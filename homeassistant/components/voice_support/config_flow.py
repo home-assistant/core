@@ -344,8 +344,6 @@ class VoiceSupportConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._host is not None
 
         if user_input is not None:
-            if self._async_current_entries():
-                return self.async_abort(reason="already_configured")
             return self._async_create_entry()
 
         return self.async_show_form(
@@ -375,11 +373,16 @@ class VoiceSupportConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_create_entry(self) -> ConfigFlowResult:
-        """Create the entry, and clear any complaint from an earlier attempt."""
+        """Create the entry, and clear any complaint from an earlier attempt.
+
+        Another flow may have made one in the meantime, and there is one client.
+        """
         if TYPE_CHECKING:
             assert self._info is not None
             assert self._host is not None
             assert self._port is not None
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
         ir.async_delete_issue(self.hass, DOMAIN, ISSUE_APP_SETUP_FAILED)
         data: dict[str, Any] = {CONF_HOST: self._host, CONF_PORT: self._port}
         if self._integration_created_app:

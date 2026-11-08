@@ -6,7 +6,8 @@ from typing import Any
 
 import aiohttp
 
-type Answer = dict[str, Any] | aiohttp.WSMessage
+type Answer = dict[str, Any] | aiohttp.WSMessage | None
+"""What the app says: JSON, a ready-made message, or None for going away."""
 
 
 def accepted(wake_word_audio_ms: int) -> dict[str, Any]:
@@ -37,7 +38,6 @@ class FakeWebsocket:
     """The app's end of a run: says what the test wrote down, when it said so.
 
     Each answer comes once that many chunks of audio have reached the app.
-    A dict is sent as JSON text; a ready-made message goes as it is.
     """
 
     def __init__(self, answers: list[tuple[int, Answer]] | None = None) -> None:
@@ -51,7 +51,7 @@ class FakeWebsocket:
         self.stalled = False
         """Make every send hang, as it does once the app stops reading."""
         self._answers = list(answers or [])
-        self._messages: asyncio.Queue[Answer | None] = asyncio.Queue()
+        self._messages: asyncio.Queue[Answer] = asyncio.Queue()
         self._say_what_is_due()
 
     def _say_what_is_due(self) -> None:

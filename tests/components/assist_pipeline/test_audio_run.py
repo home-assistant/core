@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +15,7 @@ from homeassistant.core import Context, HomeAssistant
 from .conftest import MockSTTProviderEntity, make_10ms_chunk
 
 from tests.components.voice_support.common import (
+    Answer,
     FakeWebsocket,
     accepted,
     rejected,
@@ -39,7 +39,7 @@ class MockClient:
 
     def __init__(
         self,
-        answers: list[tuple[int, dict[str, Any]]] | None = None,
+        answers: list[tuple[int, Answer]] | None = None,
         *,
         phrases: set[str] | None = None,
         websocket: FakeWebsocket | None = None,
@@ -383,4 +383,52 @@ async def test_a_provider_that_goes_away_ends_the_command_there(
     ]
     # Counted from the start of the run, the wake word chunk included
     assert vad_ends == [{"timestamp": 4 * MS_PER_CHUNK}]
+    assert b"".join(mock_stt_provider_entity.received) == COMMAND * 3
+
+
+@pytest.mark.parametrize(
+    "answers",
+    [
+        pytest.param(
+            [
+                (0, accepted(MS_PER_CHUNK)),
+                (0, speech_started(20)),
+                (0, speech_ended(40)),
+                (0, None),
+            ],
+            id="before_the_command",
+        ),
+        pytest.param(
+            [
+                (0, accepted(MS_PER_CHUNK)),
+                (2, speech_started(20)),
+                (3, speech_ended(40)),
+                (3, None),
+            ],
+            id="mid_command",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_a_provider_that_finishes_keeps_its_boundary(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    answers: list[tuple[int, Answer]],
+) -> None:
+    """Test an app that is done once it said where the command ends.
+
+    Speech-to-text hears everything up to there, whether the app went
+    before the command reached speech-to-text or while it was being heard.
+    """
+    events = await _async_run_pipeline(
+        hass,
+        _audio_stream(WAKE, COMMAND, COMMAND, COMMAND, COMMAND, COMMAND),
+        is_vad_enabled=True,
+        client=MockClient(answers),
+    )
+
+    vad_ends = [
+        event.data for event in events if event.type is PipelineEventType.STT_VAD_END
+    ]
+    assert vad_ends == [{"timestamp": 40}]
     assert b"".join(mock_stt_provider_entity.received) == COMMAND * 3

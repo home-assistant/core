@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"url": client.url},
+            translation_placeholders={"url": str(client.url)},
         ) from err
     except UnsupportedVersionError as err:
         # Not ready rather than an error: the app may get updated any time

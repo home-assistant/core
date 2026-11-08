@@ -121,6 +121,28 @@ async def test_manual_flow_cannot_use_app(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("preview_feature_enabled", "app_info")
+async def test_manual_flows_at_once(hass: HomeAssistant) -> None:
+    """Test two people saying where the app runs do not make two entries."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        first["flow_id"], {CONF_HOST: HOST, CONF_PORT: PORT}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    result = await hass.config_entries.flow.async_configure(
+        second["flow_id"], {CONF_HOST: HOST, CONF_PORT: PORT}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.usefixtures("preview_feature_enabled")
 async def test_user_flow_single_instance(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

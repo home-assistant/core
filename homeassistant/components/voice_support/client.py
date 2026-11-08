@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from yarl import URL
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -19,7 +20,14 @@ RUN_TIMEOUT = 1
 """Opening or closing a run sits between the wake word and the command."""
 SEND_TIMEOUT = 1
 """An app that stops taking audio has stopped listening."""
-CONNECT_ERRORS = (aiohttp.ClientError, TimeoutError, ValueError, KeyError, TypeError)
+CONNECT_ERRORS = (
+    aiohttp.ClientError,
+    TimeoutError,
+    AttributeError,
+    KeyError,
+    TypeError,
+    ValueError,
+)
 """What reading the app's info may raise, a malformed answer included."""
 INFO_REFRESH_INTERVAL = timedelta(minutes=5)
 WAKE_WORD_VERDICT_SECONDS = 2.0
@@ -103,6 +111,13 @@ class WakeWordRejected:
 
     reason: str | None = None
     """In the app's own words, for logs only."""
+
+
+def _ms(value: Any) -> int:
+    """A point in the run's audio, as the app must give it."""
+    if isinstance(value, bool) or (not isinstance(value, int)) or (value < 0):
+        raise ValueError(f"not a point in the audio: {value!r}")
+    return value
 
 
 class AudioRun:
@@ -218,16 +233,16 @@ class AudioRun:
 
         if event_type == "wake-word-end":
             output = event["wake_word_output"]
-            self.wake_word = WakeWordAccepted(output["wake_word_audio_ms"])
+            self.wake_word = WakeWordAccepted(_ms(output["wake_word_audio_ms"]))
             self._wake_word_known.set()
         elif event_type == "wake-word-rejected":
             output = event["wake_word_output"]
             self.wake_word = WakeWordRejected(output.get("reason"))
             self._wake_word_known.set()
         elif event_type == "stt-vad-start":
-            self.speech_started_ms = event["timestamp"]
+            self.speech_started_ms = _ms(event["timestamp"])
         elif event_type == "stt-vad-end":
-            self.speech_ended_ms = event["timestamp"]
+            self.speech_ended_ms = _ms(event["timestamp"])
         elif event_type == "error":
             _LOGGER.warning(
                 "The app could not handle the run (%s): %s",
@@ -250,7 +265,7 @@ class VoiceSupportClient:
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Set up a client for the app at this address."""
         self.hass = hass
-        self.url = f"http://{host}:{port}"
+        self.url = URL.build(scheme="http", host=host, port=port)
         self.info: AppInfo | None = None
         self._stop_refresh: CALLBACK_TYPE | None = None
         self._refresh_task: asyncio.Task[None] | None = None
@@ -305,7 +320,7 @@ class VoiceSupportClient:
         session = async_get_clientsession(self.hass)
         try:
             async with session.get(
-                f"{self.url}/info", timeout=aiohttp.ClientTimeout(total=INFO_TIMEOUT)
+                self.url / "info", timeout=aiohttp.ClientTimeout(total=INFO_TIMEOUT)
             ) as response:
                 response.raise_for_status()
                 info = AppInfo.from_json(await response.json())
@@ -352,9 +367,16 @@ class VoiceSupportClient:
         try:
             async with asyncio.timeout(RUN_TIMEOUT):
                 websocket = await session.ws_connect(
-                    f"{self.url}/run",
+                    self.url / "run",
                     timeout=aiohttp.ClientWSTimeout(ws_close=RUN_TIMEOUT),
                 )
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.debug("Cannot reach the app (%r): running without it", err)
+            self._async_schedule_refresh()
+            return None
+
+        try:
+            async with asyncio.timeout(RUN_TIMEOUT):
                 await websocket.send_json(
                     {
                         "type": "run-start",
@@ -365,8 +387,9 @@ class VoiceSupportClient:
                     }
                 )
         except (aiohttp.ClientError, TimeoutError) as err:
-            _LOGGER.debug("Cannot reach the app (%r): running without it", err)
+            _LOGGER.debug("The app would not take a run (%r): running without it", err)
             self._async_schedule_refresh()
+            await websocket.close()
             return None
 
         return AudioRun(self.hass, websocket, audio, verifies_wake_word)

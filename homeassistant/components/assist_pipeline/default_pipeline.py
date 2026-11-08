@@ -462,12 +462,16 @@ class _DefaultPipelineProcessor:
 
         self.host.start_debug_recording(f"01_stt-{engine}")
 
-        # While the run listens, it alone says where the command ends
+        # While the run listens, it alone says where the command ends,
+        # and what it said stands once it is done
         run: voice_support.AudioRun | None = None
         if (
             is_vad_enabled
             and (self._audio_run is not None)
-            and self._audio_run.listening
+            and (
+                self._audio_run.listening
+                or (self._audio_run.speech_ended_ms is not None)
+            )
         ):
             run = self._audio_run
 
@@ -577,7 +581,7 @@ class _DefaultPipelineProcessor:
                     self._async_stt_vad_end(run.speech_ended_ms)
                     break
 
-                if not run.listening:
+                if (not run.listening) and (run.speech_ended_ms is None):
                     _LOGGER.debug(
                         "The run stopped listening at %s ms",
                         chunk.timestamp_ms,
