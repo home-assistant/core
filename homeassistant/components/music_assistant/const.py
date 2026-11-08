@@ -11,7 +11,6 @@ DEFAULT_NAME = "Music Assistant"
 AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
-# Schema version where the queue settings, playback speed and DSP preset commands were added
 PLAYER_SETTINGS_SCHEMA_VERSION = 101
 
 # The official Music Assistant Home Assistant app
