@@ -124,13 +124,18 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             owner = self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, device.uuid
             )
-            if self.hass.config_entries.async_update_entry(
+            changed = self.hass.config_entries.async_update_entry(
                 entry,
                 unique_id=entry.unique_id or (None if owner else device.uuid),
                 data={**entry.data, **sw_version},
-            ) and entry.state in (
-                ConfigEntryState.LOADED,
-                ConfigEntryState.SETUP_RETRY,
+            )
+            # As _abort_if_unique_id_configured: a retrying entry retries now
+            # its controller is seen, a loaded one reloads on a change. A
+            # change during setup reloads too, after the setup lock is free.
+            if entry.state is ConfigEntryState.SETUP_RETRY or (
+                changed
+                and entry.state
+                in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_IN_PROGRESS)
             ):
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")

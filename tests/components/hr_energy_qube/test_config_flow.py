@@ -508,6 +508,41 @@ async def test_zeroconf_hostname_shared_with_another_qube(hass: HomeAssistant) -
     assert by_address.unique_id is None
 
 
+@pytest.mark.parametrize(
+    ("state", "stored", "reload"),
+    [
+        pytest.param(ConfigEntryState.LOADED, "4.1.00", False, id="loaded_unchanged"),
+        pytest.param(ConfigEntryState.LOADED, "4.0.00", True, id="loaded_changed"),
+        pytest.param(ConfigEntryState.SETUP_RETRY, "4.1.00", True, id="retry"),
+        pytest.param(
+            ConfigEntryState.SETUP_IN_PROGRESS, "4.0.00", True, id="setting_up"
+        ),
+        pytest.param(ConfigEntryState.NOT_LOADED, "4.0.00", False, id="not_loaded"),
+    ],
+)
+async def test_zeroconf_reload_by_entry_state(
+    hass: HomeAssistant, state: ConfigEntryState, stored: str, reload: bool
+) -> None:
+    """Test when rediscovery of the configured controller reloads its entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.5.208", CONF_PORT: 502, CONF_SW_VERSION: stored},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, state)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_SW_VERSION] == "4.1.00"
+    assert mock_reload.called is reload
+
+
 async def test_zeroconf_new_version_reloads_entry(
     hass: HomeAssistant,
     mock_qube_client: MagicMock,
