@@ -1,17 +1,8 @@
 """Media player platform for the Samsung ExLink integration."""
 
-from collections.abc import Callable, Coroutine
-from datetime import timedelta
-from functools import wraps
-from typing import Any, override
+from typing import override
 
-from samsung_exlink import (
-    MAX_VOLUME,
-    CommandRejected,
-    InputSource,
-    SamsungTVError,
-    TVState,
-)
+from samsung_exlink import MAX_VOLUME, InputSource, TVState
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -20,14 +11,14 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SamsungExLinkConfigEntry
+from .const import DOMAIN
+from .coordinator import SamsungExLinkConfigEntry, SamsungExLinkCoordinator
+from .helpers import catch_command_errors
 
-# Samsung TVs do not push state over RS-232, so the entity is polled.
-SCAN_INTERVAL = timedelta(seconds=5)
 PARALLEL_UPDATES = 1
 
 INPUT_SOURCE_SAMSUNG_TO_HA: dict[InputSource, str] = {
@@ -64,31 +55,6 @@ _BASE_SUPPORTED_FEATURES = (
 )
 
 
-def catch_command_errors[**_P](
-    func: Callable[_P, Coroutine[Any, Any, None]],
-) -> Callable[_P, Coroutine[Any, Any, None]]:
-    """Translate Samsung library errors raised by an action into HomeAssistantError."""
-
-    @wraps(func)
-    async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
-        try:
-            await func(*args, **kwargs)
-        except CommandRejected as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_rejected",
-                translation_placeholders={"error": str(err) or type(err).__name__},
-            ) from err
-        except (SamsungTVError, ConnectionError, OSError, TimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"error": str(err) or type(err).__name__},
-            ) from err
-
-    return wrapper
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SamsungExLinkConfigEntry,
@@ -98,7 +64,9 @@ async def async_setup_entry(
     async_add_entities([SamsungExLinkMediaPlayer(config_entry)])
 
 
-class SamsungExLinkMediaPlayer(MediaPlayerEntity):
+class SamsungExLinkMediaPlayer(
+    CoordinatorEntity[SamsungExLinkCoordinator], MediaPlayerEntity
+):
     """Representation of a Samsung TV controlled over ExLink (RS-232)."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
@@ -108,7 +76,9 @@ class SamsungExLinkMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, config_entry: SamsungExLinkConfigEntry) -> None:
         """Initialize the media player."""
-        self._tv = config_entry.runtime_data
+        coordinator = config_entry.runtime_data
+        super().__init__(coordinator)
+        self._tv = coordinator.tv
         sources = list(INPUT_SOURCE_SAMSUNG_TO_HA.values())
         if self._tv.model and self._tv.model.art_mode:
             sources.append(SOURCE_ART_MODE)
@@ -119,30 +89,27 @@ class SamsungExLinkMediaPlayer(MediaPlayerEntity):
             manufacturer="Samsung",
             model=self._tv.model.name if self._tv.model else None,
         )
-        self._async_update_from_state(self._tv.state)
+        self._async_update_from_state(self.coordinator.data)
 
+    @property
     @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to TV state updates."""
-        self.async_on_remove(self._tv.subscribe(self._async_on_state_update))
-
-    async def async_update(self) -> None:
-        """Poll the TV for its current state."""
-        await self._tv.refresh()
+    def available(self) -> bool:
+        """Return if the TV has a state and coordinator updates are successful."""
+        return super().available and self.coordinator.data is not None
 
     @callback
-    def _async_on_state_update(self, state: TVState | None) -> None:
-        """Handle a state update from the TV."""
-        if state is None:
-            self._attr_available = False
-        else:
-            self._attr_available = True
-            self._async_update_from_state(state)
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle a coordinator state update."""
+        self._async_update_from_state(self.coordinator.data)
         self.async_write_ha_state()
 
     @callback
-    def _async_update_from_state(self, state: TVState) -> None:
+    def _async_update_from_state(self, state: TVState | None) -> None:
         """Update entity attributes from a TV state snapshot."""
+        if state is None:
+            return
+
         if state.power is None:
             self._attr_state = None
         else:
