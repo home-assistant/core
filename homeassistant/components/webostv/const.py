@@ -13,6 +13,7 @@ LOGGER = logging.getLogger(__package__)
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 DEFAULT_NAME = "LG webOS TV"
 
+ATTR_ICON = "icon"
 ATTR_PAYLOAD = "payload"
 ATTR_SOUND_OUTPUT = "sound_output"
 
