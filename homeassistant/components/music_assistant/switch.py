@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Final, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
@@ -75,7 +75,8 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[SwitchEntity] = []
-        assert mass.server_info  # for type checking
+        if TYPE_CHECKING:
+            assert mass.server_info is not None
         # older servers lack the commands, so their players keep only the option switches;
         # the queue itself may still be missing, the server adds it after the player
         if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION:
