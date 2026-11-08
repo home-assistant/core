@@ -22,7 +22,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config as config_util, core, loader, runner
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry, ConfigEntryDisabler
 from homeassistant.const import (
     BASE_PLATFORMS,
     CONF_DEBUG,
@@ -269,6 +269,30 @@ async def test_load_hassio(hass: HomeAssistant) -> None:
         assert "hassio" in bootstrap._get_domains(hass, {})
 
 
+@pytest.mark.parametrize(
+    ("include_disabled", "expected_domains"),
+    [
+        pytest.param(True, {"enabled_entry", "disabled_entry"}, id="include_disabled"),
+        pytest.param(False, {"enabled_entry"}, id="exclude_disabled"),
+    ],
+)
+async def test_get_domains_config_entries(
+    hass: HomeAssistant, include_disabled: bool, expected_domains: set[str]
+) -> None:
+    """Test which config entry domains are set up."""
+    MockConfigEntry(domain="enabled_entry").add_to_hass(hass)
+    MockConfigEntry(
+        domain="disabled_entry", disabled_by=ConfigEntryDisabler.USER
+    ).add_to_hass(hass)
+    MockConfigEntry(domain="ignored_entry", source=SOURCE_IGNORE).add_to_hass(hass)
+
+    domains = bootstrap._get_domains(hass, {}, include_disabled=include_disabled)
+
+    assert domains & {"enabled_entry", "disabled_entry", "ignored_entry"} == (
+        expected_domains
+    )
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_empty_setup(hass: HomeAssistant) -> None:
     """Test an empty set up loads the core."""
@@ -463,6 +487,151 @@ async def test_setup_after_deps_in_stage_1(hass: HomeAssistant) -> None:
     assert "normal_integration" in hass.config.components
     assert "cloud" in hass.config.components
     assert order == ["an_after_dep", "normal_integration", "cloud"]
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setup_after_deps_with_only_disabled_entries(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test after_dependencies with only disabled config entries are not waited for.
+
+    The domain is still set up, but its failure must not fail the dependent.
+    """
+    order = []
+    normal_integration_done = asyncio.Event()
+
+    async def normal_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        order.append("normal_integration")
+        normal_integration_done.set()
+        return True
+
+    async def an_after_dep_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        # Would deadlock if normal_integration waited for this domain
+        await normal_integration_done.wait()
+        order.append("an_after_dep")
+        return False
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=normal_integration_setup,
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass, MockModule(domain="an_after_dep", async_setup=an_after_dep_setup)
+    )
+    MockConfigEntry(
+        domain="an_after_dep", disabled_by=ConfigEntryDisabler.USER
+    ).add_to_hass(hass)
+
+    await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+
+    assert "normal_integration" in hass.config.components
+    assert "an_after_dep" not in hass.config.components
+    assert order == ["normal_integration", "an_after_dep"]
+    assert "Setup failed for 'an_after_dep'" in caplog.text
+    assert "Only set up for disabled config entries: {'an_after_dep'}" in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setup_after_deps_with_disabled_entries_needed_as_dependency(
+    hass: HomeAssistant,
+) -> None:
+    """Test after_dependencies wait for a domain with disabled entries another domain depends on."""
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    async def an_after_dep_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        # Let a dependent which does not wait for this domain finish first
+        await asyncio.sleep(0)
+        order.append("an_after_dep")
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass, MockModule(domain="an_after_dep", async_setup=an_after_dep_setup)
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="dependent",
+            async_setup=gen_domain_setup("dependent"),
+            dependencies=["an_after_dep"],
+        ),
+    )
+    MockConfigEntry(
+        domain="an_after_dep", disabled_by=ConfigEntryDisabler.USER
+    ).add_to_hass(hass)
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"normal_integration": {}, "dependent": {}}
+    )
+
+    assert "normal_integration" in hass.config.components
+    assert "an_after_dep" in hass.config.components
+    assert "dependent" in hass.config.components
+    assert order[0] == "an_after_dep"
+    assert set(order[1:]) == {"normal_integration", "dependent"}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setup_after_deps_cycle_with_only_disabled_entries(
+    hass: HomeAssistant,
+) -> None:
+    """Test an after_dependencies cycle through a domain with only disabled entries.
+
+    The domain is not an after dependency of anything, so there is no cycle,
+    just as today when the domain is not set up at all.
+    """
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep",
+            async_setup=gen_domain_setup("an_after_dep"),
+            partial_manifest={"after_dependencies": ["normal_integration"]},
+        ),
+    )
+    MockConfigEntry(
+        domain="an_after_dep", disabled_by=ConfigEntryDisabler.USER
+    ).add_to_hass(hass)
+
+    await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+
+    assert "normal_integration" in hass.config.components
+    assert "an_after_dep" in hass.config.components
+    assert order == ["normal_integration", "an_after_dep"]
 
 
 @pytest.mark.parametrize("load_registries", [False])
