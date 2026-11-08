@@ -3,7 +3,6 @@
 import asyncio
 import contextlib
 import logging
-import math
 
 from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.__main__ import OpenEVSE
@@ -85,8 +84,6 @@ def _parse_power_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
-        if not math.isfinite(val):
-            return None
     except ValueError, TypeError, OverflowError:
         return None
 
@@ -95,12 +92,9 @@ def _parse_power_state(state: State | None) -> int | None:
         with contextlib.suppress(Exception):
             val = PowerConverter.convert(val, unit, UnitOfPower.WATT)
 
-    if not math.isfinite(val):
-        return None
-
     try:
         return round(val)
-    except OverflowError:
+    except ValueError, TypeError, OverflowError:
         return None
 
 
@@ -110,8 +104,6 @@ def _parse_voltage_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
-        if not math.isfinite(val):
-            return None
     except ValueError, TypeError, OverflowError:
         return None
 
@@ -126,12 +118,9 @@ def _parse_voltage_state(state: State | None) -> int | None:
                 val, unit, UnitOfElectricPotential.VOLT
             )
 
-    if not math.isfinite(val):
-        return None
-
     try:
         return round(val)
-    except OverflowError:
+    except ValueError, TypeError, OverflowError:
         return None
 
 
@@ -141,8 +130,6 @@ def _parse_range_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
-        if not math.isfinite(val):
-            return None
     except ValueError, TypeError, OverflowError:
         return None
 
@@ -155,12 +142,9 @@ def _parse_range_state(state: State | None) -> int | None:
         with contextlib.suppress(Exception):
             val = DistanceConverter.convert(val, unit, UnitOfLength.KILOMETERS)
 
-    if not math.isfinite(val):
-        return None
-
     try:
         return round(val)
-    except OverflowError:
+    except ValueError, TypeError, OverflowError:
         return None
 
 
@@ -169,10 +153,7 @@ def _parse_int_state(state: State | None) -> int | None:
     if not state or state.state in (None, "unavailable", "unknown", ""):
         return None
     try:
-        val = float(state.state)
-        if not math.isfinite(val):
-            return None
-        return round(val)
+        return round(float(state.state))
     except ValueError, TypeError, OverflowError:
         return None
 
@@ -183,8 +164,6 @@ def _parse_eta_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
-        if not math.isfinite(val):
-            return None
         unit = state.attributes.get("unit_of_measurement")
         if (
             unit
@@ -193,8 +172,6 @@ def _parse_eta_state(state: State | None) -> int | None:
         ):
             with contextlib.suppress(Exception):
                 val = DurationConverter.convert(val, unit, UnitOfTime.SECONDS)
-        if not math.isfinite(val):
-            return None
         return round(val)
     except ValueError, TypeError, OverflowError:
         pass
