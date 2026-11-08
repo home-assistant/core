@@ -46,16 +46,14 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: A failed reconnect logs a warning on every poll.
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
@@ -71,12 +69,10 @@ rules:
   entity-category: done
   entity-device-class:
     status: todo
-    comment: The CPU package, CPU core and GPU power sensors have no device class.
+    comment: The locked binary sensor has no device class.
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: Some errors, such as the coordinator's UpdateFailed, are not translated.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
