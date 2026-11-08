@@ -29,7 +29,6 @@
     "step": {
       "confirm": {
         "data": {
-          "allow_mesh_info_non_admin": "[%key:component::fritz::common::data_allow_mesh_info_non_admin%]",
           "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]",
           "password": "[%key:common::config_flow::data::password%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
