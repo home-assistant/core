@@ -257,21 +257,23 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
         """Set the native value of the entity."""
         await self.async_set_option(value)
 
+    def set_native_unit_of_measurement(self, unit: str | None) -> None:
+        """Set the native unit of measurement for the entity."""
+        if unit:
+            candidate_unit = UNIT_MAP.get(unit, unit)
+            if (
+                not hasattr(self, "_attr_native_unit_of_measurement")
+                or candidate_unit != self._attr_native_unit_of_measurement
+            ):
+                self._attr_native_unit_of_measurement = candidate_unit
+
     @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_native_value = cast(float | None, self.option_value)
         option_definition = self.appliance.available_options.get(self.bsh_key)
         if option_definition:
-            if option_definition.unit:
-                candidate_unit = UNIT_MAP.get(
-                    option_definition.unit, option_definition.unit
-                )
-                if (
-                    not hasattr(self, "_attr_native_unit_of_measurement")
-                    or candidate_unit != self._attr_native_unit_of_measurement
-                ):
-                    self._attr_native_unit_of_measurement = candidate_unit
+            self.set_native_unit_of_measurement(option_definition.unit)
             option_constraints = option_definition.constraints
             if option_constraints:
                 if (
@@ -289,3 +291,5 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
                     or self._attr_native_step != option_constraints.step_size
                 ) and option_constraints.step_size:
                     self._attr_native_step = option_constraints.step_size
+        elif option := self.appliance.options.get(self.bsh_key):
+            self.set_native_unit_of_measurement(option.unit)

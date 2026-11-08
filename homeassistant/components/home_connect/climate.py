@@ -169,13 +169,22 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Return the native unit of measurement."""
         if (
             (
-                option_definition := self.appliance.available_options.get(
-                    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                (
+                    option_definition := self.appliance.available_options.get(
+                        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                    )
                 )
+                and (proto_unit := option_definition.unit) is not None
             )
-            and (proto_unit := option_definition.unit) is not None
-            and (unit := UNIT_MAP.get(proto_unit)) is not None
-        ):
+            or (
+                (
+                    option := self.appliance.options.get(
+                        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                    )
+                )
+                and (proto_unit := option.unit) is not None
+            )
+        ) and (unit := UNIT_MAP.get(proto_unit)) is not None:
             return unit
         return UnitOfTemperature.CELSIUS
 

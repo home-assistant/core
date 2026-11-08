@@ -1295,6 +1295,7 @@ async def test_preset_mode_feature_not_supported_on_missing_active_clean(
             Option(
                 key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
                 value=20.0,
+                unit="°C",
             ),
             ProgramDefinitionOption(
                 OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,

@@ -51,8 +51,10 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_RESTORED,
+    ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -668,7 +670,7 @@ async def test_options_entities_available_non_writable(
     entity_id = "number.oven_setpoint_temperature"
     client.get_active_program_options = client.get_selected_program_options = AsyncMock(
         return_value=ArrayOfOptions(
-            [Option(OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE, 200)]
+            [Option(OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE, 200, unit="°C")]
         )
     )
     client.get_available_program = AsyncMock(
@@ -676,7 +678,7 @@ async def test_options_entities_available_non_writable(
             ProgramKey.UNKNOWN,
             options=[
                 ProgramDefinitionOption(
-                    OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE, "Double"
+                    OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE, "Double", unit="°C"
                 )
             ],
         )
@@ -733,6 +735,7 @@ async def test_options_entities_available_non_writable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "200"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
     client.set_active_program_option.reset_mock()
     with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
@@ -770,6 +773,7 @@ async def test_options_entities_available_non_writable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "90"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)

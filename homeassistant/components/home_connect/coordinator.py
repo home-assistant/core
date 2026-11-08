@@ -15,6 +15,7 @@ from aiohomeconnect.model import (
     EventType,
     GetSetting,
     HomeAppliance,
+    Option,
     OptionKey,
     ProgramKey,
     SettingKey,
@@ -69,7 +70,7 @@ class HomeConnectApplianceData:
     commands: set[CommandKey]
     events: dict[EventKey, Event]
     info: HomeAppliance
-    options: set[OptionKey]
+    options: dict[OptionKey, Option]
     available_options: dict[OptionKey, ProgramDefinitionOption]
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
@@ -100,7 +101,7 @@ class HomeConnectApplianceData:
             commands=set(),
             events={},
             info=appliance,
-            options=set(),
+            options={},
             available_options={},
             programs=[],
             settings={},
@@ -705,7 +706,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
         programs = []
         events = {}
-        options = set()
+        options = {}
         available_options = {}
         if appliance.type in APPLIANCES_WITH_PROGRAMS:  # pylint: disable=too-many-nested-blocks
             try:
@@ -743,7 +744,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         )
                         current_program_key = program.key
                         options_data = program.options or []
-                        options = {option.key for option in program.options or []}
+                        options = {
+                            option.key: option for option in program.options or []
+                        }
                         if current_program_key in FAVORITE_PROGRAMS and options:
                             # The API doesn't allow to fetch the
                             # options from the favorite program.
@@ -760,7 +763,18 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                     )
                     # In theory, available options should be always a subset of options,
                     # but we add them to options anyway just to be safe.
-                    options.update(available_options.keys())
+                    options.update(
+                        {
+                            option_key: Option(
+                                key=option_key,
+                                value=None,
+                                name=available_option.name,
+                                display_value=None,
+                                unit=available_option.unit,
+                            )
+                            for option_key, available_option in available_options.items()
+                        }
+                    )
                     for option in options_data:
                         option_event_key = EventKey(option.key)
                         events[option_event_key] = Event(
@@ -873,10 +887,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             )
             _options = []
 
-        options.update(option.key for option in _options)
-        # In theory, available options should be always a subset of options,
-        # but we add them to options anyway just to be safe.
-        options.update(available_options.keys())
+        options.update({option.key: option for option in _options})
 
         self.last_fetched_program = (program_type, program_key)
 
@@ -893,8 +904,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 display_value=option.display_value,
                 unit=option.unit,
             )
-        for available_option in available_options.values():
+        for option_key, available_option in available_options.items():
             option_event_key = EventKey(available_option.key)
+            option_default_value = None
             if (
                 option_event_key not in events
                 and available_option.constraints
@@ -909,6 +921,16 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                     "",
                     option_default_value,
                     available_option.name,
+                    unit=available_option.unit,
+                )
+            if option_key not in options:
+                # In theory, available options should be always a subset of options,
+                # but we add them to options anyway just to be safe.
+                options[option_key] = Option(
+                    key=option_key,
+                    value=option_default_value,
+                    name=available_option.name,
+                    display_value=None,
                     unit=available_option.unit,
                 )
         options_to_notify.update(options)
