@@ -45,6 +45,29 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "charge_lock_time": {
+        "name": "Charging lockout period"
+      },
+      "charging_limited_by_forecast": {
+        "name": "Charging limited by forecast"
+      },
+      "charging_locked": {
+        "name": "Charging locked"
+      },
+      "discharge_lock_time": {
+        "name": "Discharging lockout period"
+      },
+      "discharging_locked": {
+        "name": "Discharging locked"
+      },
+      "emergency_power_ready": {
+        "name": "Emergency power ready"
+      },
+      "feed_in_limited": {
+        "name": "Feed-in limited"
+      }
+    },
     "sensor": {
       "additional_power": {
         "name": "Additional feeder power"
