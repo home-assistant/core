@@ -2427,7 +2427,7 @@ pykira==0.1.1
 pykmtronic==0.3.0
 
 # homeassistant.components.kodi
-pykodi==0.2.7
+pykodi==0.3.0
 
 # homeassistant.components.kostal_plenticore
 pykoplenti==1.5.0
