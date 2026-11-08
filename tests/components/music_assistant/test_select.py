@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.dsp import DSPConfig, DSPConfigPreset
 from music_assistant_models.enums import EventType
+from music_assistant_models.errors import MusicAssistantError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -228,10 +229,23 @@ async def test_dsp_preset_select_registry(
 ) -> None:
     """Test the DSP preset select is a disabled config entity."""
     music_assistant_client.server_info.schema_version = 101
-    music_assistant_client.config.get_dsp_preset = AsyncMock(return_value=[])
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entry = entity_registry.async_get("select.test_player_1_dsp_preset")
     assert entry
     assert entry.unique_id == "00:00:00:00:00:01_dsp_preset"
     assert entry.entity_category is EntityCategory.CONFIG
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dsp_preset_select_presets_request_fails(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test a failing preset request keeps the other selects of the player."""
+    music_assistant_client.server_info.schema_version = 101
+    music_assistant_client.config.get_dsp_preset = AsyncMock(
+        side_effect=MusicAssistantError("Connection lost")
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert hass.states.get("select.test_player_1_link_audio_delay")
