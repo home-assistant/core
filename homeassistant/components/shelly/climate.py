@@ -10,6 +10,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
+    PRESET_BOOST,
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityDescription,
@@ -809,10 +810,13 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     _attr_max_temp = BLU_TRV_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = BLU_TRV_TEMPERATURE_SETTINGS["min"]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.PRESET_MODE
     )
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_hvac_mode = HVACMode.HEAT
+    _attr_preset_modes = [PRESET_NONE, PRESET_BOOST]
     _attr_target_temperature_step = BLU_TRV_TEMPERATURE_SETTINGS["step"]
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -825,6 +829,30 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"
         self._attr_device_info = get_entity_blu_trv_device_info(coordinator, self.key)
+        self._assumed_preset: str | None = None
+        self._preset_command_running = False
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to HASS."""
+        await super().async_added_to_hass()
+        # The boost state is only updated by polling, so refresh the entity
+        # after each poll
+        if poll_coordinator := self.coordinator.config_entry.runtime_data.rpc_poll:
+            self.async_on_remove(
+                poll_coordinator.async_add_listener(self._async_poll_callback)
+            )
+
+    @callback
+    def _async_poll_callback(self) -> None:
+        """Handle a polled update."""
+        if self._preset_command_running:
+            # The poll can not know the result of the running command yet
+            return
+
+        # The polled status is up to date again, stop assuming the preset
+        self._assumed_preset = None
+        self.async_write_ha_state()
 
     @property
     @override
@@ -850,6 +878,18 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
         return HVACAction.HEATING
 
+    @property
+    @override
+    def preset_mode(self) -> str:
+        """Return the current preset mode."""
+        if self._assumed_preset is not None:
+            return self._assumed_preset
+
+        if self.status.get("boost") is not None:
+            return PRESET_BOOST
+
+        return PRESET_NONE
+
     @rpc_call
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -857,3 +897,28 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         await self.coordinator.device.blu_trv_set_target_temperature(
             self._id, kwargs[ATTR_TEMPERATURE]
         )
+
+    @rpc_call
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        # The boost state is only updated by polling, assume the new preset
+        # until the next poll. The command can take a while, so show it right away
+        previous_preset = self._assumed_preset
+        self._assumed_preset = preset_mode
+        self._preset_command_running = True
+        self.async_write_ha_state()
+
+        try:
+            # The TRV ends the boost after its configured duration and
+            # returns to the previous target temperature by itself
+            if preset_mode == PRESET_BOOST:
+                await self.coordinator.device.blu_trv_set_boost(self._id)
+            else:
+                await self.coordinator.device.blu_trv_clear_boost(self._id)
+        except BaseException:
+            self._assumed_preset = previous_preset
+            raise
+        finally:
+            self._preset_command_running = False
+            self.async_write_ha_state()
