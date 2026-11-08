@@ -11,6 +11,11 @@ from pytest_homeassistant.common import (
     async_load_json_object_fixture,
     snapshot_platform,
 )
+from skoda_public_api.models.enums import (
+    AirConditioningState,
+    AuxiliaryHeatingState,
+    PlugConnectionState,
+)
 from skoda_public_api.models.vehicle import VehicleResponse
 from syrupy.assertion import SnapshotAssertion
 
@@ -130,98 +135,78 @@ async def test_binary_sensor_unknown_when_data_missing(
 
 
 @pytest.mark.parametrize(
-    ("block", "field", "value", "entity_id", "expected_state"),
+    ("plug_state", "expected_state"),
     [
-        pytest.param(
-            "charging",
-            "plugConnectionState",
-            "DISCONNECTED",
-            "binary_sensor.enyaq_coupe_charging_cable",
-            STATE_OFF,
-            id="cable_disconnected",
-        ),
-        pytest.param(
-            "charging",
-            "plugConnectionState",
-            "UNKNOWN",
-            "binary_sensor.enyaq_coupe_charging_cable",
-            STATE_UNKNOWN,
-            id="cable_unknown",
-        ),
-        pytest.param(
-            "charging",
-            "plugConnectionState",
-            None,
-            "binary_sensor.enyaq_coupe_charging_cable",
-            STATE_UNKNOWN,
-            id="cable_not_reported",
-        ),
-        pytest.param(
-            "airConditioning",
-            "state",
-            "COOLING",
-            "binary_sensor.enyaq_coupe_air_conditioning",
-            STATE_ON,
-            id="air_conditioning_cooling",
-        ),
-        pytest.param(
-            "airConditioning",
-            "state",
-            "COMPLETED",
-            "binary_sensor.enyaq_coupe_air_conditioning",
-            STATE_OFF,
-            id="air_conditioning_completed",
-        ),
-        pytest.param(
-            "airConditioning",
-            "state",
-            "UNKNOWN",
-            "binary_sensor.enyaq_coupe_air_conditioning",
-            STATE_UNKNOWN,
-            id="air_conditioning_unknown",
-        ),
-        pytest.param(
-            "auxiliaryHeating",
-            "state",
-            "PREHEATING",
-            "binary_sensor.enyaq_coupe_auxiliary_heating",
-            STATE_ON,
-            id="auxiliary_heating_preheating",
-        ),
-        pytest.param(
-            "auxiliaryHeating",
-            "state",
-            "UNKNOWN",
-            "binary_sensor.enyaq_coupe_auxiliary_heating",
-            STATE_UNKNOWN,
-            id="auxiliary_heating_unknown",
-        ),
+        (PlugConnectionState.CONNECTED, STATE_ON),
+        (PlugConnectionState.DISCONNECTED, STATE_OFF),
+        (PlugConnectionState.UNKNOWN, STATE_UNKNOWN),
+        (None, STATE_UNKNOWN),
     ],
 )
-async def test_running_and_plug_states(
+async def test_charging_cable_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_skoda_client: AsyncMock,
-    block: str,
-    field: str,
-    value: str | None,
-    entity_id: str,
+    plug_state: PlugConnectionState | None,
     expected_state: str,
 ) -> None:
-    """Test the charging cable and running binary sensors map the vehicle states."""
-    vehicle = await async_load_json_object_fixture(
-        hass, "vehicle_electric.json", DOMAIN
-    )
-    data = vehicle["vehicle"][block]
-    if block == "charging":
-        data = data["status"]
-    if value is None:
-        data.pop(field)
-    else:
-        data[field] = value
-    mock_skoda_client.get_vehicle.return_value = VehicleResponse.model_validate(vehicle)
+    """Test the charging cable sensor follows the plug connection state."""
+    vehicle = mock_skoda_client.get_vehicle.return_value.vehicle
+    vehicle.charging.status.plug_connection_state = plug_state
 
     await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get(entity_id))
+    assert (state := hass.states.get("binary_sensor.enyaq_coupe_charging_cable"))
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("air_conditioning_state", "expected_state"),
+    [
+        (AirConditioningState.COOLING, STATE_ON),
+        (AirConditioningState.HEATING, STATE_ON),
+        (AirConditioningState.COMPLETED, STATE_OFF),
+        (AirConditioningState.UNKNOWN, STATE_UNKNOWN),
+    ],
+)
+async def test_air_conditioning_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+    air_conditioning_state: AirConditioningState,
+    expected_state: str,
+) -> None:
+    """Test the air conditioning sensor follows the air conditioning state."""
+    vehicle = mock_skoda_client.get_vehicle.return_value.vehicle
+    vehicle.air_conditioning.state = air_conditioning_state
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("binary_sensor.enyaq_coupe_air_conditioning"))
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("auxiliary_heating_state", "expected_state"),
+    [
+        (AuxiliaryHeatingState.PREHEATING, STATE_ON),
+        (AuxiliaryHeatingState.VENTILATION, STATE_ON),
+        (AuxiliaryHeatingState.OFF, STATE_OFF),
+        (AuxiliaryHeatingState.UNKNOWN, STATE_UNKNOWN),
+    ],
+)
+async def test_auxiliary_heating_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+    auxiliary_heating_state: AuxiliaryHeatingState,
+    expected_state: str,
+) -> None:
+    """Test the auxiliary heating sensor follows the auxiliary heating state."""
+    vehicle = mock_skoda_client.get_vehicle.return_value.vehicle
+    vehicle.auxiliary_heating.state = auxiliary_heating_state
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("binary_sensor.enyaq_coupe_auxiliary_heating"))
     assert state.state == expected_state
