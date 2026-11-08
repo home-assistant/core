@@ -49,6 +49,9 @@
       "gas_detected": {
         "default": "mdi:gas-burner"
       },
+      "humidity_level": {
+        "default": "mdi:water-outline"
+      },
       "illuminance_level": {
         "default": "mdi:brightness-5"
       },
