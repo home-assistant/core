@@ -52,21 +52,21 @@ async def test_binary_sensors(
 
 
 @pytest.mark.parametrize("vehicle_fixture", ["vehicle_combustion.json"])
-async def test_no_status_binary_sensors_without_status(
+async def test_only_non_status_binary_sensors_without_status(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_skoda_client: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test no status binary sensors are created for a vehicle without status data."""
+    """Test only binary sensors that do not need status data are created without it."""
     await setup_integration(hass, mock_config_entry)
 
-    assert [
+    assert {
         entry.entity_id
         for entry in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
-    ] == ["binary_sensor.octavia_auxiliary_heating"]
+    } == {"binary_sensor.octavia_auxiliary_heating"}
 
 
 @pytest.mark.parametrize(
