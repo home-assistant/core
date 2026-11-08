@@ -90,7 +90,10 @@ rules:
   icon-translations:
     status: exempt
     comment: The integration has no entities.
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: The only config flow settings are credentials, which the
+      reauthentication flow handles.
   repair-issues:
     status: exempt
     comment: The integration raises no repair issues.
