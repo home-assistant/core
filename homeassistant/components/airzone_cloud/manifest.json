@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aioairzone_cloud"],
-  "requirements": ["aioairzone-cloud==0.7.2"]
+  "requirements": ["aioairzone-cloud==0.7.3"]
 }

@@ -25,13 +25,25 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
+    ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
 
 from . import get_mock_event_function
@@ -96,6 +108,151 @@ async def test_update_setup(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
     await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR, Platform.UPDATE]])
+@pytest.mark.parametrize("error", [TimeoutError, ValueError])
+@pytest.mark.parametrize(
+    "entity_id",
+    ["update.mock_title_core_firmware", "update.mock_title_zigbee_firmware"],
+)
+async def test_firmware_catalog_failure_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    error: type[Exception],
+    entity_id: str,
+) -> None:
+    """Test background catalog failure and recovery without an initial candidate."""
+    get_firmware = mock_smlight_client.get_firmware_version.side_effect
+    mock_smlight_client.get_firmware_version.side_effect = error
+
+    entry = await setup_integration(hass, mock_config_entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.get("sensor.mock_title_core_chip_temp").state != STATE_UNAVAILABLE
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_smlight_client.get_firmware_version.side_effect = None
+    mock_smlight_client.get_firmware_version.return_value = []
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    mock_smlight_client.get_firmware_version.side_effect = error
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_smlight_client.get_firmware_version.side_effect = get_firmware
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_installed_version_updates_without_firmware_catalog(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test local version changes are published while the catalog remains empty."""
+    mock_smlight_client.get_firmware_version.side_effect = None
+    mock_smlight_client.get_firmware_version.return_value = []
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "update.mock_title_core_firmware"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+    assert state.attributes[ATTR_LATEST_VERSION] is None
+
+    info = Info.from_dict(
+        await async_load_json_object_fixture(hass, "info.json", DOMAIN)
+    )
+    info.sw_version = "v2.7.5"
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = info
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
+    assert state.attributes[ATTR_LATEST_VERSION] is None
+
+
+@pytest.mark.parametrize(
+    ("catalog_responses", "expected_core_state"),
+    [
+        pytest.param(
+            [SmlightConnectionError("Catalog unavailable")],
+            STATE_UNKNOWN,
+            id="core",
+        ),
+        pytest.param(
+            [
+                [Firmware(ver="v2.7.5", mode="ESP")],
+                SmlightConnectionError("Catalog unavailable"),
+            ],
+            STATE_ON,
+            id="radio",
+        ),
+    ],
+)
+async def test_catalog_connection_error_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    catalog_responses: list[list[Firmware] | SmlightConnectionError],
+    expected_core_state: str,
+) -> None:
+    """Test catalog connection errors preserve availability and recover."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
+    assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
+
+    side_effect = mock_smlight_client.get_firmware_version.side_effect
+    mock_smlight_client.get_firmware_version.side_effect = catalog_responses
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.mock_title_core_firmware").state == expected_core_state
+    )
+    assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_UNKNOWN
+
+    mock_smlight_client.get_firmware_version.side_effect = side_effect
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        model="SLZB-06p7",
+        fw_channel="dev",
+        sw_version="v2.7.5",
+        radios=[Radio(chip_index=0, zb_type=0, zb_version="20250201")],
+    )
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.mock_title_core_firmware").state == STATE_OFF
+    assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -563,3 +720,101 @@ async def test_zwave_update_naming_mr10(
     state = hass.states.get("update.mock_title_z_wave_firmware")
     assert state is not None
     assert state.name == "Mock Title Z-Wave firmware"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "version", "installed_version", "latest_version", "updated_info"),
+    [
+        pytest.param(
+            "update.mock_title_core_firmware",
+            "0.9.9",
+            "v2.3.6",
+            "v2.7.5",
+            Info(sw_version="0.9.9"),
+            id="core",
+        ),
+        pytest.param(
+            "update.mock_title_zigbee_firmware",
+            "20240315",
+            "20240314",
+            "20250201",
+            Info(radios=[Radio(chip_index=0, zb_type=0, zb_version="20240315")]),
+            id="zigbee",
+        ),
+    ],
+)
+@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
+async def test_update_firmware_specific_version(
+    mock_sleep: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    entity_id: str,
+    version: str,
+    installed_version: str,
+    latest_version: str,
+    updated_info: Info,
+) -> None:
+    """Test installing a specific firmware version, older than the latest."""
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_INSTALLED_VERSION] == installed_version
+    assert state.attributes[ATTR_LATEST_VERSION] == latest_version
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: version},
+        blocking=False,
+    )
+
+    assert len(mock_smlight_client.fw_update.mock_calls) == 1
+    firmware, idx = mock_smlight_client.fw_update.call_args.args
+    assert firmware.ver == version
+    assert idx == 0
+
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+    event_function(MOCK_FIRMWARE_DONE)
+
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = updated_info
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_INSTALLED_VERSION] == version
+    assert state.attributes[ATTR_LATEST_VERSION] == latest_version
+
+
+@pytest.mark.parametrize(
+    ("version", "translation_key"),
+    [
+        pytest.param("v9.9.9", "firmware_version_not_found", id="not_in_catalog"),
+        pytest.param("", "firmware_version_not_found", id="empty"),
+        pytest.param(
+            "v2.3.6", "firmware_version_already_installed", id="already_installed"
+        ),
+    ],
+)
+async def test_update_firmware_specific_version_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    version: str,
+    translation_key: str,
+) -> None:
+    """Test a version that cannot be installed is refused before flashing."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.mock_title_core_firmware", ATTR_VERSION: version},
+            blocking=True,
+        )
+
+    mock_smlight_client.fw_update.assert_not_called()
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key

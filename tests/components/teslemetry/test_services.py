@@ -8,6 +8,7 @@ from aiopowerwall import (
     PowerwallConnectionError,
     PowerwallError,
     PowerwallNotSupportedError,
+    PowerwallProtocolError,
 )
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -642,9 +643,9 @@ async def test_local_battery_services(
             id="out_of_range",
         ),
         pytest.param(
-            PowerwallConnectionError("unreachable"),
+            PowerwallProtocolError("malformed response"),
             "local_command_failed",
-            id="connection_error",
+            id="protocol_error",
         ),
     ],
 )
@@ -657,7 +658,7 @@ async def test_local_battery_services_errors(
     error: PowerwallError,
     translation_key: str,
 ) -> None:
-    """Test the local battery services translate gateway errors."""
+    """Test the local battery services translate gateway errors the cloud is not retried for."""
     entry = await _setup_site(hass, [PAIRED_SITE])
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(SITE_ID)), entry.entry_id
@@ -666,6 +667,9 @@ async def test_local_battery_services_errors(
 
     with (
         patch(f"aiopowerwall.PowerwallClient.{method}", side_effect=error),
+        patch(
+            f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}"
+        ) as mock_cloud,
         pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
@@ -676,6 +680,7 @@ async def test_local_battery_services_errors(
         )
     assert exc_info.value.translation_key == translation_key
     assert not exc_info.value.translation_placeholders
+    mock_cloud.assert_not_called()
 
 
 async def test_dispatch_battery_power_out_of_range_message(
@@ -716,6 +721,59 @@ async def test_dispatch_battery_power_out_of_range_message(
 
 
 @pytest.mark.parametrize(("service", "data", "method"), LOCAL_BATTERY_SERVICES)
+async def test_local_battery_services_unreachable_gateway(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+    data: dict[str, int],
+    method: str,
+) -> None:
+    """Test the energy site router sends the command to the cloud when the gateway is unreachable."""
+    entry = await _setup_site(hass, [PAIRED_SITE])
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(SITE_ID)), entry.entry_id
+    )
+    assert device
+
+    with (
+        patch(
+            f"aiopowerwall.PowerwallClient.{method}",
+            side_effect=PowerwallConnectionError("unreachable"),
+        ) as mock_local,
+        patch(
+            f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}",
+            return_value=COMMAND_OK,
+        ) as mock_cloud,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CONF_DEVICE_ID: device.id, **data},
+            blocking=True,
+        )
+    mock_local.assert_awaited_once()
+    mock_cloud.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "method", "expected_args"),
+    [
+        pytest.param(
+            SERVICE_DISPATCH_BATTERY_POWER,
+            {ATTR_POWER: -5000, ATTR_DURATION: 1800},
+            "dispatch_battery_power",
+            (-5000, 1800),
+            id="dispatch_battery_power",
+        ),
+        pytest.param(
+            SERVICE_RESUME_BATTERY_OPERATION,
+            {},
+            "resume_battery_operation",
+            (),
+            id="resume_battery_operation",
+        ),
+    ],
+)
 @pytest.mark.parametrize(
     "subentries",
     [
@@ -733,15 +791,16 @@ async def test_dispatch_battery_power_out_of_range_message(
         ),
     ],
 )
-async def test_local_battery_services_not_paired(
+async def test_battery_services_cloud(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service: str,
     data: dict[str, int],
     method: str,
+    expected_args: tuple[int, ...],
     subentries: list[ConfigSubentryData],
 ) -> None:
-    """Test the local battery services reject a site without a local gateway."""
+    """Test the battery services call the cloud for a site without a local gateway."""
     entry = await _setup_site(hass, subentries)
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, str(SITE_ID)), entry.entry_id
@@ -749,8 +808,11 @@ async def test_local_battery_services_not_paired(
     assert device
 
     with (
-        patch(f"aiopowerwall.PowerwallClient.{method}") as mock_method,
-        pytest.raises(ServiceValidationError) as exc_info,
+        patch(
+            f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}",
+            return_value=COMMAND_OK,
+        ) as mock_method,
+        patch(f"aiopowerwall.PowerwallClient.{method}") as mock_local,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -758,8 +820,8 @@ async def test_local_battery_services_not_paired(
             {CONF_DEVICE_ID: device.id, **data},
             blocking=True,
         )
-    assert exc_info.value.translation_key == "no_local_powerwall"
-    mock_method.assert_not_called()
+    mock_method.assert_awaited_once_with(*expected_args)
+    mock_local.assert_not_called()
 
 
 @pytest.mark.parametrize(

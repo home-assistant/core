@@ -430,6 +430,36 @@ async def test_device_attr(
     assert info.rate_limit is None
 
 
+async def test_device_attr_private_attributes_blocked(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that device_attr does not expose private or dunder attributes."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="test",
+    )
+
+    for attr_name in ("_cache", "_config_entries", "_pending_move", "__dict__"):
+        info = render_to_info(
+            hass, f"{{{{ device_attr('{device_entry.id}', '{attr_name}') }}}}"
+        )
+        assert_result_info(info, None)
+
+        info = render_to_info(
+            hass,
+            f"{{{{ is_device_attr('{device_entry.id}', '{attr_name}', None) }}}}",
+        )
+        assert_result_info(info, True)
+
+    # Public attributes are still readable.
+    info = render_to_info(hass, f"{{{{ device_attr('{device_entry.id}', 'model') }}}}")
+    assert_result_info(info, "test")
+
+
 async def test_device_functions_with_child_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

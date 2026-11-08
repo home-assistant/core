@@ -63,6 +63,7 @@ class WAQIDataUpdateCoordinator(DataUpdateCoordinator[WAQIAirQuality]):
                 DOMAIN,
                 issue_id,
                 config_entry_id=self.config_entry.entry_id,
+                config_subentry_id=self.subentry.subentry_id,
                 is_fixable=True,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="station_not_found",

@@ -26,7 +26,7 @@ from .entity import FlexitEntity
 class FlexitSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Flexit switch entity."""
 
-    is_on_fn: Callable[[FlexitBACnet], bool]
+    is_on_fn: Callable[[FlexitBACnet], bool | None]
     turn_on_fn: Callable[[FlexitBACnet], Awaitable[None]]
     turn_off_fn: Callable[[FlexitBACnet], Awaitable[None]]
 
@@ -87,7 +87,7 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return value of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 

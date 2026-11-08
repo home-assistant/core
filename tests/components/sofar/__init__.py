@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from modbus_connection import ModbusError
+from modbus_connection import IllegalDataAddressError
 from modbus_connection.mock import MockModbusUnit
 
 from homeassistant.components.sofar.const import (
@@ -101,7 +101,7 @@ def deny_charge_cutoff(unit: MockModbusUnit) -> None:
 
 def refuse_battery_config_mask(unit: MockModbusUnit) -> None:
     """Seed a model that publishes no battery config mask."""
-    unit.fail_read(0x1040, ModbusError("illegal data address"))
+    unit.fail_read(0x1040, IllegalDataAddressError())
 
 
 def declare_pv_in_masks(unit: MockModbusUnit) -> None:
@@ -116,7 +116,7 @@ def declare_pv_in_masks(unit: MockModbusUnit) -> None:
 def seed_hybrid_inverter(
     unit: MockModbusUnit, serial: str = MOCK_HYBRID_SERIAL
 ) -> None:
-    """Seed a hybrid inverter with battery packs 1 and 3 wired, 2 absent."""
+    """Seed a hybrid inverter with battery strings 1 and 3 wired, 2 absent."""
     _seed_common(unit, serial)
     unit.holding[0x0604] = 520  # battery_voltage_1 -> 52.0 V
     unit.holding[0x0608] = 87  # battery_capacity_1 -> 87%

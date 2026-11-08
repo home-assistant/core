@@ -16,7 +16,7 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE
+from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -28,7 +28,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -75,7 +75,7 @@ SCRIPT_FIELDS = (
     CONF_TRIGGER_ACTION,
 )
 
-DEFAULT_NAME = "Template Alarm Control Panel"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.ALARM_CONTROL_PANEL]
 
 ALARM_CONTROL_PANEL_COMMON_SCHEMA = probatio.Schema(
     {
