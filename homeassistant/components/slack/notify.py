@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_ICON, CONF_PATH
+from homeassistant.const import CONF_ICON, CONF_PATH, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
@@ -307,7 +307,7 @@ class SlackNotificationService(BaseNotificationService):
                 targets,
                 message,
                 title,
-                username=data.get(ATTR_USERNAME, self._config.get(ATTR_USERNAME)),
+                username=data.get(ATTR_USERNAME, self._config.get(CONF_USERNAME)),
                 icon=data.get(ATTR_ICON, self._config.get(CONF_ICON)),
                 thread_ts=data.get(ATTR_THREAD_TS),
                 blocks=blocks,
