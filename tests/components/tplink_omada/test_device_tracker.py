@@ -5,9 +5,14 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.clients import OmadaConnectedClient
+from tplink_omada_client.devices import OmadaListDevice
 
 from homeassistant.components.tplink_omada.const import (
     CONF_SHOW_ONLY_ADOPTED_DEVICES,
@@ -76,11 +81,23 @@ async def test_device_scanner_created(
     assert entity == snapshot
 
 
+@pytest.mark.parametrize(
+    ("identifier_domain", "has_disabled_entity", "device_retained"),
+    [
+        pytest.param("esphome", False, False, id="client-only"),
+        pytest.param(DOMAIN, False, True, id="omada-identifier"),
+        pytest.param("esphome", True, True, id="disabled-entity"),
+    ],
+)
 async def test_adopted_devices_only_detaches_client_tracker(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_omada_clients_only_site_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    identifier_domain: str,
+    has_disabled_entity: bool,
+    device_retained: bool,
 ) -> None:
     """Keep the tracker settings while removing its client device."""
     entity_id = "device_tracker.banana"
@@ -88,9 +105,24 @@ async def test_adopted_devices_only_detaches_client_tracker(
     assert tracker is not None
     device_id = tracker.device_id
     assert device_id is not None
+    identifier = "shared-hardware"
+    if identifier_domain == DOMAIN:
+        devices = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+        ap = OmadaListDevice({**devices[0], "type": "ap"})
+        identifier = ap.mac
+        mock_omada_clients_only_site_client.get_devices.return_value = [ap]
     device_registry.async_update_device(
-        device_id, new_identifiers={("esphome", "shared-hardware")}
+        device_id, new_identifiers={(identifier_domain, identifier)}
     )
+    if has_disabled_entity:
+        entity_registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            "other_entity",
+            config_entry=init_integration,
+            device_id=device_id,
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
 
     result = await hass.config_entries.options.async_init(init_integration.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -103,7 +135,7 @@ async def test_adopted_devices_only_detaches_client_tracker(
     tracker = entity_registry.async_get(entity_id)
     assert tracker is not None
     assert tracker.device_id is None
-    assert device_registry.async_get(device_id) is None
+    assert (device_registry.async_get(device_id) is not None) is device_retained
 
     result = await hass.config_entries.options.async_init(init_integration.entry_id)
     assert result["type"] is FlowResultType.FORM

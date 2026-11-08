@@ -160,13 +160,13 @@
   "options": {
     "step": {
       "init": {
-        "title": "Omada device tracking",
         "data": {
           "show_only_adopted_devices": "Exclude Wi-Fi clients"
         },
         "data_description": {
           "show_only_adopted_devices": "Stop tracking Wi-Fi clients for this site. Automations using their presence will lose updates while this is enabled."
-        }
+        },
+        "title": "Omada device tracking"
       }
     }
   },
