@@ -27,7 +27,7 @@ from homeassistant.components.enphase_envoy.const import (
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.enphase_envoy.sensor import aggregate_acb_sleep_state
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -2058,3 +2058,74 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
     for name in PHASE_NAMES:
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
         assert entity_state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_generator_data(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test enphase_envoy inverter entities values."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    sn = mock_envoy.serial_number
+    entity_base = f"{Platform.SENSOR}.generator_{sn}"
+
+    GENERATOR_ITEMS = (
+        ("admin_state", "admin_state"),
+        ("operating_state", "oper_state"),
+        ("start_battery_level", "start_soc"),
+        ("stop_battery_level", "stop_soc"),
+    )
+    GENERATOR_CONFIG_ITEMS = (
+        ("nameplate_rating", "name_plate_rating_wat"),
+        ("maximum_continuous_current", "max_cont_gen_amps"),
+        ("start_method", "start_method"),
+        ("warm_up_time", "warm_up_mins"),
+        ("cool_down_time", "cool_down_mins"),
+        ("generator_type", "gen_type"),
+    )
+    GENERATOR_MODE_ITEMS = (("requested_mode", "gen_cmd"),)
+
+    for entity, item in GENERATOR_ITEMS:
+        assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
+        assert entity_state.state == str(getattr(mock_envoy.data.generator, item))
+
+    for entity, item in GENERATOR_CONFIG_ITEMS:
+        assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
+        assert entity_state.state == str(
+            getattr(mock_envoy.data.generator_config, item)
+        )
+    for entity, item in GENERATOR_MODE_ITEMS:
+        assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
+        assert entity_state.state == str(getattr(mock_envoy.data.generator_mode, item))
+
+    mock_envoy.data.generator = None
+    mock_envoy.data.generator_config = None
+    mock_envoy.data.generator_mode = None
+
+    mock_envoy.data.raw = {"changed": True}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity, _item in GENERATOR_ITEMS:
+        assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
+        assert entity_state.state == STATE_UNAVAILABLE
+
+    for entity, _item in GENERATOR_CONFIG_ITEMS:
+        assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
+        assert entity_state.state == STATE_UNAVAILABLE
+    for entity, _item in GENERATOR_MODE_ITEMS:
+        assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
+        assert entity_state.state == STATE_UNAVAILABLE

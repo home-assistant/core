@@ -527,6 +527,43 @@ async def test_dry_contact_relay_via_device(
     assert relay_device.via_device_id == enpower_device.id
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy", "has_generator"),
+    [("envoy_metered_batt_relay", True), ("envoy", False)],
+    indirect=["mock_envoy"],
+)
+async def test_generator_device(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    has_generator: bool,
+) -> None:
+    """Test the standby generator device is created and can not be removed."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, config_entry)
+
+    envoy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234"), config_entry.entry_id
+    )
+    assert envoy_device is not None
+    generator_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234_generator"), config_entry.entry_id
+    )
+    if has_generator:
+        assert generator_device is not None
+        assert generator_device.manufacturer == "Generac"
+        assert generator_device.via_device_id == envoy_device.id
+    else:
+        assert generator_device is None
+
+    if has_generator:
+        hass_client = await hass_ws_client(hass)
+        response = await hass_client.remove_device(generator_device.id)
+        assert not response["success"]
+
+
 @pytest.mark.parametrize("mock_envoy", ["envoy_acb_batt"], indirect=["mock_envoy"])
 async def test_remove_config_entry_device_acb(
     hass: HomeAssistant,
