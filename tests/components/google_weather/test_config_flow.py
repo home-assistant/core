@@ -959,6 +959,7 @@ async def test_subentry_reconfigure_entry_setup_failed(
         CONF_LATITUDE: 30.1,
         CONF_LONGITUDE: 40.1,
     }
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_subentry_flow_entry_disabled(
@@ -997,3 +998,20 @@ async def test_subentry_flow_entry_not_loaded(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "location"
+
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(entry.subentries) == 2

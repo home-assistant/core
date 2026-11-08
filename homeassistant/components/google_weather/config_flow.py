@@ -278,11 +278,23 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             if await _validate_input(user_input, api, errors, description_placeholders):
                 if self._is_new:
-                    return self.async_create_entry(
+                    result = self.async_create_entry(
                         title=user_input[CONF_NAME],
                         data=user_input[CONF_LOCATION],
                     )
-                return self.async_update_and_abort(
+                    # The reload listener is only installed once setup succeeds,
+                    # so non-loaded entries need an explicit reload.
+                    if not entry.update_listeners:
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                    return result
+                if entry.update_listeners:
+                    return self.async_update_and_abort(
+                        entry,
+                        self._get_reconfigure_subentry(),
+                        title=user_input[CONF_NAME],
+                        data=user_input[CONF_LOCATION],
+                    )
+                return self.async_update_reload_and_abort(
                     entry,
                     self._get_reconfigure_subentry(),
                     title=user_input[CONF_NAME],
