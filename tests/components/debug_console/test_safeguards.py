@@ -5,7 +5,7 @@ import re
 from typing import Any
 
 import pytest
-from pytest_homeassistant.common import CLIENT_ID, MockUser
+from pytest_homeassistant.common import MockUser
 from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.debug_console.const import (
@@ -264,17 +264,14 @@ async def test_logging_property_evaluation(
 async def test_warning_required_per_user(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
-    hass_ws_client: WebSocketGenerator,
+    frontend_ws_client: WebSocketGenerator,
     command: dict[str, Any],
 ) -> None:
     """Test every console command needs each user to accept the warning."""
     other_user = await hass.auth.async_create_user(
         "Other admin", group_ids=["system-admin"]
     )
-    refresh_token = await hass.auth.async_create_refresh_token(other_user, CLIENT_ID)
-    other_client = await hass_ws_client(
-        hass, hass.auth.async_create_access_token(refresh_token)
-    )
+    other_client = await frontend_ws_client(other_user)
     await _async_send(other_client, {"type": "debug_console/warning/accept"})
 
     msg = await _async_send(websocket_client, command)

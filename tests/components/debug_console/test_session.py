@@ -1,16 +1,29 @@
 """Tests for the sessions of the Debug console."""
 
+import asyncio
+from collections.abc import Awaitable, Callable
 import threading
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import CLIENT_ID, async_fire_time_changed
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
 from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.debug_console.const import SESSION_TIMEOUT
-from homeassistant.components.debug_console.session import DATA_SESSIONS
+from homeassistant.components.debug_console.execution import (
+    async_execute as async_execute_code,
+)
+from homeassistant.components.debug_console.session import (
+    DATA_LLM_SESSIONS,
+    DATA_MCP_SESSIONS,
+    DATA_SESSIONS,
+    SessionNotFoundError,
+    async_close_agent_sessions,
+    async_llm_session,
+    async_mcp_session,
+)
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -18,6 +31,8 @@ from homeassistant.core import HomeAssistant
 from . import SESSION_ID, async_execute, async_send
 
 WAIT_FOREVER = "import asyncio\nawait asyncio.Event().wait()"
+MCP_USER_ID = "first-user"
+MCP_CREDENTIAL_ID = "first-credential"
 
 
 async def _async_start_waiting_execution(client: MockHAClientWebSocket) -> None:
@@ -151,7 +166,9 @@ async def test_session_shared_by_connections(
 
 @pytest.mark.usefixtures("setup_integration")
 async def test_sessions_separated(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    frontend_ws_client: WebSocketGenerator,
 ) -> None:
     """Test sessions are separated by session ID and by user."""
     client = await hass_ws_client(hass)
@@ -167,10 +184,7 @@ async def test_sessions_separated(
     other_user = await hass.auth.async_create_user(
         "Other admin", group_ids=["system-admin"]
     )
-    refresh_token = await hass.auth.async_create_refresh_token(other_user, CLIENT_ID)
-    other_client = await hass_ws_client(
-        hass, hass.auth.async_create_access_token(refresh_token)
-    )
+    other_client = await frontend_ws_client(other_user)
     await other_client.send_json_auto_id({"type": "debug_console/warning/accept"})
     assert (await other_client.receive_json())["success"]
     result = await async_execute(other_client, "secret")
@@ -334,3 +348,269 @@ async def test_stopping_closes_sessions(
 
     assert not sessions
     assert execution.cancelled()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_mcp_namespace_persists(hass: HomeAssistant) -> None:
+    """Test an issued MCP handle resumes its namespace and print capture."""
+    async with async_mcp_session(hass, MCP_USER_ID, MCP_CREDENTIAL_ID) as first:
+        await async_execute_code(hass, first, "answer = 41")
+
+    async with async_mcp_session(
+        hass, MCP_USER_ID, MCP_CREDENTIAL_ID, first.session_id
+    ) as second:
+        assert second is first
+        assert second.namespace["hass"] is hass
+        result = await async_execute_code(hass, second, "print(answer)\nanswer + 1")
+
+    assert result == {
+        "logs": [[{"type": "number", "value": "41"}]],
+        "result": {"type": "number", "value": "42"},
+    }
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_mcp_omitting_handle_creates_new_session(hass: HomeAssistant) -> None:
+    """Test each omitted handle issues a distinct session even for one credential."""
+    async with async_mcp_session(hass, MCP_USER_ID, MCP_CREDENTIAL_ID) as first:
+        await async_execute_code(hass, first, "secret = 42")
+
+    async with async_mcp_session(hass, MCP_USER_ID, MCP_CREDENTIAL_ID) as second:
+        result = await async_execute_code(hass, second, "secret")
+
+    assert second is not first
+    assert second.session_id != first.session_id
+    assert len(first.session_id) == len(second.session_id) == 32
+    assert "NameError: name 'secret' is not defined" in result["error"]
+
+
+@pytest.mark.parametrize(
+    ("user_id", "credential_id"),
+    [
+        pytest.param("second-user", MCP_CREDENTIAL_ID, id="other-user"),
+        pytest.param(MCP_USER_ID, "second-credential", id="other-credential"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_mcp_foreign_handles_rejected(
+    hass: HomeAssistant, user_id: str, credential_id: str
+) -> None:
+    """Test foreign handle lookups neither create sessions nor refresh expiry."""
+    async with async_mcp_session(hass, MCP_USER_ID, MCP_CREDENTIAL_ID) as session:
+        await async_execute_code(hass, session, "secret = 42")
+    cancel_expiry = session.cancel_expiry
+
+    with pytest.raises(SessionNotFoundError):
+        async with async_mcp_session(hass, user_id, credential_id, session.session_id):
+            pytest.fail("A foreign handle resumed the session")
+
+    assert list(hass.data[DATA_MCP_SESSIONS].values()) == [session]
+    assert session.cancel_expiry is cancel_expiry
+    assert session.namespace["secret"] == 42
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_mcp_unknown_handle_does_not_create_session(hass: HomeAssistant) -> None:
+    """Test arbitrary caller handles cannot create a namespace."""
+    with pytest.raises(SessionNotFoundError):
+        async with async_mcp_session(
+            hass, MCP_USER_ID, MCP_CREDENTIAL_ID, "unknown-handle"
+        ):
+            pytest.fail("An unknown handle created a session")
+
+    assert not hass.data[DATA_MCP_SESSIONS]
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_agent_registries_isolated(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test browser, MCP and local agent namespaces remain separate."""
+    await async_execute(websocket_client, "browser_secret = 42")
+
+    async with async_mcp_session(
+        hass, hass_admin_user.id, MCP_CREDENTIAL_ID
+    ) as mcp_session:
+        await async_execute_code(hass, mcp_session, "agent_secret = 41")
+        result = await async_execute_code(hass, mcp_session, "browser_secret")
+
+    assert "NameError: name 'browser_secret' is not defined" in result["error"]
+    result = await async_execute(websocket_client, "agent_secret")
+    assert "NameError: name 'agent_secret' is not defined" in result["error"]
+
+    async with async_llm_session(
+        hass, hass_admin_user.id, "test", "agent", mcp_session.session_id
+    ) as local_session:
+        result = await async_execute_code(hass, local_session, "agent_secret")
+
+    assert "NameError: name 'agent_secret' is not defined" in result["error"]
+    assert local_session is not mcp_session
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_mcp_idle_session_expires(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test idle expiry removes a handle and subsequent use cannot recreate it."""
+    async with async_mcp_session(hass, MCP_USER_ID, MCP_CREDENTIAL_ID) as session:
+        await async_execute_code(hass, session, "answer = 42")
+
+    freezer.tick(SESSION_TIMEOUT / 2)
+    async_fire_time_changed(hass)
+    async with async_mcp_session(
+        hass, MCP_USER_ID, MCP_CREDENTIAL_ID, session.session_id
+    ) as resumed:
+        assert resumed is session
+
+    freezer.tick(SESSION_TIMEOUT / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        hass.data[DATA_MCP_SESSIONS][MCP_USER_ID, MCP_CREDENTIAL_ID, session.session_id]
+        is session
+    )
+
+    freezer.tick(SESSION_TIMEOUT / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert not hass.data[DATA_MCP_SESSIONS]
+    assert not session.namespace
+
+    with pytest.raises(SessionNotFoundError):
+        async with async_mcp_session(
+            hass, MCP_USER_ID, MCP_CREDENTIAL_ID, session.session_id
+        ):
+            pytest.fail("An expired handle recreated its session")
+
+    assert not hass.data[DATA_MCP_SESSIONS]
+
+
+async def _async_mcp_waiting_execution(
+    hass: HomeAssistant,
+    started: asyncio.Event,
+    release: asyncio.Event,
+    cleaned_up: list[bool],
+) -> None:
+    """Run code until it is released or its session closes."""
+    async with async_mcp_session(hass, MCP_USER_ID, MCP_CREDENTIAL_ID) as session:
+        session.namespace.update(
+            started=started, release=release, cleaned_up=cleaned_up
+        )
+        await async_execute_code(
+            hass,
+            session,
+            "import asyncio\n"
+            "try:\n"
+            "    started.set()\n"
+            "    await release.wait()\n"
+            "finally:\n"
+            "    await asyncio.sleep(0)\n"
+            "    cleaned_up.append(True)\n",
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_mcp_active_requests_do_not_expire(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test overlapping requests keep a session alive until the last one ends."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+    execution = asyncio.create_task(
+        _async_mcp_waiting_execution(hass, started, release, [])
+    )
+    await started.wait()
+    (session,) = hass.data[DATA_MCP_SESSIONS].values()
+
+    async with async_mcp_session(
+        hass, MCP_USER_ID, MCP_CREDENTIAL_ID, session.session_id
+    ) as concurrent:
+        assert concurrent is session
+
+    freezer.tick(SESSION_TIMEOUT * 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert list(hass.data[DATA_MCP_SESSIONS].values()) == [session]
+    assert session.cancel_expiry is None
+
+    release.set()
+    await execution
+    assert session.cancel_expiry is not None
+
+    freezer.tick(SESSION_TIMEOUT)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert not hass.data[DATA_MCP_SESSIONS]
+
+
+async def _async_close_user_agent_sessions(hass: HomeAssistant, user_id: str) -> None:
+    """Close the user's MCP and local agent sessions."""
+    async_close_agent_sessions(hass, user_id)
+
+
+async def _async_agent_shutdown(hass: HomeAssistant, _user_id: str) -> None:
+    """Stop Home Assistant's console sessions."""
+    await _async_stop(hass)
+
+
+@pytest.mark.parametrize(
+    "close_sessions",
+    [
+        pytest.param(_async_close_user_agent_sessions, id="user-removed"),
+        pytest.param(_async_agent_shutdown, id="shutdown"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_agent_closing_cancels_execution(
+    hass: HomeAssistant,
+    close_sessions: Callable[[HomeAssistant, str], Awaitable[None]],
+) -> None:
+    """Test closure clears both registries and lets cancelled code clean up."""
+    async with async_llm_session(
+        hass, MCP_USER_ID, "test", None, "conversation"
+    ) as local_session:
+        await async_execute_code(hass, local_session, "local_secret = 1")
+    started = asyncio.Event()
+    cleaned_up: list[bool] = []
+    execution = asyncio.create_task(
+        _async_mcp_waiting_execution(hass, started, asyncio.Event(), cleaned_up)
+    )
+    await started.wait()
+    (session,) = hass.data[DATA_MCP_SESSIONS].values()
+
+    await close_sessions(hass, MCP_USER_ID)
+    with pytest.raises(asyncio.CancelledError):
+        await execution
+    await hass.async_block_till_done()
+
+    assert cleaned_up == [True]
+    assert not hass.data[DATA_MCP_SESSIONS]
+    assert not hass.data[DATA_LLM_SESSIONS]
+    assert not session.namespace
+    assert not local_session.namespace
+    assert session.cancel_expiry is None
+    assert local_session.cancel_expiry is None
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_agent_closing_keeps_other_users_sessions(hass: HomeAssistant) -> None:
+    """Test removing one user leaves other users' sessions available."""
+    async with async_mcp_session(hass, MCP_USER_ID, MCP_CREDENTIAL_ID):
+        pass
+    async with async_mcp_session(hass, "second-user", MCP_CREDENTIAL_ID) as other:
+        await async_execute_code(hass, other, "answer = 42")
+    async with async_llm_session(hass, MCP_USER_ID, "test", None, "conversation"):
+        pass
+    async with async_llm_session(
+        hass, "second-user", "test", None, "conversation"
+    ) as other_local:
+        await async_execute_code(hass, other_local, "answer = 41")
+
+    async_close_agent_sessions(hass, MCP_USER_ID)
+
+    assert list(hass.data[DATA_MCP_SESSIONS].values()) == [other]
+    assert list(hass.data[DATA_LLM_SESSIONS].values()) == [other_local]
+    assert other.namespace["answer"] == 42
+    assert other_local.namespace["answer"] == 41

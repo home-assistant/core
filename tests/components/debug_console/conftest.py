@@ -1,18 +1,73 @@
 """Fixtures for the Debug console tests."""
 
-from typing import Any
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager, contextmanager
+from itertools import count
+from typing import Any, cast
 
+from aiohttp.test_utils import make_mocked_request
+from aiohttp.web import Request
 import pytest
-from pytest_homeassistant.common import MockUser
-from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
+from homeassistant.auth.models import RefreshToken
 from homeassistant.components.debug_console.const import (
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     WARNING_VERSION,
 )
+from homeassistant.components.http import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+    current_request,
+)
+from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+
+type MCPRequestScope = Callable[[RefreshToken], AbstractContextManager[Request]]
+
+
+@pytest.fixture
+async def mcp_refresh_token(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> RefreshToken:
+    """Return an actual credential for an external administrator client."""
+    return await hass.auth.async_create_refresh_token(
+        hass_admin_user, "https://agent.example/"
+    )
+
+
+@pytest.fixture
+def mcp_request_scope(hass: HomeAssistant) -> MCPRequestScope:
+    """Provide the authenticated request context that MCP passes to LLM tools."""
+
+    @contextmanager
+    def request_scope(token: RefreshToken) -> Generator[Request]:
+        request = make_mocked_request(
+            "POST",
+            "/api/mcp",
+            headers={
+                "Authorization": f"Bearer {hass.auth.async_create_access_token(token)}"
+            },
+        )
+        request[KEY_AUTHENTICATED] = True
+        request[KEY_HASS_USER] = token.user
+        request[KEY_HASS_REFRESH_TOKEN_ID] = token.id
+        scope_token = current_request.set(request)
+        try:
+            yield request
+        finally:
+            current_request.reset(scope_token)
+
+    return request_scope
 
 
 @pytest.fixture
@@ -36,10 +91,66 @@ async def setup_integration(
 
 
 @pytest.fixture
-async def websocket_client(
+def frontend_ws_client(
     hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> WebSocketGenerator:
+    """Create a signed-in frontend session with a same-origin browser token."""
+
+    async def create_client(user: MockUser) -> MockHAClientWebSocket:
+        client = await aiohttp_client(hass.http.app)
+        origin = str(client.make_url("/").origin())
+        hass.config.internal_url = origin
+        token = await hass.auth.async_create_refresh_token(user, f"{origin}/")
+        websocket = await client.ws_connect("/api/websocket", origin=origin)
+        assert (await websocket.receive_json())["type"] == "auth_required"
+        await websocket.send_json(
+            {"type": "auth", "access_token": hass.auth.async_create_access_token(token)}
+        )
+        assert (await websocket.receive_json())["type"] == "auth_ok"
+
+        message_ids = count(1)
+        wrapped = cast(MockHAClientWebSocket, websocket)
+        wrapped.client = client
+        wrapped.send_json_auto_id = lambda data: websocket.send_json(
+            {"id": next(message_ids), **data}
+        )
+        return wrapped
+
+    return create_client
+
+
+@pytest.fixture
+async def websocket_client(
     setup_integration: None,
-    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    frontend_ws_client: WebSocketGenerator,
 ) -> MockHAClientWebSocket:
-    """Create a websocket client, with the Debug console set up."""
-    return await hass_ws_client(hass)
+    """Create a frontend websocket client with the Debug console set up."""
+    return await frontend_ws_client(hass_admin_user)
+
+
+@pytest.fixture
+def mcp_read_only() -> bool:
+    """Return whether the MCP server exposes only read-only tools."""
+    return False
+
+
+@pytest.fixture
+async def setup_mcp_server(hass: HomeAssistant, mcp_read_only: bool) -> None:
+    """Expose the Debug console tools over MCP without granting consent."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    assert await async_setup_component(hass, "homeassistant", {})
+    entry = MockConfigEntry(
+        domain="mcp_server",
+        data={
+            "all_llm_apis": False,
+            CONF_LLM_HASS_API: [llm.LLM_API_HOME_ASSISTANT],
+            "require_admin": True,
+            "read_only": mcp_read_only,
+        },
+        minor_version=4,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
