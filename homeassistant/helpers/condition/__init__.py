@@ -699,6 +699,12 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
             if zone_entity_id := config.get(CONF_OPTIONS, {}).get(CONF_ZONE):
                 referenced.add(zone_entity_id)
 
+        if options := config.get(CONF_OPTIONS):
+            if entity_ids := options.get(CONF_ENTITY_ID):
+                referenced.update(
+                    [entity_ids] if isinstance(entity_ids, str) else entity_ids
+                )
+
         entity_ids = config.get(CONF_ENTITY_ID)
 
         if isinstance(entity_ids, str):
@@ -736,6 +742,12 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
             if (device_id := config.get(CONF_DEVICE_ID)) is not None:
                 referenced.add(device_id)
             continue
+
+        if options := config.get(CONF_OPTIONS):
+            if device_ids := options.get(CONF_DEVICE_ID):
+                referenced.update(
+                    [device_ids] if isinstance(device_ids, str) else device_ids
+                )
 
         if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
             referenced.update(target_devices)
