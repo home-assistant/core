@@ -393,6 +393,8 @@ async def test_reconfigure_flow(
         CONF_ACCESS_TOKEN: "new-access-token",
         CONF_REFRESH_TOKEN: "new-refresh-token",
     }
+    assert mock_engie_client.call_args.kwargs[CONF_ACCESS_TOKEN] == "new-access-token"
+    assert mock_engie_client.call_args.kwargs[CONF_REFRESH_TOKEN] == "new-refresh-token"
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
