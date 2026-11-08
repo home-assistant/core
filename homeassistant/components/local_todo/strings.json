@@ -53,7 +53,7 @@
           "sections": "Sections"
         },
         "data_description": {
-          "sections": "Sections (groups or categories) available for the items of this list, in display order. Removing a section leaves its items without a section."
+          "sections": "Sections (groups or categories) available for the items of this list, in display order. Removing a section leaves its items without a section: to keep its items, use \"Rename a section\" instead."
         },
         "description": "Define how the items of this to-do list can be grouped."
       }

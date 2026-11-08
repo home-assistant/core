@@ -68,7 +68,9 @@ TODO_ITEM_FIELDS = [
     ),
     TodoItemFieldDescription(
         service_field=TodoServiceArgument.SECTION,
-        validation=probatio.Any(probatio.All(cv.string, _empty_to_none), None),
+        validation=probatio.Any(
+            probatio.All(cv.string, str.strip, _empty_to_none), None
+        ),
         todo_item_field=ATTR_SECTION,
         required_feature=TodoListEntityFeature.SET_SECTION_ON_ITEM,
     ),

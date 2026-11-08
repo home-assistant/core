@@ -1494,3 +1494,34 @@ async def test_remove_section_entity_disabled(
 
     assert config_entry.options == {"sections": ["Grocery", "Household"]}
     assert await _stored_categories(hass, config_entry) == [[], ["Grocery"], []]
+
+
+LEGACY_CRLF_SECTIONS_ICS = (
+    "BEGIN:VCALENDAR\n"
+    "PRODID:-//homeassistant.io//local_todo 2.0//EN\n"
+    "VERSION:2.0\n"
+    "BEGIN:VTODO\n"
+    "DTSTAMP:20260205T183141Z\n"
+    "UID:apples\n"
+    "SEQUENCE:0\n"
+    "STATUS:NEEDS-ACTION\n"
+    "SUMMARY:Apples\n"
+    "CATEGORIES:Fresh produce\n"
+    "DESCRIPTION:Line 1\n\\n\n\\nLine 2\n"
+    "END:VTODO\n"
+    "END:VCALENDAR\n"
+)
+
+
+@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [LEGACY_CRLF_SECTIONS_ICS])
+async def test_remove_section_legacy_file_entry_not_loaded(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test sections can be removed from a malformed legacy file not loaded yet."""
+    config_entry.add_to_hass(hass)
+
+    await _remove_fresh_produce(hass, config_entry.entry_id)
+
+    assert config_entry.options == {"sections": ["Grocery", "Household"]}
+    assert await _stored_categories(hass, config_entry) == [[]]

@@ -8,7 +8,6 @@ from typing import override
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
-from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
 
@@ -26,7 +25,7 @@ from homeassistant.util import dt as dt_util
 
 from . import LocalTodoConfigEntry, LocalTodoData
 from .const import CONF_SECTIONS, CONF_TODO_LIST_NAME, DOMAIN
-from .store import LocalTodoListStore, change_sections
+from .store import LocalTodoListStore, change_sections, parse_calendar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,16 +64,6 @@ def _migrate_calendar(calendar: Calendar) -> bool:
     return migrated
 
 
-def _repair_legacy_crlf_newlines(content: str) -> str:
-    r"""Repair ICS content corrupted by CRLF newlines from ical <= 12.1.3.
-
-    In ical <= 12.1.3, TextEncoder escaped \n to \\n but left \r unescaped.
-    When read with Python's universal newlines mode (newline=None), any lone \r
-    before \\n was converted into \n\\n, breaking property line parsing.
-    """
-    return content.replace("\r\\n", "\\n").replace("\n\\n", "\\n").replace("\r", "")
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LocalTodoConfigEntry,
@@ -87,28 +76,19 @@ async def async_setup_entry(
     store = data.store
     ics = await store.async_load()
 
-    migrated = False
-    try:
-        with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
-            # calendar_from_ics will dynamically load packages
-            # the first time it is called, so we need to do it
-            # in a separate thread to avoid blocking the event loop
-            calendar: Calendar = await hass.async_add_import_executor_job(
-                IcsCalendarStream.calendar_from_ics, ics
-            )
-    except CalendarParseError:
-        # Attempt to repair malformed newlines from ical <= 12.1.3 CRLF bug
-        repaired_ics = _repair_legacy_crlf_newlines(ics)
-        if repaired_ics == ics:
-            raise
-        calendar = await hass.async_add_import_executor_job(
-            IcsCalendarStream.calendar_from_ics, repaired_ics
+    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+        # calendar_from_ics will dynamically load packages
+        # the first time it is called, so we need to do it
+        # in a separate thread to avoid blocking the event loop
+        calendar, repaired = await hass.async_add_import_executor_job(
+            parse_calendar, ics
         )
+    if repaired:
         _LOGGER.warning(
             "Repaired malformed iCalendar file for to-do list %s",
             name,
         )
-        migrated = True
+    migrated = repaired
 
     if _migrate_calendar(calendar):
         migrated = True

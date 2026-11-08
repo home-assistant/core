@@ -753,7 +753,12 @@ async def test_update_todo_item_extended_fields(
         ),
         (
             [TodoItem(uid="1", summary="Summary", section="Grocery")],
-            {ATTR_SECTION: ""},
+            {ATTR_SECTION: " Fresh produce "},
+            TodoItem(uid="1", summary="Summary", section="Fresh produce"),
+        ),
+        (
+            [TodoItem(uid="1", summary="Summary", section="Grocery")],
+            {ATTR_SECTION: "  "},
             TodoItem(uid="1", summary="Summary"),
         ),
     ],
@@ -767,7 +772,8 @@ async def test_update_todo_item_extended_fields(
         "clear_due_date_time",
         "overwrite_section",
         "clear_section",
-        "clear_section_with_empty_string",
+        "strip_section",
+        "clear_section_with_blank_string",
     ],
 )
 async def test_update_todo_item_extended_fields_overwrite_existing_values(

@@ -6,9 +6,31 @@ from pathlib import Path
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.os_error import os_write_error
+
+
+def _repair_legacy_crlf_newlines(content: str) -> str:
+    r"""Repair ICS content corrupted by CRLF newlines from ical <= 12.1.3.
+
+    In ical <= 12.1.3, TextEncoder escaped \n to \\n but left \r unescaped.
+    When read with Python's universal newlines mode (newline=None), any lone \r
+    before \\n was converted into \n\\n, breaking property line parsing.
+    """
+    return content.replace("\r\\n", "\\n").replace("\n\\n", "\\n").replace("\r", "")
+
+
+def parse_calendar(ics: str) -> tuple[Calendar, bool]:
+    """Parse a calendar, and tell whether malformed newlines had to be repaired."""
+    try:
+        return IcsCalendarStream.calendar_from_ics(ics), False
+    except CalendarParseError:
+        repaired_ics = _repair_legacy_crlf_newlines(ics)
+        if repaired_ics == ics:
+            raise
+        return IcsCalendarStream.calendar_from_ics(repaired_ics), True
 
 
 def change_sections(calendar: Calendar, changes: Mapping[str, str | None]) -> bool:
@@ -68,7 +90,7 @@ class LocalTodoListStore:
         """Rename sections of the items, or clear them when mapped to None."""
         if not (ics := self._load()):
             return
-        calendar = IcsCalendarStream.calendar_from_ics(ics)
+        calendar, _ = parse_calendar(ics)
         if change_sections(calendar, changes):
             try:
                 self._store(IcsCalendarStream.calendar_to_ics(calendar))
