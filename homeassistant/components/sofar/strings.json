@@ -1052,6 +1052,9 @@
     }
   },
   "exceptions": {
+    "charge_cutoff_unsupported": {
+      "message": "{title} does not support setting the charge cut-off."
+    },
     "invalid_action_value": {
       "message": "The provided value is not valid for this action."
     },
@@ -1107,6 +1110,32 @@
         }
       },
       "name": "Set active power limit"
+    },
+    "set_battery_cutoffs": {
+      "description": "Sets the battery's cut-off levels, as shown on the SofarCloud app's battery parameters page. The inverter stores each change, so avoid calling this often. Only for inverters with battery storage.",
+      "fields": {
+        "charge_cutoff_soc": {
+          "description": "The charge level at which the battery stops charging. Left unchanged when omitted. Not every inverter supports it.",
+          "name": "Charge cut-off state of charge"
+        },
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "off_grid_discharge_cutoff_soc": {
+          "description": "The charge level at which the battery stops discharging during a grid outage. At most the on-grid cut-off.",
+          "name": "Off-grid discharge cut-off state of charge"
+        },
+        "off_grid_recovery_soc": {
+          "description": "The charge level the battery recharges to before it discharges off-grid again. At least 5% above the off-grid cut-off.",
+          "name": "Off-grid discharge recovery state of charge"
+        },
+        "on_grid_discharge_cutoff_soc": {
+          "description": "The charge level at which the battery stops discharging while the grid is up.",
+          "name": "On-grid discharge cut-off state of charge"
+        }
+      },
+      "name": "Set battery cut-offs"
     },
     "set_feed_in_limit": {
       "description": "Limits how much power the inverter exports to the grid.",

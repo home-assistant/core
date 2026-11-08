@@ -19,6 +19,7 @@ from .const import DOMAIN
 from .coordinator import SofarConfigEntry
 
 SERVICE_SET_ACTIVE_POWER_LIMIT = "set_active_power_limit"
+SERVICE_SET_BATTERY_CUTOFFS = "set_battery_cutoffs"
 SERVICE_SET_FEED_IN_LIMIT = "set_feed_in_limit"
 SERVICE_SET_PASSIVE_MODE_POWER = "set_passive_mode_power"
 SERVICE_SET_PASSIVE_MODE_TIMEOUT = "set_passive_mode_timeout"
@@ -26,10 +27,14 @@ SERVICE_SET_PASSIVE_MODE_TIMEOUT = "set_passive_mode_timeout"
 ATTR_ACTION = "action"
 ATTR_BATTERY_POWER_MAX = "battery_power_max"
 ATTR_BATTERY_POWER_MIN = "battery_power_min"
+ATTR_CHARGE_CUTOFF_SOC = "charge_cutoff_soc"
 ATTR_ENABLED = "enabled"
 ATTR_GRID_POWER = "grid_power"
 ATTR_LIMIT = "limit"
 ATTR_MAX_POWER = "max_power"
+ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC = "off_grid_discharge_cutoff_soc"
+ATTR_OFF_GRID_RECOVERY_SOC = "off_grid_recovery_soc"
+ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC = "on_grid_discharge_cutoff_soc"
 ATTR_TIMEOUT = "timeout"
 
 _ENTRY_SCHEMA = probatio.Schema({probatio.Required(ATTR_CONFIG_ENTRY_ID): str})
@@ -75,6 +80,23 @@ SET_PASSIVE_MODE_POWER_SCHEMA = _ENTRY_SCHEMA.extend(
         probatio.Required(ATTR_GRID_POWER): _POWER_RANGE,
         probatio.Required(ATTR_BATTERY_POWER_MIN): _POWER_RANGE,
         probatio.Required(ATTR_BATTERY_POWER_MAX): _POWER_RANGE,
+    }
+)
+
+SET_BATTERY_CUTOFFS_SCHEMA = _ENTRY_SCHEMA.extend(
+    {
+        probatio.Required(ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC): probatio.All(
+            int, probatio.Range(min=10, max=100)
+        ),
+        probatio.Required(ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC): probatio.All(
+            int, probatio.Range(min=10, max=30)
+        ),
+        probatio.Required(ATTR_OFF_GRID_RECOVERY_SOC): probatio.All(
+            int, probatio.Range(min=15, max=100)
+        ),
+        probatio.Optional(ATTR_CHARGE_CUTOFF_SOC): probatio.All(
+            int, probatio.Range(min=60, max=100)
+        ),
     }
 )
 
@@ -165,6 +187,27 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
         )
 
+    async def _handle_set_battery_cutoffs(call: ServiceCall) -> None:
+        entry = _get_entry(hass, call, "battery_config")
+        if (
+            ATTR_CHARGE_CUTOFF_SOC in call.data
+            and "battery_charge_cutoff" not in entry.runtime_data.served_components
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="charge_cutoff_unsupported",
+                translation_placeholders={"title": entry.title},
+            )
+        await _write(
+            entry,
+            entry.runtime_data.readings.device.async_write_battery_cutoffs(
+                call.data[ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC],
+                call.data[ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC],
+                call.data[ATTR_OFF_GRID_RECOVERY_SOC],
+                call.data.get(ATTR_CHARGE_CUTOFF_SOC),
+            ),
+        )
+
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -192,4 +235,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_PASSIVE_MODE_POWER,
         _handle_set_passive_mode_power,
         schema=SET_PASSIVE_MODE_POWER_SCHEMA,
+    )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_BATTERY_CUTOFFS,
+        _handle_set_battery_cutoffs,
+        schema=SET_BATTERY_CUTOFFS_SCHEMA,
     )

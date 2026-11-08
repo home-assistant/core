@@ -1,24 +1,31 @@
 """Tests for the Sofar integration services."""
 
+from collections.abc import Callable
 from unittest.mock import patch
 
 from modbus_connection import ModbusError
-from modbus_connection.mock import MockModbusConnection
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit, WriteEvent
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from sofar_modbus.modern import BatConfigCellType, BatConfigWriteStatus
 
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.components.sofar.services import (
     ATTR_ACTION,
     ATTR_BATTERY_POWER_MAX,
     ATTR_BATTERY_POWER_MIN,
+    ATTR_CHARGE_CUTOFF_SOC,
     ATTR_ENABLED,
     ATTR_GRID_POWER,
     ATTR_LIMIT,
     ATTR_MAX_POWER,
+    ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC,
+    ATTR_OFF_GRID_RECOVERY_SOC,
+    ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC,
     ATTR_TIMEOUT,
     SERVICE_SET_ACTIVE_POWER_LIMIT,
+    SERVICE_SET_BATTERY_CUTOFFS,
     SERVICE_SET_FEED_IN_LIMIT,
     SERVICE_SET_PASSIVE_MODE_POWER,
     SERVICE_SET_PASSIVE_MODE_TIMEOUT,
@@ -31,6 +38,7 @@ from . import (
     MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
+    deny_charge_cutoff,
     seed_hybrid_inverter,
 )
 
@@ -43,14 +51,27 @@ PASSIVE_TIMEOUT_ACTION_REGISTER = 0x1185
 PASSIVE_GRID_POWER_REGISTER = 0x1187
 PASSIVE_BATTERY_POWER_MIN_REGISTER = 0x1189
 PASSIVE_BATTERY_POWER_MAX_REGISTER = 0x118B
+DEPTH_OF_DISCHARGE_REGISTER = 0x104D
+END_OF_DISCHARGE_REGISTER = 0x104E
+CELL_TYPE_REGISTER = 0x1051
+EPS_BUFFER_REGISTER = 0x1052
+BATTERY_CONFIG_STATUS_REGISTER = 0x1053
+CHARGE_CUTOFF_REGISTER = 0x105B
+
+DISCHARGE_CUTOFFS = {
+    ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC: 30,
+    ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC: 10,
+    ATTR_OFF_GRID_RECOVERY_SOC: 15,
+}
 
 
 async def _setup_hybrid(
-    hass: HomeAssistant,
+    hass: HomeAssistant, *seeds: Callable[[MockModbusUnit], None]
 ) -> tuple[MockConfigEntry, MockModbusConnection]:
     """Set up a hybrid inverter, which serves the passive-mode registers."""
     connection = MockModbusConnection()
-    seed_hybrid_inverter(connection.for_unit(1))
+    for seed in (seed_hybrid_inverter, *seeds):
+        seed(connection.for_unit(1))
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
@@ -159,6 +180,72 @@ async def test_set_passive_mode_power(hass: HomeAssistant) -> None:
     assert holding[PASSIVE_BATTERY_POWER_MAX_REGISTER + 1] == 2000
 
 
+def _commit_battery_config(unit: MockModbusUnit) -> None:
+    """Make a lithium battery's config writes commit at once."""
+    unit.holding[CELL_TYPE_REGISTER] = BatConfigCellType.LITHIUM_IRON_PHOSPHATE
+    unit.on_write(
+        lambda _: unit.holding.__setitem__(
+            BATTERY_CONFIG_STATUS_REGISTER, BatConfigWriteStatus.SUCCESS
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    ("data", "charge_cutoff"),
+    [
+        pytest.param({}, 95, id="discharge_only"),
+        pytest.param({ATTR_CHARGE_CUTOFF_SOC: 90}, 90, id="with_charge_cutoff"),
+    ],
+)
+async def test_set_battery_cutoffs(
+    hass: HomeAssistant, data: dict[str, int], charge_cutoff: int
+) -> None:
+    """Test the app's cut-offs reach the battery config registers."""
+    entry, connection = await _setup_hybrid(hass, _commit_battery_config)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_BATTERY_CUTOFFS,
+        {ATTR_CONFIG_ENTRY_ID: entry.entry_id, **DISCHARGE_CUTOFFS, **data},
+        blocking=True,
+    )
+
+    # The inverter stores each cut-off as its distance from 100% or 0%.
+    assert [
+        connection.for_unit(1).holding[address]
+        for address in (
+            DEPTH_OF_DISCHARGE_REGISTER,
+            END_OF_DISCHARGE_REGISTER,
+            EPS_BUFFER_REGISTER,
+            CHARGE_CUTOFF_REGISTER,
+        )
+    ] == [70, 90, 5, charge_cutoff]
+
+
+async def test_charge_cutoff_rejected_when_not_served(hass: HomeAssistant) -> None:
+    """Test a charge cut-off is refused when the mask leaves out 0x105B."""
+    entry, connection = await _setup_hybrid(
+        hass, deny_charge_cutoff, _commit_battery_config
+    )
+    writes: list[WriteEvent] = []
+    connection.for_unit(1).on_write(writes.append)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_BATTERY_CUTOFFS,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                **DISCHARGE_CUTOFFS,
+                ATTR_CHARGE_CUTOFF_SOC: 90,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "charge_cutoff_unsupported"
+    assert writes == []
+
+
 @pytest.mark.parametrize(
     ("service", "data"),
     [
@@ -174,6 +261,7 @@ async def test_set_passive_mode_power(hass: HomeAssistant) -> None:
                 ATTR_BATTERY_POWER_MAX: 0,
             },
         ),
+        (SERVICE_SET_BATTERY_CUTOFFS, DISCHARGE_CUTOFFS),
     ],
 )
 async def test_action_rejected_when_unsupported(
@@ -182,7 +270,7 @@ async def test_action_rejected_when_unsupported(
     service: str,
     data: dict[str, int | str],
 ) -> None:
-    """Test a passive-mode action is refused by a PV-only inverter."""
+    """Test a battery action is refused by a PV-only inverter."""
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
@@ -280,6 +368,26 @@ async def test_write_failure_is_a_home_assistant_error(
                 ATTR_BATTERY_POWER_MAX: 0,
             },
             id="passive_grid_power",
+        ),
+        pytest.param(
+            SERVICE_SET_BATTERY_CUTOFFS,
+            {**DISCHARGE_CUTOFFS, ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC: 101},
+            id="on_grid_discharge_cutoff",
+        ),
+        pytest.param(
+            SERVICE_SET_BATTERY_CUTOFFS,
+            {**DISCHARGE_CUTOFFS, ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC: 31},
+            id="off_grid_discharge_cutoff",
+        ),
+        pytest.param(
+            SERVICE_SET_BATTERY_CUTOFFS,
+            {**DISCHARGE_CUTOFFS, ATTR_OFF_GRID_RECOVERY_SOC: 14},
+            id="off_grid_recovery",
+        ),
+        pytest.param(
+            SERVICE_SET_BATTERY_CUTOFFS,
+            {**DISCHARGE_CUTOFFS, ATTR_CHARGE_CUTOFF_SOC: 59},
+            id="charge_cutoff",
         ),
     ],
 )

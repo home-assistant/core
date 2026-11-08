@@ -53,6 +53,9 @@
     "set_active_power_limit": {
       "service": "mdi:speedometer-slow"
     },
+    "set_battery_cutoffs": {
+      "service": "mdi:battery-sync"
+    },
     "set_feed_in_limit": {
       "service": "mdi:transmission-tower-export"
     },
