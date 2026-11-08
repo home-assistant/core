@@ -75,8 +75,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
     @override
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
-        # Climate entities convert temperatures to the system unit via show_temp
-        return self._hass.config.units.temperature_unit
+        return entity_state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE_UNIT)
 
 
 class ClimateTargetHumidityCondition(EntityNumericalConditionBase):
