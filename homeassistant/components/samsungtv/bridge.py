@@ -527,6 +527,7 @@ class SamsungTVWSBridge(
                     name=VALUE_CONF_NAME,
                 )
 
+            previous_token = self._art.token
             try:
                 status = await self.hass.async_add_executor_job(self._art.get_artmode)
             except ART_EXCEPTIONS as err:
@@ -536,9 +537,14 @@ class SamsungTVWSBridge(
                 await self._async_close_art()
                 return None
 
-            if self._art.token and self.token != self._art.token:
-                self.token = self._art.token
-                self._notify_update_config_entry({CONF_TOKEN: self.token})
+            # The remote can refresh the shared token while the request is in flight.
+            if (
+                (new_token := self._art.token)
+                and new_token != previous_token
+                and self.token == previous_token
+            ):
+                self.token = new_token
+                self._notify_update_config_entry({CONF_TOKEN: new_token})
 
             if not isinstance(status, str) or status not in ("on", "off"):
                 LOGGER.debug(

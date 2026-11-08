@@ -12,6 +12,11 @@ from samsungtvws.exceptions import ConnectionFailure, ResponseError, Unauthorize
 from syrupy.assertion import SnapshotAssertion
 from websocket import WebSocketException, WebSocketTimeoutException
 
+from homeassistant.components.remote import (
+    ATTR_COMMAND,
+    DOMAIN as REMOTE_DOMAIN,
+    SERVICE_SEND_COMMAND,
+)
 from homeassistant.components.samsungtv.const import TIMEOUT_WEBSOCKET, VALUE_CONF_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -278,7 +283,44 @@ async def test_art_mode_unload(hass: HomeAssistant, art_api: Mock) -> None:
 @pytest.mark.usefixtures("frame_tv")
 async def test_art_mode_token_update(hass: HomeAssistant, art_api: Mock) -> None:
     """Test a refreshed Art API token is saved in the config entry."""
-    art_api.token = "NEW_TOKEN"
+
+    def get_artmode() -> str:
+        art_api.token = "NEW_TOKEN"
+        return "on"
+
+    art_api.get_artmode.side_effect = get_artmode
     entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
 
     assert entry.data[CONF_TOKEN] == "NEW_TOKEN"
+
+
+@pytest.mark.usefixtures("frame_tv")
+async def test_art_mode_preserves_refreshed_remote_token(
+    hass: HomeAssistant,
+    art_api: Mock,
+    remote_websocket: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Art Mode polling preserves the token from a remote reconnect."""
+    entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+    assert entry.data[CONF_TOKEN] == art_api.token
+
+    remote_token = "REMOTE_TOKEN"
+    remote_websocket.is_alive.return_value = False
+    remote_websocket.token = remote_token
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: f"{REMOTE_DOMAIN}.mock_title", ATTR_COMMAND: "KEY_HOME"},
+        blocking=True,
+    )
+    remote_websocket.is_alive.return_value = True
+    assert entry.data[CONF_TOKEN] == remote_token
+
+    art_api.get_artmode.return_value = "off"
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert entry.data[CONF_TOKEN] == remote_token
