@@ -452,28 +452,15 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
     """Handle the device tracker subentry of an SNMP device."""
 
-    @callback
-    def _async_is_table_tracked(
-        self, baseoid: str, exclude_subentry_id: str | None = None
-    ) -> bool:
-        """Return True when another subentry of this device tracks the table."""
-        return any(
-            other.subentry_id != exclude_subentry_id
-            and other.data.get(CONF_BASEOID) == baseoid
-            for other in self._get_entry().get_subentries_of_type(
-                SUBENTRY_TYPE_DEVICE_TRACKER
-            )
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Add a device tracker to the SNMP device."""
+        """Add the device tracker of the SNMP device."""
+        if self._get_entry().get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER):
+            return self.async_abort(reason="single_instance_allowed")
+
         errors: dict[str, str] = {}
         if user_input is not None:
-            if self._async_is_table_tracked(user_input[CONF_BASEOID]):
-                return self.async_abort(reason="already_configured")
-
             error, _ = await self._async_validate_baseoid(user_input[CONF_BASEOID])
             if error:
                 errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
@@ -503,12 +490,6 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
             )
             if error:
                 errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
-            # Checked after the validation and before anything is mutated, so a
-            # refusal can not leave the current table untracked.
-            elif self._async_is_table_tracked(
-                user_input[CONF_BASEOID], subentry.subentry_id
-            ):
-                return self.async_abort(reason="already_configured")
             else:
                 if user_input[CONF_BASEOID] != subentry.data[CONF_BASEOID]:
                     self._async_remove_entities(subentry, table_macs)

@@ -1,6 +1,5 @@
 """SNMP tests."""
 
-import asyncio
 import binascii
 from collections.abc import AsyncIterator
 from typing import Any
@@ -28,7 +27,6 @@ from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ARP_TABLE_MAC_OID, mock_entry
@@ -411,50 +409,6 @@ async def test_subentry_added_after_setup(
     assert _async_mac_entity_id(hass, subentry.subentry_id) is not None
 
 
-async def test_subentry_added_during_setup(hass: HomeAssistant) -> None:
-    """Test that a tracker added while the entry starts up is not lost."""
-    entry = mock_entry()
-    entry.add_to_hass(hass)
-
-    refresh_started = asyncio.Event()
-    release_refresh = asyncio.Event()
-
-    async def blocking_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        """Block the poll until the test has added the subentry."""
-        refresh_started.set()
-        await release_refresh.wait()
-        async for row in _async_mock_walk_with_mac(*args, **kwargs):
-            yield row
-
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=blocking_walk,
-    ):
-        setup_task = hass.async_create_task(
-            hass.config_entries.async_setup(entry.entry_id)
-        )
-        await refresh_started.wait()
-
-        second = ConfigSubentry(
-            data={CONF_BASEOID: BRIDGE_MAC_OID},
-            subentry_type=SUBENTRY_TYPE_DEVICE_TRACKER,
-            title=BRIDGE_MAC_OID,
-            unique_id=BRIDGE_MAC_OID,
-        )
-        assert hass.config_entries.async_add_subentry(entry, second)
-
-        release_refresh.set()
-        assert await setup_task
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    assert set(entry.runtime_data.coordinators) == {
-        next(iter(entry.subentries)),
-        second.subentry_id,
-    }
-    assert _async_mac_entity_id(hass, second.subentry_id) is not None
-
-
 async def test_subentry_removed_after_setup(hass: HomeAssistant) -> None:
     """Test that removing the device tracker removes its entity and coordinator."""
     entry = mock_entry()
@@ -551,89 +505,3 @@ async def test_subentry_reconfigure_switches_table(
     # A surviving tracker keeps its registry entry, and with it the person
     # associations which are dropped when an entity is removed.
     assert (_async_mac_entity_id(hass, subentry_id) == entity_id) is survives
-
-
-async def test_subentry_reconfigure_to_tracked_table_keeps_entities(
-    hass: HomeAssistant,
-) -> None:
-    """Test that aborting a reconfigure does not remove the current entities."""
-    entry = mock_entry()
-    entry.add_to_hass(hass)
-    subentry_id = next(iter(entry.subentries))
-
-    second = ConfigSubentry(
-        data={CONF_BASEOID: BRIDGE_MAC_OID},
-        subentry_type=SUBENTRY_TYPE_DEVICE_TRACKER,
-        title=BRIDGE_MAC_OID,
-        unique_id=BRIDGE_MAC_OID,
-    )
-    assert hass.config_entries.async_add_subentry(entry, second)
-
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=_async_mock_walk_with_mac,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert _async_mac_entity_id(hass, subentry_id) is not None
-
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_BASEOID: BRIDGE_MAC_OID},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert _async_mac_entity_id(hass, subentry_id) is not None
-
-
-async def test_subentry_reconfigure_keeps_other_table_entities(
-    hass: HomeAssistant,
-) -> None:
-    """Test that switching one table leaves the trackers of another table alone."""
-    entry = mock_entry()
-    entry.add_to_hass(hass)
-    subentry_id = next(iter(entry.subentries))
-
-    second = ConfigSubentry(
-        data={CONF_BASEOID: BRIDGE_MAC_OID},
-        subentry_type=SUBENTRY_TYPE_DEVICE_TRACKER,
-        title=BRIDGE_MAC_OID,
-        unique_id=BRIDGE_MAC_OID,
-    )
-    assert hass.config_entries.async_add_subentry(entry, second)
-    table = {"macs": [MAC_BYTES]}
-
-    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
-        """Yield the MACs of the table which is currently being walked."""
-        oid = Mock()
-        oid.asTuple.return_value = (*ARP_MAC_OID, 1, 192, 168, 1, 1)
-        for mac in table["macs"]:
-            yield None, None, None, [(oid, OctetString(binascii.unhexlify(mac)))]
-
-    with patch(
-        "homeassistant.components.snmp.client.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        entity_id = _async_mac_entity_id(hass, subentry_id)
-        other_entity_id = _async_mac_entity_id(hass, second.subentry_id)
-        assert entity_id is not None
-        assert other_entity_id is not None
-
-        # The new table is empty, so the switched tracker loses its entity while
-        # the tracker of the other table keeps its own.
-        table["macs"] = []
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.3"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["reason"] == "reconfigure_successful"
-    assert _async_mac_entity_id(hass, subentry_id) is None
-    assert _async_mac_entity_id(hass, second.subentry_id) == other_entity_id

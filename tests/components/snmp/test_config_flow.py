@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectSelector
 
-from . import ARP_TABLE_MAC_OID, mock_entry
+from . import mock_entry
 
 
 @pytest.fixture
@@ -407,21 +407,15 @@ async def test_subentry_flow_user(hass: HomeAssistant) -> None:
     assert subentries[0].unique_id == "1.3.6.1.2.1.4.22.1.2"
 
 
-@pytest.mark.usefixtures("mock_walk_empty")
-async def test_subentry_flow_multiple_trackers(hass: HomeAssistant) -> None:
-    """Test that a device can track several tables."""
+async def test_subentry_flow_single_tracker(hass: HomeAssistant) -> None:
+    """Test that a device tracks a single table."""
     entry = mock_entry()
     entry.add_to_hass(hass)
 
     result = await _async_start_subentry_flow(hass, entry)
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {"baseoid": "1.3.6.1.2.1.17.4.3.1.1"},
-    )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
-    assert len(subentries) == 2
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 @pytest.mark.usefixtures("mock_walk_empty")
@@ -488,21 +482,6 @@ async def test_subentry_flow_unreadable_oid(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_subentry_flow_already_configured(hass: HomeAssistant) -> None:
-    """Test that the same table cannot be tracked twice."""
-    entry = mock_entry()
-    entry.add_to_hass(hass)
-
-    result = await _async_start_subentry_flow(hass, entry)
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {"baseoid": ARP_TABLE_MAC_OID},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_walk_empty")

@@ -79,7 +79,7 @@
   "config_subentries": {
     "device_tracker": {
       "abort": {
-        "already_configured": "This table is already tracked for this device"
+        "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
       },
       "entry_type": "Device tracker",
       "error": {

@@ -242,25 +242,31 @@ async def test_device_tracker_device_registry_linking(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that the tracker entity is not linked to a device."""
+    """Test that the tracked device is linked to the SNMP device."""
     entry = mock_entry()
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    assert (
-        device_registry.async_get_device_by_connection(
-            (dr.CONNECTION_NETWORK_MAC, MAC), entry.entry_id
-        )
-        is None
+    snmp_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
     )
+    assert snmp_device is not None
+    assert not snmp_device.connections
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC), entry.entry_id
+    )
+    assert device is not None
+    assert device.name == MAC
+    assert device.via_device_id == snmp_device.id
+    assert device.config_subentry_id == next(iter(entry.subentries))
 
     entity_id = _tracker_entity_id(entity_registry, entry, MAC)
     reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry is not None
-    assert reg_entry.device_id is None
+    assert reg_entry.device_id == device.id
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
@@ -322,9 +328,17 @@ async def test_device_tracker_initial_macs(
 
 
 async def test_device_tracker_properties_empty_coordinator(
-    hass: HomeAssistant, mock_coordinator_entry: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test entity properties when coordinator data is empty."""
+    device_registry.async_get_or_create_from_info(
+        config_entry_id=mock_coordinator_entry.entry_id,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+        ),
+    )
     subentry = next(iter(mock_coordinator_entry.subentries.values()))
     coordinator = SnmpDeviceTrackerCoordinator(
         hass, mock_coordinator_entry, subentry, Mock()

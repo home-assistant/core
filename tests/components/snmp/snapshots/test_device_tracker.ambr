@@ -11,7 +11,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': <ConfigSubentry subentry_type='device_tracker' title='1.3.6.1.2.1.4.22.1.2'>,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:11:22:33:44:55')]>,
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,

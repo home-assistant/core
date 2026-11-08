@@ -5,9 +5,11 @@ from pysnmp.error import PySnmpError
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .client import SnmpClient
-from .const import SUBENTRY_TYPE_DEVICE_TRACKER
+from .const import DOMAIN, SUBENTRY_TYPE_DEVICE_TRACKER
 from .coordinator import SnmpConfigEntry, SnmpDeviceTrackerCoordinator, SnmpRuntimeData
 from .util import async_get_snmp_engine
 
@@ -38,8 +40,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> None
 
     entry.runtime_data = SnmpRuntimeData(client=client, coordinators=coordinators)
 
-    if coordinators:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if not coordinators:
+        return
+
+    # The tracker devices link to the SNMP device through via_device_id, which can
+    # only resolve a device which already exists.
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id,
+        device_info=DeviceInfo(identifiers={(DOMAIN, entry.entry_id)}),
+    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: SnmpConfigEntry) -> None:

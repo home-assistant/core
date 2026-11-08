@@ -25,10 +25,11 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -314,18 +315,23 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpDeviceTrackerCoordinator], Scanner
         self._attr_mac_address = mac
         self._attr_name = mac
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
-        # A tracker has no device: the MAC belongs to a third party device which is
-        # not managed here, and the same MAC may be tracked by several subentries of
-        # the entry, while a device can only belong to one subentry.
-        self._attr_device_info = DeviceInfo()
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, mac)},
+            name=mac,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.entry_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
+        )
 
     @property
     @override
     def unique_id(self) -> str | None:
         """Return the unique ID of the entity.
 
-        ScannerEntity derives the unique ID from the MAC address, which would
-        collide between subentries tracking the same device.
+        ScannerEntity derives the unique ID from the MAC address, which collides
+        when two SNMP devices track the same client.
         """
         return self._attr_unique_id
 
