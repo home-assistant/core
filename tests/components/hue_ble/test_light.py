@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
     ColorMode,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -190,7 +191,7 @@ async def test_light_control_effect_xy(
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.NONE.name
+    assert attributes[ATTR_EFFECT] == EFFECT_OFF
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
     await hass.services.async_call(
@@ -253,7 +254,7 @@ async def test_light_control_effect_temp(
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.NONE.name
+    assert attributes[ATTR_EFFECT] == EFFECT_OFF
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
     await hass.services.async_call(
@@ -318,7 +319,7 @@ async def test_light_bad_effect(
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.NONE.name
+    assert attributes[ATTR_EFFECT] == EFFECT_OFF
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
     with pytest.raises(ServiceValidationError):
@@ -336,5 +337,5 @@ async def test_light_bad_effect(
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.NONE.name
+    assert attributes[ATTR_EFFECT] == EFFECT_OFF
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
