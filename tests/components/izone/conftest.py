@@ -56,7 +56,8 @@ def create_mock_controller(
     controller.bridge_connected = True
     controller.is_v2 = False
     controller.is_ipower = False
-    controller.mode = Controller.Mode.COOL
+    # pizone reports FREE_AIR as the mode whenever free air is on.
+    controller.mode = Controller.Mode.FREE_AIR if free_air else Controller.Mode.COOL
     controller.temp_setpoint = 24.0
     controller.control_setpoint_owner = None
     controller.control_setpoint = None
@@ -164,7 +165,6 @@ def create_mock_zone(
     zone.sensor_type = sensor_type
     zone.rf_signal = rf_signal
     zone.battery_level = battery_level
-    zone.is_on = True
     zone._zone_data = {
         "AirStreamDeviceUId": "000000001",
         "Id": 0,

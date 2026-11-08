@@ -173,7 +173,9 @@ class DeviceExtension(BaseTemplateExtension):
                 )
             return resolve(device)
 
-        if not hasattr(device, attr_name):
+        # Private attributes are internal state, not part of the device API,
+        # and must not be exposed to templates.
+        if attr_name.startswith("_") or not hasattr(device, attr_name):
             return None
         return getattr(device, attr_name)
 
