@@ -1471,6 +1471,94 @@ async def test_reauth_flow_reloads_when_credentials_are_unchanged(
     mock_schedule_reload.assert_called_once_with(entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    (
+        "entry_data",
+        "errindication",
+        "step_id",
+        "rejected",
+        "expected_error",
+        "accepted",
+        "expected_changes",
+    ),
+    [
+        pytest.param(
+            {"version": "1", "community": "old-community"},
+            errind.unknownCommunityName,
+            "v1_v2c",
+            {"community": "wrong-community"},
+            "invalid_auth",
+            {"community": "new-community"},
+            {"community": "new-community"},
+            id="v1_v2c",
+        ),
+        pytest.param(
+            {
+                "version": "3",
+                "username": "user",
+                "auth_key": "old-key",
+                "auth_protocol": "hmac-sha",
+            },
+            errind.wrongDigest,
+            "v3",
+            {"username": "user", "auth_key": "wrong-key", "auth_protocol": "hmac-sha"},
+            "usm_wrong_digests",
+            {"username": "user", "auth_key": "new-key", "auth_protocol": "hmac-sha"},
+            {"auth_key": "new-key"},
+            id="v3",
+        ),
+    ],
+)
+async def test_reauth_flow_retries_rejected_credentials(
+    hass: HomeAssistant,
+    mock_setup_entry: Mock,
+    entry_data: dict[str, Any],
+    errindication: object,
+    step_id: str,
+    rejected: dict[str, str],
+    expected_error: str,
+    accepted: dict[str, str],
+    expected_changes: dict[str, str],
+) -> None:
+    """Test that rejected credentials are reported and can be retried."""
+    entry = mock_entry(baseoid=None, **entry_data)
+    entry.add_to_hass(hass)
+    original_data = dict(entry.data)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == step_id
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(errindication, None, None, None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], rejected
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    assert result["errors"] == {"base": expected_error}
+    assert entry.data == original_data
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], accepted
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    for key, value in expected_changes.items():
+        assert entry.data[key] == value
+    assert mock_setup_entry.called
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) -> None:
     """Test that a v3 flow is not aborted before its context name is known."""
