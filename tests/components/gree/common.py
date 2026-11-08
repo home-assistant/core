@@ -5,6 +5,7 @@ import logging
 from unittest.mock import AsyncMock, Mock
 
 from greeclimate.discovery import Listener
+from greeclimate.network import Response
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.gree.const import DISCOVERY_TIMEOUT, DOMAIN
@@ -88,6 +89,18 @@ def build_device_mock(name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc1122
         power_save=False,
         steady_heat=False,
     )
+
+
+def dispatch_device_response(
+    device: Mock, response: Response, data: dict[str, int]
+) -> None:
+    """Deliver a device reply to its registered response handler."""
+    handler = next(
+        call.args[1]
+        for call in device.add_handler.call_args_list
+        if call.args[0] == response
+    )
+    handler(data)
 
 
 async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:
