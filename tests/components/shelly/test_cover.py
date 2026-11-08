@@ -350,6 +350,9 @@ async def test_rpc_device_position_control_closed(
         ("stopped", "open", CoverState.OPEN),
         # Nothing has moved since the device booted
         ("stopped", None, STATE_UNKNOWN),
+        # A limit switch reports the end position
+        ("closed", "close", CoverState.CLOSED),
+        ("open", "open", CoverState.OPEN),
     ],
 )
 async def test_rpc_device_no_position_control(
