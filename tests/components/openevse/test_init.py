@@ -12,16 +12,16 @@ from openevsehttp.exceptions import (
     ParseJSONError,
     UnsupportedFeature,
 )
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
+from homeassistant.components.openevse.services import OpenEVSEService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry_timeout(
@@ -398,3 +398,16 @@ async def test_sensor_entity_registry_rename(
     await hass.async_block_till_done()
 
     assert config_entry.options["vehicle_soc"] == "sensor.my_new_car_battery"
+
+
+async def test_services_registered(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test component setup registers services."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, OpenEVSEService.SET_OVERRIDE)

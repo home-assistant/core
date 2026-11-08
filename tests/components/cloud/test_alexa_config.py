@@ -9,6 +9,8 @@ from hass_nabucasa.alexa_api import (
     AlexaApiNoTokenError,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
@@ -36,9 +38,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture

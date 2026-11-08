@@ -3,19 +3,18 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_setup_component
+from pytest_homeassistant.typing import ClientSessionGenerator
 import requests
 
 from homeassistant import config_entries
 from homeassistant.components import ifttt
 from homeassistant.components.ifttt import CONF_KEY
-from homeassistant.components.ifttt.const import DOMAIN, SERVICE_TRIGGER
+from homeassistant.components.ifttt.const import DOMAIN, IftttService
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import async_setup_component
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_flow_registers_webhook(
@@ -76,7 +75,7 @@ async def test_trigger_service_raises_when_ifttt_unreachable(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRIGGER,
+            IftttService.TRIGGER,
             {"event": "test_event"},
             blocking=True,
         )

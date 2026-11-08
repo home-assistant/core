@@ -11,6 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 import respx
 
 from homeassistant.components.camera import async_get_image
@@ -45,9 +47,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TESTDATA = {
     CONF_STILL_IMAGE_URL: "http://127.0.0.1/testurl/1",

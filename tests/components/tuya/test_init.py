@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
@@ -28,8 +29,6 @@ from . import (
     create_manager,
     initialize_entry,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_registry_cleanup(

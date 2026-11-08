@@ -8,6 +8,7 @@ from pyinsteon.address import Address
 from pyinsteon.constants import ResponseStatus
 from pyinsteon.device_types.ipdb import ClimateControl_Thermostat
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon import (
@@ -23,8 +24,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
-
-from tests.common import MockConfigEntry
 
 THERMOSTAT_ADDRESS = "66.66.66"
 

@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
 
-TriggerStyle = Callable[[dict[str, Any]], dict[str, Any]]
+type TriggerStyle = Callable[[dict[str, Any]], dict[str, Any]]
 
 # The telegram trigger accepts its options both at the top level - the config
 # format from before the trigger was migrated to a trigger platform - and

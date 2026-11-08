@@ -68,6 +68,9 @@
       "shaper_active": {
         "name": "Shaper active"
       },
+      "station_status": {
+        "name": "Station status"
+      },
       "using_ethernet": {
         "name": "Ethernet connected"
       },
@@ -249,6 +252,9 @@
     "invalid_value": {
       "message": "Value {value} is invalid for the charger."
     },
+    "no_matching_target_entries": {
+      "message": "No matching OpenEVSE chargers found for the specified target."
+    },
     "unsupported_feature": {
       "message": "The charger does not support this feature."
     }
@@ -282,6 +288,46 @@
         },
         "description": "Configure sensor entities to push data to OpenEVSE.\n\nNOTE: OpenEVSE expects positive import and negative export."
       }
+    }
+  },
+  "selector": {
+    "override_state": {
+      "options": {
+        "active": "Active",
+        "disabled": "Disabled"
+      }
+    }
+  },
+  "services": {
+    "set_override": {
+      "description": "Sets or updates the manual override on the charger.",
+      "fields": {
+        "auto_release": {
+          "description": "Automatically clear the override when the session completes or limits are reached.",
+          "name": "Auto release"
+        },
+        "charge_current": {
+          "description": "Target charging current in Amperes.",
+          "name": "Charge current"
+        },
+        "energy_limit": {
+          "description": "Energy limit for the override session in Watt-hours.",
+          "name": "Energy limit"
+        },
+        "max_current": {
+          "description": "Maximum allowed charging current in Amperes.",
+          "name": "Maximum current"
+        },
+        "state": {
+          "description": "Override charging state.",
+          "name": "State"
+        },
+        "time_limit": {
+          "description": "Time limit duration for the override session.",
+          "name": "Time limit"
+        }
+      },
+      "name": "Set manual override"
     }
   }
 }

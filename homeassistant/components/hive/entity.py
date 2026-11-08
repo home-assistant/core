@@ -41,7 +41,7 @@ class HiveEntity(Entity):
         )
         # Hive reports the hub itself as its parent.
         if self.device["parentDevice"] != device_id:
-            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
                 hass,
                 (DOMAIN, self.device["parentDevice"]),
                 config_entry_id=entry.entry_id,

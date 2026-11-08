@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "select": {
+      "channel": {
+        "default": "mdi:radio-tower"
+      },
+      "power_mode": {
+        "default": "mdi:power-settings",
+        "state": {
+          "sleep": "mdi:power-sleep",
+          "standby": "mdi:power-standby"
+        }
+      }
+    },
+    "sensor": {
+      "power_state": {
+        "default": "mdi:power",
+        "state": {
+          "booting": "mdi:timer-sand",
+          "sleep": "mdi:power-sleep",
+          "standby": "mdi:power-standby"
+        }
+      }
+    }
+  }
+}

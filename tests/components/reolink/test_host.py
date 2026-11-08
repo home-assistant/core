@@ -7,6 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.enums import ConnectionEnum, SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -35,6 +38,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError
@@ -58,10 +62,6 @@ from .conftest import (
     TEST_USERNAME,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
-
 
 async def test_setup_with_tcp_push(
     hass: HomeAssistant,
@@ -82,6 +82,55 @@ async def test_setup_with_tcp_push(
 
     # ONVIF push subscription not called
     assert not reolink_host.subscribe.called
+
+
+async def test_tcp_push_clears_webhook_issues(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test all webhook related issues are deleted once TCP push works."""
+    translation_keys = ("webhook_url", "https_webhook", "ssl")
+    for translation_key in translation_keys:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{translation_key}_{config_entry.entry_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=dict.fromkeys(
+                (
+                    "base_url",
+                    "example_ip",
+                    "example_url",
+                    "name",
+                    "network_link",
+                    "nginx_link",
+                    "ssl_link",
+                ),
+                "test",
+            ),
+            config_entry_id=config_entry.entry_id,
+        )
+    reolink_host.baichuan.events_active = True
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=FIRST_TCP_PUSH_TIMEOUT))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for translation_key in translation_keys:
+        assert (
+            issue_registry.async_get_issue(
+                DOMAIN, f"{translation_key}_{config_entry.entry_id}"
+            )
+            is None
+        )
 
 
 async def test_unloading_with_tcp_push(

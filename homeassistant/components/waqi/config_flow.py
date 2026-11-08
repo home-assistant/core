@@ -13,7 +13,6 @@ from aiowaqi import (
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -30,6 +29,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
 from .const import CONF_STATION_NUMBER, DOMAIN, SUBENTRY_TYPE_STATION
+from .coordinator import WAQIConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: WAQIConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_STATION: StationFlowHandler}
@@ -132,7 +132,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_step_update_api_key(
-        self, step_id: str, entry: ConfigEntry, user_input: dict[str, Any] | None
+        self, step_id: str, entry: WAQIConfigEntry, user_input: dict[str, Any] | None
     ) -> ConfigFlowResult:
         """Validate a new API key and store it in an existing entry."""
         errors: dict[str, str] = {}

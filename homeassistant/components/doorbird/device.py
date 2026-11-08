@@ -210,6 +210,22 @@ class ConfiguredDoorBird:
         """Get device slug."""
         return slugify(self._name)
 
+    def event_names_of_type(self, event_type: str) -> list[str]:
+        """Return the configured event names of an event type.
+
+        Models without the schedule API have no descriptions, so fall back to
+        the type a default event name implies.
+        """
+        described = {event.event: event.event_type for event in self.event_descriptions}
+        default_types = dict(DEFAULT_EVENT_TYPES)
+        return [
+            event_name
+            for event, event_name in zip(
+                self.events, self.door_station_events, strict=True
+            )
+            if (described.get(event_name) or default_types.get(event)) == event_type
+        ]
+
     def _get_event_name(self, event: str) -> str:
         return f"{self.slug}_{event}"
 

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 
 
@@ -16,7 +16,7 @@ def async_check_significant_change(
     **kwargs: Any,
 ) -> bool | None:
     """Test if state significantly changed."""
-    device_class = new_attrs.get(ATTR_DEVICE_CLASS)
+    device_class = new_attrs.get(EntityStateAttribute.DEVICE_CLASS)
 
     if device_class is None:
         return None

@@ -46,7 +46,27 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "epex_tomorrow_available": {
+        "name": "EPEX tomorrow prices available"
+      }
+    },
     "sensor": {
+      "capacity_tariff_daily_power_peak": {
+        "name": "Capacity tariff daily power peak"
+      },
+      "capacity_tariff_monthly_energy_peak": {
+        "name": "Capacity tariff monthly energy peak"
+      },
+      "capacity_tariff_monthly_peak_end": {
+        "name": "Capacity tariff monthly peak end"
+      },
+      "capacity_tariff_monthly_peak_start": {
+        "name": "Capacity tariff monthly peak start"
+      },
+      "capacity_tariff_monthly_power_peak": {
+        "name": "Capacity tariff monthly power peak"
+      },
       "electricity_price_injection": {
         "name": "Electricity injection price"
       },
@@ -287,6 +307,30 @@
       "energy_price_offtake_with_ean": {
         "name": "Offtake price ({ean_suffix})"
       },
+      "epex_current_hour": {
+        "name": "EPEX current hour price"
+      },
+      "epex_current_quarter_hour": {
+        "name": "EPEX current quarter-hourly price"
+      },
+      "epex_high_today_hour": {
+        "name": "EPEX highest hour price today"
+      },
+      "epex_high_today_quarter_hour": {
+        "name": "EPEX highest quarter-hourly price today"
+      },
+      "epex_low_today_hour": {
+        "name": "EPEX lowest hour price today"
+      },
+      "epex_low_today_quarter_hour": {
+        "name": "EPEX lowest quarter-hourly price today"
+      },
+      "epex_next_hour": {
+        "name": "EPEX next hour price"
+      },
+      "epex_next_quarter_hour": {
+        "name": "EPEX next quarter-hourly price"
+      },
       "gas_price_offtake": {
         "name": "Gas offtake price"
       },
@@ -350,6 +394,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "There was a connection error connecting to the API. Try again later."
+    },
     "invalid_auth": {
       "message": "Authentication with ENGIE Belgium failed. Please reauthenticate."
     }

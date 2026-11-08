@@ -15,7 +15,7 @@ async def _async_configure_valid(hass: HomeAssistant, flow_id: str) -> FlowResul
     """Configure the flow with valid input."""
     with patch(
         "homeassistant.components.prusalink.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         return await hass.config_entries.flow.async_configure(
             flow_id,
@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant, mock_version_api) -> None:
 
     with patch(
         "homeassistant.components.prusalink.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -71,7 +71,7 @@ async def test_form_mk3(hass: HomeAssistant, mock_version_api) -> None:
 
     with patch(
         "homeassistant.components.prusalink.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

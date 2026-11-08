@@ -1,17 +1,16 @@
 """The tests for nuki integration."""
 
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 import requests_mock
 
 from homeassistant.components.nuki.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .mock import MOCK_INFO, setup_nuki_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
 
 
 async def init_integration(

@@ -97,7 +97,9 @@ class BaseFirmwareUpdateEntity(
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
     _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_has_entity_name = True
     _flasher_type: FlasherType
@@ -245,6 +247,18 @@ class BaseFirmwareUpdateEntity(
             self._attr_latest_version = self.entity_description.version_parser(version)
             self._attr_release_summary = self._latest_firmware.release_notes
             self._attr_release_url = str(self._latest_manifest.html_url)
+
+    @override
+    async def async_release_notes(self) -> str | None:
+        """Return the changelog of every firmware version since the installed one."""
+        if self._latest_firmware is None or self._current_firmware_info is None:
+            return None
+
+        # The parsed installed version cannot be used: for OpenThread it drops the
+        # `SL-OPENTHREAD/` prefix and `_GitHub-<hash>` suffix of changelog versions
+        return self._latest_firmware.release_notes_since(
+            self._current_firmware_info.firmware_version
+        )
 
     @callback
     @override

@@ -4,14 +4,17 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 from momonga import MomongaError, MomongaSkScanFailure
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.route_b_smart_meter.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_route_b_smart_meter_sensor_update(

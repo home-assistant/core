@@ -1,5 +1,7 @@
 """Tests for the OpenAI integration."""
 
+import subprocess
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -7,19 +9,23 @@ import attr
 import httpx2
 from openai import APIConnectionError, AuthenticationError, BadRequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from homeassistant.components import ai_task
 from homeassistant.components.openai_conversation import CONF_CHAT_MODEL
 from homeassistant.components.openai_conversation.const import (
     CONF_REASONING_SUMMARY,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
 )
@@ -35,7 +41,7 @@ from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+IMPORT_TIMEOUT = 60
 
 
 @pytest.mark.parametrize(
@@ -139,17 +145,17 @@ async def test_migration_from_v1(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 7
+    assert mock_config_entry.minor_version == 8
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
-    assert len(mock_config_entry.subentries) == 4
+    assert len(mock_config_entry.subentries) == 5
 
     # Find the subentries
     conversation_subentry = None
@@ -277,7 +283,7 @@ async def test_migration_from_v1_with_multiple_keys(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -288,9 +294,9 @@ async def test_migration_from_v1_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
-        assert entry.minor_version == 7
+        assert entry.minor_version == 8
         assert not entry.options
-        assert len(entry.subentries) == 4
+        assert len(entry.subentries) == 5
 
         conversation_subentry = None
         for subentry in entry.subentries.values():
@@ -381,7 +387,7 @@ async def test_migration_from_v1_with_same_keys(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -393,11 +399,11 @@ async def test_migration_from_v1_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 7
+    assert entry.minor_version == 8
     assert not entry.options
     assert (
-        len(entry.subentries) == 5
-    )  # 2 conversation + 1 AI task + 1 STT + 1 TTS subentry
+        len(entry.subentries) == 6
+    )  # 2 conversation + 2 AI task + 1 STT + 1 TTS subentry
 
     # Check both conversation subentries exist with correct data
     conversation_subentries = [
@@ -592,7 +598,7 @@ async def test_migration_from_v1_disabled(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -603,11 +609,11 @@ async def test_migration_from_v1_disabled(
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
     assert entry.minor_version == (
-        4 if merged_config_entry_disabled_by is not None else 7
+        4 if merged_config_entry_disabled_by is not None else 8
     )
     assert not entry.options
     assert entry.title == "OpenAI Conversation"
-    assert len(entry.subentries) == (3 if entry.minor_version == 4 else 5)
+    assert len(entry.subentries) == (3 if entry.minor_version == 4 else 6)
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -756,7 +762,7 @@ async def test_migration_from_v2_1(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -765,10 +771,10 @@ async def test_migration_from_v2_1(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 7
+    assert entry.minor_version == 8
     assert not entry.options
     assert entry.title == "ChatGPT"
-    assert len(entry.subentries) == 5  # 2 conversation + 1 AI task + 1 STT + 1 TTS
+    assert len(entry.subentries) == 6  # 2 conversation + 2 AI task + 1 STT + 1 TTS
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -852,7 +858,7 @@ async def test_devices(
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert len(devices) == 4  # One for conversation, AI task, STT, and TTS
+    assert len(devices) == 5  # Conversation, data, evaluation, STT, and TTS
 
     # Find the conversation subentry device specifically, since device ordering
     # from concurrent platform setup is non-deterministic.
@@ -903,7 +909,7 @@ async def test_migration_from_v2_2(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -912,10 +918,10 @@ async def test_migration_from_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 7
+    assert entry.minor_version == 8
     assert not entry.options
     assert entry.title == "ChatGPT"
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
 
     # Check conversation subentry is still there
     conversation_subentries = [
@@ -957,7 +963,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
             True,
-            7,
+            8,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -967,7 +973,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
             True,
-            7,
+            8,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -977,7 +983,7 @@ async def test_migration_from_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
             True,
-            7,
+            8,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -987,7 +993,7 @@ async def test_migration_from_v2_2(
             None,
             None,
             True,
-            7,
+            8,
             None,
             None,
             None,
@@ -1091,10 +1097,13 @@ async def test_migrate_entry_from_v2_3(
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=entity_disabled_by,
         device_id=conversation_device.id,
         suggested_object_id="chatgpt",
     )
+    conversation_entity = attr.evolve(
+        conversation_entity, disabled_by=entity_disabled_by
+    )
+    entity_registry.entities[conversation_entity.entity_id] = conversation_entity
 
     # Verify initial state
     assert mock_config_entry.version == 2
@@ -1107,7 +1116,7 @@ async def test_migrate_entry_from_v2_3(
     # Run setup to trigger migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert result is setup_result
@@ -1176,7 +1185,7 @@ async def test_migration_from_v2_4(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1185,10 +1194,10 @@ async def test_migration_from_v2_4(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 7
+    assert entry.minor_version == 8
     assert not entry.options
     assert entry.title == "ChatGPT"
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
 
     # Check conversation subentry is still there
     conversation_subentries = [
@@ -1279,7 +1288,7 @@ async def test_migration_from_v2_5(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1288,10 +1297,10 @@ async def test_migration_from_v2_5(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 7
+    assert entry.minor_version == 8
     assert not entry.options
     assert entry.title == "ChatGPT"
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
 
     # Check conversation subentry is still there
     conversation_subentries = [
@@ -1424,7 +1433,7 @@ async def test_migration_from_v2_6(
 
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1433,7 +1442,7 @@ async def test_migration_from_v2_6(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 7
+    assert entry.minor_version == 8
 
     subentries_by_id = entry.subentries
 
@@ -1454,3 +1463,137 @@ async def test_migration_from_v2_6(
 
     # "concise" already stored on an o* model: concise→auto
     assert subentries_by_id["mock_id_6"].data[CONF_REASONING_SUMMARY] == "auto"
+
+
+async def test_migration_from_v2_7(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Add an evaluation entity on upgrade without opting in to automatic use."""
+    evaluation_subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == "ai_task_evaluate"
+    )
+    hass.config_entries.async_remove_subentry(
+        mock_config_entry, evaluation_subentry.subentry_id
+    )
+    hass.config_entries.async_update_entry(mock_config_entry, minor_version=7)
+    existing_subentries = dict(mock_config_entry.subentries)
+
+    with patch("openai.resources.models.AsyncModels.list", new_callable=AsyncMock):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.minor_version == 8
+        evaluation_subentries = [
+            subentry
+            for subentry in mock_config_entry.subentries.values()
+            if subentry.subentry_type == "ai_task_evaluate"
+        ]
+        assert len(evaluation_subentries) == 1
+        evaluation_subentry = evaluation_subentries[0]
+        assert evaluation_subentry.title == DEFAULT_EVALUATION_NAME
+        assert evaluation_subentry.data == RECOMMENDED_EVALUATION_OPTIONS
+        assert mock_config_entry.subentries == {
+            **existing_subentries,
+            evaluation_subentry.subentry_id: evaluation_subentry,
+        }
+        entity = entity_registry.async_get("ai_task.openai_evaluation")
+        assert entity.config_subentry_id == evaluation_subentry.subentry_id
+        assert hass.states.get(entity.entity_id).attributes["supported_features"] == (
+            ai_task.AITaskEntityFeature.EVALUATE
+            | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
+        )
+        preferences = hass.data[ai_task.DATA_PREFERENCES]
+        assert preferences.evaluate_entity_id is None
+        assert preferences.allow_automatic_evaluation is False
+
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_config_entry.subentries) == len(existing_subentries) + 1
+        assert entity_registry.async_get(entity.entity_id) == entity
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        hass.config_entries.async_remove_subentry(
+            mock_config_entry, evaluation_subentry.subentry_id
+        )
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.subentries == existing_subentries
+
+
+async def test_migration_from_v2_7_existing_evaluation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Preserve an evaluation subentry already configured on the shared branch."""
+    evaluation_subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == "ai_task_evaluate"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        evaluation_subentry,
+        title="My decisions",
+        data={CONF_CHAT_MODEL: "custom-decision-model"},
+    )
+    hass.config_entries.async_update_entry(mock_config_entry, minor_version=7)
+    existing_subentries = dict(mock_config_entry.subentries)
+
+    with patch("openai.resources.models.AsyncModels.list", new_callable=AsyncMock):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.minor_version == 8
+    assert mock_config_entry.subentries == existing_subentries
+    assert hass.states.get("ai_task.my_decisions") is not None
+
+
+CHECK_CLIENT_RESOURCE_IMPORTS = """
+import importlib
+
+import homeassistant.components.openai_conversation
+import openai
+
+imports = []
+import_module = importlib.import_module
+
+
+def record_import(name, package=None):
+    imports.append(name)
+    return import_module(name, package)
+
+
+importlib.import_module = record_import
+client = openai.AsyncOpenAI(api_key="test")
+client.responses
+client.audio.speech
+client.audio.transcriptions
+print(imports)
+"""
+
+
+def test_client_resources_are_imported_with_the_integration() -> None:
+    """Accessing the client resources must not import anything in the event loop.
+
+    The OpenAI client imports its responses and audio resources on first use
+    through importlib.import_module, which Home Assistant reports as a blocking
+    call when it happens in the event loop. Having the submodules in
+    sys.modules is not enough: the call uses a relative name that the check
+    does not resolve.
+
+    A clean interpreter is the only way to see this: anything the test suite
+    imported first would hide it.
+    """
+    result = subprocess.run(
+        [sys.executable, "-c", CHECK_CLIENT_RESOURCE_IMPORTS],
+        capture_output=True,
+        check=True,
+        text=True,
+        timeout=IMPORT_TIMEOUT,
+    )
+
+    assert result.stdout.strip() == "[]"

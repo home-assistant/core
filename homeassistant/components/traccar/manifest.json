@@ -1,8 +1,10 @@
 {
   "domain": "traccar",
   "name": "Traccar Client",
+  "categories": ["presence_location.phones_companion_apps"],
   "codeowners": ["@ludeeus"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/traccar",
   "iot_class": "cloud_push",

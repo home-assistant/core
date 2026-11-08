@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from subarulink import SubaruException
 from subarulink.const import LATITUDE, LONGITUDE, TIMESTAMP, VEHICLE_STATUS
 
@@ -21,8 +22,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .api_responses import EXPECTED_STATE_EV_IMPERIAL, VEHICLE_STATUS_EV
 from .conftest import MOCK_API_FETCH, MOCK_API_GET_DATA, advance_time_to_next_fetch
-
-from tests.common import async_fire_time_changed
 
 DEVICE_ID = "device_tracker.test_vehicle_2"
 

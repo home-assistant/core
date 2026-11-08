@@ -8,6 +8,18 @@ from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -43,24 +55,10 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.json import json_bytes
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
-
-from . import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    async_fire_time_changed,
-    async_test_home_assistant,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1197,12 +1195,12 @@ async def test_integration_with_entity(hass: HomeAssistant) -> None:
     entity_one.hass = hass
     assert entity_one.available is True
     assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature-remote"
-    assert entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff-remote")},
-        "manufacturer": "Govee",
-        "model": "H5178-REMOTE",
-        "name": "B5178D6FB Remote",
-    }
+    assert entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff-remote")},
+        manufacturer="Govee",
+        model="H5178-REMOTE",
+        name="B5178D6FB Remote",
+    )
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id="remote"
     )
@@ -1309,11 +1307,11 @@ async def test_integration_with_entity_without_a_device(hass: HomeAssistant) -> 
     entity_one.hass = hass
     assert entity_one.available is True
     assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature"
-    assert entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "name": "Generic",
-    }
+    assert entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        name="Generic",
+    )
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id=None
     )
@@ -1488,13 +1486,13 @@ async def test_integration_multiple_entity_platforms(hass: HomeAssistant) -> Non
     sensor_entity_one.hass = hass
     assert sensor_entity_one.available is True
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
-    assert sensor_entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "manufacturer": "Test Manufacturer",
-        "model": "Test Model",
-        "name": "Test Device",
-    }
+    assert sensor_entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        name="Test Device",
+    )
     assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
         key="pressure", device_id=None
     )
@@ -1505,13 +1503,13 @@ async def test_integration_multiple_entity_platforms(hass: HomeAssistant) -> Non
     binary_sensor_entity_one.hass = hass
     assert binary_sensor_entity_one.available is True
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
-    assert binary_sensor_entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "manufacturer": "Test Manufacturer",
-        "model": "Test Model",
-        "name": "Test Device",
-    }
+    assert binary_sensor_entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        name="Test Device",
+    )
     assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
         key="motion", device_id=None
     )
@@ -1646,13 +1644,13 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     sensor_entity_one.hass = hass
     assert sensor_entity_one.available is True
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
-    assert sensor_entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "manufacturer": "Test Manufacturer",
-        "model": "Test Model",
-        "name": "Test Device",
-    }
+    assert sensor_entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        name="Test Device",
+    )
     assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
         key="pressure", device_id=None
     )
@@ -1663,13 +1661,13 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     binary_sensor_entity_one.hass = hass
     assert binary_sensor_entity_one.available is True
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
-    assert binary_sensor_entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "manufacturer": "Test Manufacturer",
-        "model": "Test Model",
-        "name": "Test Device",
-    }
+    assert binary_sensor_entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        name="Test Device",
+    )
     assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
         key="motion", device_id=None
     )
@@ -1728,13 +1726,13 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     sensor_entity_one.hass = hass
     assert sensor_entity_one.available is True
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
-    assert sensor_entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "manufacturer": "Test Manufacturer",
-        "model": "Test Model",
-        "name": "Test Device",
-    }
+    assert sensor_entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        name="Test Device",
+    )
     assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
         key="pressure", device_id=None
     )
@@ -1745,13 +1743,13 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     binary_sensor_entity_one.hass = hass
     assert binary_sensor_entity_one.available is True
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
-    assert binary_sensor_entity_one.device_info == {
-        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-        "manufacturer": "Test Manufacturer",
-        "model": "Test Model",
-        "name": "Test Device",
-    }
+    assert binary_sensor_entity_one.device_info == DeviceInfo(
+        identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        name="Test Device",
+    )
     assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
         key="motion", device_id=None
     )
@@ -1824,13 +1822,13 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
         sensor_entity_one.hass = test_hass
         assert sensor_entity_one.available is False  # service data not injected
         assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
-        assert sensor_entity_one.device_info == {
-            "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-            "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-            "manufacturer": "Test Manufacturer",
-            "model": "Test Model",
-            "name": "Test Device",
-        }
+        assert sensor_entity_one.device_info == DeviceInfo(
+            identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+            connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+            manufacturer="Test Manufacturer",
+            model="Test Model",
+            name="Test Device",
+        )
         assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
             key="pressure", device_id=None
         )
@@ -1841,13 +1839,13 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
         binary_sensor_entity_one.hass = test_hass
         assert binary_sensor_entity_one.available is False  # service data not injected
         assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
-        assert binary_sensor_entity_one.device_info == {
-            "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-            "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
-            "manufacturer": "Test Manufacturer",
-            "model": "Test Model",
-            "name": "Test Device",
-        }
+        assert binary_sensor_entity_one.device_info == DeviceInfo(
+            identifiers={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+            connections={("bluetooth", "aa:bb:cc:dd:ee:ff")},
+            manufacturer="Test Manufacturer",
+            model="Test Model",
+            name="Test Device",
+        )
         assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
             key="motion", device_id=None
         )
@@ -1927,7 +1925,7 @@ async def test_naming(hass: HomeAssistant) -> None:
     sensor_entity.hass = hass
     sensor_entity.platform = MockEntityPlatform(hass)
     assert sensor_entity.available is True
-    assert sensor_entity.name is UNDEFINED
+    assert sensor_entity.name is Undefined
     assert sensor_entity.device_class is SensorDeviceClass.TEMPERATURE
     assert sensor_entity.translation_key is None
 

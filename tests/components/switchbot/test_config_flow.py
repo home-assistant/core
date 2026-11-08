@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
 from homeassistant.components.bluetooth import (
@@ -48,8 +49,6 @@ from . import (
     init_integration,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "switchbot"
 
@@ -1686,7 +1685,7 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     # Test Force night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -1751,7 +1750,7 @@ async def test_options_flow_curtain_speed(
 
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -2077,7 +2076,7 @@ async def test_options_flow_lock_with_night_latch(
     # Test night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM

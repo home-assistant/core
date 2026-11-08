@@ -41,9 +41,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .const import DOMAIN
-from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-from .models import ZwaveJSConfigEntry
+from .models import ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

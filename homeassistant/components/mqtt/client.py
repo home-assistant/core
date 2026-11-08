@@ -82,6 +82,7 @@ from .const import (
 )
 from .models import (
     DATA_MQTT,
+    LAST_PAYLOAD_JSON,
     MessageCallbackType,
     MqttData,
     PublishMessage,
@@ -1359,7 +1360,7 @@ class MQTT:
             if subscription.encoding is not None:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
-                except AttributeError, UnicodeDecodeError:
+                except AttributeError, LookupError, UnicodeDecodeError:
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload[0:8192],
@@ -1397,6 +1398,7 @@ class MQTT:
                     )
             else:
                 self.hass.async_run_hass_job(job, receive_msg)
+        LAST_PAYLOAD_JSON.clear()
         self._mqtt_data.state_write_requests.process_write_state_requests(msg)
 
     @callback

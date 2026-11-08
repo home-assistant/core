@@ -1,6 +1,6 @@
 """The bluetooth integration."""
 
-import datetime
+import datetime as dt
 import logging
 import platform
 from typing import TYPE_CHECKING, Any
@@ -25,6 +25,7 @@ from bluetooth_adapters import (
 )
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BaseHaRemoteScanner,
     BaseHaScanner,
     BluetoothReachabilityIntent,
@@ -89,7 +90,6 @@ from .const import (
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
 )
@@ -103,6 +103,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
 __all__ = [
+    "DOMAIN",
     "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
     "MONOTONIC_TIME",
     "SOURCE_LOCAL",
@@ -181,7 +182,7 @@ async def _async_start_adapter_discovery(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
-    async def _async_call_debouncer(now: datetime.datetime) -> None:
+    async def _async_call_debouncer(now: dt.datetime) -> None:
         """Call the debouncer at a later time."""
         await discovery_debouncer.async_call()
 

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from python_qube_heatpump import STATUS_CODE_MAP
+from python_qube_heatpump import StatusCode
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,17 +33,14 @@ if TYPE_CHECKING:
     from . import QubeConfigEntry
     from .coordinator import QubeCoordinator
 
-# Status code to state mapping, derived from the library's status code map.
-STATUS_MAP: dict[int, str] = {
-    code: status.value for code, status in STATUS_CODE_MAP.items()
-}
+# The library combines the status code with the anti-legionella request into
+# one status; anti-legionella takes precedence over everything except an alarm.
+STATUS_OPTIONS: list[str] = [
+    status.value for status in StatusCode if status is not StatusCode.UNKNOWN
+]
 
-# Options list for the status sensor: unique status strings from STATUS_MAP,
-# in first-seen order. StatusCode also defines ANTI_LEGIONELLA and UNKNOWN,
-# but those are not part of STATUS_CODE_MAP (only surfaced via the library's
-# resolve_status() helper, which this integration does not use), so they are
-# excluded here automatically rather than needing an explicit filter.
-STATUS_OPTIONS: list[str] = list(dict.fromkeys(STATUS_MAP.values()))
+# The controller reports -999.9 as the room temperature without a room sensor
+ROOM_SENSOR_MISSING = -999.0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -51,14 +48,23 @@ class QubeSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for Qube Heat Pump."""
 
     value_fn: Callable[[QubeData], StateType]
+    exists_fn: Callable[[QubeData], bool] = lambda _: True
+
+
+def _room_temperature(data: QubeData) -> StateType:
+    """Return the room temperature, or None without a room sensor."""
+    temperature = data.state.temp_room
+    if temperature is None or temperature <= ROOM_SENSOR_MISSING:
+        return None
+    return temperature
 
 
 def _status_value(data: QubeData) -> StateType:
-    """Return status string from status code."""
-    code = data.state.status_code
-    if code is None:
+    """Return the heat pump status."""
+    status = data.state.status
+    if status is None or status is StatusCode.UNKNOWN:
         return None
-    return STATUS_MAP.get(code)
+    return str(status.value)
 
 
 SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
@@ -105,7 +111,8 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.state.temp_room,
+        value_fn=_room_temperature,
+        exists_fn=lambda data: bool(data.state.roomprb_en),
     ),
     QubeSensorEntityDescription(
         key="temp_dhw",
@@ -240,7 +247,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        QubeSensor(coordinator, entry, description) for description in SENSOR_TYPES
+        QubeSensor(coordinator, entry, description)
+        for description in SENSOR_TYPES
+        if description.exists_fn(coordinator.data)
     )
 
 

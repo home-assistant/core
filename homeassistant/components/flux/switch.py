@@ -3,7 +3,7 @@
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -252,7 +252,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self.unsub_tracker = event.async_track_time_interval(
             self.hass,
             self.async_flux_update,
-            datetime.timedelta(seconds=self._interval),
+            dt.timedelta(seconds=self._interval),
         )
 
         # Make initial update
@@ -284,10 +284,10 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             # stop_time does not happen in the same day as start_time
             if start_time < now:
                 # stop time is tomorrow
-                stop_time += datetime.timedelta(days=1)
+                stop_time += dt.timedelta(days=1)
         elif now < start_time:
             # stop_time was yesterday since the new start_time is not reached
-            stop_time -= datetime.timedelta(days=1)
+            stop_time -= dt.timedelta(days=1)
 
         if start_time < now < sunset:
             # Daytime
@@ -308,7 +308,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             if now < stop_time:
                 if stop_time < start_time and stop_time.day == sunset.day:
                     # we need to use yesterday's sunset time
-                    sunset_time = sunset - datetime.timedelta(days=1)
+                    sunset_time = sunset - dt.timedelta(days=1)
                 else:
                     sunset_time = sunset
 

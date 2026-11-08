@@ -9,7 +9,7 @@ from async_upnp_client.client import UpnpDevice
 from async_upnp_client.event_handler import UpnpEventHandler
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
-from samsungctl import Remote
+from pytest_homeassistant.common import async_load_json_object_fixture
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
@@ -22,14 +22,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import SAMPLE_DEVICE_INFO_WIFI
 
-from tests.common import async_load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.samsungtv.async_setup_entry", return_value=True
+        "homeassistant.components.samsungtv.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -149,14 +147,12 @@ def upnp_notify_server_fixture(upnp_factory: Mock) -> Generator[Mock]:
 
 @pytest.fixture(name="remote_legacy")
 def remote_legacy_fixture() -> Generator[Mock]:
-    """Patch the samsungctl Remote."""
-    remote_legacy = Mock(Remote)
-    remote_legacy.__enter__ = Mock()
-    remote_legacy.__exit__ = Mock()
+    """Patch the samsungtvws SamsungTVLegacyAsyncRemote."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", return_value=remote_legacy
-    ):
-        yield remote_legacy
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+        autospec=True,
+    ) as remote_legacy_class:
+        yield remote_legacy_class.return_value
 
 
 @pytest.fixture(name="rest_api")
@@ -291,10 +287,3 @@ def remote_encrypted_websocket_fixture() -> Generator[Mock]:
     ) as remotews_class:
         remotews_class.return_value = remote_encrypted_websocket
         yield remote_encrypted_websocket
-
-
-@pytest.fixture(name="mac_address", autouse=True)
-def mac_address_fixture() -> Generator[Mock]:
-    """Patch getmac.get_mac_address."""
-    with patch("getmac.get_mac_address", return_value=None) as mac:
-        yield mac

@@ -32,7 +32,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -372,6 +372,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # Device was de/re-connected, state might have changed
         self.async_write_ha_state()
 
+    @callback
     @override
     def _async_write_ha_state(self) -> None:
         """Write the state."""
@@ -465,8 +466,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         self._updated_registry = True
         # Create linked HA DeviceEntry now the information is known.
-        device_entry = dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self._config_entry.entry_id, **device_info
+        device_entry = dr.async_get(self.hass).async_get_or_create_from_info(
+            config_entry_id=self._config_entry.entry_id, device_info=device_info
         )
 
         # Update entity registry to link to the device
@@ -558,6 +559,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
     def available(self) -> bool:
         """Device is available when we have a connection to it."""
         return self._device is not None and self._device.profile_device.available
+
+    @property
+    def device(self) -> DmrDevice | None:
+        """Return the connected DMR device, if any."""
+        return self._device
 
     @property
     @override

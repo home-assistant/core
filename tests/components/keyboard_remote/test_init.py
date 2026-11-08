@@ -12,6 +12,11 @@ from unittest.mock import MagicMock, patch
 
 from asyncinotify import Mask
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.keyboard_remote import KeyboardRemoteManager
 from homeassistant.components.keyboard_remote.const import (
@@ -59,8 +64,6 @@ from .conftest import (
     FAKE_DEVICE_REAL_PATH,
     FakeInput,
 )
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 REMOTE_PATH = "/dev/input/event7"
 REMOTE_PATH_2 = "/dev/input/event8"

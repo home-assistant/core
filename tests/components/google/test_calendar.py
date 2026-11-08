@@ -1,7 +1,7 @@
 """The tests for the google calendar platform."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -11,6 +11,9 @@ from aiohttp.client_exceptions import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from gcal_sync.auth import API_BASE_URL
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS, DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
@@ -31,10 +34,6 @@ from .conftest import (
     ApiResult,
     ComponentSetup,
 )
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_ENTITY = TEST_API_ENTITY
 TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
@@ -63,15 +62,15 @@ def upcoming() -> dict[str, Any]:
     now = dt_util.now()
     return {
         "start": {"dateTime": now.isoformat()},
-        "end": {"dateTime": (now + datetime.timedelta(minutes=5)).isoformat()},
+        "end": {"dateTime": (now + dt.timedelta(minutes=5)).isoformat()},
     }
 
 
 def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
     """Return a calendar API to return events created by upcoming()."""
     now = dt_util.now()
-    start = (now - datetime.timedelta(minutes=60)).isoformat()
-    end = (now + datetime.timedelta(minutes=60)).isoformat()
+    start = (now - dt.timedelta(minutes=60)).isoformat()
+    end = (now + dt.timedelta(minutes=60)).isoformat()
     return get_events_url(entity, start, end)
 
 
@@ -128,8 +127,8 @@ async def test_all_day_event(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test for an all day calendar event."""
-    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
-    end_event = week_from_today + datetime.timedelta(days=1)
+    week_from_today = dt_util.now().date() + dt.timedelta(days=7)
+    end_event = week_from_today + dt.timedelta(days=1)
     event = {
         **TEST_EVENT,
         "start": {"date": week_from_today.isoformat()},
@@ -159,8 +158,8 @@ async def test_future_event(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test for an upcoming event."""
-    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
-    end_event = one_hour_from_now + datetime.timedelta(minutes=60)
+    one_hour_from_now = dt_util.now() + dt.timedelta(minutes=30)
+    end_event = one_hour_from_now + dt.timedelta(minutes=60)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": one_hour_from_now.isoformat()},
@@ -190,8 +189,8 @@ async def test_in_progress_event(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test an event that is active now."""
-    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
-    end_event = middle_of_event + datetime.timedelta(minutes=60)
+    middle_of_event = dt_util.now() - dt.timedelta(minutes=30)
+    end_event = middle_of_event + dt.timedelta(minutes=60)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": middle_of_event.isoformat()},
@@ -221,8 +220,8 @@ async def test_offset_in_progress_event(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test an event that is active now with an offset."""
-    middle_of_event = dt_util.now() + datetime.timedelta(minutes=14)
-    end_event = middle_of_event + datetime.timedelta(minutes=60)
+    middle_of_event = dt_util.now() + dt.timedelta(minutes=14)
+    end_event = middle_of_event + dt.timedelta(minutes=60)
     event_summary = "Test Event in Progress"
     event = {
         **TEST_EVENT,
@@ -254,8 +253,8 @@ async def test_all_day_offset_in_progress_event(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test an all day event that is currently in progress due to an offset."""
-    tomorrow = dt_util.now().date() + datetime.timedelta(days=1)
-    end_event = tomorrow + datetime.timedelta(days=1)
+    tomorrow = dt_util.now().date() + dt.timedelta(days=1)
+    end_event = tomorrow + dt.timedelta(days=1)
     event_summary = "Test All Day Event Offset In Progress"
     event = {
         **TEST_EVENT,
@@ -288,8 +287,8 @@ async def test_all_day_offset_event(
 ) -> None:
     """Test an all day event that not in progress due to an offset."""
     now = dt_util.now()
-    day_after_tomorrow = now.date() + datetime.timedelta(days=2)
-    end_event = day_after_tomorrow + datetime.timedelta(days=1)
+    day_after_tomorrow = now.date() + dt.timedelta(days=2)
+    end_event = day_after_tomorrow + dt.timedelta(days=1)
     offset_hours = 1 + now.hour
     event_summary = "Test All Day Event Offset"
     event = {
@@ -322,8 +321,8 @@ async def test_missing_summary(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test that a summary is optional."""
-    start_event = dt_util.now() + datetime.timedelta(minutes=14)
-    end_event = start_event + datetime.timedelta(minutes=60)
+    start_event = dt_util.now() + dt.timedelta(minutes=14)
+    end_event = start_event + dt.timedelta(minutes=60)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": start_event.isoformat()},
@@ -365,11 +364,9 @@ async def test_update_error(
                 {
                     **TEST_EVENT,
                     "start": {
-                        "dateTime": (now + datetime.timedelta(minutes=-30)).isoformat()
+                        "dateTime": (now + dt.timedelta(minutes=-30)).isoformat()
                     },
-                    "end": {
-                        "dateTime": (now + datetime.timedelta(minutes=30)).isoformat()
-                    },
+                    "end": {"dateTime": (now + dt.timedelta(minutes=30)).isoformat()},
                 }
             ]
         }
@@ -381,7 +378,7 @@ async def test_update_error(
     assert state.state == "on"
 
     # Advance time to next data update interval
-    now += datetime.timedelta(minutes=30)
+    now += dt.timedelta(minutes=30)
 
     aioclient_mock.clear_requests()
     mock_events_list({}, exc=ClientError())
@@ -396,7 +393,7 @@ async def test_update_error(
     assert state.state == "unavailable"
 
     # Advance time past next coordinator update
-    now += datetime.timedelta(minutes=30)
+    now += dt.timedelta(minutes=30)
 
     aioclient_mock.clear_requests()
     mock_events_list(
@@ -404,12 +401,8 @@ async def test_update_error(
             "items": [
                 {
                     **TEST_EVENT,
-                    "start": {
-                        "dateTime": (now + datetime.timedelta(minutes=30)).isoformat()
-                    },
-                    "end": {
-                        "dateTime": (now + datetime.timedelta(minutes=60)).isoformat()
-                    },
+                    "start": {"dateTime": (now + dt.timedelta(minutes=30)).isoformat()},
+                    "end": {"dateTime": (now + dt.timedelta(minutes=60)).isoformat()},
                 }
             ]
         }
@@ -646,8 +639,8 @@ async def test_future_event_update_behavior(
 ) -> None:
     """Test an future event that becomes active."""
     now = dt_util.now()
-    one_hour_from_now = now + datetime.timedelta(minutes=60)
-    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    one_hour_from_now = now + dt.timedelta(minutes=60)
+    end_event = one_hour_from_now + dt.timedelta(minutes=90)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": one_hour_from_now.isoformat()},
@@ -662,7 +655,7 @@ async def test_future_event_update_behavior(
     assert state.state == STATE_OFF
 
     # Advance time until event has started
-    now += datetime.timedelta(minutes=60)
+    now += dt.timedelta(minutes=60)
     freezer.move_to(now)
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -680,8 +673,8 @@ async def test_future_event_offset_update_behavior(
 ) -> None:
     """Test an future event that becomes active."""
     now = dt_util.now()
-    one_hour_from_now = now + datetime.timedelta(minutes=60)
-    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    one_hour_from_now = now + dt.timedelta(minutes=60)
+    end_event = one_hour_from_now + dt.timedelta(minutes=90)
     event_summary = "Test Event in Progress"
     event = {
         **TEST_EVENT,
@@ -699,7 +692,7 @@ async def test_future_event_offset_update_behavior(
     assert not state.attributes["offset_reached"]
 
     # Advance time until event has started
-    now += datetime.timedelta(minutes=45)
+    now += dt.timedelta(minutes=45)
     freezer.move_to(now)
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -1214,8 +1207,8 @@ async def test_all_day_reader_access(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test that reader / freebusy reader access can load properly."""
-    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
-    end_event = week_from_today + datetime.timedelta(days=1)
+    week_from_today = dt_util.now().date() + dt.timedelta(days=7)
+    end_event = week_from_today + dt.timedelta(days=1)
     event = {
         **TEST_EVENT,
         "start": {"date": week_from_today.isoformat()},
@@ -1245,8 +1238,8 @@ async def test_reader_in_progress_event(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test reader access for an event in process."""
-    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
-    end_event = middle_of_event + datetime.timedelta(minutes=60)
+    middle_of_event = dt_util.now() - dt.timedelta(minutes=30)
+    end_event = middle_of_event + dt.timedelta(minutes=60)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": middle_of_event.isoformat()},
@@ -1275,7 +1268,7 @@ async def test_all_day_event_without_duration(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test all day event without duration is adjusted to one day."""
-    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    week_from_today = dt_util.now().date() + dt.timedelta(days=7)
     event = {
         **TEST_EVENT,
         "start": {"date": week_from_today.isoformat()},
@@ -1285,7 +1278,7 @@ async def test_all_day_event_without_duration(
 
     assert await component_setup()
 
-    expected_end_event = week_from_today + datetime.timedelta(days=1)
+    expected_end_event = week_from_today + dt.timedelta(days=1)
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
@@ -1307,7 +1300,7 @@ async def test_event_without_duration(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Google calendar UI allows creating events without a duration."""
-    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    one_hour_from_now = dt_util.now() + dt.timedelta(minutes=30)
     event = {
         **TEST_EVENT,
         "start": {"dateTime": one_hour_from_now.isoformat()},
@@ -1332,8 +1325,8 @@ async def test_event_differs_timezone(
     hass: HomeAssistant, mock_events_list_items, component_setup
 ) -> None:
     """Test a case where the event has a different start/end timezone."""
-    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
-    end_event = one_hour_from_now + datetime.timedelta(hours=8)
+    one_hour_from_now = dt_util.now() + dt.timedelta(minutes=30)
+    end_event = one_hour_from_now + dt.timedelta(hours=8)
     event = {
         **TEST_EVENT,
         "start": {
@@ -1370,8 +1363,8 @@ async def test_invalid_rrule_fix(
     component_setup,
 ) -> None:
     """Test invalid RRULE from Google Calendar API is handled."""
-    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
-    end_event = week_from_today + datetime.timedelta(days=1)
+    week_from_today = dt_util.now().date() + dt.timedelta(days=7)
+    end_event = week_from_today + dt.timedelta(days=1)
     event = {
         **TEST_EVENT,
         "start": {"date": week_from_today.isoformat()},
@@ -1477,7 +1470,7 @@ async def test_working_location_entity(
     )
     async_fire_time_changed(
         hass,
-        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + dt.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -1531,7 +1524,7 @@ async def test_working_location_get_events(
     )
     async_fire_time_changed(
         hass,
-        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + dt.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -1630,7 +1623,7 @@ async def test_working_location_ignore_availability_false(
     )
     async_fire_time_changed(
         hass,
-        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + dt.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -1734,7 +1727,7 @@ async def test_birthday_entity(
     )
     async_fire_time_changed(
         hass,
-        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + dt.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 

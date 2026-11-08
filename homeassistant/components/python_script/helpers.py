@@ -1,7 +1,7 @@
 """Helpers to execute python scripts."""
 
 from collections.abc import Callable, Mapping, Sequence
-import datetime
+import datetime as dt
 import logging
 from numbers import Number
 import operator
@@ -176,7 +176,7 @@ def execute(
             or (obj is hass.states and name not in ALLOWED_STATEMACHINE)
             or (obj is hass.services and name not in ALLOWED_SERVICEREGISTRY)
             or (obj is dt_util and name not in ALLOWED_DT_UTIL)
-            or (obj is datetime and name not in ALLOWED_DATETIME)
+            or (obj is dt and name not in ALLOWED_DATETIME)
             or (isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME)
         ):
             raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
@@ -185,7 +185,7 @@ def execute(
 
     extra_builtins = {
         "__import__": guarded_import,
-        "datetime": datetime,
+        "datetime": dt,
         "sorted": sorted,
         "time": TimeWrapper(),
         "dt_util": dt_util,

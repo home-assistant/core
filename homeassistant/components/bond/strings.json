@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device.",
       "wrong_device": "The access token belongs to a different Bond device than the one configured."
     },
     "error": {
@@ -24,6 +25,15 @@
         },
         "description": "The access token for the Bond device at {host} is no longer valid. Please enter the new access token.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::bond::config::step::user::data_description::host%]"
+        }
       },
       "user": {
         "data": {

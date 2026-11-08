@@ -4,10 +4,9 @@ from typing import Any
 
 import aiohttp
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from .const import DEFAULT_RESPONSE, RESOURCE_URL
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture

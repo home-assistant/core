@@ -32,12 +32,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
@@ -61,6 +62,9 @@ from .const import (
     SENSOR_FIELDS,
 )
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -266,6 +270,12 @@ async def _handle_sensor_update(
         _LOGGER.debug(
             "Failed to push %s update to OpenEVSE charger: %s", changed_entity, err
         )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the OpenEVSE component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> None:

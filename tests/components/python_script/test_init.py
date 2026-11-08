@@ -4,6 +4,7 @@ import logging
 from unittest.mock import mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import patch_yaml_files
 
 from homeassistant.components.python_script.const import DOMAIN, FOLDER
 from homeassistant.components.python_script.helpers import execute
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
-
-from tests.common import patch_yaml_files
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -26,7 +25,8 @@ async def test_setup(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         res = await async_setup_component(hass, DOMAIN, {})
@@ -369,7 +369,8 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         res = await async_setup_component(hass, DOMAIN, {})
@@ -388,7 +389,8 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
@@ -397,6 +399,49 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.services.has_service("python_script", "hello2")
     assert hass.services.has_service("python_script", "world_beer")
     assert hass.services.has_service("python_script", "reload")
+
+
+@pytest.mark.parametrize("filename", ["reload.py", "RELOAD.py"])
+async def test_reload_name_is_reserved(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, filename: str
+) -> None:
+    """Test a script named reload does not replace the reload action."""
+    scripts = [
+        "/some/config/dir/python_scripts/hello.py",
+        f"/some/config/dir/python_scripts/{filename}",
+    ]
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    assert "name is reserved" in caplog.text
+    assert hass.services.has_service("python_script", "hello")
+
+    scripts = [
+        "/some/config/dir/python_scripts/hello2.py",
+        f"/some/config/dir/python_scripts/{filename}",
+    ]
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
+        ),
+    ):
+        await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
+
+    # The built-in reload action ran, so the scripts were discovered again
+    assert not hass.services.has_service("python_script", "hello")
+    assert hass.services.has_service("python_script", "hello2")
 
 
 async def test_service_descriptions(hass: HomeAssistant) -> None:
@@ -425,7 +470,8 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts1
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts1,
         ),
         patch(
             "homeassistant.components.python_script.os.path.exists", return_value=True
@@ -479,7 +525,8 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts2
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts2,
         ),
         patch(
             "homeassistant.components.python_script.os.path.exists", return_value=True
@@ -535,7 +582,8 @@ async def test_execute_with_output(
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -579,7 +627,8 @@ async def test_execute_no_output(
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -618,7 +667,8 @@ async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
         await async_setup_component(hass, DOMAIN, {})

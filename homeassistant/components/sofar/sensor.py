@@ -31,6 +31,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -45,9 +46,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import METER_ENERGY
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 0
 
@@ -58,52 +58,54 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sofar sensor platform."""
+    async_remove_unserved_entities(
+        hass,
+        entry,
+        Platform.SENSOR,
+        SENSOR_DESCRIPTIONS + TOTAL_SENSOR_DESCRIPTIONS,
+    )
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
 
-    async_add_entities(
-        _sensor_class(description)(runtime_data, description)
+    entities: list[SofarSensor | SofarTotalSensor] = [
+        SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and not _is_battery_pack(description)
+        if description.component in served and not _is_battery_string(description)
+    ]
+    entities.extend(
+        SofarTotalSensor(runtime_data, description)
+        for description in TOTAL_SENSOR_DESCRIPTIONS
+        if description.component in served
     )
+    async_add_entities(entities)
 
     @callback
-    def _async_add_wired_packs() -> None:
-        """Add a pack's sensors the first time it reports a voltage."""
-        wired = runtime_data.wired_packs
-        new = runtime_data.readings.device.wired_battery_strings - wired
+    def _async_add_wired_battery_strings() -> None:
+        """Add a battery string's sensors the first time it reports a voltage."""
+        new = (
+            runtime_data.readings.device.wired_battery_strings
+            - runtime_data.added_battery_strings
+        )
         if not new:
             return
-        wired.update(new)
+        runtime_data.added_battery_strings.update(new)
         async_add_entities(
-            _sensor_class(description)(runtime_data, description)
+            SofarSensor(runtime_data, description)
             for description in SENSOR_DESCRIPTIONS
             if (part := description.part) is not None
             and part[0] == "battery"
             and part[1] in new
         )
 
-    _async_add_wired_packs()
+    _async_add_wired_battery_strings()
     entry.async_on_unload(
-        runtime_data.readings.async_add_listener(_async_add_wired_packs)
+        runtime_data.readings.async_add_listener(_async_add_wired_battery_strings)
     )
 
 
-def _is_battery_pack(description: SofarSensorDescription) -> bool:
-    """Whether a description belongs to one numbered battery pack."""
+def _is_battery_string(description: SofarSensorDescription) -> bool:
+    """Whether a description belongs to one numbered battery string."""
     return description.part is not None and description.part[0] == "battery"
-
-
-def _sensor_class(
-    description: SofarSensorDescription,
-) -> type[SofarSensor | SofarTotalSensor]:
-    """Pick the entity class a description's semantics ask for."""
-    if description.state_class in (
-        SensorStateClass.TOTAL,
-        SensorStateClass.TOTAL_INCREASING,
-    ):
-        return SofarTotalSensor
-    return SofarSensor
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -124,26 +126,21 @@ class SofarSensor(SofarEntity, SensorEntity):
 class SofarTotalSensor(SofarEntity, RestoreSensor):
     """Defines a Sofar cumulative total sensor."""
 
-    entity_description: SofarSensorDescription
+    entity_description: SofarTotalSensorDescription
 
     @override
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if (last_data := await self.async_get_last_sensor_data()) is None:
-            return
-        if last_data.native_value is None:
-            return
-        try:
-            val = float(str(last_data.native_value))
-        except ValueError, TypeError:
-            return
-        self._attr_native_value = val
+        last_data = await self.async_get_last_sensor_data()
+        if last_data is not None and isinstance(last_data.native_value, (int, float)):
+            self._attr_native_value = last_data.native_value
 
     @property
     @override
     def native_value(self) -> int | float | None:
-        value = self.entity_description.value_fn(self.coordinator.device)
-        if isinstance(value, (int, float)):
+        value = self.entity_description.total_fn(self.coordinator.device).value
+        # Restore state saves this even while unavailable; keep the last total.
+        if value is not None:
             self._attr_native_value = value
         return cast(int | float | None, self._attr_native_value)
 
@@ -153,12 +150,18 @@ class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
     """Describe a Sofar sensor."""
 
     value_fn: Callable[[SofarInverter], StateType]
-    total_fn: Callable[[SofarInverter], CorrectedTotal] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class SofarTotalSensorDescription(SensorEntityDescription, SofarEntityDescription):
+    """Describe a Sofar cumulative total sensor."""
+
+    total_fn: Callable[[SofarInverter], CorrectedTotal]
 
 
 @dataclass(frozen=True, kw_only=True)
 class _PartMeasurement:
-    """One measurement every string or pack repeats, before it gets a number."""
+    """One measurement every string repeats, before it gets a number."""
 
     key: str
     translation_key: str
@@ -264,7 +267,7 @@ def _part_sensors(
     components: Mapping[int, str],
     measurements: tuple[_PartMeasurement, ...],
 ) -> tuple[SofarSensorDescription, ...]:
-    """Repeat a part's measurements across every string or pack it has."""
+    """Repeat a part's measurements across every string it has."""
     return tuple(
         SofarSensorDescription(
             key=f"{measurement.key}_{number}",
@@ -289,8 +292,23 @@ def _part_sensors(
 def _part_value_fn(
     value_fn: Callable[[SofarInverter, int], StateType], number: int
 ) -> Callable[[SofarInverter], StateType]:
-    """Bind a measurement to one numbered string or pack."""
+    """Bind a measurement to one numbered string."""
     return lambda device: value_fn(device, number)
+
+
+def _discharge_cutoff_soc(depth: int | None) -> int | None:
+    """Return the charge left once the battery has discharged by depth."""
+    return None if depth is None else 100 - depth
+
+
+def _off_grid_recovery_soc(device: SofarInverter) -> int | None:
+    """Return the charge at which off-grid discharge resumes."""
+    config = device.battery_config
+    if (cutoff := _discharge_cutoff_soc(config.bat_config_end_of_discharge)) is None:
+        return None
+    if (buffer := config.bat_config_eps_buffer) is None:
+        return None
+    return cutoff + buffer
 
 
 SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
@@ -302,17 +320,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.pv_1_2.pv_power_total,
-    ),
-    SofarSensorDescription(
-        key="solar_generation_total",
-        component="energy",
-        translation_key="solar_generation_total",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        value_fn=lambda device: device.energy.solar_generation_total_corrected.value,
-        total_fn=lambda device: device.energy.solar_generation_total_corrected,
     ),
     SofarSensorDescription(
         key="system_state",
@@ -1263,153 +1270,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         value_fn=lambda device: device.battery_totals.battery_state_of_health_total,
     ),
     SofarSensorDescription(
-        key="solar_generation_today",
-        component="energy",
-        translation_key="solar_generation_today",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: device.energy.solar_generation_today_corrected.value,
-        total_fn=lambda device: device.energy.solar_generation_today_corrected,
-    ),
-    SofarSensorDescription(
-        key="load_consumption_today",
-        component=METER_ENERGY,
-        translation_key="load_consumption_today",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: (
-            device.meter_energy.load_consumption_today_corrected.value
-        ),
-        total_fn=lambda device: device.meter_energy.load_consumption_today_corrected,
-    ),
-    SofarSensorDescription(
-        key="load_consumption_total",
-        component=METER_ENERGY,
-        translation_key="load_consumption_total",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        value_fn=lambda device: (
-            device.meter_energy.load_consumption_total_corrected.value
-        ),
-        total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
-    ),
-    SofarSensorDescription(
-        key="import_energy_today",
-        component=METER_ENERGY,
-        translation_key="import_energy_today",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: device.meter_energy.import_energy_today_corrected.value,
-        total_fn=lambda device: device.meter_energy.import_energy_today_corrected,
-    ),
-    SofarSensorDescription(
-        key="import_energy_total",
-        component=METER_ENERGY,
-        translation_key="import_energy_total",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        value_fn=lambda device: device.meter_energy.import_energy_total_corrected.value,
-        total_fn=lambda device: device.meter_energy.import_energy_total_corrected,
-    ),
-    SofarSensorDescription(
-        key="export_energy_today",
-        component=METER_ENERGY,
-        translation_key="export_energy_today",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: device.meter_energy.export_energy_today_corrected.value,
-        total_fn=lambda device: device.meter_energy.export_energy_today_corrected,
-    ),
-    SofarSensorDescription(
-        key="export_energy_total",
-        component=METER_ENERGY,
-        translation_key="export_energy_total",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        value_fn=lambda device: device.meter_energy.export_energy_total_corrected.value,
-        total_fn=lambda device: device.meter_energy.export_energy_total_corrected,
-    ),
-    SofarSensorDescription(
-        key="battery_input_energy_today",
-        component="battery_energy",
-        translation_key="battery_input_energy_today",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: (
-            device.battery_energy.battery_input_energy_today_corrected.value
-        ),
-        total_fn=lambda device: (
-            device.battery_energy.battery_input_energy_today_corrected
-        ),
-    ),
-    SofarSensorDescription(
-        key="battery_input_energy_total",
-        component="battery_energy",
-        translation_key="battery_input_energy_total",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        value_fn=lambda device: (
-            device.battery_energy.battery_input_energy_total_corrected.value
-        ),
-        total_fn=lambda device: (
-            device.battery_energy.battery_input_energy_total_corrected
-        ),
-    ),
-    SofarSensorDescription(
-        key="battery_output_energy_today",
-        component="battery_energy",
-        translation_key="battery_output_energy_today",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        entity_registry_enabled_default=False,
-        value_fn=lambda device: (
-            device.battery_energy.battery_output_energy_today_corrected.value
-        ),
-        total_fn=lambda device: (
-            device.battery_energy.battery_output_energy_today_corrected
-        ),
-    ),
-    SofarSensorDescription(
-        key="battery_output_energy_total",
-        component="battery_energy",
-        translation_key="battery_output_energy_total",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        suggested_display_precision=2,
-        value_fn=lambda device: (
-            device.battery_energy.battery_output_energy_total_corrected.value
-        ),
-        total_fn=lambda device: (
-            device.battery_energy.battery_output_energy_total_corrected
-        ),
-    ),
-    SofarSensorDescription(
         key="passive_eps_wait_time",
         component="eps",
         translation_key="passive_eps_wait_time",
@@ -1577,6 +1437,48 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         value_fn=lambda device: device.battery_config.bat_config_voltage_float,
     ),
     SofarSensorDescription(
+        key="on_grid_discharge_cutoff_soc",
+        component="battery_config",
+        translation_key="on_grid_discharge_cutoff_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: _discharge_cutoff_soc(
+            device.battery_config.bat_config_depth_of_discharge
+        ),
+    ),
+    SofarSensorDescription(
+        key="off_grid_discharge_cutoff_soc",
+        component="battery_config",
+        translation_key="off_grid_discharge_cutoff_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: _discharge_cutoff_soc(
+            device.battery_config.bat_config_end_of_discharge
+        ),
+    ),
+    SofarSensorDescription(
+        key="off_grid_recovery_soc",
+        component="battery_config",
+        translation_key="off_grid_recovery_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=_off_grid_recovery_soc,
+    ),
+    SofarSensorDescription(
+        key="bat_config_charge_cutoff_soc",
+        component="battery_charge_cutoff",
+        translation_key="bat_config_charge_cutoff_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: (
+            device.battery_charge_cutoff.bat_config_charge_cutoff_soc
+        ),
+    ),
+    SofarSensorDescription(
         key="sync_rtc_result",
         component="rtc_sync",
         translation_key="sync_rtc_result",
@@ -1669,3 +1571,140 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
 SENSOR_DESCRIPTIONS += _part_sensors(
     "pv_string", PV_STRING_COMPONENTS, _PV_STRING_MEASUREMENTS
 ) + _part_sensors("battery", BATTERY_STRING_COMPONENTS, _BATTERY_MEASUREMENTS)
+
+TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
+    SofarTotalSensorDescription(
+        key="solar_generation_total",
+        component="energy",
+        translation_key="solar_generation_total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        total_fn=lambda device: device.energy.solar_generation_total_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="solar_generation_today",
+        component="energy",
+        translation_key="solar_generation_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        total_fn=lambda device: device.energy.solar_generation_today_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="load_consumption_today",
+        component="meter_energy",
+        translation_key="load_consumption_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        total_fn=lambda device: device.meter_energy.load_consumption_today_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="load_consumption_total",
+        component="meter_energy",
+        translation_key="load_consumption_total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        total_fn=lambda device: device.meter_energy.load_consumption_total_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="import_energy_today",
+        component="meter_energy",
+        translation_key="import_energy_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        total_fn=lambda device: device.meter_energy.import_energy_today_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="import_energy_total",
+        component="meter_energy",
+        translation_key="import_energy_total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        total_fn=lambda device: device.meter_energy.import_energy_total_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="export_energy_today",
+        component="meter_energy",
+        translation_key="export_energy_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        total_fn=lambda device: device.meter_energy.export_energy_today_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="export_energy_total",
+        component="meter_energy",
+        translation_key="export_energy_total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        total_fn=lambda device: device.meter_energy.export_energy_total_corrected,
+    ),
+    SofarTotalSensorDescription(
+        key="battery_input_energy_today",
+        component="battery_energy",
+        translation_key="battery_input_energy_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        total_fn=lambda device: (
+            device.battery_energy.battery_input_energy_today_corrected
+        ),
+    ),
+    SofarTotalSensorDescription(
+        key="battery_input_energy_total",
+        component="battery_energy",
+        translation_key="battery_input_energy_total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        total_fn=lambda device: (
+            device.battery_energy.battery_input_energy_total_corrected
+        ),
+    ),
+    SofarTotalSensorDescription(
+        key="battery_output_energy_today",
+        component="battery_energy",
+        translation_key="battery_output_energy_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        total_fn=lambda device: (
+            device.battery_energy.battery_output_energy_today_corrected
+        ),
+    ),
+    SofarTotalSensorDescription(
+        key="battery_output_energy_total",
+        component="battery_energy",
+        translation_key="battery_output_energy_total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        total_fn=lambda device: (
+            device.battery_energy.battery_output_energy_total_corrected
+        ),
+    ),
+)

@@ -10,7 +10,7 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 
 TO_REDACT = {
     CONF_NAME,
@@ -34,7 +34,7 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
 
     devices: list[dict[str, dict[str, Any]]] = [
-        build_device_data(device) for device in coordinator.data.values()
+        build_device_data(coordinator, device) for device in coordinator.data.values()
     ]
 
     return {
@@ -61,19 +61,33 @@ async def async_get_device_diagnostics(
         # Service device has no serial number and no matching coordinator data
         return {"service device": True}
 
-    return build_device_data(coordinator.data[device_entry.serial_number])
+    return build_device_data(coordinator, coordinator.data[device_entry.serial_number])
 
 
-def build_device_data(device: AmazonDevice) -> dict[str, Any]:
+def build_device_data(
+    coordinator: AmazonDevicesCoordinator, device: AmazonDevice
+) -> dict[str, Any]:
     """Build device data for diagnostics."""
     return {
         "account name": device.account_name,
         "capabilities": device.capabilities,
         "device family": device.device_family,
         "device type": device.device_type,
+        "primary display category": device.primary_display_category,
         "device cluster members": device.device_cluster_members,
         "online": device.online,
         "serial number": device.serial_number,
         "software version": device.software_version,
-        "sensors": {key: asdict(sensor) for key, sensor in device.sensors.items()},
+        "sensors": {
+            key: asdict(sensor)
+            for key, sensor in coordinator.sensors.get(device.serial_number, {}).items()
+        },
+        "features": {
+            key: {instance: asdict(feature) for instance, feature in instances.items()}
+            for key, instances in device.features.items()
+        },
+        "unsupported features": {
+            key: {instance: asdict(feature) for instance, feature in instances.items()}
+            for key, instances in device.unsupported_features.items()
+        },
     }

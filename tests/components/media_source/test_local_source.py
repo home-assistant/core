@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import media_source, websocket_api
 from homeassistant.components.media_player import (
@@ -20,9 +22,6 @@ from homeassistant.components.media_source.local_source import MAX_SEARCH_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -296,14 +295,15 @@ async def test_media_view(
 
     client = await hass_client()
 
-    # Protects against non-existent files
-    resp = await client.head("/media/local/invalid.txt")
+    # Protects against non-existent files. A media extension is used so the
+    # existence check is what rejects the request, not the media-type check.
+    resp = await client.head("/media/local/invalid.mp3")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    resp = await client.get("/media/local/invalid.txt")
+    resp = await client.get("/media/local/invalid.mp3")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    resp = await client.get("/media/recordings/invalid.txt")
+    resp = await client.get("/media/recordings/invalid.mp3")
     assert resp.status == HTTPStatus.NOT_FOUND
 
     # Protects against non-media files

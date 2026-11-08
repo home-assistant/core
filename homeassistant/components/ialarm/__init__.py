@@ -2,7 +2,7 @@
 
 import asyncio
 
-from pyialarm import IAlarm
+from pyasyncialarm import IAlarm
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -18,10 +18,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: IAlarmConfigEntry) -> No
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
     ialarm = IAlarm(host, port)
+    # Also runs when setup fails, so the persistent connection is always closed
+    entry.async_on_unload(ialarm.shutdown)
 
     try:
         async with asyncio.timeout(10):
-            mac = await hass.async_add_executor_job(ialarm.get_mac)
+            mac = await ialarm.get_mac()
     except (TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 

@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .mocks import _mock_powerwall_restricted, _mock_powerwall_with_fixtures
-
-from tests.common import MockConfigEntry
 
 
 async def test_sensors(hass: HomeAssistant) -> None:

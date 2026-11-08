@@ -22,17 +22,17 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_read_error
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NFAndroidTVConfigEntry
 from .const import (
-    ATTR_BGCOLOR,
     ATTR_BKGCOLOR,
     ATTR_COLOR,
     ATTR_DURATION,
@@ -50,16 +50,18 @@ from .const import (
     ATTR_IMAGE_PATH,
     ATTR_IMAGE_URL,
     ATTR_IMAGE_USERNAME,
-    ATTR_INTERACTIVE,
     ATTR_INTERRUPT,
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    NFAndroidTVServiceArgument,
 )
 from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
+
+_ATTR_ICON = "icon"
 
 
 async def async_setup_entry(
@@ -101,25 +103,29 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_connection_error",
-                translation_placeholders={CONF_NAME: self.entry.title},
+                translation_placeholders={"name": self.entry.title},
             ) from e
 
     async def nfandroidtv_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message via nfandroidtv.send_message."""
 
-        if ATTR_INTERACTIVE in kwargs:
-            kwargs[ATTR_INTERRUPT] = kwargs.pop(ATTR_INTERACTIVE)
-        if ATTR_IMAGE in kwargs:
+        if NFAndroidTVServiceArgument.INTERACTIVE in kwargs:
+            kwargs[ATTR_INTERRUPT] = kwargs.pop(NFAndroidTVServiceArgument.INTERACTIVE)
+        if NFAndroidTVServiceArgument.IMAGE in kwargs:
             kwargs["image_file"] = await _resolve_media(
-                self.hass, kwargs.pop(ATTR_IMAGE)
+                self.hass, kwargs.pop(NFAndroidTVServiceArgument.IMAGE)
             )
-        if ATTR_ICON in kwargs:
-            kwargs[ATTR_ICON] = await _resolve_media(self.hass, kwargs.pop(ATTR_ICON))
-        if ATTR_DURATION in kwargs:
-            duration: timedelta = kwargs.pop(ATTR_DURATION)
+        if NFAndroidTVServiceArgument.ICON in kwargs:
+            kwargs[_ATTR_ICON] = await _resolve_media(
+                self.hass, kwargs.pop(NFAndroidTVServiceArgument.ICON)
+            )
+        if NFAndroidTVServiceArgument.DURATION in kwargs:
+            duration: timedelta = kwargs.pop(NFAndroidTVServiceArgument.DURATION)
             kwargs[ATTR_DURATION] = int(duration.total_seconds())
-        if ATTR_BGCOLOR in kwargs:
-            kwargs[ATTR_BKGCOLOR] = kwargs.pop(ATTR_BGCOLOR)
+        if NFAndroidTVServiceArgument.BACKGROUND_COLOR in kwargs:
+            kwargs[ATTR_BKGCOLOR] = kwargs.pop(
+                NFAndroidTVServiceArgument.BACKGROUND_COLOR
+            )
 
         try:
             sent = await self.hass.async_add_executor_job(
@@ -129,13 +135,13 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_connection_error",
-                translation_placeholders={CONF_NAME: self.entry.title},
+                translation_placeholders={"name": self.entry.title},
             ) from e
         if not sent:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_failed",
-                translation_placeholders={CONF_NAME: self.entry.title},
+                translation_placeholders={"name": self.entry.title},
             )
         self._async_record_notification()
 
@@ -156,12 +162,8 @@ async def _resolve_media(hass: HomeAssistant, media_source: dict[str, Any]) -> b
         )
     try:
         return await hass.async_add_executor_job(media.path.read_bytes)
-    except OSError as e:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="media_not_readable",
-            translation_placeholders={CONF_NAME: media.path.name},
-        ) from e
+    except OSError as err:
+        raise os_read_error(err, str(media.path)) from err
 
 
 async def async_get_service(
@@ -204,7 +206,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="connection_failed",
-                    translation_placeholders={CONF_HOST: self.host},
+                    translation_placeholders={"host": self.host},
                 ) from err
 
         data: dict | None = kwargs.get(ATTR_DATA)
@@ -290,7 +292,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         translation_key="invalid_notification_image",
                         translation_placeholders={"type": type(imagedata).__name__},
                     )
-            if icondata := data.get(ATTR_ICON):
+            if icondata := data.get(_ATTR_ICON):
                 if isinstance(icondata, str):
                     icondata = (
                         self.load_file(url=icondata)
@@ -330,7 +332,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",
-                translation_placeholders={CONF_HOST: self.host},
+                translation_placeholders={"host": self.host},
             ) from err
 
     def load_file(

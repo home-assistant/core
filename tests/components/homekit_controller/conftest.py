@@ -1,7 +1,7 @@
 """HomeKit controller session fixtures."""
 
 from collections.abc import Callable, Generator
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock, patch
 
 from aiohomekit.model import Transport
@@ -22,7 +22,7 @@ pytest.register_assert_rewrite("tests.components.homekit_controller.common")
 def freeze_time_in_future() -> Generator[FrozenDateTimeFactory]:
     """Freeze time at a known point."""
     now = dt_util.utcnow()
-    start_dt = datetime.datetime(now.year + 1, 1, 1, 0, 0, 0, tzinfo=now.tzinfo)
+    start_dt = dt.datetime(now.year + 1, 1, 1, 0, 0, 0, tzinfo=now.tzinfo)
     with freeze_time(start_dt) as frozen_time:
         yield frozen_time
 

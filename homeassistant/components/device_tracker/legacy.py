@@ -23,8 +23,6 @@ from homeassistant.config import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
-    ATTR_ICON,
-    ATTR_NAME,
     CONF_ICON,
     CONF_MAC,
     CONF_NAME,
@@ -781,6 +779,7 @@ class DeviceTracker:
                 device.async_write_ha_state()
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class Device(RestoreEntity):
     """Base class for a tracked device."""
 
@@ -1084,9 +1083,9 @@ def update_config(path: str, dev_id: str, device: Device) -> None:
     with open(path, "a", encoding="utf8") as out:
         device_config = {
             device.dev_id: {
-                ATTR_NAME: device.name,
-                ATTR_MAC: device.mac,
-                ATTR_ICON: device.icon,
+                CONF_NAME: device.name,
+                CONF_MAC: device.mac,
+                CONF_ICON: device.icon,
                 "picture": device.config_picture,
                 "track": device.track,
             }

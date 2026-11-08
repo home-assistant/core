@@ -1,6 +1,7 @@
 """Test the System Bridge integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
@@ -8,14 +9,14 @@ from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -139,26 +140,35 @@ async def test_file(
     )
 
 
-async def test_bad_entry(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
+@pytest.mark.parametrize(
+    "entry_id",
+    [
+        pytest.param("badentryid", id="not_found"),
+        pytest.param("other_entry", id="other_integration"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_bad_entry(hass: HomeAssistant, entry_id: str) -> None:
     """Test invalid entry raises BrowseError."""
+    MockConfigEntry(
+        domain="other", entry_id="other_entry", state=ConfigEntryState.LOADED
+    ).add_to_hass(hass)
+
     with pytest.raises(BrowseError):
         await async_browse_media(
             hass,
-            f"{URI_SCHEME}{DOMAIN}/badentryid",
+            f"{URI_SCHEME}{DOMAIN}/{entry_id}",
         )
 
     with pytest.raises(BrowseError):
         await async_browse_media(
             hass,
-            f"{URI_SCHEME}{DOMAIN}/badentryid~~baddirectory",
+            f"{URI_SCHEME}{DOMAIN}/{entry_id}~~baddirectory",
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(Unresolvable):
         await async_resolve_media(
             hass,
-            f"{URI_SCHEME}{DOMAIN}/badentryid~~baddirectory/badfile.txt~~text/plain",
+            f"{URI_SCHEME}{DOMAIN}/{entry_id}~~baddirectory/badfile.txt~~text/plain",
             None,
         )

@@ -22,13 +22,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import (
     ElkAttachedEntity,
     ElkEntity,
     create_elk_entities,
     generate_unique_id,
 )
+from .models import ElkM1ConfigEntry
 from .util import deprecate_entity
 
 UNDEFINED_TEMPERATURE = -40

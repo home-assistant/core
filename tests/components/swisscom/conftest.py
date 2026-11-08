@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.swisscom.const import DOMAIN
 
 from .const import TEST_BASE_MAC, TEST_FORMATTED_MAC, TEST_MODEL_NAME, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -27,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.swisscom.async_setup_entry", return_value=True
+        "homeassistant.components.swisscom.async_setup_entry", return_value=None
     ) as mock_fn:
         yield mock_fn
 

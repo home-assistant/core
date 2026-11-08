@@ -31,6 +31,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.DATETIME,
     Platform.EVENT,
     Platform.FAN,
+    Platform.GEO_LOCATION,
     Platform.HUMIDIFIER,
     Platform.LAWN_MOWER,
     Platform.LIGHT,
@@ -54,13 +55,16 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    Platform.GEO_LOCATION,
     Platform.TTS,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -45,7 +45,8 @@ async def async_setup_entry(
         firmware = await async_get_raspberry_pi_firmware_info(hass)
     except SupervisorError as err:
         raise PlatformNotReady(
-            f"Error fetching Raspberry Pi firmware info: {err}"
+            translation_domain=DOMAIN,
+            translation_key="firmware_info_error",
         ) from err
 
     # Skip when the update is blocked on this boot device (e.g. CM4 without

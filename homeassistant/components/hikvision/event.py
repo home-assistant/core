@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 0
 
 # Smart events classify what tripped them. Firmware that does not classify, and
 # every trip of a non-smart event, reports no target at all.
-DETECTION_TARGETS = ("human", "pet", "vehicle")
+DETECTION_TARGETS = ("human", "others", "pet", "vehicle")
 EVENT_TYPE_TRIGGERED = "triggered"
 EVENT_TYPES = [EVENT_TYPE_TRIGGERED, *DETECTION_TARGETS]
 

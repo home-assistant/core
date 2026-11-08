@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 from specialized_turbo import PRODUCTION_WRAPPING_KEY, AssistLevel, TelemetrySnapshot
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -21,9 +26,6 @@ from homeassistant.components.specialized_turbo.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 MOCK_ADDRESS = "DC:DD:BB:4A:D6:55"
 MOCK_ADDRESS_FORMATTED = "dc:dd:bb:4a:d6:55"
@@ -185,11 +187,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     async def setup_entry(
         _hass: HomeAssistant,
         entry: ConfigEntry,
-    ) -> bool:
+    ) -> None:
         runtime_data = MagicMock()
         runtime_data.async_shutdown = AsyncMock()
         entry.runtime_data = runtime_data
-        return True
 
     with patch(
         "homeassistant.components.specialized_turbo.async_setup_entry",

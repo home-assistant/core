@@ -42,18 +42,18 @@ class RenaultServiceArgument(StrEnum):
 
 SERVICE_VEHICLE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(RenaultServiceArgument.VEHICLE.value): cv.string,
+        probatio.Required(RenaultServiceArgument.VEHICLE): cv.string,
     }
 )
 SERVICE_AC_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        probatio.Required(RenaultServiceArgument.TEMPERATURE.value): cv.positive_float,
-        probatio.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
+        probatio.Required(RenaultServiceArgument.TEMPERATURE): cv.positive_float,
+        probatio.Optional(RenaultServiceArgument.WHEN): cv.datetime,
     }
 )
 SERVICE_CHARGE_START_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        probatio.Optional(RenaultServiceArgument.WHEN.value): cv.datetime,
+        probatio.Optional(RenaultServiceArgument.WHEN): cv.datetime,
     }
 )
 SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA = probatio.Schema(
@@ -91,7 +91,7 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = probatio.Schema(
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
+        probatio.Required(RenaultServiceArgument.SCHEDULES): probatio.All(
             probatio.EnsureList(), [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
         ),
     }
@@ -132,7 +132,7 @@ SERVICE_AC_SET_SCHEDULE_SCHEMA = probatio.Schema(
 )
 SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     {
-        probatio.Required(RenaultServiceArgument.SCHEDULES.value): probatio.All(
+        probatio.Required(RenaultServiceArgument.SCHEDULES): probatio.All(
             probatio.EnsureList(), [SERVICE_AC_SET_SCHEDULE_SCHEMA]
         ),
     }
