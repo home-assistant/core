@@ -255,7 +255,6 @@ FLOWS = {
         "firefly_iii",
         "fireservicerota",
         "fish_audio",
-        "fitbit",
         "fivem",
         "fjaraskupan",
         "flexit",

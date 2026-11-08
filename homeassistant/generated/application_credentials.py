@@ -12,7 +12,6 @@ APPLICATION_CREDENTIALS = [
     "dropbox",
     "ekeybionyx",
     "electric_kiwi",
-    "fitbit",
     "gentex_homelink",
     "geocaching",
     "google",
