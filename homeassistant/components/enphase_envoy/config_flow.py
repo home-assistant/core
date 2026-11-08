@@ -259,6 +259,9 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(
+            CONF_NO_SOLAR, reauth_entry.data.get(CONF_NO_SOLAR, False)
+        )
 
         if token := reauth_entry.data.get(CONF_TOKEN, ""):
             token_days_left = token_lifetime(token)
@@ -326,7 +329,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
         token_days_left: str = UNKNOWN_TOKEN_TEXT
-        no_solar = (user_input or {}).get(CONF_NO_SOLAR, False)
+        self.no_solar = (user_input or {}).get(CONF_NO_SOLAR, False)
 
         if user_input and (token := user_input.get(CONF_TOKEN, "")):
             token_days_left = token_lifetime(token)
@@ -346,7 +349,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input.get(CONF_USERNAME, ""),
                     user_input.get(CONF_PASSWORD, ""),
                     token := user_input.get(CONF_TOKEN, "") or None,
-                    no_solar,
+                    self.no_solar,
                     errors,
                     description_placeholders,
                 )
@@ -371,7 +374,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
                                 CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
                                 CONF_MANUAL_TOKEN: self.manual_token,
-                                CONF_NO_SOLAR: no_solar,
+                                CONF_NO_SOLAR: self.no_solar,
                             }
                             | token_update,
                             error="reauth_successful",
@@ -406,6 +409,9 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         token_days_left: str = UNKNOWN_TOKEN_TEXT
+        self.no_solar = (user_input or {}).get(
+            CONF_NO_SOLAR, reconfigure_entry.data.get(CONF_NO_SOLAR, False)
+        )
 
         if token := reconfigure_entry.data.get(CONF_TOKEN, ""):
             token_days_left = token_lifetime(token)
@@ -423,7 +429,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 username := user_input.get(CONF_USERNAME, ""),
                 password := user_input.get(CONF_PASSWORD, ""),
                 token := user_input.get(CONF_TOKEN, "") or None,
-                no_solar := user_input.get(CONF_NO_SOLAR, False),
+                self.no_solar,
                 errors,
                 description_placeholders,
             )
@@ -438,7 +444,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
                         CONF_MANUAL_TOKEN: self.manual_token,
-                        CONF_NO_SOLAR: no_solar,
+                        CONF_NO_SOLAR: self.no_solar,
                     }
                     | (
                         {CONF_TOKEN: envoy.auth.token}
