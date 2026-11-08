@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy, UnitOfPower, UnitOfVolume
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
@@ -255,24 +255,34 @@ def _async_add_sensors_when_available(
     coordinator: PowerfoxCoordinator,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the sensors of a device as soon as its data is available."""
-    added = False
+    """Add the sensors of a device, waiting for its data if necessary."""
+    if entities := _create_sensors(coordinator):
+        async_add_entities(entities)
+        return
+
+    remove_listener: CALLBACK_TYPE | None = None
+
+    @callback
+    def _async_stop_waiting() -> None:
+        nonlocal remove_listener
+        if remove_listener:
+            remove_listener()
+            remove_listener = None
 
     @callback
     def _async_add_sensors() -> None:
-        nonlocal added
-        if added or not coordinator.last_update_success:
-            return
         if entities := _create_sensors(coordinator):
-            added = True
+            _async_stop_waiting()
             async_add_entities(entities)
 
-    _async_add_sensors()
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_sensors))
+    remove_listener = coordinator.async_add_listener(_async_add_sensors)
+    entry.async_on_unload(_async_stop_waiting)
 
 
 def _create_sensors(coordinator: PowerfoxCoordinator) -> list[SensorEntity]:
     """Create the sensors supported by the current data of a device."""
+    if not coordinator.last_update_success:
+        return []
     if isinstance(coordinator, PowerfoxReportDataUpdateCoordinator):
         gas_report = coordinator.data.gas
         if gas_report is None:
