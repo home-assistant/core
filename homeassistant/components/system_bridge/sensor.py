@@ -175,10 +175,11 @@ def cpu_usage_per_cpu(per_cpu: PerCPU) -> float | None:
 def with_display(func) -> Callable:
     """Wrap a function to ensure a Display is available."""
 
-    def wrapper(data: SystemBridgeData, index: int) -> Display | None:
+    def wrapper(data: SystemBridgeData, display_id: str) -> StateType:
         """Wrap a function to ensure a Display is available."""
-        if index < len(data.displays):
-            return func(data.displays[index])
+        for display in data.displays:
+            if display.id == display_id:
+                return func(display)
         return None
 
     return wrapper
@@ -205,10 +206,11 @@ def display_refresh_rate(display: Display) -> float | None:
 def with_gpu(func) -> Callable:
     """Wrap a function to ensure a GPU is available."""
 
-    def wrapper(data: SystemBridgeData, index: int) -> GPU | None:
+    def wrapper(data: SystemBridgeData, gpu_id: str) -> StateType:
         """Wrap a function to ensure a GPU is available."""
-        if index < len(data.gpus):
-            return func(data.gpus[index])
+        for gpu in data.gpus:
+            if gpu.id == gpu_id:
+                return func(gpu)
         return None
 
     return wrapper
@@ -341,21 +343,12 @@ def swap_used_percentage(data: SystemBridgeData) -> float | None:
     return None
 
 
-def partition_usage(
-    data: SystemBridgeData,
-    device_index: int,
-    partition_index: int,
-) -> float | None:
-    """Return the used memory."""
-    if (
-        data.disks is not None
-        and (devices := data.disks.devices) is not None
-        and device_index < len(devices)
-        and (partitions := devices[device_index].partitions) is not None
-        and partition_index < len(partitions)
-        and (usage := partitions[partition_index].usage) is not None
-    ):
-        return usage.percent
+def partition_usage(data: SystemBridgeData, mount_point: str) -> float | None:
+    """Return the used space of the partition mounted at the mount point."""
+    for device in disk_devices(data):
+        for partition in device.partitions or []:
+            if partition.mount_point == mount_point and partition.usage is not None:
+                return partition.usage.percent
     return None
 
 
@@ -876,7 +869,7 @@ async def async_setup_entry(
         for description in BASE_SENSOR_TYPES
     ]
 
-    for index_device, device in enumerate(disk_devices(coordinator.data)):
+    for device in disk_devices(coordinator.data):
         if device.partitions is None:
             continue
 
@@ -890,15 +883,13 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                     suggested_display_precision=2,
-                    value=(
-                        lambda data, dk=index_device, pk=index_partition: (
-                            partition_usage(data, dk, pk)
-                        )
+                    value=lambda data, k=partition.mount_point: partition_usage(
+                        data, k
                     ),
                 ),
                 entry.data[CONF_PORT],
             )
-            for index_partition, partition in enumerate(device.partitions)
+            for partition in device.partitions
         )
 
     if (
@@ -931,7 +922,7 @@ async def async_setup_entry(
     )
 
     if coordinator.data.displays is not None:
-        for index, display in enumerate(coordinator.data.displays):
+        for display in coordinator.data.displays:
             entities = [
                 *entities,
                 SystemBridgeSensor(
@@ -942,7 +933,7 @@ async def async_setup_entry(
                         translation_placeholders={"display_id": display.id},
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PIXELS,
-                        value=lambda data, k=index: display_resolution_horizontal(
+                        value=lambda data, k=display.id: display_resolution_horizontal(
                             data, k
                         ),
                     ),
@@ -956,7 +947,7 @@ async def async_setup_entry(
                         translation_placeholders={"display_id": display.id},
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PIXELS,
-                        value=lambda data, k=index: display_resolution_vertical(
+                        value=lambda data, k=display.id: display_resolution_vertical(
                             data, k
                         ),
                     ),
@@ -972,13 +963,13 @@ async def async_setup_entry(
                         native_unit_of_measurement=UnitOfFrequency.HERTZ,
                         device_class=SensorDeviceClass.FREQUENCY,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: display_refresh_rate(data, k),
+                        value=lambda data, k=display.id: display_refresh_rate(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
             ]
 
-    for index, gpu in enumerate(coordinator.data.gpus):
+    for gpu in coordinator.data.gpus:
         entities.extend(
             [
                 SystemBridgeSensor(
@@ -992,7 +983,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
                         device_class=SensorDeviceClass.FREQUENCY,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_core_clock_speed(data, k),
+                        value=lambda data, k=gpu.id: gpu_core_clock_speed(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1007,7 +998,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
                         device_class=SensorDeviceClass.FREQUENCY,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_memory_clock_speed(data, k),
+                        value=lambda data, k=gpu.id: gpu_memory_clock_speed(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1021,7 +1012,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
                         device_class=SensorDeviceClass.DATA_SIZE,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_memory_free(data, k),
+                        value=lambda data, k=gpu.id: gpu_memory_free(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1034,7 +1025,9 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=2,
-                        value=lambda data, k=index: gpu_memory_used_percentage(data, k),
+                        value=lambda data, k=gpu.id: gpu_memory_used_percentage(
+                            data, k
+                        ),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1049,7 +1042,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
                         device_class=SensorDeviceClass.DATA_SIZE,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_memory_used(data, k),
+                        value=lambda data, k=gpu.id: gpu_memory_used(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1064,7 +1057,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
                         device_class=SensorDeviceClass.DATA_SIZE,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_memory_total(data, k),
+                        value=lambda data, k=gpu.id: gpu_memory_total(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1077,7 +1070,7 @@ async def async_setup_entry(
                         entity_registry_enabled_default=False,
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
-                        value=lambda data, k=index: gpu_fan_speed(data, k),
+                        value=lambda data, k=gpu.id: gpu_fan_speed(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1091,7 +1084,7 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_fan_speed_percentage(data, k),
+                        value=lambda data, k=gpu.id: gpu_fan_speed_percentage(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1106,7 +1099,7 @@ async def async_setup_entry(
                         device_class=SensorDeviceClass.POWER,
                         native_unit_of_measurement=UnitOfPower.WATT,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_power_limit(data, k),
+                        value=lambda data, k=gpu.id: gpu_power_limit(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1117,7 +1110,7 @@ async def async_setup_entry(
                         translation_key="gpu_performance_state",
                         translation_placeholders={"gpu_name": gpu.name},
                         entity_registry_enabled_default=False,
-                        value=lambda data, k=index: gpu_performance_state(data, k),
+                        value=lambda data, k=gpu.id: gpu_performance_state(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1131,7 +1124,7 @@ async def async_setup_entry(
                         device_class=SensorDeviceClass.POWER,
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfPower.WATT,
-                        value=lambda data, k=index: gpu_power_usage(data, k),
+                        value=lambda data, k=gpu.id: gpu_power_usage(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1146,7 +1139,7 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                         suggested_display_precision=2,
-                        value=lambda data, k=index: gpu_temperature(data, k),
+                        value=lambda data, k=gpu.id: gpu_temperature(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1159,7 +1152,7 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=2,
-                        value=lambda data, k=index: gpu_usage_percentage(data, k),
+                        value=lambda data, k=gpu.id: gpu_usage_percentage(data, k),
                     ),
                     entry.data[CONF_PORT],
                 ),
@@ -1173,7 +1166,7 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_encoder_usage_percentage(
+                        value=lambda data, k=gpu.id: gpu_encoder_usage_percentage(
                             data, k
                         ),
                     ),
@@ -1189,7 +1182,7 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                         suggested_display_precision=0,
-                        value=lambda data, k=index: gpu_decoder_usage_percentage(
+                        value=lambda data, k=gpu.id: gpu_decoder_usage_percentage(
                             data, k
                         ),
                     ),
