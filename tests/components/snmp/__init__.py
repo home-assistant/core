@@ -28,7 +28,6 @@ def mock_entry(
     *,
     host: str = "192.168.1.1",
     baseoid: str | None = ARP_TABLE_MAC_OID,
-    source: str = SOURCE_USER,
     **data: Any,
 ) -> MockConfigEntry:
     """Create an SNMP device entry, optionally with a device tracker subentry."""
@@ -43,7 +42,7 @@ def mock_entry(
         entry_data.setdefault(CONF_COMMUNITY, DEFAULT_COMMUNITY)
     return MockConfigEntry(
         domain=DOMAIN,
-        source=source,
+        source=SOURCE_USER,
         title=host,
         data=entry_data,
         subentries_data=(

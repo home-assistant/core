@@ -23,15 +23,8 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.components.snmp.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.components.snmp.coordinator import (
-    MAX_CONSECUTIVE_FAILURES,
-    SnmpDeviceTrackerCoordinator,
-)
-from homeassistant.components.snmp.device_tracker import (
-    SnmpScanner,
-    SnmpTrackerEntity,
-    async_get_scanner,
-)
+from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
+from homeassistant.components.snmp.device_tracker import SnmpScanner, async_get_scanner
 from homeassistant.const import (
     CONF_PLATFORM,
     STATE_HOME,
@@ -189,8 +182,6 @@ async def test_device_tracker_update(
 
     mac1 = binascii.unhexlify("001122334455")
     mac2 = binascii.unhexlify("aabbccddeeff")
-    mac1_str = MAC
-    mac2_str = MAC2
 
     oid1 = Mock()
     oid1.asTuple.return_value = _arp_oid(192, 168, 1, 1)
@@ -204,12 +195,12 @@ async def test_device_tracker_update(
         yield None, None, None, [(oid2, OctetString(mac2))]
 
     mock_walk.side_effect = mock_walk_1
-    enable_tracker(mac1_str)
+    enable_tracker(MAC)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id_1 = _tracker_entity_id(entity_registry, entry, mac1_str)
+    entity_id_1 = _tracker_entity_id(entity_registry, entry, MAC)
     assert entity_id_1 is not None
     assert hass.states.get(entity_id_1).state == STATE_HOME
     assert hass.states.get(entity_id_1).attributes[ATTR_IP] == "192.168.1.1"
@@ -221,7 +212,7 @@ async def test_device_tracker_update(
     await hass.async_block_till_done()
 
     # mac2 is a new device, so its entity is disabled
-    entity_id_2 = _tracker_entity_id(entity_registry, entry, mac2_str)
+    entity_id_2 = _tracker_entity_id(entity_registry, entry, MAC2)
     assert entity_id_2 is not None
 
     entry2 = entity_registry.async_get(entity_id_2)
@@ -323,40 +314,20 @@ async def test_device_tracker_initial_macs(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME
-
-
-async def test_device_tracker_properties_empty_coordinator(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_coordinator_entry: MockConfigEntry,
-) -> None:
-    """Test entity properties when coordinator data is empty."""
-    device_registry.async_get_or_create_from_info(
-        config_entry_id=mock_coordinator_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
-        ),
-    )
-    subentry = next(iter(mock_coordinator_entry.subentries.values()))
-    coordinator = SnmpDeviceTrackerCoordinator(
-        hass, mock_coordinator_entry, subentry, Mock()
-    )
-
-    entity = SnmpTrackerEntity(coordinator, MAC)
-    assert coordinator.data is None
-    assert not entity.is_connected
-    assert entity.ip_address is None
+    assert state.attributes.get(ATTR_IP) is None
 
 
 async def test_device_tracker_update_empty_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    enable_tracker: Callable[[str], None],
     mock_walk: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator update with empty data."""
     entry = mock_entry()
     entry.add_to_hass(hass)
+    enable_tracker(MAC)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -376,6 +347,11 @@ async def test_device_tracker_update_empty_data(
 
     entity_id = _tracker_entity_id(entity_registry, entry, MAC)
     assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes.get(ATTR_IP) is None
 
 
 @pytest.mark.parametrize(
@@ -471,7 +447,6 @@ async def test_ip_extraction(
 ) -> None:
     """Test IP address extraction from OID suffix."""
     mac_bytes = binascii.unhexlify("001122334455")
-    mac_str = MAC
 
     oid = Mock()
     oid.asTuple.return_value = oid_tuple
@@ -479,7 +454,7 @@ async def test_ip_extraction(
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         yield None, None, None, [(oid, OctetString(mac_bytes))]
 
-    enable_tracker(mac_str)
+    enable_tracker(MAC)
 
     with patch(
         "homeassistant.components.snmp.client.bulk_walk_cmd",
@@ -488,7 +463,7 @@ async def test_ip_extraction(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, mac_str)
+    entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)

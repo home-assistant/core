@@ -18,15 +18,27 @@ from homeassistant.components.snmp.config_flow import (
     SNMP_VERSION_SELECTOR,
 )
 from homeassistant.components.snmp.const import (
+    CONF_AUTH_KEY,
+    CONF_AUTH_PROTOCOL,
     CONF_BASEOID,
+    CONF_COMMUNITY,
+    CONF_CONTEXT_NAME,
+    CONF_PRIV_KEY,
+    CONF_PRIV_PROTOCOL,
+    CONF_VERSION,
     DOMAIN,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
     SUBENTRY_TYPE_DEVICE_TRACKER,
 )
-from homeassistant.config_entries import SOURCE_USER, SubentryFlowContext
-from homeassistant.const import CONF_PORT
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    FlowType,
+    SubentryFlowContext,
+    SubentryFlowResult,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -52,6 +64,7 @@ def mock_walk_empty() -> Iterator[None]:
         yield
 
 
+@pytest.mark.usefixtures("mock_walk_empty")
 async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
     """Test successful user setup flow (v1/v2c)."""
     result = await hass.config_entries.flow.async_init(
@@ -63,8 +76,8 @@ async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) ->
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "192.168.1.1",
-            "version": "1",
+            CONF_HOST: "192.168.1.1",
+            CONF_VERSION: "1",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -77,7 +90,7 @@ async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "community": "public",
+                CONF_COMMUNITY: "public",
             },
         )
         await hass.async_block_till_done()
@@ -85,13 +98,27 @@ async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) ->
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.1"
     assert result["data"] == {
-        "host": "192.168.1.1",
-        "community": "public",
-        "port": 161,
-        "version": "1",
-        "context_name": "",
+        CONF_HOST: "192.168.1.1",
+        CONF_COMMUNITY: "public",
+        CONF_PORT: 161,
+        CONF_VERSION: "1",
+        CONF_CONTEXT_NAME: "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+    # The device tracker subentry flow is chained right after the entry is created
+    next_flow_type, next_flow_id = result["next_flow"]
+    assert next_flow_type is FlowType.CONFIG_SUBENTRIES_FLOW
+
+    result = await hass.config_entries.subentries.async_configure(
+        next_flow_id, {CONF_BASEOID: ARP_TABLE_MAC_OID}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert [subentry.subentry_type for subentry in entry.subentries.values()] == [
+        SUBENTRY_TYPE_DEVICE_TRACKER
+    ]
 
 
 async def test_user_flow_v3_success(
@@ -105,8 +132,8 @@ async def test_user_flow_v3_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "192.168.1.1",
-            "version": "3",
+            CONF_HOST: "192.168.1.1",
+            CONF_VERSION: "3",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -119,19 +146,20 @@ async def test_user_flow_v3_success(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "auth_user",
-                "auth_key": "auth_password",
-                "auth_protocol": "hmac-sha",
-                "priv_key": "priv_password",
-                "priv_protocol": "aes-cfb-128",
+                CONF_USERNAME: "auth_user",
+                CONF_AUTH_KEY: "auth_password",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+                CONF_PRIV_KEY: "priv_password",
+                CONF_PRIV_PROTOCOL: "aes-cfb-128",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["version"] == "3"
-    assert result["data"]["username"] == "auth_user"
+    assert result["data"][CONF_VERSION] == "3"
+    assert result["data"][CONF_USERNAME] == "auth_user"
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["next_flow"][0] is FlowType.CONFIG_SUBENTRIES_FLOW
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -144,8 +172,8 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "192.168.1.1",
-            "version": "1",
+            CONF_HOST: "192.168.1.1",
+            CONF_VERSION: "1",
         },
     )
 
@@ -156,7 +184,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "community": "public",
+                CONF_COMMUNITY: "public",
             },
         )
 
@@ -169,7 +197,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"community": "public"},
+            {CONF_COMMUNITY: "public"},
         )
         await hass.async_block_till_done()
 
@@ -186,8 +214,8 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "192.168.1.1",
-            "version": "1",
+            CONF_HOST: "192.168.1.1",
+            CONF_VERSION: "1",
         },
     )
 
@@ -205,8 +233,8 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "192.168.1.1",
-            "version": "3",
+            CONF_HOST: "192.168.1.1",
+            CONF_VERSION: "3",
         },
     )
 
@@ -218,7 +246,11 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -231,9 +263,9 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "user",
-                "auth_key": "correct_pass",
-                "auth_protocol": "hmac-sha",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "correct_pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
             },
         )
         await hass.async_block_till_done()
@@ -251,8 +283,8 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "192.168.1.1",
-            "version": "3",
+            CONF_HOST: "192.168.1.1",
+            CONF_VERSION: "3",
         },
     )
 
@@ -264,7 +296,11 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
@@ -277,49 +313,65 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
         pytest.param(
             "1",
             errind.requestTimedOut,
-            {"community": "public"},
+            {CONF_COMMUNITY: "public"},
             "snmp_timeout",
-            {"community": "public"},
+            {CONF_COMMUNITY: "public"},
             id="timeout",
         ),
         pytest.param(
             "1",
             errind.emptyResponse,
-            {"community": "public"},
+            {CONF_COMMUNITY: "public"},
             "snmp_timeout",
-            {"community": "public"},
+            {CONF_COMMUNITY: "public"},
             id="empty_response",
         ),
         pytest.param(
             "3",
             errind.decryptionError,
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
             "usm_wrong_digests",
             {
-                "username": "user",
-                "auth_key": "correct_pass",
-                "auth_protocol": "hmac-sha",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "correct_pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
             },
             id="decryption_error",
         ),
         pytest.param(
             "3",
             errind.wrongDigest,
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
             "usm_wrong_digests",
             {
-                "username": "user",
-                "auth_key": "correct_pass",
-                "auth_protocol": "hmac-sha",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "correct_pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
             },
             id="wrong_digest",
         ),
         pytest.param(
             "3",
             errind.unknownUserName,
-            {"username": "nouser", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "nouser",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
             "invalid_auth",
-            {"username": "validuser", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "validuser",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
             id="unknown_user",
         ),
         pytest.param(
@@ -327,17 +379,17 @@ async def test_user_flow_v3_vacm_denied_sysdescr(hass: HomeAssistant) -> None:
             # pysnmp reports an unknown context as the report PDU's OID
             errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"),
             {
-                "username": "user",
-                "auth_key": "pass",
-                "auth_protocol": "hmac-sha",
-                "context_name": "missing",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+                CONF_CONTEXT_NAME: "missing",
             },
             "invalid_context",
             {
-                "username": "user",
-                "auth_key": "pass",
-                "auth_protocol": "hmac-sha",
-                "context_name": "existing",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+                CONF_CONTEXT_NAME: "existing",
             },
             id="unknown_context",
         ),
@@ -358,7 +410,7 @@ async def test_user_flow_err_indication(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": version},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: version},
     )
 
     with patch(
@@ -384,7 +436,9 @@ async def test_user_flow_err_indication(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def _async_start_subentry_flow(hass: HomeAssistant, entry: MockConfigEntry):
+async def _async_start_subentry_flow(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> SubentryFlowResult:
     """Start the device tracker subentry flow of an entry."""
     return await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_DEVICE_TRACKER),
@@ -404,13 +458,13 @@ async def test_subentry_flow_user(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
+        {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
     assert len(subentries) == 1
-    assert subentries[0].data == {"baseoid": "1.3.6.1.2.1.4.22.1.2"}
+    assert subentries[0].data == {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"}
     assert subentries[0].title == "1.3.6.1.2.1.4.22.1.2"
     assert subentries[0].unique_id == "1.3.6.1.2.1.4.22.1.2"
 
@@ -436,14 +490,14 @@ async def test_subentry_flow_invalid_oid(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"baseoid": "not_an_oid"},
+        {CONF_BASEOID: "not_an_oid"},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"baseoid": "invalid_oid"}
+    assert result["errors"] == {CONF_BASEOID: "invalid_oid"}
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
+        {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE_TRACKER)
@@ -483,7 +537,7 @@ async def test_subentry_flow_walk_failure(
     ):
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
+            {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -491,7 +545,7 @@ async def test_subentry_flow_walk_failure(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"baseoid": "1.3.6.1.2.1.4.22.1.2"},
+        {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -592,7 +646,7 @@ async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": "1"},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: "1"},
     )
 
     with patch(
@@ -600,7 +654,7 @@ async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
         return_value=(errind.unknownCommunityName, None, None, []),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], {CONF_COMMUNITY: "public"}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -611,7 +665,7 @@ async def test_user_flow_v1_v2c_invalid_auth(hass: HomeAssistant) -> None:
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "correct_community"}
+            result["flow_id"], {CONF_COMMUNITY: "correct_community"}
         )
         await hass.async_block_till_done()
 
@@ -626,7 +680,7 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": "1"},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: "1"},
     )
 
     with patch(
@@ -634,7 +688,7 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
         side_effect=PySnmpError("Unknown error"),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], {CONF_COMMUNITY: "public"}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -645,7 +699,7 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], {CONF_COMMUNITY: "public"}
         )
         await hass.async_block_till_done()
 
@@ -660,7 +714,7 @@ async def test_user_flow_unexpected_error(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": "1"},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: "1"},
     )
 
     with patch(
@@ -668,7 +722,7 @@ async def test_user_flow_unexpected_error(hass: HomeAssistant) -> None:
         side_effect=RuntimeError("boom"),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], {CONF_COMMUNITY: "public"}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -679,7 +733,7 @@ async def test_user_flow_unexpected_error(hass: HomeAssistant) -> None:
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], {CONF_COMMUNITY: "public"}
         )
         await hass.async_block_till_done()
 
@@ -694,15 +748,15 @@ async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> N
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": "3"},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: "3"},
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"username": "user", "priv_key": "pass"}
+        result["flow_id"], {CONF_USERNAME: "user", CONF_PRIV_KEY: "pass"}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"auth_key": "auth_key_required_for_priv"}
+    assert result["errors"] == {CONF_AUTH_KEY: "auth_key_required_for_priv"}
 
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
@@ -711,11 +765,11 @@ async def test_user_flow_v3_auth_key_required_for_priv(hass: HomeAssistant) -> N
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "user",
-                "auth_key": "authpass",
-                "auth_protocol": "hmac-sha",
-                "priv_key": "privpass",
-                "priv_protocol": "aes-cfb-128",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "authpass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+                CONF_PRIV_KEY: "privpass",
+                CONF_PRIV_PROTOCOL: "aes-cfb-128",
             },
         )
         await hass.async_block_till_done()
@@ -731,7 +785,7 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": "3"},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: "3"},
     )
 
     with patch(
@@ -740,7 +794,11 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -752,7 +810,11 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
@@ -767,7 +829,7 @@ async def test_user_flow_v3_no_keys_success(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.2.3.4", "version": "3"},
+        {CONF_HOST: "1.2.3.4", CONF_VERSION: "3"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
@@ -777,7 +839,7 @@ async def test_user_flow_v3_no_keys_success(hass: HomeAssistant) -> None:
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "test-user"}
+            result["flow_id"], {CONF_USERNAME: "test-user"}
         )
         await hass.async_block_till_done()
 
@@ -792,7 +854,7 @@ async def test_user_flow_v3_auth_creation_error(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.2.3.4", "version": "3"},
+        {CONF_HOST: "1.2.3.4", CONF_VERSION: "3"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
@@ -802,7 +864,7 @@ async def test_user_flow_v3_auth_creation_error(hass: HomeAssistant) -> None:
         side_effect=PySnmpError,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "test-user"}
+            result["flow_id"], {CONF_USERNAME: "test-user"}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -814,7 +876,7 @@ async def test_user_flow_v3_auth_creation_error(hass: HomeAssistant) -> None:
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "test-user"}
+            result["flow_id"], {CONF_USERNAME: "test-user"}
         )
         await hass.async_block_till_done()
 
@@ -829,7 +891,7 @@ async def test_user_flow_v3_wrong_value_error(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.2.3.4", "version": "3"},
+        {CONF_HOST: "1.2.3.4", CONF_VERSION: "3"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
@@ -840,7 +902,11 @@ async def test_user_flow_v3_wrong_value_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "test-user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -853,7 +919,11 @@ async def test_user_flow_v3_wrong_value_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "test-user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
@@ -868,7 +938,7 @@ async def test_user_flow_transport_cannot_connect(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": "1"},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: "1"},
     )
 
     with (
@@ -882,7 +952,7 @@ async def test_user_flow_transport_cannot_connect(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], {CONF_COMMUNITY: "public"}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -893,7 +963,7 @@ async def test_user_flow_transport_cannot_connect(hass: HomeAssistant) -> None:
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "public"}
+            result["flow_id"], {CONF_COMMUNITY: "public"}
         )
         await hass.async_block_till_done()
 
@@ -908,7 +978,7 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": "1.1.1.1", "version": "3"},
+        {CONF_HOST: "1.1.1.1", CONF_VERSION: "3"},
     )
 
     with (
@@ -923,7 +993,11 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -935,7 +1009,11 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "pass",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
@@ -948,10 +1026,12 @@ async def test_user_flow_v3_cannot_connect(hass: HomeAssistant) -> None:
     [
         pytest.param({}, FlowResultType.CREATE_ENTRY, id="no_context"),
         pytest.param(
-            {"context_name": "other"}, FlowResultType.CREATE_ENTRY, id="other_context"
+            {CONF_CONTEXT_NAME: "other"},
+            FlowResultType.CREATE_ENTRY,
+            id="other_context",
         ),
         pytest.param(
-            {"context_name": "test-context"}, FlowResultType.ABORT, id="same_context"
+            {CONF_CONTEXT_NAME: "test-context"}, FlowResultType.ABORT, id="same_context"
         ),
     ],
 )
@@ -975,7 +1055,7 @@ async def test_user_flow_context_is_part_of_the_device(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_VERSION: "3"}
     )
 
     with patch(
@@ -983,7 +1063,7 @@ async def test_user_flow_context_is_part_of_the_device(
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "user", **context_input}
+            result["flow_id"], {CONF_USERNAME: "user", **context_input}
         )
         await hass.async_block_till_done()
 
@@ -994,43 +1074,47 @@ async def test_user_flow_context_is_part_of_the_device(
     ("user_input", "expected_errors"),
     [
         pytest.param(
-            {"username": "user", "auth_key": "auth-key", "auth_protocol": "none"},
-            {"auth_protocol": "auth_protocol_required_for_auth_key"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "auth-key",
+                CONF_AUTH_PROTOCOL: "none",
+            },
+            {CONF_AUTH_PROTOCOL: "auth_protocol_required_for_auth_key"},
             id="auth_key_without_protocol",
         ),
         pytest.param(
-            {"username": "user", "auth_protocol": "hmac-sha"},
-            {"auth_key": "auth_key_required_for_auth_protocol"},
+            {CONF_USERNAME: "user", CONF_AUTH_PROTOCOL: "hmac-sha"},
+            {CONF_AUTH_KEY: "auth_key_required_for_auth_protocol"},
             id="auth_protocol_without_key",
         ),
         pytest.param(
             {
-                "username": "user",
-                "priv_key": "priv-key",
-                "priv_protocol": "aes-cfb-128",
+                CONF_USERNAME: "user",
+                CONF_PRIV_KEY: "priv-key",
+                CONF_PRIV_PROTOCOL: "aes-cfb-128",
             },
-            {"auth_key": "auth_key_required_for_priv"},
+            {CONF_AUTH_KEY: "auth_key_required_for_priv"},
             id="priv_without_auth",
         ),
         pytest.param(
             {
-                "username": "user",
-                "auth_key": "auth-key",
-                "auth_protocol": "hmac-sha",
-                "priv_key": "priv-key",
-                "priv_protocol": "none",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "auth-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+                CONF_PRIV_KEY: "priv-key",
+                CONF_PRIV_PROTOCOL: "none",
             },
-            {"priv_protocol": "priv_protocol_required_for_priv_key"},
+            {CONF_PRIV_PROTOCOL: "priv_protocol_required_for_priv_key"},
             id="priv_key_without_protocol",
         ),
         pytest.param(
             {
-                "username": "user",
-                "auth_key": "auth-key",
-                "auth_protocol": "hmac-sha",
-                "priv_protocol": "aes-cfb-128",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "auth-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+                CONF_PRIV_PROTOCOL: "aes-cfb-128",
             },
-            {"priv_key": "priv_key_required_for_priv_protocol"},
+            {CONF_PRIV_KEY: "priv_key_required_for_priv_protocol"},
             id="priv_protocol_without_key",
         ),
     ],
@@ -1045,7 +1129,7 @@ async def test_user_flow_v3_incoherent_credentials(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_VERSION: "3"}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -1063,7 +1147,11 @@ async def test_user_flow_v3_incoherent_credentials(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "auth-key", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "auth-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
@@ -1077,7 +1165,7 @@ async def test_user_flow_v3_auth_without_privacy(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_VERSION: "3"}
     )
 
     with patch(
@@ -1086,13 +1174,17 @@ async def test_user_flow_v3_auth_without_privacy(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "auth-key", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "auth-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["auth_protocol"] == "hmac-sha"
-    assert "priv_key" not in result["data"]
+    assert result["data"][CONF_AUTH_PROTOCOL] == "hmac-sha"
+    assert CONF_PRIV_KEY not in result["data"]
 
 
 @pytest.mark.parametrize(
@@ -1148,7 +1240,8 @@ async def test_reconfigure_flow_updates_credentials(
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", CONF_PORT: 1161, "version": "1"}
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.1", CONF_PORT: 1161, CONF_VERSION: "1"},
     )
     assert result["step_id"] == "v1_v2c"
 
@@ -1157,13 +1250,13 @@ async def test_reconfigure_flow_updates_credentials(
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "private"}
+            result["flow_id"], {CONF_COMMUNITY: "private"}
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data["community"] == "private"
+    assert entry.data[CONF_COMMUNITY] == "private"
     assert entry.data[CONF_PORT] == 1161
     # The entry had no update listener, so it has to be reloaded explicitly
     assert mock_setup_entry.called
@@ -1178,20 +1271,20 @@ async def test_reconfigure_flow_uses_update_listener(hass: HomeAssistant) -> Non
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", "version": "1"}
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_VERSION: "1"}
     )
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "private"}
+            result["flow_id"], {CONF_COMMUNITY: "private"}
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data["community"] == "private"
+    assert entry.data[CONF_COMMUNITY] == "private"
     # The update listener is responsible for reloading the entry
     assert listener.called
 
@@ -1205,7 +1298,7 @@ async def test_reconfigure_flow_keeps_entry_on_invalid_credentials(
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", "version": "1"}
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_VERSION: "1"}
     )
 
     with patch(
@@ -1213,13 +1306,13 @@ async def test_reconfigure_flow_keeps_entry_on_invalid_credentials(
         return_value=(errind.unknownCommunityName, None, None, None),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "wrong"}
+            result["flow_id"], {CONF_COMMUNITY: "wrong"}
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v1_v2c"
     assert result["errors"] == {"base": "invalid_auth"}
-    assert entry.data["community"] == "public"
+    assert entry.data[CONF_COMMUNITY] == "public"
 
     # Working credentials finish the reconfigure and update the entry
     with patch(
@@ -1227,13 +1320,13 @@ async def test_reconfigure_flow_keeps_entry_on_invalid_credentials(
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "private"}
+            result["flow_id"], {CONF_COMMUNITY: "private"}
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data["community"] == "private"
+    assert entry.data[CONF_COMMUNITY] == "private"
     assert mock_setup_entry.called
 
 
@@ -1249,12 +1342,12 @@ async def test_reconfigure_flow_aborts_on_duplicate_device(
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.2", "version": "1"}
+        result["flow_id"], {CONF_HOST: "192.168.1.2", CONF_VERSION: "1"}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data["host"] == "192.168.1.1"
+    assert entry.data[CONF_HOST] == "192.168.1.1"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -1276,17 +1369,17 @@ async def test_reconfigure_flow_suggests_credentials(hass: HomeAssistant) -> Non
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", CONF_PORT: 161, "version": "3"}
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_PORT: 161, CONF_VERSION: "3"}
     )
     assert result["step_id"] == "v3"
 
     data_schema = result["data_schema"].schema
-    assert get_schema_suggested_value(data_schema, "username") == "user"
-    assert get_schema_suggested_value(data_schema, "auth_protocol") == "hmac-sha"
-    assert get_schema_suggested_value(data_schema, "priv_protocol") == "aes-cfb-128"
-    assert get_schema_suggested_value(data_schema, "context_name") == "other-context"
-    assert get_schema_suggested_value(data_schema, "auth_key") is None
-    assert get_schema_suggested_value(data_schema, "priv_key") is None
+    assert get_schema_suggested_value(data_schema, CONF_USERNAME) == "user"
+    assert get_schema_suggested_value(data_schema, CONF_AUTH_PROTOCOL) == "hmac-sha"
+    assert get_schema_suggested_value(data_schema, CONF_PRIV_PROTOCOL) == "aes-cfb-128"
+    assert get_schema_suggested_value(data_schema, CONF_CONTEXT_NAME) == "other-context"
+    assert get_schema_suggested_value(data_schema, CONF_AUTH_KEY) is None
+    assert get_schema_suggested_value(data_schema, CONF_PRIV_KEY) is None
 
 
 async def test_reauth_flow_updates_credentials(
@@ -1313,8 +1406,8 @@ async def test_reauth_flow_updates_credentials(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
     data_schema = result["data_schema"].schema
-    assert get_schema_suggested_value(data_schema, "username") == "user"
-    assert get_schema_suggested_value(data_schema, "auth_key") is None
+    assert get_schema_suggested_value(data_schema, CONF_USERNAME) == "user"
+    assert get_schema_suggested_value(data_schema, CONF_AUTH_KEY) is None
 
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
@@ -1322,14 +1415,18 @@ async def test_reauth_flow_updates_credentials(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "new-key", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "new-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data["auth_key"] == "new-key"
-    assert entry.data["host"] == "192.168.1.1"
+    assert entry.data[CONF_AUTH_KEY] == "new-key"
+    assert entry.data[CONF_HOST] == "192.168.1.1"
     assert mock_setup_entry.called
 
 
@@ -1354,20 +1451,22 @@ async def test_reauth_flow_v1_v2c_does_not_suggest_community(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v1_v2c"
-    assert get_schema_suggested_value(result["data_schema"].schema, "community") is None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_COMMUNITY) is None
+    )
 
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",
         return_value=(None, None, None, [[OctetString("98F")]]),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"community": "new-community"}
+            result["flow_id"], {CONF_COMMUNITY: "new-community"}
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data["community"] == "new-community"
+    assert entry.data[CONF_COMMUNITY] == "new-community"
     assert mock_setup_entry.called
 
 
@@ -1403,18 +1502,18 @@ async def test_reauth_flow_drops_removed_privacy_key(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "user",
-                "auth_key": "auth-key",
-                "auth_protocol": "hmac-sha",
-                "priv_protocol": "none",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "auth-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+                CONF_PRIV_PROTOCOL: "none",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data["priv_protocol"] == "none"
-    assert "priv_key" not in entry.data
+    assert entry.data[CONF_PRIV_PROTOCOL] == "none"
+    assert CONF_PRIV_KEY not in entry.data
     assert mock_setup_entry.called
 
 
@@ -1457,9 +1556,9 @@ async def test_reauth_flow_reloads_when_credentials_are_unchanged(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "user",
-                "auth_key": "auth-key",
-                "auth_protocol": "hmac-sha",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "auth-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
             },
         )
         await hass.async_block_till_done()
@@ -1483,28 +1582,36 @@ async def test_reauth_flow_reloads_when_credentials_are_unchanged(
     ),
     [
         pytest.param(
-            {"version": "1", "community": "old-community"},
+            {CONF_VERSION: "1", CONF_COMMUNITY: "old-community"},
             errind.unknownCommunityName,
             "v1_v2c",
-            {"community": "wrong-community"},
+            {CONF_COMMUNITY: "wrong-community"},
             "invalid_auth",
-            {"community": "new-community"},
-            {"community": "new-community"},
+            {CONF_COMMUNITY: "new-community"},
+            {CONF_COMMUNITY: "new-community"},
             id="v1_v2c",
         ),
         pytest.param(
             {
-                "version": "3",
-                "username": "user",
-                "auth_key": "old-key",
-                "auth_protocol": "hmac-sha",
+                CONF_VERSION: "3",
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "old-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
             },
             errind.wrongDigest,
             "v3",
-            {"username": "user", "auth_key": "wrong-key", "auth_protocol": "hmac-sha"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "wrong-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
             "usm_wrong_digests",
-            {"username": "user", "auth_key": "new-key", "auth_protocol": "hmac-sha"},
-            {"auth_key": "new-key"},
+            {
+                CONF_USERNAME: "user",
+                CONF_AUTH_KEY: "new-key",
+                CONF_AUTH_PROTOCOL: "hmac-sha",
+            },
+            {CONF_AUTH_KEY: "new-key"},
             id="v3",
         ),
     ],
@@ -1569,7 +1676,7 @@ async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) ->
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+        result["flow_id"], {CONF_HOST: "192.168.1.1", CONF_VERSION: "3"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
@@ -1580,13 +1687,13 @@ async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) ->
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "context_name": "other-context"},
+            {CONF_USERNAME: "user", CONF_CONTEXT_NAME: "other-context"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.1 (other-context)"
-    assert result["data"]["context_name"] == "other-context"
+    assert result["data"][CONF_CONTEXT_NAME] == "other-context"
 
 
 @pytest.mark.usefixtures("mock_walk_empty")
@@ -1599,16 +1706,16 @@ async def test_subentry_flow_reconfigure_invalid_oid(hass: HomeAssistant) -> Non
     result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"baseoid": "not_an_oid"}
+        result["flow_id"], {CONF_BASEOID: "not_an_oid"}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"baseoid": "invalid_oid"}
+    assert result["errors"] == {CONF_BASEOID: "invalid_oid"}
 
     # A resolvable OID finishes the reconfigure
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"baseoid": "1.3.6.1.2.1.4.22.1.2"}
+        result["flow_id"], {CONF_BASEOID: "1.3.6.1.2.1.4.22.1.2"}
     )
 
     assert result["type"] is FlowResultType.ABORT
