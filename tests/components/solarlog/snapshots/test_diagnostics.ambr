@@ -44,6 +44,30 @@
       'firmware_release_date': None,
       'firmware_version': None,
       'inverter_data': dict({
+        '0': dict({
+          'consumption_year': 354687,
+          'current_power': 5,
+          'enabled': True,
+          'errors': dict({
+          }),
+          'events': dict({
+          }),
+          'last_event': None,
+          'name': 'Inverter 1',
+          'status': None,
+        }),
+        '1': dict({
+          'consumption_year': 354,
+          'current_power': 6,
+          'enabled': True,
+          'errors': dict({
+          }),
+          'events': dict({
+          }),
+          'last_event': None,
+          'name': 'Inverter 2',
+          'status': None,
+        }),
       }),
       'last_updated': '2024-08-01T15:20:45+00:00',
       'power_ac': 100.0,

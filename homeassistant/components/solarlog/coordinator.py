@@ -97,6 +97,9 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
 
         _LOGGER.debug("Basic data successfully updated")
 
+        if self.data is not None:
+            data.battery_data = self.data.battery_data
+
         return data
 
     async def renew_authentication(self) -> bool:
@@ -166,11 +169,16 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
 
         _LOGGER.debug("Device data successfully updated")
 
-        self.data = inverter_data
-        self.config_entry.runtime_data.basic_data_coordinator.data.battery_data = (
-            battery_data
-        )
+        if self.config_entry.runtime_data.basic_data_coordinator.data is not None:
+            data = self.config_entry.runtime_data.basic_data_coordinator.data
 
+            data.inverter_data = inverter_data
+            data.battery_data = battery_data
+            self.config_entry.runtime_data.basic_data_coordinator.async_set_updated_data(
+                data
+            )
+
+        self.data = inverter_data  # already set self.data, as it is needed in _async_add_remove_devices
         self._async_add_remove_devices(inverter_data)
 
         return inverter_data
