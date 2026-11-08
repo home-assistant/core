@@ -28,7 +28,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from . import setup_integration
 from .conftest import TEST_DEPARTURES, TEST_STATION, TEST_STATIONS
@@ -252,8 +252,17 @@ async def test_yaml_import(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.unique_id == entries[0].entry_id
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
-    assert issue is not None
+    issues = [
+        issue
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN and issue.translation_key == "deprecated_yaml"
+    ]
+    assert len(issues) == 1
+    issue = issues[0]
+    assert issue.translation_placeholders is not None
+    assert (
+        yaml_util.parse_yaml(issue.translation_placeholders["configuration"]) == config
+    )
     assert issue.breaks_in_ha_version == "2027.5.0"
 
     add_entities = Mock()
@@ -300,7 +309,10 @@ async def test_yaml_invalid_station(
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == entry_count
-    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
+    assert not any(
+        issue.translation_key == "deprecated_yaml"
+        for issue in issue_registry.issues.values()
+    )
     issue = issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_invalid_station_Missing"
     )
@@ -316,7 +328,10 @@ async def test_yaml_invalid_station(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == len(stations)
     assert all(entry in entries for entry in imported_entries)
-    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert any(
+        issue.translation_key == "deprecated_yaml"
+        for issue in issue_registry.issues.values()
+    )
     assert (
         issue_registry.async_get_issue(
             DOMAIN, "deprecated_yaml_import_issue_invalid_station_Missing"
@@ -355,7 +370,10 @@ async def test_yaml_import_retry(
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
+    assert not any(
+        issue.translation_key == "deprecated_yaml"
+        for issue in issue_registry.issues.values()
+    )
     assert issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect_Hauptbahnhof"
     )
@@ -368,10 +386,150 @@ async def test_yaml_import_retry(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
     assert all(entry in entries for entry in imported_entries)
-    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert any(
+        issue.translation_key == "deprecated_yaml"
+        for issue in issue_registry.issues.values()
+    )
     assert (
         issue_registry.async_get_issue(
             DOMAIN, "deprecated_yaml_import_issue_cannot_connect_Hauptbahnhof"
         )
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("configs", "entity_ids"),
+    [
+        pytest.param(
+            [
+                {
+                    "platform": DOMAIN,
+                    "nextdeparture": [{"station": "Hauptbahnhof"}, {"station": "Hbf"}],
+                }
+            ],
+            ["sensor.hauptbahnhof", "sensor.hbf"],
+            id="station_aliases",
+        ),
+        pytest.param(
+            [
+                {
+                    "platform": DOMAIN,
+                    "entity_namespace": "commute",
+                    "nextdeparture": [{"station": "Hauptbahnhof"}],
+                },
+                {
+                    "platform": DOMAIN,
+                    "entity_namespace": "home",
+                    "nextdeparture": [{"station": "Hauptbahnhof"}],
+                },
+            ],
+            ["sensor.commute_hauptbahnhof", "sensor.home_hauptbahnhof"],
+            id="entity_namespaces",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mvg_api")
+async def test_yaml_import_preserves_entity_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    configs: list[dict[str, object]],
+    entity_ids: list[str],
+) -> None:
+    """Test aliases and namespaces remain separate, idempotent sensors."""
+    assert await async_setup_component(hass, "sensor", {"sensor": configs})
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id) is not None
+        assert entity_registry.async_get(entity_id) is not None
+
+    for config in configs:
+        await async_setup_platform(hass, PLATFORM_SCHEMA(config), Mock())
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(DOMAIN) == entries
+
+    for entry in entries:
+        assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    "stations",
+    [
+        pytest.param(["Hauptbahnhof", "Missing"], id="success_first"),
+        pytest.param(["Missing", "Hauptbahnhof"], id="failure_first"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_yaml_import_repairs_identify_successful_blocks(
+    hass: HomeAssistant,
+    mvg_api: dict[str, AsyncMock],
+    issue_registry: ir.IssueRegistry,
+    stations: list[str],
+) -> None:
+    """Test a successful block never advises removing a failed block."""
+    mvg_api["station_async"].side_effect = lambda station, **kwargs: {
+        "Hauptbahnhof": TEST_STATION,
+        "Missing": None,
+    }[station]
+    configs = [
+        {"platform": DOMAIN, "nextdeparture": [{"station": station}]}
+        for station in stations
+    ]
+    assert await async_setup_component(hass, "sensor", {"sensor": configs})
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
+    issues = [
+        issue
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN and issue.translation_key == "deprecated_yaml"
+    ]
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders is not None
+    imported_config = yaml_util.parse_yaml(
+        issues[0].translation_placeholders["configuration"]
+    )
+    assert imported_config == PLATFORM_SCHEMA(
+        {"platform": DOMAIN, "nextdeparture": [{"station": "Hauptbahnhof"}]}
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_yaml_import_issue_invalid_station_Missing"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("mvg_api", "mock_setup_entry")
+async def test_yaml_import_repair_with_scan_interval(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair renders a YAML block that sets a scan interval."""
+    config = {
+        "platform": DOMAIN,
+        "scan_interval": 60,
+        "nextdeparture": [{"station": "Hauptbahnhof"}],
+    }
+    assert await async_setup_component(hass, "sensor", {"sensor": [config]})
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    issues = [
+        issue
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN and issue.translation_key == "deprecated_yaml"
+    ]
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders is not None
+    imported_config = yaml_util.parse_yaml(
+        issues[0].translation_placeholders["configuration"]
+    )
+    assert imported_config["scan_interval"] == 60

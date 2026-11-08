@@ -20,7 +20,7 @@ from homeassistant.components.mvglive.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -262,6 +262,8 @@ async def test_import_flow(
         CONF_STATION_ID: TEST_STATION["id"],
         CONF_STATION_NAME: TEST_STATION["name"],
         CONF_IMPORTED: {
+            CONF_STATION: station_config[CONF_STATION],
+            CONF_ENTITY_NAMESPACE: None,
             CONF_NAME: station_config.get(CONF_NAME),
             CONF_DESTINATIONS: ["Feldmoching"],
             CONF_DIRECTIONS: None,

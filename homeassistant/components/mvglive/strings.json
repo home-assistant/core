@@ -29,7 +29,7 @@
   },
   "issues": {
     "deprecated_yaml": {
-      "description": "MVG stations configured in `configuration.yaml` have been imported automatically as config entries. You can now remove the `sensor: - platform: mvglive` block from `configuration.yaml`.",
+      "description": "The following MVG YAML block has been imported automatically as config entries:\n\n```yaml\n{configuration}\n```\n\nYou can remove this block from your sensor configuration. Keep any other MVG YAML blocks until their imports succeed.",
       "title": "The MVG YAML configuration is deprecated"
     },
     "deprecated_yaml_import_issue_cannot_connect": {

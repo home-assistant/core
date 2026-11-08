@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
+from hashlib import sha256
 import logging
 from typing import Any, override
 
@@ -9,27 +10,35 @@ from mvg import MvgApi, MvgApiError, TransportType
 import probatio
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.const import (
+    CONF_ENTITY_NAMESPACE,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from .const import (
     CONF_DESTINATIONS,
     CONF_DIRECTIONS,
+    CONF_IMPORTED,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
@@ -81,9 +90,20 @@ async def async_setup_platform(
 ) -> None:
     """Import the legacy YAML configuration as config entries."""
     stations = config[CONF_NEXT_DEPARTURE]
+    yaml_config = dict(config)
+    if scan_interval := yaml_config.get(CONF_SCAN_INTERVAL):
+        yaml_config[CONF_SCAN_INTERVAL] = int(scan_interval.total_seconds())
+    configuration = yaml_util.dump(yaml_config)
+    repair_id = f"deprecated_yaml_{sha256(configuration.encode()).hexdigest()}"
+    ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml")
     results = [
         await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=nextdeparture
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                **nextdeparture,
+                CONF_ENTITY_NAMESPACE: config.get(CONF_ENTITY_NAMESPACE),
+            },
         )
         for nextdeparture in stations
     ]
@@ -122,6 +142,9 @@ async def async_setup_platform(
                     issue_id,
                 )
 
+    if not all_imported:
+        ir.async_delete_issue(hass, DOMAIN, repair_id)
+
     if retry_import:
         raise PlatformNotReady("Could not connect to MVG to import YAML stations")
 
@@ -129,11 +152,12 @@ async def async_setup_platform(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "deprecated_yaml",
+            repair_id,
             breaks_in_ha_version="2027.5.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
+            translation_placeholders={"configuration": configuration},
         )
 
 
@@ -143,7 +167,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MVG sensor from a config entry."""
-    async_add_entities([MVGSensor(entry)], True)
+    sensor = MVGSensor(entry)
+    if namespace := entry.data.get(CONF_IMPORTED, {}).get(CONF_ENTITY_NAMESPACE):
+        sensor.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, f"{namespace} {entry.title}", hass=hass
+        )
+    async_add_entities([sensor], True)
 
 
 def _get_minutes_until_departure(departure_time: int) -> int:

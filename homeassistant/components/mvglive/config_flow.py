@@ -6,7 +6,7 @@ from mvg import MvgApi, MvgApiError, TransportType
 import probatio
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -46,6 +46,8 @@ LEGACY_PRODUCTS = {
 LEGACY_DEFAULT_PRODUCTS = ["U-Bahn", "Tram", "Bus", "ExpressBus", "S-Bahn", "Nachteule"]
 
 IMPORT_KEYS = (
+    CONF_STATION,
+    CONF_ENTITY_NAMESPACE,
     CONF_NAME,
     CONF_DESTINATIONS,
     CONF_DIRECTIONS,
