@@ -84,8 +84,7 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
     @override
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
-        # Water heater entities convert temperatures to the system unit via show_temp
-        return self._hass.config.units.temperature_unit
+        return entity_state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE_UNIT)
 
 
 CONDITIONS: dict[str, type[Condition]] = {

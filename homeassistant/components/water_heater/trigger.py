@@ -72,8 +72,7 @@ class _WaterHeaterTargetTemperatureTriggerMixin(
     @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
-        # Water heater entities convert temperatures to the system unit via show_temp
-        return self._hass.config.units.temperature_unit
+        return state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE_UNIT)
 
 
 class WaterHeaterTargetTemperatureChangedTrigger(
