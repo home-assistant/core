@@ -95,9 +95,6 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: (
             PipelineEventType.WAKE_WORD_END
         ),
-        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_REJECTED: (
-            PipelineEventType.WAKE_WORD_REJECTED
-        ),
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: (
             PipelineEventType.STT_VAD_START
         ),
@@ -441,9 +438,6 @@ class EsphomeAssistSatellite(
                     "code": "no_wake_word",
                     "message": "No wake word detected",
                 }
-        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_REJECTED:
-            # The device stops streaming without ending the audio
-            self._stop_pipeline()
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
             assert event.data is not None
             data_to_send = {

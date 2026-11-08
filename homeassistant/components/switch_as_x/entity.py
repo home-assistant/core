@@ -79,6 +79,8 @@ class BaseEntity(Entity):
             event: Event[EventStateChangedData] | None = None,
         ) -> None:
             """Handle child updates."""
+            if event:
+                self.async_set_context(event.context)
             self.async_state_changed_listener(event)
             self.async_write_ha_state()
 

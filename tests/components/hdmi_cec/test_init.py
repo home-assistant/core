@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 
 import probatio
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 import pytest
 from pytest_homeassistant.common import (
     MockEntity,
@@ -17,20 +18,17 @@ from pytest_homeassistant.common import (
 from homeassistant.components.hdmi_cec import (
     DOMAIN,
     EVENT_HDMI_CEC_UNAVAILABLE,
-    SERVICE_SEND_COMMAND,
-    SERVICE_VOLUME,
     WATCHDOG_INTERVAL,
-    CecCommand,
-    KeyPressCommand,
-    KeyReleaseCommand,
     PhysicalAddress,
     parse_mapping,
 )
 from homeassistant.components.hdmi_cec.services import (
     SERVICE_POWER_ON,
     SERVICE_SELECT_DEVICE,
+    SERVICE_SEND_COMMAND,
     SERVICE_STANDBY,
     SERVICE_UPDATE_DEVICES,
+    SERVICE_VOLUME,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -135,8 +133,10 @@ async def test_setup_cec_adapter(
     [
         SERVICE_POWER_ON,
         SERVICE_SELECT_DEVICE,
+        SERVICE_SEND_COMMAND,
         SERVICE_STANDBY,
         SERVICE_UPDATE_DEVICES,
+        SERVICE_VOLUME,
     ],
 )
 async def test_services_registered_during_setup(

@@ -115,7 +115,7 @@ multidict>=6.0.2
 Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.14.1
+pydantic==2.14.2
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
