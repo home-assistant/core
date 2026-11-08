@@ -349,8 +349,6 @@ async def test_zeroconf_already_configured(
     config_entry: MockConfigEntry,
 ) -> None:
     """Ignore zeroconf discovery when the integration is already configured."""
-    config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
