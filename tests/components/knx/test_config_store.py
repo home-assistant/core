@@ -98,8 +98,6 @@ async def test_create_entity(
     assert test_storage_data == {
         "entity": {
             "name": test_name,
-            "device_info": None,
-            "entity_category": None,
         },
         "knx": {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
@@ -586,8 +584,6 @@ async def test_get_entity_config(
     assert res["result"]["data"] == {
         "entity": {
             "name": "Test",
-            "device_info": None,
-            "entity_category": None,
         },
         "knx": {
             "ga_switch": {"write": "1/2/3", "passive": [], "state": None},
@@ -1141,7 +1137,6 @@ TYPED_CONFIG_CASES = [
             "invert": False,
             "ignore_internal_state": False,
             "context_timeout": 1.5,
-            "reset_after": None,
             "sync_state": True,
         },
         id="binary_sensor",
@@ -1152,9 +1147,6 @@ TYPED_CONFIG_CASES = [
         {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "sync_state": False},
         {
             "ga_sensor": {"state": "1/2/3", "passive": [], "dpt": "9.001"},
-            "unit_of_measurement": None,
-            "device_class": None,
-            "state_class": None,
             "always_callback": False,
             "sync_state": False,
         },
@@ -1173,11 +1165,7 @@ TYPED_CONFIG_CASES = [
             },
             "respond_to_read": False,
             "mode": "auto",
-            "min": None,
             "max": 50,
-            "step": None,
-            "unit_of_measurement": None,
-            "device_class": None,
             "sync_state": True,
         },
         id="number",
@@ -1208,19 +1196,8 @@ TYPED_CONFIG_CASES = [
         },
         {
             "ga_temperature": {"state": "1/2/3", "passive": []},
-            "ga_humidity": None,
-            "ga_air_pressure": None,
-            "ga_wind_speed": None,
-            "ga_wind_bearing": None,
-            "ga_brightness_east": None,
-            "ga_brightness_south": None,
-            "ga_brightness_west": None,
-            "ga_brightness_north": None,
-            "ga_day_night": None,
             "invert_day_night": False,
             "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
-            "ga_frost_alarm": None,
-            "ga_wind_alarm": None,
             "sync_state": True,
         },
         id="weather",
@@ -1236,10 +1213,6 @@ TYPED_CONFIG_CASES = [
         {
             "ga_up_down": {"write": "1/2/3", "passive": []},
             "invert_updown": False,
-            "ga_stop": None,
-            "ga_step": None,
-            "ga_position_set": None,
-            "ga_position_state": None,
             "invert_position": False,
             "ga_angle": {"write": "1/2/4", "state": "1/2/5", "passive": []},
             "invert_angle": False,
@@ -1254,12 +1227,10 @@ TYPED_CONFIG_CASES = [
         FanKnxConfig,
         {"speed": {"ga_step": {"write": "1/2/3"}, "max_step": 4.0}},
         {
-            "ga_switch": None,
             "speed": {
                 "ga_step": {"write": "1/2/3", "state": None, "passive": []},
                 "max_step": 4,
             },
-            "ga_oscillation": None,
             "sync_state": True,
         },
         id="fan_step",
@@ -1271,7 +1242,6 @@ TYPED_CONFIG_CASES = [
         {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
             "speed": {"ga_speed": {"write": "1/2/4", "state": None, "passive": []}},
-            "ga_oscillation": None,
             "sync_state": True,
         },
         id="fan_percentage",
@@ -1285,8 +1255,6 @@ TYPED_CONFIG_CASES = [
         },
         {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
-            "ga_brightness": None,
-            "ga_color_temp": None,
             "color_temp_min": 2700,
             "color_temp_max": 6000,
             "color": {
@@ -1313,20 +1281,13 @@ TYPED_CONFIG_CASES = [
             }
         },
         {
-            "ga_switch": None,
-            "ga_brightness": None,
-            "ga_color_temp": None,
             "color_temp_min": 2700,
             "color_temp_max": 6000,
             "color": {
-                "ga_red_switch": None,
                 "ga_red_brightness": {"write": "1/2/1", "state": None, "passive": []},
-                "ga_green_switch": None,
                 "ga_green_brightness": {"write": "1/2/2", "state": None, "passive": []},
-                "ga_blue_switch": None,
                 "ga_blue_brightness": {"write": "1/2/3", "state": None, "passive": []},
                 "ga_white_switch": {"write": "1/2/4", "state": None, "passive": []},
-                "ga_white_brightness": None,
             },
             "sync_state": True,
         },
@@ -1346,7 +1307,6 @@ TYPED_CONFIG_CASES = [
         {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
             "ga_brightness": {"write": "1/2/4", "state": None, "passive": []},
-            "ga_color_temp": None,
             "color_temp_min": 2700,
             "color_temp_max": 6000,
             "color": {
@@ -1373,7 +1333,6 @@ TYPED_CONFIG_CASES = [
         },
         {
             "ga_temperature_current": {"state": "1/2/1", "passive": []},
-            "ga_humidity_current": None,
             "target_temperature": {
                 "ga_temperature_target": {"state": "1/2/2", "passive": []},
                 "ga_setpoint_shift": {
@@ -1386,25 +1345,11 @@ TYPED_CONFIG_CASES = [
                 "setpoint_shift_max": 6,
                 "temperature_step": 0.1,
             },
-            "ga_active": None,
-            "ga_valve": None,
-            "ga_operation_mode": None,
             "ignore_auto_mode": False,
-            "ga_operation_mode_comfort": None,
-            "ga_operation_mode_economy": None,
-            "ga_operation_mode_standby": None,
-            "ga_operation_mode_protection": None,
-            "ga_heat_cool": None,
-            "ga_on_off": None,
             "on_off_invert": False,
-            "ga_controller_mode": None,
-            "ga_controller_status": None,
             "default_controller_mode": "heat",
-            "ga_fan_speed": None,
             "fan_max_step": 3,
             "fan_zero_mode": "off",
-            "ga_fan_swing": None,
-            "ga_fan_swing_horizontal": None,
             "sync_state": True,
         },
         id="climate_setpoint_shift",
@@ -1498,8 +1443,6 @@ def test_typed_config_storage_roundtrip(
     stored = to_storage_dict(validated)
     assert stored["entity"] == {
         "name": "test",
-        "device_info": None,
-        "entity_category": None,
     }
     assert stored["knx"] == knx_stored
     assert json.loads(json.dumps(stored)) == stored  # storage is JSON
