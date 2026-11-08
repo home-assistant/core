@@ -83,7 +83,8 @@ def acting_user(
 ) -> str | LinkedUser | None:
     """Return the Music Assistant user to act as for a command that accepts a user."""
     # older servers refuse a user on these commands, so the caller only goes to newer ones
-    assert mass.server_info  # for type checking
+    if TYPE_CHECKING:
+        assert mass.server_info is not None
     supported = mass.server_info.schema_version >= IMPERSONATION_SCHEMA_VERSION
     if username is not None:
         if not supported:
