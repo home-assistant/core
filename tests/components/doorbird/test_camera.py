@@ -2,6 +2,7 @@
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.camera import (
@@ -9,17 +10,27 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.doorbird.const import DOMAIN
+from homeassistant.components.doorbird.const import (
+    CONF_EVENTS,
+    DEFAULT_DOORBELL_EVENT,
+    DEFAULT_MOTION_EVENT,
+    DOMAIN,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
-from . import mock_not_found_exception
+from . import VALID_CONFIG, mock_not_found_exception
 from .conftest import DoorbirdMockerType
 
 LIVE_CAMERA_ENTITY_ID = "camera.mydoorbird_live"
+LIVE_1080P_CAMERA_ENTITY_ID = "camera.mydoorbird_live_1080p"
 LAST_RING_CAMERA_ENTITY_ID = "camera.mydoorbird_last_ring"
 LAST_MOTION_CAMERA_ENTITY_ID = "camera.mydoorbird_last_motion"
 LAST_RING_ISSUE_ID = "deprecated_camera_1234ABCD_last_ring"
@@ -66,6 +77,35 @@ async def test_doorbird_live_camera(
 
     freezer.tick(60)
     assert (await async_get_image(hass, LIVE_CAMERA_ENTITY_ID)).content == b"notyet"
+
+
+async def test_live_1080p_camera_disabled_by_default(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the 1080p camera is disabled by default."""
+    await doorbird_mocker()
+
+    assert hass.states.get(LIVE_1080P_CAMERA_ENTITY_ID) is None
+    entry = entity_registry.async_get(LIVE_1080P_CAMERA_ENTITY_ID)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_live_1080p_camera(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test the 1080p camera streams from the 1080p RTSP URL."""
+    doorbird_entry = await doorbird_mocker()
+
+    assert hass.states.get(LIVE_1080P_CAMERA_ENTITY_ID).state == CameraState.IDLE
+    assert (
+        await async_get_stream_source(hass, LIVE_1080P_CAMERA_ENTITY_ID)
+        == doorbird_entry.api.rtsp_live_video_1080p_url
+    )
 
 
 @pytest.mark.parametrize(
@@ -200,20 +240,34 @@ async def test_deprecated_camera_removed_when_disabled(
 async def test_deprecated_camera_kept_when_disabled_by_device(
     hass: HomeAssistant,
     doorbird_mocker: DoorbirdMockerType,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a camera disabled along with its device is neither removed nor flagged."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1CCAE3AAAAAA",
+        data=VALID_CONFIG,
+        options={CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]},
+    )
+    entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "1234ABCD")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
     entity_registry.async_get_or_create(
         Platform.CAMERA,
         DOMAIN,
         "1234ABCD_last_ring",
+        config_entry=entry,
+        device_id=device_entry.id,
         suggested_object_id="mydoorbird_last_ring",
-        disabled_by=er.RegistryEntryDisabler.DEVICE,
     )
     create_stale_issue(hass, LAST_RING_ISSUE_ID)
 
-    await doorbird_mocker()
+    await doorbird_mocker(entry=entry)
 
     assert entity_registry.async_get(LAST_RING_CAMERA_ENTITY_ID) is not None
     assert (DOMAIN, LAST_RING_ISSUE_ID) not in issue_registry.issues

@@ -1,6 +1,7 @@
 """Tests for the iCloud to-do platform."""
 
 from datetime import UTC, date, datetime
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -16,8 +17,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.icloud.const import CONF_INCLUDE_COMPLETED, DOMAIN
 from homeassistant.components.icloud.coordinator import (
+    MISSING_ZONE_SCAN_INTERVAL,
     REMINDERS_SCAN_INTERVAL,
     UNDECODED_TITLE,
+    _is_zone_not_found_error,
 )
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
@@ -71,6 +74,22 @@ def _list(
     reminder_list.is_group = is_group
     reminder_list.deleted = deleted
     return reminder_list
+
+
+def _zone_not_found_error() -> RemindersApiError:
+    """Build the error pyicloud raises when the Reminders zone is missing."""
+    return RemindersApiError(
+        "Zone changes failed: ZONE_NOT_FOUND (Zone does not exist)",
+        payload={
+            "zones": [
+                {
+                    "zoneID": {"zoneName": "Reminders", "owner": "_defaultOwner"},
+                    "serverErrorCode": "ZONE_NOT_FOUND",
+                    "reason": "Zone does not exist",
+                }
+            ]
+        },
+    )
 
 
 @pytest.fixture(name="reminders")
@@ -829,3 +848,168 @@ async def test_entry_loads_when_reminders_fail(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_zone_not_found_is_tolerated(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an account with no Reminders zone is not an error.
+
+    The account has simply never used Reminders, so there is nothing to
+    fetch and nothing to repair: the entry loads without to-do entities
+    and the state is reported once at info level.
+    """
+    caplog.set_level(logging.INFO)
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID) is None
+    assert "Error fetching" not in caplog.text
+    assert "has no Reminders data" in caplog.text
+
+
+async def test_zone_not_found_logged_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the missing zone is reported once, not on every poll."""
+    caplog.set_level(logging.INFO)
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+    assert caplog.text.count("has no Reminders data") == 1
+
+    freezer.tick(MISSING_ZONE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("has no Reminders data") == 1
+
+
+async def test_zone_not_found_backs_off_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+) -> None:
+    """Test that a missing zone slows the polls down instead of failing."""
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+
+    coordinator = config_entry.runtime_data.reminders_coordinator
+    assert coordinator is not None
+    assert coordinator.update_interval == MISSING_ZONE_SCAN_INTERVAL
+
+
+async def test_zone_not_found_recovers(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that lists appear by themselves once Reminders is enabled."""
+    reminders.lists.side_effect = _zone_not_found_error()
+
+    await _setup(hass, config_entry)
+    assert hass.states.get(ENTITY_ID) is None
+
+    reminders.lists.side_effect = None
+    freezer.tick(MISSING_ZONE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    coordinator = config_entry.runtime_data.reminders_coordinator
+    assert coordinator is not None
+    assert coordinator.update_interval == REMINDERS_SCAN_INTERVAL
+    assert hass.states.get(ENTITY_ID) is not None
+
+
+async def test_zone_not_found_keeps_existing_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a missing zone never removes lists that already exist."""
+    await _setup(hass, config_entry)
+    assert hass.states.get(ENTITY_ID) is not None
+
+    reminders.lists.side_effect = _zone_not_found_error()
+    freezer.tick(REMINDERS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get_entity_id(
+        TODO_DOMAIN, DOMAIN, f"{config_entry.unique_id}_list1"
+    )
+    assert hass.states.get(ENTITY_ID) is not None
+
+    items = await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.GET_ITEMS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert [item["summary"] for item in items[ENTITY_ID]["items"]] == [
+        "Milk",
+        "Bread",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("err", "expected"),
+    [
+        pytest.param(
+            RemindersApiError(
+                "Zone changes failed: ZONE_NOT_FOUND (Zone does not exist)",
+                payload={
+                    "zones": [
+                        {
+                            "zoneID": {"zoneName": "Reminders"},
+                            "serverErrorCode": "ZONE_NOT_FOUND",
+                            "reason": "Zone does not exist",
+                        }
+                    ]
+                },
+            ),
+            True,
+            id="zone_not_found",
+        ),
+        pytest.param(
+            RemindersApiError(
+                "Zone changes failed: THROTTLED",
+                payload={"zones": [{"serverErrorCode": "THROTTLED"}]},
+            ),
+            False,
+            id="other_zone_error",
+        ),
+        pytest.param(
+            RemindersApiError("HTTP 429: rate limited", payload={"retry_after": 30}),
+            False,
+            id="rate_limited",
+        ),
+        pytest.param(
+            RemindersApiError(
+                "Fetch reminder lists failed for 1 record(s)",
+                payload=[{"recordName": "r1", "serverErrorCode": "BAD_REQUEST"}],
+            ),
+            False,
+            id="record_errors",
+        ),
+        pytest.param(RemindersApiError("no payload"), False, id="none_payload"),
+        pytest.param(LookupError("gone"), False, id="no_payload_attribute"),
+    ],
+)
+def test_zone_not_found_payload_detection(err: Exception, expected: bool) -> None:
+    """Test that only the zone-not-found payload is reclassified."""
+    assert _is_zone_not_found_error(err) is expected

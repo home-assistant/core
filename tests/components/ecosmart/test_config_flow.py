@@ -247,3 +247,77 @@ async def test_reauth_flow_other_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data == USER_INPUT
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a new key for the same account can be entered at any time."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == NEW_KEY_INPUT
+
+
+@FLOW_ERRORS
+async def test_reconfigure_flow_errors_then_recovers(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test each failure shows its error and the reconfigure still finishes."""
+    mock_config_entry.add_to_hass(hass)
+    mock_ecosmart_client.me.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_ecosmart_client.me.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == NEW_KEY_INPUT
+
+
+async def test_reconfigure_flow_other_account(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a key for a different account is refused and the old key is kept."""
+    mock_config_entry.add_to_hass(hass)
+    mock_ecosmart_client.me.return_value = replace(
+        load_identity(), account_ref=OTHER_ACCOUNT_REF
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == USER_INPUT

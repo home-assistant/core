@@ -13,7 +13,10 @@ SETTINGS_SCAN_INTERVAL = 60
 CONF_BAUDRATE = "baudrate"
 CONF_UNIT_ID = "unit_id"
 
-METER_ENERGY = "meter_energy"
+LAST_HANDLED_FAULT = "last_handled_fault"
+
+FAULT_LOG = "fault_log"
+SERVED_COMPONENTS = "served_components"
 
 TYPE_SERIAL = "serial"
 TYPE_TCP = "tcp"

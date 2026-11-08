@@ -143,7 +143,7 @@ async def test_block_sensor_em3(
     monkeypatch.setattr(mock_block_device, "blocks", blocks)
     await init_integration(hass, 1, model=MODEL_EM3)
 
-    assert hass.states.get(f"{SENSOR_DOMAIN}.grid_l1_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_grid_l1_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_b_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_c_power")
 
@@ -890,6 +890,42 @@ async def test_rpc_restored_sleeping_last_seen_sensor(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "2026-10-08T10:00:00+00:00"
+
+
+async def test_rpc_restored_sleeping_device_adds_new_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a sensor missing from the registry is added once a restored device wakes."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    device = register_device(device_registry, entry)
+    register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        entry,
+        device_id=device.id,
+    )
+    entity_id = f"{SENSOR_DOMAIN}.test_name_last_seen"
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entities can only be restored from the registry while the device sleeps
+    assert hass.states.get(entity_id) is None
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id)
+    assert entity_registry.async_get(entity_id)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

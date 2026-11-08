@@ -8,7 +8,6 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
-from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.exceptions import (
     ConnectionFailure,
@@ -104,15 +103,14 @@ MOCK_DEVICE_INFO = {
     "id": "123",
 }
 
-AUTODETECT_LEGACY = {
-    "name": "HomeAssistant",
-    "description": "HomeAssistant",
-    "id": "ha.component.samsung",
-    "method": METHOD_LEGACY,
-    "port": LEGACY_PORT,
-    "host": "10.20.43.21",
-    "timeout": TIMEOUT_REQUEST,
-}
+AUTODETECT_LEGACY = call(
+    "10.20.43.21",
+    port=LEGACY_PORT,
+    name="HomeAssistant",
+    description="HomeAssistant",
+    remote_id="ha.component.samsung",
+    timeout=TIMEOUT_REQUEST,
+)
 AUTODETECT_WEBSOCKET_SSL = {
     "host": "10.20.43.21",
     "name": "HomeAssistant",
@@ -173,8 +171,8 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     # show form
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=AccessDenied("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=UnauthorizedError("Boom"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -186,7 +184,9 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA
         )
 
-    with patch("homeassistant.components.samsungtv.bridge.Remote"):
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open"
+    ):
         # entry was added
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], user_input={}
@@ -209,7 +209,8 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
 async def test_user_websocket(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom")
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=ConnectionFailure("Boom"),
     ):
         # show form
         result = await hass.config_entries.flow.async_init(
@@ -444,8 +445,8 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=AccessDenied("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=UnauthorizedError("Boom"),
     ):
         # legacy device missing authentication
         result = await hass.config_entries.flow.async_configure(
@@ -457,8 +458,8 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "auth_missing"}
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError,
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=ConnectionFailure,
     ):
         # legacy device fails to connect after auth failed
         result2 = await hass.config_entries.flow.async_configure(
@@ -479,8 +480,8 @@ async def test_user_legacy_not_supported(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=UnhandledResponse("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=ResponseError("Boom"),
     ):
         # legacy device not supported
         result = await hass.config_entries.flow.async_configure(
@@ -502,8 +503,8 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -532,8 +533,8 @@ async def test_user_websocket_access_denied(
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -561,8 +562,8 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -578,8 +579,8 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "auth_missing"}
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -609,8 +610,8 @@ async def test_user_not_successful(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -636,8 +637,8 @@ async def test_user_not_successful_2(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -737,8 +738,8 @@ async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
 async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery with authentication."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=AccessDenied("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=UnauthorizedError("Boom"),
     ):
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
@@ -755,7 +756,9 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
         assert result["step_id"] == "pairing"
         assert result["errors"] == {"base": "auth_missing"}
 
-    with patch("homeassistant.components.samsungtv.bridge.Remote"):
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open"
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
@@ -925,8 +928,8 @@ async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery and we cannot connect."""
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
@@ -965,8 +968,8 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -997,8 +1000,8 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
@@ -1336,8 +1339,8 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
@@ -1396,8 +1399,8 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+            side_effect=ConnectionFailure("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote"
@@ -1453,9 +1456,10 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=AccessDenied("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+        autospec=True,
     ) as remote:
+        remote.return_value.open.side_effect = UnauthorizedError("Boom")
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
@@ -1466,10 +1470,13 @@ async def test_autodetect_auth_missing(hass: HomeAssistant) -> None:
 
         assert remote.call_count == 2
         assert remote.call_args_list == [
-            call(AUTODETECT_LEGACY),
-            call(AUTODETECT_LEGACY),
+            AUTODETECT_LEGACY,
+            AUTODETECT_LEGACY,
         ]
-    with patch("homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError):
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=ConnectionFailure,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -1490,16 +1497,17 @@ async def test_autodetect_not_supported(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[UnhandledResponse("Boom")],
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+        autospec=True,
     ) as remote:
+        remote.return_value.open.side_effect = ResponseError("Boom")
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == RESULT_NOT_SUPPORTED
         assert remote.call_count == 1
-        assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
+        assert remote.call_args_list == [AUTODETECT_LEGACY]
 
 
 @pytest.mark.usefixtures("remote_legacy", "rest_api_failing")
@@ -1533,14 +1541,15 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote",
-            side_effect=OSError("Boom"),
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+            autospec=True,
         ) as remote,
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVAsyncRest.rest_device_info",
             side_effect=ResponseError,
         ) as rest_device_info,
     ):
+        remote.return_value.open.side_effect = ConnectionFailure("Boom")
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
@@ -1548,7 +1557,7 @@ async def test_autodetect_none(hass: HomeAssistant) -> None:
         assert result["reason"] == RESULT_CANNOT_CONNECT
         assert remote.call_count == 1
         assert remote.call_args_list == [
-            call(AUTODETECT_LEGACY),
+            AUTODETECT_LEGACY,
         ]
         assert rest_device_info.call_count == 2
 
@@ -1985,8 +1994,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     entry.add_to_hass(hass)
     with (
         patch(
-            "homeassistant.components.samsungtv.bridge.Remote.__enter__",
-            return_value=True,
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",

@@ -14,6 +14,8 @@ import sys
 from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+from hassfest.model import Config, Integration
+from hassfest.requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.utils import canonicalize_name
@@ -21,9 +23,6 @@ from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
-
-from .model import Config, Integration
-from .requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
@@ -164,12 +163,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
     "familyhub": {"python-family-hub-local": {"async-timeout"}},
     "ffmpeg": {"ha-ffmpeg": {"async-timeout"}},
-    "fitbit": {
-        # https://github.com/orcasgit/python-fitbit/pull/178
-        # but project seems unmaintained
-        # fitbit > setuptools
-        "fitbit": {"setuptools"}
-    },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
     "geocaching": {"geocachingapi": {"backoff"}},
@@ -180,7 +173,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
     "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
@@ -232,7 +224,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
-    "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
@@ -286,10 +277,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     # https://github.com/tkdrob/pyefergy/pull/47
     "efergy": {"codecov": {"coverage"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
-    "fitbit": {
-        # Setuptools - distutils-precedence.pth
-        "fitbit": {"setuptools"}
-    },
     "flume": {"homeassistant": {"pyflume"}},
     # https://github.com/fortinet-solutions-cse/fortiosapi
     "fortios": {"homeassistant": {"fortiosapi"}},
@@ -299,11 +286,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "google_maps": {
         # Coloredlogs, unmaintained - coloredlogs.pth
         "locationsharinglib": {"coloredlogs"},
-    },
-    # https://github.com/NabuCasa/universal-silabs-flasher
-    "homeassistant_hardware": {
-        # Coloredlogs, unmaintained - coloredlogs.pth
-        "universal-silabs-flasher": {"coloredlogs"},
     },
     # https://github.com/basnijholt/aiokef
     "kef": {"homeassistant": {"aiokef"}},
@@ -665,7 +647,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
 
     for item in json.loads(
         subprocess.run(
-            ["pipdeptree", "-w", "silence", "--json"],
+            [sys.executable, "-m", "pipdeptree", "-w", "silence", "--json"],
             check=True,
             capture_output=True,
             text=True,
@@ -978,7 +960,16 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         if is_installed:
             continue
 
-        args = ["uv", "pip", "install", "--quiet"]
+        args = [
+            sys.executable,
+            "-m",
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            sys.executable,
+            "--quiet",
+        ]
         if install_args:
             args.append(install_args)
         args.append(requirement_arg)

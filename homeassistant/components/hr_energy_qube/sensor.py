@@ -39,12 +39,24 @@ STATUS_OPTIONS: list[str] = [
     status.value for status in StatusCode if status is not StatusCode.UNKNOWN
 ]
 
+# The controller reports -999.9 as the room temperature without a room sensor
+ROOM_SENSOR_MISSING = -999.0
+
 
 @dataclass(frozen=True, kw_only=True)
 class QubeSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for Qube Heat Pump."""
 
     value_fn: Callable[[QubeData], StateType]
+    exists_fn: Callable[[QubeData], bool] = lambda _: True
+
+
+def _room_temperature(data: QubeData) -> StateType:
+    """Return the room temperature, or None without a room sensor."""
+    temperature = data.state.temp_room
+    if temperature is None or temperature <= ROOM_SENSOR_MISSING:
+        return None
+    return temperature
 
 
 def _status_value(data: QubeData) -> StateType:
@@ -99,7 +111,8 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.state.temp_room,
+        value_fn=_room_temperature,
+        exists_fn=lambda data: bool(data.state.roomprb_en),
     ),
     QubeSensorEntityDescription(
         key="temp_dhw",
@@ -234,7 +247,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        QubeSensor(coordinator, entry, description) for description in SENSOR_TYPES
+        QubeSensor(coordinator, entry, description)
+        for description in SENSOR_TYPES
+        if description.exists_fn(coordinator.data)
     )
 
 
