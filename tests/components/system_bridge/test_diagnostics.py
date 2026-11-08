@@ -89,6 +89,11 @@ async def test_diagnostics_app_bundle(
             id="connection_closed",
         ),
         pytest.param(
+            ConnectionResetError("Cannot write to closing transport"),
+            "not_connected",
+            id="connection_reset",
+        ),
+        pytest.param(
             ConnectionErrorException("Timeout waiting for diagnostics response"),
             "timeout",
             id="timeout",

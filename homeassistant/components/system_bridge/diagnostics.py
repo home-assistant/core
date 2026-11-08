@@ -85,7 +85,7 @@ async def async_get_config_entry_diagnostics(
     else:
         try:
             app_diagnostics = await coordinator.websocket_client.get_diagnostics()
-        except ConnectionClosedException:
+        except ConnectionClosedException, ConnectionResetError:
             missing_reason = "not_connected"
         except ConnectionErrorException:
             missing_reason = "timeout"
