@@ -488,6 +488,8 @@ class Repository:
         self.treefiles: list[str] = []
         # The files of the installed version, when it is not the one of the tree
         self._installed_treefiles: tuple[str, list[str] | None] | None = None
+        # Pages asked for at once fetch the installed files only once
+        self._installed_treefiles_lock = Lock()
         self.ref: str | None = None
         self.logger = LOGGER
         # Two installs of one repository would write over each other's files
@@ -1030,24 +1032,27 @@ class Repository:
         """Return the files of the installed version, the tree's when unknown.
 
         They are fetched once per version, also when that fails, so a rate limit
-        is not asked again on every page.
+        is not asked again on every page. Pages asked for at the same time wait
+        for the first fetch instead of fetching again.
         """
-        if (
-            self._installed_treefiles is None
-            or self._installed_treefiles[0] != installed
-        ):
-            files: list[str] | None
-            try:
-                tree = await self.get_tree(installed)
-            except MarketplaceError as exception:
-                self.logger.debug(
-                    "%s No tree for %s: %s", self.string, installed, exception
-                )
-                files = None
-            else:
-                files = [entry.path for entry in tree or []]
-            self._installed_treefiles = (installed, files)
-        if (files := self._installed_treefiles[1]) is None:
+        async with self._installed_treefiles_lock:
+            if (
+                self._installed_treefiles is None
+                or self._installed_treefiles[0] != installed
+            ):
+                files: list[str] | None
+                try:
+                    tree = await self.get_tree(installed)
+                except MarketplaceError as exception:
+                    self.logger.debug(
+                        "%s No tree for %s: %s", self.string, installed, exception
+                    )
+                    files = None
+                else:
+                    files = [entry.path for entry in tree or []]
+                self._installed_treefiles = (installed, files)
+            files = self._installed_treefiles[1]
+        if files is None:
             return self.treefiles
         return files
 

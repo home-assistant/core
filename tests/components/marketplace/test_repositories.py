@@ -1,6 +1,6 @@
 """Tests for the Marketplace repositories."""
 
-from asyncio import CancelledError, Future, sleep
+from asyncio import CancelledError, Future, gather, sleep
 from collections.abc import AsyncIterator
 from http import HTTPStatus
 import io
@@ -980,6 +980,38 @@ async def test_translated_readme_named_by_the_installed_version(
     ) as get_tree:
         assert await repository.async_get_translated_readme("de") == "1.0.0"
         assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+    get_tree.assert_called_once_with("1.0.0")
+
+
+async def test_translated_readme_installed_tree_fetched_once_at_a_time(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test pages asked for at once fetch the files of the installed version once."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.tree_ref = "2.0.0"
+    repository.treefiles = ["README.md", "README.de-DE.md"]
+    repository.data.installed = True
+    repository.data.installed_version = "1.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"), keep=True)
+    tree: Future[list[GitHubGitTreeEntryModel]] = Future()
+
+    async def get_tree_later(_: str) -> list[GitHubGitTreeEntryModel]:
+        return await tree
+
+    with patch.object(repository, "get_tree", side_effect=get_tree_later) as get_tree:
+        pages = gather(
+            repository.async_get_translated_readme("de"),
+            repository.async_get_translated_readme("de"),
+        )
+        await sleep(0)
+        tree.set_result(_tree(("README.md", False), ("README.de.md", False)))
+        assert await pages == ["1.0.0", "1.0.0"]
 
     get_tree.assert_called_once_with("1.0.0")
 
