@@ -6,6 +6,7 @@ from velbusaio.channels import Blind as VelbusBlind
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -33,6 +34,8 @@ async def async_setup_entry(
 
 class VelbusCover(VelbusEntity, CoverEntity):
     """Representation a Velbus cover."""
+
+    _attr_device_class = CoverDeviceClass.SHUTTER
 
     _channel: VelbusBlind
     _assumed_closed: bool
