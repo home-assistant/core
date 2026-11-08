@@ -1400,7 +1400,7 @@ async def test_repair_flow_skips_active_and_unknown_models(
 @pytest.mark.parametrize(
     ("line", "expected_model"),
     [
-        pytest.param("haiku", "claude-opus-1", id="metadata_line"),
+        pytest.param("haiku", "claude-opus-1-20260101", id="metadata_line"),
         pytest.param(None, None, id="no_line"),
         pytest.param("mythos", None, id="no_active_model_in_line"),
     ],
@@ -1438,10 +1438,10 @@ async def test_repair_flow_model_selection(
                 update={"id": "claude-haiku-99"}
             ),
             _copy_model_info("claude-haiku-5-5").model_copy(
-                update={"id": "claude-opus-1"}
+                update={"id": "claude-opus-1-20260101"}
             ),
             _copy_model_info("claude-haiku-5-5").model_copy(
-                update={"id": "claude-opus-99"}
+                update={"id": "claude-opus-1-20250101"}
             ),
         ],
         has_more=False,
@@ -1458,8 +1458,8 @@ async def test_repair_flow_model_selection(
     assert model_field.get("default") == expected_model
     assert model_field["selector"]["select"]["options"] == [
         {"label": "Claude Sonnet 5.5", "value": "claude-haiku-99"},
-        {"label": "Claude Haiku 5.5", "value": "claude-opus-1"},
-        {"label": "Claude Haiku 5.5", "value": "claude-opus-99"},
+        {"label": "Claude Haiku 5.5", "value": "claude-opus-1-20260101"},
+        {"label": "Claude Haiku 5.5", "value": "claude-opus-1-20250101"},
     ]
 
 

@@ -92,13 +92,12 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             if model.lifecycle == "active"
         ]
         model_list: list[SelectOptionDict] = [
-            {"label": model.display_name, "value": model_alias(model.id)}
-            for model in active_models
+            {"label": model.display_name, "value": model.id} for model in active_models
         ]
 
         suggested_model = next(
             (
-                model_alias(model.id)
+                model.id
                 for model in active_models
                 if model_info.line is not None and model.line == model_info.line
             ),
