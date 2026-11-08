@@ -1,8 +1,10 @@
 """The OpenEVSE integration."""
 
 import asyncio
+from collections.abc import Awaitable
 import contextlib
 import logging
+from typing import Any
 
 from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.__main__ import OpenEVSE
@@ -194,83 +196,85 @@ async def _handle_sensor_updates(
     charger = coordinator.charger
     options = entry.options
 
-    try:
-        grid_sensor = options.get(CONF_GRID)
-        if grid_sensor and grid_sensor in entities_to_process:
-            grid = _parse_power_state(hass.states.get(grid_sensor))
-            invert = options.get(CONF_INVERT_GRID, False)
-            await charger.self_production(grid=grid, solar=None, invert=invert)
-
-        solar_sensor = options.get(CONF_SOLAR)
-        if solar_sensor and solar_sensor in entities_to_process:
-            solar = _parse_power_state(hass.states.get(solar_sensor))
-            await charger.self_production(grid=None, solar=solar, invert=False)
-
-        voltage_sensor = options.get(CONF_VOLTAGE)
-        if voltage_sensor and voltage_sensor in entities_to_process:
-            voltage = _parse_voltage_state(hass.states.get(voltage_sensor))
-            if voltage is not None:
-                await charger.grid_voltage(voltage=voltage)
-
-        shaper_sensor = options.get(CONF_SHAPER)
-        if shaper_sensor and shaper_sensor in entities_to_process:
-            power = _parse_power_state(hass.states.get(shaper_sensor))
-            if power is not None:
-                await charger.set_shaper_live_pwr(power=power)
-
-        soc_sensor = options.get(CONF_VEHICLE_SOC)
-        range_sensor = options.get(CONF_VEHICLE_RANGE)
-        eta_sensor = options.get(CONF_VEHICLE_ETA)
-        vehicle_sensors = {s for s in (soc_sensor, range_sensor, eta_sensor) if s}
-        if vehicle_sensors & entities_to_process:
-            soc = _parse_int_state(hass.states.get(soc_sensor)) if soc_sensor else None
-            vrange = (
-                _parse_range_state(hass.states.get(range_sensor))
-                if range_sensor
-                else None
+    async def _safe_push(coro: Awaitable[Any]) -> None:
+        try:
+            await coro
+        except AuthenticationError as err:
+            _LOGGER.debug("Authentication failed while pushing sensor update: %s", err)
+            entry.async_start_reauth(hass)
+        except UnsupportedFeature:
+            _LOGGER.debug(
+                "Pushing sensor data is unsupported by this OpenEVSE firmware"
             )
-            eta = _parse_eta_state(hass.states.get(eta_sensor)) if eta_sensor else None
+        except (
+            TimeoutError,
+            ServerTimeoutError,
+            ContentTypeError,
+            ParseJSONError,
+            UnknownError,
+            RuntimeError,
+            ValueError,
+            OverflowError,
+            OSError,
+        ) as err:
+            _LOGGER.debug("Failed to push sensor update to OpenEVSE charger: %s", err)
 
-            await charger.soc(
+    grid_sensor = options.get(CONF_GRID)
+    if grid_sensor and grid_sensor in entities_to_process:
+        grid = _parse_power_state(hass.states.get(grid_sensor))
+        invert = options.get(CONF_INVERT_GRID, False)
+        await _safe_push(charger.self_production(grid=grid, solar=None, invert=invert))
+
+    solar_sensor = options.get(CONF_SOLAR)
+    if solar_sensor and solar_sensor in entities_to_process:
+        solar = _parse_power_state(hass.states.get(solar_sensor))
+        await _safe_push(charger.self_production(grid=None, solar=solar, invert=False))
+
+    voltage_sensor = options.get(CONF_VOLTAGE)
+    if voltage_sensor and voltage_sensor in entities_to_process:
+        voltage = _parse_voltage_state(hass.states.get(voltage_sensor))
+        if voltage is not None:
+            await _safe_push(charger.grid_voltage(voltage=voltage))
+
+    shaper_sensor = options.get(CONF_SHAPER)
+    if shaper_sensor and shaper_sensor in entities_to_process:
+        power = _parse_power_state(hass.states.get(shaper_sensor))
+        if power is not None:
+            await _safe_push(charger.set_shaper_live_pwr(power=power))
+
+    soc_sensor = options.get(CONF_VEHICLE_SOC)
+    range_sensor = options.get(CONF_VEHICLE_RANGE)
+    eta_sensor = options.get(CONF_VEHICLE_ETA)
+    vehicle_sensors = {s for s in (soc_sensor, range_sensor, eta_sensor) if s}
+    if vehicle_sensors & entities_to_process:
+        soc = _parse_int_state(hass.states.get(soc_sensor)) if soc_sensor else None
+        vrange = (
+            _parse_range_state(hass.states.get(range_sensor)) if range_sensor else None
+        )
+        eta = _parse_eta_state(hass.states.get(eta_sensor)) if eta_sensor else None
+
+        await _safe_push(
+            charger.soc(
                 battery_level=soc,
                 battery_range=vrange,
                 time_to_full=eta,
             )
+        )
 
-        hb_soc_sensor = options.get(CONF_HOME_BATTERY_SOC)
-        hb_power_sensor = options.get(CONF_HOME_BATTERY_POWER)
-        hb_sensors = {s for s in (hb_soc_sensor, hb_power_sensor) if s}
-        if hb_sensors & entities_to_process:
-            hb_soc = (
-                _parse_int_state(hass.states.get(hb_soc_sensor))
-                if hb_soc_sensor
-                else None
-            )
-            hb_power = (
-                _parse_power_state(hass.states.get(hb_power_sensor))
-                if hb_power_sensor
-                else None
-            )
+    hb_soc_sensor = options.get(CONF_HOME_BATTERY_SOC)
+    hb_power_sensor = options.get(CONF_HOME_BATTERY_POWER)
+    hb_sensors = {s for s in (hb_soc_sensor, hb_power_sensor) if s}
+    if hb_sensors & entities_to_process:
+        hb_soc = (
+            _parse_int_state(hass.states.get(hb_soc_sensor)) if hb_soc_sensor else None
+        )
+        hb_power = (
+            _parse_power_state(hass.states.get(hb_power_sensor))
+            if hb_power_sensor
+            else None
+        )
 
-            await charger.home_battery(soc=hb_soc, power=hb_power)
-
-    except AuthenticationError as err:
-        _LOGGER.debug("Authentication failed while pushing sensor update: %s", err)
-        entry.async_start_reauth(hass)
-    except UnsupportedFeature:
-        _LOGGER.debug("Pushing sensor data is unsupported by this OpenEVSE firmware")
-    except (
-        TimeoutError,
-        ServerTimeoutError,
-        ContentTypeError,
-        ParseJSONError,
-        UnknownError,
-        RuntimeError,
-        ValueError,
-        OverflowError,
-        OSError,
-    ) as err:
-        _LOGGER.debug("Failed to push sensor update to OpenEVSE charger: %s", err)
+        await _safe_push(charger.home_battery(soc=hb_soc, power=hb_power))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

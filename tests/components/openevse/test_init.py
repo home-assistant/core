@@ -146,12 +146,14 @@ async def test_sensor_state_change_pushes_data(
             "invert_grid": True,
         },
     )
+    push_count = 0
     push_event = asyncio.Event()
 
     def _sync_mock(mock_method: AsyncMock) -> None:
         orig = mock_method.side_effect
 
         async def _wrapper(*args, **kwargs):
+            nonlocal push_count
             try:
                 if isinstance(orig, type) and issubclass(orig, BaseException):
                     raise orig
@@ -161,6 +163,7 @@ async def test_sensor_state_change_pushes_data(
                     return await orig(*args, **kwargs)
                 return None
             finally:
+                push_count += 1
                 push_event.set()
 
         mock_method.side_effect = _wrapper
@@ -313,11 +316,25 @@ async def test_sensor_startup_replay_and_coalescing(
     mock_charger.soc = AsyncMock()
     mock_charger.home_battery = AsyncMock()
 
+    push_count = 0
     push_event = asyncio.Event()
 
     def _sync_mock(mock_method: AsyncMock) -> None:
+        orig = mock_method.side_effect
+
         async def _wrapper(*args, **kwargs):
-            push_event.set()
+            nonlocal push_count
+            try:
+                if isinstance(orig, type) and issubclass(orig, BaseException):
+                    raise orig
+                if isinstance(orig, BaseException):
+                    raise orig
+                if callable(orig):
+                    return await orig(*args, **kwargs)
+                return None
+            finally:
+                push_count += 1
+                push_event.set()
 
         mock_method.side_effect = _wrapper
 
@@ -371,6 +388,29 @@ async def test_sensor_startup_replay_and_coalescing(
     assert mock_charger.self_production.call_count == 1
     mock_charger.self_production.assert_called_once_with(
         grid=3000, solar=None, invert=False
+    )
+
+    # Test error in earlier push group does not prevent subsequent groups from sending
+    mock_charger.self_production.reset_mock()
+    mock_charger.soc.reset_mock()
+    mock_charger.self_production.side_effect = TimeoutError
+    _sync_mock(mock_charger.self_production)
+    target_pushes = push_count + 2
+
+    hass.states.async_set("sensor.grid_power", "3500", {"unit_of_measurement": "W"})
+    hass.states.async_set("sensor.car_battery", "80")
+    await hass.async_block_till_done()
+
+    # Wait for the two pushes (grid failure + soc success)
+    async with asyncio.timeout(1):
+        while push_count < target_pushes:
+            await push_event.wait()
+            push_event.clear()
+
+    assert mock_charger.self_production.call_count == 1
+    assert mock_charger.soc.call_count == 1
+    mock_charger.soc.assert_called_once_with(
+        battery_level=80, battery_range=150, time_to_full=None
     )
 
 
