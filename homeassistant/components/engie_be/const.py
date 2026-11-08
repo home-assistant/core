@@ -20,5 +20,6 @@ CONTRACTS_RETRY_INTERVAL = timedelta(minutes=5)
 
 HOUSEHOLD_SCAN_INTERVAL = timedelta(hours=1)
 EPEX_SCAN_INTERVAL = timedelta(hours=1)
+PEAKS_SCAN_INTERVAL = timedelta(hours=1)
 
 DIRECTIONS: tuple[Literal["offtake", "injection"], ...] = ("offtake", "injection")

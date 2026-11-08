@@ -70,6 +70,7 @@ from .conftest import (
     build_tou_schedules,
     setup_dynamic_entry,
     setup_entry,
+    without_capacity_tariff,
 )
 
 
@@ -108,8 +109,10 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the energy-price sensors for an offtake-only and a dual-direction EAN."""
+    freezer.move_to(datetime(2026, 11, 15, 12, 0, tzinfo=BRUSSELS_TIME_ZONE))
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -174,8 +177,8 @@ async def test_excl_vat_disabled_by_default(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_entries = without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     excl_vat_entries = [
         entry for entry in entity_entries if entry.unique_id.endswith("_excl_vat")
@@ -357,8 +360,8 @@ async def test_period_window_creates_sensors(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_entries = without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     enabled_entries = [
         entity_entry
@@ -388,8 +391,8 @@ async def test_period_window_uses_brussels_date(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 
@@ -419,10 +422,10 @@ async def test_period_window_skips_sensors(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_entries = without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
-    assert entity_entries == []
+    assert without_capacity_tariff(entity_entries) == []
 
 
 async def test_period_window_refresh_makes_existing_sensors_unavailable(
@@ -441,8 +444,8 @@ async def test_period_window_refresh_makes_existing_sensors_unavailable(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    entity_entries = without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     enabled_entity_entries = [
         entity_entry
@@ -600,7 +603,11 @@ async def test_period_gap_heals(
     await hass.async_block_till_done()
 
     assert (
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+        without_capacity_tariff(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
         == []
     )
 
@@ -608,8 +615,8 @@ async def test_period_gap_heals(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 

@@ -12,6 +12,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pizone"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["python-izone==2.0.0"]
 }

@@ -40,6 +40,7 @@ from .conftest import (
     build_prices,
     build_relations,
     setup_dynamic_entry,
+    without_capacity_tariff,
 )
 
 
@@ -195,8 +196,8 @@ async def test_setup_prices_error(
         )
         is not None
     )
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert not without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 
@@ -262,8 +263,8 @@ async def test_all_households_loaded_despite_prices_failure(
         device_registry, mock_config_entry.entry_id
     )
     assert len(device_entries) == 2
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert not without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 
@@ -298,8 +299,8 @@ async def test_setup_without_active_agreements(
     assert not dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert not without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 
@@ -335,7 +336,9 @@ async def test_device_created_for_household_without_prices(
         (DOMAIN, BAN_2), mock_config_entry.entry_id
     )
     assert ban_2_device is not None
-    assert not er.async_entries_for_device(entity_registry, ban_2_device.id)
+    assert not without_capacity_tariff(
+        er.async_entries_for_device(entity_registry, ban_2_device.id)
+    )
 
     ban_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, BAN), mock_config_entry.entry_id
@@ -419,8 +422,8 @@ async def test_unexpected_service_point_error_does_not_prevent_setup(
         )
         is not None
     )
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    assert not without_capacity_tariff(
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
 

@@ -70,7 +70,7 @@ rules:
     comment: using only device name
   exception-translations: done
   icon-translations:
-    status: done
+    status: exempt
     comment: no custom icons, only default icons
   reconfiguration-flow: done
   repair-issues:

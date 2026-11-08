@@ -287,10 +287,3 @@ def remote_encrypted_websocket_fixture() -> Generator[Mock]:
     ) as remotews_class:
         remotews_class.return_value = remote_encrypted_websocket
         yield remote_encrypted_websocket
-
-
-@pytest.fixture(name="mac_address", autouse=True)
-def mac_address_fixture() -> Generator[Mock]:
-    """Patch getmac.get_mac_address."""
-    with patch("getmac.get_mac_address", return_value=None) as mac:
-        yield mac
