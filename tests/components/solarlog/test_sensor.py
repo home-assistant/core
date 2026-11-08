@@ -1,5 +1,6 @@
 """Test the Home Assistant solarlog sensor module."""
 
+from copy import deepcopy
 from datetime import date, timedelta
 from unittest.mock import AsyncMock
 
@@ -11,6 +12,7 @@ from pytest_homeassistant.common import (
     snapshot_platform,
 )
 from solarlog_cli.solarlog_exceptions import (
+    SolarLogAuthenticationError,
     SolarLogConnectionError,
     SolarLogUpdateError,
 )
@@ -20,6 +22,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.solarlog.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -164,6 +167,52 @@ async def test_firmware_read_error_retains_previous_firmware_data(
     coordinator = mock_config_entry.runtime_data.basic_data_coordinator
 
     mock_solarlog_connector.update_firmware_information.side_effect = exception
+    updated_data = deepcopy(coordinator.data)
+    updated_data.firmware_version = None
+    updated_data.firmware_release_date = None
+    updated_data.power_ac = 200.0
+    mock_solarlog_connector.update_basic_data.return_value = updated_data
+    coordinator._update_counter = 99
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.data is not None
+    assert coordinator.data.power_ac == 200
+    assert coordinator.data.firmware_version == "1.0"
+    assert coordinator.data.firmware_release_date == date(2024, 1, 1)
+    assert coordinator._update_counter == 0
+    state = hass.states.get("sensor.solarlog_power_ac")
+    assert state is not None
+    assert state.state == "200.0"
+
+
+@pytest.mark.parametrize(
+    ("recovery_method", "exception"),
+    [
+        ("login", SolarLogConnectionError),
+        ("login", SolarLogUpdateError),
+        ("test_extended_data_available", SolarLogConnectionError),
+        ("test_extended_data_available", SolarLogUpdateError),
+    ],
+)
+async def test_firmware_auth_recovery_transient_error_keeps_basic_data_available(
+    hass: HomeAssistant,
+    recovery_method: str,
+    exception: type[Exception],
+    mock_solarlog_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test transient firmware auth recovery errors do not fail basic data refresh."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    coordinator = mock_config_entry.runtime_data.basic_data_coordinator
+
+    mock_solarlog_connector.update_firmware_information.side_effect = (
+        SolarLogAuthenticationError
+    )
+    getattr(mock_solarlog_connector, recovery_method).side_effect = exception
     coordinator._update_counter = 99
 
     freezer.tick(delta=timedelta(minutes=1))
@@ -172,12 +221,30 @@ async def test_firmware_read_error_retains_previous_firmware_data(
 
     assert coordinator.data is not None
     assert coordinator.data.power_ac == 100
-    assert coordinator.data.firmware_version == "1.0"
-    assert coordinator.data.firmware_release_date == date(2024, 1, 1)
-    assert coordinator._update_counter == 0
     state = hass.states.get("sensor.solarlog_power_ac")
     assert state is not None
     assert state.state == "100.0"
+
+
+async def test_firmware_auth_recovery_probe_auth_error_fails_config_entry(
+    hass: HomeAssistant,
+    mock_solarlog_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth errors from the extended-data probe are reported as auth failures."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    coordinator = mock_config_entry.runtime_data.basic_data_coordinator
+
+    mock_solarlog_connector.update_firmware_information.side_effect = (
+        SolarLogAuthenticationError
+    )
+    mock_solarlog_connector.test_extended_data_available.side_effect = (
+        SolarLogAuthenticationError
+    )
+    coordinator._update_counter = 99
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()
 
 
 @pytest.mark.usefixtures("mock_solarlog_connector")
