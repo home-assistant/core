@@ -1193,7 +1193,9 @@ async def test_init_no_solar(
         f"Using options: {EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name} for Envoy Envoy 1234"
         in caplog.text
     )
+
     caplog.clear()
+    mocked_envoy.reset_mock()
 
     hass.config_entries.async_update_entry(
         entry,

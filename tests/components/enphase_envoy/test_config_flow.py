@@ -2,9 +2,9 @@
 
 from ipaddress import ip_address
 import logging
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from pyenphase import EnvoyAuthenticationError, EnvoyError, EnvoyTokenAuth
+from pyenphase import Envoy, EnvoyAuthenticationError, EnvoyError, EnvoyTokenAuth
 from pyenphase.const import EnvoyOptions
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -1295,13 +1295,17 @@ async def test_reauth_manaual_token_switch_to_no_solar_on(
     assert config_entry.data[CONF_NO_SOLAR]
 
 
+@patch(
+    "homeassistant.components.enphase_envoy.config_flow.Envoy",
+    autospec=True,
+    side_effect=EnvoyAuthenticationError("fail authentication"),
+)
 async def test_form_configure_no_solar_on(
+    mocked_envoy: Envoy,
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_envoy: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test user step selecting to use no solar mode."""
+    """Test user step no solar mode passed to Envoy setup."""
     caplog.set_level(logging.DEBUG)
 
     result = await hass.config_entries.flow.async_init(
@@ -1310,34 +1314,76 @@ async def test_form_configure_no_solar_on(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    caplog.clear()
-
-    # test user enabling no_solar mode
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_NO_SOLAR: True,
-        },
-    )
+    # setup fails, we only are testing Envoy parameters passed to instantiation
+    with pytest.raises(EnvoyAuthenticationError):
+        # test user enabling no_solar mode
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_NO_SOLAR: True,
+            },
+        )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Envoy 1234"
-    assert result["result"].unique_id == "1234"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_NAME: "Envoy 1234",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-        CONF_MANUAL_TOKEN: False,
-        CONF_TOKEN: mock_envoy.auth.token,
-        CONF_NO_SOLAR: True,
-    }
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.NO_SOLAR | EnvoyOptions.V2_ACB_MODE
 
     assert (
         f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name}"
+        in caplog.text
+    )
+
+    caplog.clear()
+    mocked_envoy.reset_mock()
+
+    # setup fails, we only are testing Envoy parameters passed to instantiation
+    with pytest.raises(EnvoyAuthenticationError):
+        # test user enabling no_solar mode
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_NO_SOLAR: False,
+            },
+        )
+    await hass.async_block_till_done()
+
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
+
+    assert (
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name} "
+        in caplog.text
+    )
+
+    caplog.clear()
+    mocked_envoy.reset_mock()
+
+    # setup fails, we only are testing Envoy parameters passed to instantiation
+    with pytest.raises(EnvoyAuthenticationError):
+        # test user enabling no_solar mode
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+    await hass.async_block_till_done()
+
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
+
+    assert (
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name} "
         in caplog.text
     )
