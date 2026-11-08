@@ -7,13 +7,12 @@ from typing import Any
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TimeValue, TimeValueSequence
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("language", ["en", "he"])

@@ -8,9 +8,10 @@ from eternalegypt.eternalegypt import Modem
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_NOTIFY, LOGGER
+from .const import CONF_NOTIFY, DOMAIN, LOGGER
 
 
 async def async_get_service(
@@ -57,6 +58,9 @@ class NetgearNotifyService(BaseNotificationService):
         for target in targets:
             try:
                 await self.modem.sms(target, message)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except eternalegypt.Error:
-                LOGGER.error("Unable to send to %s", target)
+            except eternalegypt.Error as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="send_message_failed",
+                    translation_placeholders={"target": target},
+                ) from err

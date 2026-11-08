@@ -7,14 +7,8 @@ from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import orjson
 import pytest
-
-from homeassistant.components import infrared, mqtt
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -35,9 +29,13 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import infrared, mqtt
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+import homeassistant.util.dt as dt_util
 
 DEFAULT_CONFIG_EMITTER = {
     mqtt.DOMAIN: {
@@ -392,14 +390,14 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "command_topic": "test-topic",
             },
-            "Error 'not a valid value for dictionary value @ data['schema']'",
+            "Error 'expected schema to be one of",
         ),
         (
             {
                 "schema": "emitter",
                 "name": "test",
             },
-            "Error 'required key not provided @ data['command_topic']'",
+            "Error 'required key not provided at 'command_topic''",
         ),
         (
             {
@@ -407,14 +405,14 @@ async def test_discovery_ir_entity_succeeds(
                 "name": "test",
                 "state_topic": "test-topic",
             },
-            "Error 'not a valid value for dictionary value @ data['schema']'",
+            "Error 'expected schema to be one of",
         ),
         (
             {
                 "schema": "receiver",
                 "name": "test",
             },
-            "Error 'required key not provided @ data['state_topic']'",
+            "Error 'required key not provided at 'state_topic''",
         ),
     ],
 )

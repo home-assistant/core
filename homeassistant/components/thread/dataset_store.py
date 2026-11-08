@@ -20,6 +20,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 
 from . import discovery
+from .const import DOMAIN
 
 BORDER_AGENT_DISCOVERY_TIMEOUT = 30
 DATA_STORE = "thread.datasets"
@@ -299,13 +300,17 @@ class DatasetStore:
             MeshcopTLVType.EXTPANID not in dataset
             or MeshcopTLVType.ACTIVETIMESTAMP not in dataset
         ):
-            raise HomeAssistantError("Invalid dataset")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_dataset",
+            )
 
         # Don't allow setting preferred border agent ID without setting
         # preferred extended address
         if preferred_border_agent_id is not None and preferred_extended_address is None:
             raise HomeAssistantError(
-                "Must set preferred extended address with preferred border agent ID"
+                translation_domain=DOMAIN,
+                translation_key="preferred_extended_address_required",
             )
 
         # Bail out if the dataset already exists
@@ -444,7 +449,8 @@ class DatasetStore:
         # preferred extended address
         if border_agent_id is not None and extended_address is None:
             raise HomeAssistantError(
-                "Must set preferred extended address with preferred border agent ID"
+                translation_domain=DOMAIN,
+                translation_key="preferred_extended_address_required",
             )
 
         self.datasets[dataset_id] = dataclasses.replace(
@@ -514,6 +520,17 @@ class DatasetStore:
             # Either the router is not there, or mDNS is not working. In any case,
             # don't set the router as preferred.
             _LOGGER.debug("Own router not found, do not set dataset as default")
+
+        elif self._preferred_dataset is not None:
+            # Discovery takes up to BORDER_AGENT_DISCOVERY_TIMEOUT, and a
+            # preferred dataset was chosen while we were waiting. Whoever set
+            # it knows the network as it is now, so leave it alone: this task
+            # only exists to pick a preference when there is none.
+            _LOGGER.debug("Preferred dataset already set, do not overwrite it")
+
+        elif dataset_id not in self.datasets:
+            # The dataset was deleted while discovery was running.
+            _LOGGER.debug("Dataset is gone, do not set it as default")
 
         else:
             # We've discovered the router connected to the dataset, but we did not

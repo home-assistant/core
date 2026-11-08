@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import mold_indicator
 from homeassistant.components.mold_indicator.config_flow import (
@@ -21,8 +22,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -226,7 +225,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     )
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, mold_indicator_entity_entry.entity_id)
 
@@ -289,7 +288,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     )
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, mold_indicator_entity_entry.entity_id)
 
@@ -314,7 +313,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 
     # Check if the mold_indicator config entry is not in the device
     source_device = device_registry.async_get(source_device.id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
 
     # Check that the mold_indicator config entry is not removed
     assert mold_indicator_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -362,7 +361,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     )
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, mold_indicator_entity_entry.entity_id)
 
@@ -385,7 +384,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 
     # Check that the mold_indicator config entry is not in the device
     source_device = device_registry.async_get(source_device.id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
 
     # Check that the mold_indicator config entry is not removed
     assert mold_indicator_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -431,9 +430,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     )
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
     source_device_2 = device_registry.async_get(source_device_2.id)
-    assert mold_indicator_config_entry.entry_id not in source_device_2.config_entries
+    assert source_device_2.config_entry_id != mold_indicator_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, mold_indicator_entity_entry.entity_id)
 
@@ -461,9 +460,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 
     # Check that the mold_indicator config entry is not in any of the devices
     source_device = device_registry.async_get(source_device.id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
     source_device_2 = device_registry.async_get(source_device_2.id)
-    assert mold_indicator_config_entry.entry_id not in source_device_2.config_entries
+    assert source_device_2.config_entry_id != mold_indicator_config_entry.entry_id
 
     # Check that the mold_indicator config entry is not removed
     assert mold_indicator_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -503,7 +502,7 @@ async def test_async_handle_source_entity_new_entity_id(
     )
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, mold_indicator_entity_entry.entity_id)
 
@@ -523,7 +522,7 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config is not in the device
     source_device = device_registry.async_get(source_device.id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
 
     # Check that the mold_indicator config entry is not removed
     assert mold_indicator_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -567,7 +566,7 @@ async def test_migration_1_1(
     # Check that the helper config entry is not in the device and the helper entity
     # is linked to the source device
     source_device = device_registry.async_get(indoor_humidity_device.id)
-    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    assert source_device.config_entry_id != mold_indicator_config_entry.entry_id
     mold_indicator_entity_entry = entity_registry.async_get(
         "sensor.mock_title_my_mold_indicator"
     )

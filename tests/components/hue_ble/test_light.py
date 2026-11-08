@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from HueBLE import EffectType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hue_ble.const import EFFECT_SPEED
@@ -13,7 +14,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_XY_COLOR,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -22,8 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.hue_ble import TEST_DEVICE_NAME
+from . import TEST_DEVICE_NAME
 
 
 async def test_light(
@@ -62,7 +62,7 @@ async def test_light_control_basic(
     assert attributes[ATTR_BRIGHTNESS] == 100
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_off",
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -73,7 +73,7 @@ async def test_light_control_basic(
     assert not mock_light.power_state
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 50},
         blocking=True,
@@ -86,7 +86,7 @@ async def test_light_control_basic(
     assert mock_light.power_state
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 200},
         blocking=True,
@@ -120,7 +120,7 @@ async def test_light_control_color_temp(
     assert mock_light.colour_temp == 250
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 3000},
         blocking=True,
@@ -156,7 +156,7 @@ async def test_light_control_color_xy(
     assert mock_light.colour_xy == (0.0, 0.0)
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.1, 0.1)},
         blocking=True,
@@ -194,7 +194,7 @@ async def test_light_control_effect_xy(
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {
             ATTR_ENTITY_ID: entity_id,
@@ -214,7 +214,7 @@ async def test_light_control_effect_xy(
     assert not mock_light.colour_temp_mode
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {
             ATTR_ENTITY_ID: entity_id,
@@ -257,7 +257,7 @@ async def test_light_control_effect_temp(
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: EffectType.COSMOS.name},
         blocking=True,
@@ -272,7 +272,7 @@ async def test_light_control_effect_temp(
     assert mock_light.colour_temp_mode
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {
             ATTR_ENTITY_ID: entity_id,
@@ -282,7 +282,7 @@ async def test_light_control_effect_temp(
         blocking=True,
     )
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
@@ -323,7 +323,7 @@ async def test_light_bad_effect(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
+            LIGHT_DOMAIN,
             "turn_on",
             {
                 ATTR_ENTITY_ID: entity_id,

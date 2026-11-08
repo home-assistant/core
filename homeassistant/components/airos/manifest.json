@@ -1,12 +1,14 @@
 {
   "domain": "airos",
   "name": "Ubiquiti airOS",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@CoMPaTech"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [{ "registered_devices": true }],
   "documentation": "https://www.home-assistant.io/integrations/airos",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["airos==0.6.9"]
+  "requirements": ["airos==0.6.13"]
 }

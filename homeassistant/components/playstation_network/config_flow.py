@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
     PSNAWPError,
@@ -11,18 +12,15 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPNotFoundError,
 )
 from psnawp_api.utils.misc import parse_npsso_token
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -36,7 +34,7 @@ from .helpers import PlaystationNetwork
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_NPSSO): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_NPSSO): str})
 
 
 class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,7 +44,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: PlaystationNetworkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"friend": FriendSubentryFlowHandler}
@@ -146,7 +144,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(
                     description_placeholders={
                         "wrong_account": user.online_id,
-                        CONF_NAME: entry.title,
+                        "name": entry.title,
                     }
                 )
 
@@ -155,6 +153,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={CONF_NPSSO: npsso},
                 )
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=self.add_suggested_values_to_schema(
@@ -212,9 +211,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ACCOUNT_ID): SelectSelector(
+                        probatio.Required(CONF_ACCOUNT_ID): SelectSelector(
                             SelectSelectorConfig(options=options)
                         )
                     }

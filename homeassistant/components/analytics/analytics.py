@@ -49,7 +49,7 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -189,9 +189,9 @@ async def _async_get_modifier(
 ) -> AnalyticsModifier | None:
     """Get analytics modifier."""
     modifiers = _async_get_modifiers(hass)
-    modifier = modifiers.get(domain, UNDEFINED)
+    modifier = modifiers.get(domain, Undefined)
 
-    if modifier is not UNDEFINED:
+    if modifier is not Undefined:
         return modifier
 
     platform = await _async_get_analytics_platform(hass, domain)
@@ -774,7 +774,7 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     removed_devices: set[str] = set()
 
     # Get device list
-    for device_entry in (*dev_reg.devices, *dev_reg.child_devices.values()):
+    for device_entry in (*dev_reg.devices, *dev_reg.child_devices):
         config_entry = hass.config_entries.async_get_entry(device_entry.config_entry_id)
 
         if config_entry is None:

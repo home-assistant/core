@@ -1,37 +1,51 @@
 """Define services for the Apple TV integration."""
 
+from enum import StrEnum
+
+import probatio
 from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
 from pyatv.interface import AppleTV as AppleTVInterface
-import voluptuous as vol
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import ATTR_TEXT, DOMAIN
+from .const import DOMAIN
 
-SERVICE_SET_KEYBOARD_TEXT = "set_keyboard_text"
-SERVICE_SET_KEYBOARD_TEXT_SCHEMA = vol.Schema(
+
+class AppleTVService(StrEnum):
+    """Store keys for Apple TV services."""
+
+    SET_KEYBOARD_TEXT = "set_keyboard_text"
+    APPEND_KEYBOARD_TEXT = "append_keyboard_text"
+    CLEAR_KEYBOARD_TEXT = "clear_keyboard_text"
+
+
+class AppleTVServiceArgument(StrEnum):
+    """Store keys for Apple TV service arguments."""
+
+    TEXT = "text"
+
+
+SERVICE_SET_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_TEXT): cv.string,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(AppleTVServiceArgument.TEXT): cv.string,
     }
 )
 
-SERVICE_APPEND_KEYBOARD_TEXT = "append_keyboard_text"
-SERVICE_APPEND_KEYBOARD_TEXT_SCHEMA = vol.Schema(
+SERVICE_APPEND_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_TEXT): cv.string,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(AppleTVServiceArgument.TEXT): cv.string,
     }
 )
 
-SERVICE_CLEAR_KEYBOARD_TEXT = "clear_keyboard_text"
-SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = vol.Schema(
+SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
     }
 )
 
@@ -39,7 +53,7 @@ SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = vol.Schema(
 def _get_atv(call: ServiceCall) -> AppleTVInterface:
     """Get the AppleTVInterface for a service call."""
     entry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     atv: AppleTVInterface | None = entry.runtime_data.atv
     if atv is None:
@@ -71,7 +85,7 @@ async def _async_set_keyboard_text(call: ServiceCall) -> None:
     atv = _get_atv(call)
     _check_keyboard_focus(atv)
     try:
-        await atv.keyboard.text_set(call.data[ATTR_TEXT])
+        await atv.keyboard.text_set(call.data[AppleTVServiceArgument.TEXT])
     except ProtocolError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -84,7 +98,7 @@ async def _async_append_keyboard_text(call: ServiceCall) -> None:
     atv = _get_atv(call)
     _check_keyboard_focus(atv)
     try:
-        await atv.keyboard.text_append(call.data[ATTR_TEXT])
+        await atv.keyboard.text_append(call.data[AppleTVServiceArgument.TEXT])
     except ProtocolError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -110,19 +124,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Apple TV integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_KEYBOARD_TEXT,
+        AppleTVService.SET_KEYBOARD_TEXT,
         _async_set_keyboard_text,
         schema=SERVICE_SET_KEYBOARD_TEXT_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_APPEND_KEYBOARD_TEXT,
+        AppleTVService.APPEND_KEYBOARD_TEXT,
         _async_append_keyboard_text,
         schema=SERVICE_APPEND_KEYBOARD_TEXT_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_CLEAR_KEYBOARD_TEXT,
+        AppleTVService.CLEAR_KEYBOARD_TEXT,
         _async_clear_keyboard_text,
         schema=SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA,
     )

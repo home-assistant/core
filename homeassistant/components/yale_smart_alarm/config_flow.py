@@ -3,12 +3,11 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from yalesmartalarmclient.client import YaleSmartAlarmClient
 from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -17,6 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
+from . import YaleConfigEntry
 from .const import (
     CONF_AREA_ID,
     CONF_LOCK_CODE_DIGITS,
@@ -25,23 +25,23 @@ from .const import (
     YALE_BASE_ERRORS,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Required(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
     }
 )
 
-DATA_SCHEMA_AUTH = vol.Schema(
+DATA_SCHEMA_AUTH = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_LOCK_CODE_DIGITS,
         ): int,
     }
@@ -69,7 +69,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> YaleOptionsFlowHandler:
+    def async_get_options_flow(config_entry: YaleConfigEntry) -> YaleOptionsFlowHandler:
         """Get the options flow for this handler."""
         return YaleOptionsFlowHandler()
 

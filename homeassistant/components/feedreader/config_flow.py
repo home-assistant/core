@@ -6,10 +6,9 @@ from typing import Any, override
 import urllib.error
 
 import feedparser
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -24,6 +23,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN, USER_AGENT
+from .coordinator import FeedReaderConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: FeedReaderConfigEntry,
     ) -> FeedReaderOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FeedReaderOptionsFlowHandler()
@@ -63,9 +63,9 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_URL, default=user_input.get(CONF_URL, "")
                     ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL))
                 }
@@ -137,9 +137,9 @@ class FeedReaderOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_MAX_ENTRIES,
                     default=self.config_entry.options.get(
                         CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES

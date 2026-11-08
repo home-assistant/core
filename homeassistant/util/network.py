@@ -19,7 +19,7 @@ PRIVATE_NETWORKS = (
     ip_network("10.0.0.0/8"),
     ip_network("172.16.0.0/12"),
     ip_network("192.168.0.0/16"),
-    ip_network("fd00::/8"),
+    ip_network("fc00::/7"),
     ip_network("::ffff:10.0.0.0/104"),
     ip_network("::ffff:172.16.0.0/108"),
     ip_network("::ffff:192.168.0.0/112"),
@@ -97,13 +97,16 @@ def is_host_valid(host: str) -> bool:
     if re.match(r"^[0-9\.]+$", host):  # reject invalid IPv4
         return False
     host = host.removesuffix(".")
-    allowed = re.compile(r"(?!-)[A-Z\d\-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in host.split("."))
+    allowed = re.compile(r"(?!-)[A-Z\d\-]{1,63}(?<!-)", re.IGNORECASE | re.ASCII)
+    return all(allowed.fullmatch(x) for x in host.split("."))
 
 
 def normalize_url(address: str) -> str:
     """Normalize a given URL."""
-    url = yarl.URL(address.rstrip("/"))
+    url = yarl.URL(address)
+    # A trailing "/" is only part of the path without a query or fragment
+    if not url.raw_query_string and not url.raw_fragment:
+        url = yarl.URL(str(url).rstrip("/"))
     if url.is_absolute() and url.is_default_port():
         return str(url.with_port(None))
     return str(url)

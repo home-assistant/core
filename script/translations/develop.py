@@ -6,7 +6,9 @@ import sys
 
 import orjson
 
-from . import download, upload
+from script.hassfest.translation_data import generate_upload_data
+
+from . import download
 from .const import INTEGRATIONS_DIR
 from .util import flatten_translations, get_base_arg_parser, substitute_references
 
@@ -72,7 +74,7 @@ def run_single(translations, flattened_translations, integration):
 def run():
     """Run the script."""
     args = get_arguments()
-    translations = upload.generate_upload_data()
+    translations = generate_upload_data(Path.cwd())
     flattened_translations = flatten_translations(translations)
 
     if args.all:

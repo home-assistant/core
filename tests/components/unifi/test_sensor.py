@@ -1,5 +1,6 @@
 """UniFi Network sensor platform tests."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from types import MappingProxyType
@@ -10,6 +11,12 @@ from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
@@ -29,9 +36,12 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
+from homeassistant.components.unifi.coordinator import POLL_INTERVAL
+from homeassistant.components.unifi.sensor import TELEMETRY_UPDATE_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -47,8 +57,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 WIRED_CLIENT = {
     "hostname": "Wired client",
@@ -194,6 +202,45 @@ WLAN = {
     "x_iapp_key": "01234567891011121314151617181920",
     "x_passphrase": "password",
 }
+
+FIREWALL_POLICY = {
+    "_id": "678ceb9fe3849d293243405c",
+    "action": "BLOCK",
+    "connection_state_type": "ALL",
+    "connection_states": [],
+    "create_allow_respond": False,
+    "description": "",
+    "destination": {
+        "match_opposite_ports": False,
+        "matching_target": "ANY",
+        "port_matching_type": "ANY",
+        "zone_id": "678ccc26e3849d2932432e26",
+    },
+    "enabled": True,
+    "icmp_typename": "ANY",
+    "icmp_v6_typename": "ANY",
+    "index": 10000,
+    "ip_version": "BOTH",
+    "logging": False,
+    "match_ip_sec": False,
+    "match_opposite_protocol": False,
+    "name": "Block streaming",
+    "predefined": False,
+    "protocol": "all",
+    "schedule": {
+        "mode": "EVERY_DAY",
+        "time_range_end": "08:00",
+        "time_range_start": "21:00",
+    },
+    "source": {
+        "match_opposite_ports": False,
+        "matching_target": "ANY",
+        "port_matching_type": "ANY",
+        "zone_id": "678c63bc2d97692f08adcdfa",
+    },
+}
+
+SCHEDULE_STATUS_ENTITY = "sensor.unifi_network_block_streaming_schedule_status"
 
 PDU_DEVICE_1 = {
     "_id": "123456654321abcdef012345",
@@ -402,8 +449,65 @@ UPS_DEVICE_1.update(
                 "index": 1,
             }
         ],
+        "vbms_table": {
+            "battpool": {
+                "batteryLevel": 100,
+                "device_input_voltage": 121.9,
+                "device_output_current": 0.35,
+                "device_output_voltage": 121.7,
+                "device_total_power_factor": 0.98,
+                "device_total_power_output": 42.5,
+                "timeToRemain": 30600,
+            }
+        },
     }
 )
+
+UPS_DEVICE_2 = deepcopy(UPS_DEVICE_1)
+UPS_DEVICE_2.update(
+    {
+        "device_id": "mock-ups-2",
+        "mac": "02:00:00:00:00:02",
+        "model": "USWDA25",
+        "name": "Dummy UPS 2U",
+        "type": "usw",
+        "outlet_table": [
+            {
+                "index": index,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "name": f"Outlet {index}",
+                "outlet_caps": caps,
+            }
+            for index, caps in enumerate(
+                (65549, 65549, 65549, 65549, 65541, 65541, 65541, 65541), start=1
+            )
+        ],
+    }
+)
+UPS_DEVICE_2["vbms_table"]["battpool"].pop("device_input_voltage")
+UPS_DEVICE_2["vbms_table"]["battpool"]["device_bypass_voltage"] = 121.7
+
+UPS_BATTERY_POOL_SENSORS = {
+    "batteryLevel": "battery_level",
+    "timeToRemain": "battery_runtime",
+    "device_total_power_output": "output_power",
+    "device_output_current": "output_current",
+    "device_output_voltage": "output_voltage",
+    "device_input_voltage": "input_voltage",
+    "device_bypass_voltage": "bypass_voltage",
+    "device_total_power_factor": "output_power_factor",
+}
+
+UPS_BATTERY_POOL_FIELDS = [
+    pytest.param([device], device_name, field, sensor, id=f"{device['model']}-{field}")
+    for device, device_name in (
+        (UPS_DEVICE_1, "dummy_ups_2u_pro"),
+        (UPS_DEVICE_2, "dummy_ups_2u"),
+    )
+    for field, sensor in UPS_BATTERY_POOL_SENSORS.items()
+    if field in device["vbms_table"]["battpool"]
+]
 
 
 @pytest.mark.parametrize(
@@ -489,6 +593,28 @@ UPS_DEVICE_1.update(
                                 "type": "icmp",
                             },
                             {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
+                        ],
+                    },
+                    "WAN3": {
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 41,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 32,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 16,
+                                "target": "1.1.1.1",
+                                "type": "icmp",
+                            },
                         ],
                     },
                 },
@@ -926,9 +1052,10 @@ async def test_wlan_client_sensors(
     await mock_websocket_state.disconnect()
     assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
-    # Controller reconnects
+    # Controller reconnects, the recovery refetches the clients and the mocked
+    # payload still lists one on the SSID
     await mock_websocket_state.reconnect()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
@@ -941,7 +1068,7 @@ async def test_wlan_client_sensors(
     wlan_1["enabled"] = True
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
 
 @pytest.mark.parametrize(
@@ -1018,6 +1145,213 @@ async def test_outlet_power_reading_extended_caps(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "43.5"
+
+
+@pytest.mark.parametrize(
+    (
+        "device_payload",
+        "device_name",
+        "voltage_sensor",
+        "voltage_value",
+        "missing_voltage_sensor",
+        "metered_outlets",
+    ),
+    [
+        pytest.param(
+            [UPS_DEVICE_1],
+            "dummy_ups_2u_pro",
+            "input_voltage",
+            "121.9",
+            "bypass_voltage",
+            (1, 2),
+            id="input_voltage",
+        ),
+        pytest.param(
+            [UPS_DEVICE_2],
+            "dummy_ups_2u",
+            "bypass_voltage",
+            "121.7",
+            "input_voltage",
+            (),
+            id="bypass_voltage",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "missing_telemetry",
+    [
+        pytest.param({}, id="missing-table"),
+        pytest.param({"vbms_table": {}}, id="missing-pool"),
+        pytest.param({"vbms_table": {"battpool": {}}}, id="empty-pool"),
+        pytest.param({"vbms_table": {"battpool": None}}, id="null-pool"),
+    ],
+)
+async def test_ups_battery_pool_sensors(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    device_name: str,
+    voltage_sensor: str,
+    voltage_value: str,
+    missing_voltage_sensor: str,
+    metered_outlets: tuple[int, ...],
+    missing_telemetry: dict[str, Any],
+) -> None:
+    """Test UPS battery pool telemetry sensors."""
+    assert {
+        entity_id
+        for entity_id in entity_registry.entities
+        if entity_id.startswith(f"sensor.{device_name}_outlet_")
+        and entity_id.endswith("_outlet_power")
+    } == {
+        f"sensor.{device_name}_outlet_{index}_outlet_power" for index in metered_outlets
+    }
+    assert hass.states.get(f"sensor.{device_name}_battery_level").state == "100"
+    assert hass.states.get(f"sensor.{device_name}_battery_runtime").state == "30600"
+    assert hass.states.get(f"sensor.{device_name}_output_power").state == "42.5"
+    assert hass.states.get(f"sensor.{device_name}_output_current").state == "0.35"
+    assert hass.states.get(f"sensor.{device_name}_output_voltage").state == "121.7"
+    assert (
+        hass.states.get(f"sensor.{device_name}_{voltage_sensor}").state == voltage_value
+    )
+    assert hass.states.get(f"sensor.{device_name}_{missing_voltage_sensor}") is None
+    assert (
+        entity_registry.async_get(f"sensor.{device_name}_{missing_voltage_sensor}")
+        is None
+    )
+    power_factor = hass.states.get(f"sensor.{device_name}_output_power_factor")
+    assert power_factor is not None
+    assert power_factor.state == "0.98"
+    assert power_factor.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER_FACTOR
+    assert power_factor.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    updated_device_data = deepcopy(device_payload[0])
+    updated_device_data["vbms_table"]["battpool"]["batteryLevel"] = 95
+    mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"sensor.{device_name}_battery_level").state == "95"
+
+    expected_states = {
+        f"sensor.{device_name}_{UPS_BATTERY_POOL_SENSORS[field]}": str(value)
+        for field, value in device_payload[0]["vbms_table"]["battpool"].items()
+    }
+    registry_entries = {
+        entity_id: entity_registry.async_update_entity(
+            entity_id, name=f"Custom {entity_id}", icon="mdi:battery"
+        )
+        for entity_id in expected_states
+    }
+    updated_device_data.pop("vbms_table")
+    updated_device_data.update(missing_telemetry)
+    mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+    await hass.async_block_till_done()
+
+    for entity_id, registry_entry in registry_entries.items():
+        assert hass.states.get(entity_id).state == STATE_UNKNOWN
+        assert entity_registry.async_get(entity_id) == registry_entry
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
+    await hass.async_block_till_done()
+
+    for entity_id, expected_state in expected_states.items():
+        assert hass.states.get(entity_id).state == expected_state
+        assert entity_registry.async_get(entity_id) == registry_entries[entity_id]
+
+    config_entry_setup.runtime_data.api.devices.remove_item(device_payload[0])
+    await hass.async_block_till_done()
+
+    for entity_id in expected_states:
+        assert hass.states.get(entity_id) is None
+        assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "device_name", "field", "sensor"),
+    UPS_BATTERY_POOL_FIELDS,
+    indirect=["device_payload"],
+)
+async def test_ups_battery_pool_readings(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    device_name: str,
+    field: str,
+    sensor: str,
+) -> None:
+    """Test initial zero readings and recovery from missing or null fields."""
+    original_device = deepcopy(device_payload[0])
+    device_payload[0] = deepcopy(original_device)
+    device_payload[0]["vbms_table"]["battpool"][field] = 0
+    await config_entry_factory()
+
+    entity_id = f"sensor.{device_name}_{sensor}"
+    assert hass.states.get(entity_id).state == "0"
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+
+    original_pool = original_device["vbms_table"]["battpool"]
+    missing_field_pool = deepcopy(original_pool)
+    missing_field_pool.pop(field)
+    for pool, expected_state in (
+        (missing_field_pool, STATE_UNKNOWN),
+        (original_pool, str(original_pool[field])),
+        ({**original_pool, field: None}, STATE_UNKNOWN),
+        ({**original_pool, field: 0}, "0"),
+    ):
+        updated_device_data = deepcopy(original_device)
+        updated_device_data["vbms_table"]["battpool"] = pool
+        mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(entity_id).state == expected_state
+        assert entity_registry.async_get(entity_id) == registry_entry
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "device_name", "field", "sensor"),
+    UPS_BATTERY_POOL_FIELDS,
+    indirect=["device_payload"],
+)
+@pytest.mark.parametrize(
+    "initial_readings",
+    [pytest.param((), id="missing"), pytest.param((None,), id="null")],
+)
+async def test_ups_battery_pool_late_field(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    device_name: str,
+    field: str,
+    sensor: str,
+    initial_readings: tuple[None, ...],
+) -> None:
+    """Test initially unsupported fields are discovered on ordinary updates."""
+    original_device = deepcopy(device_payload[0])
+    device_payload[0] = deepcopy(original_device)
+    pool = device_payload[0]["vbms_table"]["battpool"]
+    pool.pop(field)
+    for value in initial_readings:
+        pool[field] = value
+    await config_entry_factory()
+
+    entity_id = f"sensor.{device_name}_{sensor}"
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=original_device)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == str(
+        original_device["vbms_table"]["battpool"][field]
+    )
+    assert entity_registry.async_get(entity_id) is not None
 
 
 @pytest.mark.parametrize(
@@ -1129,6 +1463,7 @@ async def test_device_state(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_device_system_stats(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
@@ -1140,12 +1475,119 @@ async def test_device_system_stats(
     assert hass.states.get("sensor.device_memory_utilization").state == "31.1"
 
     # Verify new event change system-stats
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     device = device_payload[0]
     device["system-stats"] = {"cpu": 7.7, "mem": 33.3, "uptime": 7316}
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+                "system-stats": {"cpu": 5.8, "mem": 31.1, "uptime": 7316},
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_system_stats_update_interval(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    mock_websocket_state: WebsocketStateManager,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify device stats sensors limit how often their value changes."""
+
+    async def send(
+        cpu: float | str | None, mem: float | str | None, **changes: Any
+    ) -> None:
+        device = deepcopy(device_payload[0])
+        if cpu is None:
+            device.pop("system-stats")
+        else:
+            device["system-stats"] = {"cpu": cpu, "mem": mem, "uptime": 7316}
+        device.update(changes)
+        mock_websocket_message(message=MessageKey.DEVICE, data=device)
+        await hass.async_block_till_done()
+
+    def assert_states(cpu: str, mem: str) -> None:
+        assert hass.states.get("sensor.device_cpu_utilization").state == cpu
+        assert hass.states.get("sensor.device_memory_utilization").state == mem
+
+    assert_states("5.8", "31.1")
+
+    # Changed value within the interval is held
+    freezer.tick(timedelta(seconds=1))
+    await send(7.7, 33.3)
+    assert_states("5.8", "31.1")
+
+    # After the interval the current value is shown, not the held one
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - timedelta(seconds=1))
+    await send(9.9, 35.5)
+    assert_states("9.9", "35.5")
+
+    freezer.tick(timedelta(seconds=1))
+    await send(9.9, 35.5)
+    assert_states("9.9", "35.5")
+    await send(11.1, 37.7)
+    assert_states("9.9", "35.5")
+
+    # A large change is shown at once, small changes are still held
+    freezer.tick(timedelta(seconds=1))
+    await send(21.0, 37.7)
+    assert_states("21.0", "35.5")
+    freezer.tick(timedelta(seconds=1))
+    await send(22.2, 37.7)
+    assert_states("21.0", "35.5")
+
+    # UniFi reports CPU and memory as numeric strings
+    freezer.tick(timedelta(seconds=1))
+    await send("33.3", "37.7")
+    assert_states("33.3", "35.5")
+
+    # A non-numeric reading within the interval is held
+    freezer.tick(timedelta(seconds=1))
+    await send("n/a", "37.7")
+    assert_states("33.3", "35.5")
+
+    # A clock set back does not hold values until it catches up
+    freezer.tick(-timedelta(hours=1))
+    await send("34.4", "38.8")
+    assert_states("34.4", "38.8")
+
+    # Unavailable is shown at once, and so is the first value afterwards
+    await send(12.2, 38.8, disabled=True)
+    assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)
+    freezer.tick(timedelta(seconds=1))
+    await send(13.3, 39.9)
+    assert_states("13.3", "39.9")
+
+    # Telemetry gaps are shown at once, and so is the value afterwards
+    freezer.tick(timedelta(seconds=1))
+    await send(None, None)
+    assert_states(STATE_UNKNOWN, STATE_UNKNOWN)
+    freezer.tick(timedelta(seconds=1))
+    await send(15.5, 41.1)
+    assert_states("15.5", "41.1")
+
+    # The refetched value is shown at once after a reconnect
+    freezer.tick(timedelta(seconds=1))
+    await mock_websocket_state.disconnect()
+    assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)
+    await mock_websocket_state.reconnect()
+    assert_states("5.8", "31.1")
 
 
 @pytest.mark.parametrize(
@@ -1701,6 +2143,28 @@ async def test_device_uptime(
                             {"availability": 0.0, "target": "1.1.1.1", "type": "icmp"},
                         ],
                     },
+                    "WAN3": {
+                        "monitors": [
+                            {
+                                "availability": 100.0,
+                                "latency_average": 41,
+                                "target": "www.microsoft.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 32,
+                                "target": "google.com",
+                                "type": "icmp",
+                            },
+                            {
+                                "availability": 100.0,
+                                "latency_average": 16,
+                                "target": "1.1.1.1",
+                                "type": "icmp",
+                            },
+                        ],
+                    },
                 },
                 "state": 1,
                 "type": "usw",
@@ -1710,14 +2174,93 @@ async def test_device_uptime(
     ],
 )
 @pytest.mark.parametrize(
-    ("monitor_id", "state", "updated_state", "index_to_update"),
+    (
+        "wan",
+        "monitor_id",
+        "state",
+        "index_to_update",
+        "monitor_update",
+        "updated_state",
+    ),
     [
-        # Microsoft
-        ("microsoft_wan", "56", "20", 0),
-        # Google
-        ("google_wan", "53", "90", 1),
-        # Cloudflare
-        ("cloudflare_wan", "30", "80", 2),
+        pytest.param(
+            "WAN",
+            "microsoft_wan",
+            "56",
+            0,
+            {"latency_average": 20},
+            "20",
+            id="microsoft",
+        ),
+        pytest.param(
+            "WAN", "google_wan", "53", 1, {"latency_average": 90}, "90", id="google"
+        ),
+        pytest.param(
+            "WAN",
+            "cloudflare_wan",
+            "30",
+            2,
+            {"latency_average": 80},
+            "80",
+            id="cloudflare",
+        ),
+        pytest.param(
+            "WAN",
+            "microsoft_wan",
+            "56",
+            0,
+            {},
+            STATE_UNKNOWN,
+            id="microsoft_no_response",
+        ),
+        pytest.param(
+            "WAN", "google_wan", "53", 1, {}, STATE_UNKNOWN, id="google_no_response"
+        ),
+        pytest.param(
+            "WAN",
+            "cloudflare_wan",
+            "30",
+            2,
+            {},
+            STATE_UNKNOWN,
+            id="cloudflare_no_response",
+        ),
+        pytest.param(
+            "WAN3",
+            "microsoft_wan3",
+            "41",
+            0,
+            {"latency_average": 25},
+            "25",
+            id="microsoft_wan3",
+        ),
+        pytest.param(
+            "WAN3",
+            "google_wan3",
+            "32",
+            1,
+            {"latency_average": 60},
+            "60",
+            id="google_wan3",
+        ),
+        pytest.param(
+            "WAN3",
+            "cloudflare_wan3",
+            "16",
+            2,
+            {"latency_average": 70},
+            "70",
+            id="cloudflare_wan3",
+        ),
+        pytest.param(
+            "WAN3",
+            "cloudflare_wan3",
+            "16",
+            2,
+            {},
+            STATE_UNKNOWN,
+            id="cloudflare_wan3_no_response",
+        ),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1726,10 +2269,12 @@ async def test_wan_monitor_latency(
     entity_registry: er.EntityRegistry,
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
+    wan: str,
     monitor_id: str,
     state: str,
-    updated_state: str,
     index_to_update: int,
+    monitor_update: dict[str, Any],
+    updated_state: str,
 ) -> None:
     """Verify that wan latency sensors are working as expected."""
     entity_id = f"sensor.mock_name_{monitor_id}_latency"
@@ -1757,14 +2302,14 @@ async def test_wan_monitor_latency(
     # Verify sensor state
     assert hass.states.get(entity_id).state == state
 
-    # Verify state update
-    device = device_payload[0]
-    device["uptime_stats"]["WAN"]["monitors"][index_to_update]["latency_average"] = (
-        updated_state
-    )
-
+    # Update state
+    device = deepcopy(device_payload[0])
+    monitor = device["uptime_stats"][wan]["monitors"][index_to_update]
+    monitor.pop("latency_average")
+    monitor.update(monitor_update)
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
+    # Verify state update
     assert hass.states.get(entity_id).state == updated_state
 
 
@@ -1946,6 +2491,7 @@ async def test_wan_monitor_latency_without_monitors_key(
 async def test_device_temperatures(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_websocket_message,
     device_payload: list[dict[str, Any]],
     temperature_id: str,
@@ -1981,12 +2527,63 @@ async def test_device_temperatures(
     assert hass.states.get(entity_id).state == state
 
     # # Verify state update
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     device = device_payload[0]
     device["temperatures"][index_to_update]["value"] = updated_state
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get(entity_id).state == updated_state
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+                "temperatures": [{"name": "CPU", "type": "cpu", "value": 66.0}],
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_temperature_update_interval(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify device temperature sensors limit how often their value changes."""
+    entity_id = "sensor.device_cpu_temperature"
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "66.0"
+
+    device = device_payload[0]
+    freezer.tick(timedelta(seconds=1))
+    device["temperatures"][0]["value"] = 70.0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "66.0"
+
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - timedelta(seconds=1))
+    device["temperatures"][0]["value"] = 72.0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "72.0"
 
 
 @pytest.mark.parametrize(
@@ -2021,7 +2618,7 @@ async def test_device_temperatures(
 async def test_device_temperature_with_missing_value(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device temperatures sensors are working as expected."""
@@ -2050,7 +2647,7 @@ async def test_device_temperature_with_missing_value(
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Send original payload again to verify sensor recovers
     mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
@@ -2193,3 +2790,178 @@ async def test_device_uplink(
     device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firewall_policy_schedule_status(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """The status follows the controller's clock across a schedule window.
+
+    The controller is in Europe/Stockholm (UTC+1 in January) and Home Assistant
+    in US/Pacific, so a 21:00 to 08:00 window opens at 20:00 UTC.
+    """
+    freezer.move_to("2026-01-15 19:30:00+00:00")
+    await config_entry_factory()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "inactive"
+
+    for now, expected in (
+        ("2026-01-15 20:00:00+00:00", "active"),
+        ("2026-01-16 06:59:00+00:00", "active"),
+        ("2026-01-16 07:00:00+00:00", "inactive"),
+    ):
+        freezer.move_to(now)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == expected, now
+
+
+@pytest.mark.parametrize(
+    "system_information_payload",
+    [
+        pytest.param(
+            [{"anonymous_controller_id": "1", "version": "7.4.162"}], id="missing"
+        ),
+        pytest.param(
+            [
+                {
+                    "anonymous_controller_id": "1",
+                    "version": "7.4.162",
+                    "timezone": "Mars/Olympus_Mons",
+                }
+            ],
+            id="unknown",
+        ),
+        pytest.param(
+            [
+                {
+                    "anonymous_controller_id": "1",
+                    "version": "7.4.162",
+                    "timezone": "../../etc/passwd",
+                }
+            ],
+            id="path",
+        ),
+        pytest.param(
+            [{"anonymous_controller_id": "1", "version": "7.4.162", "timezone": 3600}],
+            id="not_a_string",
+        ),
+    ],
+)
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firewall_policy_schedule_status_time_zone_fallback(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Without a usable controller time zone, Home Assistant's is used.
+
+    20:00 UTC is 21:00 in Stockholm but noon in US/Pacific.
+    """
+    freezer.move_to("2026-01-15 20:00:00+00:00")
+    await config_entry_factory()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "inactive"
+
+
+@pytest.mark.parametrize(
+    ("firewall_policy_payload", "expected"),
+    [
+        pytest.param(
+            [{**FIREWALL_POLICY, "enabled": False}], "disabled", id="disabled"
+        ),
+        pytest.param(
+            [{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}],
+            "active",
+            id="always",
+        ),
+        pytest.param(
+            [{**FIREWALL_POLICY, "schedule": {"mode": "SUNRISE"}}],
+            STATE_UNKNOWN,
+            id="unknown_mode",
+        ),
+        pytest.param(
+            [{k: v for k, v in FIREWALL_POLICY.items() if k != "schedule"}],
+            STATE_UNKNOWN,
+            id="no_schedule",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firewall_policy_schedule_status_by_policy(
+    hass: HomeAssistant, expected: str
+) -> None:
+    """Disabled policies, always-on schedules and unknown modes."""
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == expected
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload",
+    [
+        pytest.param([{**FIREWALL_POLICY, "predefined": True}], id="predefined"),
+        pytest.param([{**FIREWALL_POLICY, "name": ""}], id="unnamed"),
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firewall_policy_schedule_status_unsupported(
+    hass: HomeAssistant,
+) -> None:
+    """Predefined and unnamed policies get no status sensor."""
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+
+
+@pytest.mark.parametrize(
+    "firewall_policy_payload", [[{**FIREWALL_POLICY, "schedule": {"mode": "ALWAYS"}}]]
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firewall_policy_schedule_status_follows_polling(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_requests: Callable[[str, str], None],
+    firewall_policy_payload: list[dict[str, Any]],
+) -> None:
+    """A policy disabled on the controller shows as disabled after a poll."""
+    await config_entry_factory()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "active"
+
+    firewall_policy_payload[0]["enabled"] = False
+    aioclient_mock.clear_requests()
+    mock_requests()
+
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY).state == "disabled"
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_firewall_policy_schedule_status_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """The status sensor is created disabled."""
+    entry = entity_registry.async_get(SCHEDULE_STATUS_ENTITY)
+    assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(SCHEDULE_STATUS_ENTITY) is None
+
+
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
+@pytest.mark.freeze_time("2021-01-01 01:01:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firewall_policy_schedule_status_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Validate the schedule status entity's registry entry and state."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

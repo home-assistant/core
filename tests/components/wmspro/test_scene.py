@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.wmspro.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_config_entry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

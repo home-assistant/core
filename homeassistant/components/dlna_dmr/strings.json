@@ -36,6 +36,14 @@
       }
     }
   },
+  "exceptions": {
+    "request_connection_error": {
+      "message": "Could not connect to device when calling service for action {action}"
+    },
+    "request_error": {
+      "message": "Error when calling device service for action {action}: {upnperror}"
+    }
+  },
   "options": {
     "error": {
       "invalid_url": "Invalid URL"

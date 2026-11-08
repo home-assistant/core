@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "VeSync account is already configured",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "The account you are trying to re-authenticate is different from the one configured"
     },
     "error": {
@@ -46,6 +45,11 @@
         "name": "Water tank lifted"
       }
     },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {
@@ -76,6 +80,9 @@
     "number": {
       "mist_level": {
         "name": "Mist level"
+      },
+      "warm_mist_level": {
+        "name": "Warm mist level"
       }
     },
     "select": {
@@ -102,13 +109,16 @@
       "cook_status": {
         "name": "Cooking status",
         "state": {
+          "appointing": "Appointing",
           "cooking": "Cooking",
           "cooking_end": "Cooking finished",
           "cooking_stop": "Cooking stopped",
           "heating": "Preheating",
+          "hold": "Hold",
           "preheat_end": "Preheating finished",
           "preheat_stop": "Preheating stopped",
           "pull_out": "Drawer pulled out",
+          "ready": "Ready",
           "standby": "[%key:common::state::standby%]"
         }
       },

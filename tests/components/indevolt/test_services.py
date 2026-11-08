@@ -9,6 +9,7 @@ from indevolt_api import (
     SocBelowMinimumError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.indevolt.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -16,8 +17,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
@@ -34,7 +33,7 @@ def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> s
 @pytest.mark.parametrize(
     ("service_name", "power", "target_soc"),
     [
-        ("charge", 1200, 60),
+        ("charge", 5000, 60),
         ("discharge", 1200, 40),
     ],
 )

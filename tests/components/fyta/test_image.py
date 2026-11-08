@@ -8,6 +8,13 @@ from freezegun.api import FrozenDateTimeFactory
 from fyta_cli.fyta_exceptions import FytaConnectionError, FytaPlantError
 from fyta_cli.fyta_models import Plant
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fyta.const import DOMAIN
@@ -15,16 +22,9 @@ from homeassistant.components.image import ImageEntity
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_platform
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_all_entities(
@@ -147,6 +147,9 @@ async def test_update_image(
 
     assert image_entity.image_url == "http://www.plant_picture.com/picture1"
     assert image_state_1 != image_state_2
+
+    # The state is image_last_updated serialized, so it has to carry a timezone
+    assert dt_util.parse_datetime(image_state_2.state).tzinfo is not None
 
 
 async def test_update_user_image_error(

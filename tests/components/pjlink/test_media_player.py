@@ -2,48 +2,22 @@
 
 from datetime import timedelta
 import socket
+from typing import Any
 from unittest.mock import MagicMock, create_autospec, patch
 
 import pypjlink
 from pypjlink import MUTE_AUDIO
 from pypjlink.projector import ProjectorError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import media_player
-from homeassistant.components.pjlink.const import (
-    CONF_ENCODING,
-    DEFAULT_ENCODING,
-    DEFAULT_PORT,
-    DOMAIN,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PLATFORM,
-    CONF_PORT,
-    Platform,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from . import setup_pjlink_entry
-
-from tests.common import async_fire_time_changed
-
-_EXAMPLE_YAML_CONFIG = {
-    Platform.MEDIA_PLAYER: [
-        {
-            CONF_PLATFORM: DOMAIN,
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: DEFAULT_PORT,
-            CONF_PASSWORD: "test-password",
-            CONF_ENCODING: DEFAULT_ENCODING,
-        }
-    ]
-}
 
 
 @pytest.fixture(name="projector_from_address")
@@ -114,6 +88,7 @@ async def test_initialization(
     source_list = state.attributes["source_list"]
 
     assert set(source_list) == {"HDMI 1", "HDMI 2", "VGA 1"}
+    assert state.attributes["device_class"] == "projector"
 
 
 @pytest.mark.parametrize("power_state", ["on", "warm-up"])
@@ -268,57 +243,82 @@ async def test_select_source(mocked_projector: MagicMock, hass: HomeAssistant) -
     mocked_projector.set_input.assert_called_with("VGA", 1)
 
 
-async def test_yaml_import(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mocked_projector: MagicMock,
-) -> None:
-    """Test a YAML media player is imported and becomes an operational config entry."""
-    assert await async_setup_component(hass, media_player.DOMAIN, _EXAMPLE_YAML_CONFIG)
-    await hass.async_block_till_done()
-
-    # Verify the config entry was created
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    # Verify a warning was issued about YAML deprecation
-    assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
+_ERROR = ProjectorError("projector error")
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error_str"),
+    ("service", "service_data", "method_name"),
     [
-        (RuntimeError, "invalid_auth"),
-        (TimeoutError, "cannot_connect"),
-        (Exception, "unknown"),
+        pytest.param("turn_off", {}, "set_power", id="turn_off"),
+        pytest.param("turn_on", {}, "set_power", id="turn_on"),
+        pytest.param(
+            "volume_mute", {"is_volume_muted": True}, "set_mute", id="volume_mute"
+        ),
+        pytest.param(
+            "select_source", {"source": "VGA 1"}, "set_input", id="select_source"
+        ),
     ],
 )
-async def test_failed_yaml_import(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
+async def test_service_command_error_is_home_assistant_error(
     mocked_projector: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    side_effect: type[Exception],
-    error_str: str,
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, Any],
+    method_name: str,
 ) -> None:
-    """Test a YAML media player is imported and becomes an operational config entry."""
+    """Projector failures during a service command surface as HomeAssistantError."""
 
-    with patch("pypjlink.Projector.from_address", side_effect=side_effect):
-        assert await async_setup_component(
-            hass, media_player.DOMAIN, _EXAMPLE_YAML_CONFIG
+    getattr(mocked_projector, method_name).side_effect = _ERROR
+
+    await setup_pjlink_entry(hass)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "media_player.test", **service_data},
+            blocking=True,
         )
-        await hass.async_block_till_done()
 
-    # Verify the config entry was not created
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 0
 
-    # verify no flows still in progress
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 0
+async def test_service_error_when_projector_unreachable_is_home_assistant_error(
+    mocked_projector: MagicMock,
+    projector_from_address: MagicMock,
+    hass: HomeAssistant,
+) -> None:
+    """A command on an unreachable projector surfaces as HomeAssistantError."""
 
-    # Verify a warning was issued about YAML not being imported
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{error_str}"
-    )
+    await setup_pjlink_entry(hass)
+
+    projector_from_address.side_effect = socket.timeout
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            "turn_off",
+            {ATTR_ENTITY_ID: "media_player.test"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "socket_error", [TimeoutError, OSError], ids=["timeout", "os_error"]
+)
+async def test_service_socket_error_during_command_is_home_assistant_error(
+    mocked_projector: MagicMock,
+    hass: HomeAssistant,
+    socket_error: type[Exception],
+) -> None:
+    """A socket error raised by the command itself surfaces as HomeAssistantError."""
+
+    mocked_projector.set_power.side_effect = socket_error
+
+    await setup_pjlink_entry(hass)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            "turn_off",
+            {ATTR_ENTITY_ID: "media_player.test"},
+            blocking=True,
+        )

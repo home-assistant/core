@@ -24,6 +24,18 @@ GVH5075_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+GVH5055_SERVICE_INFO = BluetoothServiceInfo(
+    name="",
+    address="C0:A3:C7:0A:5C:77",
+    rssi=-63,
+    manufacturer_data={
+        23562: b"\x77\x41\x00\x01\x01\xe4\x81\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
+    },
+    service_uuids=["00005550-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
+
 GVH5184_SERVICE_INFO = BluetoothServiceInfo(
     name="GVH5184_XXXX",
     address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",

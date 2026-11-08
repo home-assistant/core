@@ -12,6 +12,7 @@
       'display_name': 'infinite love ⴳ',
       'emojis': list([
       ]),
+      'feature_approval': None,
       'fields': list([
         dict({
           'name': 'Website',
@@ -43,6 +44,7 @@
       'hide_collections': True,
       'id': '14715',
       'indexable': False,
+      'invalid_handle': None,
       'last_status_at': '2025-03-04T00:00:00',
       'limited': None,
       'locked': False,
@@ -59,6 +61,7 @@
       'show_media': None,
       'show_media_replies': None,
       'source': None,
+      'state': None,
       'statuses_count': 69523,
       'suspended': None,
       'uri': 'https://mastodon.social/users/trwnh',
@@ -102,6 +105,7 @@
       'display_name': 'infinite love ⴳ',
       'emojis': list([
       ]),
+      'feature_approval': None,
       'fields': list([
         dict({
           'name': 'Website',
@@ -133,6 +137,7 @@
       'hide_collections': True,
       'id': '14715',
       'indexable': False,
+      'invalid_handle': None,
       'last_status_at': '2025-03-04T00:00:00',
       'limited': None,
       'locked': False,
@@ -149,6 +154,7 @@
       'show_media': None,
       'show_media_replies': None,
       'source': None,
+      'state': None,
       'statuses_count': 69523,
       'suspended': None,
       'uri': 'https://mastodon.social/users/trwnh',

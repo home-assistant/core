@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pytouchline_extended import PyTouchline
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -17,9 +17,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     }
 )
 
@@ -84,26 +84,4 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-
-        # Abort if an entry with the same host already exists, to avoid duplicates
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
-        # Validate the user input allows us to connect
-        try:
-            unique_id = await _async_validate_input(self.hass, user_input)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # noqa: BLE001
-            return self.async_abort(reason="unknown")
-
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=user_input[CONF_HOST],
-            data=user_input,
         )

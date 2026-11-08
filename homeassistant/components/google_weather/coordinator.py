@@ -3,8 +3,9 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
-from typing import TypeVar, override
+from typing import override
 
 from google_weather_api import (
     CurrentConditionsResponse,
@@ -28,15 +29,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar(
-    "T",
-    bound=(
-        CurrentConditionsResponse
-        | DailyForecastResponse
-        | HourlyForecastResponse
-        | None
-    ),
-)
+# The API returns at most 24 hourly records per request, so asking for more than
+# that costs an extra request per update. Keep it to a single page.
+HOURLY_FORECAST_HOURS = 24
 
 
 @dataclass
@@ -56,10 +51,15 @@ class GoogleWeatherRuntimeData:
     subentries_runtime_data: dict[str, GoogleWeatherSubEntryRuntimeData]
 
 
+type _GoogleWeatherDataType = (
+    CurrentConditionsResponse | DailyForecastResponse | HourlyForecastResponse | None
+)
 type GoogleWeatherConfigEntry = ConfigEntry[GoogleWeatherRuntimeData]
 
 
-class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
+class GoogleWeatherBaseCoordinator[T: _GoogleWeatherDataType](
+    TimestampDataUpdateCoordinator[T]
+):
     """Base class for Google Weather coordinators."""
 
     config_entry: GoogleWeatherConfigEntry
@@ -82,7 +82,6 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
             update_interval=update_interval,
         )
         self.subentry = subentry
-        self._data_type_name = data_type_name
         self._api_method = api_method
 
     @override
@@ -102,12 +101,6 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 },
             ) from err
         except GoogleWeatherApiError as err:
-            _LOGGER.error(
-                "Error fetching %s for %s: %s",
-                self._data_type_name,
-                self.subentry.title,
-                err,
-            )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
@@ -182,5 +175,5 @@ class GoogleWeatherHourlyForecastCoordinator(
             subentry,
             "hourly weather forecast",
             timedelta(hours=1),
-            api.async_get_hourly_forecast,
+            partial(api.async_get_hourly_forecast, hours=HOURLY_FORECAST_HOURS),
         )

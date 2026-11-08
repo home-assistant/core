@@ -1,17 +1,19 @@
 """Support for the yandex speechkit tts  service."""
 
 import asyncio
+from enum import StrEnum
 from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TextToSpeechCommonOption,
     TtsAudioType,
 )
 from homeassistant.const import CONF_API_KEY
@@ -70,20 +72,42 @@ DEFAULT_VOICE = "zahar"
 DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
+
+class YandexTextToSpeechOption(StrEnum):
+    """Store keys for the Yandex TTS text-to-speech options."""
+
+    CODEC = "codec"
+    EMOTION = "emotion"
+    SPEED = "speed"
+
+
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-        vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
-        vol.Optional(CONF_EMOTION, default=DEFAULT_EMOTION): vol.In(SUPPORTED_EMOTION),
-        vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): vol.Range(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+        probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+            SUPPORT_LANGUAGES
+        ),
+        probatio.Optional(CONF_CODEC, default=DEFAULT_CODEC): probatio.In(
+            SUPPORT_CODECS
+        ),
+        probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): probatio.In(
+            SUPPORT_VOICES
+        ),
+        probatio.Optional(CONF_EMOTION, default=DEFAULT_EMOTION): probatio.In(
+            SUPPORTED_EMOTION
+        ),
+        probatio.Optional(CONF_SPEED, default=DEFAULT_SPEED): probatio.Range(
             min=MIN_SPEED, max=MAX_SPEED
         ),
     }
 )
 
-SUPPORTED_OPTIONS = [CONF_CODEC, CONF_VOICE, CONF_EMOTION, CONF_SPEED]
+SUPPORTED_OPTIONS: list[str] = [
+    YandexTextToSpeechOption.CODEC,
+    TextToSpeechCommonOption.VOICE,
+    YandexTextToSpeechOption.EMOTION,
+    YandexTextToSpeechOption.SPEED,
+]
 
 
 async def async_get_engine(hass, config, discovery_info=None):
@@ -139,10 +163,14 @@ class YandexSpeechKitProvider(Provider):
                     "text": message,
                     "lang": actual_language,
                     "key": self._key,
-                    "speaker": options.get(CONF_VOICE, self._speaker),
-                    "format": options.get(CONF_CODEC, self._codec),
-                    "emotion": options.get(CONF_EMOTION, self._emotion),
-                    "speed": options.get(CONF_SPEED, self._speed),
+                    "speaker": options.get(
+                        TextToSpeechCommonOption.VOICE, self._speaker
+                    ),
+                    "format": options.get(YandexTextToSpeechOption.CODEC, self._codec),
+                    "emotion": options.get(
+                        YandexTextToSpeechOption.EMOTION, self._emotion
+                    ),
+                    "speed": options.get(YandexTextToSpeechOption.SPEED, self._speed),
                 }
 
                 request = await websession.get(YANDEX_API_URL, params=url_param)

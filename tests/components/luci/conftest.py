@@ -5,6 +5,7 @@ from typing import NamedTuple
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.luci.const import DOMAIN
 from homeassistant.const import (
@@ -14,8 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry
 
 
 class MockDevice(NamedTuple):
@@ -42,6 +41,13 @@ MOCK_DEVICE_2 = MockDevice(
     reachable=True,
     host="192.168.1.1",
 )
+MOCK_DEVICE_3 = MockDevice(
+    mac="AA:AA:AA:BB:BB:BB",
+    hostname="device3",
+    ip="192.168.1.102",
+    reachable=True,
+    host="192.168.1.1",
+)
 
 
 @pytest.fixture
@@ -49,7 +55,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.luci.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 

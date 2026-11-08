@@ -1,73 +1,68 @@
 """Services for the Fully Kiosk Browser integration."""
 
-import voluptuous as vol
+from enum import StrEnum
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID
+import probatio
+
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
-from .const import (
-    ATTR_APPLICATION,
-    ATTR_KEY,
-    ATTR_URL,
-    ATTR_VALUE,
-    DOMAIN,
-    SERVICE_LOAD_URL,
-    SERVICE_SET_CONFIG,
-    SERVICE_START_APPLICATION,
-)
+from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
+
+
+class FullyKioskService(StrEnum):
+    """Store keys for Fully Kiosk Browser services."""
+
+    LOAD_URL = "load_url"
+    SET_CONFIG = "set_config"
+    START_APPLICATION = "start_application"
+
+
+class FullyKioskServiceArgument(StrEnum):
+    """Store keys for Fully Kiosk Browser service arguments."""
+
+    URL = "url"
+    KEY = "key"
+    VALUE = "value"
+    APPLICATION = "application"
 
 
 async def _collect_coordinators(
     call: ServiceCall,
 ) -> list[FullyKioskDataUpdateCoordinator]:
-    device_ids: list[str] = call.data[ATTR_DEVICE_ID]
-    config_entries = list[ConfigEntry]()
-    registry = dr.async_get(call.hass)
-    for target in device_ids:
-        device = registry.async_get(target)
-        if device:
-            device_entries = list[ConfigEntry]()
-            for entry_id in device.config_entries:
-                entry = call.hass.config_entries.async_get_entry(entry_id)
-                if entry and entry.domain == DOMAIN:
-                    device_entries.append(entry)
-            if not device_entries:
-                raise HomeAssistantError(f"Device '{target}' is not a {DOMAIN} device")
-            config_entries.extend(device_entries)
-        else:
-            raise HomeAssistantError(f"Device '{target}' not found in device registry")
-    coordinators = list[FullyKioskDataUpdateCoordinator]()
-    for config_entry in config_entries:
-        if config_entry.state is not ConfigEntryState.LOADED:
-            raise HomeAssistantError(f"{config_entry.title} is not loaded")
-        coordinators.append(config_entry.runtime_data)
-    return coordinators
+    device_ids: list[str] = call.data[CommonServiceArgument.DEVICE_ID]
+    return [
+        service.async_get_device_and_config_entry(call.hass, DOMAIN, device_id)[
+            1
+        ].runtime_data
+        for device_id in device_ids
+    ]
 
 
 async def _async_load_url(call: ServiceCall) -> None:
     """Load a URL on the Fully Kiosk Browser."""
     for coordinator in await _collect_coordinators(call):
-        await coordinator.fully.loadUrl(call.data[ATTR_URL])
+        await coordinator.fully.loadUrl(call.data[FullyKioskServiceArgument.URL])
 
 
 async def _async_start_app(call: ServiceCall) -> None:
     """Start an app on the device."""
     for coordinator in await _collect_coordinators(call):
-        await coordinator.fully.startApplication(call.data[ATTR_APPLICATION])
+        await coordinator.fully.startApplication(
+            call.data[FullyKioskServiceArgument.APPLICATION]
+        )
 
 
 async def _async_set_config(call: ServiceCall) -> None:
     """Set a Fully Kiosk Browser config value on the device."""
     for coordinator in await _collect_coordinators(call):
-        key = call.data[ATTR_KEY]
-        value = call.data[ATTR_VALUE]
+        key = call.data[FullyKioskServiceArgument.KEY]
+        value = call.data[FullyKioskServiceArgument.VALUE]
 
         # Fully API has different methods for setting string and bool values.
-        # check if call.data[ATTR_VALUE] is a bool
+        # check if call.data[FullyKioskServiceArgument.VALUE] is a bool
         if isinstance(value, bool) or (
             isinstance(value, str) and value.lower() in ("true", "false")
         ):
@@ -86,19 +81,25 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     # Register all the above services
     service_mapping = [
-        (_async_load_url, SERVICE_LOAD_URL, ATTR_URL),
-        (_async_start_app, SERVICE_START_APPLICATION, ATTR_APPLICATION),
+        (_async_load_url, FullyKioskService.LOAD_URL, FullyKioskServiceArgument.URL),
+        (
+            _async_start_app,
+            FullyKioskService.START_APPLICATION,
+            FullyKioskServiceArgument.APPLICATION,
+        ),
     ]
     for service_handler, service_name, attrib in service_mapping:
         hass.services.async_register(
             DOMAIN,
             service_name,
             service_handler,
-            schema=vol.Schema(
-                vol.All(
+            schema=probatio.Schema(
+                probatio.All(
                     {
-                        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                        vol.Required(attrib): cv.string,
+                        probatio.Required(
+                            CommonServiceArgument.DEVICE_ID
+                        ): probatio.EnsureList(),
+                        probatio.Required(attrib): cv.string,
                     }
                 )
             ),
@@ -106,14 +107,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_CONFIG,
+        FullyKioskService.SET_CONFIG,
         _async_set_config,
-        schema=vol.Schema(
-            vol.All(
+        schema=probatio.Schema(
+            probatio.All(
                 {
-                    vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                    vol.Required(ATTR_KEY): cv.string,
-                    vol.Required(ATTR_VALUE): vol.Any(str, bool, int),
+                    probatio.Required(
+                        CommonServiceArgument.DEVICE_ID
+                    ): probatio.EnsureList(),
+                    probatio.Required(FullyKioskServiceArgument.KEY): cv.string,
+                    probatio.Required(FullyKioskServiceArgument.VALUE): probatio.Any(
+                        str, bool, int
+                    ),
                 }
             )
         ),

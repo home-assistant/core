@@ -1,65 +1,47 @@
 """The Qube Heat Pump integration."""
 
-from dataclasses import dataclass
-
+from modbus_connection import ModbusTcpParams
 from python_qube_heatpump import QubeClient
 
+from homeassistant.components.modbus import async_get_unit
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS, UNIT_ID
 from .coordinator import QubeCoordinator
 
-
-@dataclass
-class QubeData:
-    """Runtime data for Qube Heat Pump."""
-
-    coordinator: QubeCoordinator
-    client: QubeClient
-    sw_version: str | None
+type QubeConfigEntry = ConfigEntry[QubeCoordinator]
 
 
-type QubeConfigEntry = ConfigEntry[QubeData]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> None:
     """Set up Qube Heat Pump from a config entry."""
-    client = QubeClient(entry.data[CONF_HOST], entry.data[CONF_PORT])
-
-    # Connect and read software version for device info
-    sw_version: str | None = None
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
     try:
-        connected = await client.connect()
-        if not connected:
-            await client.close()
-            raise ConfigEntryNotReady(
-                f"Unable to connect to Qube heat pump at {entry.data[CONF_HOST]}"
-            )
-        sw_version = await client.async_get_software_version()
-    except (OSError, TimeoutError) as err:
-        await client.close()
-        raise ConfigEntryNotReady(
-            f"Unable to connect to Qube heat pump at {entry.data[CONF_HOST]}"
+        # Borrowed from the modbus integration, which shares one connection
+        # per device and closes it when the last entry using it unloads
+        unit = async_get_unit(
+            hass, entry, ModbusTcpParams(host=host, port=port), UNIT_ID
+        )
+    except HomeAssistantError as err:
+        # The device is already in use over different link settings
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="link_settings_in_use",
+            translation_placeholders={"error": str(err)},
         ) from err
 
+    client = QubeClient(host, port, UNIT_ID, unit=unit)
     coordinator = QubeCoordinator(hass, client, entry)
 
-    entry.runtime_data = QubeData(
-        coordinator=coordinator,
-        client=client,
-        sw_version=sw_version,
-    )
+    entry.runtime_data = coordinator
 
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.client.close()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -35,7 +35,6 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.deprecation import deprecated_function
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -72,6 +71,7 @@ _DAYS_TO_SECS = _DAYS_TO_HRS * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 # Energy conversion constants
 _WH_TO_J = 3600  # 1 Wh = 3600 J
 _WH_TO_CAL = _WH_TO_J / 4.184  # 1 Wh = 860.42065 cal
+_WH_TO_THERM_US = _WH_TO_J / 1.054804e8  # 1 therm (U.S.) = 1.054804e8 J (NIST SP 811)
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
@@ -414,6 +414,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
         UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
         UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
+        UnitOfEnergy.THERM: _WH_TO_THERM_US * 1e3,
     }
     VALID_UNITS = set(UnitOfEnergy)
 
@@ -600,6 +601,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI: 1 / 6894.757,
         UnitOfPressure.MMHG: 1
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.ATM: 1 / 101325,
     }
     VALID_UNITS = {
         UnitOfPressure.MILLIPASCAL,
@@ -613,6 +615,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.INH2O,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
+        UnitOfPressure.ATM,
     }
 
 
@@ -834,7 +837,7 @@ class TemperatureConverter(BaseUnitConverter):
         eg. 10°C will return 50°F
 
         For converting an interval between two temperatures, please use
-        `convert_interval` instead.
+        `TemperatureDeltaConverter.convert` instead.
         """
         # We cannot use the implementation from BaseUnitConverter here because the
         # temperature units do not use the same floor: 0°C, 0°F and 0K do not align
@@ -867,22 +870,6 @@ class TemperatureConverter(BaseUnitConverter):
         raise HomeAssistantError(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
         )
-
-    @classmethod
-    @deprecated_function(
-        "TemperatureDeltaConverter.convert", breaks_in_ha_version="2026.12.0"
-    )
-    def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
-        """Convert a temperature interval from one unit to another.
-
-        eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
-
-        For converting a temperature value, please use `convert` as this method
-        skips floor adjustment.
-        """
-        # We use BaseUnitConverter implementation here because we are only interested
-        # in the ratio between the units.
-        return super().converter_factory(from_unit, to_unit)(interval)
 
     @classmethod
     def _kelvin_to_fahrenheit(cls, kelvin: float) -> float:

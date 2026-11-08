@@ -6,14 +6,24 @@ from unittest.mock import MagicMock, Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from RFXtrx import Connect, RFXtrxTransport
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.components.rfxtrx.const import (
+    CONF_DATA_BITS,
+    CONF_EVENT_CODE,
+    SUBENTRY_TYPE_DEVICE,
+)
+from homeassistant.config_entries import ConfigSubentryDataWithId
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.util import ulid as ulid_util
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import ENTRY_VERSION
+
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -21,7 +31,6 @@ def create_rfx_test_cfg(
     device="abcd",
     automatic_add=False,
     protocols=None,
-    devices=None,
     host=None,
     port=None,
 ):
@@ -33,8 +42,72 @@ def create_rfx_test_cfg(
         "automatic_add": automatic_add,
         "protocols": protocols,
         "debug": False,
-        "devices": devices or {},
     }
+
+
+def create_rfx_test_subentries(
+    devices: dict[str, dict[str, Any]] | None,
+) -> tuple[ConfigSubentryDataWithId, ...]:
+    """Build device subentries data from a devices dict, keyed by event code."""
+    subentries = []
+    for event_code, entity_info in (devices or {}).items():
+        data = {
+            key: value for key, value in entity_info.items() if key != CONF_DEVICE_ID
+        }
+        data[CONF_EVENT_CODE] = [event_code]
+
+        unique_id: str | None = None
+        title = event_code
+        if event := rfxtrx.get_rfx_object(event_code):
+            device_id = rfxtrx.get_device_tuple_from_device(
+                event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+            )
+            unique_id = device_id.unique_id
+            title = f"{event.device.type_string} {device_id.id_string}"
+
+        subentries.append(
+            ConfigSubentryDataWithId(
+                data=data,
+                # Deliberately unrelated to the RF address/unique_id, like a
+                # real subentry_id, so tests can't accidentally rely on them
+                # matching.
+                subentry_id=ulid_util.ulid_now(),
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title=title,
+                unique_id=unique_id,
+            )
+        )
+    return tuple(subentries)
+
+
+def get_device_identifier(entry: MockConfigEntry, unique_id: str) -> tuple[str, str]:
+    """Get the device registry identifier for a configured device.
+
+    Device identifiers are keyed by subentry id (unrelated to the device's
+    RF address), so tests must resolve it via the subentry rather than
+    hardcoding a `unique_id`-based identifier.
+    """
+    subentry = next(s for s in entry.subentries.values() if s.unique_id == unique_id)
+    return (DOMAIN, subentry.subentry_id)
+
+
+def create_rfx_test_entry(
+    device="abcd",
+    automatic_add=False,
+    protocols=None,
+    devices=None,
+    host=None,
+    port=None,
+):
+    """Create rfxtrx config entry."""
+    entry_data = create_rfx_test_cfg(device, automatic_add, protocols, host, port)
+    return MockConfigEntry(
+        domain="rfxtrx",
+        unique_id=DOMAIN,
+        data=entry_data,
+        subentries_data=create_rfx_test_subentries(devices),
+        version=ENTRY_VERSION,
+    )
 
 
 async def setup_rfx_test_cfg(
@@ -47,7 +120,7 @@ async def setup_rfx_test_cfg(
     port=None,
 ):
     """Construct a rfxtrx config entry."""
-    entry_data = create_rfx_test_cfg(
+    mock_entry = create_rfx_test_entry(
         device=device,
         automatic_add=automatic_add,
         devices=devices,
@@ -55,7 +128,6 @@ async def setup_rfx_test_cfg(
         host=host,
         port=port,
     )
-    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
     mock_entry.supports_remove_device = True
     mock_entry.add_to_hass(hass)
 

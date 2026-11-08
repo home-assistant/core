@@ -1,17 +1,17 @@
 """Tests for the Hot Spring integration."""
 
+from typing import cast
 from unittest.mock import MagicMock
 
 from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(
@@ -22,7 +22,7 @@ async def test_async_setup_entry(
 
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
-    assert init_integration.state is ConfigEntryState.NOT_LOADED
+    assert cast(ConfigEntryState, init_integration.state) is ConfigEntryState.NOT_LOADED
 
 
 async def test_device_info(

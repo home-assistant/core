@@ -4,18 +4,11 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_WEBHOOK_ID,
-    STATE_NOT_HOME,
-    Platform,
-)
+from homeassistant.const import ATTR_ID, CONF_WEBHOOK_ID, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -30,6 +23,8 @@ type LocativeConfigEntry = ConfigEntry[set[str]]
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 ATTR_DEVICE_ID = "device"
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 ATTR_TRIGGER = "trigger"
 
 
@@ -41,20 +36,20 @@ def _id(value: str) -> str:
 def _validate_test_mode(obj: dict) -> dict:
     """Validate that id is provided outside of test mode."""
     if ATTR_ID not in obj and obj[ATTR_TRIGGER] != "test":
-        raise vol.Invalid("Location id not specified")
+        raise probatio.Invalid("Location id not specified")
     return obj
 
 
-WEBHOOK_SCHEMA = vol.All(
-    vol.Schema(
+WEBHOOK_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_LATITUDE): cv.latitude,
-            vol.Required(ATTR_LONGITUDE): cv.longitude,
-            vol.Required(ATTR_DEVICE_ID): cv.string,
-            vol.Required(ATTR_TRIGGER): cv.string,
-            vol.Optional(ATTR_ID): vol.All(cv.string, _id),
+            probatio.Required(ATTR_LATITUDE): cv.latitude,
+            probatio.Required(ATTR_LONGITUDE): cv.longitude,
+            probatio.Required(ATTR_DEVICE_ID): cv.string,
+            probatio.Required(ATTR_TRIGGER): cv.string,
+            probatio.Optional(ATTR_ID): probatio.All(cv.string, _id),
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     ),
     _validate_test_mode,
 )
@@ -66,7 +61,7 @@ async def handle_webhook(
     """Handle incoming webhook from Locative."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
-    except vol.MultipleInvalid as error:
+    except probatio.MultipleInvalid as error:
         return web.Response(
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )
@@ -110,7 +105,7 @@ async def handle_webhook(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> None:
     """Configure based on config entry."""
     entry.runtime_data = set()
     webhook.async_register(
@@ -118,13 +113,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LocativeConfigEntry) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

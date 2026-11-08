@@ -3,14 +3,27 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components.humidifier.const import (
     ATTR_ACTION,
     HumidifierAction,
     HumidifierEntityFeature,
 )
+from homeassistant.components.humidifier.trigger import TRIGGERS
 from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
@@ -24,22 +37,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
-from tests.components.common import (
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
-
 
 @pytest.fixture
 async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple humidifier entities associated with different targets."""
     return await target_entities(hass, "humidifier")
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "mode_changed": TargetSupport.STANDARD,
+    "started_drying": TargetSupport.STANDARD,
+    "started_humidifying": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -67,6 +78,11 @@ async def test_humidifier_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -385,13 +401,13 @@ async def test_humidifier_state_attribute_trigger_behavior_all(
             "humidifier.mode_changed",
             # Empty mode list
             {CONF_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "humidifier.mode_changed",
             # Missing CONF_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )

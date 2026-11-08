@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING, override
 
 from amcrest import AmcrestError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -125,7 +125,7 @@ def check_binary_sensors(value: list[str]) -> list[str]:
     """Validate binary sensor configurations."""
     for exclusive_options in _EXCLUSIVE_OPTIONS:
         if len(set(value) & exclusive_options) > 1:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"must contain at most one of {', '.join(exclusive_options)}."
             )
     return value

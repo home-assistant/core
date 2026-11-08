@@ -22,6 +22,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
+type ScreenLogicConfigEntry = ConfigEntry[ScreenlogicDataUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 REQUEST_REFRESH_DELAY = 2
@@ -29,7 +31,7 @@ HEATER_COOLDOWN_DELAY = 6
 
 
 async def async_get_connect_info(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ScreenLogicConfigEntry
 ) -> dict[str, str | int]:
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
@@ -52,13 +54,13 @@ async def async_get_connect_info(
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage the data update for the Screenlogic component."""
 
-    config_entry: ConfigEntry
+    config_entry: ScreenLogicConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
-        config_entry: ConfigEntry,
+        config_entry: ScreenLogicConfigEntry,
         gateway: ScreenLogicGateway,
     ) -> None:
         """Initialize the Screenlogic Data Update Coordinator."""

@@ -1,18 +1,29 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
-import voluptuous as vol
+from enum import StrEnum
+
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import ATTR_DYNAMIC_EQ, DOMAIN
+from .const import DOMAIN
 
-# Services
-SERVICE_GET_COMMAND = "get_command"
-SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
-SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
+
+class DenonAvrService(StrEnum):
+    """Store keys for Denon AVR services."""
+
+    GET_COMMAND = "get_command"
+    SET_DYNAMIC_EQ = "set_dynamic_eq"
+    UPDATE_AUDYSSEY = "update_audyssey"
+
+
+class DenonAvrServiceArgument(StrEnum):
+    """Store keys for Denon AVR service arguments."""
+
+    COMMAND = "command"
+    DYNAMIC_EQ = "dynamic_eq"
 
 
 @callback
@@ -22,24 +33,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_COMMAND,
+        DenonAvrService.GET_COMMAND,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_COMMAND): cv.string},
-        func=f"async_{SERVICE_GET_COMMAND}",
+        schema={probatio.Required(DenonAvrServiceArgument.COMMAND): cv.string},
+        func="async_get_command",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_DYNAMIC_EQ,
+        DenonAvrService.SET_DYNAMIC_EQ,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_DYNAMIC_EQ): cv.boolean},
-        func=f"async_{SERVICE_SET_DYNAMIC_EQ}",
+        schema={probatio.Required(DenonAvrServiceArgument.DYNAMIC_EQ): cv.boolean},
+        func="async_set_dynamic_eq",
     )
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_UPDATE_AUDYSSEY,
+        DenonAvrService.UPDATE_AUDYSSEY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
-        func=f"async_{SERVICE_UPDATE_AUDYSSEY}",
+        func="async_update_audyssey",
     )
