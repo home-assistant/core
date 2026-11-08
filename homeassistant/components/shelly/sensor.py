@@ -959,6 +959,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="counts",
         translation_key="total_runtime",
+        # API docs state minutes, but the firmware reports seconds
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         value=lambda status, _: status["on_time"],
@@ -985,6 +986,7 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="counts",
         translation_key="runtime_above_power_threshold",
+        # API docs state minutes, but the firmware reports seconds
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         value=lambda status, _: status["on_above_thr"],
