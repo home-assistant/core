@@ -40,6 +40,7 @@ from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
 from .entity import E3dcEntity, E3dcPart, part_device_info
 
@@ -533,6 +534,34 @@ PARTS = (
 )
 
 
+def _registered_slots(
+    device_registry: dr.DeviceRegistry,
+    entry: E3dcConfigEntry,
+    coordinator: E3dcDataUpdateCoordinator,
+) -> dict[str, set[int]]:
+    """The slots of the parts that already have a device, by kind."""
+    identifiers = {
+        identifier
+        for device in (
+            *dr.async_entries_for_config_entry(device_registry, entry.entry_id),
+            *dr.async_entries_for_parent_device(
+                device_registry, coordinator.station_device_id
+            ),
+        )
+        for domain, identifier in device.identifiers
+        if domain == DOMAIN
+    }
+    slots: dict[str, set[int]] = {}
+    for part_kind in PARTS:
+        prefix = f"{entry.unique_id}_{part_kind.kind}_"
+        slots[part_kind.kind] = {
+            int(number) - 1
+            for identifier in identifiers
+            if (number := identifier.removeprefix(prefix)) != identifier
+        }
+    return slots
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: E3dcConfigEntry,
@@ -545,6 +574,8 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     added_sensors: set[str] = set()
     added_parts: dict[tuple[str, int], E3dcPart] = {}
+    # Parts from earlier runs keep the numbering while they are absent
+    seen_slots = _registered_slots(device_registry, entry, coordinator)
 
     @callback
     def _async_add_new() -> None:
@@ -560,9 +591,10 @@ async def async_setup_entry(
                 entities.append(E3dcSensor(coordinator, description))
         for part_kind in PARTS:
             slots = list(part_kind.present_fn(device))
-            known = {slot for kind, slot in added_parts if kind == part_kind.kind}
+            seen = seen_slots[part_kind.kind]
+            seen.update(slots)
             # Number the parts once the power station has had several of a kind
-            numbered = len({*slots, *known}) > 1
+            numbered = len(seen) > 1
             for slot in slots:
                 if (part_kind.kind, slot) in added_parts:
                     continue

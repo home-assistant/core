@@ -290,6 +290,24 @@ async def test_part_devices(
     assert parts == devices
 
 
+def _part_names(
+    device_registry: dr.DeviceRegistry, entry: MockConfigEntry
+) -> dict[str, str | None]:
+    """The names of the part devices, by identifier without the serial number."""
+    station = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), entry.entry_id
+    )
+    return {
+        identifier.removeprefix(f"{MOCK_SERIAL}_"): device.name
+        for device in (
+            *dr.async_entries_for_config_entry(device_registry, entry.entry_id),
+            *dr.async_entries_for_parent_device(device_registry, station.id),
+        )
+        if device.id != station.id
+        for _, identifier in device.identifiers
+    }
+
+
 @pytest.mark.parametrize(
     ("holding", "entity_id", "names"),
     [
@@ -338,21 +356,55 @@ async def test_part_added_when_reported(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is not None
-    station = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
-    )
-    parts = {
-        identifier.removeprefix(f"{MOCK_SERIAL}_"): device.name
-        for device in (
-            *dr.async_entries_for_config_entry(
-                device_registry, mock_config_entry.entry_id
-            ),
-            *dr.async_entries_for_parent_device(device_registry, station.id),
-        )
-        if device.id != station.id
-        for _, identifier in device.identifiers
-    }
-    assert parts == names
+    assert _part_names(device_registry, mock_config_entry) == names
+
+
+@pytest.mark.parametrize(
+    ("setup_holding", "holding", "names"),
+    [
+        pytest.param(
+            {40113: 2},
+            {40113: 0},
+            {
+                "power_meter_2": "Power meter 2",
+                "power_meter_3": "Power meter 3",
+                "inverter_1": "Inverter",
+            },
+            id="power_meter",
+        ),
+        pytest.param(
+            {41034 + 18: 2302},
+            {41034 + 18: 0},
+            {
+                "power_meter_2": "Power meter",
+                "inverter_1": "Inverter 1",
+                "inverter_2": "Inverter 2",
+            },
+            id="inverter",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_numbering_kept_after_reload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_unit: MockModbusUnit,
+    mock_config_entry: MockConfigEntry,
+    setup_holding: dict[int, int | list[int]],
+    holding: dict[int, int | list[int]],
+    names: dict[str, str],
+) -> None:
+    """Test the parts stay numbered after a reload while one of them is absent."""
+    seed(mock_unit, setup_holding)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    seed(mock_unit, holding)
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _part_names(device_registry, mock_config_entry) == names
 
 
 @pytest.mark.parametrize(
