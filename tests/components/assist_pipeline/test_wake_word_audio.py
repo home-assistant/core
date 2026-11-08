@@ -101,7 +101,7 @@ async def test_wake_word_audio(
 async def test_wake_word_audio_duplicate(
     hass: HomeAssistant, end_stage: assist_pipeline.PipelineStage
 ) -> None:
-    """Test a wake word another satellite just woke up with is rejected."""
+    """Test a wake word another satellite just woke up with ends the run."""
     first_events = await _async_run_pipeline(
         hass, _audio_stream(WAKE, COMMAND), MS_PER_CHUNK
     )
@@ -110,18 +110,14 @@ async def test_wake_word_audio_duplicate(
     )
 
     assert first_events[1].type is PipelineEventType.WAKE_WORD_END
+    # The same error as for a duplicate without wake word audio
     assert [event.type for event in second_events] == [
         PipelineEventType.RUN_START,
-        PipelineEventType.WAKE_WORD_REJECTED,
+        PipelineEventType.ERROR,
         PipelineEventType.RUN_END,
     ]
-    assert second_events[1].data == {
-        "wake_word_output": {
-            "wake_word_phrase": "okay nabu",
-            "wake_word_audio_ms": MS_PER_CHUNK,
-        }
-    }
-    # The text-to-speech stream prepared for the rejected run is removed
+    assert second_events[1].data["code"] == "duplicate_wake_up_detected"
+    # The text-to-speech stream prepared for the run is removed
     assert not hass.data[tts.DATA_TTS_MANAGER].token_to_stream
 
 

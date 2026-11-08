@@ -35,7 +35,6 @@ from .const import (
     SAMPLES_PER_CHUNK,
 )
 from .error import (
-    DuplicateWakeUpDetectedError,
     IntentRecognitionError,
     PipelineRunValidationError,
     SpeechToTextError,
@@ -561,20 +560,12 @@ class _DefaultPipelineProcessor:
     @callback
     def _accept_wake_word_audio(
         self, wake_word_phrase: str, wake_word_audio_ms: int
-    ) -> bool:
-        """Accept the wake word at the start of the stream, unless a duplicate."""
-        try:
-            self.host.accept_wake_word(wake_word_phrase)
-        except DuplicateWakeUpDetectedError:
-            accepted = False
-        else:
-            accepted = True
-
+    ) -> None:
+        """Accept the wake word whose audio starts the stream."""
+        self.host.accept_wake_word(wake_word_phrase)
         self.host.process_event(
             PipelineEvent(
-                PipelineEventType.WAKE_WORD_END
-                if accepted
-                else PipelineEventType.WAKE_WORD_REJECTED,
+                PipelineEventType.WAKE_WORD_END,
                 {
                     "wake_word_output": {
                         "wake_word_phrase": wake_word_phrase,
@@ -583,7 +574,6 @@ class _DefaultPipelineProcessor:
                 },
             )
         )
-        return accepted
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""
@@ -1191,11 +1181,9 @@ class _DefaultPipelineProcessor:
                 request.wake_word_phrase is not None
             ):
                 if request.wake_word_audio_ms is not None:
-                    if not self._accept_wake_word_audio(
+                    self._accept_wake_word_audio(
                         request.wake_word_phrase, request.wake_word_audio_ms
-                    ):
-                        self.cleanup()
-                        return
+                    )
                 else:
                     self.host.accept_wake_word(request.wake_word_phrase)
 
