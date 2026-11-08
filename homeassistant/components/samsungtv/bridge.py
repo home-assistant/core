@@ -195,9 +195,14 @@ class SamsungTVBridge(ABC):
 
     def register_app_list_callback(
         self, func: Callable[[dict[str, str]], None]
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Register app_list callback function."""
         self._app_list_callback = func
+
+        def _unregister() -> None:
+            self._app_list_callback = None
+
+        return _unregister
 
     @abstractmethod
     async def async_try_connect(self) -> str:
