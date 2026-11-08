@@ -518,8 +518,15 @@ async def test_connection_reset_during_auth_logs_at_debug(
             pass
         await disconnected.wait()
 
-    assert "Unexpected error inside websocket API" not in caplog.text
-    assert "Disconnected during auth phase: Connection reset by peer" in caplog.text
+    assert any(
+        record.levelno == logging.DEBUG
+        and "Disconnected during auth phase: Connection reset by peer"
+        in record.getMessage()
+        for record in caplog.records
+    )
+    assert not [
+        record for record in caplog.records if record.levelno >= logging.WARNING
+    ]
 
 
 async def test_enable_coalesce(
