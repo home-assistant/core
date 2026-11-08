@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -22,6 +22,21 @@ if TYPE_CHECKING:
 
 class MissingNode(HomeAssistantError):
     """Exception raised when we can't find a node."""
+
+
+def write_error_status(result: Any) -> int | None:
+    """Return the first unsuccessful Matter status of a write response, if any.
+
+    A write is answered with a list of per-path results rather than an error, so
+    a device rejecting the write otherwise looks like a successful service call.
+    """
+    if not isinstance(result, list):
+        return None
+    for item in result:
+        status: int | None = item.get("Status") if isinstance(item, dict) else None
+        if status:
+            return status
+    return None
 
 
 @dataclass

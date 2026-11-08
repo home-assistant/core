@@ -301,6 +301,12 @@
       "travel_time_up": {
         "name": "Travel time up"
       },
+      "unoccupied_cooling_setpoint": {
+        "name": "Unoccupied cooling setpoint"
+      },
+      "unoccupied_heating_setpoint": {
+        "name": "Unoccupied heating setpoint"
+      },
       "user_code_temporary_disable_time": {
         "name": "User code temporary disable time"
       },
@@ -819,6 +825,12 @@
     },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."
+    },
+    "setpoint_out_of_range": {
+      "message": "The device rejected the value for {name} because it is outside the range the device accepts."
+    },
+    "setpoint_write_failed": {
+      "message": "Failed to change {name}: the device returned status {status}."
     }
   },
   "issues": {

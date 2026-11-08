@@ -25,6 +25,12 @@ from .common import (
 POWER_ON_COLOR_TEMPERATURE_ENTITY_ID = (
     "number.mock_color_temperature_light_power_on_color_temperature"
 )
+UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID = (
+    "number.mock_thermostat_unoccupied_heating_setpoint"
+)
+UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID = (
+    "number.mock_thermostat_unoccupied_cooling_setpoint"
+)
 
 
 @pytest.fixture
@@ -448,6 +454,187 @@ async def test_thermostat_occupied_setback(
         ),
         value=20,
     )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "attribute_id", "value", "attribute"),
+    [
+        pytest.param(
+            UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID,
+            20,
+            15.5,
+            clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            id="heating",
+        ),
+        pytest.param(
+            UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID,
+            19,
+            27.0,
+            clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
+            id="cooling",
+        ),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_unoccupied_setpoint(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    attribute_id: int,
+    value: float,
+    attribute: type[clusters.ClusterAttributeDescriptor],
+) -> None:
+    """Test thermostat unoccupied setpoint number entities."""
+    set_node_attribute(matter_node, 1, 513, attribute_id, 1850)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "18.5"
+
+    matter_client.write_attribute.return_value = [
+        {
+            "Path": {"EndpointId": 1, "ClusterId": 513, "AttributeId": attribute_id},
+            "Status": 0,
+        }
+    ]
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": entity_id, "value": value},
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=attribute,
+        ),
+        value=round(value * 100),
+    )
+
+
+@pytest.mark.parametrize(
+    ("attributes", "entity_id", "expected_min", "expected_max"),
+    [
+        pytest.param(
+            {"1/513/21": 1000, "1/513/22": 2500},
+            UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID,
+            10.0,
+            25.0,
+            id="heating_setpoint_limits",
+        ),
+        pytest.param(
+            {"1/513/21": None, "1/513/22": None, "1/513/3": 500, "1/513/4": 3500},
+            UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID,
+            5.0,
+            35.0,
+            id="heating_absolute_limits",
+        ),
+        pytest.param(
+            {"1/513/21": None, "1/513/22": None, "1/513/3": None, "1/513/4": None},
+            UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID,
+            7.0,
+            30.0,
+            id="heating_spec_defaults",
+        ),
+        pytest.param(
+            {"1/513/23": 1800, "1/513/24": 3000},
+            UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID,
+            18.0,
+            30.0,
+            id="cooling_setpoint_limits",
+        ),
+        pytest.param(
+            {"1/513/23": None, "1/513/24": None, "1/513/5": 1500, "1/513/6": 3500},
+            UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID,
+            15.0,
+            35.0,
+            id="cooling_absolute_limits",
+        ),
+        pytest.param(
+            {"1/513/23": None, "1/513/24": None, "1/513/5": None, "1/513/6": None},
+            UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID,
+            16.0,
+            32.0,
+            id="cooling_spec_defaults",
+        ),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+@pytest.mark.usefixtures("matter_node")
+async def test_thermostat_unoccupied_setpoint_limits(
+    hass: HomeAssistant,
+    entity_id: str,
+    expected_min: float,
+    expected_max: float,
+) -> None:
+    """Test unoccupied setpoint limits fall back as the Matter spec defines."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["min"] == expected_min
+    assert state.attributes["max"] == expected_max
+
+
+# The fixture's FeatureMap (423) without the Occupancy bit (4)
+@pytest.mark.parametrize("attributes", [{"1/513/65532": 419}])
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+@pytest.mark.usefixtures("matter_node")
+async def test_thermostat_unoccupied_setpoint_needs_occupancy_feature(
+    hass: HomeAssistant,
+) -> None:
+    """Test no unoccupied setpoint entities without the Occupancy feature."""
+    assert not hass.states.get(UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID)
+    assert not hass.states.get(UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID)
+
+
+@pytest.mark.parametrize(
+    ("status", "translation_key"),
+    [
+        pytest.param(
+            clusters.Globals.Enums.status.kConstraintError,
+            "setpoint_out_of_range",
+            id="constraint_error",
+        ),
+        pytest.param(
+            clusters.Globals.Enums.status.kBusy,
+            "setpoint_write_failed",
+            id="busy",
+        ),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+@pytest.mark.usefixtures("matter_node")
+async def test_thermostat_unoccupied_setpoint_write_rejected(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    status: int,
+    translation_key: str,
+) -> None:
+    """Test a setpoint write the device rejects raises instead of passing silently."""
+    entity_id = UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID
+    # The Matter Server answers a rejected write with a status, not an error
+    matter_client.write_attribute.return_value = [
+        {
+            "Path": {"EndpointId": 1, "ClusterId": 513, "AttributeId": 19},
+            "Status": status,
+        }
+    ]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {"entity_id": entity_id, "value": 20},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "26.0"
 
 
 @pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500"])
