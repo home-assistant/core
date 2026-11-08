@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': list([
+      dict({
+        'group': 'Core',
+        'key': 'backend_service',
+        'name': 'Backend Service',
+        'results': list([
+          dict({
+            'status': 200,
+            'success': True,
+          }),
+        ]),
+      }),
+    ]),
+  })
+# ---

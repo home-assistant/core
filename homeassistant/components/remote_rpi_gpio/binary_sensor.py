@@ -1,8 +1,10 @@
 """Support for binary sensor using RPi GPIO."""
 
+from typing import override
+
 from gpiozero import DigitalInputDevice
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -27,15 +29,15 @@ from . import (
 
 CONF_PORTS = "ports"
 
-_SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
+_SENSORS_SCHEMA = probatio.Schema({cv.positive_int: cv.string})
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
-        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-        vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
-        vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORTS): _SENSORS_SCHEMA,
+        probatio.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+        probatio.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
+        probatio.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
     }
 )
 
@@ -79,6 +81,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
         self._state = False
         self._sensor = sensor
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
@@ -91,6 +94,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
         self._sensor.when_activated = read_gpio
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic

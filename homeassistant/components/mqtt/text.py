@@ -3,12 +3,12 @@
 from collections.abc import Callable
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import text
-from homeassistant.components.text import TextEntity
+from homeassistant.components.text import TextEntity, TextEntityCapabilityAttribute
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
@@ -51,10 +51,10 @@ DEFAULT_NAME = "MQTT Text"
 
 MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        text.ATTR_MAX,
-        text.ATTR_MIN,
-        text.ATTR_MODE,
-        text.ATTR_PATTERN,
+        TextEntityCapabilityAttribute.MAX,
+        TextEntityCapabilityAttribute.MIN,
+        TextEntityCapabilityAttribute.MODE,
+        TextEntityCapabilityAttribute.PATTERN,
     }
 )
 
@@ -62,34 +62,36 @@ MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
 def valid_text_size_configuration(config: ConfigType) -> ConfigType:
     """Validate that the text length configuration is valid, throws if it isn't."""
     if config[CONF_MIN] > config[CONF_MAX]:
-        raise vol.Invalid("text length min must be <= max")
+        raise probatio.Invalid("text length min must be <= max")
     if config[CONF_MAX] > MAX_LENGTH_STATE_STATE:
-        raise vol.Invalid(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
+        raise probatio.Invalid(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
 
     return config
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
-        vol.Optional(CONF_MIN, default=0): cv.positive_int,
-        vol.Optional(CONF_MODE, default=text.TextMode.TEXT): vol.In(
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
+        probatio.Optional(CONF_MIN, default=0): cv.positive_int,
+        probatio.Optional(CONF_MODE, default=text.TextMode.TEXT): probatio.In(
             [text.TextMode.TEXT, text.TextMode.PASSWORD]
         ),
-        vol.Optional(CONF_PATTERN): cv.is_regex,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_PATTERN): cv.is_regex,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+DISCOVERY_SCHEMA = probatio.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=probatio.REMOVE_EXTRA),
     valid_text_size_configuration,
 )
 
-PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, valid_text_size_configuration)
+PLATFORM_SCHEMA_MODERN = probatio.All(
+    _PLATFORM_SCHEMA_BASE, valid_text_size_configuration
+)
 
 
 async def async_setup_entry(
@@ -123,10 +125,12 @@ class MqttTextEntity(MqttEntity, TextEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_native_max = config[CONF_MAX]
@@ -158,6 +162,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
         self._attr_native_value = payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -166,10 +171,12 @@ class MqttTextEntity(MqttEntity, TextEntity):
             {"_attr_native_value"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_set_value(self, value: str) -> None:
         """Change the text."""
         payload = self._command_template(value)

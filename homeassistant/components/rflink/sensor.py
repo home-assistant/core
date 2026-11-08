@@ -1,28 +1,24 @@
 """Support for Rflink sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from rflink.parser import PACKET_FIELDS, UNITS
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     UV_INDEX,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,13 +26,13 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -48,12 +44,9 @@ from .const import (
     EVENT_KEY_ID,
     EVENT_KEY_SENSOR,
     EVENT_KEY_UNIT,
-    SIGNAL_AVAILABILITY,
-    SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
 )
 from .entity import RflinkDevice
-from .utils import create_issue_yaml_migration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +67,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
-        # Rflink devices reports ok/low so device class can’t be used
+        # Rflink devices reports ok/low so device class can't be used
         # It should be migrated to a binary sensor
         key="battery",
         name="Battery",
@@ -85,7 +78,7 @@ SENSOR_TYPES = (
         name="CO2 air quality",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     SensorEntityDescription(
         key="command",
@@ -140,7 +133,7 @@ SENSOR_TYPES = (
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     SensorEntityDescription(
         key="humidity_status",
@@ -269,25 +262,20 @@ SENSOR_TYPES = (
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 RFLINK_PLATFORM = {
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Required(CONF_SENSOR_TYPE): cv.string,
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Required(CONF_SENSOR_TYPE): cv.string,
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )
     },
 }
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def lookup_unit_for_sensor_type(sensor_type):
@@ -341,12 +329,9 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-        automatic_add_config(hass, config)
-    else:
-        async_add_entities(devices_from_config(discovery_info))
-        automatic_add_config(hass, discovery_info)
+        return
+    async_add_entities(devices_from_config(discovery_info))
+    automatic_add_config(hass, discovery_info)
 
 
 class RflinkSensor(RflinkDevice, SensorEntity):
@@ -370,13 +355,15 @@ class RflinkSensor(RflinkDevice, SensorEntity):
 
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
+    @override
     def _handle_event(self, event):
         """Domain specific event handler."""
         self._state = event["value"]
 
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """Register update callback."""
+    @callback
+    @override
+    def _async_register_lookups(self) -> None:
+        """Route sensor events for the device id and aliases to this entity."""
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if (
@@ -388,32 +375,14 @@ class RflinkSensor(RflinkDevice, SensorEntity):
             ].remove(tmp_entity)
 
         # Register id and aliases
-        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self._device_id].append(
-            self.entity_id
-        )
+        lookup = self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]
+        self._async_register_lookup(lookup, self._device_id)
         if self._aliases:
             for _id in self._aliases:
-                self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][_id].append(
-                    self.entity_id
-                )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_HANDLE_EVENT.format(self.entity_id),
-                self.handle_event_callback,
-            )
-        )
-
-        # Process the initial event now that the entity is created
-        if self._initial_event:
-            self.handle_event_callback(self._initial_event)
+                self._async_register_lookup(lookup, _id)
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return measurement unit."""
         if self._unit_of_measurement:
@@ -423,6 +392,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self):
         """Return value."""
         return self._state

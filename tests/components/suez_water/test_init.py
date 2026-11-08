@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder.statistics import statistics_during_period
@@ -24,9 +26,6 @@ import homeassistant.util.dt as dt_util
 
 from . import setup_integration
 from .conftest import MOCK_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_initialization_setup_api_error(
@@ -89,7 +88,9 @@ async def test_statistics_no_price(
     suez_client.get_price.side_effect = PySuezError("will fail")
     suez_client.fetch_all_daily_data.return_value = [
         TelemetryMeasure(
-            (datetime.now().date()).strftime("%Y-%m-%d %H:%M:%S"), 0.5, 0.5
+            dt_util.utcnow().date().strftime("%Y-%m-%d %H:%M:%S"),
+            0.5,
+            0.5,
         )
     ]
 
@@ -103,7 +104,7 @@ async def test_statistics_no_price(
     stats = await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.now() - timedelta(days=1),
+        dt_util.utcnow() - timedelta(days=1),
         None,
         [statistic_id],
         "hour",
@@ -200,7 +201,7 @@ async def test_statistics(
     # New daily data retrieved
     suez_client.fetch_all_daily_data.return_value = [
         TelemetryMeasure(
-            date=(datetime.now().date()).strftime("%Y-%m-%d %H:%M:%S"),
+            date=dt_util.utcnow().date().strftime("%Y-%m-%d %H:%M:%S"),
             volume=0.5,
             index=0.5 * (121 + 1),
         )

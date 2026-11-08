@@ -12,9 +12,13 @@ rules:
   docs-actions:
     status: exempt
     comment: no actions
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers: done
   entity-event-setup:
     status: exempt
     comment: no events
@@ -66,7 +70,7 @@ rules:
     comment: using only device name
   exception-translations: done
   icon-translations:
-    status: done
+    status: exempt
     comment: no custom icons, only default icons
   reconfiguration-flow: done
   repair-issues:
@@ -79,6 +83,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: Requirements 'getmac==0.9.5', 'samsungctl[websocket]==0.7.1' and 'wakeonlan==2.1.0' appear untyped
+  strict-typing: done

@@ -1,6 +1,7 @@
 """The Things Network's integration sensors."""
 
 import logging
+from typing import override
 
 from ttn_client import TTNSensorValue
 
@@ -54,6 +55,7 @@ class TtnDataSensor(TTNEntity, SensorEntity):
     _ttn_value: TTNSensorValue
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self._ttn_value.value

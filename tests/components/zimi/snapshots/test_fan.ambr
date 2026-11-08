@@ -2,12 +2,12 @@
 # name: test_fan_entity
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fan Controller Test Entity Name',
-      'percentage': 1,
-      'percentage_step': 12.5,
-      'preset_mode': None,
-      'preset_modes': None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fan Controller Test Entity Name',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 1,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 12.5,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.test_entity_room_fan_controller_test_entity_name',

@@ -1,11 +1,12 @@
 """Tankerkoenig sensor integration."""
 
 import logging
+from typing import override
 
 from aiotankerkoenig import GasType, Station
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
+from homeassistant.const import CURRENCY_EURO, EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -75,8 +76,8 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
             ATTR_STATION_NAME,
             ATTR_STREET,
             ATTRIBUTION,
-            ATTR_LATITUDE,
-            ATTR_LONGITUDE,
+            EntityStateAttribute.LATITUDE,
+            EntityStateAttribute.LONGITUDE,
         }
     )
 
@@ -103,11 +104,12 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         }
 
         if coordinator.show_on_map:
-            attrs[ATTR_LATITUDE] = station.lat
-            attrs[ATTR_LONGITUDE] = station.lng
+            attrs[EntityStateAttribute.LATITUDE] = station.lat
+            attrs[EntityStateAttribute.LONGITUDE] = station.lng
         self._attr_extra_state_attributes = attrs
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current price for the fuel type."""
         info = self.coordinator.data[self._station_id]

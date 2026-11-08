@@ -4,9 +4,10 @@ from unittest.mock import Mock, call, patch
 
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
 from yarl import URL
 
-from homeassistant.components.homeassistant_yellow.const import RADIO_DEVICE
+from homeassistant.components.homeassistant_yellow.const import DOMAIN, RADIO_DEVICE
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, mock_restore_cache
 
 SWITCH_ENTITY_ID = "switch.home_assistant_yellow_radio_beta_firmware_updates"
 
@@ -78,7 +77,7 @@ async def test_switch_turn_on_off(
     # Set up the Yellow integration
     yellow_config_entry = MockConfigEntry(
         title="Home Assistant Yellow",
-        domain="homeassistant_yellow",
+        domain=DOMAIN,
         data={
             "firmware": "ezsp",
             "firmware_version": "7.3.1.0 build 0",

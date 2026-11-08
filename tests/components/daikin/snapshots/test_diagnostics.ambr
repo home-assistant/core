@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'device': dict({
+      'support_advanced_modes': False,
+      'support_away_mode': False,
+      'support_compressor_frequency': False,
+      'support_energy_consumption': False,
+      'support_fan_rate': False,
+      'support_humidity': False,
+      'support_outside_temperature': False,
+      'support_swing_mode': False,
+      'values': dict({
+        'lztemp_c': '22',
+        'lztemp_h': '22',
+        'model': 'TESTMODEL',
+        'name': 'Daikin Test',
+        'ver': '1_0_0',
+        'zone_name': 'Living',
+        'zone_onoff': '1',
+      }),
+    }),
+    'entry_data': dict({
+      'host': '**REDACTED**',
+      'mac': '**REDACTED**',
+    }),
+  })
+# ---

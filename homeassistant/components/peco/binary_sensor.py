@@ -1,6 +1,6 @@
 """Binary sensor for PECO outage counter."""
 
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -46,6 +46,7 @@ class PecoBinarySensor(
         self._attr_unique_id = f"{phone_number}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the meter has power."""
         return self.coordinator.data

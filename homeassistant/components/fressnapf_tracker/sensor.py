@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from fressnapftracker import Tracker
 
@@ -15,7 +16,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FressnapfTrackerConfigEntry
+from .coordinator import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 
 # Coordinator is used to centralize the data updates
@@ -61,6 +62,7 @@ class FressnapfTrackerSensor(FressnapfTrackerEntity, SensorEntity):
     entity_description: FressnapfTrackerSensorDescription
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the resources if it has been received yet."""
         return self.entity_description.value_fn(self.coordinator.data)

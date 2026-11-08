@@ -1,6 +1,6 @@
 """Support for switch entities."""
 
-from typing import Any
+from typing import Any, override
 
 from gardena_bluetooth.const import Valve
 
@@ -9,7 +9,7 @@ from homeassistant.components.valve import (
     ValveEntity,
     ValveEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
@@ -53,14 +53,17 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(
-            coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
+            coordinator, {Valve.state.unique_id, Valve.manual_watering_time.unique_id}
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.unique_id}"
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_closed = not self.coordinator.get_cached(Valve.state)
         super()._handle_coordinator_update()
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         value = (
@@ -71,6 +74,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.write(Valve.remaining_open_time, 0)

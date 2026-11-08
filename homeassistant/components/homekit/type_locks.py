@@ -1,11 +1,15 @@
 """Class to hold all lock accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_DOOR_LOCK
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    LockServiceArgument,
+    LockState,
+)
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import State, callback
 
@@ -87,10 +91,11 @@ class Lock(HomeDoorbellAccessory):
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
-            params[ATTR_CODE] = self._code
+            params[LockServiceArgument.CODE] = self._code
         self.async_call_service(LOCK_DOMAIN, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update lock after state changed."""
         hass_state = new_state.state

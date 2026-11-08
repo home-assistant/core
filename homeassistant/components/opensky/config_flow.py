@@ -1,29 +1,31 @@
 """Config flow for OpenSky integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp import BasicAuth
+import probatio
 from python_opensky import OpenSky
 from python_opensky.exceptions import OpenSkyUnauthenticatedError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_PASSWORD,
     CONF_RADIUS,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
     CONF_ALTITUDE,
     CONF_CONTRIBUTING_USER,
     DEFAULT_ALTITUDE,
     DEFAULT_NAME,
+    DEFAULT_RADIUS,
     DOMAIN,
 )
 from .coordinator import OpenSkyConfigEntry
@@ -34,12 +36,14 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: OpenSkyConfigEntry,
     ) -> OpenSkyOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OpenSkyOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -48,28 +52,33 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=DEFAULT_NAME,
                 data={
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                    CONF_LATITUDE: user_input[CONF_LOCATION][CONF_LATITUDE],
+                    CONF_LONGITUDE: user_input[CONF_LOCATION][CONF_LONGITUDE],
                 },
                 options={
-                    CONF_RADIUS: user_input[CONF_RADIUS],
+                    CONF_RADIUS: user_input[CONF_LOCATION].get(
+                        CONF_RADIUS, DEFAULT_RADIUS
+                    ),
                     CONF_ALTITUDE: user_input[CONF_ALTITUDE],
                 },
             )
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_RADIUS): vol.Coerce(float),
-                        vol.Required(CONF_LATITUDE): cv.latitude,
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
-                        vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=True, icon="mdi:airplane")
+                        ),
+                        probatio.Optional(CONF_ALTITUDE): probatio.Coerce(float),
                     }
                 ),
                 {
-                    CONF_LATITUDE: self.hass.config.latitude,
-                    CONF_LONGITUDE: self.hass.config.longitude,
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                        CONF_RADIUS: DEFAULT_RADIUS,
+                    },
                     CONF_ALTITUDE: DEFAULT_ALTITUDE,
                 },
             ),
@@ -111,13 +120,13 @@ class OpenSkyOptionsFlowHandler(OptionsFlow):
             step_id="init",
             errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_RADIUS): vol.Coerce(float),
-                        vol.Optional(CONF_ALTITUDE): vol.Coerce(float),
-                        vol.Optional(CONF_USERNAME): str,
-                        vol.Optional(CONF_PASSWORD): str,
-                        vol.Optional(CONF_CONTRIBUTING_USER, default=False): bool,
+                        probatio.Required(CONF_RADIUS): probatio.Coerce(float),
+                        probatio.Optional(CONF_ALTITUDE): probatio.Coerce(float),
+                        probatio.Optional(CONF_USERNAME): str,
+                        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+                        probatio.Optional(CONF_CONTRIBUTING_USER, default=False): bool,
                     }
                 ),
                 user_input or self.config_entry.options,

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from togrill_bluetooth.packets import (
     GrillType,
@@ -17,9 +17,8 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToGrillConfigEntry
 from .const import CONF_PROBE_COUNT, MAX_PROBE_COUNT
-from .coordinator import ToGrillCoordinator
+from .coordinator import ToGrillConfigEntry, ToGrillCoordinator
 from .entity import ToGrillEntity
 
 PARALLEL_UPDATES = 0
@@ -159,11 +158,13 @@ class ToGrillSelect(ToGrillEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
 
         return self.entity_description.get_value(self.coordinator)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set value on device."""
 

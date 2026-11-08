@@ -4,6 +4,14 @@ from collections.abc import Generator
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components import conversation
 from homeassistant.components.climate import (
@@ -14,6 +22,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import ATTR_DEVICE_CLASS, Platform, UnitOfTemperature
@@ -26,15 +35,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 
@@ -58,19 +58,17 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.CLIMATE]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-    ) -> bool:
+    ) -> None:
         await hass.config_entries.async_unload_platforms(config_entry, [Platform.TODO])
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
@@ -114,7 +112,7 @@ async def create_mock_platform(
 class MockClimateEntity(ClimateEntity):
     """Mock Climate device to use in tests."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -122,13 +120,13 @@ class MockClimateEntity(ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the thermostat temperature."""
         value = kwargs[ATTR_TEMPERATURE]
-        self._attr_target_temperature = value
+        self._attr_native_target_temperature = value
 
 
 class MockClimateEntityNoSetTemperature(ClimateEntity):
     """Mock Climate device to use in tests."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
 
@@ -141,12 +139,12 @@ async def test_get_temperature(
 ) -> None:
     """Test HassClimateGetTemperature intent."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"
     climate_1._attr_unique_id = "1234"
-    climate_1._attr_current_temperature = 10.0
+    climate_1._attr_native_current_temperature = 10.0
     entity_registry.async_get_or_create(
         CLIMATE_DOMAIN, "test", "1234", suggested_object_id="climate_1"
     )
@@ -154,7 +152,7 @@ async def test_get_temperature(
     climate_2 = MockClimateEntity()
     climate_2._attr_name = "Climate 2"
     climate_2._attr_unique_id = "5678"
-    climate_2._attr_current_temperature = 22.0
+    climate_2._attr_native_current_temperature = 22.0
     entity_registry.async_get_or_create(
         CLIMATE_DOMAIN, "test", "5678", suggested_object_id="climate_2"
     )
@@ -182,7 +180,6 @@ async def test_get_temperature(
     # first floor => living room and office
     # 2nd floor => bedroom
     # 3rd floor => attic
-    floor_registry = fr.async_get(hass)
     first_floor = floor_registry.async_create("First floor")
     living_room_area = area_registry.async_update(
         living_room_area.id, floor_id=first_floor.floor_id
@@ -421,7 +418,7 @@ async def test_get_temperature_no_entities(
 ) -> None:
     """Test HassClimateGetTemperature intent with no climate entities."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     await create_mock_platform(hass, [])
 
@@ -443,12 +440,12 @@ async def test_not_exposed(
 ) -> None:
     """Test HassClimateGetTemperature intent when entities aren't exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"
     climate_1._attr_unique_id = "1234"
-    climate_1._attr_current_temperature = 10.0
+    climate_1._attr_native_current_temperature = 10.0
     entity_registry.async_get_or_create(
         CLIMATE_DOMAIN, "test", "1234", suggested_object_id="climate_1"
     )
@@ -456,7 +453,7 @@ async def test_not_exposed(
     climate_2 = MockClimateEntity()
     climate_2._attr_name = "Climate 2"
     climate_2._attr_unique_id = "5678"
-    climate_2._attr_current_temperature = 22.0
+    climate_2._attr_native_current_temperature = 22.0
     entity_registry.async_get_or_create(
         CLIMATE_DOMAIN, "test", "5678", suggested_object_id="climate_2"
     )

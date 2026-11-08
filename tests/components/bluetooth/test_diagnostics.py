@@ -1,10 +1,22 @@
 """Test bluetooth diagnostics."""
 
+import sys
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    FakeScannerMixin,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement,
+)
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -14,19 +26,6 @@ from homeassistant.components.bluetooth import (
     HaScanner,
 )
 from homeassistant.core import HomeAssistant
-
-from . import (
-    FakeScannerMixin,
-    MockBleakClient,
-    _get_manager,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement,
-)
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 class FakeHaScanner(FakeScannerMixin, HaScanner):
@@ -43,6 +42,7 @@ class FakeHaScanner(FakeScannerMixin, HaScanner):
         }
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux Bluetooth stack")
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
 @pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_diagnostics(
@@ -178,6 +178,24 @@ async def test_diagnostics(
                     "timings": {},
                 },
                 "all_history": [],
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {
+                        "00:00:00:00:00:02": {
+                            "failed_window": False,
+                            "last_window_at": 0.0,
+                            "last_window_duration": 0.0,
+                            "name": "hci1 (00:00:00:00:00:02)",
+                            "next_event_at": ANY,
+                            "next_sweep_at": ANY,
+                            "sweep_last_completed": ANY,
+                            "warned_no_fallback": False,
+                            "window_end": 0.0,
+                        },
+                    },
+                },
                 "connectable_history": [],
                 "scanners": [
                     {
@@ -239,11 +257,11 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.PASSIVE: 'passive'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
+                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
                         },
                     },
                 ],
@@ -309,8 +327,10 @@ async def test_diagnostics_macos(
                 "Core Bluetooth": {
                     "adapter_type": None,
                     "address": "00:00:00:00:00:00",
+                    "advertise": True,
                     "manufacturer": "Apple",
                     "passive_scan": False,
+                    "powered": True,
                     "product": "Unknown MacOS Model",
                     "product_id": "Unknown",
                     "sw_version": ANY,
@@ -330,8 +350,10 @@ async def test_diagnostics_macos(
                     "Core Bluetooth": {
                         "adapter_type": None,
                         "address": "00:00:00:00:00:00",
+                        "advertise": True,
                         "manufacturer": "Apple",
                         "passive_scan": False,
+                        "powered": True,
                         "product": "Unknown MacOS Model",
                         "product_id": "Unknown",
                         "sw_version": ANY,
@@ -343,6 +365,12 @@ async def test_diagnostics_macos(
                     "intervals": {},
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
+                },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
                 },
                 "all_history": [
                     {
@@ -535,6 +563,14 @@ async def test_diagnostics_remote_adapter(
                         "slots": 5,
                         "source": "00:00:00:00:00:01",
                     },
+                    # Registering a connectable scanner seeds a zeroed
+                    # entry (slots=0 means no slot info reported yet).
+                    "esp32": {
+                        "allocated": [],
+                        "free": 0,
+                        "slots": 0,
+                        "source": "esp32",
+                    },
                 },
                 "adapters": {
                     "hci0": {
@@ -553,6 +589,12 @@ async def test_diagnostics_remote_adapter(
                     "intervals": {},
                     "sources": {"44:44:33:11:23:45": "esp32"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
+                },
+                "auto_scheduler": {
+                    "monotonic_time": ANY,
+                    "requests": {},
+                    "running": True,
+                    "workers": {},
                 },
                 "all_history": [
                     {

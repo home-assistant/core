@@ -1,6 +1,6 @@
 """Support for Lutron Caseta fans."""
 
-from typing import Any
+from typing import Any, override
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
@@ -36,7 +36,9 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     fan_devices = bridge.get_devices_by_domain(FAN_DOMAIN)
-    async_add_entities(LutronCasetaFan(fan_device, data) for fan_device in fan_devices)
+    async_add_entities(
+        LutronCasetaFan(hass, fan_device, data) for fan_device in fan_devices
+    )
 
 
 class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
@@ -50,6 +52,7 @@ class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._device["fan_speed"] is None:
@@ -60,6 +63,7 @@ class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
             ORDERED_NAMED_FAN_SPEEDS, self._device["fan_speed"]
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -72,10 +76,12 @@ class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
 
         await self.async_set_percentage(percentage)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.async_set_percentage(0)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
@@ -88,6 +94,7 @@ class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
         await self._smartbridge.set_fan(self.device_id, named_speed)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self.percentage)

@@ -1,10 +1,11 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -61,9 +62,12 @@ class FreeboxDevice(ScannerEntity):
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:
         """Initialize a Freebox device."""
         self._router = router
-        self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
         self._mac = device["l2ident"]["id"]
         self._manufacturer = device["vendor_name"]
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            name=device["primary_name"].strip() or DEFAULT_DEVICE_NAME,
+        )
         self._attr_icon = icon_for_freebox_device(device)
         self._active = False
         self._attr_extra_state_attributes: dict[str, Any] = {}
@@ -86,16 +90,13 @@ class FreeboxDevice(ScannerEntity):
             self._attr_extra_state_attributes = device["attrs"]
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return a unique ID."""
         return self._mac
 
     @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._active
@@ -106,6 +107,7 @@ class FreeboxDevice(ScannerEntity):
         self.async_update_state()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()

@@ -1,18 +1,18 @@
 """Vodafone Station image."""
 
 from io import BytesIO
-from typing import Final, cast
+from typing import Final, cast, override
 
 from aiovodafone.const import WIFI_DATA
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER
+from .const import LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 # Coordinator is used to centralize the data updates
@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guest WiFi QR code for device."""
-    _LOGGER.debug("Setting up Vodafone Station images")
+    LOGGER.debug("Setting up Vodafone Station images")
 
     coordinator = entry.runtime_data
 
@@ -87,11 +87,14 @@ class VodafoneGuestWifiQRImage(
         )
         return qr_code.getvalue()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set the update time."""
         self._attr_image_last_updated = dt_util.utcnow()
         await super().async_added_to_hass()
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
@@ -104,6 +107,7 @@ class VodafoneGuestWifiQRImage(
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return QR code image."""
         return self._qr_code

@@ -1,14 +1,14 @@
 """Test the pjlink integration."""
 
-from homeassistant.components.pjlink.const import DEFAULT_PORT
+from pytest_homeassistant.common import HomeAssistant, MockConfigEntry
 
-from tests.common import HomeAssistant, MockConfigEntry
+from homeassistant.components.pjlink.const import DEFAULT_PORT, DOMAIN
 
 
 async def setup_pjlink_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Set up PJLink integration via config entry."""
     entry = MockConfigEntry(
-        domain="pjlink",
+        domain=DOMAIN,
         data={"host": "127.0.0.1", "port": DEFAULT_PORT},
         title="test",
     )

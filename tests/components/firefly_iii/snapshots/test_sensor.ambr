@@ -6,12 +6,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_budget_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -41,10 +41,10 @@
 # name: test_all_entities[sensor.bills_budget-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Bills Budget',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bills Budget',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'AMS',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bills_budget',
@@ -61,12 +61,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -96,10 +96,10 @@
 # name: test_all_entities[sensor.credit_card_account_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Credit Card Account Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Credit Card Account Balance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'AMS',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.credit_card_account_balance',
@@ -117,9 +117,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -149,7 +149,7 @@
 # name: test_all_entities[sensor.credit_card_account_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Credit Card Account Role',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Credit Card Account Role',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.credit_card_account_role',
@@ -167,9 +167,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_4')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -199,8 +199,8 @@
 # name: test_all_entities[sensor.credit_card_account_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Credit Card Account Type',
-      'icon': 'mdi:cash-plus',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Credit Card Account Type',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cash-plus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.credit_card_account_type',
@@ -217,12 +217,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_category_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -252,10 +252,10 @@
 # name: test_all_entities[sensor.lunch_earned_spent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Lunch Earned/Spent',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lunch Earned/Spent',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'AMS',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lunch_earned_spent',
@@ -272,12 +272,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -307,10 +307,10 @@
 # name: test_all_entities[sensor.my_checking_account_account_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'My checking account Account Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My checking account Account Balance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'AMS',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_checking_account_account_balance',
@@ -328,9 +328,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -360,7 +360,7 @@
 # name: test_all_entities[sensor.my_checking_account_account_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My checking account Account Role',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My checking account Account Role',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_checking_account_account_role',
@@ -378,9 +378,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_2')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -410,8 +410,8 @@
 # name: test_all_entities[sensor.my_checking_account_account_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My checking account Account Type',
-      'icon': 'mdi:account-cash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My checking account Account Type',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:account-cash',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_checking_account_account_type',
@@ -428,12 +428,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -463,10 +463,10 @@
 # name: test_all_entities[sensor.savings_account_account_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Savings Account Account Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Savings Account Account Balance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'AMS',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.savings_account_account_balance',
@@ -484,9 +484,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -516,7 +516,7 @@
 # name: test_all_entities[sensor.savings_account_account_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Savings Account Account Role',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Savings Account Account Role',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.savings_account_account_role',
@@ -534,9 +534,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('firefly_iii', 'firefly_iii_test_entry_123_account_3')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -566,8 +566,8 @@
 # name: test_all_entities[sensor.savings_account_account_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Savings Account Account Type',
-      'icon': 'mdi:cash-minus',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Savings Account Account Type',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cash-minus',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.savings_account_account_type',

@@ -1,5 +1,6 @@
 """Test initialization of tedee."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -8,23 +9,31 @@ from urllib.parse import urlparse
 from aiotedee.exceptions import (
     TedeeAuthException,
     TedeeClientException,
+    TedeeLocalAuthException,
     TedeeWebhookException,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_WEBHOOK_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import WEBHOOK_ID
 
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
+LOCK_ENTITY_ID = "lock.lock_1a2b"
 
 
 async def test_load_unload_config_entry(
@@ -41,6 +50,31 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_tedee.delete_webhook.assert_called_once()
+
+
+async def test_reload_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the webhook is re-registered when the entry is reloaded."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_tedee.register_webhook.call_count == 2
+    mock_tedee.delete_webhook.assert_called_once()
+
+    client = await hass_client_no_auth()
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+    resp = await client.post(urlparse(webhook_url).path, json={})
+    assert resp.status == HTTPStatus.OK
+    # The webhook component answers 200 even for unregistered webhooks
+    mock_tedee.parse_webhook_message.assert_called_once_with({})
 
 
 @pytest.mark.parametrize(
@@ -59,6 +93,92 @@ async def test_config_entry_not_ready(
 
     assert len(mock_tedee.get_locks.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_not_ready_no_locks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+) -> None:
+    """Test a dedicated error is reported when the bridge has no locks."""
+    mock_tedee.locks_dict = {}
+    mock_tedee.get_locks.side_effect = TedeeClientException("No lock found")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "no_locks"
+
+
+async def test_auth_failed_during_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+) -> None:
+    """Test an auth error during setup starts reauth immediately."""
+    mock_tedee.get_local_bridge.side_effect = TedeeLocalAuthException("")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_transient_auth_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a short burst of auth errors after setup does not start reauth."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_tedee.sync.side_effect = TedeeLocalAuthException("")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LOCK_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    mock_tedee.sync.side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LOCK_ENTITY_ID).state != STATE_UNAVAILABLE
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    # The grace period restarts after a successful update
+    mock_tedee.sync.side_effect = TedeeLocalAuthException("")
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_persistent_auth_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test auth errors lasting longer than the grace period start reauth."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_tedee.sync.side_effect = TedeeLocalAuthException("")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    freezer.tick(timedelta(minutes=10, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_cleanup_on_shutdown(
@@ -137,7 +257,9 @@ async def test_lock_device(
     """Ensure the lock device is registered."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(mock_config_entry.domain, "12345")})
+    device = device_registry.async_get_device_by_identifier(
+        (mock_config_entry.domain, "12345"), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot
 
@@ -152,8 +274,9 @@ async def test_bridge_device(
     """Ensure the bridge device is registered."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        {(mock_config_entry.domain, mock_tedee.get_local_bridge.return_value.serial)}
+    device = device_registry.async_get_device_by_identifier(
+        (mock_config_entry.domain, mock_tedee.get_local_bridge.return_value.serial),
+        mock_config_entry.entry_id,
     )
     assert device
     assert device == snapshot

@@ -4,12 +4,13 @@ from advantage_air import advantage_air
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
+from .helpers import get_system_id
 from .services import async_setup_services
 
 PLATFORMS = [
@@ -34,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AdvantageAirDataConfigEntry
-) -> bool:
+) -> None:
     """Set up Advantage Air config."""
     ip_address = entry.data[CONF_IP_ADDRESS]
     port = entry.data[CONF_PORT]
@@ -50,13 +51,23 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Register the system device so child devices can resolve it as their
+    # via_device parent regardless of platform setup order.
+    system = coordinator.data["system"]
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, get_system_id(system))},
+        manufacturer="Advantage Air",
+        model=system["sysType"],
+        name=system["name"],
+        sw_version=system["myAppRev"],
+    )
 
-    return True
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AdvantageAirDataConfigEntry
-) -> bool:
+) -> None:
     """Unload Advantage Air Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

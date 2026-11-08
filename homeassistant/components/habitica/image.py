@@ -1,14 +1,14 @@
 """Image platform for Habitica integration."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from habiticalib import Avatar, ContentData, extract_avatar
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -93,6 +93,8 @@ class HabiticaImage(HabiticaBase, ImageEntity):
             assert self.user
         self._avatar = extract_avatar(self.user)
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Check if equipped gear and other things have changed.
 
@@ -106,6 +108,7 @@ class HabiticaImage(HabiticaBase, ImageEntity):
 
         return super()._handle_coordinator_update()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return cached bytes, otherwise generate new avatar."""
         if not self._cache and self._avatar:
@@ -154,6 +157,8 @@ class HabiticaPartyImage(HabiticaPartyBase, ImageEntity):
         self._attr_image_url = self.image_url
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -165,6 +170,7 @@ class HabiticaPartyImage(HabiticaPartyBase, ImageEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def image_url(self) -> str | None:
         """Return URL of image."""
         return (
@@ -173,6 +179,7 @@ class HabiticaPartyImage(HabiticaPartyBase, ImageEntity):
             else None
         )
 
+    @override
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url.
 

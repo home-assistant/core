@@ -1,6 +1,6 @@
 """The tests for the rmvtransport platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
@@ -76,7 +76,7 @@ def get_departures_mock():
                 "number": 12,
                 "trainId": "1123456",
                 "direction": "Frankfurt (Main) Hugo-Junkers-Straße/Schleife",
-                "departure_time": datetime.datetime(2018, 8, 6, 14, 21),
+                "departure_time": dt.datetime(2018, 8, 6, 14, 21),
                 "minutes": 7,
                 "delay": 3,
                 "stops": [
@@ -98,7 +98,7 @@ def get_departures_mock():
                 "number": 21,
                 "trainId": "1234567",
                 "direction": "Frankfurt (Main) Hugo-Junkers-Straße/Schleife",
-                "departure_time": datetime.datetime(2018, 8, 6, 14, 22),
+                "departure_time": dt.datetime(2018, 8, 6, 14, 22),
                 "minutes": 8,
                 "delay": 1,
                 "stops": [
@@ -114,7 +114,7 @@ def get_departures_mock():
                 "number": 12,
                 "trainId": "1234568",
                 "direction": "Frankfurt (Main) Hugo-Junkers-Straße/Schleife",
-                "departure_time": datetime.datetime(2018, 8, 6, 14, 25),
+                "departure_time": dt.datetime(2018, 8, 6, 14, 25),
                 "minutes": 11,
                 "delay": 1,
                 "stops": ["Frankfurt (Main) Stadion"],
@@ -127,7 +127,7 @@ def get_departures_mock():
                 "number": 21,
                 "trainId": "1234569",
                 "direction": "Frankfurt (Main) Hugo-Junkers-Straße/Schleife",
-                "departure_time": datetime.datetime(2018, 8, 6, 14, 25),
+                "departure_time": dt.datetime(2018, 8, 6, 14, 25),
                 "minutes": 11,
                 "delay": 1,
                 "stops": [],
@@ -140,7 +140,7 @@ def get_departures_mock():
                 "number": 12,
                 "trainId": "1234570",
                 "direction": "Frankfurt (Main) Hugo-Junkers-Straße/Schleife",
-                "departure_time": datetime.datetime(2018, 8, 6, 14, 25),
+                "departure_time": dt.datetime(2018, 8, 6, 14, 25),
                 "minutes": 11,
                 "delay": 1,
                 "stops": [],
@@ -153,7 +153,7 @@ def get_departures_mock():
                 "number": 21,
                 "trainId": "1234571",
                 "direction": "Frankfurt (Main) Hugo-Junkers-Straße/Schleife",
-                "departure_time": datetime.datetime(2018, 8, 6, 14, 25),
+                "departure_time": dt.datetime(2018, 8, 6, 14, 25),
                 "minutes": 11,
                 "delay": 1,
                 "stops": [],
@@ -166,7 +166,7 @@ def get_departures_mock():
                 "number": 12,
                 "trainId": "1234568",
                 "direction": "Frankfurt (Main) Hugo-Junkers-Straße/Schleife",
-                "departure_time": datetime.datetime(2018, 8, 6, 14, 30),
+                "departure_time": dt.datetime(2018, 8, 6, 14, 30),
                 "minutes": 16,
                 "delay": 0,
                 "stops": ["Frankfurt (Main) Stadion"],
@@ -199,7 +199,7 @@ async def test_rmvtransport_min_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
     assert state.state == "7"
-    assert state.attributes["departure_time"] == datetime.datetime(2018, 8, 6, 14, 21)
+    assert state.attributes["departure_time"] == dt.datetime(2018, 8, 6, 14, 21)
     assert (
         state.attributes["direction"] == "Frankfurt (Main) Hugo-Junkers-Straße/Schleife"
     )
@@ -253,7 +253,7 @@ async def test_rmvtransport_dest_config(hass: HomeAssistant) -> None:
     )
     assert state.attributes["line"] == 12
     assert state.attributes["minutes"] == 16
-    assert state.attributes["departure_time"] == datetime.datetime(2018, 8, 6, 14, 30)
+    assert state.attributes["departure_time"] == dt.datetime(2018, 8, 6, 14, 30)
 
 
 async def test_rmvtransport_dest_only_config(hass: HomeAssistant) -> None:
@@ -272,7 +272,7 @@ async def test_rmvtransport_dest_only_config(hass: HomeAssistant) -> None:
     )
     assert state.attributes["line"] == 12
     assert state.attributes["minutes"] == 11
-    assert state.attributes["departure_time"] == datetime.datetime(2018, 8, 6, 14, 25)
+    assert state.attributes["departure_time"] == dt.datetime(2018, 8, 6, 14, 25)
 
 
 async def test_rmvtransport_no_departures(hass: HomeAssistant) -> None:

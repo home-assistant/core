@@ -1,19 +1,15 @@
 """Intents for the vacuum integration."""
 
 import logging
+from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, config_validation as cv, intent
 
-from . import (
-    DOMAIN,
-    SERVICE_CLEAN_AREA,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
-    VacuumEntityFeature,
-)
+from . import DOMAIN, VacuumEntityFeature
+from .const import VacuumService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +25,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_VACUUM_START,
             DOMAIN,
-            SERVICE_START,
+            VacuumService.START,
             description="Starts a vacuum",
             required_domains={DOMAIN},
             platforms={DOMAIN},
@@ -41,7 +37,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         intent.ServiceIntentHandler(
             INTENT_VACUUM_RETURN_TO_BASE,
             DOMAIN,
-            SERVICE_RETURN_TO_BASE,
+            VacuumService.RETURN_TO_BASE,
             description="Returns a vacuum to base",
             required_domains={DOMAIN},
             platforms={DOMAIN},
@@ -63,15 +59,17 @@ class CleanAreaIntentHandler(intent.IntentHandler):
     description = "Tells a vacuum to clean a specific area"
 
     @property
+    @override
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         return {
-            vol.Required("area"): cv.string,
-            vol.Optional("name"): cv.string,
-            vol.Optional("preferred_area_id"): cv.string,
-            vol.Optional("preferred_floor_id"): cv.string,
+            probatio.Required("area"): cv.string,
+            probatio.Optional("name"): cv.string,
+            probatio.Optional("preferred_area_id"): cv.string,
+            probatio.Optional("preferred_floor_id"): cv.string,
         }
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -155,7 +153,7 @@ class CleanAreaIntentHandler(intent.IntentHandler):
         try:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_CLEAN_AREA,
+                VacuumService.CLEAN_AREA,
                 {
                     "entity_id": entity_ids,
                     "cleaning_area_id": area_ids,
@@ -166,12 +164,12 @@ class CleanAreaIntentHandler(intent.IntentHandler):
         except Exception:
             _LOGGER.exception(
                 "Failed to call %s for areas: %s with vacuums: %s",
-                SERVICE_CLEAN_AREA,
+                VacuumService.CLEAN_AREA,
                 area_ids,
                 entity_ids,
             )
             raise intent.IntentHandleError(
-                f"Failed to call {SERVICE_CLEAN_AREA} for areas: {area_ids}"
+                f"Failed to call {VacuumService.CLEAN_AREA} for areas: {area_ids}"
                 f" with vacuums: {entity_ids}"
             ) from None
 

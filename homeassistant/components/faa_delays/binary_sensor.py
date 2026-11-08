@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from faadelays import Airport
 
@@ -15,8 +15,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FAAConfigEntry, FAADataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FAAConfigEntry, FAADataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -122,11 +122,13 @@ class FAABinarySensor(CoordinatorEntity[FAADataUpdateCoordinator], BinarySensorE
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the status of the sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return attributes for sensor."""
         return self.entity_description.extra_state_attributes_fn(self.coordinator.data)

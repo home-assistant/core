@@ -1,8 +1,14 @@
 {
   "entity": {
     "button": {
+      "build_cache_prune": {
+        "default": "mdi:delete-sweep"
+      },
       "kill_container": {
         "default": "mdi:cog-stop"
+      },
+      "networks_prune": {
+        "default": "mdi:lan-disconnect"
       },
       "pause_container": {
         "default": "mdi:pause-circle"
@@ -17,6 +23,11 @@
         "default": "mdi:delete-sweep"
       }
     },
+    "event": {
+      "docker_event": {
+        "default": "mdi:docker"
+      }
+    },
     "sensor": {
       "api_version": {
         "default": "mdi:api"
@@ -29,6 +40,15 @@
       },
       "container_disk_usage_total_size": {
         "default": "mdi:harddisk"
+      },
+      "container_health_state": {
+        "default": "mdi:heart-pulse"
+      },
+      "container_restart_count": {
+        "default": "mdi:restart"
+      },
+      "container_started_at": {
+        "default": "mdi:clock-start"
       },
       "container_state": {
         "default": "mdi:state-machine"
@@ -57,11 +77,17 @@
       "image": {
         "default": "mdi:docker"
       },
+      "image_created": {
+        "default": "mdi:calendar-clock"
+      },
       "image_disk_usage_reclaimable": {
         "default": "mdi:file-restore"
       },
       "image_disk_usage_total_size": {
         "default": "mdi:harddisk"
+      },
+      "image_version": {
+        "default": "mdi:tag-outline"
       },
       "images_count": {
         "default": "mdi:image-multiple"
@@ -116,6 +142,9 @@
     }
   },
   "services": {
+    "prune_build_cache": {
+      "service": "mdi:delete-sweep"
+    },
     "prune_images": {
       "service": "mdi:delete-sweep"
     },

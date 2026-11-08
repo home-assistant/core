@@ -1,10 +1,10 @@
 """Config flow for the Honeywell String Lights integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from rf_protocols import RadioFrequencyCommand
 from rf_protocols.codes.honeywell.string_lights import CODES
-import voluptuous as vol
 
 from homeassistant.components.radio_frequency import async_get_transmitters
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -18,7 +18,9 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Honeywell String Lights."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -50,14 +52,14 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title="Honeywell String Lights",
-                data={CONF_TRANSMITTER: entity_entry.id},
+                data={CONF_TRANSMITTER: entity_entry.entity_id},
             )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_TRANSMITTER): selector.EntitySelector(
+                    probatio.Required(CONF_TRANSMITTER): selector.EntitySelector(
                         selector.EntitySelectorConfig(include_entities=transmitters),
                     ),
                 }

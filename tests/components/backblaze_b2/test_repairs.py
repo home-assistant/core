@@ -9,7 +9,9 @@ from b2sdk.v2.exception import (
     Unauthorized,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.backblaze_b2 import DOMAIN
 from homeassistant.components.backblaze_b2.repairs import (
     async_check_for_repair_issues,
     async_create_fix_flow,
@@ -18,19 +20,18 @@ from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_entry():
     """Create a mock config entry with runtime data."""
-    entry = MockConfigEntry(domain="backblaze_b2", data={"bucket": "test"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"bucket": "test"})
     entry.runtime_data = Mock()
     return entry
 
 
 async def test_unauthorized_triggers_reauth(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_entry: MockConfigEntry,
 ) -> None:
     """Test that Unauthorized exception triggers reauth flow."""
@@ -41,7 +42,7 @@ async def test_unauthorized_triggers_reauth(
         await async_check_for_repair_issues(hass, mock_entry)
 
     mock_reauth.assert_called_once_with(hass)
-    assert len(ir.async_get(hass).issues) == 0
+    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize(
@@ -54,17 +55,27 @@ async def test_unauthorized_triggers_reauth(
 )
 async def test_repair_issue_creation(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_entry: MockConfigEntry,
     exception: Exception,
     expected_issues: int,
 ) -> None:
     """Test repair issue creation for different exception types."""
+    mock_entry.add_to_hass(hass)
     mock_entry.runtime_data.api.account_info.get_allowed.side_effect = exception
     with patch.object(mock_entry, "async_start_reauth") as mock_reauth:
         await async_check_for_repair_issues(hass, mock_entry)
 
     mock_reauth.assert_not_called()
-    assert len(ir.async_get(hass).issues) == expected_issues
+    assert len(issue_registry.issues) == expected_issues
+    assert all(
+        issue.config_entry_id == mock_entry.entry_id
+        for issue in issue_registry.issues.values()
+    )
+
+    await hass.config_entries.async_remove(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
 
 
 async def test_async_create_fix_flow(hass: HomeAssistant) -> None:

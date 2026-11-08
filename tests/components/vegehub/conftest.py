@@ -5,7 +5,9 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
+from homeassistant.components.vegehub import DOMAIN
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -14,8 +16,6 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 TEST_IP = "192.168.0.100"
 TEST_UNIQUE_ID = "aabbccddeeff"
@@ -68,7 +68,7 @@ def mock_vegehub() -> Generator[Any]:
 async def fixture_mocked_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock VegeHub config entry."""
     return MockConfigEntry(
-        domain="vegehub",
+        domain=DOMAIN,
         data={
             CONF_MAC: TEST_SIMPLE_MAC,
             CONF_IP_ADDRESS: TEST_IP,

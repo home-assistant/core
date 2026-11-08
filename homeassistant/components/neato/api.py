@@ -1,13 +1,15 @@
 """API for Neato Botvac bound to Home Assistant OAuth."""
 
 from asyncio import run_coroutine_threadsafe
-from typing import Any
+from typing import Any, override
 
 import pybotvac
 
-from homeassistant import config_entries, core
+from homeassistant import core
 from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .hub import NeatoConfigEntry
 
 
 class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
@@ -16,7 +18,7 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
     def __init__(
         self,
         hass: core.HomeAssistant,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: NeatoConfigEntry,
         implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
     ) -> None:
         """Initialize Neato Botvac Auth."""
@@ -43,10 +45,12 @@ class NeatoImplementation(AuthImplementation):
     """
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"client_secret": self.client_secret}
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize.
 

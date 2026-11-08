@@ -1,6 +1,6 @@
 """Support for Epion API."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -8,12 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfPressure,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfPressure, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,7 +21,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         key="co2",
         suggested_display_precision=0,
     ),
@@ -40,7 +35,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         key="humidity",
         suggested_display_precision=1,
     ),
@@ -96,6 +91,7 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the sensor.
 
@@ -105,6 +101,7 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
         return self.device.get(self.entity_description.key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the device that provides this sensor data."""
         return super().available and self._epion_device_id in self.coordinator.data

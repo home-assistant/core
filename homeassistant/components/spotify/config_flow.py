@@ -2,11 +2,15 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from spotifyaio import SpotifyClient, SpotifyForbiddenError
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,15 +27,18 @@ class SpotifyFlowHandler(
     VERSION = 1
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": ",".join(SPOTIFY_SCOPES)}
+        return {"scope": ",".join(SPOTIFY_SCOPES), "show_dialog": "true"}
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for Spotify."""
         spotify = SpotifyClient(async_get_clientsession(self.hass))
@@ -46,7 +53,7 @@ class SpotifyFlowHandler(
             self.logger.exception("Error while connecting to Spotify")
             return self.async_abort(reason="connection_error")
 
-        name = current_user.display_name
+        name = current_user.display_name or current_user.user_id
 
         await self.async_set_unique_id(current_user.user_id)
 
@@ -55,6 +62,14 @@ class SpotifyFlowHandler(
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), title=name, data=data
             )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                title=name,
+                data={**data, CONF_NAME: name},
+            )
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=name, data={**data, CONF_NAME: name})
 
     async def async_step_reauth(
@@ -71,10 +86,22 @@ class SpotifyFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": reauth_entry.data["id"]},
+                description_placeholders={"account": reauth_entry.title},
                 errors={},
             )
 
         return await self.async_step_pick_implementation(
             user_input={"implementation": reauth_entry.data["auth_implementation"]}
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration by re-running the OAuth flow."""
+        return await self.async_step_pick_implementation(
+            user_input={
+                "implementation": self._get_reconfigure_entry().data[
+                    "auth_implementation"
+                ]
+            }
         )

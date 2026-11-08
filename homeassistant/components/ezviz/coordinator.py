@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyezvizapi.client import EzvizClient
 from pyezvizapi.exceptions import (
@@ -25,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 type EzvizConfigEntry = ConfigEntry[EzvizDataUpdateCoordinator]
 
 
-class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
+class EzvizDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching EZVIZ data."""
 
     def __init__(
@@ -49,6 +50,7 @@ class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from EZVIZ."""
         try:

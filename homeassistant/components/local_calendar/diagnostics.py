@@ -1,6 +1,5 @@
 """Provides diagnostics for local calendar."""
 
-import datetime
 from typing import Any
 
 from ical.diagnostics import redact_ics
@@ -18,7 +17,7 @@ async def async_get_config_entry_diagnostics(
     payload: dict[str, Any] = {
         "now": dt_util.now().isoformat(),
         "timezone": str(dt_util.get_default_time_zone()),
-        "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
+        "system_timezone": str(dt_util.naive_now().astimezone().tzinfo),
     }
     store = config_entry.runtime_data
     ics = await store.async_load()

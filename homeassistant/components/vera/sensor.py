@@ -1,12 +1,11 @@
 """Support for Vera sensors."""
 
 from datetime import timedelta
-from typing import cast
+from typing import cast, override
 
 import pyvera as veraApi
 
 from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -60,7 +59,6 @@ class VeraSensor(VeraEntity[veraApi.VeraSensor], SensorEntity):
         self._temperature_units: str | None = None
         self.last_changed_time = None
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
@@ -78,6 +76,7 @@ class VeraSensor(VeraEntity[veraApi.VeraSensor], SensorEntity):
         elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             self._attr_native_unit_of_measurement = UnitOfPower.WATT
 
+    @override
     def update(self) -> None:
         """Update the state."""
         super().update()
@@ -131,6 +130,7 @@ class VeraPowerSensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
         VeraEntity.__init__(self, vera_device, controller_data)
         self._unique_id = f"{self._unique_id}_power"
 
+    @override
     def update(self) -> None:
         """Update the sensor state."""
         super().update()
@@ -152,6 +152,7 @@ class VeraEnergySensor(VeraEntity[veraApi.VeraSwitch], SensorEntity):
         VeraEntity.__init__(self, vera_device, controller_data)
         self._unique_id = f"{self._unique_id}_energy"
 
+    @override
     def update(self) -> None:
         """Update the sensor state."""
         super().update()

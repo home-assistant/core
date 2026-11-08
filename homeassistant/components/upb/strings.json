@@ -11,11 +11,14 @@
     "step": {
       "user": {
         "data": {
-          "address": "Address (see description above)",
-          "file_path": "Path and name of the UPStart UPB export file.",
-          "protocol": "Protocol"
+          "device": "Device",
+          "file_path": "UPStart export file"
         },
-        "description": "Connect a Universal Powerline Bus Powerline Interface Module (UPB PIM). The address string must be in the form 'address[:port]' for 'tcp'. The port is optional and defaults to 2101. Example: '192.168.1.42'. For the serial protocol, the address must be in the form 'tty[:baud]'. The baud is optional and defaults to 4800. Example: '/dev/ttyS1'.",
+        "data_description": {
+          "device": "The serial port or network address of the UPB PIM.",
+          "file_path": "Path and name of the UPStart UPB export file."
+        },
+        "description": "Connect a Universal Powerline Bus Powerline Interface Module (UPB PIM).",
         "title": "Connect to UPB PIM"
       }
     }

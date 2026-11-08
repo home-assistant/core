@@ -2,11 +2,13 @@
 
 import array
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import functools
 import gc
 import logging
 import os
+import pickle
 import re
 import threading
 import time
@@ -14,9 +16,10 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.const import (
@@ -59,8 +62,6 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
-
-from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -1333,6 +1334,111 @@ async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) ->
     assert len(calls) == 1
 
 
+async def test_eventbus_nested_fire_dispatch_order(hass: HomeAssistant) -> None:
+    """Test dispatch order when a listener fires an event synchronously.
+
+    The implementation of event listeners is such that listeners are called
+    in the order they were registered
+
+    Event dispatch is however non-reentrant: an event fired from within a
+    synchronous listener is queued and dispatched after the dispatch of the
+    outer event completes. All listeners therefore observe events in fire
+    order, regardless of their registration position relative to the
+    listener which fires the nested event.
+    """
+    observed_before: list[str] = []
+    observed_after: list[str] = []
+
+    @ha.callback
+    def observer_before(event: ha.Event) -> None:
+        observed_before.append(event.event_type)
+
+    @ha.callback
+    def fire_nested(event: ha.Event) -> None:
+        hass.bus.async_fire("test_nested")
+
+    @ha.callback
+    def observer_after(event: ha.Event) -> None:
+        observed_after.append(event.event_type)
+
+    unsubs = [
+        hass.bus.async_listen("test_outer", observer_before),
+        hass.bus.async_listen("test_nested", observer_before),
+        hass.bus.async_listen("test_outer", fire_nested),
+        hass.bus.async_listen("test_outer", observer_after),
+        hass.bus.async_listen("test_nested", observer_after),
+    ]
+
+    hass.bus.async_fire("test_outer")
+
+    # All listeners observe fire order, regardless of registration position
+    # relative to the nesting listener.
+    assert observed_before == ["test_outer", "test_nested"]
+    assert observed_after == ["test_outer", "test_nested"]
+
+    for unsub in unsubs:
+        unsub()
+
+
+async def test_eventbus_nested_fire_endless_loop_guard(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that event listeners firing events in an endless loop are stopped.
+
+    A listener which unconditionally fires an event it also listens to would
+    keep the dispatch drain loop running forever. Once the per-dispatch queue
+    limit is reached, the bus stops queuing further events and raises in the
+    firing listener; the raise is caught and logged by the per-listener error
+    handling.
+    """
+    calls: list[ha.Event] = []
+
+    @ha.callback
+    def refire(event: ha.Event) -> None:
+        calls.append(event)
+        hass.bus.async_fire("test_loop")
+
+    unsub = hass.bus.async_listen("test_loop", refire)
+
+    with patch.object(ha, "_MAX_QUEUED_EVENT_DISPATCHES", 10):
+        hass.bus.async_fire("test_loop")
+
+    # The top-level dispatch plus 10 queued dispatches; the next fire is
+    # rejected once the queue limit is reached. The firing listener raises,
+    # which the per-listener error handling catches and logs.
+    assert len(calls) == 11
+    assert "Error running job" in caplog.text
+    assert "are likely firing events in an endless loop" in caplog.text
+
+    unsub()
+
+    # The bus remains functional after the aborted dispatch
+    events = async_capture_events(hass, "test_after")
+    hass.bus.async_fire("test_after")
+    assert len(events) == 1
+
+
+async def test_eventbus_fire_raises_when_queue_limit_reached(
+    hass: HomeAssistant,
+) -> None:
+    """Test a nested fire raises once the per-dispatch queue limit is reached.
+
+    A fire issued while an event is being dispatched is queued, but once the
+    limit is reached it is rejected with an error instead of being queued.
+    """
+    # Simulate being in the middle of dispatching with the queue limit reached
+    hass.bus._dispatching = True
+    hass.bus._queued_event_count = ha._MAX_QUEUED_EVENT_DISPATCHES
+    try:
+        with pytest.raises(HomeAssistantError, match="endless loop"):
+            hass.bus.async_fire("test")
+        # The rejected event is not queued
+        assert len(hass.bus._event_queue) == 0
+    finally:
+        hass.bus._dispatching = False
+        hass.bus._queued_event_count = 0
+
+
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
     """Test unsubscribe listener from returned function."""
     calls = []
@@ -1507,6 +1613,17 @@ def test_state_dict_conversion() -> None:
     assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
+def test_state_dict_conversion_keeps_context() -> None:
+    """Test conversion of dict keeps the full context."""
+    context = ha.Context(user_id="user", parent_id="parent", id="id")
+    state = ha.State("domain.hello", "world", context=context)
+
+    restored = ha.State.from_dict(state.as_dict())
+
+    assert restored.context.parent_id == "parent"
+    assert restored.as_dict() == state.as_dict()
+
+
 def test_state_dict_conversion_with_wrong_data() -> None:
     """Test conversion with wrong data."""
     assert ha.State.from_dict(None) is None
@@ -1522,6 +1639,17 @@ def test_state_dict_conversion_with_wrong_data() -> None:
     )
     assert wrong_context is not None
     assert wrong_context.context.id == "123"
+
+
+@pytest.mark.parametrize("protocol", range(2, pickle.HIGHEST_PROTOCOL + 1))
+def test_state_pickle(protocol: int) -> None:
+    """Test a state with attributes survives a pickle round trip."""
+    state = ha.State("domain.hello", "world", {"some": "attr"})
+
+    restored = pickle.loads(pickle.dumps(state, protocol=protocol))  # noqa: S301
+
+    assert type(restored.attributes) is ReadOnlyDict
+    assert restored.as_dict() == state.as_dict()
 
 
 def test_state_repr() -> None:
@@ -2100,7 +2228,7 @@ async def test_service_call_event_contains_original_data(hass: HomeAssistant) ->
     events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(
-        hass, "test", "service", vol.Schema({"number": vol.Coerce(int)})
+        hass, "test", "service", probatio.Schema({"number": probatio.Coerce(int)})
     )
 
     context = ha.Context()
@@ -2218,6 +2346,7 @@ def test_valid_entity_id() -> None:
         "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
+        "light.kitchen\n",
     ):
         assert not ha.valid_entity_id(invalid), invalid
 
@@ -2247,6 +2376,7 @@ def test_valid_domain() -> None:
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light",
+        "light\n",
     ):
         assert not ha.valid_domain(invalid), invalid
 
@@ -3018,6 +3148,13 @@ async def test_get_release_channel(
         assert get_release_channel() == release_channel
 
 
+def test_async_noop() -> None:
+    """Test async_noop is a callback that does nothing."""
+    assert ha.is_callback(ha.async_noop)
+    assert HassJob(ha.async_noop).job_type is ha.HassJobType.Callback
+    assert ha.async_noop() is None
+
+
 def test_is_callback_check_partial() -> None:
     """Test is_callback_check_partial matches HassJob."""
 
@@ -3106,6 +3243,84 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     assert not evt.is_set()
 
 
+async def test_shutdown_job_runs_before_stop(hass: HomeAssistant) -> None:
+    """Test shutdown jobs run before EVENT_HOMEASSISTANT_STOP is fired."""
+    order: list[str] = []
+
+    @callback
+    def stop_listener(event: ha.Event) -> None:
+        order.append("stop_listener")
+
+    async def shutdown_func() -> None:
+        order.append("shutdown_job")
+        assert hass.state is CoreState.running
+        assert "stop_listener" not in order
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_listener)
+    hass.async_add_shutdown_job(HassJob(shutdown_func, "shutdown_job"))
+
+    await hass.async_stop()
+    assert order == ["shutdown_job", "stop_listener"]
+
+
+async def test_startup_job(hass: HomeAssistant) -> None:
+    """Test async_add_startup_job."""
+    evt = asyncio.Event()
+
+    async def startup_func() -> None:
+        # Sleep to ensure core is waiting for the task to finish
+        await asyncio.sleep(0.01)
+        evt.set()
+
+    job = HassJob(startup_func, "startup_job")
+    hass.async_add_startup_job(job)
+    await hass.async_start()
+    assert evt.is_set()
+
+
+async def test_cancel_startup_job(hass: HomeAssistant) -> None:
+    """Test cancelling a job added to async_add_startup_job."""
+    evt = asyncio.Event()
+
+    async def startup_func() -> None:
+        evt.set()
+
+    job = HassJob(startup_func, "startup_job")
+    cancel = hass.async_add_startup_job(job)
+    cancel()
+    await hass.async_start()
+    assert not evt.is_set()
+
+
+async def test_startup_job_runs_after_start_before_started(hass: HomeAssistant) -> None:
+    """Test startup jobs run after START listeners finish and before STARTED is fired."""
+    order: list[str] = []
+
+    async def start_listener(event: ha.Event) -> None:
+        # Yield control to prove startup jobs wait for in-flight START listeners.
+        await asyncio.sleep(0.01)
+        order.append("start_listener")
+
+    @callback
+    def started_listener(event: ha.Event) -> None:
+        order.append("started_listener")
+
+    async def startup_func() -> None:
+        order.append("startup_job")
+        assert hass.state is CoreState.starting
+        assert "started_listener" not in order
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_START, start_listener)
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, started_listener)
+    hass.async_add_startup_job(HassJob(startup_func, "startup_job"))
+
+    hass.set_state(CoreState.not_running)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert order == ["start_listener", "startup_job", "started_listener"]
+
+
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:
     """Test one time listener repr."""
 
@@ -3146,7 +3361,7 @@ async def test_async_run_job_deprecated(
     hass.async_run_job(_test)
     assert (
         "Detected code that calls `async_run_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3162,7 +3377,7 @@ async def test_async_add_job_deprecated(
     hass.async_add_job(_test)
     assert (
         "Detected code that calls `async_add_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3179,7 +3394,7 @@ async def test_async_add_hass_job_deprecated(
     assert (
         "Detected code that calls `async_add_hass_job`,"
         " which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+        "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
         " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text
 
@@ -3346,11 +3561,11 @@ async def test_async_listen_with_run_immediately_deprecated(
         pass
 
     func = getattr(hass.bus, method)
-    func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
-    assert (
-        f"Detected code that calls `{method}` with run_immediately. "
-        "This will stop working in Home Assistant 2025.5"
-    ) in caplog.text
+    with pytest.raises(
+        RuntimeError,
+        match=f"Detected code that calls `{method}` with run_immediately. Please report this issue",
+    ):
+        func(EVENT_HOMEASSISTANT_START, _test, run_immediately=run_immediately)
 
 
 async def test_async_fire_thread_safety(hass: HomeAssistant) -> None:
@@ -3412,11 +3627,84 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
             "Detected code that calls test from a thread other than the event loop, "
             "which may cause Home Assistant to crash or data to corrupt. For more "
             "information, see "
-            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            "https://contributors.home-assistant.io/core/internals/thread-safety/#test"
             ". Please report this issue",
         ),
     ):
         await hass.async_add_executor_job(hass.verify_event_loop_thread, "test")
+
+
+@ha.verify_event_loop_thread("test.function")
+def _decorated_function(hass: HomeAssistant, value: int, *, extra: int) -> int:
+    """Return the sum of the arguments."""
+    return value + extra
+
+
+class _DecoratedMethodOwner:
+    """Hold a reference to hass and a decorated method."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self.hass = hass
+
+    @ha.verify_event_loop_thread("test.method")
+    def decorated(self, value: int, *, extra: int) -> int:
+        """Return the sum of the arguments."""
+        return value + extra
+
+
+class _DecoratedMethodPrivateOwner:
+    """Hold a private reference to hass and a decorated method."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+        self._hass = hass
+
+    @ha.verify_event_loop_thread("test.private_method")
+    def decorated(self, value: int, *, extra: int) -> int:
+        """Return the sum of the arguments."""
+        return value + extra
+
+
+@pytest.mark.parametrize(
+    ("get_target", "what"),
+    [
+        pytest.param(
+            lambda hass: functools.partial(_decorated_function, hass),
+            "test.function",
+            id="hass_argument",
+        ),
+        pytest.param(
+            lambda hass: functools.partial(_decorated_function, hass=hass),
+            "test.function",
+            id="hass_keyword_argument",
+        ),
+        pytest.param(
+            lambda hass: _DecoratedMethodOwner(hass).decorated,
+            "test.method",
+            id="hass_attribute",
+        ),
+        pytest.param(
+            lambda hass: _DecoratedMethodPrivateOwner(hass).decorated,
+            "test.private_method",
+            id="private_hass_attribute",
+        ),
+    ],
+)
+async def test_verify_event_loop_thread_decorator(
+    hass: HomeAssistant,
+    get_target: Callable[[HomeAssistant], Callable[..., int]],
+    what: str,
+) -> None:
+    """Test the verify_event_loop_thread decorator."""
+    target = get_target(hass)
+    assert target(value=1, extra=2) == 3
+
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(f"Detected code that calls {what} from a thread other than"),
+    ):
+        await hass.async_add_executor_job(functools.partial(target, value=1, extra=2))
 
 
 async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:

@@ -7,6 +7,7 @@ from aiohomekit.exceptions import AccessoryDisconnectedError, EncryptionError
 from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakeController, FakePairing
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.homekit_controller.connection import (
     MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE,
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from ..common import Helper, setup_accessories_from_file, setup_test_accessories
-
-from tests.common import async_fire_time_changed
 
 LIGHT_ON = ("lightbulb", "on")
 

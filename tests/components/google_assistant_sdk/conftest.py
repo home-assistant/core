@@ -6,6 +6,7 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -15,8 +16,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.google_assistant_sdk.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 type ComponentSetup = Callable[[], Awaitable[None]]
 

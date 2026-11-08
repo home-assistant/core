@@ -6,8 +6,6 @@ from typing import Final
 ATTR_CID: Final = "cid"
 ATTR_MAC: Final = "macAddr"
 ATTR_MANUFACTURER: Final = "Sony"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_MODEL: Final = "model"
 
 CONF_NICKNAME: Final = "nickname"
 CONF_USE_PSK: Final = "use_psk"

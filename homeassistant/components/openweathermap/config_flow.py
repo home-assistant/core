@@ -1,13 +1,10 @@
 """Config flow for OpenWeatherMap."""
 
-import voluptuous as vol
+from typing import override
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+import probatio
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
@@ -24,6 +21,7 @@ from homeassistant.helpers.selector import (
     LocationSelectorConfig,
 )
 
+from . import OpenweathermapConfigEntry
 from .const import (
     CONFIG_FLOW_VERSION,
     DEFAULT_LANGUAGE,
@@ -35,25 +33,25 @@ from .const import (
 )
 from .utils import build_data_and_options, validate_api_key
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LOCATION): LocationSelector(
+        probatio.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False)
         ),
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+        probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+        probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
-        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
     }
 )
 
@@ -65,12 +63,14 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OpenweathermapConfigEntry,
     ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
         return OpenWeatherMapOptionsFlow()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}

@@ -4,10 +4,10 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import os
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.const import CONF_ID
@@ -105,7 +105,7 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
 
         try:
             self.key_schema(config_key)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             return self.json_message(f"Key malformed: {err}", HTTPStatus.BAD_REQUEST)
 
         hass = request.app[KEY_HASS]
@@ -118,7 +118,7 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
             else:
                 # We either have a data_schema or a data_validator, ignore mypy
                 self.data_schema(data)  # type: ignore[misc]
-        except (vol.Invalid, HomeAssistantError) as err:
+        except (probatio.Invalid, HomeAssistantError) as err:
             return self.json_message(
                 f"Message malformed: {err}", HTTPStatus.BAD_REQUEST
             )
@@ -169,16 +169,19 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
 class EditKeyBasedConfigView(BaseEditConfigView[dict[str, dict[str, Any]]]):
     """Configure a list of entries."""
 
+    @override
     def _empty_config(self) -> dict[str, Any]:
         """Return an empty config."""
         return {}
 
+    @override
     def _get_value(
         self, hass: HomeAssistant, data: dict[str, dict[str, Any]], config_key: str
     ) -> dict[str, Any] | None:
         """Get value."""
         return data.get(config_key)
 
+    @override
     def _write_value(
         self,
         hass: HomeAssistant,
@@ -189,6 +192,7 @@ class EditKeyBasedConfigView(BaseEditConfigView[dict[str, dict[str, Any]]]):
         """Set value."""
         data.setdefault(config_key, {}).update(new_value)
 
+    @override
     def _delete_value(
         self, hass: HomeAssistant, data: dict[str, dict[str, Any]], config_key: str
     ) -> dict[str, Any]:
@@ -199,16 +203,19 @@ class EditKeyBasedConfigView(BaseEditConfigView[dict[str, dict[str, Any]]]):
 class EditIdBasedConfigView(BaseEditConfigView[list[dict[str, Any]]]):
     """Configure key based config entries."""
 
+    @override
     def _empty_config(self) -> list[Any]:
         """Return an empty config."""
         return []
 
+    @override
     def _get_value(
         self, hass: HomeAssistant, data: list[dict[str, Any]], config_key: str
     ) -> dict[str, Any] | None:
         """Get value."""
         return next((val for val in data if val.get(CONF_ID) == config_key), None)
 
+    @override
     def _write_value(
         self,
         hass: HomeAssistant,
@@ -223,6 +230,7 @@ class EditIdBasedConfigView(BaseEditConfigView[list[dict[str, Any]]]):
 
         value.update(new_value)
 
+    @override
     def _delete_value(
         self, hass: HomeAssistant, data: list[dict[str, Any]], config_key: str
     ) -> None:

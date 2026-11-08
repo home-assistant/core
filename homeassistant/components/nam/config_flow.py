@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
@@ -12,7 +12,7 @@ from nettigo_air_monitor import (
     ConnectionOptions,
     NettigoAirMonitor,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -25,13 +25,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-AUTH_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+AUTH_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 
 async def async_get_nam(
-    hass: HomeAssistant, host: str, data: dict[str, Any]
+    hass: HomeAssistant, host: str, data: Mapping[str, Any]
 ) -> NettigoAirMonitor:
     """Get NAM client."""
     websession = async_get_clientsession(hass)
@@ -48,6 +51,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
     auth_enabled: bool = False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -79,7 +83,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -112,6 +116,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=AUTH_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -133,6 +138,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm_discovery()
 
         await self.async_set_unique_id(format_mac(nam.mac))
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         return await self.async_step_confirm_discovery()
 
@@ -150,8 +156,6 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.auth_enabled is True:
             return await self.async_step_credentials()
-
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
@@ -176,17 +180,15 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await async_get_nam(self.hass, self.host, user_input)
-            except (
-                ApiError,
-                AuthFailedError,
-                ClientConnectorError,
-                TimeoutError,
-            ):
-                return self.async_abort(reason="reauth_unsuccessful")
-
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data={**user_input, CONF_HOST: self.host}
-            )
+            except AuthFailedError:
+                errors["base"] = "invalid_auth"
+            except ApiError, ClientConnectorError, TimeoutError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data={**user_input, CONF_HOST: self.host},
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -205,7 +207,11 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                nam = await async_get_nam(self.hass, user_input[CONF_HOST], {})
+                nam = await async_get_nam(
+                    self.hass, user_input[CONF_HOST], reconfigure_entry.data
+                )
+            except AuthFailedError:
+                errors["base"] = "invalid_auth"
             except ApiError, ClientConnectorError, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:
@@ -218,9 +224,9 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self.host): str,
+                    probatio.Required(CONF_HOST, default=self.host): str,
                 }
             ),
             description_placeholders={"device_name": reconfigure_entry.title},

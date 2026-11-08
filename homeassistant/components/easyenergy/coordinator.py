@@ -1,7 +1,7 @@
 """The Coordinator for easyEnergy."""
 
 from datetime import timedelta
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from easyenergy import (
     EasyEnergy,
@@ -47,6 +47,7 @@ class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
 
         self.easyenergy = EasyEnergy(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> EasyEnergyData:
         """Fetch data from easyEnergy."""
         today = dt_util.now().date()

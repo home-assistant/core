@@ -1,6 +1,7 @@
 """Support for Ridwell calendars."""
 
-import datetime
+import datetime as dt
+from typing import override
 
 from aioridwell.model import PickupCategory, RidwellAccount, RidwellPickupEvent
 
@@ -57,7 +58,7 @@ def async_get_calendar_event_from_pickup_event(
         summary=summary,
         description=f"Pickup types: {pickup_type_string}",
         start=pickup_event.pickup_date,
-        end=pickup_event.pickup_date + datetime.timedelta(days=1),
+        end=pickup_event.pickup_date + dt.timedelta(days=1),
     )
 
 
@@ -91,17 +92,19 @@ class RidwellCalendar(RidwellEntity, CalendarEntity):
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return async_get_calendar_event_from_pickup_event(
             self.next_pickup_event, self.coordinator.config_entry
         )
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         return [

@@ -2,18 +2,19 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import avea
 from bleak.exc import BleakError
-import voluptuous as vol
+import probatio
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_ADDRESS
 
 from .const import AVEA_SERVICE_UUID, DOMAIN, UNKNOWN_NAME
 
@@ -66,6 +67,15 @@ def _is_avea_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
     return AVEA_SERVICE_UUID in discovery_info.service_uuids
 
 
+def _discovery_label(discovery_info: BluetoothServiceInfoBleak) -> str:
+    """Return a label for a discovered Avea bulb."""
+    if (
+        name := _normalize_name(discovery_info.name)
+    ) and name != discovery_info.address:
+        return f"{name} ({discovery_info.address})"
+    return discovery_info.address
+
+
 class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Avea."""
 
@@ -74,6 +84,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -113,13 +124,13 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": self._discovery_info.name or self._discovery_info.address
         }
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -150,6 +161,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
+            await bluetooth.async_request_active_scan(self.hass)
             current_addresses = self._async_current_ids(include_ignore=False)
             for discovery in async_discovered_service_info(self.hass):
                 if (
@@ -165,23 +177,19 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovery_info:
             disc = self._discovery_info
-            label = f"{disc.name or disc.address} ({disc.address})"
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS, default=disc.address): vol.In(
-                        {disc.address: label}
+                    probatio.Required(CONF_ADDRESS, default=disc.address): probatio.In(
+                        {disc.address: _discovery_label(disc)}
                     )
                 }
             )
         else:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
-                            service_info.address: (
-                                f"{service_info.name or service_info.address}"
-                                f" ({service_info.address})"
-                            )
+                            service_info.address: _discovery_label(service_info)
                             for service_info in self._discovered_devices.values()
                         }
                     ),
@@ -192,18 +200,6 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-        address = import_data[CONF_ADDRESS]
-
-        await self.async_set_unique_id(address, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_data.get(CONF_NAME, address),
-            data={CONF_ADDRESS: address},
         )
 
 

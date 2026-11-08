@@ -2,6 +2,8 @@
 
 from datetime import time
 
+from pytest_homeassistant.common import setup_test_component_platform
+
 from homeassistant.components.time import DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import MockTimeEntity
-
-from tests.common import setup_test_component_platform
 
 
 async def test_date(hass: HomeAssistant) -> None:

@@ -13,14 +13,13 @@ from pysmartthings import (
     DeviceStatus,
 )
 from pysmartthings.models import HealthStatus
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, load_fixture
 
 DEVICE_FIXTURES = [
     "aq_sensor_3_ikea",
@@ -36,8 +35,10 @@ DEVICE_FIXTURES = [
     "da_ac_cac_01001",
     "multipurpose_sensor",
     "contact_sensor",
+    "copper_water_meter_v03",
     "base_electric_meter",
     "smart_plug",
+    "fibaro_dimmer_2",
     "vd_stv_2017_k",
     "c2c_arlo_pro_3_switch",
     "yale_push_button_deadbolt_lock",

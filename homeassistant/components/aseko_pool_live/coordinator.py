@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioaseko import Aseko, Unit
 
@@ -35,6 +36,7 @@ class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Unit]]):
             update_interval=timedelta(minutes=2),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Unit]:
         """Fetch unit data."""
         units = await self._aseko.get_units()

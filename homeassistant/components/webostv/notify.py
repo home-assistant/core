@@ -1,17 +1,17 @@
 """Support for LG webOS TV notification service."""
 
-from typing import Any
+from typing import Any, override
 
 from aiowebostv import WebOsClient
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_ICON
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import WebOsTvConfigEntry
-from .const import DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import ATTR_ICON, DOMAIN, WEBOSTV_EXCEPTIONS
+from .coordinator import WebOsTvConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -41,9 +41,10 @@ class LgWebOSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._entry = entry
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the tv."""
-        client: WebOsClient = self._entry.runtime_data
+        client: WebOsClient = self._entry.runtime_data.client
         data = kwargs[ATTR_DATA]
         icon_path = data.get(ATTR_ICON) if data else None
 

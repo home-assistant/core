@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from opower import (
     Account,
@@ -97,6 +97,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         # is needed for _insert_statistics.
         self.async_add_listener(_dummy_listener)
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[str, OpowerData]:
@@ -107,12 +108,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # assume previous session has expired and re-login.
             await self.api.async_login()
         except (InvalidAuth, MfaChallenge) as err:
-            _LOGGER.error("Error during login: %s", err)
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
-            _LOGGER.error("Error during login: %s", err)
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise UpdateFailed(f"Error during login: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         try:
             accounts = await self.api.async_get_accounts()
@@ -263,7 +265,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
-                start = cost_reads[0].start_time
+                start = min(
+                    cost_reads[0].start_time,
+                    dt_util.utc_from_timestamp(
+                        last_stat[consumption_statistic_id][0]["start"]
+                    ),
+                )
                 _LOGGER.debug("Getting statistics at: %s", start)
                 # In the common case there should be a previous statistic at start time
                 # so we only need to fetch one statistic. If there isn't any, fetch all.
@@ -328,8 +335,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
                 cost_state = max(0, cost_read.provided_cost)
                 compensation_state = max(0, -cost_read.provided_cost)
-                consumption_state = max(0, cost_read.consumption)
-                return_state = max(0, -cost_read.consumption)
+                # Prefer the meter's own import and export registers when the
+                # utility publishes them. Splitting the net consumption on its
+                # sign undercounts both directions on a net-metered site,
+                # because an interval that is net-export can still contain real
+                # import (and vice versa).
+                if cost_read.imported is not None and cost_read.exported is not None:
+                    consumption_state = cost_read.imported
+                    return_state = cost_read.exported
+                else:
+                    consumption_state = max(0, cost_read.consumption)
+                    return_state = max(0, -cost_read.consumption)
 
                 cost_sum += cost_state
                 compensation_sum += compensation_state
@@ -490,7 +506,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            issue_id=f"return_to_grid_migration_{utility_account_id}",
+            issue_id=f"return_to_grid_migration_{self.config_entry.entry_id}_{utility_account_id}",
+            config_entry_id=self.config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="return_to_grid_migration",
@@ -544,47 +561,44 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         else:
             start = datetime.fromtimestamp(start_time, tz=tz) - timedelta(days=30)
         end = dt_util.now(tz)
-        _LOGGER.debug("Getting monthly cost reads: %s - %s", start, end)
-        try:
-            cost_reads = await self.api.async_get_cost_reads(
-                account, AggregateType.BILL, start, end
-            )
-        except ApiException as err:
-            _LOGGER.error("Error getting monthly cost reads: %s", err)
-            raise
-        _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
-        if account.read_resolution is ReadResolution.BILLING:
-            return cost_reads
+        cost_reads: list[CostRead] = []
+        if start_time is None or account.read_resolution is ReadResolution.BILLING:
+            _LOGGER.debug("Getting monthly cost reads: %s - %s", start, end)
+            try:
+                cost_reads = await self.api.async_get_cost_reads(
+                    account, AggregateType.BILL, start, end
+                )
+            except ApiException as err:
+                _LOGGER.error("Error getting monthly cost reads: %s", err)
+                raise
+            _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
+            if account.read_resolution is ReadResolution.BILLING:
+                return cost_reads
 
-        if start_time is None:
-            start = end - timedelta(days=3 * 365)
-        else:
-            if cost_reads:
-                start = cost_reads[0].start_time
-            assert start
-            start = max(start, end - timedelta(days=3 * 365))
-        _LOGGER.debug("Getting daily cost reads: %s - %s", start, end)
-        try:
-            daily_cost_reads = await self.api.async_get_cost_reads(
-                account, AggregateType.DAY, start, end
-            )
-        except ApiException as err:
-            _LOGGER.error("Error getting daily cost reads: %s", err)
-            raise
-        _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
-        _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
-        if account.read_resolution is ReadResolution.DAY:
-            return cost_reads
+        if start_time is None or account.read_resolution is ReadResolution.DAY:
+            daily_start = end - timedelta(days=3 * 365)
+            if start is not None:
+                daily_start = max(start, daily_start)
+            _LOGGER.debug("Getting daily cost reads: %s - %s", daily_start, end)
+            try:
+                daily_cost_reads = await self.api.async_get_cost_reads(
+                    account, AggregateType.DAY, daily_start, end
+                )
+            except ApiException as err:
+                _LOGGER.error("Error getting daily cost reads: %s", err)
+                raise
+            _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
+            _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
+            if account.read_resolution is ReadResolution.DAY:
+                return cost_reads
 
-        if start_time is None:
-            start = end - timedelta(days=2 * 30)
-        else:
-            assert start
-            start = max(start, end - timedelta(days=2 * 30))
-        _LOGGER.debug("Getting hourly cost reads: %s - %s", start, end)
+        hourly_start = end - timedelta(days=2 * 30)
+        if start is not None:
+            hourly_start = max(start, hourly_start)
+        _LOGGER.debug("Getting hourly cost reads: %s - %s", hourly_start, end)
         try:
             hourly_cost_reads = await self.api.async_get_cost_reads(
-                account, AggregateType.HOUR, start, end
+                account, AggregateType.HOUR, hourly_start, end
             )
         except ApiException as err:
             _LOGGER.error("Error getting hourly cost reads: %s", err)

@@ -1,14 +1,15 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
+from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, PLATFORMS
@@ -30,18 +31,19 @@ _STATIC_UNIQUE_ID_MIGRATIONS: tuple[tuple[Platform, str, str], ...] = (
 )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.version < 2:
         api = await get_api(hass, entry.data[CONF_HOST])
         try:
             await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
             freebox_config = await api.system.get_config()
-        except HttpRequestError:
-            _LOGGER.warning(
-                "Unable to migrate Freebox entry to version 2: cannot reach the router"
-            )
-            return False
+        except HttpRequestError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": entry.data[CONF_HOST]},
+            ) from err
         finally:
             await api.close()
 
@@ -75,26 +77,48 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
 
         hass.config_entries.async_update_entry(entry, version=2)
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> None:
     """Set up Freebox entry."""
     api = await get_api(hass, entry.data[CONF_HOST])
+    # The library raises its own error only for a request the router refused,
+    # and leaves everything the transport can throw to aiohttp
     try:
         await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
-    except HttpRequestError as err:
+        freebox_config = await api.system.get_config()
+        router = FreeboxRouter(hass, entry, api, freebox_config)
+        await router.update_all()
+    except (HttpRequestError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    freebox_config = await api.system.get_config()
+    update_failed = False
 
-    router = FreeboxRouter(hass, entry, api, freebox_config)
-    await router.update_all()
+    async def _async_update_all(now: datetime) -> None:
+        """Update the router, logging a failure once until it recovers."""
+        nonlocal update_failed
+        try:
+            await router.update_all()
+        except (HttpRequestError, ClientError, TimeoutError) as err:
+            if not update_failed:
+                _LOGGER.warning("Error updating the Freebox: %r", err)
+            update_failed = True
+            return
+
+        if update_failed:
+            _LOGGER.info("Updating the Freebox works again")
+            update_failed = False
+
     entry.async_on_unload(
-        async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
+        async_track_time_interval(hass, _async_update_all, SCAN_INTERVAL)
     )
 
     entry.runtime_data = router
+
+    # Register the router device up front so child devices (home devices, disks)
+    # can deterministically resolve it as their via_device on any platform.
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=router.device_info
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -107,9 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
     )
     entry.async_on_unload(router.close)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

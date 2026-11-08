@@ -1,17 +1,18 @@
 """Support for image which integrates with other components."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
     ENTITY_ID_FORMAT,
     ImageEntity,
+    ImageEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -21,39 +22,44 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator
-from .const import CONF_PICTURE
+from . import validators as tcv
+from .const import CONF_PICTURE, DEFAULT_NAMES
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Image"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.IMAGE]
 
 GET_IMAGE_TIMEOUT = 10
 
-IMAGE_YAML_SCHEMA = vol.Schema(
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=ImageEntityStateAttribute
+)
+
+IMAGE_YAML_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(
-    make_template_entity_common_modern_attributes_schema(
-        IMAGE_DOMAIN, DEFAULT_NAME
+    make_template_entity_common_schema(
+        IMAGE_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
 
-IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
+IMAGE_CONFIG_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
@@ -96,6 +102,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -135,6 +142,7 @@ class StateImageEntity(TemplateEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:
@@ -159,6 +167,7 @@ class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:

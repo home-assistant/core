@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import Device
@@ -11,6 +11,7 @@ from pymelcloud.atw_device import Zone
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -38,11 +39,13 @@ type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordi
 class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
     """Per-device coordinator for MELCloud data updates."""
 
+    config_entry: MelCloudConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         device: Device,
-        config_entry: ConfigEntry,
+        config_entry: MelCloudConfigEntry,
     ) -> None:
         """Initialize the per-device coordinator."""
         self.device = device
@@ -110,9 +113,14 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             manufacturer="Mitsubishi Electric",
             model="ATW zone device",
             name=f"{self.device.name} {zone.name}",
-            via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, f"{dev.mac}-{dev.serial}"),
+                config_entry_id=self.config_entry.entry_id,
+            ),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data for this specific device from MELCloud."""
         try:
@@ -131,15 +139,12 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             if ex.status in (401, 403):
                 raise ConfigEntryAuthFailed from ex
             if ex.status == 429:
-                _LOGGER.error(
-                    "MELCloud rate limit exceeded for %s. Your account may be "
-                    "temporarily blocked",
-                    self.device.name,
-                )
                 # Rate limit - mark unavailable immediately
                 self.device_available = False
                 raise UpdateFailed(
-                    f"Rate limit exceeded for {self.device.name}"
+                    translation_domain=DOMAIN,
+                    translation_key="device_rate_limit_exceeded",
+                    translation_placeholders={"device": self.device.name},
                 ) from ex
             # Other HTTP errors - use retry logic
             self._handle_failure(f"Error updating {self.device.name}: {ex}", ex)
@@ -168,12 +173,6 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             self.update_interval = timedelta(seconds=RETRY_INTERVAL_SECONDS)
         else:
             # Threshold reached - mark unavailable and restore normal interval
-            _LOGGER.warning(
-                "%s (attempt %d/%d, marking unavailable)",
-                message,
-                self._consecutive_failures,
-                MAX_CONSECUTIVE_FAILURES,
-            )
             self.device_available = False
             self.update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
             raise UpdateFailed(message) from exception

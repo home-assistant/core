@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from sensor_state_data import DeviceKey
 from victron_ble_ha_parser import Keys, Units
@@ -19,10 +19,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -33,6 +33,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+
+from . import VictronBLEConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -348,6 +350,13 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    Keys.OUTPUT_CURRENT: VictronBLESensorEntityDescription(
+        key=Keys.OUTPUT_CURRENT,
+        translation_key=Keys.OUTPUT_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     Keys.REMAINING_MINUTES: VictronBLESensorEntityDescription(
         key=Keys.REMAINING_MINUTES,
         translation_key=Keys.REMAINING_MINUTES,
@@ -408,6 +417,27 @@ SENSOR_DESCRIPTIONS = {
     Keys.AC_CURRENT: VictronBLESensorEntityDescription(
         key=Keys.AC_CURRENT,
         translation_key=Keys.AC_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.AC_APPARENT_POWER: VictronBLESensorEntityDescription(
+        key=Keys.AC_APPARENT_POWER,
+        translation_key=Keys.AC_APPARENT_POWER,
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.AC_VOLTAGE: VictronBLESensorEntityDescription(
+        key=Keys.AC_VOLTAGE,
+        translation_key=Keys.AC_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.INPUT_CURRENT: VictronBLESensorEntityDescription(
+        key=Keys.INPUT_CURRENT,
+        translation_key=Keys.INPUT_CURRENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -508,7 +538,7 @@ def sensor_update_to_bluetooth_data_update(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VictronBLEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Victron BLE sensor."""
@@ -519,7 +549,11 @@ async def async_setup_entry(
             VictronBLESensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(
+            processor, VictronBLESensorEntityDescription
+        )
+    )
 
 
 class VictronBLESensorEntity(PassiveBluetoothProcessorEntity, SensorEntity):
@@ -528,6 +562,7 @@ class VictronBLESensorEntity(PassiveBluetoothProcessorEntity, SensorEntity):
     entity_description: VictronBLESensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
         value = self.processor.entity_data.get(self.entity_key)

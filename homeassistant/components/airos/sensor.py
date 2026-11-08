@@ -3,7 +3,9 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
+from airos.airos8 import AirOS8Data
 from airos.data import (
     AirOSDataBaseClass,
     DerivedWirelessMode,
@@ -29,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import AirOS8Data, AirOSConfigEntry, AirOSDataUpdateCoordinator
+from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,6 +208,7 @@ class AirOSSensor(AirOSEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -7,10 +7,10 @@ import enum
 import logging
 import os
 import pathlib
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 from webrtc_models import RTCConfiguration, RTCIceServer
 import yarl
 
@@ -19,7 +19,6 @@ from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
 from .const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     BASE_PLATFORMS,
     CONF_ALLOWLIST_EXTERNAL_DIRS,
     CONF_ALLOWLIST_EXTERNAL_URLS,
@@ -49,7 +48,9 @@ from .const import (
     CONF_UNIT_SYSTEM,
     CONF_URL,
     CONF_USERNAME,
+    DEFAULT_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
+    KEY_DATA_LOGGING_DISABLED_REASON,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     UnitOfLength,
     __version__,
@@ -59,7 +60,7 @@ from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
 from .helpers.storage import Store
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import Undefined
 from .util import dt as dt_util, location
 from .util.hass_dict import HassKey
 from .util.package import is_docker_env
@@ -110,7 +111,7 @@ def _no_duplicate_auth_provider(
     for config in configs:
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Duplicate auth provider {config[CONF_TYPE]} found. "
                 "Please add unique IDs "
                 "if you want to have the same auth provider twice"
@@ -133,7 +134,7 @@ def _no_duplicate_auth_mfa_module(
     for config in configs:
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 f"Duplicate mfa module {config[CONF_TYPE]} found. "
                 "Please add unique IDs "
                 "if you want to have the same mfa module twice"
@@ -156,29 +157,30 @@ def _filter_bad_internal_external_urls(conf: dict) -> dict:
 
 
 # Schema for all packages element
-_PACKAGES_CONFIG_SCHEMA = vol.Schema({cv.string: vol.Any(dict, list)})
+_PACKAGES_CONFIG_SCHEMA = probatio.Schema({cv.string: probatio.Any(dict, list)})
 
 # Schema for individual package definition
-_PACKAGE_DEFINITION_SCHEMA = vol.Schema({cv.string: vol.Any(dict, list, None)})
-
-_CUSTOMIZE_DICT_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-        vol.Optional(ATTR_HIDDEN): cv.boolean,
-        vol.Optional(ATTR_ASSUMED_STATE): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+_PACKAGE_DEFINITION_SCHEMA = probatio.Schema(
+    {cv.string: probatio.Any(dict, list, None)}
 )
 
-_CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
+_CUSTOMIZE_DICT_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CUSTOMIZE, default={}): vol.Schema(
+        probatio.Optional(ATTR_FRIENDLY_NAME): cv.string,
+        probatio.Optional(ATTR_ASSUMED_STATE): cv.boolean,
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+_CUSTOMIZE_CONFIG_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(CONF_CUSTOMIZE, default={}): probatio.Schema(
             {cv.entity_id: _CUSTOMIZE_DICT_SCHEMA}
         ),
-        vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}): vol.Schema(
+        probatio.Optional(CONF_CUSTOMIZE_DOMAIN, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_DICT_SCHEMA}
         ),
-        vol.Optional(CONF_CUSTOMIZE_GLOB, default={}): vol.Schema(
+        probatio.Optional(CONF_CUSTOMIZE_GLOB, default={}): probatio.Schema(
             {cv.string: _CUSTOMIZE_DICT_SCHEMA}
         ),
     }
@@ -241,55 +243,55 @@ def _raise_issue_if_no_country(hass: HomeAssistant, country: str | None) -> None
 def _validate_currency(data: Any) -> Any:
     try:
         return cv.currency(data)
-    except vol.InInvalid:
-        with suppress(vol.InInvalid):
+    except probatio.InInvalid:
+        with suppress(probatio.InInvalid):
             return cv.historic_currency(data)
         raise
 
 
 def validate_stun_or_turn_url(value: Any) -> str:
-    """Validate an URL."""
+    """Validate a URL."""
     url_in = str(value)
     url = urlparse(url_in)
 
     if url.scheme not in ("stun", "stuns", "turn", "turns"):
-        raise vol.Invalid("invalid url")
+        raise probatio.Invalid("invalid url")
     return url_in
 
 
-CORE_CONFIG_SCHEMA = vol.All(
+CORE_CONFIG_SCHEMA = probatio.All(
     _CUSTOMIZE_CONFIG_SCHEMA.extend(
         {
-            CONF_NAME: vol.Coerce(str),
+            CONF_NAME: probatio.Coerce(str),
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
-            CONF_ELEVATION: vol.Coerce(int),
+            CONF_ELEVATION: probatio.Coerce(int),
             CONF_RADIUS: cv.positive_int,
-            vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            CONF_UNIT_SYSTEM: vol.Any(
+            probatio.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+            CONF_UNIT_SYSTEM: probatio.Any(
                 _CONF_UNIT_SYSTEM_METRIC,
                 _CONF_UNIT_SYSTEM_US_CUSTOMARY,
                 _CONF_UNIT_SYSTEM_IMPERIAL,
             ),
             CONF_TIME_ZONE: cv.time_zone,
-            vol.Optional(CONF_INTERNAL_URL): cv.url,
-            vol.Optional(CONF_EXTERNAL_URL): cv.url,
-            vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]
+            probatio.Optional(CONF_INTERNAL_URL): cv.url,
+            probatio.Optional(CONF_EXTERNAL_URL): cv.url,
+            probatio.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): probatio.All(
+                probatio.EnsureList(), [probatio.IsDir()]
             ),
-            vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]
+            probatio.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): probatio.All(
+                probatio.EnsureList(), [probatio.IsDir()]
             ),
-            vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(
-                cv.ensure_list, [cv.url]
+            probatio.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): probatio.All(
+                probatio.EnsureList(), [cv.url]
             ),
-            vol.Optional(CONF_PACKAGES, default={}): _PACKAGES_CONFIG_SCHEMA,
-            vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
-                cv.ensure_list,
+            probatio.Optional(CONF_PACKAGES, default={}): _PACKAGES_CONFIG_SCHEMA,
+            probatio.Optional(CONF_AUTH_PROVIDERS): probatio.All(
+                probatio.EnsureList(),
                 [
                     auth_providers.AUTH_PROVIDER_SCHEMA.extend(
                         {
-                            CONF_TYPE: vol.NotIn(
+                            CONF_TYPE: probatio.NotIn(
                                 ["insecure_example"],
                                 (
                                     "The insecure_example auth provider"
@@ -301,12 +303,12 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_provider,
             ),
-            vol.Optional(CONF_AUTH_MFA_MODULES): vol.All(
-                cv.ensure_list,
+            probatio.Optional(CONF_AUTH_MFA_MODULES): probatio.All(
+                probatio.EnsureList(),
                 [
                     auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
                         {
-                            CONF_TYPE: vol.NotIn(
+                            CONF_TYPE: probatio.NotIn(
                                 ["insecure_example"],
                                 "The insecure_example mfa module is for testing only.",
                             )
@@ -315,24 +317,29 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
-            vol.Remove(CONF_LEGACY_TEMPLATES): cv.boolean,
-            vol.Optional(CONF_CURRENCY): _validate_currency,
-            vol.Optional(CONF_COUNTRY): cv.country,
-            vol.Optional(CONF_LANGUAGE): cv.language,
-            vol.Optional(CONF_DEBUG): cv.boolean,
-            vol.Optional(CONF_WEBRTC): vol.Schema(
+            probatio.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(
+                probatio.IsDir()
+            ),
+            probatio.Remove(CONF_LEGACY_TEMPLATES): cv.boolean,
+            probatio.Optional(CONF_CURRENCY): _validate_currency,
+            probatio.Optional(CONF_COUNTRY): cv.country,
+            probatio.Optional(CONF_LANGUAGE): cv.language,
+            probatio.Optional(CONF_DEBUG): cv.boolean,
+            probatio.Optional(CONF_WEBRTC): probatio.Schema(
                 {
-                    vol.Required(CONF_ICE_SERVERS): vol.All(
-                        cv.ensure_list,
+                    probatio.Required(CONF_ICE_SERVERS): probatio.All(
+                        probatio.EnsureList(),
                         [
-                            vol.Schema(
+                            probatio.Schema(
                                 {
-                                    vol.Required(CONF_URL): vol.All(
-                                        cv.ensure_list, [validate_stun_or_turn_url]
+                                    probatio.Required(CONF_URL): probatio.All(
+                                        probatio.EnsureList(),
+                                        [validate_stun_or_turn_url],
                                     ),
-                                    vol.Optional(CONF_USERNAME): cv.string,
-                                    vol.Optional(CONF_CREDENTIAL): cv.string,
+                                    probatio.Optional(CONF_USERNAME): cv.string,
+                                    probatio.Optional(
+                                        probatio.Secret(CONF_CREDENTIAL)
+                                    ): cv.string,
                                 }
                             )
                         ],
@@ -350,7 +357,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     This method is a coroutine.
     """
-    # CORE_CONFIG_SCHEMA is not async safe since it uses vol.IsDir
+    # CORE_CONFIG_SCHEMA is not async safe since it uses probatio.IsDir
     # so we need to run it in an executor job.
     config = await hass.async_add_executor_job(CORE_CONFIG_SCHEMA, config)
 
@@ -448,7 +455,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
         )
 
-    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # Init whitelist external URL list - make sure to add / to every URL that doesn't
     # already have it so that we can properly test "path ownership"
     if CONF_ALLOWLIST_EXTERNAL_URLS in config:
         hac.allowlist_external_urls.update(
@@ -467,7 +474,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
         try:
             pkg_cust = _CUSTOMIZE_CONFIG_SCHEMA(pkg_cust)
-        except vol.Invalid:
+        except probatio.Invalid:
             _LOGGER.warning("Package %s contains invalid customize", name)
             continue
 
@@ -504,6 +511,7 @@ class _ComponentSet(set[str]):
         self._top_level_components = top_level_components
         self._all_components = all_components
 
+    @override
     def add(self, value: str) -> None:
         """Add a component to the store."""
         if "." not in value:
@@ -515,6 +523,7 @@ class _ComponentSet(set[str]):
                 self._all_components.add(platform)
         return super().add(value)
 
+    @override
     def remove(self, value: str) -> None:
         """Remove a component from the store."""
         if "." in value:
@@ -522,6 +531,7 @@ class _ComponentSet(set[str]):
         self._top_level_components.remove(value)
         return super().remove(value)
 
+    @override
     def discard(self, value: object) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
@@ -534,8 +544,6 @@ class Config:
 
     def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
-        from .components.zone import DEFAULT_RADIUS  # noqa: PLC0415
-
         self.hass = hass
 
         self.latitude: float = 0
@@ -695,6 +703,11 @@ class Config:
             "language": self.language,
             "latitude": self.latitude,
             "location_name": self.location_name,
+            "logging": {
+                "log_file_disabled_reason": self.hass.data.get(
+                    KEY_DATA_LOGGING_DISABLED_REASON
+                ),
+            },
             "longitude": self.longitude,
             "radius": self.radius,
             "recovery_mode": self.recovery_mode,
@@ -718,11 +731,11 @@ class Config:
     async def _async_update(
         self,
         *,
-        country: str | UndefinedType | None = UNDEFINED,
+        country: str | Undefined | None = Undefined,
         currency: str | None = None,
         elevation: int | None = None,
-        external_url: str | UndefinedType | None = UNDEFINED,
-        internal_url: str | UndefinedType | None = UNDEFINED,
+        external_url: str | Undefined | None = Undefined,
+        internal_url: str | Undefined | None = Undefined,
         language: str | None = None,
         latitude: float | None = None,
         location_name: str | None = None,
@@ -734,15 +747,15 @@ class Config:
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
-        if country is not UNDEFINED:
+        if country is not Undefined:
             self.country = country
         if currency is not None:
             self.currency = currency
         if elevation is not None:
             self.elevation = elevation
-        if external_url is not UNDEFINED:
+        if external_url is not Undefined:
             self.external_url = external_url
-        if internal_url is not UNDEFINED:
+        if internal_url is not Undefined:
             self.internal_url = internal_url
         if language is not None:
             self.language = language
@@ -798,8 +811,8 @@ class Config:
             unit_system=data.get("unit_system_v2"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
-            external_url=data.get("external_url", UNDEFINED),
-            internal_url=data.get("internal_url", UNDEFINED),
+            external_url=data.get("external_url", Undefined),
+            internal_url=data.get("internal_url", Undefined),
             currency=data.get("currency"),
             country=data.get("country"),
             language=data.get("language"),
@@ -841,6 +854,7 @@ class Config:
             )
             self._original_unit_system: str | None = None  # from old store 1.1
 
+        @override
         async def _async_migrate_func(
             self,
             old_major_version: int,
@@ -848,9 +862,6 @@ class Config:
             old_data: dict[str, Any],
         ) -> dict[str, Any]:
             """Migrate to the new version."""
-
-            from .components.zone import DEFAULT_RADIUS  # noqa: PLC0415
-
             data = old_data
             if old_major_version == 1 and old_minor_version < 2:
                 # In 1.2, we remove support for "imperial", replaced by "us_customary"
@@ -866,9 +877,7 @@ class Config:
                 try:
                     owner = await self.hass.auth.async_get_owner()
                     if owner is not None:
-                        from .components.frontend import (  # noqa: PLC0415
-                            storage as frontend_store,
-                        )
+                        from .components.frontend import storage as frontend_store  # noqa: PLC0415
 
                         owner_store = await frontend_store.async_user_store(
                             self.hass, owner.id
@@ -878,7 +887,7 @@ class Config:
                             "language" in owner_store.data
                             and "language" in owner_store.data["language"]
                         ):
-                            with suppress(vol.InInvalid):
+                            with suppress(probatio.InInvalid):
                                 data["language"] = cv.language(
                                     owner_store.data["language"]["language"]
                                 )
@@ -893,6 +902,7 @@ class Config:
                 raise NotImplementedError
             return data
 
+        @override
         async def async_save(self, data: dict[str, Any]) -> None:
             if self._original_unit_system:
                 data["unit_system"] = self._original_unit_system

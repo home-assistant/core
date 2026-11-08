@@ -3,6 +3,7 @@
 from typing import Any
 
 from holidays import OPTIONAL
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.workday.const import (
     DEFAULT_EXCLUDES,
@@ -14,8 +15,6 @@ from homeassistant.components.workday.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-
 
 async def init_integration(
     hass: HomeAssistant,
@@ -23,7 +22,13 @@ async def init_integration(
     entry_id: str = "1",
     source: str = SOURCE_USER,
 ) -> MockConfigEntry:
-    """Set up the Scrape integration in Home Assistant."""
+    """Set up the Workday integration in Home Assistant."""
+
+    name = DEFAULT_NAME
+    if config.get("country"):
+        name += f" {config['country']}"
+    if config.get("province"):
+        name += f" {config['province']}"
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -31,6 +36,8 @@ async def init_integration(
         data={},
         options=config,
         entry_id=entry_id,
+        title=name,
+        minor_version=2,
     )
 
     config_entry.add_to_hass(hass)
@@ -42,7 +49,6 @@ async def init_integration(
 
 
 TEST_CONFIG_NO_COUNTRY = {
-    "name": DEFAULT_NAME,
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
     "workdays": DEFAULT_WORKDAYS,
@@ -50,15 +56,13 @@ TEST_CONFIG_NO_COUNTRY = {
     "remove_holidays": [],
 }
 TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY = {
-    "name": DEFAULT_NAME,
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
     "workdays": DEFAULT_WORKDAYS,
-    "add_holidays": ["2020-02-24"],
+    "add_holidays": ["2020-02-24", "2022-04-15"],
     "remove_holidays": [],
 }
 TEST_CONFIG_WITH_PROVINCE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -69,7 +73,6 @@ TEST_CONFIG_WITH_PROVINCE = {
     "language": "de",
 }
 TEST_CONFIG_NO_LANGUAGE_CONFIGURED = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -79,7 +82,6 @@ TEST_CONFIG_NO_LANGUAGE_CONFIGURED = {
     "remove_holidays": [],
 }
 TEST_CONFIG_INCORRECT_COUNTRY = {
-    "name": DEFAULT_NAME,
     "country": "ZZ",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
@@ -89,7 +91,6 @@ TEST_CONFIG_INCORRECT_COUNTRY = {
     "language": "de",
 }
 TEST_CONFIG_INCORRECT_PROVINCE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "ZZ",
     "excludes": DEFAULT_EXCLUDES,
@@ -100,7 +101,6 @@ TEST_CONFIG_INCORRECT_PROVINCE = {
     "language": "de",
 }
 TEST_CONFIG_NO_PROVINCE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
@@ -110,7 +110,6 @@ TEST_CONFIG_NO_PROVINCE = {
     "language": "de",
 }
 TEST_CONFIG_WITH_STATE = {
-    "name": DEFAULT_NAME,
     "country": "US",
     "province": "CA",
     "excludes": DEFAULT_EXCLUDES,
@@ -121,7 +120,6 @@ TEST_CONFIG_WITH_STATE = {
     "language": "en_US",
 }
 TEST_CONFIG_NO_STATE = {
-    "name": DEFAULT_NAME,
     "country": "US",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
@@ -131,7 +129,6 @@ TEST_CONFIG_NO_STATE = {
     "language": "en_US",
 }
 TEST_CONFIG_INCLUDE_HOLIDAY = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": ["sat", "sun"],
@@ -142,7 +139,6 @@ TEST_CONFIG_INCLUDE_HOLIDAY = {
     "language": "de",
 }
 TEST_CONFIG_EXAMPLE_1 = {
-    "name": DEFAULT_NAME,
     "country": "US",
     "excludes": ["sat", "sun"],
     "days_offset": DEFAULT_OFFSET,
@@ -152,7 +148,6 @@ TEST_CONFIG_EXAMPLE_1 = {
     "language": "en_US",
 }
 TEST_CONFIG_EXAMPLE_2 = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -163,7 +158,6 @@ TEST_CONFIG_EXAMPLE_2 = {
     "language": "de",
 }
 TEST_CONFIG_REMOVE_HOLIDAY = {
-    "name": DEFAULT_NAME,
     "country": "US",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
@@ -173,7 +167,6 @@ TEST_CONFIG_REMOVE_HOLIDAY = {
     "language": "en_US",
 }
 TEST_CONFIG_REMOVE_NAMED = {
-    "name": DEFAULT_NAME,
     "country": "US",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
@@ -183,7 +176,6 @@ TEST_CONFIG_REMOVE_NAMED = {
     "language": "en_US",
 }
 TEST_CONFIG_REMOVE_DATE = {
-    "name": DEFAULT_NAME,
     "country": "US",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": DEFAULT_OFFSET,
@@ -193,7 +185,6 @@ TEST_CONFIG_REMOVE_DATE = {
     "language": "en_US",
 }
 TEST_CONFIG_TOMORROW = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": 1,
@@ -203,7 +194,6 @@ TEST_CONFIG_TOMORROW = {
     "language": "de",
 }
 TEST_CONFIG_DAY_AFTER_TOMORROW = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": 2,
@@ -213,7 +203,6 @@ TEST_CONFIG_DAY_AFTER_TOMORROW = {
     "language": "de",
 }
 TEST_CONFIG_YESTERDAY = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "excludes": DEFAULT_EXCLUDES,
     "days_offset": -1,
@@ -223,7 +212,6 @@ TEST_CONFIG_YESTERDAY = {
     "language": "de",
 }
 TEST_CONFIG_INCORRECT_ADD_REMOVE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -234,7 +222,6 @@ TEST_CONFIG_INCORRECT_ADD_REMOVE = {
     "language": "de",
 }
 TEST_CONFIG_INCORRECT_ADD_DATE_RANGE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -245,7 +232,6 @@ TEST_CONFIG_INCORRECT_ADD_DATE_RANGE = {
     "language": "de",
 }
 TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -256,7 +242,6 @@ TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE = {
     "language": "de",
 }
 TEST_CONFIG_INCORRECT_ADD_DATE_RANGE_LEN = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -267,7 +252,6 @@ TEST_CONFIG_INCORRECT_ADD_DATE_RANGE_LEN = {
     "language": "de",
 }
 TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -278,7 +262,6 @@ TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN = {
     "language": "de",
 }
 TEST_CONFIG_ADD_REMOVE_DATE_RANGE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -289,7 +272,6 @@ TEST_CONFIG_ADD_REMOVE_DATE_RANGE = {
     "language": "de",
 }
 TEST_LANGUAGE_CHANGE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -300,7 +282,6 @@ TEST_LANGUAGE_CHANGE = {
     "language": "en",
 }
 TEST_LANGUAGE_NO_CHANGE = {
-    "name": DEFAULT_NAME,
     "country": "DE",
     "province": "BW",
     "excludes": DEFAULT_EXCLUDES,
@@ -311,7 +292,6 @@ TEST_LANGUAGE_NO_CHANGE = {
     "language": "de",
 }
 TEST_NO_OPTIONAL_CATEGORY = {
-    "name": DEFAULT_NAME,
     "country": "CH",
     "province": "FR",
     "excludes": DEFAULT_EXCLUDES,
@@ -322,7 +302,6 @@ TEST_NO_OPTIONAL_CATEGORY = {
     "language": "de",
 }
 TEST_OPTIONAL_CATEGORY = {
-    "name": DEFAULT_NAME,
     "country": "CH",
     "province": "FR",
     "excludes": DEFAULT_EXCLUDES,

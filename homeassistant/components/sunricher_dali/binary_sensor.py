@@ -1,5 +1,7 @@
 """Platform for Sunricher DALI binary sensor entities."""
 
+from typing import override
+
 from PySrDaliGateway import CallbackEventType, Device
 from PySrDaliGateway.helper import is_motion_sensor
 from PySrDaliGateway.types import MotionState, MotionStatus
@@ -9,10 +11,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, MANUFACTURER
 from .entity import DaliDeviceEntity
 from .types import DaliCenterConfigEntry
 
@@ -38,8 +38,8 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = []
     for device in devices:
         if is_motion_sensor(device.dev_type):
-            entities.append(SunricherDaliMotionSensor(device))
-            entities.append(SunricherDaliOccupancySensor(device))
+            entities.append(SunricherDaliMotionSensor(hass, device, entry))
+            entities.append(SunricherDaliOccupancySensor(hass, device, entry))
 
     if entities:
         async_add_entities(entities)
@@ -50,19 +50,14 @@ class SunricherDaliMotionSensor(DaliDeviceEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
-    def __init__(self, device: Device) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: Device, entry: DaliCenterConfigEntry
+    ) -> None:
         """Initialize the motion sensor."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(hass, device, entry)
         self._attr_unique_id = f"{device.dev_id}_motion"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.dev_id)},
-            name=device.name,
-            manufacturer=MANUFACTURER,
-            model=device.model,
-            via_device=(DOMAIN, device.gw_sn),
-        )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()
@@ -92,19 +87,14 @@ class SunricherDaliOccupancySensor(DaliDeviceEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
-    def __init__(self, device: Device) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: Device, entry: DaliCenterConfigEntry
+    ) -> None:
         """Initialize the occupancy sensor."""
-        super().__init__(device)
-        self._device = device
+        super().__init__(hass, device, entry)
         self._attr_unique_id = f"{device.dev_id}_occupancy"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.dev_id)},
-            name=device.name,
-            manufacturer=MANUFACTURER,
-            model=device.model,
-            via_device=(DOMAIN, device.gw_sn),
-        )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
         await super().async_added_to_hass()

@@ -2,7 +2,7 @@
 # name: test_sensors[sensor.netgear_lm1200_cell_id]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Cell ID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Cell ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_cell_id',
@@ -15,7 +15,7 @@
 # name: test_sensors[sensor.netgear_lm1200_connection_text]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Connection text',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Connection text',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_connection_text',
@@ -28,7 +28,7 @@
 # name: test_sensors[sensor.netgear_lm1200_connection_type]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Connection type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Connection type',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_connection_type',
@@ -41,7 +41,7 @@
 # name: test_sensors[sensor.netgear_lm1200_current_band]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Current band',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Current band',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_current_band',
@@ -54,8 +54,8 @@
 # name: test_sensors[sensor.netgear_lm1200_radio_quality]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Radio quality',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Radio quality',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_radio_quality',
@@ -68,7 +68,7 @@
 # name: test_sensors[sensor.netgear_lm1200_register_network_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Register network display',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Register network display',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_register_network_display',
@@ -81,9 +81,9 @@
 # name: test_sensors[sensor.netgear_lm1200_rx_level]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Netgear LM1200 Rx level',
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Rx level',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_rx_level',
@@ -96,7 +96,7 @@
 # name: test_sensors[sensor.netgear_lm1200_service_type]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Service type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Service type',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_service_type',
@@ -109,8 +109,8 @@
 # name: test_sensors[sensor.netgear_lm1200_sms]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 SMS',
-      'unit_of_measurement': 'unread',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 SMS',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'unread',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_sms',
@@ -123,8 +123,8 @@
 # name: test_sensors[sensor.netgear_lm1200_sms_total]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 SMS total',
-      'unit_of_measurement': 'messages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 SMS total',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'messages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_sms_total',
@@ -137,9 +137,9 @@
 # name: test_sensors[sensor.netgear_lm1200_tx_level]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Netgear LM1200 Tx level',
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Tx level',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_tx_level',
@@ -152,7 +152,7 @@
 # name: test_sensors[sensor.netgear_lm1200_upstream]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Upstream',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Upstream',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_upstream',
@@ -165,9 +165,9 @@
 # name: test_sensors[sensor.netgear_lm1200_usage]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Netgear LM1200 Usage',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netgear LM1200 Usage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_usage',

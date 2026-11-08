@@ -1,5 +1,7 @@
 """Support for Qingping binary sensors."""
 
+from typing import override
+
 from qingping_ble import (
     BinarySensorDeviceClass as QingpingBinarySensorDeviceClass,
     SensorUpdate,
@@ -21,6 +23,8 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import QingpingConfigEntry
 from .device import device_key_to_bluetooth_entity_key
+
+PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_DESCRIPTIONS = {
     QingpingBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
@@ -98,6 +102,7 @@ class QingpingBluetoothSensorEntity(
     """Representation of a Qingping binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

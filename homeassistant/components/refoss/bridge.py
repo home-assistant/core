@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import _LOGGER, DISPATCH_DEVICE_DISCOVERED
+from .const import DISPATCH_DEVICE_DISCOVERED, LOGGER
 from .coordinator import RefossDataUpdateCoordinator
 
 type RefossConfigEntry = ConfigEntry[DiscoveryService]
@@ -40,7 +40,7 @@ class DiscoveryService(Listener):
         self.coordinators.append(coordo)
         await coordo.async_refresh()
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Discover new device: %s, ip: %s",
             device_info.dev_name,
             device_info.inner_ip,
@@ -51,7 +51,7 @@ class DiscoveryService(Listener):
         """Handle updates in device information, update if ip has changed."""
         for coordinator in self.coordinators:
             if coordinator.device.device_info.mac == device_info.mac:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Update device %s ip to %s",
                     device_info.dev_name,
                     device_info.inner_ip,

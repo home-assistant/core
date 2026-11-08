@@ -2,12 +2,13 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
 from deebot_client.events import (
     CachedMapInfoEvent,
+    CleanCountEvent,
     FanSpeedEvent,
     RoomsEvent,
     StateEvent,
@@ -28,8 +29,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import EcovacsConfigEntry
 from .const import DOMAIN
+from .controller import EcovacsConfigEntry
 from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
@@ -74,6 +75,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         | VacuumEntityFeature.FAN_SPEED
     )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         self._event_listeners.append(
@@ -105,6 +107,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return the state of the vacuum cleaner."""
         if self.error is not None:
@@ -125,11 +128,13 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         return None
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self.device.fan_speed  # type: ignore[no-any-return]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes of this vacuum."""
         data: dict[str, Any] = {}
@@ -137,36 +142,43 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
         return data
 
+    @override
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
 
         self.device.run(sucks.Charge())
 
+    @override
     def start(self, **kwargs: Any) -> None:
         """Turn the vacuum on and start cleaning."""
 
         self.device.run(sucks.Clean())
 
+    @override
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
 
         self.device.run(sucks.Stop())
 
+    @override
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
 
         self.device.run(sucks.Spot())
 
+    @override
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
 
         self.device.run(sucks.PlaySound())
 
+    @override
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if self.state == VacuumActivity.CLEANING:
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
+    @override
     def send_command(
         self,
         command: str,
@@ -226,6 +238,7 @@ class EcovacsVacuum(
 
         self._room_event: RoomsEvent | None = None
         self._maps: dict[str, Map] = {}
+        self._clean_count = 1
 
         if fan_speed := self._capability.fan_speed:
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
@@ -236,6 +249,7 @@ class EcovacsVacuum(
         if self._capability.map and self._capability.clean.action.area:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
@@ -254,6 +268,13 @@ class EcovacsVacuum(
 
             self._subscribe(self._capability.fan_speed.event, on_fan_speed)
 
+        if clean_count := self._capability.clean.count:
+
+            async def on_clean_count(event: CleanCountEvent) -> None:
+                self._clean_count = event.count
+
+            self._subscribe(clean_count.event, on_clean_count)
+
         if map_caps := self._capability.map:
 
             async def on_rooms(event: RoomsEvent) -> None:
@@ -270,6 +291,7 @@ class EcovacsVacuum(
             self._subscribe(map_caps.cached_info.event, on_map_info)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
@@ -296,24 +318,29 @@ class EcovacsVacuum(
             _ATTR_ROOMS: rooms,
         }
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if TYPE_CHECKING:
             assert self._capability.fan_speed
         await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         await self._device.execute_command(self._capability.charge.execute())
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self._clean_command(CleanAction.STOP)
 
+    @override
     async def async_pause(self) -> None:
         """Pause the vacuum cleaner."""
         await self._clean_command(CleanAction.PAUSE)
 
+    @override
     async def async_start(self) -> None:
         """Start the vacuum cleaner."""
         await self._clean_command(CleanAction.START)
@@ -323,10 +350,12 @@ class EcovacsVacuum(
             self._capability.clean.action.command(action)
         )
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         await self._device.execute_command(self._capability.play_sound.execute())
 
+    @override
     async def async_send_command(
         self,
         command: str,
@@ -353,11 +382,10 @@ class EcovacsVacuum(
             if self._capability.clean.action.area is None:
                 info = self._device.device_info
                 name = info.get("nick", info["name"])
-                # pylint: disable-next=home-assistant-exception-translation-key-missing
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="vacuum_send_command_area_not_supported",
-                    translation_placeholders={"name": name},
+                    translation_key="vacuum_send_command_not_supported",
+                    translation_placeholders={"command": command, "name": name},
                 )
 
             if command == "spot_area":
@@ -449,10 +477,12 @@ class EcovacsVacuum(
         )
         return segments
 
+    @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned."""
         return self._get_segments()
 
+    @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean.
 
@@ -503,7 +533,7 @@ class EcovacsVacuum(
             self._capability.clean.action.area(
                 CleanMode.SPOT_AREA,
                 valid_room_ids,
-                1,
+                self._clean_count,
             )
         )
 

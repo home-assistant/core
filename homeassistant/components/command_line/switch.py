@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -104,6 +104,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -145,6 +146,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         )
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._command_state is None
@@ -201,6 +203,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         """
         await self._update_entity_state(dt_util.now())
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if await self._switch(self._command_on) and not self._command_state:
@@ -208,6 +211,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             self.async_write_ha_state()
         await self._update_entity_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:

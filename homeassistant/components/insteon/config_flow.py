@@ -1,7 +1,7 @@
 """Test config flow for Insteon."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyinsteon import async_connect
 
@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -55,6 +55,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     _device_name: str
     discovered_conf: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -129,6 +130,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         self._device_path = discovery_info.device
@@ -140,9 +142,8 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.vid,
             discovery_info.pid,
         )
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Insteon PLM {self._device_name}"
+            "name": f"Insteon PLM {self._device_name}"
         }
         await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
@@ -156,16 +157,17 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm_usb",
-            description_placeholders={CONF_NAME: self._device_name},
+            description_placeholders={"name": self._device_name},
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         self.discovered_conf = {CONF_HOST: discovery_info.ip}
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Insteon Hub {discovery_info.ip}"
+            "name": f"Insteon Hub {discovery_info.ip}"
         }
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         return await self.async_step_user()

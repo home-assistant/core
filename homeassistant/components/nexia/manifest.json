@@ -1,8 +1,10 @@
 {
   "domain": "nexia",
   "name": "Nexia/American Standard/Trane",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "xl857-*",
@@ -13,5 +15,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["nexia"],
-  "requirements": ["nexia==2.11.1"]
+  "requirements": ["nexia==2.13.0"]
 }

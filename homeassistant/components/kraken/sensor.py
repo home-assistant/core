@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -219,7 +220,11 @@ class KrakenSensor(
             tracked_asset_pair
         ]
         self._target_asset = tracked_asset_pair.split("/")[1]
-        if "number_of" not in description.key:
+        if description.key in ("volume_today", "volume_last_24h"):
+            self._attr_native_unit_of_measurement = tracked_asset_pair.split(
+                "/", maxsplit=1
+            )[0]
+        elif "number_of" not in description.key:
             self._attr_native_unit_of_measurement = self._target_asset
         self._device_name = create_device_name(tracked_asset_pair)
         self._attr_unique_id = "_".join(
@@ -240,11 +245,14 @@ class KrakenSensor(
             name=self._device_name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._update_internal_state()
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._update_internal_state()
         super()._handle_coordinator_update()
@@ -268,6 +276,7 @@ class KrakenSensor(
                     self._available = False
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon."""
         if self._target_asset == "EUR":
@@ -283,6 +292,7 @@ class KrakenSensor(
         return "mdi:cash"
 
     @property
+    @override
     def available(self) -> bool:
         """Could the api be accessed during the last update call."""
         return self._available and self.coordinator.last_update_success

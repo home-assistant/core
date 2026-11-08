@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 from zoneinfo import ZoneInfo
 
 from starlink_grpc import (
@@ -19,6 +20,7 @@ from starlink_grpc import (
     history_stats,
     location_data,
     reboot,
+    set_gps_config,
     set_sleep_config,
     set_stow_state,
     status_data,
@@ -83,6 +85,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             location, sleep, status, obstruction, alert, usage, consumption
         )
 
+    @override
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
             try:
@@ -105,6 +108,16 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(reboot, self.channel_context)
+            except GrpcError as exc:
+                raise HomeAssistantError from exc
+
+    async def async_set_gps_enabled(self, enable: bool) -> None:
+        """Set whether Starlink system uses GPS for position data."""
+        async with asyncio.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(
+                    set_gps_config, enable, self.channel_context
+                )
             except GrpcError as exc:
                 raise HomeAssistantError from exc
 

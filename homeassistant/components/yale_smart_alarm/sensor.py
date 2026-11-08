@@ -1,6 +1,6 @@
 """Sensors for Yale Alarm."""
 
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import UnitOfTemperature
@@ -34,6 +34,7 @@ class YaleTemperatureSensor(YaleEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> StateType:
         "Return native value."
         return cast(float, self.coordinator.data["temp_map"][self._attr_unique_id])

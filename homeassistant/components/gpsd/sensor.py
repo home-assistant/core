@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from gps3.agps3threaded import AGPS3mechanism
 
@@ -15,8 +16,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_ELEVATION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TIME,
     EntityCategory,
@@ -35,6 +34,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLIMB = "climb"
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 ATTR_SPEED = "speed"
 ATTR_TOTAL_SATELLITES = "total_satellites"
 ATTR_USED_SATELLITES = "used_satellites"
@@ -193,6 +194,7 @@ class GpsdSensor(SensorEntity):
         self.agps_thread = agps_thread
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of GPSD."""
         value = self.entity_description.value_fn(self.agps_thread)

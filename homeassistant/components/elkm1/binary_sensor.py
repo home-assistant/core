@@ -1,6 +1,6 @@
 """Support for control of ElkM1 binary sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from elkm1_lib.const import ZoneLogicalStatus, ZoneType
 from elkm1_lib.elements import Element
@@ -10,8 +10,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity
+from .models import ElkM1ConfigEntry
 
 
 async def async_setup_entry(
@@ -47,6 +47,7 @@ class ElkBinarySensor(ElkAttachedEntity, BinarySensorEntity):
     _element: Zone
     _attr_entity_registry_enabled_default = False
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         # Zone in NORMAL state is OFF; any other state is ON
         self._attr_is_on = bool(

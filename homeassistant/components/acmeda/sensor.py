@@ -1,15 +1,17 @@
 """Support for Acmeda Roller Blind Batteries."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AcmedaConfigEntry
 from .const import ACMEDA_HUB_UPDATE
 from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
+from .hub import AcmedaConfigEntry
 
 
 async def async_setup_entry(
@@ -44,6 +46,7 @@ class AcmedaBattery(AcmedaEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the device."""
         return self.roller.battery  # type: ignore[no-any-return]

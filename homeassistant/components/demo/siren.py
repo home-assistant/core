@@ -1,6 +1,6 @@
 """Demo platform that offers a fake siren device."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -53,11 +53,13 @@ class DemoSiren(SirenEntity):
             self._attr_supported_features |= SirenEntityFeature.DURATION
         self._attr_available_tones = available_tones
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         self._attr_is_on = False

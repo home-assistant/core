@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from melnor_bluetooth.device import Valve
 
@@ -12,7 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
+from .coordinator import MelnorConfigEntry
 from .entity import MelnorZoneEntity, get_entities_for_valves
 
 
@@ -58,20 +58,13 @@ class MelnorZoneTime(MelnorZoneEntity, TimeEntity):
 
     entity_description: MelnorZoneTimeEntityDescription
 
-    def __init__(
-        self,
-        coordinator: MelnorDataUpdateCoordinator,
-        entity_description: MelnorZoneTimeEntityDescription,
-        valve: Valve,
-    ) -> None:
-        """Initialize a number for a melnor device."""
-        super().__init__(coordinator, entity_description, valve)
-
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the current value."""
         return self.entity_description.state_fn(self._valve)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the current value."""
         await self.entity_description.set_time_fn(self._valve, value)

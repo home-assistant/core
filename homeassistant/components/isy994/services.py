@@ -1,48 +1,54 @@
 """ISY Services and Commands."""
 
+from enum import StrEnum
 from typing import Any
 
+import probatio
 from pyisy.constants import COMMAND_FRIENDLY_NAME
-import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_CODE,
-    CONF_COMMAND,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.service import entity_service_call
+from homeassistant.helpers.service import (
+    async_register_platform_entity_service,
+    entity_service_call,
+)
 from homeassistant.helpers.typing import VolDictType
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .models import IsyConfigEntry
 
-# Common Services for All Platforms:
-SERVICE_SEND_PROGRAM_COMMAND = "send_program_command"
 
-# Entity specific methods (valid for most Groups/ISY Scenes, Lights, Switches, Fans)
-SERVICE_SEND_RAW_NODE_COMMAND = "send_raw_node_command"
-SERVICE_SEND_NODE_COMMAND = "send_node_command"
-SERVICE_GET_ZWAVE_PARAMETER = "get_zwave_parameter"
-SERVICE_SET_ZWAVE_PARAMETER = "set_zwave_parameter"
-SERVICE_RENAME_NODE = "rename_node"
+class ISYService(StrEnum):
+    """Store keys for Universal Devices ISY/IoX services."""
 
-# Services valid only for Z-Wave Locks
-SERVICE_SET_ZWAVE_LOCK_USER_CODE = "set_zwave_lock_user_code"
-SERVICE_DELETE_ZWAVE_LOCK_USER_CODE = "delete_zwave_lock_user_code"
+    SEND_RAW_NODE_COMMAND = "send_raw_node_command"
+    SEND_NODE_COMMAND = "send_node_command"
+    GET_ZWAVE_PARAMETER = "get_zwave_parameter"
+    SET_ZWAVE_PARAMETER = "set_zwave_parameter"
+    SET_ZWAVE_LOCK_USER_CODE = "set_zwave_lock_user_code"
+    DELETE_ZWAVE_LOCK_USER_CODE = "delete_zwave_lock_user_code"
+    RENAME_NODE = "rename_node"
+    SEND_PROGRAM_COMMAND = "send_program_command"
 
-CONF_PARAMETER = "parameter"
-CONF_PARAMETERS = "parameters"
-CONF_USER_NUM = "user_num"
-CONF_VALUE = "value"
-CONF_INIT = "init"
-CONF_ISY = "isy"
-CONF_SIZE = "size"
+
+class ISYServiceArgument(StrEnum):
+    """Store keys for Universal Devices ISY/IoX service arguments."""
+
+    COMMAND = "command"
+    VALUE = "value"
+    PARAMETERS = "parameters"
+    UNIT_OF_MEASUREMENT = "unit_of_measurement"
+    PARAMETER = "parameter"
+    SIZE = "size"
+    USER_NUM = "user_num"
+    CODE = "code"
+    NAME = "name"
+    ADDRESS = "address"
+    ISY = "isy"
+
 
 VALID_NODE_COMMANDS = [
     "beep",
@@ -76,49 +82,63 @@ def valid_isy_commands(value: Any) -> str:
     if value in COMMAND_FRIENDLY_NAME:
         assert isinstance(value, str)
         return value
-    raise vol.Invalid("Invalid ISY Command.")
+    raise probatio.Invalid("Invalid ISY Command.")
 
 
 SCHEMA_GROUP = "name-address"
 
 SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA = {
-    vol.Required(CONF_COMMAND): vol.All(cv.string, valid_isy_commands),
-    vol.Optional(CONF_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 255)),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(vol.Coerce(int), vol.Range(0, 120)),
-    vol.Optional(CONF_PARAMETERS, default={}): {cv.string: cv.string},
+    probatio.Required(ISYServiceArgument.COMMAND): probatio.All(
+        cv.string, valid_isy_commands
+    ),
+    probatio.Optional(ISYServiceArgument.VALUE): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 255)
+    ),
+    probatio.Optional(ISYServiceArgument.UNIT_OF_MEASUREMENT): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, 120)
+    ),
+    probatio.Optional(ISYServiceArgument.PARAMETERS, default={}): {
+        cv.string: cv.string
+    },
 }
 
 SERVICE_SEND_NODE_COMMAND_SCHEMA = {
-    vol.Required(CONF_COMMAND): vol.In(VALID_NODE_COMMANDS)
+    probatio.Required(ISYServiceArgument.COMMAND): probatio.In(VALID_NODE_COMMANDS)
 }
 
-SERVICE_RENAME_NODE_SCHEMA = {vol.Required(CONF_NAME): cv.string}
+SERVICE_RENAME_NODE_SCHEMA = {probatio.Required(ISYServiceArgument.NAME): cv.string}
 
-SERVICE_GET_ZWAVE_PARAMETER_SCHEMA = {vol.Required(CONF_PARAMETER): vol.Coerce(int)}
+SERVICE_GET_ZWAVE_PARAMETER_SCHEMA = {
+    probatio.Required(ISYServiceArgument.PARAMETER): probatio.Coerce(int)
+}
 
 SERVICE_SET_ZWAVE_PARAMETER_SCHEMA = {
-    vol.Required(CONF_PARAMETER): vol.Coerce(int),
-    vol.Required(CONF_VALUE): vol.Coerce(int),
-    vol.Required(CONF_SIZE): vol.All(vol.Coerce(int), vol.In(VALID_PARAMETER_SIZES)),
+    probatio.Required(ISYServiceArgument.PARAMETER): probatio.Coerce(int),
+    probatio.Required(ISYServiceArgument.VALUE): probatio.Coerce(int),
+    probatio.Required(ISYServiceArgument.SIZE): probatio.All(
+        probatio.Coerce(int), probatio.In(VALID_PARAMETER_SIZES)
+    ),
 }
 
 SERVICE_SET_USER_CODE_SCHEMA: VolDictType = {
-    vol.Required(CONF_USER_NUM): vol.Coerce(int),
-    vol.Required(CONF_CODE): vol.Coerce(int),
+    probatio.Required(ISYServiceArgument.USER_NUM): probatio.Coerce(int),
+    probatio.Required(ISYServiceArgument.CODE): probatio.Coerce(int),
 }
 
 SERVICE_DELETE_USER_CODE_SCHEMA: VolDictType = {
-    vol.Required(CONF_USER_NUM): vol.Coerce(int)
+    probatio.Required(ISYServiceArgument.USER_NUM): probatio.Coerce(int)
 }
 
-SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_ADDRESS, CONF_NAME),
-    vol.Schema(
+SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = probatio.All(
+    probatio.AtLeastOne(ISYServiceArgument.ADDRESS, ISYServiceArgument.NAME),
+    probatio.Schema(
         {
-            vol.Exclusive(CONF_NAME, SCHEMA_GROUP): cv.string,
-            vol.Exclusive(CONF_ADDRESS, SCHEMA_GROUP): cv.string,
-            vol.Required(CONF_COMMAND): vol.In(VALID_PROGRAM_COMMANDS),
-            vol.Optional(CONF_ISY): cv.string,
+            probatio.Exclusive(ISYServiceArgument.NAME, SCHEMA_GROUP): cv.string,
+            probatio.Exclusive(ISYServiceArgument.ADDRESS, SCHEMA_GROUP): cv.string,
+            probatio.Required(ISYServiceArgument.COMMAND): probatio.In(
+                VALID_PROGRAM_COMMANDS
+            ),
+            probatio.Optional(ISYServiceArgument.ISY): cv.string,
         }
     ),
 )
@@ -138,10 +158,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def async_send_program_command_service_handler(service: ServiceCall) -> None:
         """Handle a send program command service call."""
-        address = service.data.get(CONF_ADDRESS)
-        name = service.data.get(CONF_NAME)
-        command = service.data[CONF_COMMAND]
-        isy_name = service.data.get(CONF_ISY)
+        address = service.data.get(ISYServiceArgument.ADDRESS)
+        name = service.data.get(ISYServiceArgument.NAME)
+        command = service.data[ISYServiceArgument.COMMAND]
+        isy_name = service.data.get(ISYServiceArgument.ISY)
 
         config_entry: IsyConfigEntry
         for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
@@ -156,11 +176,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if program is not None:
                 await getattr(program, command)()
                 return
-        _LOGGER.error("Could not send program command; not found or enabled on the ISY")
+        LOGGER.error("Could not send program command; not found or enabled on the ISY")
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=SERVICE_SEND_PROGRAM_COMMAND,
+        service=ISYService.SEND_PROGRAM_COMMAND,
         service_func=async_send_program_command_service_handler,
         schema=SERVICE_SEND_PROGRAM_COMMAND_SCHEMA,
     )
@@ -172,7 +192,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=SERVICE_SEND_RAW_NODE_COMMAND,
+        service=ISYService.SEND_RAW_NODE_COMMAND,
         schema=cv.make_entity_service_schema(SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA),
         service_func=_async_send_raw_node_command,
     )
@@ -184,7 +204,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=SERVICE_SEND_NODE_COMMAND,
+        service=ISYService.SEND_NODE_COMMAND,
         schema=cv.make_entity_service_schema(SERVICE_SEND_NODE_COMMAND_SCHEMA),
         service_func=_async_send_node_command,
     )
@@ -196,7 +216,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=SERVICE_GET_ZWAVE_PARAMETER,
+        service=ISYService.GET_ZWAVE_PARAMETER,
         schema=cv.make_entity_service_schema(SERVICE_GET_ZWAVE_PARAMETER_SCHEMA),
         service_func=_async_get_zwave_parameter,
     )
@@ -208,7 +228,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=SERVICE_SET_ZWAVE_PARAMETER,
+        service=ISYService.SET_ZWAVE_PARAMETER,
         schema=cv.make_entity_service_schema(SERVICE_SET_ZWAVE_PARAMETER_SCHEMA),
         service_func=_async_set_zwave_parameter,
     )
@@ -220,7 +240,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service=SERVICE_RENAME_NODE,
+        service=ISYService.RENAME_NODE,
         schema=cv.make_entity_service_schema(SERVICE_RENAME_NODE_SCHEMA),
         service_func=_async_rename_node,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ISYService.SET_ZWAVE_LOCK_USER_CODE,
+        entity_domain=LOCK_DOMAIN,
+        func="async_set_zwave_lock_user_code",
+        schema=SERVICE_SET_USER_CODE_SCHEMA,
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ISYService.DELETE_ZWAVE_LOCK_USER_CODE,
+        entity_domain=LOCK_DOMAIN,
+        func="async_delete_zwave_lock_user_code",
+        schema=SERVICE_DELETE_USER_CODE_SCHEMA,
     )

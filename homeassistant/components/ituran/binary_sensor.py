@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyituran import Vehicle
 
@@ -13,8 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IturanConfigEntry
-from .coordinator import IturanDataUpdateCoordinator
+from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 from .entity import IturanBaseEntity
 
 
@@ -67,6 +67,7 @@ class IturanBinarySensor(IturanBaseEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.vehicle)

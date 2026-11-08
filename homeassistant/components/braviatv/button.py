@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -14,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 from .entity import BraviaTVEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,6 +74,7 @@ class BraviaTVButton(BraviaTVEntity, ButtonEntity):
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Trigger the button action."""
         await self.entity_description.press_action(self.coordinator)

@@ -1,7 +1,7 @@
 """Support for the QNAP QSW binary sensors."""
 
 from dataclasses import dataclass, replace
-from typing import Final
+from typing import Final, override
 
 from aioqsw.const import (
     QSD_ANOMALY,
@@ -21,7 +21,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 
 from .const import ATTR_MESSAGE
 from .coordinator import QnapQswConfigEntry, QswDataCoordinator
@@ -140,7 +140,7 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
-        if description.name is UNDEFINED:
+        if description.name is Undefined:
             self._attr_has_entity_name = True
         else:
             self._attr_name = f"{self.product} {description.name}"
@@ -152,6 +152,7 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update binary sensor attributes."""
         self._attr_is_on = self.get_device_value(

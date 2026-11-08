@@ -1,10 +1,12 @@
 """System Bridge Media Source Implementation."""
 
+from typing import override
+
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles
 
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     MEDIA_CLASS_MAP,
     MEDIA_MIME_TYPES,
@@ -12,6 +14,7 @@ from homeassistant.components.media_source import (
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
@@ -21,13 +24,25 @@ from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry
 
 
-def _get_loaded_entry(hass: HomeAssistant, entry_id: str) -> SystemBridgeConfigEntry:
+def _get_loaded_entry(
+    hass: HomeAssistant,
+    entry_id: str,
+    error: type[BrowseError | Unresolvable],
+) -> SystemBridgeConfigEntry:
     """Return a loaded System Bridge config entry by id."""
     entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
         entry_id
     )
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
-        raise ValueError("Invalid entry")
+    if (
+        entry is None
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
+        raise error(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
+            translation_placeholders={"entry_id": entry_id},
+        )
     return entry
 
 
@@ -48,19 +63,21 @@ class SystemBridgeSource(MediaSource):
         self.name = "System Bridge"
         self.hass: HomeAssistant = hass
 
+    @override
     async def async_resolve_media(
         self,
         item: MediaSourceItem,
     ) -> PlayMedia:
         """Resolve media to a url."""
         entry_id, path, mime_type = item.identifier.split("~~", 2)
-        entry = _get_loaded_entry(self.hass, entry_id)
+        entry = _get_loaded_entry(self.hass, entry_id, Unresolvable)
         path_split = path.split("/", 1)
         return PlayMedia(
             f"{_build_base_url(entry)}&base={path_split[0]}&path={path_split[1]}",
             mime_type,
         )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -70,13 +87,13 @@ class SystemBridgeSource(MediaSource):
             return self._build_bridges()
 
         if "~~" not in item.identifier:
-            entry = _get_loaded_entry(self.hass, item.identifier)
+            entry = _get_loaded_entry(self.hass, item.identifier, BrowseError)
             coordinator = entry.runtime_data
             directories = await coordinator.websocket_client.get_directories()
             return _build_root_paths(entry, directories)
 
         entry_id, path = item.identifier.split("~~", 1)
-        entry = _get_loaded_entry(self.hass, entry_id)
+        entry = _get_loaded_entry(self.hass, entry_id, BrowseError)
         coordinator = entry.runtime_data
 
         path_split = path.split("/", 1)
@@ -208,7 +225,7 @@ def _build_media_item(
         domain=DOMAIN,
         identifier=f"{path}/{media_file.name}{ext}",
         media_class=media_class,
-        media_content_type=media_file.content_type,
+        media_content_type=media_file.content_type or "",
         title=media_file.name,
         can_play=not media_file.is_directory,
         can_expand=media_file.is_directory,

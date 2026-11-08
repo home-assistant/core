@@ -5,9 +5,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import Any, override
 
 from iammeter.client import IamMeter
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -50,9 +51,9 @@ DEFAULT_DEVICE_NAME = "IamMeter"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
@@ -123,7 +124,7 @@ async def async_setup_platform(
         _LOGGER.error("Device is not ready")
         raise PlatformNotReady from err
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any]:
         try:
             async with timeout(PLATFORM_TIMEOUT):
                 return await hass.async_add_executor_job(api.client.get_data)
@@ -133,6 +134,7 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name=config_name,
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
@@ -156,7 +158,10 @@ async def async_setup_platform(
         )
 
 
-class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+class IammeterSensor(
+    update_coordinator.CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]],
+    SensorEntity,
+):
     """Representation of a Sensor."""
 
     entity_description: IammeterSensorEntityDescription
@@ -165,7 +170,7 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
         description: IammeterSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -179,6 +184,7 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self):
         """Return the native sensor value."""
         raw_attr = self.coordinator.data.get(self.entity_description.key, None)

@@ -1,12 +1,13 @@
 """Support for Victron GX device tracker."""
 
-from typing import Any
+from typing import TYPE_CHECKING, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     GpsLocation,
     Metric as VictronVenusMetric,
     MetricKind,
+    MetricValue,
 )
 
 from homeassistant.components.device_tracker import TrackerEntity
@@ -63,10 +64,16 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     ) -> None:
         """Initialize the device tracker."""
         super().__init__(device, metric, device_info, installation_id)
-        self._update_from_location(metric.value)
+        value = metric.value
+        if TYPE_CHECKING:
+            assert value is None or isinstance(value, GpsLocation)
+        self._update_from_location(value)
 
     @callback
-    def _on_update_cb(self, value: Any) -> None:
+    @override
+    def _on_update_cb(self, value: MetricValue) -> None:
+        if TYPE_CHECKING:
+            assert value is None or isinstance(value, GpsLocation)
         self._update_from_location(value)
         self.async_write_ha_state()
 
@@ -87,6 +94,7 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
         self._speed = value.speed
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, StateType]:
         """Return extra state attributes for altitude, course, and speed."""
         attrs: dict[str, StateType] = {}

@@ -7,6 +7,7 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
+import pytest
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.components.light import (
@@ -58,6 +59,34 @@ def create_lightbulb_service_with_color_temp(accessory: Accessory) -> Service:
     color_temp.value = 0
 
     return service
+
+
+@pytest.mark.parametrize("brightness", [1, 2, 3])
+async def test_turn_on_low_brightness_no_zero(
+    hass: HomeAssistant, get_next_aid: Callable[[], int], brightness: int
+) -> None:
+    """Test low brightness values never send 0 percent to the device.
+
+    Sending brightness 0 with on results in full brightness on some
+    devices such as Nanoleaf Essentials bulbs.
+    """
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_lightbulb_service_with_hs
+    )
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.testdevice", "brightness": brightness},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.LIGHTBULB,
+        {
+            CharacteristicsTypes.ON: True,
+            CharacteristicsTypes.BRIGHTNESS: 1,
+        },
+    )
 
 
 async def test_switch_change_light_state(

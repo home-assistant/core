@@ -7,6 +7,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -45,8 +46,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, patch_platforms
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.test_name"
 
@@ -422,7 +421,7 @@ async def test_get_image_http_stale_url_after_thumb_invalidated(
 
     client = await hass_client_no_auth()
     resp = await client.get(entity_picture)
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_entity_picture_absent_base64_data_invalid(
@@ -444,7 +443,7 @@ async def test_entity_picture_absent_base64_data_invalid(
 
     client = await hass_client()
     resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize(
@@ -474,7 +473,7 @@ async def test_entity_picture_absent_thumb_string_invalid(
 
     client = await hass_client()
     resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_entity_picture_absent_mime_type_not_allowed(
@@ -496,7 +495,7 @@ async def test_entity_picture_absent_mime_type_not_allowed(
 
     client = await hass_client()
     resp = await client.get(f"/api/media_player_proxy/{ENTITY_ID}")
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_rpc_media_player_browse_media_root(

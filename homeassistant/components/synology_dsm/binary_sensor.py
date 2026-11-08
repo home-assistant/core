@@ -1,7 +1,7 @@
 """Support for Synology DSM binary sensors."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.storage.storage import SynoStorage
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_DISKS, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SynoApi
+from .common import SynoApi
 from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import (
     SynologyDSMBaseEntity,
@@ -95,30 +95,24 @@ class SynoDSMBinarySensor(
 
     entity_description: SynologyDSMBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        api: SynoApi,
-        coordinator: SynologyDSMCentralUpdateCoordinator,
-        description: SynologyDSMBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the Synology DSM binary_sensor entity."""
-        super().__init__(api, coordinator, description)
-
 
 class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     """Representation a Synology Security binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state."""
         return getattr(self._api.security, self.entity_description.key) != "safe"  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._api.security) and super().available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
         if TYPE_CHECKING:
@@ -142,6 +136,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
         super().__init__(api, coordinator, description, device_id)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state."""
         return bool(

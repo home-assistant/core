@@ -3,6 +3,7 @@
 import io
 from json import JSONDecodeError
 import logging
+from typing import override
 
 from hass_nabucasa.llm import (
     LLMAuthenticationError,
@@ -15,12 +16,12 @@ from hass_nabucasa.llm import (
 from PIL import Image
 
 from homeassistant.components import ai_task, conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from . import CloudConfigEntry
 from .const import AI_TASK_ENTITY_UNIQUE_ID, DATA_CLOUD
 from .entity import BaseCloudLLMEntity
 
@@ -88,7 +89,7 @@ async def async_prepare_image_generation_attachments(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: CloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud AI Task entity."""
@@ -109,10 +110,12 @@ class CloudAITaskEntity(BaseCloudLLMEntity, ai_task.AITaskEntity):
     _attr_unique_id = AI_TASK_ENTITY_UNIQUE_ID
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return self._cloud.is_logged_in and self._cloud.valid_subscription
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -138,6 +141,7 @@ class CloudAITaskEntity(BaseCloudLLMEntity, ai_task.AITaskEntity):
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,
@@ -150,6 +154,7 @@ class CloudAITaskEntity(BaseCloudLLMEntity, ai_task.AITaskEntity):
             data=data,
         )
 
+    @override
     async def _async_generate_image(
         self,
         task: ai_task.GenImageTask,

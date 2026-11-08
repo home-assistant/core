@@ -1,24 +1,13 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
 
-from typing import Any
-
-from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVERT_MODES
-import voluptuous as vol
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FloConfigEntry, FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
-
-ATTR_REVERT_TO_MODE = "revert_to_mode"
-ATTR_SLEEP_MINUTES = "sleep_minutes"
-SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
-SERVICE_SET_AWAY_MODE = "set_away_mode"
-SERVICE_SET_HOME_MODE = "set_home_mode"
-SERVICE_RUN_HEALTH_TEST = "run_health_test"
 
 
 async def async_setup_entry(
@@ -33,31 +22,6 @@ async def async_setup_entry(
         [FloSwitch(device) for device in devices if device.device_type != "puck_oem"]
     )
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE, None, "async_set_mode_away"
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_HOME_MODE, None, "async_set_mode_home"
-    )
-    platform.async_register_entity_service(
-        SERVICE_RUN_HEALTH_TEST, None, "async_run_health_test"
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_SLEEP_MODE,
-        {
-            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.All(
-                vol.Coerce(int),
-                vol.In(SLEEP_MINUTE_OPTIONS),
-            ),
-            vol.Required(ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME): vol.In(
-                SYSTEM_REVERT_MODES
-            ),
-        },
-        "async_set_mode_sleep",
-    )
-
 
 class FloSwitch(FloEntity, SwitchEntity):
     """Switch class for the Flo by Moen valve."""
@@ -69,12 +33,14 @@ class FloSwitch(FloEntity, SwitchEntity):
         super().__init__("shutoff_valve", device)
         self._attr_is_on = device.last_known_valve_state == "open"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self._device.api_client.device.close_valve(self._device.id)
@@ -87,6 +53,7 @@ class FloSwitch(FloEntity, SwitchEntity):
         self._attr_is_on = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

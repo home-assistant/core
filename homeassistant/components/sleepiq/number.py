@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from asyncsleepiq import (
     CoreTemps,
@@ -27,11 +27,16 @@ from .const import (
     ACTUATOR,
     CORE_CLIMATE_TIMER,
     ENTITY_TYPES,
+    FAVORITE_FIRMNESS,
     FIRMNESS,
     FOOT_WARMING_TIMER,
     ICON_OCCUPIED,
 )
-from .coordinator import SleepIQConfigEntry, SleepIQDataUpdateCoordinator
+from .coordinator import (
+    SleepIQConfigEntry,
+    SleepIQDataUpdateCoordinator,
+    SleepIQPauseUpdateCoordinator,
+)
 from .entity import SleepIQBedEntity, sleeper_for_side
 
 
@@ -82,11 +87,23 @@ def _get_sleeper_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
     return f"{sleeper.sleeper_id}_{FIRMNESS}"
 
 
+async def _async_set_favorite_firmness(sleeper: SleepIQSleeper, firmness: int) -> None:
+    await sleeper.set_favsleepnumber(firmness)
+
+
+def _get_favorite_name(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
+    return f"SleepNumber {bed.name} {sleeper.name} {ENTITY_TYPES[FAVORITE_FIRMNESS]}"
+
+
+def _get_favorite_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
+    return f"{sleeper.sleeper_id}_{FAVORITE_FIRMNESS}"
+
+
 async def _async_set_foot_warmer_time(
     foot_warmer: SleepIQFootWarmer, time: int
 ) -> None:
     temperature = FootWarmingTemps(foot_warmer.temperature)
-    if temperature is not FootWarmingTemps.OFF:
+    if temperature != FootWarmingTemps.OFF:
         await foot_warmer.turn_on(temperature, time)
 
     foot_warmer.timer = time
@@ -105,7 +122,7 @@ async def _async_set_core_climate_time(
     core_climate: SleepIQCoreClimate, time: int
 ) -> None:
     temperature = CoreTemps(core_climate.temperature)
-    if temperature is not CoreTemps.OFF:
+    if temperature != CoreTemps.OFF:
         await core_climate.turn_on(temperature, time)
 
     core_climate.timer = time
@@ -134,6 +151,18 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         set_value_fn=_async_set_firmness,
         get_name_fn=_get_sleeper_name,
         get_unique_id_fn=_get_sleeper_unique_id,
+    ),
+    FAVORITE_FIRMNESS: SleepIQNumberEntityDescription(
+        key=FAVORITE_FIRMNESS,
+        native_min_value=5,
+        native_max_value=100,
+        native_step=5,
+        name=ENTITY_TYPES[FAVORITE_FIRMNESS],
+        icon="mdi:bed-outline",
+        value_fn=lambda sleeper: cast(float, sleeper.fav_sleep_number),
+        set_value_fn=_async_set_favorite_firmness,
+        get_name_fn=_get_favorite_name,
+        get_unique_id_fn=_get_favorite_unique_id,
     ),
     ACTUATOR: SleepIQNumberEntityDescription(
         key=ACTUATOR,
@@ -199,6 +228,15 @@ async def async_setup_entry(
         )
         entities.extend(
             SleepIQNumberEntity(
+                data.pause_coordinator,
+                bed,
+                sleeper,
+                NUMBER_DESCRIPTIONS[FAVORITE_FIRMNESS],
+            )
+            for sleeper in bed.sleepers
+        )
+        entities.extend(
+            SleepIQNumberEntity(
                 data.data_coordinator,
                 bed,
                 actuator,
@@ -228,7 +266,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], NumberEntity):
+class SleepIQNumberEntity(
+    SleepIQBedEntity[SleepIQDataUpdateCoordinator | SleepIQPauseUpdateCoordinator],
+    NumberEntity,
+):
     """Representation of a SleepIQ number entity."""
 
     entity_description: SleepIQNumberEntityDescription
@@ -236,7 +277,7 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
 
     def __init__(
         self,
-        coordinator: SleepIQDataUpdateCoordinator,
+        coordinator: SleepIQDataUpdateCoordinator | SleepIQPauseUpdateCoordinator,
         bed: SleepIQBed,
         device: Any,
         description: SleepIQNumberEntityDescription,
@@ -253,10 +294,12 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
         super().__init__(coordinator, bed)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update number attributes."""
         self._attr_native_value = float(self.entity_description.value_fn(self.device))
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""
         await self.entity_description.set_value_fn(self.device, int(value))

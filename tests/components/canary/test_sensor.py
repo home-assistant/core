@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.canary.const import DOMAIN, MANUFACTURER
 from homeassistant.components.canary.sensor import (
     ATTR_AIR_QUALITY,
@@ -22,8 +24,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import init_integration, mock_device, mock_location, mock_reading
-
-from tests.common import async_fire_time_changed
 
 
 async def test_sensors_pro(
@@ -47,7 +47,7 @@ async def test_sensors_pro(
     ]
 
     with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
-        await init_integration(hass)
+        entry = await init_integration(hass)
 
     sensors = {
         "dining_room_home_dining_room_temperature": (
@@ -85,7 +85,9 @@ async def test_sensors_pro(
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "20")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "20"), entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"
@@ -168,7 +170,7 @@ async def test_sensors_flex(
     ]
 
     with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
-        await init_integration(hass)
+        entry = await init_integration(hass)
 
     sensors = {
         "dining_room_home_dining_room_battery": (
@@ -199,7 +201,9 @@ async def test_sensors_flex(
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "20")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "20"), entry.entry_id
+    )
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"

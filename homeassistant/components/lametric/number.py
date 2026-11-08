@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from demetriek import Device, LaMetricDevice, Range
 
@@ -14,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,11 +85,13 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def native_min_value(self) -> int:
         """Return the min range."""
         if limits := self.entity_description.range_fn(self.coordinator.data):
@@ -95,6 +99,7 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
         return 0
 
     @property
+    @override
     def native_max_value(self) -> int:
         """Return the max range."""
         if limits := self.entity_description.range_fn(self.coordinator.data):
@@ -102,6 +107,7 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
         return 100
 
     @lametric_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(self.coordinator.lametric, value)

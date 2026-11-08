@@ -1,12 +1,12 @@
 """Config flow for the Bang & Olufsen integration."""
 
 from ipaddress import AddressValueError, IPv4Address
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -19,7 +19,6 @@ from .const import (
     ATTR_ITEM_NUMBER,
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
-    CONF_SERIAL_NUMBER,
     DEFAULT_MODEL,
     DOMAIN,
     SELECTABLE_MODELS,
@@ -61,14 +60,15 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
+                probatio.Required(CONF_HOST): str,
+                probatio.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
                     SelectSelectorConfig(options=SELECTABLE_MODELS)
                 ),
             }
@@ -123,6 +123,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -187,14 +188,12 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._create_entry()
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                CONF_HOST: self._host,
-                CONF_MODEL: self._model,
-                CONF_SERIAL_NUMBER: self._serial_number,
+                "host": self._host,
+                "model": self._model,
+                "serial_number": self._serial_number,
             },
             last_step=True,
         )

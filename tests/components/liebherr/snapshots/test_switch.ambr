@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('liebherr', 'single_zone_id')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_single_zone_switch[switch.single_zone_fridge_supercool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Single Zone Fridge SuperCool',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single Zone Fridge SuperCool',
     }),
     'context': <ANY>,
     'entity_id': 'switch.single_zone_fridge_supercool',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('liebherr', 'test_device_id')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_switches[switch.test_fridge_bottom_zone_superfrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge Bottom zone SuperFrost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fridge Bottom zone SuperFrost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_fridge_bottom_zone_superfrost',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('liebherr', 'test_device_id')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_switches[switch.test_fridge_nightmode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge NightMode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fridge NightMode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_fridge_nightmode',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('liebherr', 'test_device_id')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_switches[switch.test_fridge_partymode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge PartyMode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fridge PartyMode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_fridge_partymode',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('liebherr', 'test_device_id')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -239,7 +239,7 @@
 # name: test_switches[switch.test_fridge_top_zone_supercool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fridge Top zone SuperCool',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fridge Top zone SuperCool',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_fridge_top_zone_supercool',

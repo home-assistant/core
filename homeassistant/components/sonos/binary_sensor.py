@@ -1,7 +1,7 @@
 """Entity representing a Sonos power sensor."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -64,16 +64,19 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-power"
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.speaker.charging
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
         return {
@@ -81,6 +84,7 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
         }
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available and self.speaker.charging is not None
@@ -97,6 +101,7 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-microphone"
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Handle polling when subscription fails."""
         await self.hass.async_add_executor_job(self.poll_state)
@@ -107,6 +112,7 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         self.speaker.mic_enabled = self.soco.mic_enabled
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.speaker.mic_enabled

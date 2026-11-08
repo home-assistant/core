@@ -1,9 +1,18 @@
 """Test the Model Context Protocol Server init module."""
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from tests.common import MockConfigEntry
+from homeassistant.components.mcp_server.const import (
+    CONF_ALL_LLM_APIS,
+    CONF_READ_ONLY,
+    CONF_REQUIRE_ADMIN,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 
 
 async def test_init(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -13,3 +22,109 @@ async def test_init(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_migrate_entry_require_admin(hass: HomeAssistant) -> None:
+    """Test an entry created before the require admin option keeps the endpoints open."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LLM_HASS_API: [llm.LLM_API_ASSIST]},
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert config_entry.minor_version == 4
+    assert config_entry.data == {
+        CONF_ALL_LLM_APIS: False,
+        CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+        CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
+    }
+
+
+async def test_migrate_entry_keeps_require_admin(hass: HomeAssistant) -> None:
+    """Test the migration keeps an option the options flow saved before it ran."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LLM_HASS_API: [llm.LLM_API_ASSIST], CONF_REQUIRE_ADMIN: True},
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert config_entry.minor_version == 4
+    assert config_entry.data[CONF_REQUIRE_ADMIN] is True
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_all_llm_apis"),
+    [
+        pytest.param({}, False, id="selected_llm_apis"),
+        pytest.param({CONF_ALL_LLM_APIS: True}, True, id="saved_by_options_flow"),
+    ],
+)
+async def test_migrate_entry_all_llm_apis(
+    hass: HomeAssistant, data: dict[str, bool], expected_all_llm_apis: bool
+) -> None:
+    """Test an entry created before the all LLM APIs option keeps its selection."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+            CONF_REQUIRE_ADMIN: True,
+            **data,
+        },
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert config_entry.minor_version == 4
+    assert config_entry.data == {
+        CONF_ALL_LLM_APIS: expected_all_llm_apis,
+        CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+        CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_read_only"),
+    [
+        pytest.param({}, False, id="all_tools"),
+        pytest.param({CONF_READ_ONLY: True}, True, id="saved_by_options_flow"),
+    ],
+)
+async def test_migrate_entry_read_only(
+    hass: HomeAssistant, data: dict[str, bool], expected_read_only: bool
+) -> None:
+    """Test an entry created before the read-only option keeps exposing all tools."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ALL_LLM_APIS: False,
+            CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+            CONF_REQUIRE_ADMIN: True,
+            **data,
+        },
+        minor_version=3,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert config_entry.minor_version == 4
+    assert config_entry.data == {
+        CONF_ALL_LLM_APIS: False,
+        CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+        CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: expected_read_only,
+    }

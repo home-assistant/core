@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_CUBIC_METER,
     PERCENTAGE,
     UV_INDEX,
     UnitOfIrradiance,
@@ -24,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     AIR_QUALITY_CATEGORY_MAP,
@@ -35,7 +33,6 @@ from .const import (
     ATTR_LEVEL,
     ATTR_SPEED,
     ATTR_VALUE,
-    ATTRIBUTION,
     MAX_FORECAST_DAYS,
     POLLEN_CATEGORY_MAP,
 )
@@ -44,8 +41,11 @@ from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
+from .entity import AccuWeatherEntity
 
 PARALLEL_UPDATES = 1
+
+PARTS_PER_CUBIC_METER = "p/m³"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -81,7 +81,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Grass",
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
             ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
@@ -107,7 +107,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="Mold",
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
             ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
@@ -116,7 +116,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Ragweed",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
@@ -184,7 +184,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Tree",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        native_unit_of_measurement=PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
         attr_fn=lambda data: {
@@ -368,7 +368,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][API_METRIC][ATTR_VALUE]),
-        translation_key="wind_speed",
     ),
     AccuWeatherSensorDescription(
         key="WindGust",
@@ -413,12 +412,10 @@ async def async_setup_entry(
 
 
 class AccuWeatherSensor(
-    CoordinatorEntity[AccuWeatherObservationDataUpdateCoordinator], SensorEntity
+    AccuWeatherEntity[AccuWeatherObservationDataUpdateCoordinator], SensorEntity
 ):
     """Define an AccuWeather entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: AccuWeatherSensorDescription
 
     def __init__(
@@ -432,19 +429,21 @@ class AccuWeatherSensor(
         self.entity_description = description
         self._sensor_data = self._get_sensor_data(coordinator.data, description.key)
         self._attr_unique_id = f"{coordinator.location_key}-{description.key}".lower()
-        self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = self._get_sensor_data(
@@ -465,12 +464,10 @@ class AccuWeatherSensor(
 
 
 class AccuWeatherForecastSensor(
-    CoordinatorEntity[AccuWeatherDailyForecastDataUpdateCoordinator], SensorEntity
+    AccuWeatherEntity[AccuWeatherDailyForecastDataUpdateCoordinator], SensorEntity
 ):
     """Define an AccuWeather entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: AccuWeatherSensorDescription
 
     def __init__(
@@ -489,21 +486,23 @@ class AccuWeatherForecastSensor(
         self._attr_unique_id = (
             f"{coordinator.location_key}-{description.key}-{forecast_day}".lower()
         )
-        self._attr_device_info = coordinator.device_info
         self._attr_translation_placeholders = {"forecast_day": str(forecast_day)}
         self.forecast_day = forecast_day
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self._sensor_data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = self._get_sensor_data(

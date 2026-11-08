@@ -1,8 +1,91 @@
 """Test Snooz configuration."""
 
-from homeassistant.core import HomeAssistant
+from unittest.mock import patch
 
-from . import SnoozFixture
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.snooz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from . import (
+    SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME,
+    TEST_ADDRESS,
+    TEST_PAIRING_TOKEN,
+    SnoozFixture,
+    create_mock_snooz,
+)
+
+
+async def test_setup_retries_when_service_info_not_found(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup is retried when Bluetooth service info is missing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.snooz.async_last_service_info",
+            return_value=None,
+        ) as mock_last_service_info,
+        patch(
+            "homeassistant.components.snooz.async_address_reachability_diagnostics",
+            return_value="mock reachability reason",
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_last_service_info.assert_called_once_with(hass, TEST_ADDRESS)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        f"Could not find Snooz with address {TEST_ADDRESS}: mock reachability reason"
+        in caplog.text
+    )
+
+
+async def test_setup_with_device_name_from_characteristic(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup succeeds when the cached advertisement has the bare device name."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
+    )
+    entry.add_to_hass(hass)
+    inject_bluetooth_service_info(hass, SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME)
+
+    device = await create_mock_snooz()
+    with patch("homeassistant.components.snooz.SnoozDevice", return_value=device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    mock_connected_snooz: SnoozFixture,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the Bluetooth connection."""
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_ADDRESS), mock_connected_snooz.entry.entry_id
+    )
+    assert device_entry == snapshot
 
 
 async def test_removing_entry_cleans_up_connections(

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
 # name: test_binary_sensors[binary_sensor.12345_freeze_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Freeze restrictions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Freeze restrictions',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_freeze_restrictions',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -89,7 +89,7 @@
 # name: test_binary_sensors[binary_sensor.12345_hourly_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Hourly restrictions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Hourly restrictions',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_hourly_restrictions',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -139,7 +139,7 @@
 # name: test_binary_sensors[binary_sensor.12345_month_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Month restrictions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Month restrictions',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_month_restrictions',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -189,7 +189,7 @@
 # name: test_binary_sensors[binary_sensor.12345_rain_delay_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Rain delay restrictions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Rain delay restrictions',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_rain_delay_restrictions',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -239,7 +239,7 @@
 # name: test_binary_sensors[binary_sensor.12345_rain_sensor_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Rain sensor restrictions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Rain sensor restrictions',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_rain_sensor_restrictions',
@@ -257,9 +257,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -289,7 +289,7 @@
 # name: test_binary_sensors[binary_sensor.12345_weekday_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '12345 Weekday restrictions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Weekday restrictions',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12345_weekday_restrictions',

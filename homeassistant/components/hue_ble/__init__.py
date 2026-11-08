@@ -4,21 +4,24 @@ import logging
 
 from HueBLE import ConnectionError, HueBleError, HueBleLight
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
     async_ble_device_from_address,
-    async_scanner_count,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 type HueBLEConfigEntry = ConfigEntry[HueBleLight]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> None:
     """Set up the integration from a config entry."""
 
     assert entry.unique_id is not None
@@ -26,15 +29,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
 
-    if ble_device is None:
-        count_scanners = async_scanner_count(hass, connectable=True)
-        _LOGGER.debug("Count of BLE scanners: %i", count_scanners)
-
-        if count_scanners < 1:
-            raise ConfigEntryNotReady(
-                "No Bluetooth scanners are available to search for the light."
-            )
-        raise ConfigEntryNotReady("The light was not found.")
+    if not ble_device:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "name": entry.title,
+                "mac": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
+        )
 
     light = HueBleLight(ble_device)
 
@@ -52,10 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.LIGHT])
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, [Platform.LIGHT])
+    await hass.config_entries.async_unload_platforms_or_raise(entry, [Platform.LIGHT])

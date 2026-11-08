@@ -2,13 +2,13 @@
 
 from collections.abc import Collection, Mapping
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from pyrisco.cloud.event import Event
 
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -87,11 +87,14 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
         self._attr_name = f"Risco {self.coordinator.risco.site_name} {name} Events"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._entity_registry = er.async_get(self.hass)
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         events = self.coordinator.data
         for event in reversed(events):
@@ -104,6 +107,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
             self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Value of sensor."""
         if self._event is None:
@@ -114,6 +118,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """State attributes."""
         if self._event is None:

@@ -1,9 +1,11 @@
 """Test the ToGrill config flow."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant import config_entries
 from homeassistant.components.togrill.const import DOMAIN
@@ -11,9 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import TOGRILL_SERVICE_INFO, TOGRILL_SERVICE_INFO_NO_NAME, setup_entry
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -27,11 +26,15 @@ async def test_user_selection(
     inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO_NO_NAME)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.togrill.config_flow.bluetooth.async_request_active_scan"
+    ) as mock_request_active_scan:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -72,6 +75,7 @@ async def test_user_selection_ignored(
         user_input={"address": TOGRILL_SERVICE_INFO.address},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address
 
 
 async def test_failed_connect(

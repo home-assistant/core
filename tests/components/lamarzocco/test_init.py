@@ -5,9 +5,14 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.exceptions import (
+    AuthFail,
+    PolicyAcceptanceRequired,
+    RequestNotSuccessful,
+)
 from pylamarzocco.models import WebSocketDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
@@ -26,8 +31,6 @@ from homeassistant.helpers import (
 )
 
 from . import MOCK_INSTALLATION_KEY, USER_INPUT, async_init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -65,6 +68,7 @@ async def test_config_entry_not_ready(
     ("side_effect", "expected_state"),
     [
         (AuthFail(""), ConfigEntryState.SETUP_ERROR),
+        (PolicyAcceptanceRequired(""), ConfigEntryState.SETUP_ERROR),
         (RequestNotSuccessful(""), ConfigEntryState.SETUP_RETRY),
     ],
 )
@@ -84,14 +88,22 @@ async def test_get_settings_errors(
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(AuthFail(""), id="auth_fail"),
+        pytest.param(PolicyAcceptanceRequired(""), id="policy_acceptance_required"),
+    ],
+)
 async def test_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception,
 ) -> None:
     """Test auth error during setup."""
     mock_lamarzocco.websocket.connected = False
-    mock_lamarzocco.get_dashboard.side_effect = AuthFail("")
+    mock_lamarzocco.get_dashboard.side_effect = side_effect
     await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
@@ -126,6 +138,10 @@ async def test_v1_migration_fails(
     await hass.async_block_till_done()
 
     assert entry_v1.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry_v1.reason == (
+        "Migration from version 1 is no longer supported, remove and re-add the"
+        " integration"
+    )
 
 
 async def test_v4_migration(
@@ -157,14 +173,34 @@ async def test_v4_migration(
     }
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            AuthFail("Error"),
+            ConfigEntryState.MIGRATION_ERROR,
+            "Authentication failed",
+            id="auth_failed",
+        ),
+        pytest.param(
+            RequestNotSuccessful("Error"),
+            ConfigEntryState.SETUP_RETRY,
+            "Error while communicating with the API",
+            id="request_not_successful",
+        ),
+    ],
+)
 async def test_migration_errors(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception,
+    state: ConfigEntryState,
+    reason: str,
 ) -> None:
     """Test errors during migration."""
 
-    mock_cloud_client.async_register_client.side_effect = RequestNotSuccessful("Error")
+    mock_cloud_client.async_register_client.side_effect = side_effect
 
     entry_v3 = MockConfigEntry(
         domain=DOMAIN,
@@ -179,7 +215,9 @@ async def test_migration_errors(
     entry_v3.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(entry_v3.entry_id)
-    assert entry_v3.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry_v3.state is state
+    assert entry_v3.reason == reason
+    assert entry_v3.version == 3
 
 
 async def test_config_flow_entry_migration_downgrade(
@@ -220,6 +258,7 @@ async def test_websocket_closed_on_unload(
 )
 async def test_gateway_version_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
     version: str,
@@ -232,9 +271,79 @@ async def test_gateway_version_issue(
 
     await async_init_integration(hass, mock_config_entry)
 
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"unsupported_gateway_firmware_{mock_config_entry.entry_id}"
+    )
     assert (issue is not None) == issue_exists
+
+
+async def test_gateway_version_issue_per_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test each entry gets its own gateway issue, removed with the entry."""
+    mock_cloud_client.get_thing_settings.return_value.firmwares[
+        FirmwareType.GATEWAY
+    ].build_version = "v3.5-rc6"
+    other_entry = MockConfigEntry(
+        title="My other LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data=mock_config_entry.data,
+        unique_id="GS012345",
+    )
+    other_entry.add_to_hass(hass)
+    await async_init_integration(hass, mock_config_entry)
+
+    entries = (mock_config_entry, other_entry)
+    for entry in entries:
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"unsupported_gateway_firmware_{entry.entry_id}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_key == "unsupported_gateway_firmware"
+        assert issue.translation_placeholders == {
+            "gateway_version": "3.5rc6",
+            "name": entry.title,
+        }
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        DOMAIN,
+        f"unsupported_gateway_firmware_{mock_config_entry.entry_id}",
+    ) not in issue_registry.issues
+    assert (
+        DOMAIN,
+        f"unsupported_gateway_firmware_{other_entry.entry_id}",
+    ) in issue_registry.issues
+
+
+async def test_gateway_version_issue_deleted_after_update(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test the gateway issue is deleted once the gateway firmware is updated."""
+    gateway_firmware = mock_cloud_client.get_thing_settings.return_value.firmwares[
+        FirmwareType.GATEWAY
+    ]
+    gateway_firmware.build_version = "v3.5-rc6"
+    await async_init_integration(hass, mock_config_entry)
+    issue_id = f"unsupported_gateway_firmware_{mock_config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    gateway_firmware.build_version = "v5.0.9"
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
 async def test_device(

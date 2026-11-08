@@ -1,5 +1,9 @@
 """Support for Agent DVR Alarm Control Panels."""
 
+from typing import override
+
+from agent.a import Agent
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -40,7 +44,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, client):
+    def __init__(self, client: Agent) -> None:
         """Initialize the alarm control panel."""
         self._client = client
         self._attr_unique_id = f"{client.unique}_CP"
@@ -61,7 +65,8 @@ class AgentBaseStation(AlarmControlPanelEntity):
             self._attr_alarm_state = None
             return
         if armed:
-            prof = (await self._client.get_active_profile()).lower()
+            # None when no profile is marked active
+            prof = (await self._client.get_active_profile() or "").lower()
             self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
             if prof == CONF_HOME_MODE_NAME:
                 self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
@@ -70,23 +75,27 @@ class AgentBaseStation(AlarmControlPanelEntity):
         else:
             self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm()
         self._attr_alarm_state = AlarmControlPanelState.DISARMED
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_AWAY_MODE_NAME)
         self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_HOME_MODE_NAME)
         self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command. Uses custom mode."""
         await self._client.arm()

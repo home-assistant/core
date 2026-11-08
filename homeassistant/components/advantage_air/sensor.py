@@ -1,7 +1,7 @@
 """Sensor platform for Advantage Air integration."""
 
 from decimal import Decimal
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,12 +12,10 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
-from .const import ADVANTAGE_AIR_STATE_OPEN
-from .coordinator import AdvantageAirCoordinator
+from .const import ADVANTAGE_AIR_STATE_OPEN, AdvantageAirServiceArgument
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
-ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
 ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
 
 PARALLEL_UPDATES = 0
@@ -67,11 +65,13 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
         self._attr_unique_id += f"-timeto{action}"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value."""
         return self._ac[self._time_key]
 
     @property
+    @override
     def icon(self) -> str:
         """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
@@ -80,7 +80,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
 
     async def set_time_to(self, **kwargs: Any) -> None:
         """Set the timer value."""
-        value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
+        value = min(720, max(0, int(kwargs[AdvantageAirServiceArgument.MINUTES])))
         await self.async_update_ac({self._time_key: value})
 
 
@@ -100,6 +100,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-vent"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value of the air vent."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
@@ -107,6 +108,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
         return Decimal(0)
 
     @property
+    @override
     def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
@@ -130,11 +132,13 @@ class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-signal"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
 
     @property
+    @override
     def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["rssi"] >= 80:
@@ -166,6 +170,7 @@ class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-temp"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value of the measured temperature."""
         return self._zone["measuredTemp"]

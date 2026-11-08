@@ -1,10 +1,13 @@
 """LOQED lock integration for Home Assistant."""
 
 import logging
-from typing import Any
+from typing import Any, override
+
+import aiohttp
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LoqedConfigEntry, LoqedDataCoordinator
@@ -37,43 +40,64 @@ class LoqedLock(LoqedEntity, LockEntity):
         self._attr_name = None
 
     @property
+    @override
     def changed_by(self) -> str:
         """Return internal ID of last used key."""
         return f"KeyID {self._lock.last_key_id}"
 
     @property
+    @override
     def is_locking(self) -> bool | None:
         """Return true if lock is locking."""
         return self._lock.bolt_state == "locking"
 
     @property
+    @override
     def is_unlocking(self) -> bool | None:
         """Return true if lock is unlocking."""
         return self._lock.bolt_state == "unlocking"
 
     @property
+    @override
     def is_jammed(self) -> bool | None:
         """Return true if lock is jammed."""
         return self._lock.bolt_state == "motor_stall"
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
+        # The bridge reports "unknown" after a restart until the lock reports again.
+        if self._lock.bolt_state == "unknown":
+            return None
         return self._lock.bolt_state in ["night_lock_remote", "night_lock"]
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._lock.lock()
+        try:
+            await self._lock.lock()
+        except (TimeoutError, aiohttp.ClientError) as ex:
+            raise HomeAssistantError(f"Failed to lock {self._lock.id}") from ex
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        await self._lock.unlock()
+        try:
+            await self._lock.unlock()
+        except (TimeoutError, aiohttp.ClientError) as ex:
+            raise HomeAssistantError(f"Failed to unlock {self._lock.id}") from ex
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        await self._lock.open()
+        try:
+            await self._lock.open()
+        except (TimeoutError, aiohttp.ClientError) as ex:
+            raise HomeAssistantError(f"Failed to open {self._lock.id}") from ex
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         _LOGGER.debug(self.coordinator.data)

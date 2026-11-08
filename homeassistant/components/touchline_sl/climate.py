@@ -1,6 +1,6 @@
 """Roth Touchline SL climate integration implementation for Home Assistant."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -45,7 +45,7 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "zone"
 
     def __init__(self, coordinator: TouchlineSLModuleCoordinator, zone_id: int) -> None:
@@ -61,11 +61,13 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
         self.set_attr()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.set_attr()
         super()._handle_coordinator_update()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -74,13 +76,16 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
         await self.zone.set_temperature(temperature)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Assign the zone to a particular global schedule."""
         if not self.zone:
             return
 
-        if preset_mode == CONSTANT_TEMPERATURE and self._attr_target_temperature:
-            await self.zone.set_temperature(temperature=self._attr_target_temperature)
+        if preset_mode == CONSTANT_TEMPERATURE and self._attr_native_target_temperature:
+            await self.zone.set_temperature(
+                temperature=self._attr_native_target_temperature
+            )
             await self.coordinator.async_request_refresh()
             return
 
@@ -92,8 +97,8 @@ class TouchlineSLZone(TouchlineSLZoneEntity, ClimateEntity):
         """Populate attributes with data from the coordinator."""
         schedule_names = self.coordinator.data.schedules.keys()
 
-        self._attr_current_temperature = self.zone.temperature
-        self._attr_target_temperature = self.zone.target_temperature
+        self._attr_native_current_temperature = self.zone.temperature
+        self._attr_native_target_temperature = self.zone.target_temperature
         self._attr_current_humidity = int(self.zone.humidity)
         self._attr_preset_modes = [*schedule_names, CONSTANT_TEMPERATURE]
 

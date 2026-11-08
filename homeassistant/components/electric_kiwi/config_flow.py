@@ -2,13 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
@@ -25,11 +24,13 @@ class ElectricKiwiOauth2FlowHandler(
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": SCOPE_VALUES}
@@ -47,10 +48,11 @@ class ElectricKiwiOauth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+                description_placeholders={"name": self._get_reauth_entry().title},
             )
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for Electric Kiwi."""
         ek_api = ElectricKiwiApi(

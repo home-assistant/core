@@ -2,7 +2,7 @@
 
 from datetime import time as dt_time
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from elkm1_lib.const import SettingFormat
 from elkm1_lib.elements import Element
@@ -12,8 +12,8 @@ from homeassistant.components.time import TimeEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
+from .models import ElkM1ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +48,7 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
 
     _element: Setting
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         value = self._element.value
         # Guard against the panel possibly changing the underlying
@@ -63,6 +64,7 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
                 self.entity_id,
             )
 
+    @override
     async def async_set_value(self, value: dt_time) -> None:
         """Set the time of the setting."""
         self._element.set((value.hour, value.minute))

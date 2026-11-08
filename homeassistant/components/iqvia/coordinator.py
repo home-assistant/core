@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyiqvia.errors import IQVIAError
 
@@ -39,6 +39,7 @@ class IqviaUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self._update_method = update_method
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the API."""
         try:

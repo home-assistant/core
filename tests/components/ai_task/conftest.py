@@ -3,6 +3,14 @@
 import json
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.ai_task import (
     DOMAIN,
@@ -19,15 +27,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 TEST_ENTITY_ID = "ai_task.test_task_entity"
@@ -48,12 +47,14 @@ class MockAITaskEntity(AITaskEntity):
         super().__init__()
         self.mock_generate_data_tasks = []
         self.mock_generate_image_tasks = []
+        self.mock_chat_logs = []
 
     async def _async_generate_data(
         self, task: GenDataTask, chat_log: ChatLog
     ) -> GenDataTaskResult:
         """Mock handling of generate data task."""
         self.mock_generate_data_tasks.append(task)
+        self.mock_chat_logs.append(chat_log)
         if task.structure is not None:
             data = {"name": "Tracy Chen", "age": 30}
             data_chat_log = json.dumps(data)
@@ -114,21 +115,19 @@ async def init_components(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.AI_TASK]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(
             config_entry, Platform.AI_TASK
         )
-        return True
 
     mock_integration(
         hass,

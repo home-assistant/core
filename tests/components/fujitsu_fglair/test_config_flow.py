@@ -4,20 +4,15 @@ from unittest.mock import AsyncMock
 
 from ayla_iot_unofficial import AylaAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.fujitsu_fglair.const import (
-    CONF_REGION,
-    DOMAIN,
-    REGION_DEFAULT,
-)
+from homeassistant.components.fujitsu_fglair.const import DOMAIN, REGION_DEFAULT
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_PASSWORD2, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def _initial_step(hass: HomeAssistant) -> FlowResult:
@@ -50,6 +45,7 @@ async def test_full_flow(hass: HomeAssistant, mock_ayla_api: AsyncMock) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_REGION: REGION_DEFAULT,
     }
+    assert result["result"].unique_id == TEST_USERNAME.lower()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -1,7 +1,9 @@
 """Test energy data storage and migration."""
 
+from typing import Any
+
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.energy.data import (
     ENERGY_SOURCE_SCHEMA,
@@ -13,7 +15,7 @@ from homeassistant.components.energy.data import (
     EnergyManager,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import storage
+from homeassistant.helpers import entity_registry as er, storage
 
 
 async def test_energy_preferences_no_migration_needed(hass: HomeAssistant) -> None:
@@ -42,6 +44,44 @@ async def test_energy_preferences_no_migration_needed(hass: HomeAssistant) -> No
     ]
 
 
+async def test_energy_preferences_load_resolves_renamed_power_sensor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a stale stat_rate is pointed at the renamed power sensor on load."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        "energy",
+        "energy_power_battery_inverted_sensor_battery_power",
+        suggested_object_id="renamed_power",
+    )
+    hass_storage["energy"] = {
+        "version": 1,
+        "minor_version": 3,
+        "key": "energy",
+        "data": {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                    "stat_rate": "sensor.battery_power_inverted",
+                }
+            ],
+            "device_consumption": [],
+            "device_consumption_water": [],
+        },
+    }
+
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0]["stat_rate"] == "sensor.renamed_power"
+
+
 async def test_energy_preferences_default(hass: HomeAssistant) -> None:
     """Test default preferences include device_consumption_water."""
     defaults = EnergyManager.default_preferences()
@@ -61,7 +101,7 @@ async def test_energy_preferences_empty_store(hass: HomeAssistant) -> None:
     assert manager.data is None
 
 
-async def test_energy_preferences_migration_from_old_version(
+async def test_energy_preferences_migration_from_version_1_1(
     hass: HomeAssistant,
 ) -> None:
     """Test that device_consumption_water is added when migrating from v1.1 to v1.2."""
@@ -83,6 +123,31 @@ async def test_energy_preferences_migration_from_old_version(
     assert manager.data is not None
     assert "device_consumption_water" in manager.data
     assert manager.data["device_consumption_water"] == []
+
+
+async def test_energy_preferences_migration_from_version_1_3(
+    hass: HomeAssistant,
+) -> None:
+    """Test that device_consumption_gas is added when migrating from v1.3 to v1.4."""
+    # Create version 1.3 data without device_consumption_gas (old version)
+    old_data = {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+    # Save with old version (1.3) - migration will run to upgrade to 1.4
+    old_store = storage.Store(hass, 1, "energy", minor_version=3)
+    await old_store.async_save(old_data)
+
+    # Load with manager - should trigger migration
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    # Verify the field was added by migration
+    assert manager.data is not None
+    assert "device_consumption_gas" in manager.data
+    assert manager.data["device_consumption_gas"] == []
 
 
 async def test_battery_power_config_inverted_sets_stat_rate(
@@ -174,6 +239,32 @@ async def test_battery_stat_soc_round_trip(
     assert manager.data is not None
     source = manager.data["energy_sources"][0]
     assert source["stat_soc"] == "sensor.battery_state_of_charge"
+
+
+async def test_battery_capacity_round_trip(
+    hass: HomeAssistant,
+) -> None:
+    """Test that battery capacity is preserved through async_update."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    battery_source = {
+        "type": "battery",
+        "stat_energy_from": "sensor.battery_energy_from",
+        "stat_energy_to": "sensor.battery_energy_to",
+        "capacity": 13.5,
+    }
+    sources = ENERGY_SOURCE_SCHEMA([battery_source])
+
+    await manager.async_update({"energy_sources": sources})
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0]["capacity"] == 13.5
+    with pytest.raises(probatio.Invalid):
+        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": 0}])
+    with pytest.raises(probatio.Invalid):
+        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": -1}])
 
 
 async def test_grid_power_config_inverted_sets_stat_rate(
@@ -298,14 +389,16 @@ async def test_power_config_takes_precedence_over_stat_rate(
 
 async def test_power_config_validation_empty() -> None:
     """Test that empty power_config raises validation error."""
-    with pytest.raises(vol.Invalid, match="power_config must have at least one option"):
+    with pytest.raises(
+        probatio.Invalid, match="power_config must have at least one option"
+    ):
         POWER_CONFIG_SCHEMA({})
 
 
 async def test_power_config_validation_multiple_methods() -> None:
     """Test that power_config with multiple methods raises validation error."""
     # Both stat_rate and stat_rate_inverted (should fail due to Exclusive)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         POWER_CONFIG_SCHEMA(
             {
                 "stat_rate": "sensor.power",
@@ -314,7 +407,7 @@ async def test_power_config_validation_multiple_methods() -> None:
         )
 
     # Both stat_rate and stat_rate_from/to (should fail due to Exclusive)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         POWER_CONFIG_SCHEMA(
             {
                 "stat_rate": "sensor.power",
@@ -324,7 +417,7 @@ async def test_power_config_validation_multiple_methods() -> None:
         )
 
     # Both stat_rate_inverted and stat_rate_from/to (should fail due to Exclusive)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         POWER_CONFIG_SCHEMA(
             {
                 "stat_rate_inverted": "sensor.power",
@@ -338,7 +431,8 @@ async def test_flow_from_validation_multiple_prices() -> None:
     """Test that flow_from validation rejects both entity and number price."""
     # Both entity_energy_price and number_energy_price should fail
     with pytest.raises(
-        vol.Invalid, match="Define either an entity or a fixed number for the price"
+        probatio.Invalid,
+        match="Define either an entity or a fixed number for the price",
     ):
         FLOW_FROM_GRID_SOURCE_SCHEMA(
             {
@@ -698,11 +792,10 @@ async def test_grid_migration_more_imports_than_exports(hass: HomeAssistant) -> 
 
 
 async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
-    """Test migration preserves power config and stat_rate from first grid.
+    """Test migration preserves power config from first grid.
 
-    Note: Migration preserves the original stat_rate value from the legacy power array.
-    The stat_rate regeneration from power_config only happens during async_update()
-    for new data submissions, not during storage migration.
+    Note: stat_rate is regenerated from power_config when the preferences are
+    loaded, so a stale stat_rate from the legacy power array is replaced.
     """
     old_data = {
         "energy_sources": [
@@ -739,9 +832,7 @@ async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
     # Verify power_config is preserved
     assert grid["power_config"] == {"stat_rate_inverted": "sensor.grid_power"}
 
-    # Migration preserves the original stat_rate value from the legacy power array
-    # (stat_rate regeneration from power_config only happens in async_update)
-    assert grid["stat_rate"] == "sensor.grid_power"
+    assert grid["stat_rate"] == "sensor.grid_power_inverted"
 
 
 async def test_grid_migration_import_only(hass: HomeAssistant) -> None:
@@ -850,7 +941,8 @@ async def test_grid_new_format_no_migration_needed(hass: HomeAssistant) -> None:
 async def test_grid_validation_single_import_price() -> None:
     """Test that grid validation rejects both entity and number import price."""
     with pytest.raises(
-        vol.Invalid, match="Define either an entity or a fixed number for import price"
+        probatio.Invalid,
+        match="Define either an entity or a fixed number for import price",
     ):
         ENERGY_SOURCE_SCHEMA(
             [
@@ -868,7 +960,8 @@ async def test_grid_validation_single_import_price() -> None:
 async def test_grid_validation_single_export_price() -> None:
     """Test that grid validation rejects both entity and number export price."""
     with pytest.raises(
-        vol.Invalid, match="Define either an entity or a fixed number for export price"
+        probatio.Invalid,
+        match="Define either an entity or a fixed number for export price",
     ):
         ENERGY_SOURCE_SCHEMA(
             [
@@ -886,7 +979,7 @@ async def test_grid_validation_single_export_price() -> None:
 
 async def test_flow_from_rejects_entity_price_for_external_stat() -> None:
     """Test that entity_energy_price is rejected for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_FROM_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
@@ -897,7 +990,7 @@ async def test_flow_from_rejects_entity_price_for_external_stat() -> None:
 
 async def test_flow_from_rejects_number_price_for_external_stat() -> None:
     """Test that number_energy_price is rejected for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_FROM_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
@@ -934,7 +1027,7 @@ async def test_flow_from_allows_no_cost_for_external_stat() -> None:
 
 async def test_flow_to_rejects_entity_price_for_external_stat() -> None:
     """Test that entity_energy_price is rejected for external export statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_TO_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_to": "external:grid_export",
@@ -945,7 +1038,7 @@ async def test_flow_to_rejects_entity_price_for_external_stat() -> None:
 
 async def test_flow_to_rejects_number_price_for_external_stat() -> None:
     """Test that number_energy_price is rejected for external export statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_TO_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_to": "external:grid_export",
@@ -956,7 +1049,7 @@ async def test_flow_to_rejects_number_price_for_external_stat() -> None:
 
 async def test_grid_rejects_entity_price_for_external_import_stat() -> None:
     """Test that grid schema rejects entity price for external import stats."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         ENERGY_SOURCE_SCHEMA(
             [
                 {
@@ -971,7 +1064,7 @@ async def test_grid_rejects_entity_price_for_external_import_stat() -> None:
 
 async def test_grid_rejects_number_price_for_external_export_stat() -> None:
     """Test that grid schema rejects number price for external export stats."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         ENERGY_SOURCE_SCHEMA(
             [
                 {
@@ -1004,7 +1097,7 @@ async def test_grid_allows_stat_cost_for_external_stat() -> None:
 
 async def test_gas_rejects_entity_price_for_external_stat() -> None:
     """Test that gas schema rejects entity price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         GAS_SOURCE_SCHEMA(
             {
                 "type": "gas",
@@ -1016,7 +1109,7 @@ async def test_gas_rejects_entity_price_for_external_stat() -> None:
 
 async def test_gas_rejects_number_price_for_external_stat() -> None:
     """Test that gas schema rejects number price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         GAS_SOURCE_SCHEMA(
             {
                 "type": "gas",
@@ -1028,7 +1121,7 @@ async def test_gas_rejects_number_price_for_external_stat() -> None:
 
 async def test_water_rejects_entity_price_for_external_stat() -> None:
     """Test that water schema rejects entity price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         WATER_SOURCE_SCHEMA(
             {
                 "type": "water",
@@ -1040,7 +1133,7 @@ async def test_water_rejects_entity_price_for_external_stat() -> None:
 
 async def test_water_rejects_number_price_for_external_stat() -> None:
     """Test that water schema rejects number price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         WATER_SOURCE_SCHEMA(
             {
                 "type": "water",

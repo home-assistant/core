@@ -1,20 +1,23 @@
 """Vodafone Station helpers."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import _LOGGER
+from .const import LOGGER
+
+if TYPE_CHECKING:
+    from .coordinator import VodafoneConfigEntry
 
 
 async def cleanup_device_tracker(
-    hass: HomeAssistant, config_entry: ConfigEntry, devices: dict[str, Any]
+    hass: HomeAssistant, config_entry: VodafoneConfigEntry, devices: dict[str, Any]
 ) -> None:
     """Cleanup stale device tracker."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     entities_removed: bool = False
 
@@ -28,6 +31,14 @@ async def cleanup_device_tracker(
         if entry.domain != DEVICE_TRACKER_DOMAIN:
             continue
         entry_name = entry.name or entry.original_name
+        if (
+            not entry_name
+            and entry.device_id
+            and (device := device_reg.async_get(entry.device_id))
+        ):
+            # The tracker has no entity name; its device is named by the hostname,
+            # which a user rename of the device must not hide
+            entry_name = device.name
         entry_host = entry_name.partition(" ")[0] if entry_name else None
         entry_mac = entry.unique_id.partition("_")[0]
 
@@ -39,7 +50,7 @@ async def cleanup_device_tracker(
             and entry_host in device_hosts_names
             and entry_mac in device_hosts_macs
         ):
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Skipping entity %s [mac=%s, host=%s]",
                 entry_name,
                 entry_mac,
@@ -48,7 +59,7 @@ async def cleanup_device_tracker(
             continue
         # Entity is removed so that at the next coordinator update
         # the correct one will be created
-        _LOGGER.info("Removing entity: %s", entry_name)
+        LOGGER.info("Removing entity: %s", entry_name)
         entity_reg.async_remove(entry.entity_id)
         entities_removed = True
 
@@ -57,7 +68,9 @@ async def cleanup_device_tracker(
 
 
 def _async_remove_empty_devices(
-    hass: HomeAssistant, entity_reg: er.EntityRegistry, config_entry: ConfigEntry
+    hass: HomeAssistant,
+    entity_reg: er.EntityRegistry,
+    config_entry: VodafoneConfigEntry,
 ) -> None:
     """Remove devices with no entities."""
 
@@ -69,5 +82,5 @@ def _async_remove_empty_devices(
             device_entry.id,
             include_disabled_entities=True,
         ):
-            _LOGGER.info("Removing device: %s", device_entry.name)
+            LOGGER.info("Removing device: %s", device_entry.name)
             device_reg.async_remove_device(device_entry.id)

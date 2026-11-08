@@ -1,18 +1,29 @@
 """Tests for the SmartThings component init module."""
 
+from dataclasses import replace
+from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import (
     Attribute,
     Capability,
     DeviceResponse,
     DeviceStatus,
     Lifecycle,
+    SmartThingsAuthenticationFailedError,
     SmartThingsConnectionError,
     SmartThingsSinkError,
     Subscription,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -51,8 +62,6 @@ from . import (
     trigger_update,
 )
 
-from tests.common import MockConfigEntry, async_load_fixture
-
 
 async def test_fixtures() -> None:
     """Test all fixtures."""
@@ -85,7 +94,9 @@ async def test_devices(
     for specs in devices.get_devices.return_value:
         device_id = specs.device_id
 
-        device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
 
         assert device is not None
         assert device == snapshot(name=get_fixture_name(device_id))
@@ -104,21 +115,27 @@ async def test_device_not_resetting_area(
 
     device_id = devices.get_devices.return_value[0].device_id
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
 
     assert device.area_id == "theater"
 
     device_registry.async_update_device(device_id=device.id, area_id=None)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
 
     assert device.area_id is None
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
     assert device.area_id is None
 
 
@@ -179,23 +196,78 @@ async def test_create_subscription(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_create_subscription_sink_error(
+@pytest.mark.parametrize(
+    "error",
+    [
+        SmartThingsSinkError("Sink error"),
+        SmartThingsConnectionError("Timeout occurred while connecting to SmartThings"),
+    ],
+)
+async def test_create_subscription_error(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    error: Exception,
 ) -> None:
     """Test handling an error when creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
-    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+    devices.create_subscription.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "create_subscription_error"
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    "call",
+    [
+        "get_rooms",
+        "get_devices",
+        "get_device_status",
+        "get_device_health",
+        "get_scenes",
+    ],
+)
+async def test_initial_fetch_connection_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    call: str,
+) -> None:
+    """Test retrying setup when the cloud is unreachable while fetching."""
+    getattr(devices, call).side_effect = SmartThingsConnectionError(
+        "Timeout occurred while connecting to SmartThings"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_initial_fetch_authentication_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting reauth when authentication fails while fetching."""
+    devices.get_devices.side_effect = SmartThingsAuthenticationFailedError(
+        "Authentication failed"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "authentication_failed"
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -241,6 +313,30 @@ async def test_stale_subscription_id(
         == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
     devices.delete_subscription.assert_called_once_with("test")
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_delete_stale_subscription_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test retrying setup when the old subscription can't be deleted."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "test"},
+    )
+    devices.delete_subscription.side_effect = SmartThingsConnectionError(
+        "Timeout occurred while connecting to SmartThings"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "delete_subscription_error"
+    devices.create_subscription.assert_not_called()
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -342,7 +438,9 @@ async def test_removing_stale_devices(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "aaa-bbb-ccc"), mock_config_entry.entry_id
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -384,6 +482,122 @@ async def test_error_refreshing_token(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_refreshing_token_while_loaded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the token is refreshed when it expires while the entry is loaded."""
+    await setup_integration(hass, mock_config_entry)
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "expires_in": 86399,
+        },
+    )
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data["token"]["access_token"] == "new-access-token"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    ("response", "reauth_flows"),
+    [({"status": 500}, 0), ({"status": 400}, 1), ({"exc": TimeoutError}, 0)],
+)
+async def test_error_refreshing_token_while_loaded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    response: dict[str, Any],
+    reauth_flows: int,
+) -> None:
+    """Test a failed token refresh keeps the entry loaded and warns once."""
+    await setup_integration(hass, mock_config_entry)
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token", **response
+    )
+
+    for delta in (timedelta(hours=1), timedelta(minutes=1)):
+        freezer.tick(delta)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 2
+    assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == reauth_flows
+    assert caplog.text.count("Error refreshing the token") == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_warning_after_token_refresh_recovered(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed token refresh warns again after a successful one."""
+    await setup_integration(hass, mock_config_entry)
+    token_url = "https://auth-global.api.smartthings.com/oauth/token"
+    new_token = {
+        "access_token": "new-access-token",
+        "refresh_token": "new-refresh-token",
+        "expires_in": 86399,
+    }
+
+    for delta, response in (
+        (timedelta(hours=1), {"status": 500}),
+        (timedelta(minutes=1), {"json": new_token}),
+        (timedelta(days=1), {"status": 500}),
+    ):
+        aioclient_mock.clear_requests()
+        aioclient_mock.post(token_url, **response)
+        freezer.tick(delta)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.data["token"]["access_token"] == "new-access-token"
+    assert caplog.text.count("Error refreshing the token") == 2
+
+
+async def test_missing_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting reauth when the config entry has no token."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            key: value
+            for key, value in mock_config_entry.data.items()
+            if key != "token"
+        },
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "missing_token"
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
 async def test_hub_via_device(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -403,16 +617,59 @@ async def test_hub_via_device(
     ]
     await setup_integration(hass, mock_config_entry)
 
-    hub_device = device_registry.async_get_device(
-        {(DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e")}
+    hub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e"), mock_config_entry.entry_id
     )
     assert hub_device == snapshot
-    assert (
-        device_registry.async_get_device(
-            {(DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f")}
-        ).via_device_id
-        == hub_device.id
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f"), mock_config_entry.entry_id
     )
+    assert child_device is not None
+    assert child_device.via_device_id == hub_device.id
+
+
+async def test_via_device_nested_hierarchy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Test a nested device hierarchy is linked regardless of device order."""
+    grandparent_id = "11111111-1111-1111-1111-111111111111"
+    parent_id = "00000000-0000-0000-0000-000000000000"
+    child_id = "22222222-2222-2222-2222-222222222222"
+
+    base_device = DeviceResponse.from_json(
+        await async_load_fixture(hass, "devices/virtual_valve.json", DOMAIN)
+    ).items[0]
+    # Children precede their parents to exercise ordering-independent linking.
+    mock_smartthings.get_devices.return_value = [
+        replace(base_device, device_id=child_id, parent_device_id=parent_id),
+        replace(base_device, device_id=parent_id, parent_device_id=grandparent_id),
+        replace(base_device, device_id=grandparent_id, parent_device_id=None),
+    ]
+    mock_smartthings.get_device_status.return_value = DeviceStatus.from_json(
+        await async_load_fixture(hass, "device_status/virtual_valve.json", DOMAIN)
+    ).components
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    grandparent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, grandparent_id), mock_config_entry.entry_id
+    )
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_id), mock_config_entry.entry_id
+    )
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, child_id), mock_config_entry.entry_id
+    )
+    assert grandparent_device is not None
+    assert parent_device is not None
+    assert child_device is not None
+    assert grandparent_device.via_device_id is None
+    assert parent_device.via_device_id == grandparent_device.id
+    assert child_device.via_device_id == parent_device.id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

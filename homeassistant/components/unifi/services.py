@@ -5,7 +5,7 @@ from typing import Any
 
 import aiounifi
 from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -18,8 +18,8 @@ from .const import DOMAIN
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 SERVICE_REMOVE_CLIENTS = "remove_clients"
 
-SERVICE_RECONNECT_CLIENT_SCHEMA = vol.All(
-    vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
+SERVICE_RECONNECT_CLIENT_SCHEMA = probatio.All(
+    probatio.Schema({probatio.Required(ATTR_DEVICE_ID): str})
 )
 
 SUPPORTED_SERVICES = (SERVICE_RECONNECT_CLIENT, SERVICE_REMOVE_CLIENTS)
@@ -54,7 +54,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
+    device_entry = device_registry.async_get(
+        data[ATTR_DEVICE_ID], include_child_devices=False
+    )
 
     if device_entry is None:
         raise ServiceValidationError(

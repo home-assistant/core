@@ -3,17 +3,16 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from essent_dynamic_pricing.models import EnergyData, Tariff
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CURRENCY_EURO
+from homeassistant.const import CURRENCY_EURO, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -204,11 +203,13 @@ class EssentSensor(EssentEntity, SensorEntity):
         self._attr_translation_key = f"{energy_type}_{description.translation_key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_description.value_fn(self.energy_data)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return f"{CURRENCY_EURO}/{self.energy_data.unit}"

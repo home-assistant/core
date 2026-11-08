@@ -2,6 +2,7 @@
 
 from copy import copy
 import dataclasses
+from typing import override
 
 from screenlogicpy.const.common import ON_OFF
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
@@ -18,14 +19,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ScreenlogicDataUpdateCoordinator
+from .coordinator import ScreenLogicConfigEntry, ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
-from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity
 
 
@@ -265,6 +265,7 @@ class ScreenLogicBinarySensor(ScreenLogicEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def is_on(self) -> bool:
         """Determine if the sensor is on."""
         return self.entity_data[ATTR.VALUE] == ON_OFF.ON

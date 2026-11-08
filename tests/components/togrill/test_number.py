@@ -1,14 +1,18 @@
 """Test numbers for ToGrill integration."""
 
+from datetime import timedelta
 from unittest.mock import Mock
 
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 from togrill_bluetooth.exceptions import BaseError
 from togrill_bluetooth.packets import (
     PacketA0Notify,
     PacketA6Write,
+    PacketA7Write,
     PacketA8Notify,
     PacketA300Write,
     PacketA301Write,
@@ -25,9 +29,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import TOGRILL_SERVICE_INFO, setup_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -232,7 +233,7 @@ async def test_set_ambient_number(
                     temperature_1=50.0,
                 ),
             ],
-            "number.probe_1_target_temperature",
+            "number.pro_05_probe_1_target_temperature",
             100.0,
             PacketA301Write(probe=1, target=100),
             id="probe",
@@ -245,7 +246,7 @@ async def test_set_ambient_number(
                     temperature_1=50.0,
                 ),
             ],
-            "number.probe_1_target_temperature",
+            "number.pro_05_probe_1_target_temperature",
             0.0,
             PacketA301Write(probe=1, target=None),
             id="probe_clear",
@@ -259,7 +260,7 @@ async def test_set_ambient_number(
                     temperature_2=80.0,
                 ),
             ],
-            "number.probe_1_minimum_temperature",
+            "number.pro_05_probe_1_minimum_temperature",
             100.0,
             PacketA300Write(probe=1, minimum=100.0, maximum=80.0),
             id="minimum",
@@ -273,7 +274,7 @@ async def test_set_ambient_number(
                     temperature_2=80.0,
                 ),
             ],
-            "number.probe_1_minimum_temperature",
+            "number.pro_05_probe_1_minimum_temperature",
             0.0,
             PacketA300Write(probe=1, minimum=None, maximum=80.0),
             id="minimum_clear",
@@ -287,7 +288,7 @@ async def test_set_ambient_number(
                     temperature_2=80.0,
                 ),
             ],
-            "number.probe_1_maximum_temperature",
+            "number.pro_05_probe_1_maximum_temperature",
             100.0,
             PacketA300Write(probe=1, minimum=50.0, maximum=100.0),
             id="maximum",
@@ -301,7 +302,7 @@ async def test_set_ambient_number(
                     temperature_2=None,
                 ),
             ],
-            "number.probe_1_maximum_temperature",
+            "number.pro_05_probe_1_maximum_temperature",
             0.0,
             PacketA300Write(probe=1, minimum=50.0, maximum=None),
             id="maximum_clear",
@@ -323,6 +324,32 @@ async def test_set_ambient_number(
             15,
             PacketA6Write(temperature_unit=None, alarm_interval=15),
             id="alarm_interval",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_TARGET,
+                    temperature_1=50.0,
+                ),
+            ],
+            "number.pro_05_probe_1_timer",
+            10.0,
+            PacketA7Write(probe=1, time=timedelta(minutes=10), unknown=1),
+            id="timer",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_TARGET,
+                    temperature_1=50.0,
+                ),
+            ],
+            "number.pro_05_probe_1_timer",
+            0.0,
+            PacketA7Write(probe=1, time=timedelta(0), unknown=0),
+            id="timer_stop",
         ),
     ],
 )
@@ -404,7 +431,7 @@ async def test_set_number_write_error(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
+                ATTR_ENTITY_ID: "number.pro_05_probe_1_target_temperature",
             },
             blocking=True,
         )
@@ -438,7 +465,32 @@ async def test_set_number_disconnected(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
+                ATTR_ENTITY_ID: "number.pro_05_probe_1_target_temperature",
             },
             blocking=True,
         )
+
+
+async def test_timer_readback(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+) -> None:
+    """Test that a running timer is reported back in minutes."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry, [Platform.NUMBER])
+
+    mock_client.mocked_notify(
+        PacketA8Notify(
+            probe=1,
+            alarm_type=None,
+            time=timedelta(minutes=30),
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.pro_05_probe_1_timer")
+    assert state is not None
+    assert float(state.state) == 30.0

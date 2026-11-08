@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from elmax_api.model.command import SwitchCommand
 from elmax_api.model.panel import PanelStatus
@@ -62,6 +62,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
     """Implement the Elmax switch entity."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.coordinator.get_actuator_state(self._device.endpoint_id).opened
@@ -86,6 +87,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
 
         return new_state != old_state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.http_client.execute_command(
@@ -94,6 +96,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
         if await self._wait_for_state_change():
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.http_client.execute_command(

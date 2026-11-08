@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from aiohttp import ClientError
@@ -104,27 +104,26 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
     async def _send_message(self, message: str) -> None:
         """Send a Habitica message."""
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         try:
             await self._send_message(message)
         except NotAuthorizedError as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_message_forbidden",
                 translation_placeholders={
-                    **self.translation_placeholders,
+                    "name": self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e
         except NotFoundError as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="send_message_not_found",
                 translation_placeholders={
-                    **self.translation_placeholders,
+                    "name": self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e
@@ -157,7 +156,7 @@ class HabiticaPartyChatNotifyEntity(HabiticaBaseNotifyEntity):
         party: GroupData,
     ) -> None:
         """Initialize a Habitica entity."""
-        self._attr_translation_placeholders = {CONF_NAME: party.name}
+        self._attr_translation_placeholders = {"name": party.name}
 
         self.entity_description = NotifyEntityDescription(
             key=HabiticaNotify.PARTY_CHAT,
@@ -166,6 +165,7 @@ class HabiticaPartyChatNotifyEntity(HabiticaBaseNotifyEntity):
         self.party = party
         super().__init__(coordinator)
 
+    @override
     async def _send_message(self, message: str) -> None:
         """Send a Habitica party chat message."""
 
@@ -184,7 +184,7 @@ class HabiticaPrivateMessageNotifyEntity(HabiticaBaseNotifyEntity):
         member: UserData,
     ) -> None:
         """Initialize a Habitica entity."""
-        self._attr_translation_placeholders = {CONF_NAME: member.profile.name or ""}
+        self._attr_translation_placeholders = {"name": member.profile.name or ""}
         self.entity_description = NotifyEntityDescription(
             key=f"{member.id!s}_{HabiticaNotify.PRIVATE_MESSAGE}",
             translation_key=HabiticaNotify.PRIVATE_MESSAGE,
@@ -192,6 +192,7 @@ class HabiticaPrivateMessageNotifyEntity(HabiticaBaseNotifyEntity):
         self.member = member
         super().__init__(coordinator)
 
+    @override
     async def _send_message(self, message: str) -> None:
         """Send a Habitica private message."""
         if TYPE_CHECKING:

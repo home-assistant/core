@@ -3,10 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service, get_fixture_path
 
 from homeassistant import config as hass_config
-from homeassistant.components.intent_script import CONF_ACTION, DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, SERVICE_RELOAD
+from homeassistant.components.intent_script.const import DOMAIN
+from homeassistant.components.intent_script.services import IntentScriptService
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -17,8 +19,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service, get_fixture_path
-
 
 async def test_intent_script(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
@@ -26,7 +26,7 @@ async def test_intent_script(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorld": {
@@ -78,7 +78,7 @@ async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorldWaitResponse": {
@@ -135,7 +135,7 @@ async def test_intent_script_service_response(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorldServiceResponse": {
@@ -165,7 +165,7 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorld": {
@@ -220,7 +220,7 @@ async def test_intent_script_targets(
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "Targets": {
@@ -333,7 +333,7 @@ async def test_intent_script_action_validation(
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "ChooseWithRegistryIdIntent": {
@@ -430,7 +430,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     config = {"intent_script": {"NewIntent1": {"speech": {"text": "HelloWorld123"}}}}
 
-    await async_setup_component(hass, "intent_script", config)
+    await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     intents = hass.data.get(intent.DATA_KEY)
@@ -443,7 +443,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -459,7 +459,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -475,7 +475,7 @@ async def test_reload_unloads_scripts(hass: HomeAssistant) -> None:
     """Test that reloading intent scripts unloads the action scripts."""
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "TestIntent": {
@@ -499,7 +499,9 @@ async def test_reload_unloads_scripts(hass: HomeAssistant) -> None:
             action_script, "async_unload", wraps=action_script.async_unload
         ) as unload_mock,
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, IntentScriptService.RELOAD, blocking=True
+        )
         await hass.async_block_till_done()
 
     stop_mock.assert_called_once()

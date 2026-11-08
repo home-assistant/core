@@ -1,11 +1,12 @@
 """Support for Tile device trackers."""
 
 import logging
+from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import as_utc
+from homeassistant.util import dt as dt_util
 
 from .coordinator import TileConfigEntry, TileCoordinator
 from .entity import TileEntity
@@ -49,6 +50,7 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
         self._attr_unique_id = f"{coordinator.username}_{self._tile.uuid}"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         self._update_from_latest_data()
@@ -79,10 +81,12 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
                 # If the API doesn't return a value for a particular timestamp
                 # attribute, skip it:
                 continue
-            self._attr_extra_state_attributes[timestamp_attr[0]] = as_utc(
-                timestamp_attr[1]
-            )
+            # pytile returns naive datetimes that hold UTC, not local time:
+            self._attr_extra_state_attributes[timestamp_attr[0]] = timestamp_attr[
+                1
+            ].replace(tzinfo=dt_util.UTC)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

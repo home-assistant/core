@@ -1,11 +1,12 @@
 """Config flow for OwnTracks."""
 
 import secrets
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .const import DOMAIN
 from .helper import supports_encryption
@@ -19,6 +20,7 @@ class OwnTracksFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -29,7 +31,10 @@ class OwnTracksFlow(ConfigFlow, domain=DOMAIN):
         try:
             webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
         except cloud.CloudNotConnected:
-            return self.async_abort(reason="cloud_not_connected")
+            return self.async_abort(
+                reason="cloud_not_connected",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         secret = secrets.token_hex(16)
 

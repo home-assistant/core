@@ -1,6 +1,7 @@
 """Support for bond buttons."""
 
 from dataclasses import dataclass
+from typing import override
 
 from bond_async import Action
 
@@ -23,7 +24,7 @@ STEP_SIZE = 10
 class BondButtonEntityDescription(ButtonEntityDescription):
     """Class to describe a Bond Button entity."""
 
-    # BondEntity does not support UNDEFINED,
+    # BondEntity does not support Undefined,
     # restrict the type to str | None
     name: str | None = None
     mutually_exclusive: Action | None
@@ -313,6 +314,7 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         self.entity_description = description
         super().__init__(data, device, description.name, description.key.lower())
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         description = self.entity_description
@@ -323,5 +325,6 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             action = Action(key)
         await self._bond.action(self._device_id, action)
 
+    @override
     def _apply_state(self) -> None:
         """Apply the state."""

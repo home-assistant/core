@@ -1,13 +1,14 @@
 """Support for StarLine switch."""
 
-from typing import Any
+from typing import Any, override
+
+from starline import StarlineDevice
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import StarlineConfigEntry
-from .account import StarlineAccount, StarlineDevice
+from .account import StarlineAccount, StarlineConfigEntry
 from .entity import StarlineEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
@@ -63,19 +64,23 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._device.car_state.get(self._key)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._account.api.set_car_state(self._device.device_id, self._key, True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._account.api.set_car_state(self._device.device_id, self._key, False)

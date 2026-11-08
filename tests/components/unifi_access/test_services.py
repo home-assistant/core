@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from unifi_access_api import (
     DoorLockRule,
     DoorLockRuleStatus,
@@ -23,14 +24,16 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
-
 FRONT_DOOR_LOCK_RULE_ENTITY = "sensor.front_door_lock_rule"
 
 
-def _device_id(device_registry: dr.DeviceRegistry, identifier: str) -> str:
+def _device_id(
+    device_registry: dr.DeviceRegistry, identifier: str, config_entry_id: str
+) -> str:
     """Return the device ID for a UniFi Access identifier."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, identifier)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, identifier), config_entry_id
+    )
     assert device is not None
     return device.id
 
@@ -48,7 +51,9 @@ async def test_set_lock_rule_service_calls_api(
         DOMAIN,
         SERVICE_SET_LOCK_RULE,
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, "door-001"),
+            ATTR_DEVICE_ID: _device_id(
+                device_registry, "door-001", mock_config_entry.entry_id
+            ),
             ATTR_RULE: "keep_lock",
             ATTR_INTERVAL: {"minutes": 30},
         },
@@ -73,7 +78,9 @@ async def test_set_lock_rule_service_defaults_interval(
         DOMAIN,
         SERVICE_SET_LOCK_RULE,
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, "door-001"),
+            ATTR_DEVICE_ID: _device_id(
+                device_registry, "door-001", mock_config_entry.entry_id
+            ),
             ATTR_RULE: "keep_unlock",
         },
         blocking=True,
@@ -98,7 +105,9 @@ async def test_set_lock_rule_service_updates_sensor_state(
         DOMAIN,
         SERVICE_SET_LOCK_RULE,
         {
-            ATTR_DEVICE_ID: _device_id(device_registry, "door-001"),
+            ATTR_DEVICE_ID: _device_id(
+                device_registry, "door-001", mock_config_entry.entry_id
+            ),
             ATTR_RULE: "keep_lock",
         },
         blocking=True,
@@ -126,7 +135,9 @@ async def test_set_lock_rule_service_raises_on_api_error(
             DOMAIN,
             SERVICE_SET_LOCK_RULE,
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, "door-001"),
+                ATTR_DEVICE_ID: _device_id(
+                    device_registry, "door-001", mock_config_entry.entry_id
+                ),
                 ATTR_RULE: "keep_lock",
             },
             blocking=True,
@@ -150,7 +161,11 @@ async def test_set_lock_rule_service_rejects_hub_device(
             DOMAIN,
             SERVICE_SET_LOCK_RULE,
             {
-                ATTR_DEVICE_ID: _device_id(device_registry, mock_config_entry.entry_id),
+                ATTR_DEVICE_ID: _device_id(
+                    device_registry,
+                    mock_config_entry.entry_id,
+                    mock_config_entry.entry_id,
+                ),
                 ATTR_RULE: "keep_lock",
             },
             blocking=True,

@@ -1,10 +1,10 @@
 """Support for Vera switches."""
 
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,20 +39,22 @@ class VeraSwitch(VeraEntity[veraApi.VeraSwitch], SwitchEntity):
     ) -> None:
         """Initialize the Vera device."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self.vera_device.switch_on()
         self._attr_is_on = True
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.vera_device.switch_off()
         self._attr_is_on = False
         self.schedule_update_ha_state()
 
+    @override
     def update(self) -> None:
         """Update device state."""
         super().update()

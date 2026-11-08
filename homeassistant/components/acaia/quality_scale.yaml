@@ -14,9 +14,15 @@ rules:
     status: exempt
     comment: |
       No custom actions are defined.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -34,7 +40,9 @@ rules:
   action-exceptions:
     status: exempt
     comment: |
-      No custom actions are defined.
+      Button actions only enqueue commands; aioacaia writes them in a background task,
+      and entities are unavailable while the scale is disconnected, so there is no
+      failure to raise from the action.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from pylast import Track, WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import API_KEY, USERNAME_1, USERNAME_2, MockNetwork, MockUser
-
-from tests.common import MockConfigEntry
 
 type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 
@@ -92,3 +91,23 @@ def mock_first_time_user() -> MockUser:
 def mock_not_found_user() -> MockUser:
     """Return not found mock user."""
     return MockUser(thrown_error=WSError("network", "status", "User not found"))
+
+
+@pytest.fixture(name="hidden_user")
+def mock_hidden_user() -> MockUser:
+    """Return mock user who hides their recent listening information."""
+    return MockUser(
+        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks_error=WSError(
+            "network", "17", "Login: User required to be logged in"
+        ),
+    )
+
+
+@pytest.fixture(name="recent_tracks_error_user")
+def mock_recent_tracks_error_user() -> MockUser:
+    """Return mock user whose recent tracks request fails."""
+    return MockUser(
+        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks_error=WSError("network", "status", "Something strange"),
+    )

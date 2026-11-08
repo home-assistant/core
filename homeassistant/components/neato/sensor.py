@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
@@ -12,10 +12,9 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NeatoConfigEntry
 from .const import SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
-from .hub import NeatoHub
+from .hub import NeatoConfigEntry, NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +71,7 @@ class NeatoSensor(NeatoEntity, SensorEntity):
         _LOGGER.debug("self._state=%s", self._state)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state."""
         if self._state is not None:

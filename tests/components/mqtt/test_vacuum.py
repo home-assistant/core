@@ -6,38 +6,8 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
-
-from homeassistant.components import mqtt, vacuum
-from homeassistant.components.mqtt import vacuum as mqttvacuum
-from homeassistant.components.mqtt.const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
-from homeassistant.components.mqtt.vacuum import (
-    ALL_SERVICES,
-    MQTT_VACUUM_ATTRIBUTES_BLOCKED,
-    SERVICE_TO_STRING,
-    services_to_strings,
-)
-from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
-    ATTR_FAN_SPEED_LIST,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
-    SERVICE_STOP,
-    VacuumActivity,
-)
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    ENTITY_MATCH_ALL,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -66,21 +36,54 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.components.vacuum import common
-from tests.typing import (
+from pytest_homeassistant.typing import (
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
     WebSocketGenerator,
 )
+
+from homeassistant.components import vacuum
+from homeassistant.components.mqtt import vacuum as mqttvacuum
+from homeassistant.components.mqtt.const import (
+    CONF_COMMAND_TOPIC,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
+from homeassistant.components.mqtt.vacuum import (
+    ALL_SERVICES,
+    MQTT_VACUUM_ATTRIBUTES_BLOCKED,
+    SERVICE_TO_STRING,
+    services_to_strings,
+)
+from homeassistant.components.vacuum import (
+    ATTR_FAN_SPEED,
+    ATTR_FAN_SPEED_LIST,
+    SERVICE_CLEAN_SPOT,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_START,
+    SERVICE_STOP,
+    VacuumActivity,
+)
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    ENTITY_MATCH_ALL,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+
+from tests.components.vacuum import common
 
 COMMAND_TOPIC = "vacuum/command"
 SEND_COMMAND_TOPIC = "vacuum/send_command"
 STATE_TOPIC = "vacuum/state"
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         vacuum.DOMAIN: {
             CONF_NAME: "mqtttest",
             CONF_COMMAND_TOPIC: COMMAND_TOPIC,
@@ -93,7 +96,7 @@ DEFAULT_CONFIG = {
 }
 
 CONFIG_CLEAN_SEGMENTS = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         vacuum.DOMAIN: {
             CONF_NAME: "test",
             CONF_STATE_TOPIC: STATE_TOPIC,
@@ -103,7 +106,7 @@ CONFIG_CLEAN_SEGMENTS = {
     }
 }
 
-DEFAULT_CONFIG_2 = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
+DEFAULT_CONFIG_2 = {DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
 
 CONFIG_ALL_SERVICES = help_custom_config(
     vacuum.DOMAIN,
@@ -326,6 +329,7 @@ async def test_command_without_command_topic(
 @pytest.mark.parametrize("hass_config", [CONFIG_CLEAN_SEGMENTS])
 async def test_clean_segments_initial_setup_without_repair_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test setup does not fire repair after segments are received."""
@@ -351,7 +355,6 @@ async def test_clean_segments_initial_setup_without_repair_issue(
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
-    issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 0
 
 
@@ -360,13 +363,14 @@ async def test_clean_segments_command(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test cleaning segments and repair flow."""
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     entity_registry.async_get_or_create(
         vacuum.DOMAIN,
-        mqtt.DOMAIN,
+        DOMAIN,
         "veryunique",
         config_entry=config_entry,
         suggested_object_id="test",
@@ -401,7 +405,6 @@ async def test_clean_segments_command(
         & vacuum.VacuumEntityFeature.CLEAN_AREA
     )
 
-    issue_registry = ir.async_get(hass)
     # We do not expect a repair flow as the segments did not change
     assert len(issue_registry.issues) == 0
 
@@ -549,7 +552,7 @@ async def test_removing_clean_segments_command_topic_resets_feature(
     """
     await mqtt_mock_entry()
 
-    config_with_clean_segments_command_topic = CONFIG_CLEAN_SEGMENTS[mqtt.DOMAIN][
+    config_with_clean_segments_command_topic = CONFIG_CLEAN_SEGMENTS[DOMAIN][
         vacuum.DOMAIN
     ]
     async_fire_mqtt_message(
@@ -617,7 +620,7 @@ async def test_clean_area_feature_preserved_on_config_update(
     """
     await mqtt_mock_entry()
 
-    config = CONFIG_CLEAN_SEGMENTS[mqtt.DOMAIN][vacuum.DOMAIN]
+    config = CONFIG_CLEAN_SEGMENTS[DOMAIN][vacuum.DOMAIN]
     async_fire_mqtt_message(
         hass,
         "homeassistant/vacuum/bla/config",
@@ -701,8 +704,7 @@ async def test_status(
             (
                 {
                     mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
-                        mqttvacuum.DEFAULT_SERVICES
-                        | vacuum.VacuumEntityFeature.BATTERY,
+                        mqttvacuum.DEFAULT_SERVICES,
                         SERVICE_TO_STRING,
                     )
                 },
@@ -865,7 +867,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 vacuum.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1036,7 +1038,7 @@ async def test_publishing_with_custom_encoding(
     """Test publishing MQTT payload with different encoding."""
     domain = vacuum.DOMAIN
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqtt.DOMAIN][domain]["supported_features"] = [
+    config[DOMAIN][domain]["supported_features"] = [
         "clean_spot",
         "fan_speed",
         "locate",
@@ -1101,7 +1103,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         vacuum.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][vacuum.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][vacuum.DOMAIN],
         topic,
         value,
         attribute,

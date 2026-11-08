@@ -1,7 +1,7 @@
 """Support for Vera devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyvera as veraApi
 
@@ -12,11 +12,10 @@ from homeassistant.const import (
     ATTR_TRIPPED,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 from homeassistant.util.dt import utc_from_timestamp
 
 from .common import ControllerData
-from .const import CONF_LEGACY_UNIQUE_ID, VERA_ID_FORMAT
+from .const import CONF_LEGACY_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +31,6 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
         self.controller = controller_data.controller
 
         self._name = self.vera_device.name
-        # Append device id to prevent name clashes in HA.
-        self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_device.name), vera_device.vera_device_id
-        )
 
         if controller_data.config_entry.data.get(CONF_LEGACY_UNIQUE_ID):
             self._unique_id = str(self.vera_device.vera_device_id)
@@ -45,10 +40,12 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
                 f"_{self.vera_device.vera_device_id}"
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.controller.register(self.vera_device, self._update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from updates."""
         self.controller.unregister(self.vera_device, self._update_callback)
@@ -65,11 +62,13 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
             self.vera_device.refresh()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attr = {}
@@ -95,11 +94,13 @@ class VeraEntity[_DeviceTypeT: veraApi.VeraDevice](Entity):
         return attr
 
     @property
+    @override
     def available(self) -> bool:
         """If device communications have failed return false."""
         return not self.vera_device.comm_failure
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID.
 

@@ -3,17 +3,17 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import LetPotDeviceStatus
+from letpot.models import LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator, LetPotGardenStatus
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 from .entity import LetPotEntity, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache
@@ -89,11 +89,13 @@ class LetPotTimeEntity[_DataT: LetPotDeviceStatus](LetPotEntity[_DataT], TimeEnt
         )
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the time."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @exception_handler
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
         await self.entity_description.set_value_fn(

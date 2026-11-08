@@ -5,6 +5,7 @@ from enum import Enum
 from typing import NamedTuple
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
 import pyvera as pv
 
 from homeassistant import config_entries
@@ -14,8 +15,6 @@ from homeassistant.components.vera.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 type SetupCallback = Callable[[pv.VeraController, dict], None]
 
@@ -139,16 +138,17 @@ class ComponentFactory:
         self.vera_controller_class_mock.return_value = controller
 
         # Setup component through config flow.
-        if controller_config.config_source is ConfigSource.CONFIG_FLOW:
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data=component_config,
+        if controller_config.config_source == ConfigSource.CONFIG_FLOW:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"], component_config
             )
             await hass.async_block_till_done()
 
         # Setup component directly from config entry.
-        if controller_config.config_source is ConfigSource.CONFIG_ENTRY:
+        if controller_config.config_source == ConfigSource.CONFIG_ENTRY:
             entry = MockConfigEntry(
                 domain=DOMAIN,
                 data=controller_config.config,

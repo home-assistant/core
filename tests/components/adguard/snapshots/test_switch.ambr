@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('adguard', '01JADGUARDHOME0000000000000')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -32,14 +32,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filtering',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_filtering',
+    'unique_id': '01JADGUARDHOME0000000000000_filtering',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch[switch.adguard_home_filtering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Filtering',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Filtering',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_filtering',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('adguard', '01JADGUARDHOME0000000000000')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -82,14 +82,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'parental',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_parental',
+    'unique_id': '01JADGUARDHOME0000000000000_parental',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch[switch.adguard_home_parental_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Parental control',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Parental control',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_parental_control',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('adguard', '01JADGUARDHOME0000000000000')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -132,14 +132,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'protection',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_protection',
+    'unique_id': '01JADGUARDHOME0000000000000_protection',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch[switch.adguard_home_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_protection',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('adguard', '01JADGUARDHOME0000000000000')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -182,14 +182,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'query_log',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_querylog',
+    'unique_id': '01JADGUARDHOME0000000000000_querylog',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch[switch.adguard_home_query_log-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Query log',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Query log',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_query_log',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('adguard', '01JADGUARDHOME0000000000000')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -232,14 +232,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safe_browsing',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_safebrowsing',
+    'unique_id': '01JADGUARDHOME0000000000000_safebrowsing',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch[switch.adguard_home_safe_browsing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Safe browsing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Safe browsing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_safe_browsing',
@@ -257,9 +257,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('adguard', '01JADGUARDHOME0000000000000')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -282,14 +282,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safe_search',
-    'unique_id': 'adguard_127.0.0.1_3000_switch_safesearch',
+    'unique_id': '01JADGUARDHOME0000000000000_safesearch',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch[switch.adguard_home_safe_search-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Safe search',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Safe search',
     }),
     'context': <ANY>,
     'entity_id': 'switch.adguard_home_safe_search',

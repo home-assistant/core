@@ -7,13 +7,12 @@ from typing import Any
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TimeValue, TimeValueSequence
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("language", ["en", "he"])
@@ -568,4 +567,48 @@ async def test_sensor_date_changes_with_time(
     """Test the date sensor updates when time crosses boundaries."""
     async for expected_state in test_sequence():
         current_state = hass.states.get("sensor.jewish_calendar_date").state
+        assert current_state == expected_state
+
+
+@pytest.mark.parametrize("location_data", ["New York"], indirect=True)
+@pytest.mark.parametrize(
+    "test_sequence",
+    [
+        TimeValueSequence(
+            [
+                TimeValue(dt(2018, 9, 9, 18, 55), "Erev Rosh Hashana"),
+                TimeValue(dt(2018, 9, 9, 19, 1), "Rosh Hashana I"),
+            ]
+        )
+    ],
+    indirect=True,
+)
+async def test_sensor_holiday_changes_at_candle_lighting(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
+) -> None:
+    """Test that the holiday sensor updates at candle lighting when available."""
+    async for expected_state in test_sequence():
+        current_state = hass.states.get("sensor.jewish_calendar_holiday").state
+        assert current_state == expected_state
+
+
+@pytest.mark.parametrize("location_data", ["New York"], indirect=True)
+@pytest.mark.parametrize(
+    "test_sequence",
+    [
+        TimeValueSequence(
+            [
+                TimeValue(dt(2018, 9, 11, 19, 20), "Rosh Hashana II"),
+                TimeValue(dt(2018, 9, 11, 20, 0), "Tzom Gedaliah"),
+            ]
+        )
+    ],
+    indirect=True,
+)
+async def test_sensor_holiday_changes_at_havdalah(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
+) -> None:
+    """Test that the holiday sensor updates at havdalah when available."""
+    async for expected_state in test_sequence():
+        current_state = hass.states.get("sensor.jewish_calendar_holiday").state
         assert current_state == expected_state

@@ -1,9 +1,9 @@
 """Config flow for TechnoVE."""
 
-from typing import Any
+from typing import Any, override
 
-from technove import Station as TechnoVEStation, TechnoVE, TechnoVEConnectionError
-import voluptuous as vol
+import probatio
+from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
@@ -25,6 +25,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
     discovered_host: str
     discovered_station: TechnoVEStation
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -33,7 +34,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 station = await self._async_get_station(user_input[CONF_HOST])
-            except TechnoVEConnectionError:
+            except TechnoVEError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
@@ -63,7 +64,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        data_schema = probatio.Schema({probatio.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
             data_schema = self.add_suggested_values_to_schema(
                 data_schema,
@@ -82,6 +83,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the TechnoVE station."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -96,7 +98,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_host = discovery_info.host
         try:
             self.discovered_station = await self._async_get_station(discovery_info.host)
-        except TechnoVEConnectionError:
+        except TechnoVEError:
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(self.discovered_station.info.mac_address)

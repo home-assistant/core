@@ -3,12 +3,12 @@
 Call init before using it in your tests to ensure clean test data.
 """
 
+from pytest_homeassistant.common import MockEntity
+
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from tests.common import MockEntity
 
 ENTITIES = {}
 

@@ -6,7 +6,7 @@ Support for restarting UniFi devices.
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import secrets
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
@@ -39,6 +39,8 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_device_supported_fn,
+    async_port_poe_supported_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
@@ -100,6 +102,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         control_fn=async_restart_device_control_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=async_device_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"device_restart-{obj_id}",
     ),
     UnifiButtonEntityDescription[Ports, Port](
@@ -112,7 +115,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         control_fn=async_power_cycle_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        supported_fn=async_port_poe_supported_fn,
         translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
     ),
@@ -150,6 +153,7 @@ class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     entity_description: UnifiButtonEntityDescription[HandlerT, ApiItemT]
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -161,5 +165,6 @@ class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             ) from err
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state."""

@@ -1,17 +1,17 @@
 """The tests for the Switch component."""
 
 import pytest
+from pytest_homeassistant.common import MockUser, setup_test_component_platform
 
 from homeassistant import core
 from homeassistant.components import switch
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import common
 from .common import MockSwitch
-
-from tests.common import MockUser, setup_test_component_platform
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +63,7 @@ async def test_switch_context(
     hass_admin_user: MockUser,
 ) -> None:
     """Test that switch context works."""
-    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+    assert await async_setup_component(hass, DOMAIN, {"switch": {"platform": "test"}})
 
     await hass.async_block_till_done()
 

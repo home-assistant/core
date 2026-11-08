@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from pyvesync.base_devices import VeSyncBaseDevice, VeSyncHumidifier
 from pyvesync.const import DeviceStatus
@@ -100,6 +100,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
             lambda device: rgetattr(device, "state.display_set_status") is not None
         ),
         translation_key="display",
+        entity_category=EntityCategory.CONFIG,
         on_fn=lambda device: _toggle_display(device, True),
         off_fn=lambda device: _toggle_display(device, False),
     ),
@@ -108,6 +109,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         is_on=lambda device: device.state.child_lock,
         exists_fn=(lambda device: rgetattr(device, "state.child_lock") is not None),
         translation_key="child_lock",
+        entity_category=EntityCategory.CONFIG,
         on_fn=lambda device: _toggle_child_lock(device, True),
         off_fn=lambda device: _toggle_child_lock(device, False),
     ),
@@ -118,6 +120,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
             lambda device: rgetattr(device, "state.automatic_stop_config") is not None
         ),
         translation_key="auto_off_config",
+        entity_category=EntityCategory.CONFIG,
         on_fn=lambda device: _toggle_auto_stop(device, True),
         off_fn=lambda device: _toggle_auto_stop(device, False),
     ),
@@ -196,10 +199,12 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
             self._attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the entity value to represent the entity state."""
         return self.entity_description.is_on(self.device)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if not await self.entity_description.off_fn(self.device):
@@ -209,6 +214,7 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity[VeSyncBaseDevice]):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.entity_description.on_fn(self.device):

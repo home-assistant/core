@@ -1,22 +1,22 @@
 """Support for Lutron Caseta scenes."""
 
-from typing import Any
+from typing import Any, override
 
 from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
+from .models import LutronCasetaConfigEntry
 from .util import serial_to_unique_id
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronCasetaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta scene platform.
@@ -42,8 +42,10 @@ class LutronCasetaScene(Scene):
             identifiers={(DOMAIN, data.bridge_device["serial"])},
         )
         self._attr_name = scene["name"]
-        self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self._bridge.activate_scene(self._scene_id)

@@ -26,7 +26,8 @@
 .humidity_threshold_number: &humidity_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 .temperature_units: &temperature_units
@@ -63,7 +64,7 @@ is_hvac_mode:
             - unknown
           multiple: true
 
-target_humidity:
+is_target_humidity:
   target: *condition_climate_target
   fields:
     behavior: *condition_behavior
@@ -76,7 +77,7 @@ target_humidity:
           mode: is
           number: *humidity_threshold_number
 
-target_temperature:
+is_target_temperature:
   target: *condition_climate_target
   fields:
     behavior: *condition_behavior

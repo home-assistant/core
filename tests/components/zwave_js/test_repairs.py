@@ -4,23 +4,24 @@ from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node, NodeDataType
 
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.const import CONF_KEEP_OLD_DEVICES
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    issue_registry as ir,
 )
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def _trigger_repair_issue(
@@ -62,19 +63,19 @@ async def test_device_config_file_changed_confirm_step(
     client: Client,
     multisensor_6_state: NodeDataType,
     integration: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the device_config_file_changed issue confirm step."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -86,6 +87,10 @@ async def test_device_config_file_changed_confirm_step(
     issue = msg["result"]["issues"][0]
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
+    assert (
+        issue_registry.async_get_issue(DOMAIN, issue_id).config_entry_id
+        == integration.entry_id
+    )
 
     data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
@@ -120,6 +125,42 @@ async def test_device_config_file_changed_confirm_step(
     assert len(msg["result"]["issues"]) == 0
 
 
+async def test_device_config_file_changed_area_in_placeholders(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: Client,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the device area is included in the device_config_file_changed issue."""
+    node = await _trigger_repair_issue(
+        hass, client, multisensor_6_state, device_config_changed=False
+    )
+
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert device
+    area = area_registry.async_get_or_create("Living room")
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    await _trigger_repair_issue(hass, client, multisensor_6_state)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    issue = msg["result"]["issues"][0]
+    assert issue["issue_id"] == f"device_config_file_changed.{device.id}"
+    assert issue["translation_placeholders"] == {
+        "device_name": f"{device.name} (Living room)"
+    }
+
+
 async def test_device_config_file_changed_cleared(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -131,13 +172,12 @@ async def test_device_config_file_changed_cleared(
     """Test the device_config_file_changed issue is cleared when no longer true."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     # Assert the issue is present
@@ -174,13 +214,12 @@ async def test_device_config_file_changed_ignore_step(
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -245,7 +284,6 @@ async def test_invalid_issue(
         translation_key="invalid_issue",
     )
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -288,13 +326,12 @@ async def test_abort_confirm(
     """Test aborting device_config_file_changed issue in confirm step."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
     await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -324,6 +361,7 @@ async def test_migrate_unique_id(
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     multisensor_6: Node,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the migrate unique id flow."""
     node = multisensor_6
@@ -351,15 +389,12 @@ async def test_migrate_unique_id(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert CONF_KEEP_OLD_DEVICES in config_entry.data
-    assert config_entry.data[CONF_KEEP_OLD_DEVICES] is True
     stored_devices = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
     assert len(stored_devices) == 2
     assert device_entry.id in {device.id for device in stored_devices}
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -371,6 +406,10 @@ async def test_migrate_unique_id(
     issue = msg["result"]["issues"][0]
     issue_id = issue["issue_id"]
     assert issue_id == f"migrate_unique_id.{config_entry.entry_id}"
+    assert (
+        issue_registry.async_get_issue(DOMAIN, issue_id).config_entry_id
+        == config_entry.entry_id
+    )
 
     data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
@@ -407,6 +446,7 @@ async def test_migrate_unique_id_missing_config_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the migrate unique id flow with missing config entry."""
     old_unique_id = "123456789"
@@ -422,7 +462,6 @@ async def test_migrate_unique_id_missing_config_entry(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -434,6 +473,19 @@ async def test_migrate_unique_id_missing_config_entry(
     issue = msg["result"]["issues"][0]
     issue_id = issue["issue_id"]
     assert issue_id == f"migrate_unique_id.{config_entry.entry_id}"
+
+    # An issue raised before issues were linked to entries outlives its entry
+    issue_entry = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue_entry is not None
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        data=issue_entry.data,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="migrate_unique_id",
+    )
 
     await hass.config_entries.async_remove(config_entry.entry_id)
 
@@ -499,7 +551,6 @@ async def test_migrate_unique_id_non_integer_ids(
         translation_key="migrate_unique_id",
     )
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 

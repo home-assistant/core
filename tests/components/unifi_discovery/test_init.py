@@ -1,7 +1,16 @@
 """Test the UniFi Discovery init."""
 
+from typing import Any
+
+import pytest
+from unifi_discovery import UnifiDevice
+
 from homeassistant import config_entries
 from homeassistant.components.unifi_discovery.const import DOMAIN
+from homeassistant.components.unifi_discovery.discovery import (
+    _announced_ips,
+    _device_to_dict,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -73,3 +82,79 @@ async def test_discovery_does_not_deepcopy_device(hass: HomeAssistant) -> None:
     flows = hass.config_entries.flow.async_progress_by_handler("unifiprotect")
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
+
+
+@pytest.mark.parametrize(
+    ("device_kwargs", "expected"),
+    [
+        pytest.param({}, [], id="nothing_announced"),
+        pytest.param(
+            {
+                "ip_info": (
+                    "aa:bb:cc:dd:ee:fd;192.168.1.1",
+                    "aa:bb:cc:dd:ee:fd;192.168.2.1",
+                    "aa:bb:cc:dd:ee:fb;10.0.0.5",
+                )
+            },
+            ["192.168.1.1", "192.168.2.1", "10.0.0.5"],
+            id="every_interface",
+        ),
+        pytest.param(
+            {
+                "ip_info": (
+                    "aa:bb:cc:dd:ee:fd;192.168.1.1",
+                    # Upstream WAN and neighbours the console also reports.
+                    "00:00:00:00:00:00;198.51.100.7",
+                    "00:00:00:00:00:00;192.168.0.0",
+                    "5a:71:71:7a:68:8e;192.168.1.9",
+                    # Another Ubiquiti device: same OUI, different unit.
+                    "aa:bb:cc:99:99:01;192.168.1.10",
+                )
+            },
+            ["192.168.1.1"],
+            id="foreign_addresses_dropped",
+        ),
+        pytest.param(
+            {"ip_info": ("aa:bb:cc:dd:ee:fd;", "aa:bb:cc:dd:ee:fd")},
+            [],
+            id="malformed_entries",
+        ),
+        pytest.param(
+            {"primary_addr": "aa:bb:cc:dd:ee:ff;192.168.1.1"},
+            ["192.168.1.1"],
+            id="primary_addr",
+        ),
+        pytest.param(
+            {
+                "ip_info": ("aa:bb:cc:dd:ee:fd;192.168.1.1",),
+                "primary_addr": "aa:bb:cc:dd:ee:ff;192.168.1.1",
+            },
+            ["192.168.1.1"],
+            id="deduplicated",
+        ),
+    ],
+)
+def test_announced_ips(device_kwargs: dict[str, Any], expected: list[str]) -> None:
+    """Test only the device's own announced addresses are returned."""
+    device = UnifiDevice(
+        source_ip="192.168.1.1", hw_addr="aa:bb:cc:dd:ee:ff", **device_kwargs
+    )
+    assert _announced_ips(device) == expected
+
+
+def test_announced_ips_without_mac() -> None:
+    """Test a device without hw_addr announces nothing identifiable."""
+    device = UnifiDevice(
+        source_ip="192.168.1.1", ip_info=("aa:bb:cc:dd:ee:fd;192.168.1.1",)
+    )
+    assert _announced_ips(device) == []
+
+
+def test_device_to_dict_carries_announced_ips() -> None:
+    """Test the announced addresses reach the payload the consumers receive."""
+    device = UnifiDevice(
+        source_ip="192.168.1.1",
+        hw_addr="aa:bb:cc:dd:ee:ff",
+        ip_info=("aa:bb:cc:dd:ee:fd;192.168.2.1",),
+    )
+    assert _device_to_dict(device)["announced_ips"] == ["192.168.2.1"]

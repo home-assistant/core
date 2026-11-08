@@ -42,6 +42,7 @@ def async_enable_report_state(
     """Enable state and notification reporting."""
     checker = None
     unsub_pending: CALLBACK_TYPE | None = None
+    stopped = False
     pending: deque[dict[str, Any]] = deque([{}])
 
     async def report_states(now=None):
@@ -73,7 +74,7 @@ def async_enable_report_state(
         return bool(
             hass.is_running
             and (new_state := data["new_state"])
-            and google_config.should_expose(new_state)
+            and google_config.should_expose(new_state.entity_id)
             and async_get_google_entity_if_supported_cached(
                 hass, google_config, new_state
             )
@@ -186,6 +187,10 @@ def async_enable_report_state(
 
         await google_config.async_report_state_all({"devices": {"states": entities}})
 
+        # Reporting may have been disabled while awaiting the initial report
+        if stopped:
+            return
+
         unsub = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_entity_state_listener,
@@ -198,6 +203,8 @@ def async_enable_report_state(
 
     @callback
     def unsub_all():
+        nonlocal stopped
+        stopped = True
         unsub()
         if unsub_pending:
             unsub_pending()

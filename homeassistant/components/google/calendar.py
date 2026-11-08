@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import dataclasses
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
@@ -20,7 +20,6 @@ from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
 from homeassistant.components.calendar import (
-    CREATE_EVENT_SCHEMA,
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
@@ -32,13 +31,14 @@ from homeassistant.components.calendar import (
     CalendarEntityDescription,
     CalendarEntityFeature,
     CalendarEvent,
+    CalendarEventStatus,
     extract_offset,
     is_offset_reached,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -55,16 +55,7 @@ from . import (
     update_config,
 )
 from .api import get_feature_access
-from .const import (
-    EVENT_END_DATE,
-    EVENT_END_DATETIME,
-    EVENT_IN,
-    EVENT_IN_DAYS,
-    EVENT_IN_WEEKS,
-    EVENT_START_DATE,
-    EVENT_START_DATETIME,
-    FeatureAccess,
-)
+from .const import FeatureAccess
 from .coordinator import CalendarQueryUpdateCoordinator, CalendarSyncUpdateCoordinator
 from .store import GoogleConfigEntry
 
@@ -83,7 +74,6 @@ OPAQUE = "opaque"
 # we need to strip when working with the frontend recurrence rule values
 RRULE_PREFIX = "RRULE:"
 
-SERVICE_CREATE_EVENT = "create_event"
 FILTERED_EVENT_TYPES = [EventTypeEnum.BIRTHDAY, EventTypeEnum.WORKING_LOCATION]
 
 
@@ -143,7 +133,7 @@ def _get_entity_descriptions(
         local_sync = True
         if (
             search := data.get(CONF_SEARCH)
-        ) or calendar_item.access_role is AccessRole.FREE_BUSY_READER:
+        ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
             read_only = True
             local_sync = False
         entity_description = GoogleCalendarEntityDescription(
@@ -179,6 +169,7 @@ def _get_entity_descriptions(
                     event_type=EventTypeEnum.BIRTHDAY,
                     name=None,
                     entity_id=None,
+                    ignore_availability=True,
                 )
             )
             # Create an optional disabled by default entity for Work Location
@@ -191,6 +182,7 @@ def _get_entity_descriptions(
                     name=None,
                     entity_id=None,
                     entity_registry_enabled_default=False,
+                    ignore_availability=True,
                 )
             )
     return entity_descriptions
@@ -317,18 +309,6 @@ async def async_setup_entry(
 
         await hass.async_add_executor_job(append_calendars_to_config)
 
-    platform = entity_platform.async_get_current_platform()
-    if (
-        any(calendar_item.access_role.is_writer for calendar_item in result.items)
-        and get_feature_access(config_entry) is FeatureAccess.read_write
-    ):
-        platform.async_register_entity_service(
-            SERVICE_CREATE_EVENT,
-            CREATE_EVENT_SCHEMA,
-            async_create_event,
-            required_features=CalendarEntityFeature.CREATE_EVENT,
-        )
-
 
 class GoogleCalendarEntity(
     CoordinatorEntity[CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator],
@@ -364,6 +344,7 @@ class GoogleCalendarEntity(
             )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         return {"offset_reached": self.offset_reached}
@@ -377,6 +358,7 @@ class GoogleCalendarEntity(
         return False
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         (event, _) = self._event_with_offset()
@@ -386,14 +368,14 @@ class GoogleCalendarEntity(
         """Return True if the event is visible and not declined."""
 
         if any(
-            attendee.is_self and attendee.response_status is ResponseStatus.DECLINED
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
             for attendee in event.attendees
         ):
             return False
         # Calendar enttiy may be limited to a specific event type
         if (
             self.entity_description.event_type is not None
-            and self.entity_description.event_type is not event.event_type
+            and self.entity_description.event_type != event.event_type
         ):
             return False
         # Default calendar entity omits the special types but includes all the others
@@ -406,6 +388,7 @@ class GoogleCalendarEntity(
             return True
         return event.transparency == OPAQUE
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -419,6 +402,7 @@ class GoogleCalendarEntity(
             "google.calendar-refresh",
         )
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -448,6 +432,7 @@ class GoogleCalendarEntity(
             return event, offset_value
         return None, None
 
+    @override
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         dtstart = kwargs[EVENT_START]
@@ -487,6 +472,7 @@ class GoogleCalendarEntity(
             raise HomeAssistantError(f"Error while creating event: {err!s}") from err
         await self.coordinator.async_refresh()
 
+    @override
     async def async_delete_event(
         self,
         uid: str,
@@ -527,62 +513,9 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         end=event.end.value,
         description=event.description,
         location=event.location,
+        # The Google API defaults an omitted status to confirmed, and gcal_sync
+        # applies that default, so this is never None. It drops cancelled
+        # events when building the timeline, so only the statuses a calendar
+        # entity reports reach here, already in lower case.
+        status=CalendarEventStatus(event.status.value),
     )
-
-
-async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) -> None:
-    """Add a new event to calendar."""
-    start: DateOrDatetime | None = None
-    end: DateOrDatetime | None = None
-    hass = entity.hass
-
-    if EVENT_IN in call.data:
-        if EVENT_IN_DAYS in call.data[EVENT_IN]:
-            today = dt_util.now().date()
-
-            start_in = today + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
-            end_in = start_in + timedelta(days=1)
-
-            start = DateOrDatetime(date=start_in)
-            end = DateOrDatetime(date=end_in)
-
-        elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
-            today = dt_util.now().date()
-
-            start_in = today + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
-            end_in = start_in + timedelta(days=1)
-
-            start = DateOrDatetime(date=start_in)
-            end = DateOrDatetime(date=end_in)
-
-    elif EVENT_START_DATE in call.data and EVENT_END_DATE in call.data:
-        start = DateOrDatetime(date=call.data[EVENT_START_DATE])
-        end = DateOrDatetime(date=call.data[EVENT_END_DATE])
-
-    elif EVENT_START_DATETIME in call.data and EVENT_END_DATETIME in call.data:
-        start_dt = call.data[EVENT_START_DATETIME]
-        end_dt = call.data[EVENT_END_DATETIME]
-        start = DateOrDatetime(date_time=start_dt, timezone=str(hass.config.time_zone))
-        end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
-
-    if start is None or end is None:
-        raise ValueError("Missing required fields to set start or end date/datetime")
-
-    event = Event(
-        summary=call.data[EVENT_SUMMARY],
-        description=call.data[EVENT_DESCRIPTION],
-        start=start,
-        end=end,
-    )
-    if location := call.data.get(EVENT_LOCATION):
-        event.location = location
-    try:
-        await cast(
-            CalendarSyncUpdateCoordinator, entity.coordinator
-        ).sync.api.async_create_event(
-            entity.calendar_id,
-            event,
-        )
-    except ApiException as err:
-        raise HomeAssistantError(str(err)) from err
-    entity.async_write_ha_state()

@@ -1,7 +1,7 @@
 """Support for System Bridge notification service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.notification import Notification
@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,8 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIONS = "actions"
 ATTR_AUDIO = "audio"
+ATTR_ICON = "icon"
 ATTR_IMAGE = "image"
 ATTR_TIMEOUT = "timeout"
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -52,6 +55,7 @@ class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
     _attr_supported_features = NotifyEntityFeature.TITLE
     _attr_name = None
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
         notification = Notification(
@@ -98,6 +102,7 @@ class SystemBridgeNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._coordinator: SystemBridgeDataUpdateCoordinator = coordinator
 
+    @override
     async def async_send_message(
         self,
         message: str = "",

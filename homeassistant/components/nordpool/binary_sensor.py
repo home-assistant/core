@@ -2,18 +2,18 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NordPoolConfigEntry
 from .const import CONF_AREAS
-from .coordinator import NordPoolDataUpdateCoordinator
 from .entity import NordpoolBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -66,16 +66,8 @@ class NordpoolPriceBinarySensor(NordpoolBaseEntity, BinarySensorEntity):
 
     entity_description: NordpoolBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: NordPoolDataUpdateCoordinator,
-        entity_description: NordpoolBinarySensorEntityDescription,
-        area: str,
-    ) -> None:
-        """Initiate Nord Pool binary sensor."""
-        super().__init__(coordinator, entity_description, area)
-
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self)

@@ -2,12 +2,11 @@
 
 from collections.abc import Callable, Coroutine, Mapping
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import DEVICE_CLASS_UNITS, SensorDeviceClass
+from homeassistant.components.sensor import DEVICE_CLASS_UNITS
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_MAXIMUM,
@@ -25,14 +24,14 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     TextSelector,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 
-from .const import DOMAIN
-from .sensor import DEFAULT_MAX, DEFAULT_MIN
+from .const import DEFAULT_MAX, DEFAULT_MIN, DOMAIN
 
 
 class _FlowType(StrEnum):
@@ -40,58 +39,35 @@ class _FlowType(StrEnum):
     OPTION = "option"
 
 
-def _generate_schema(domain: str, flow_type: _FlowType) -> vol.Schema:
+def _generate_schema(domain: str, flow_type: _FlowType) -> probatio.Schema:
     """Generate schema."""
-    schema: dict[vol.Marker, Any] = {}
+    schema: dict[probatio.Marker, Any] = {}
 
     if flow_type == _FlowType.CONFIG:
-        schema[vol.Required(CONF_NAME)] = TextSelector()
+        schema[probatio.Required(CONF_NAME)] = TextSelector()
 
         if domain == Platform.BINARY_SENSOR:
-            schema[vol.Optional(CONF_DEVICE_CLASS)] = SelectSelector(
-                SelectSelectorConfig(
-                    options=[cls.value for cls in BinarySensorDeviceClass],
-                    sort=True,
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key="binary_sensor_device_class",
-                ),
+            schema[probatio.Optional(CONF_DEVICE_CLASS)] = DeviceClassSelector(
+                DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR)
             )
 
     if domain == Platform.SENSOR:
         schema.update(
             {
-                vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
-                vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
-                vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            cls.value
-                            for cls in SensorDeviceClass
-                            if cls != SensorDeviceClass.ENUM
-                        ],
-                        sort=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="sensor_device_class",
-                    ),
+                probatio.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
+                probatio.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
+                probatio.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                    DeviceClassSelectorConfig(domain=Platform.NUMBER)
                 ),
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            str(unit)
-                            for units in DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        ],
-                        sort=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="sensor_unit_of_measurement",
-                        custom_value=True,
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): UnitOfMeasurementSelector(
+                    UnitOfMeasurementSelectorConfig(
+                        context={"filter_device_class": CONF_DEVICE_CLASS}
                     ),
                 ),
             }
         )
 
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
@@ -119,7 +95,7 @@ def _validate_unit(options: dict[str, Any]) -> None:
         else:
             units_string = f"one of {', '.join(sorted_units)}"
 
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{unit}' is not a valid unit for device class '{device_class}'; "
             f"expected {units_string}"
         )
@@ -187,6 +163,7 @@ class RandomConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])

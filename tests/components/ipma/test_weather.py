@@ -1,14 +1,16 @@
 """The tests for the IPMA weather component."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyipma.observation import Observation
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ipma.const import MIN_TIME_BETWEEN_UPDATES
+from homeassistant.components.ipma.const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
@@ -22,9 +24,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import MockLocation
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 TEST_CONFIG = {
     "name": "HomeTown",
@@ -59,7 +58,7 @@ async def test_setup_config_flow(hass: HomeAssistant) -> None:
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -82,7 +81,7 @@ async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
         "pyipma.location.Location.get",
         return_value=MockBadLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -114,7 +113,7 @@ async def test_forecast_service(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -159,7 +158,7 @@ async def test_forecast_subscription(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
-        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -183,7 +182,7 @@ async def test_forecast_subscription(
 
     assert forecast1 == snapshot
 
-    freezer.tick(MIN_TIME_BETWEEN_UPDATES + datetime.timedelta(seconds=1))
+    freezer.tick(MIN_TIME_BETWEEN_UPDATES + dt.timedelta(seconds=1))
     await hass.async_block_till_done()
     msg = await client.receive_json()
 

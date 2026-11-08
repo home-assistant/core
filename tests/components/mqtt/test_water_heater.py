@@ -5,10 +5,43 @@ import json
 from typing import Any
 from unittest.mock import call, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
+    help_custom_config,
+    help_test_availability_when_connection_lost,
+    help_test_availability_without_topic,
+    help_test_custom_availability_payload,
+    help_test_default_availability_payload,
+    help_test_discovery_broken,
+    help_test_discovery_removal,
+    help_test_discovery_update,
+    help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
+    help_test_entity_debug_info_message,
+    help_test_entity_device_info_remove,
+    help_test_entity_device_info_update,
+    help_test_entity_device_info_with_connection,
+    help_test_entity_device_info_with_identifier,
+    help_test_entity_id_update_discovery_update,
+    help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
+    help_test_reloadable,
+    help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
+    help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
+    help_test_update_with_json_attrs_bad_json,
+    help_test_update_with_json_attrs_not_dict,
+)
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from homeassistant.components import mqtt, water_heater
+from homeassistant.components import water_heater
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.water_heater import (
     MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED,
 )
@@ -39,40 +72,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .common import (
-    help_custom_config,
-    help_test_availability_when_connection_lost,
-    help_test_availability_without_topic,
-    help_test_custom_availability_payload,
-    help_test_default_availability_payload,
-    help_test_discovery_broken,
-    help_test_discovery_removal,
-    help_test_discovery_update,
-    help_test_discovery_update_attr,
-    help_test_discovery_update_unchanged,
-    help_test_encoding_subscribable_topics,
-    help_test_entity_debug_info_message,
-    help_test_entity_device_info_remove,
-    help_test_entity_device_info_update,
-    help_test_entity_device_info_with_connection,
-    help_test_entity_device_info_with_identifier,
-    help_test_entity_id_update_discovery_update,
-    help_test_entity_id_update_subscriptions,
-    help_test_publishing_with_custom_encoding,
-    help_test_reloadable,
-    help_test_setting_attribute_via_mqtt_json_message,
-    help_test_setting_attribute_with_template,
-    help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_skipped_async_ha_write_state,
-    help_test_unique_id,
-    help_test_unload_config_entry_with_platform,
-    help_test_update_with_json_attrs_bad_json,
-    help_test_update_with_json_attrs_not_dict,
-)
-
-from tests.common import async_fire_mqtt_message
 from tests.components.water_heater import common
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ENTITY_WATER_HEATER = "water_heater.test"
 
@@ -96,7 +96,7 @@ _DEFAULT_MAX_TEMP_CELSIUS = round(
 
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         water_heater.DOMAIN: {
             "name": "test",
             "mode_command_topic": "mode-topic",
@@ -166,11 +166,9 @@ async def test_set_operation_mode_bad_attr_and_state(
 
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "off"
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         await common.async_set_operation_mode(hass, None, ENTITY_WATER_HEATER)  # type:ignore[arg-type]
-    assert "string value is None for dictionary value @ data['operation_mode']" in str(
-        excinfo.value
-    )
+    assert "string value is None at 'operation_mode'" in str(excinfo.value)
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "off"
 
@@ -505,8 +503,7 @@ async def test_receive_mqtt_temperature(
     async_fire_mqtt_message(hass, "current_temperature", "")
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert (
-        "Invalid empty payload for attribute _attr_current_temperature, ignoring update"
-        in caplog.text
+        "Invalid empty payload for current temperature, ignoring update" in caplog.text
     )
     assert state.attributes.get("current_temperature") == 53
 
@@ -553,7 +550,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 water_heater.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -618,7 +615,7 @@ async def test_get_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 water_heater.DOMAIN: {
                     "name": "test",
                     "mode_command_topic": "mode-topic",
@@ -867,7 +864,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 water_heater.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -910,7 +907,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][water_heater.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][water_heater.DOMAIN])
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
@@ -927,7 +924,7 @@ async def test_discovery_removal_water_heater(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered water heater."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][water_heater.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][water_heater.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, water_heater.DOMAIN, data)
 
 
@@ -1008,7 +1005,7 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             water_heater.DOMAIN: {
                 "name": "test",
                 "mode_state_topic": "test-topic",
@@ -1035,7 +1032,7 @@ async def test_entity_debug_info_message(
 ) -> None:
     """Test MQTT debug info."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             water_heater.DOMAIN: {
                 "name": "test",
                 "mode_command_topic": "command-topic",

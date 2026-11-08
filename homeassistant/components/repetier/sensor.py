@@ -2,12 +2,13 @@
 
 import logging
 import time
+from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, Undefined
 from homeassistant.util import dt as dt_util
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL, RepetierSensorEntityDescription
@@ -44,7 +45,7 @@ def setup_platform(
         sensor_type = info["sensor_type"]
         temp_id = info["temp_id"]
         description = SENSOR_TYPES[sensor_type]
-        name_suffix = "" if description.name is UNDEFINED else description.name
+        name_suffix = "" if description.name is Undefined else description.name
         name = f"{info['name']}{name_suffix}"
         if temp_id is not None:
             _LOGGER.debug("%s Temp_id: %s", sensor_type, temp_id)
@@ -85,6 +86,7 @@ class RepetierSensor(SensorEntity):
         """Get new data and update state."""
         self.async_schedule_update_ha_state(True)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect update callbacks."""
         self.async_on_remove(
@@ -116,12 +118,14 @@ class RepetierTempSensor(RepetierSensor):
     """Represent a Repetier temp sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return sensor state."""
         if self._attr_native_value is None:
             return None
         return round(self._attr_native_value, 2)
 
+    @override
     def update(self) -> None:
         """Update the sensor."""
         if (data := self._get_data()) is None:
@@ -137,6 +141,7 @@ class RepetierJobSensor(RepetierSensor):
     """Represent a Repetier job sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return sensor state."""
         if self._attr_native_value is None:
@@ -149,6 +154,7 @@ class RepetierJobEndSensor(RepetierSensor):
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
+    @override
     def update(self) -> None:
         """Update the sensor."""
         if (data := self._get_data()) is None:
@@ -173,6 +179,7 @@ class RepetierJobStartSensor(RepetierSensor):
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
+    @override
     def update(self) -> None:
         """Update the sensor."""
         if (data := self._get_data()) is None:

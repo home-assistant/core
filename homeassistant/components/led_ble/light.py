@@ -1,6 +1,6 @@
 """LED BLE integration light platform."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from led_ble import LEDBLE
 
@@ -75,6 +75,7 @@ class LEDBLEEntity(CoordinatorEntity[LEDBLECoordinator], LightEntity):
             round(brightness / 255 * 100),
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness))
@@ -93,16 +94,19 @@ class LEDBLEEntity(CoordinatorEntity[LEDBLECoordinator], LightEntity):
             return
         await self._device.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._device.turn_off()
 
     @callback
+    @override
     def _handle_coordinator_update(self, *args: Any) -> None:
         """Handle data update."""
         self._async_update_attrs()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

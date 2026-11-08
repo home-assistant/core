@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -33,15 +34,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, async_fire_time_changed
-
 CONFIG = {"cover": {"platform": "demo"}}
 ENTITY_COVER = "cover.living_room_window"
 
 
 @pytest.fixture
 def cover_only() -> Generator[None]:
-    """Enable only the climate platform."""
+    """Enable only the cover platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
         [Platform.COVER],
@@ -66,7 +65,7 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     state = hass.states.get("cover.hall_window")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 15
     state = hass.states.get("cover.living_room_window")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 255
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 511
 
 
 async def test_close_cover(hass: HomeAssistant) -> None:
@@ -76,7 +75,10 @@ async def test_close_cover(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_CURRENT_POSITION] == 70
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
     assert state.state == CoverState.CLOSING
@@ -96,7 +98,10 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 70
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
     )
     state = hass.states.get(ENTITY_COVER)
     assert state.state == CoverState.OPENING
@@ -211,6 +216,7 @@ async def test_stop_cover(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_COVER)
     assert state.attributes[ATTR_CURRENT_POSITION] == 80
+    assert state.state == CoverState.OPEN
 
 
 async def test_close_cover_tilt(hass: HomeAssistant) -> None:

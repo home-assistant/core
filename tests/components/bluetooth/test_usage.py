@@ -7,10 +7,12 @@ from habluetooth.usage import (
 )
 from habluetooth.wrappers import HaBleakClientWrapper, HaBleakScannerWrapper
 import pytest
+from pytest_homeassistant.components.bluetooth import (
+    generate_ble_device,
+    patch_bleak_backend_type,
+)
 
 from homeassistant.core import HomeAssistant
-
-from . import generate_ble_device, patch_bleak_backend_type
 
 MOCK_BLE_DEVICE = generate_ble_device(
     "00:00:00:00:00:00",

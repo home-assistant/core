@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.indevolt.const import (
     CONF_GENERATION,
@@ -11,8 +12,6 @@ from homeassistant.components.indevolt.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_HOST_ALT = "192.168.1.101"
@@ -64,6 +63,26 @@ def mock_config_entry(generation: int) -> MockConfigEntry:
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
+        minor_version=2,
+        data={
+            CONF_HOST: device_info["host"],
+            CONF_SERIAL_NUMBER: device_info["sn"],
+            CONF_MODEL: device_info["device"],
+            CONF_GENERATION: device_info["generation"],
+        },
+        unique_id=device_info["sn"],
+    )
+
+
+@pytest.fixture
+def mock_config_entry_v1_1(generation: int) -> MockConfigEntry:
+    """Return a mocked config entry with version 1.1 for migration testing."""
+    device_info = DEVICE_MAPPING[generation]
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=device_info["device"],
+        version=1,
+        minor_version=1,
         data={
             CONF_HOST: device_info["host"],
             CONF_SERIAL_NUMBER: device_info["sn"],
@@ -82,6 +101,7 @@ def alt_mock_config_entry(alt_generation: int) -> MockConfigEntry:
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
+        minor_version=2,
         data={
             CONF_HOST: device_info["host"],
             CONF_SERIAL_NUMBER: device_info["sn"],
@@ -140,6 +160,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the async_setup_entry function."""
     with patch(
         "homeassistant.components.indevolt.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup

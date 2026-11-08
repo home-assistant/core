@@ -1,13 +1,18 @@
 """Support for Freebox cameras."""
 
-from typing import Any
+from typing import Any, override
+from urllib.parse import quote
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager, async_get_image
+from homeassistant.components.ffmpeg import (
+    FFmpegManager,
+    async_get_image,
+    get_ffmpeg_manager,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
@@ -62,6 +67,23 @@ def add_entities(
         async_add_entities(new_tracked, True)
 
 
+def _quote_credentials(url: str) -> str:
+    """Quote the credentials in a stream URL.
+
+    The Freebox generates the camera password, which can contain characters like
+    a slash that break parsing the URL if they are not percent-encoded.
+    """
+    scheme, separator, rest = url.partition("://")
+    credentials, at_sign, location = rest.rpartition("@")
+    if not separator or not at_sign:
+        return url
+
+    user, colon, password = credentials.partition(":")
+    return (
+        f"{scheme}://{quote(user, safe='')}{colon}{quote(password, safe='')}@{location}"
+    )
+
+
 class FreeboxCamera(FreeboxHomeEntity, Camera):
     """Representation of a Freebox camera."""
 
@@ -75,7 +97,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
         super().__init__(router, node)
         Camera.__init__(self)
 
-        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._ffmpeg: FFmpegManager = get_ffmpeg_manager(hass)
         self._input: str = node["props"]["Stream"]
 
         self._command_motion_detection = self.get_command_id(
@@ -84,10 +106,12 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
         self._attr_extra_state_attributes = {}
         self.update_node(node)
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
-        return self._input.split(" ")[-1]
+        return _quote_credentials(self._input.split(" ")[-1])
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -99,6 +123,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
             extra_cmd=_FFMPEG_ARGUMENTS,
         )
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse:
@@ -117,16 +142,19 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
         finally:
             await stream.close()
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         if await self.set_home_endpoint_value(self._command_motion_detection, True):
             self._attr_motion_detection_enabled = True
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         if await self.set_home_endpoint_value(self._command_motion_detection, False):
             self._attr_motion_detection_enabled = False
 
+    @override
     async def async_update_signal(self) -> None:
         """Update the camera node."""
         self.update_node(self._router.home_devices[self._id])

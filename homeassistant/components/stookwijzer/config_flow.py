@@ -1,9 +1,9 @@
 """Config flow to configure the Stookwijzer integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from stookwijzer import Stookwijzer
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
@@ -17,6 +17,7 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,9 +38,9 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION,
                         default={
                             CONF_LATITUDE: self.hass.config.latitude,

@@ -1,6 +1,6 @@
 """Support for Elgato lights."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -15,7 +15,7 @@ from homeassistant.util import color as color_util
 
 from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import elgato_exception_handler
+from .helpers import color_temperature_range, elgato_device_action, supports_color
 
 PARALLEL_UPDATES = 1
 
@@ -34,8 +34,6 @@ class ElgatoLight(ElgatoEntity, LightEntity):
     """Defines an Elgato Light."""
 
     _attr_name = None
-    _attr_min_color_temp_kelvin = 2900  # 344 Mireds
-    _attr_max_color_temp_kelvin = 7000  # 143 Mireds
 
     def __init__(self, coordinator: ElgatoDataUpdateCoordinator) -> None:
         """Initialize Elgato Light."""
@@ -43,26 +41,22 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
         self._attr_unique_id = coordinator.data.info.serial_number
 
-        # Elgato Light supporting color, have a different temperature range
-        if (
-            self.coordinator.data.info.product_name
-            in (
-                "Elgato Light Strip",
-                "Elgato Light Strip Pro",
-            )
-            or self.coordinator.data.settings.power_on_hue
-            or self.coordinator.data.state.hue is not None
-        ):
+        if supports_color(coordinator.data):
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
-            self._attr_min_color_temp_kelvin = 3500  # 285 Mireds
-            self._attr_max_color_temp_kelvin = 6500  # 153 Mireds
+
+        (
+            self._attr_min_color_temp_kelvin,
+            self._attr_max_color_temp_kelvin,
+        ) = color_temperature_range(coordinator.data)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
         return round((self.coordinator.data.state.brightness * 255) / 100)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if (mired_temperature := self.coordinator.data.state.temperature) is None:
@@ -70,6 +64,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(mired_temperature)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.coordinator.data.state.hue is not None:
@@ -78,6 +73,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         return ColorMode.COLOR_TEMP
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return (
@@ -86,17 +82,19 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the light."""
         return self.coordinator.data.state.on
 
-    @elgato_exception_handler
+    @elgato_device_action
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.client.light(on=False)
-        await self.coordinator.async_request_refresh()
 
-    @elgato_exception_handler
+    @elgato_device_action
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         temperature_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
@@ -136,9 +134,8 @@ class ElgatoLight(ElgatoEntity, LightEntity):
             saturation=saturation,
             temperature=temperature,
         )
-        await self.coordinator.async_request_refresh()
 
-    @elgato_exception_handler
+    @elgato_device_action
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""
         await self.coordinator.client.identify()

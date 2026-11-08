@@ -1,0 +1,125 @@
+# serializer version: 1
+# name: test_entry_diagnostics[gasleser]
+  dict({
+    'count': 603,
+    'current_flow_rate': 0.01,
+    'device_id': '**REDACTED**',
+    'device_type': 'gasleser',
+    'signal_strength_dbm': -51.0,
+    'timestamp': 1776179005,
+    'total_consumption': 37030.67,
+  })
+# ---
+# name: test_entry_diagnostics[stromleser]
+  dict({
+    'device_id': '**REDACTED**',
+    'device_type': 'stromleser',
+    'energy_export': dict({
+      'unit': 'Wh',
+      'value': 26561.0,
+    }),
+    'energy_export_tariff_1': None,
+    'energy_export_tariff_2': None,
+    'energy_export_tariff_3': None,
+    'energy_export_tariff_4': None,
+    'energy_import': dict({
+      'unit': 'Wh',
+      'value': 12345.0,
+    }),
+    'energy_import_tariff_1': None,
+    'energy_import_tariff_2': None,
+    'energy_import_tariff_3': None,
+    'energy_import_tariff_4': None,
+    'pin_locked': False,
+    'power_absolute': None,
+    'power_active': dict({
+      'unit': 'W',
+      'value': 8.16,
+    }),
+    'power_export': None,
+    'power_import': None,
+    'power_l1': dict({
+      'unit': 'W',
+      'value': 0.0,
+    }),
+    'power_l2': dict({
+      'unit': 'W',
+      'value': 0.0,
+    }),
+    'power_l3': dict({
+      'unit': 'W',
+      'value': 8.16,
+    }),
+    'signal_strength_dbm': -51.0,
+    'timestamp': 1776178480,
+  })
+# ---
+# name: test_entry_diagnostics[waermeleser]
+  dict({
+    'device_id': '**REDACTED**',
+    'device_type': 'waermeleser',
+    'fabrication_number': '**REDACTED**',
+    'flow_temperature': dict({
+      'unit': '°C',
+      'value': 16.9,
+    }),
+    'power': dict({
+      'unit': 'kW',
+      'value': 2.31,
+    }),
+    'return_temperature': dict({
+      'unit': '°C',
+      'value': 19.6,
+    }),
+    'signal_strength_dbm': -51.0,
+    'temperature_difference': dict({
+      'unit': 'K',
+      'value': 2.68,
+    }),
+    'timestamp': 1747285200,
+    'total_energy_t1': dict({
+      'unit': 'MWh',
+      'value': 34.09,
+    }),
+    'total_energy_t2': dict({
+      'unit': 'MWh',
+      'value': 12.45,
+    }),
+    'total_energy_t3': dict({
+      'unit': 'MWh',
+      'value': 5.67,
+    }),
+    'total_volume': dict({
+      'unit': 'm³',
+      'value': 3561.23,
+    }),
+    'volume_flow': dict({
+      'unit': 'l/h',
+      'value': 1.23,
+    }),
+  })
+# ---
+# name: test_entry_diagnostics[wasserleser]
+  dict({
+    'current_flow_rate': dict({
+      'unit': 'l/h',
+      'value': 0.0,
+    }),
+    'current_flow_rate_m3': dict({
+      'unit': 'm3/h',
+      'value': 0.0,
+    }),
+    'device_id': '**REDACTED**',
+    'device_type': 'wasserleser',
+    'signal_strength_dbm': -49.0,
+    'timestamp': 1779276532,
+    'today_consumption': dict({
+      'unit': 'm3',
+      'value': 0.0,
+    }),
+    'total_consumption': dict({
+      'unit': 'm3',
+      'value': 123.755,
+    }),
+  })
+# ---

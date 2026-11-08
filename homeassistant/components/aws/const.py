@@ -1,4 +1,4 @@
-"""Constant for AWS component."""
+"""Constant for AWS integration."""
 
 from typing import TYPE_CHECKING
 

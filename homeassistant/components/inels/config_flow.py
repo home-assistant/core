@@ -1,6 +1,6 @@
 """Config flow for iNELS."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,6 +14,7 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -31,15 +32,17 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm_from_mqtt()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         try:
-            if not mqtt.is_connected(self.hass):
-                return self.async_abort(reason="mqtt_not_connected")
+            mqtt_connected = mqtt.is_connected(self.hass)
         except KeyError:
             return self.async_abort(reason="mqtt_not_configured")
+        if not mqtt_connected:
+            return self.async_abort(reason="mqtt_not_connected")
 
         return await self.async_step_confirm_from_user()
 

@@ -5,7 +5,7 @@
   fields:
     behavior: &trigger_behavior
       required: true
-      default: any
+      default: each
       selector:
         automation_behavior:
           mode: trigger
@@ -26,7 +26,8 @@
 .volume_threshold_number: &volume_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 muted: *trigger_common

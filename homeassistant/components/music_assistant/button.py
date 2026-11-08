@@ -1,5 +1,7 @@
 """Music Assistant Button platform."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -40,6 +42,7 @@ class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):
     )
 
     @catch_musicassistant_error
+    @override
     async def async_press(self) -> None:
         """Handle the button press command."""
         await self.mass.players.add_currently_playing_to_favorites(self.player_id)

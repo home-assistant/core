@@ -1,7 +1,5 @@
 """Support for AVM Fritz!Box functions."""
 
-import logging
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,12 +19,11 @@ from .const import (
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
+    LOGGER,
     PLATFORMS,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -37,9 +34,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> None:
     """Set up fritzboxtools from config entry."""
-    _LOGGER.debug("Setting up FRITZ!Box Tools component")
+    LOGGER.debug("Setting up FRITZ!Box Tools component")
 
     avm_wrapper = AvmWrapper(
         hass=hass,
@@ -67,10 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
             translation_placeholders={"error": str(ex)},
         ) from ex
 
-    if (
-        "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
-        and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
-    ):
+    if "X_AVM-DE_UPnP1" in avm_wrapper.connection.services and not (
+        await avm_wrapper.async_get_upnp_configuration()
+    ).get("NewEnable"):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="error_upnp_disabled",
@@ -83,10 +79,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
     # Load the other platforms like switch
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> None:
     """Unload FRITZ!Box Tools config entry."""
     avm_wrapper = entry.runtime_data
 
@@ -100,4 +94,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bo
     if not bool(fritz_data.tracked):
         hass.data.pop(FRITZ_DATA_KEY)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

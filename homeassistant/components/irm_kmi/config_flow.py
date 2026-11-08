@@ -1,9 +1,10 @@
 """Config flow to set up IRM KMI integration via the UI."""
 
 import logging
+from typing import override
 
 from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -12,9 +13,9 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+    CONF_LATITUDE,
     CONF_LOCATION,
+    CONF_LONGITUDE,
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import callback
@@ -45,24 +46,26 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(_config_entry: IrmKmiConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return IrmKmiOptionFlow()
 
+    @override
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Define the user step of the configuration flow."""
         errors: dict = {}
 
         default_location = {
-            ATTR_LATITUDE: self.hass.config.latitude,
-            ATTR_LONGITUDE: self.hass.config.longitude,
+            CONF_LATITUDE: self.hass.config.latitude,
+            CONF_LONGITUDE: self.hass.config.longitude,
         }
 
         if user_input:
             _LOGGER.debug("Provided config user is: %s", user_input)
 
-            lat: float = user_input[CONF_LOCATION][ATTR_LATITUDE]
-            lon: float = user_input[CONF_LOCATION][ATTR_LONGITUDE]
+            lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
+            lon: float = user_input[CONF_LOCATION][CONF_LONGITUDE]
 
             try:
                 api_data = await IrmKmiApiClient(
@@ -91,9 +94,9 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
             default_location = user_input[CONF_LOCATION]
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION, default=default_location
                     ): LocationSelector()
                 }
@@ -116,9 +119,9 @@ class IrmKmiOptionFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LANGUAGE_OVERRIDE,
                         default=self.config_entry.options.get(
                             CONF_LANGUAGE_OVERRIDE, "none"

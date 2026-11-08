@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from aiohttp import web
 from dateutil import parser
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import (
@@ -32,8 +33,6 @@ from .common import (
     generate_h264_video,
 )
 from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
-
-from tests.typing import ClientSessionGenerator
 
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75
@@ -128,7 +127,7 @@ async def test_ll_hls_stream(
     """
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -261,7 +260,7 @@ async def test_ll_hls_playlist_view(
     """Test rendering the hls playlist with 1 and 2 output segments."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -332,7 +331,7 @@ async def test_ll_hls_msn(
     """Test that requests using _HLS_msn get held and returned or rejected."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -402,7 +401,7 @@ async def test_ll_hls_playlist_bad_msn_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -480,7 +479,7 @@ async def test_ll_hls_playlist_rollover_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -561,7 +560,7 @@ async def test_ll_hls_playlist_msn_part(
 
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,
@@ -629,7 +628,7 @@ async def test_get_part_segments(
     """Test requests for part segments and hinted parts."""
     await async_setup_component(
         hass,
-        "stream",
+        DOMAIN,
         {
             "stream": {
                 CONF_LL_HLS: True,

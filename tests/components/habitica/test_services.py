@@ -20,65 +20,15 @@ from habiticalib import (
     TaskType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.habitica.const import (
-    ATTR_ADD_CHECKLIST_ITEM,
-    ATTR_ALIAS,
-    ATTR_CLEAR_DATE,
-    ATTR_CLEAR_REMINDER,
-    ATTR_COLLAPSE_CHECKLIST,
-    ATTR_CONFIG_ENTRY,
-    ATTR_COST,
-    ATTR_COUNTER_DOWN,
-    ATTR_COUNTER_UP,
-    ATTR_DIRECTION,
-    ATTR_FREQUENCY,
-    ATTR_INTERVAL,
-    ATTR_ITEM,
-    ATTR_KEYWORD,
-    ATTR_NOTES,
-    ATTR_PRIORITY,
-    ATTR_REMINDER,
-    ATTR_REMOVE_CHECKLIST_ITEM,
-    ATTR_REMOVE_REMINDER,
-    ATTR_REMOVE_TAG,
-    ATTR_REPEAT,
-    ATTR_REPEAT_MONTHLY,
-    ATTR_SCORE_CHECKLIST_ITEM,
-    ATTR_SKILL,
-    ATTR_START_DATE,
-    ATTR_STREAK,
-    ATTR_TAG,
-    ATTR_TARGET,
-    ATTR_TASK,
-    ATTR_TYPE,
-    ATTR_UNSCORE_CHECKLIST_ITEM,
-    ATTR_UP_DOWN,
-    DOMAIN,
-    SERVICE_ABORT_QUEST,
-    SERVICE_ACCEPT_QUEST,
-    SERVICE_CANCEL_QUEST,
-    SERVICE_CAST_SKILL,
-    SERVICE_CREATE_DAILY,
-    SERVICE_CREATE_HABIT,
-    SERVICE_CREATE_REWARD,
-    SERVICE_CREATE_TODO,
-    SERVICE_GET_TASKS,
-    SERVICE_LEAVE_QUEST,
-    SERVICE_REJECT_QUEST,
-    SERVICE_SCORE_HABIT,
-    SERVICE_SCORE_REWARD,
-    SERVICE_START_QUEST,
-    SERVICE_TRANSFORMATION,
-    SERVICE_UPDATE_DAILY,
-    SERVICE_UPDATE_HABIT,
-    SERVICE_UPDATE_REWARD,
-    SERVICE_UPDATE_TODO,
+from homeassistant.components.habitica.const import DOMAIN
+from homeassistant.components.habitica.services import (
+    HabiticaService,
+    HabiticaServiceArgument,
 )
-from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DATE, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -88,8 +38,6 @@ from .conftest import (
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
 )
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica: reason"
 RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again in 5 seconds"
@@ -137,8 +85,8 @@ def uuid_mock() -> Generator[None]:
     [
         (
             {
-                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
-                ATTR_SKILL: "pickpocket",
+                HabiticaServiceArgument.TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                HabiticaServiceArgument.SKILL: "pickpocket",
             },
             {
                 "skill": Skill.PICKPOCKET,
@@ -147,8 +95,8 @@ def uuid_mock() -> Generator[None]:
         ),
         (
             {
-                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
-                ATTR_SKILL: "backstab",
+                HabiticaServiceArgument.TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                HabiticaServiceArgument.SKILL: "backstab",
             },
             {
                 "skill": Skill.BACKSTAB,
@@ -157,8 +105,8 @@ def uuid_mock() -> Generator[None]:
         ),
         (
             {
-                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
-                ATTR_SKILL: "fireball",
+                HabiticaServiceArgument.TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                HabiticaServiceArgument.SKILL: "fireball",
             },
             {
                 "skill": Skill.BURST_OF_FLAMES,
@@ -167,8 +115,8 @@ def uuid_mock() -> Generator[None]:
         ),
         (
             {
-                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             {
                 "skill": Skill.BRUTAL_SMASH,
@@ -177,8 +125,8 @@ def uuid_mock() -> Generator[None]:
         ),
         (
             {
-                ATTR_TASK: "Rechnungen bezahlen",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "Rechnungen bezahlen",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             {
                 "skill": Skill.BRUTAL_SMASH,
@@ -187,8 +135,8 @@ def uuid_mock() -> Generator[None]:
         ),
         (
             {
-                ATTR_TASK: "pay_bills",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "pay_bills",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             {
                 "skill": Skill.BRUTAL_SMASH,
@@ -216,9 +164,9 @@ async def test_cast_skill(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CAST_SKILL,
+        HabiticaService.CAST_SKILL,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -237,8 +185,8 @@ async def test_cast_skill(
     [
         (
             {
-                ATTR_TASK: "task-not-found",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "task-not-found",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             None,
             ServiceValidationError,
@@ -246,8 +194,8 @@ async def test_cast_skill(
         ),
         (
             {
-                ATTR_TASK: "Rechnungen bezahlen",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "Rechnungen bezahlen",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             ERROR_TOO_MANY_REQUESTS,
             HomeAssistantError,
@@ -255,8 +203,8 @@ async def test_cast_skill(
         ),
         (
             {
-                ATTR_TASK: "Rechnungen bezahlen",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "Rechnungen bezahlen",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             ERROR_NOT_FOUND,
             ServiceValidationError,
@@ -265,8 +213,8 @@ async def test_cast_skill(
         ),
         (
             {
-                ATTR_TASK: "Rechnungen bezahlen",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "Rechnungen bezahlen",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
@@ -275,8 +223,8 @@ async def test_cast_skill(
         ),
         (
             {
-                ATTR_TASK: "Rechnungen bezahlen",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "Rechnungen bezahlen",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             ERROR_BAD_REQUEST,
             HomeAssistantError,
@@ -284,8 +232,8 @@ async def test_cast_skill(
         ),
         (
             {
-                ATTR_TASK: "Rechnungen bezahlen",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.TASK: "Rechnungen bezahlen",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             ClientError,
             HomeAssistantError,
@@ -308,9 +256,9 @@ async def test_cast_skill_exceptions(
     with pytest.raises(expected_exception, match=expected_exception_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CAST_SKILL,
+            HabiticaService.CAST_SKILL,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
                 **service_data,
             },
             return_response=True,
@@ -327,11 +275,11 @@ async def test_get_config_entry(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CAST_SKILL,
+            HabiticaService.CAST_SKILL,
             service_data={
-                ATTR_CONFIG_ENTRY: "0000000000000000",
-                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.CONFIG_ENTRY: "0000000000000000",
+                HabiticaServiceArgument.TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             return_response=True,
             blocking=True,
@@ -343,11 +291,11 @@ async def test_get_config_entry(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CAST_SKILL,
+            HabiticaService.CAST_SKILL,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
-                ATTR_SKILL: "smash",
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.TASK: "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+                HabiticaServiceArgument.SKILL: "smash",
             },
             return_response=True,
             blocking=True,
@@ -358,12 +306,12 @@ async def test_get_config_entry(
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_ABORT_QUEST,
-        SERVICE_ACCEPT_QUEST,
-        SERVICE_CANCEL_QUEST,
-        SERVICE_LEAVE_QUEST,
-        SERVICE_REJECT_QUEST,
-        SERVICE_START_QUEST,
+        HabiticaService.ABORT_QUEST,
+        HabiticaService.ACCEPT_QUEST,
+        HabiticaService.CANCEL_QUEST,
+        HabiticaService.LEAVE_QUEST,
+        HabiticaService.REJECT_QUEST,
+        HabiticaService.START_QUEST,
     ],
 )
 async def test_handle_quests(
@@ -377,7 +325,7 @@ async def test_handle_quests(
     await hass.services.async_call(
         DOMAIN,
         service,
-        service_data={ATTR_CONFIG_ENTRY: config_entry.entry_id},
+        service_data={HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id},
         return_response=True,
         blocking=True,
     )
@@ -423,12 +371,12 @@ async def test_handle_quests(
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_ACCEPT_QUEST,
-        SERVICE_ABORT_QUEST,
-        SERVICE_CANCEL_QUEST,
-        SERVICE_LEAVE_QUEST,
-        SERVICE_REJECT_QUEST,
-        SERVICE_START_QUEST,
+        HabiticaService.ACCEPT_QUEST,
+        HabiticaService.ABORT_QUEST,
+        HabiticaService.CANCEL_QUEST,
+        HabiticaService.LEAVE_QUEST,
+        HabiticaService.REJECT_QUEST,
+        HabiticaService.START_QUEST,
     ],
 )
 async def test_handle_quests_exceptions(
@@ -447,7 +395,7 @@ async def test_handle_quests_exceptions(
         await hass.services.async_call(
             DOMAIN,
             service,
-            service_data={ATTR_CONFIG_ENTRY: config_entry.entry_id},
+            service_data={HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id},
             return_response=True,
             blocking=True,
         )
@@ -457,10 +405,10 @@ async def test_handle_quests_exceptions(
     ("service", "service_data", "call_args"),
     [
         (
-            SERVICE_SCORE_HABIT,
+            HabiticaService.SCORE_HABIT,
             {
-                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             {
                 "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
@@ -468,10 +416,10 @@ async def test_handle_quests_exceptions(
             },
         ),
         (
-            SERVICE_SCORE_HABIT,
+            HabiticaService.SCORE_HABIT,
             {
-                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
-                ATTR_DIRECTION: "down",
+                HabiticaServiceArgument.TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                HabiticaServiceArgument.DIRECTION: "down",
             },
             {
                 "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
@@ -479,9 +427,9 @@ async def test_handle_quests_exceptions(
             },
         ),
         (
-            SERVICE_SCORE_REWARD,
+            HabiticaService.SCORE_REWARD,
             {
-                ATTR_TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
+                HabiticaServiceArgument.TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
             },
             {
                 "task_id": UUID("5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"),
@@ -489,10 +437,10 @@ async def test_handle_quests_exceptions(
             },
         ),
         (
-            SERVICE_SCORE_HABIT,
+            HabiticaService.SCORE_HABIT,
             {
-                ATTR_TASK: "Füge eine Aufgabe zu Habitica hinzu",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "Füge eine Aufgabe zu Habitica hinzu",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             {
                 "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
@@ -500,10 +448,10 @@ async def test_handle_quests_exceptions(
             },
         ),
         (
-            SERVICE_SCORE_HABIT,
+            HabiticaService.SCORE_HABIT,
             {
-                ATTR_TASK: "create_a_task",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "create_a_task",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             {
                 "task_id": UUID("e97659e0-2c42-4599-a7bb-00282adc410d"),
@@ -533,7 +481,7 @@ async def test_score_task(
         DOMAIN,
         service,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -553,8 +501,8 @@ async def test_score_task(
     [
         (
             {
-                ATTR_TASK: "task does not exist",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "task does not exist",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             None,
             ServiceValidationError,
@@ -562,8 +510,8 @@ async def test_score_task(
         ),
         (
             {
-                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             ERROR_TOO_MANY_REQUESTS,
             HomeAssistantError,
@@ -571,8 +519,8 @@ async def test_score_task(
         ),
         (
             {
-                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             ERROR_BAD_REQUEST,
             HomeAssistantError,
@@ -580,8 +528,8 @@ async def test_score_task(
         ),
         (
             {
-                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             ClientError,
             HomeAssistantError,
@@ -589,8 +537,8 @@ async def test_score_task(
         ),
         (
             {
-                ATTR_TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
-                ATTR_DIRECTION: "up",
+                HabiticaServiceArgument.TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
+                HabiticaServiceArgument.DIRECTION: "up",
             },
             ERROR_NOT_AUTHORIZED,
             HomeAssistantError,
@@ -614,9 +562,9 @@ async def test_score_task_exceptions(
     with pytest.raises(expected_exception, match=expected_exception_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SCORE_HABIT,
+            HabiticaService.SCORE_HABIT,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
                 **service_data,
             },
             return_response=True,
@@ -629,8 +577,8 @@ async def test_score_task_exceptions(
     [
         (
             {
-                ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             {
                 "skill": Skill.SPOOKY_SPARKLES,
@@ -639,8 +587,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
-                ATTR_ITEM: "shiny_seed",
+                HabiticaServiceArgument.TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+                HabiticaServiceArgument.ITEM: "shiny_seed",
             },
             {
                 "skill": Skill.SHINY_SEED,
@@ -649,8 +597,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
-                ATTR_ITEM: "seafoam",
+                HabiticaServiceArgument.TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+                HabiticaServiceArgument.ITEM: "seafoam",
             },
             {
                 "skill": Skill.SEAFOAM,
@@ -659,8 +607,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
-                ATTR_ITEM: "snowball",
+                HabiticaServiceArgument.TARGET: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+                HabiticaServiceArgument.ITEM: "snowball",
             },
             {
                 "skill": Skill.SNOWBALL,
@@ -669,8 +617,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "test-user",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-user",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             {
                 "skill": Skill.SPOOKY_SPARKLES,
@@ -679,8 +627,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "test-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             {
                 "skill": Skill.SPOOKY_SPARKLES,
@@ -689,8 +637,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             {
                 "skill": Skill.SPOOKY_SPARKLES,
@@ -699,8 +647,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             {
                 "skill": Skill.SPOOKY_SPARKLES,
@@ -709,8 +657,8 @@ async def test_score_task_exceptions(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-displayname",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-displayname",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             {
                 "skill": Skill.SPOOKY_SPARKLES,
@@ -741,9 +689,9 @@ async def test_transformation(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TRANSFORMATION,
+        HabiticaService.TRANSFORMATION,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -764,8 +712,8 @@ async def test_transformation(
     [
         (
             {
-                ATTR_TARGET: "user-not-found",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "user-not-found",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             None,
             None,
@@ -774,8 +722,8 @@ async def test_transformation(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             ERROR_NOT_FOUND,
             None,
@@ -785,8 +733,8 @@ async def test_transformation(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             ERROR_BAD_REQUEST,
             None,
@@ -795,8 +743,8 @@ async def test_transformation(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             None,
             ERROR_TOO_MANY_REQUESTS,
@@ -805,8 +753,8 @@ async def test_transformation(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             None,
             ERROR_NOT_AUTHORIZED,
@@ -815,8 +763,8 @@ async def test_transformation(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             None,
             ERROR_BAD_REQUEST,
@@ -825,8 +773,8 @@ async def test_transformation(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             None,
             ClientError,
@@ -835,8 +783,8 @@ async def test_transformation(
         ),
         (
             {
-                ATTR_TARGET: "test-partymember-username",
-                ATTR_ITEM: "spooky_sparkles",
+                HabiticaServiceArgument.TARGET: "test-partymember-username",
+                HabiticaServiceArgument.ITEM: "spooky_sparkles",
             },
             ClientError,
             None,
@@ -862,9 +810,9 @@ async def test_transformation_exceptions(
     with pytest.raises(expected_exception, match=expected_exception_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRANSFORMATION,
+            HabiticaService.TRANSFORMATION,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
                 **service_data,
             },
             return_response=True,
@@ -876,22 +824,27 @@ async def test_transformation_exceptions(
     ("service_data"),
     [
         {},
-        {ATTR_TYPE: ["daily"]},
-        {ATTR_TYPE: ["habit"]},
-        {ATTR_TYPE: ["todo"]},
-        {ATTR_TYPE: ["reward"]},
-        {ATTR_TYPE: ["daily", "habit"]},
-        {ATTR_TYPE: ["todo", "reward"]},
-        {ATTR_PRIORITY: "trivial"},
-        {ATTR_PRIORITY: "easy"},
-        {ATTR_PRIORITY: "medium"},
-        {ATTR_PRIORITY: "hard"},
-        {ATTR_TASK: ["Zahnseide benutzen", "Eine kurze Pause machen"]},
-        {ATTR_TASK: ["f2c85972-1a19-4426-bc6d-ce3337b9d99f"]},
-        {ATTR_TASK: ["alias_zahnseide_benutzen"]},
-        {ATTR_TAG: ["Training", "Gesundheit + Wohlbefinden"]},
-        {ATTR_KEYWORD: "gewohnheit"},
-        {ATTR_TAG: ["Home Assistant"]},
+        {HabiticaServiceArgument.TYPE: ["daily"]},
+        {HabiticaServiceArgument.TYPE: ["habit"]},
+        {HabiticaServiceArgument.TYPE: ["todo"]},
+        {HabiticaServiceArgument.TYPE: ["reward"]},
+        {HabiticaServiceArgument.TYPE: ["daily", "habit"]},
+        {HabiticaServiceArgument.TYPE: ["todo", "reward"]},
+        {HabiticaServiceArgument.PRIORITY: "trivial"},
+        {HabiticaServiceArgument.PRIORITY: "easy"},
+        {HabiticaServiceArgument.PRIORITY: "medium"},
+        {HabiticaServiceArgument.PRIORITY: "hard"},
+        {
+            HabiticaServiceArgument.TASK: [
+                "Zahnseide benutzen",
+                "Eine kurze Pause machen",
+            ]
+        },
+        {HabiticaServiceArgument.TASK: ["f2c85972-1a19-4426-bc6d-ce3337b9d99f"]},
+        {HabiticaServiceArgument.TASK: ["alias_zahnseide_benutzen"]},
+        {HabiticaServiceArgument.TAG: ["Training", "Gesundheit + Wohlbefinden"]},
+        {HabiticaServiceArgument.KEYWORD: "gewohnheit"},
+        {HabiticaServiceArgument.TAG: ["Home Assistant"]},
     ],
     ids=[
         "all_tasks",
@@ -924,9 +877,9 @@ async def test_get_tasks(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_TASKS,
+        HabiticaService.GET_TASKS,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -959,10 +912,10 @@ async def test_get_tasks(
 @pytest.mark.parametrize(
     ("service", "task_id"),
     [
-        (SERVICE_UPDATE_REWARD, "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"),
-        (SERVICE_UPDATE_HABIT, "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a"),
-        (SERVICE_UPDATE_TODO, "88de7cd9-af2b-49ce-9afd-bf941d87336b"),
-        (SERVICE_UPDATE_DAILY, "6e53f1f5-a315-4edd-984d-8d762e4a08ef"),
+        (HabiticaService.UPDATE_REWARD, "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"),
+        (HabiticaService.UPDATE_HABIT, "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a"),
+        (HabiticaService.UPDATE_TODO, "88de7cd9-af2b-49ce-9afd-bf941d87336b"),
+        (HabiticaService.UPDATE_DAILY, "6e53f1f5-a315-4edd-984d-8d762e4a08ef"),
     ],
 )
 @pytest.mark.usefixtures("habitica")
@@ -984,8 +937,8 @@ async def test_update_task_exceptions(
             DOMAIN,
             service,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_TASK: task_id,
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.TASK: task_id,
             },
             return_response=True,
             blocking=True,
@@ -1015,10 +968,10 @@ async def test_update_task_exceptions(
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_CREATE_DAILY,
-        SERVICE_CREATE_HABIT,
-        SERVICE_CREATE_REWARD,
-        SERVICE_CREATE_TODO,
+        HabiticaService.CREATE_DAILY,
+        HabiticaService.CREATE_HABIT,
+        HabiticaService.CREATE_REWARD,
+        HabiticaService.CREATE_TODO,
     ],
 )
 @pytest.mark.usefixtures("habitica")
@@ -1039,8 +992,8 @@ async def test_create_task_exceptions(
             DOMAIN,
             service,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_NAME: "TITLE",
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.NAME: "TITLE",
             },
             return_response=True,
             blocking=True,
@@ -1065,10 +1018,10 @@ async def test_task_not_found(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_REWARD,
+            HabiticaService.UPDATE_REWARD,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_TASK: task_id,
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.TASK: task_id,
             },
             return_response=True,
             blocking=True,
@@ -1080,25 +1033,25 @@ async def test_task_not_found(
     [
         (
             {
-                ATTR_COST: 100,
+                HabiticaServiceArgument.COST: 100,
             },
             Task(value=100),
         ),
         (
             {
-                ATTR_RENAME: "RENAME",
+                HabiticaServiceArgument.RENAME: "RENAME",
             },
             Task(text="RENAME"),
         ),
         (
             {
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(notes="NOTES"),
         ),
         (
             {
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(alias="ALIAS"),
         ),
@@ -1119,10 +1072,10 @@ async def test_update_reward(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_REWARD,
+        HabiticaService.UPDATE_REWARD,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
-            ATTR_TASK: task_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.TASK: task_id,
             **service_data,
         },
         return_response=True,
@@ -1136,28 +1089,28 @@ async def test_update_reward(
     [
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_COST: 100,
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.COST: 100,
             },
             Task(type=TaskType.REWARD, text="TITLE", value=100),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
+                HabiticaServiceArgument.NAME: "TITLE",
             },
             Task(type=TaskType.REWARD, text="TITLE"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(type=TaskType.REWARD, text="TITLE", notes="NOTES"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(type=TaskType.REWARD, text="TITLE", alias="ALIAS"),
         ),
@@ -1174,9 +1127,9 @@ async def test_create_reward(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CREATE_REWARD,
+        HabiticaService.CREATE_REWARD,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -1190,56 +1143,56 @@ async def test_create_reward(
     [
         (
             {
-                ATTR_RENAME: "RENAME",
+                HabiticaServiceArgument.RENAME: "RENAME",
             },
             Task(text="RENAME"),
         ),
         (
             {
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(notes="NOTES"),
         ),
         (
             {
-                ATTR_UP_DOWN: [""],
+                HabiticaServiceArgument.UP_DOWN: [""],
             },
             Task(up=False, down=False),
         ),
         (
             {
-                ATTR_UP_DOWN: ["up"],
+                HabiticaServiceArgument.UP_DOWN: ["up"],
             },
             Task(up=True, down=False),
         ),
         (
             {
-                ATTR_UP_DOWN: ["down"],
+                HabiticaServiceArgument.UP_DOWN: ["down"],
             },
             Task(up=False, down=True),
         ),
         (
             {
-                ATTR_PRIORITY: "trivial",
+                HabiticaServiceArgument.PRIORITY: "trivial",
             },
             Task(priority=TaskPriority.TRIVIAL),
         ),
         (
             {
-                ATTR_FREQUENCY: "daily",
+                HabiticaServiceArgument.FREQUENCY: "daily",
             },
             Task(frequency=Frequency.DAILY),
         ),
         (
             {
-                ATTR_COUNTER_UP: 1,
-                ATTR_COUNTER_DOWN: 2,
+                HabiticaServiceArgument.COUNTER_UP: 1,
+                HabiticaServiceArgument.COUNTER_DOWN: 2,
             },
             Task(counterUp=1, counterDown=2),
         ),
         (
             {
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(alias="ALIAS"),
         ),
@@ -1257,10 +1210,10 @@ async def test_update_habit(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_HABIT,
+        HabiticaService.UPDATE_HABIT,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
-            ATTR_TASK: task_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.TASK: task_id,
             **service_data,
         },
         return_response=True,
@@ -1274,56 +1227,56 @@ async def test_update_habit(
     [
         (
             {
-                ATTR_NAME: "TITLE",
+                HabiticaServiceArgument.NAME: "TITLE",
             },
             Task(type=TaskType.HABIT, text="TITLE"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(type=TaskType.HABIT, text="TITLE", notes="NOTES"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_UP_DOWN: [""],
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.UP_DOWN: [""],
             },
             Task(type=TaskType.HABIT, text="TITLE", up=False, down=False),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_UP_DOWN: ["up"],
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.UP_DOWN: ["up"],
             },
             Task(type=TaskType.HABIT, text="TITLE", up=True, down=False),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_UP_DOWN: ["down"],
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.UP_DOWN: ["down"],
             },
             Task(type=TaskType.HABIT, text="TITLE", up=False, down=True),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_PRIORITY: "trivial",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.PRIORITY: "trivial",
             },
             Task(type=TaskType.HABIT, text="TITLE", priority=TaskPriority.TRIVIAL),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_FREQUENCY: "daily",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.FREQUENCY: "daily",
             },
             Task(type=TaskType.HABIT, text="TITLE", frequency=Frequency.DAILY),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(type=TaskType.HABIT, text="TITLE", alias="ALIAS"),
         ),
@@ -1340,9 +1293,9 @@ async def test_create_habit(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CREATE_HABIT,
+        HabiticaService.CREATE_HABIT,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -1356,19 +1309,19 @@ async def test_create_habit(
     [
         (
             {
-                ATTR_RENAME: "RENAME",
+                HabiticaServiceArgument.RENAME: "RENAME",
             },
             Task(text="RENAME"),
         ),
         (
             {
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(notes="NOTES"),
         ),
         (
             {
-                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+                HabiticaServiceArgument.ADD_CHECKLIST_ITEM: "Checklist-item",
             },
             Task(
                 {
@@ -1394,7 +1347,7 @@ async def test_create_habit(
         ),
         (
             {
-                ATTR_REMOVE_CHECKLIST_ITEM: "Checklist-item1",
+                HabiticaServiceArgument.REMOVE_CHECKLIST_ITEM: "Checklist-item1",
             },
             Task(
                 {
@@ -1410,7 +1363,7 @@ async def test_create_habit(
         ),
         (
             {
-                ATTR_SCORE_CHECKLIST_ITEM: "Checklist-item1",
+                HabiticaServiceArgument.SCORE_CHECKLIST_ITEM: "Checklist-item1",
             },
             Task(
                 {
@@ -1431,7 +1384,7 @@ async def test_create_habit(
         ),
         (
             {
-                ATTR_UNSCORE_CHECKLIST_ITEM: "Checklist-item2",
+                HabiticaServiceArgument.UNSCORE_CHECKLIST_ITEM: "Checklist-item2",
             },
             Task(
                 {
@@ -1452,25 +1405,25 @@ async def test_create_habit(
         ),
         (
             {
-                ATTR_PRIORITY: "trivial",
+                HabiticaServiceArgument.PRIORITY: "trivial",
             },
             Task(priority=TaskPriority.TRIVIAL),
         ),
         (
             {
-                ATTR_DATE: "2025-03-05",
+                HabiticaServiceArgument.DATE: "2025-03-05",
             },
             Task(date=datetime(2025, 3, 5)),
         ),
         (
             {
-                ATTR_CLEAR_DATE: True,
+                HabiticaServiceArgument.CLEAR_DATE: True,
             },
             Task(date=None),
         ),
         (
             {
-                ATTR_REMINDER: ["2025-02-25T00:00"],
+                HabiticaServiceArgument.REMINDER: ["2025-02-25T00:00"],
             },
             Task(
                 {
@@ -1486,31 +1439,31 @@ async def test_create_habit(
         ),
         (
             {
-                ATTR_REMOVE_REMINDER: ["2025-02-25T00:00"],
+                HabiticaServiceArgument.REMOVE_REMINDER: ["2025-02-25T00:00"],
             },
             Task({"reminders": []}),
         ),
         (
             {
-                ATTR_CLEAR_REMINDER: True,
+                HabiticaServiceArgument.CLEAR_REMINDER: True,
             },
             Task({"reminders": []}),
         ),
         (
             {
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(alias="ALIAS"),
         ),
         (
             {
-                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+                HabiticaServiceArgument.COLLAPSE_CHECKLIST: "collapsed",
             },
             Task(collapseChecklist=True),
         ),
         (
             {
-                ATTR_COLLAPSE_CHECKLIST: "expanded",
+                HabiticaServiceArgument.COLLAPSE_CHECKLIST: "expanded",
             },
             Task(collapseChecklist=False),
         ),
@@ -1529,10 +1482,10 @@ async def test_update_todo(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_TODO,
+        HabiticaService.UPDATE_TODO,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
-            ATTR_TASK: task_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.TASK: task_id,
             **service_data,
         },
         return_response=True,
@@ -1546,21 +1499,21 @@ async def test_update_todo(
     [
         (
             {
-                ATTR_NAME: "TITLE",
+                HabiticaServiceArgument.NAME: "TITLE",
             },
             Task(type=TaskType.TODO, text="TITLE"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(type=TaskType.TODO, text="TITLE", notes="NOTES"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.ADD_CHECKLIST_ITEM: "Checklist-item",
             },
             Task(
                 type=TaskType.TODO,
@@ -1576,22 +1529,22 @@ async def test_update_todo(
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_PRIORITY: "trivial",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.PRIORITY: "trivial",
             },
             Task(type=TaskType.TODO, text="TITLE", priority=TaskPriority.TRIVIAL),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_DATE: "2025-03-05",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.DATE: "2025-03-05",
             },
             Task(type=TaskType.TODO, text="TITLE", date=datetime(2025, 3, 5)),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_REMINDER: ["2025-02-25T00:00"],
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.REMINDER: ["2025-02-25T00:00"],
             },
             Task(
                 type=TaskType.TODO,
@@ -1607,22 +1560,22 @@ async def test_update_todo(
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(type=TaskType.TODO, text="TITLE", alias="ALIAS"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.COLLAPSE_CHECKLIST: "collapsed",
             },
             Task(type=TaskType.TODO, text="TITLE", collapseChecklist=True),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_COLLAPSE_CHECKLIST: "expanded",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.COLLAPSE_CHECKLIST: "expanded",
             },
             Task(type=TaskType.TODO, text="TITLE", collapseChecklist=False),
         ),
@@ -1640,9 +1593,9 @@ async def test_create_todo(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CREATE_TODO,
+        HabiticaService.CREATE_TODO,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -1656,19 +1609,19 @@ async def test_create_todo(
     [
         (
             {
-                ATTR_RENAME: "RENAME",
+                HabiticaServiceArgument.RENAME: "RENAME",
             },
             Task(text="RENAME"),
         ),
         (
             {
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(notes="NOTES"),
         ),
         (
             {
-                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+                HabiticaServiceArgument.ADD_CHECKLIST_ITEM: "Checklist-item",
             },
             Task(
                 {
@@ -1694,7 +1647,7 @@ async def test_create_todo(
         ),
         (
             {
-                ATTR_REMOVE_CHECKLIST_ITEM: "Checklist-item1",
+                HabiticaServiceArgument.REMOVE_CHECKLIST_ITEM: "Checklist-item1",
             },
             Task(
                 {
@@ -1710,7 +1663,7 @@ async def test_create_todo(
         ),
         (
             {
-                ATTR_SCORE_CHECKLIST_ITEM: "Checklist-item1",
+                HabiticaServiceArgument.SCORE_CHECKLIST_ITEM: "Checklist-item1",
             },
             Task(
                 {
@@ -1731,7 +1684,7 @@ async def test_create_todo(
         ),
         (
             {
-                ATTR_UNSCORE_CHECKLIST_ITEM: "Checklist-item2",
+                HabiticaServiceArgument.UNSCORE_CHECKLIST_ITEM: "Checklist-item2",
             },
             Task(
                 {
@@ -1752,38 +1705,38 @@ async def test_create_todo(
         ),
         (
             {
-                ATTR_PRIORITY: "trivial",
+                HabiticaServiceArgument.PRIORITY: "trivial",
             },
             Task(priority=TaskPriority.TRIVIAL),
         ),
         (
             {
-                ATTR_START_DATE: "2025-03-05",
+                HabiticaServiceArgument.START_DATE: "2025-03-05",
             },
             Task(startDate=datetime(2025, 3, 5)),
         ),
         (
             {
-                ATTR_FREQUENCY: "weekly",
+                HabiticaServiceArgument.FREQUENCY: "weekly",
             },
             Task(frequency=Frequency.WEEKLY),
         ),
         (
             {
-                ATTR_INTERVAL: 5,
+                HabiticaServiceArgument.EVERY_X: 5,
             },
             Task(everyX=5),
         ),
         (
             {
-                ATTR_INTERVAL: 0,
+                HabiticaServiceArgument.EVERY_X: 0,
             },
             Task(everyX=0),
         ),
         (
             {
-                ATTR_FREQUENCY: "weekly",
-                ATTR_REPEAT: ["m", "t", "w", "th"],
+                HabiticaServiceArgument.FREQUENCY: "weekly",
+                HabiticaServiceArgument.REPEAT: ["m", "t", "w", "th"],
             },
             Task(
                 frequency=Frequency.WEEKLY,
@@ -1792,15 +1745,15 @@ async def test_create_todo(
         ),
         (
             {
-                ATTR_FREQUENCY: "monthly",
-                ATTR_REPEAT_MONTHLY: "day_of_month",
+                HabiticaServiceArgument.FREQUENCY: "monthly",
+                HabiticaServiceArgument.REPEAT_MONTHLY: "day_of_month",
             },
             Task(frequency=Frequency.MONTHLY, daysOfMonth=[20], weeksOfMonth=[]),
         ),
         (
             {
-                ATTR_FREQUENCY: "monthly",
-                ATTR_REPEAT_MONTHLY: "day_of_week",
+                HabiticaServiceArgument.FREQUENCY: "monthly",
+                HabiticaServiceArgument.REPEAT_MONTHLY: "day_of_week",
             },
             Task(
                 frequency=Frequency.MONTHLY,
@@ -1813,7 +1766,7 @@ async def test_create_todo(
         ),
         (
             {
-                ATTR_REMINDER: ["10:00"],
+                HabiticaServiceArgument.REMINDER: ["10:00"],
             },
             Task(
                 {
@@ -1829,25 +1782,25 @@ async def test_create_todo(
         ),
         (
             {
-                ATTR_REMOVE_REMINDER: ["10:00"],
+                HabiticaServiceArgument.REMOVE_REMINDER: ["10:00"],
             },
             Task({"reminders": []}),
         ),
         (
             {
-                ATTR_CLEAR_REMINDER: True,
+                HabiticaServiceArgument.CLEAR_REMINDER: True,
             },
             Task({"reminders": []}),
         ),
         (
             {
-                ATTR_STREAK: 10,
+                HabiticaServiceArgument.STREAK: 10,
             },
             Task(streak=10),
         ),
         (
             {
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(alias="ALIAS"),
         ),
@@ -1867,10 +1820,10 @@ async def test_update_daily(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_DAILY,
+        HabiticaService.UPDATE_DAILY,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
-            ATTR_TASK: task_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.TASK: task_id,
             **service_data,
         },
         return_response=True,
@@ -1884,21 +1837,21 @@ async def test_update_daily(
     [
         (
             {
-                ATTR_NAME: "TITLE",
+                HabiticaServiceArgument.NAME: "TITLE",
             },
             Task(type=TaskType.DAILY, text="TITLE"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_NOTES: "NOTES",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.NOTES: "NOTES",
             },
             Task(type=TaskType.DAILY, text="TITLE", notes="NOTES"),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.ADD_CHECKLIST_ITEM: "Checklist-item",
             },
             Task(
                 type=TaskType.DAILY,
@@ -1914,37 +1867,37 @@ async def test_update_daily(
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_PRIORITY: "trivial",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.PRIORITY: "trivial",
             },
             Task(type=TaskType.DAILY, text="TITLE", priority=TaskPriority.TRIVIAL),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_START_DATE: "2025-03-05",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.START_DATE: "2025-03-05",
             },
             Task(type=TaskType.DAILY, text="TITLE", startDate=datetime(2025, 3, 5)),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_FREQUENCY: "weekly",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.FREQUENCY: "weekly",
             },
             Task(type=TaskType.DAILY, text="TITLE", frequency=Frequency.WEEKLY),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_INTERVAL: 5,
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.EVERY_X: 5,
             },
             Task(type=TaskType.DAILY, text="TITLE", everyX=5),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_FREQUENCY: "weekly",
-                ATTR_REPEAT: ["m", "t", "w", "th"],
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.FREQUENCY: "weekly",
+                HabiticaServiceArgument.REPEAT: ["m", "t", "w", "th"],
             },
             Task(
                 type=TaskType.DAILY,
@@ -1955,9 +1908,9 @@ async def test_update_daily(
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_FREQUENCY: "monthly",
-                ATTR_REPEAT_MONTHLY: "day_of_month",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.FREQUENCY: "monthly",
+                HabiticaServiceArgument.REPEAT_MONTHLY: "day_of_month",
             },
             Task(
                 type=TaskType.DAILY,
@@ -1969,9 +1922,9 @@ async def test_update_daily(
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_FREQUENCY: "monthly",
-                ATTR_REPEAT_MONTHLY: "day_of_week",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.FREQUENCY: "monthly",
+                HabiticaServiceArgument.REPEAT_MONTHLY: "day_of_week",
             },
             Task(
                 type=TaskType.DAILY,
@@ -1986,8 +1939,8 @@ async def test_update_daily(
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_REMINDER: ["10:00"],
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.REMINDER: ["10:00"],
             },
             Task(
                 type=TaskType.DAILY,
@@ -2003,29 +1956,29 @@ async def test_update_daily(
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_REMOVE_REMINDER: ["10:00"],
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.REMOVE_REMINDER: ["10:00"],
             },
             Task(type=TaskType.DAILY, text="TITLE", reminders=[]),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_CLEAR_REMINDER: True,
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.CLEAR_REMINDER: True,
             },
             Task(type=TaskType.DAILY, text="TITLE", reminders=[]),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_STREAK: 10,
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.STREAK: 10,
             },
             Task(type=TaskType.DAILY, text="TITLE", streak=10),
         ),
         (
             {
-                ATTR_NAME: "TITLE",
-                ATTR_ALIAS: "ALIAS",
+                HabiticaServiceArgument.NAME: "TITLE",
+                HabiticaServiceArgument.ALIAS: "ALIAS",
             },
             Task(type=TaskType.DAILY, text="TITLE", alias="ALIAS"),
         ),
@@ -2044,9 +1997,9 @@ async def test_create_daily(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CREATE_DAILY,
+        HabiticaService.CREATE_DAILY,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
             **service_data,
         },
         return_response=True,
@@ -2059,16 +2012,16 @@ async def test_create_daily(
     "service_data",
     [
         {
-            ATTR_FREQUENCY: "daily",
-            ATTR_REPEAT: ["m", "t", "w", "th"],
+            HabiticaServiceArgument.FREQUENCY: "daily",
+            HabiticaServiceArgument.REPEAT: ["m", "t", "w", "th"],
         },
         {
-            ATTR_FREQUENCY: "weekly",
-            ATTR_REPEAT_MONTHLY: "day_of_month",
+            HabiticaServiceArgument.FREQUENCY: "weekly",
+            HabiticaServiceArgument.REPEAT_MONTHLY: "day_of_month",
         },
         {
-            ATTR_FREQUENCY: "weekly",
-            ATTR_REPEAT_MONTHLY: "day_of_week",
+            HabiticaServiceArgument.FREQUENCY: "weekly",
+            HabiticaServiceArgument.REPEAT_MONTHLY: "day_of_week",
         },
     ],
 )
@@ -2086,10 +2039,10 @@ async def test_update_daily_service_validation_errors(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_DAILY,
+            HabiticaService.UPDATE_DAILY,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_TASK: task_id,
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.TASK: task_id,
                 **service_data,
             },
             return_response=True,
@@ -2107,11 +2060,11 @@ async def test_tags(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_REWARD,
+        HabiticaService.UPDATE_REWARD,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
-            ATTR_TASK: task_id,
-            ATTR_TAG: ["Schule"],
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.TASK: task_id,
+            HabiticaServiceArgument.TAG: ["Schule"],
         },
         return_response=True,
         blocking=True,
@@ -2136,11 +2089,11 @@ async def test_create_new_tag(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_REWARD,
+        HabiticaService.UPDATE_REWARD,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
-            ATTR_TASK: task_id,
-            ATTR_TAG: ["Home Assistant"],
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.TASK: task_id,
+            HabiticaServiceArgument.TAG: ["Home Assistant"],
         },
         return_response=True,
         blocking=True,
@@ -2192,11 +2145,11 @@ async def test_create_new_tag_exception(
     with pytest.raises(expected_exception, match=exception_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_REWARD,
+            HabiticaService.UPDATE_REWARD,
             service_data={
-                ATTR_CONFIG_ENTRY: config_entry.entry_id,
-                ATTR_TASK: task_id,
-                ATTR_TAG: ["Home Assistant"],
+                HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                HabiticaServiceArgument.TASK: task_id,
+                HabiticaServiceArgument.TAG: ["Home Assistant"],
             },
             return_response=True,
             blocking=True,
@@ -2213,11 +2166,11 @@ async def test_remove_tags(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_REWARD,
+        HabiticaService.UPDATE_REWARD,
         service_data={
-            ATTR_CONFIG_ENTRY: config_entry.entry_id,
-            ATTR_TASK: task_id,
-            ATTR_REMOVE_TAG: ["Kreativität"],
+            HabiticaServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            HabiticaServiceArgument.TASK: task_id,
+            HabiticaServiceArgument.REMOVE_TAG: ["Kreativität"],
         },
         return_response=True,
         blocking=True,

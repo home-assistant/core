@@ -1,8 +1,10 @@
 """Tests for the TechnoVE number platform."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from technove import TechnoVEConnectionError, TechnoVEError
 
@@ -17,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
@@ -64,6 +64,7 @@ async def test_number_expected_value(
 
     assert method_mock.call_count == 1
     method_mock.assert_called_with(**called_with_value)
+    assert mock_technove.update.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -111,7 +112,7 @@ async def test_set_max_current_sharing_mode(
 
     # Enable power sharing mode
     device = mock_technove.update.return_value
-    device.info.in_sharing_mode = True
+    device.info = replace(device.info, in_sharing_mode=True)
 
     with pytest.raises(
         ServiceValidationError,

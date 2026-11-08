@@ -2,14 +2,15 @@
 
 from aiorecollect.client import PickupType
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import callback
+
+from .coordinator import RecollectWasteConfigEntry
 
 
 @callback
 def async_get_pickup_type_names(
-    entry: ConfigEntry, pickup_types: list[PickupType]
+    entry: RecollectWasteConfigEntry, pickup_types: list[PickupType]
 ) -> list[str]:
     """Return proper pickup type names from their associated objects."""
     return [

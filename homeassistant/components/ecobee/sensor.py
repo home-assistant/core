@@ -1,6 +1,7 @@
 """Support for Ecobee sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
@@ -10,12 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfDensity, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,14 +37,14 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     ),
     EcobeeSensorEntityDescription(
         key="humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         runtime_key=None,
     ),
     EcobeeSensorEntityDescription(
         key="co2PPM",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         runtime_key="actualCO2",
@@ -56,7 +52,7 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
     EcobeeSensorEntityDescription(
         key="vocPPM",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         runtime_key="actualVOC",
     ),
@@ -110,6 +106,7 @@ class EcobeeSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
@@ -121,6 +118,7 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
@@ -153,12 +151,14 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
         return thermostat["runtime"]["connected"]
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self._state in (

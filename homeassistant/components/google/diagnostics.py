@@ -1,6 +1,5 @@
 """Provides diagnostics for google calendar."""
 
-import datetime
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -45,7 +44,7 @@ async def async_get_config_entry_diagnostics(
     payload: dict[str, Any] = {
         "now": dt_util.now().isoformat(),
         "timezone": str(dt_util.get_default_time_zone()),
-        "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
+        "system_timezone": str(dt_util.naive_now().astimezone().tzinfo),
     }
 
     store = config_entry.runtime_data.store

@@ -1,5 +1,7 @@
 """Test SkyConnect utilities."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.homeassistant_sky_connect.const import (
     DOMAIN,
     HardwareVariant,
@@ -9,8 +11,6 @@ from homeassistant.components.homeassistant_sky_connect.util import (
     get_usb_service_info,
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 SKYCONNECT_CONFIG_ENTRY = MockConfigEntry(
     domain=DOMAIN,
@@ -65,7 +65,7 @@ def test_get_usb_service_info() -> None:
 
 def test_get_hardware_variant() -> None:
     """Test `get_hardware_variant` extraction."""
-    assert get_hardware_variant(SKYCONNECT_CONFIG_ENTRY) is HardwareVariant.SKYCONNECT
+    assert get_hardware_variant(SKYCONNECT_CONFIG_ENTRY) == HardwareVariant.SKYCONNECT
     assert (
-        get_hardware_variant(CONNECT_ZBT1_CONFIG_ENTRY) is HardwareVariant.CONNECT_ZBT1
+        get_hardware_variant(CONNECT_ZBT1_CONFIG_ENTRY) == HardwareVariant.CONNECT_ZBT1
     )

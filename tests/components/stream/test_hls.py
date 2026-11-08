@@ -7,9 +7,12 @@ from urllib.parse import urlparse
 
 import av
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    DOMAIN,
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     HLS_PROVIDER,
@@ -28,9 +31,6 @@ from .common import (
     dynamic_stream_settings,
 )
 
-from tests.common import async_fire_time_changed
-from tests.typing import ClientSessionGenerator
-
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"\x00\x00\x00\x08moov"
 FAKE_PAYLOAD = b"fake-payload"
@@ -48,7 +48,7 @@ HLS_CONFIG = {
 @pytest.fixture
 async def setup_component(hass: HomeAssistant) -> None:
     """Test fixture to setup the stream component."""
-    await async_setup_component(hass, "stream", HLS_CONFIG)
+    await async_setup_component(hass, DOMAIN, HLS_CONFIG)
 
 
 class HlsClient:

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pywizlight import wizlight
 
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import WIZ_EXCEPTIONS
+from .const import DOMAIN, WIZ_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ class WizCoordinator(DataUpdateCoordinator[float | None]):
         )
         self._bulb = bulb
 
+    @override
     async def _async_update_data(self) -> float | None:
         """Update the WiZ device."""
         ip_address = self._bulb.ip
@@ -65,5 +67,9 @@ class WizCoordinator(DataUpdateCoordinator[float | None]):
                 power: float | None = await self._bulb.get_power()
                 return power
         except WIZ_EXCEPTIONS as ex:
-            raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"ip_address": ip_address},
+            ) from ex
         return None

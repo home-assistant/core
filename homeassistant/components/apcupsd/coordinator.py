@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 import aioapcaccess
 
@@ -106,6 +106,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
             serial_number=self.data.serial_no,
         )
 
+    @override
     async def _async_update_data(self) -> APCUPSdData:
         """Fetch the latest status from APCUPSd.
 

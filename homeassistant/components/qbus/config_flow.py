@@ -1,7 +1,7 @@
 """Config flow for Qbus."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from qbusmqttapi.discovery import QbusMqttDevice
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
@@ -33,6 +33,7 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._device: QbusMqttDevice | None = None
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -75,10 +76,11 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_SERIAL_NUMBER: self._device.serial_number,
+                "serial": self._device.serial_number,
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -150,7 +152,7 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_SERIAL_NUMBER: self._device.serial_number,
+                    "serial": self._device.serial_number,
                 }
             }
         )

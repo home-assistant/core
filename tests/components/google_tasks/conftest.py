@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 from httplib2 import Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -18,8 +19,6 @@ from homeassistant.components.google_tasks.const import DOMAIN, OAUTH2_SCOPES
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

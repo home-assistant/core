@@ -1,7 +1,7 @@
 """Config flow for GitHub integration."""
 
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiogithubapi import (
     GitHubAPI,
@@ -11,10 +11,9 @@ from aiogithubapi import (
     GitHubLoginOauthModel,
 )
 from aiogithubapi.const import OAUTH_USER_LOGIN
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -36,6 +35,7 @@ from .const import (
     LOGGER,
     SUBENTRY_TYPE_REPOSITORY,
 )
+from .coordinator import GithubConfigEntry
 
 
 async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
@@ -119,12 +119,14 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: GithubConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_REPOSITORY: RepositoryFlowHandler}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -225,9 +227,9 @@ class RepositoryFlowHandler(ConfigSubentryFlow):
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_REPOSITORY): SelectSelector(
+                        probatio.Required(CONF_REPOSITORY): SelectSelector(
                             SelectSelectorConfig(sort=True, options=repositories)
                         ),
                     }

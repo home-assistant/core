@@ -6,11 +6,7 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: done
-    comment: |
-      Single platform only, so no entity.py file.
-      CoordinatorEntity is used.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -18,9 +14,15 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -32,15 +34,13 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: |
-      This integration does not provide configuration options.
+      No options flow. Settings are changed by reconfiguring the entry and
+      are documented with the installation parameters.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -48,8 +48,9 @@ rules:
   parallel-updates:
     status: done
     comment: |
-      Coordinators are used and asyncio.Lock mutex across them ensure proper
-      rate limiting. Platforms are read-only.
+      The read-only platforms use coordinators (PARALLEL_UPDATES = 0). The
+      number and switch platforms write one setting at a time to the device
+      (PARALLEL_UPDATES = 1).
   reauthentication-flow:
     status: exempt
     comment: |

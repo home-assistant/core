@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiounifi import AiounifiException
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
@@ -31,6 +31,7 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_device_supported_fn,
 )
 
 if TYPE_CHECKING:
@@ -60,6 +61,8 @@ def get_device_brightness_or_default(device: Device) -> int:
 @callback
 def async_device_led_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device supports LED control."""
+    if not async_device_supported_fn(hub, obj_id):
+        return False
     device: Device = hub.api.devices[obj_id]
     return device.led_override is not None or device.supports_led_ring
 
@@ -158,6 +161,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     _attr_supported_features = LightEntityFeature(0)
 
     @callback
+    @override
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         device = cast(Device, self.entity_description.object_fn(self.api, self._obj_id))
@@ -171,6 +175,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         try:
@@ -182,7 +187,9 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 translation_domain=DOMAIN,
                 translation_key="action_request_failed",
             ) from err
+        await self.async_refresh_after_control()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         try:
@@ -194,8 +201,10 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 translation_domain=DOMAIN,
                 translation_key="action_request_failed",
             ) from err
+        await self.async_refresh_after_control()
 
     @callback
+    @override
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state."""
         description = self.entity_description

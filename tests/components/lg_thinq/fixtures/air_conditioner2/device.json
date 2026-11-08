@@ -1,0 +1,9 @@
+{
+  "deviceId": "MW2-5E747ABC-6542-4DEF-AA89-4EC4353B2E89",
+  "deviceInfo": {
+    "deviceType": "DEVICE_AIR_CONDITIONER",
+    "modelName": "RAC_056905_WW",
+    "alias": "Test air conditioner2",
+    "reportable": true
+  }
+}

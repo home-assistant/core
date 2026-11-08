@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -53,11 +51,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "ding": {
-        "name": "Ding"
-      }
-    },
     "button": {
       "open_door": {
         "name": "Open door"
@@ -106,26 +99,11 @@
       }
     },
     "sensor": {
-      "doorbell_volume": {
-        "name": "Doorbell volume"
-      },
       "last_activity": {
         "name": "Last activity"
       },
-      "last_ding": {
-        "name": "Last ding"
-      },
-      "last_motion": {
-        "name": "Last motion"
-      },
-      "mic_volume": {
-        "name": "Mic volume"
-      },
-      "voice_volume": {
-        "name": "Voice volume"
-      },
-      "volume": {
-        "name": "Volume"
+      "last_recording": {
+        "name": "Last recording"
       },
       "wifi_signal_category": {
         "name": "Wi-Fi signal category"
@@ -142,9 +120,6 @@
       },
       "motion_detection": {
         "name": "Motion detection"
-      },
-      "siren": {
-        "name": "[%key:component::siren::title%]"
       }
     }
   },
@@ -158,17 +133,14 @@
     "api_timeout": {
       "message": "Timeout communicating with Ring API"
     },
+    "chime_type_unknown": {
+      "message": "The in-home chime type changed and is no longer supported. Reload the Ring integration."
+    },
     "no_subscription": {
       "message": "Ring Protect subscription required for snapshots"
     },
     "sdp_m_line_index_required": {
       "message": "Error negotiating stream for {device}"
-    }
-  },
-  "issues": {
-    "deprecated_entity": {
-      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant.",
-      "title": "Detected deprecated {platform} entity usage"
     }
   }
 }

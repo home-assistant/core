@@ -1,6 +1,6 @@
 """Support for water heaters through the SmartThings cloud API."""
 
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -86,9 +86,10 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             Attribute.TEMPERATURE
         ].unit
         assert unit is not None
-        self._attr_temperature_unit = UNIT_MAP[unit]
+        self._attr_native_temperature_unit = UNIT_MAP[unit]
 
     @property
+    @override
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the supported features."""
         features = (
@@ -101,22 +102,29 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         return features
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_temperature = TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP, UnitOfTemperature.FAHRENHEIT, self._attr_temperature_unit
+            DEFAULT_MIN_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self._attr_native_temperature_unit,
         )
-        return min(min_temperature, self.target_temperature_low)
+        return min(min_temperature, self.native_target_temperature_low)
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         max_temperature = TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP, UnitOfTemperature.FAHRENHEIT, self._attr_temperature_unit
+            DEFAULT_MAX_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self._attr_native_temperature_unit,
         )
-        return max(max_temperature, self.target_temperature_high)
+        return max(max_temperature, self.native_target_temperature_high)
 
     @property
+    @override
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
         return [
@@ -131,6 +139,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         ]
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operation mode."""
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
@@ -142,34 +151,39 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
         )
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
         )
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
         )
 
     @property
-    def target_temperature_low(self) -> float:
+    @override
+    def native_target_temperature_low(self) -> float:
         """Return the minimum temperature."""
         return self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MINIMUM_SETPOINT
         )
 
     @property
-    def target_temperature_high(self) -> float:
+    @override
+    def native_target_temperature_high(self) -> float:
         """Return the maximum temperature."""
         return self.get_attribute_value(
             Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, Attribute.MAXIMUM_SETPOINT
         )
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return if away mode is on."""
         return (
@@ -179,6 +193,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             == "on"
         )
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         if operation_mode == STATE_OFF:
@@ -192,6 +207,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             argument=HA_TO_OPERATION_MAP[operation_mode],
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.execute_device_command(
@@ -200,6 +216,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             argument=kwargs[ATTR_TEMPERATURE],
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
         await self.execute_device_command(
@@ -207,6 +224,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             Command.ON,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self.execute_device_command(
@@ -214,6 +232,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             Command.OFF,
         )
 
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.execute_device_command(
@@ -222,6 +241,7 @@ class SmartThingsWaterHeater(SmartThingsEntity, WaterHeaterEntity):
             argument="on",
         )
 
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.execute_device_command(

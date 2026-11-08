@@ -1,8 +1,8 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from wirelesstagpy import SensorTag
 
 from homeassistant.components.switch import (
@@ -12,7 +12,6 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -48,8 +47,8 @@ SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SWITCH_KEYS)]
+        probatio.Required(CONF_MONITORED_CONDITIONS, default=[]): probatio.All(
+            probatio.EnsureList(), [probatio.In(SWITCH_KEYS)]
         )
     }
 )
@@ -94,24 +93,29 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
         self._attr_name = f"{self._tag.name} {description.name}"
         self._attr_unique_id = f"{self._uuid}_{description.key}"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.arm(self)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.disarm(self)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._state
 
+    @override
     def updated_state_value(self):
         """Provide formatted value."""
         return self.principal_value
 
     @property
+    @override
     def principal_value(self):
         """Provide actual value of switch."""
         attr_name = f"is_{self.entity_description.key}_sensor_armed"

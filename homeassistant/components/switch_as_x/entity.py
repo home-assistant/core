@@ -1,6 +1,6 @@
 """Base entity for the Switch as X integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -70,6 +70,7 @@ class BaseEntity(Entity):
 
         self._attr_available = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks and copy the wrapped entity's custom name if set."""
 
@@ -78,6 +79,8 @@ class BaseEntity(Entity):
             event: Event[EventStateChangedData] | None = None,
         ) -> None:
             """Handle child updates."""
+            if event:
+                self.async_set_context(event.context)
             self.async_state_changed_listener(event)
             self.async_write_ha_state()
 
@@ -140,6 +143,7 @@ class BaseEntity(Entity):
 class BaseToggleEntity(BaseEntity, ToggleEntity):
     """Represents a Switch as a ToggleEntity."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to the switch in this light switch."""
         await self.hass.services.async_call(
@@ -150,6 +154,7 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
             context=self._context,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to the switch in this light switch."""
         await self.hass.services.async_call(
@@ -161,6 +166,7 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
         )
 
     @callback
+    @override
     def async_state_changed_listener(
         self, event: Event[EventStateChangedData] | None = None
     ) -> None:
@@ -192,6 +198,7 @@ class BaseInvertableEntity(BaseEntity):
         self._invert_state = invert
 
     @callback
+    @override
     def async_generate_entity_options(self) -> dict[str, Any]:
         """Generate entity options."""
         return super().async_generate_entity_options() | {"invert": self._invert_state}

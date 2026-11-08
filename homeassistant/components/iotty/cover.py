@@ -1,7 +1,7 @@
 """Implement a iotty Shutter Device."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from iottycloud.device import Device
 from iottycloud.shutter import Shutter, ShutterState
@@ -16,8 +16,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import IottyProxy
-from .coordinator import IottyConfigEntry, IottyDataUpdateCoordinator
+from .coordinator import IottyConfigEntry
 from .entity import IottyEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,16 +98,8 @@ class IottyShutter(IottyEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(
-        self,
-        coordinator: IottyDataUpdateCoordinator,
-        iotty_cloud: IottyProxy,
-        iotty_device: Shutter,
-    ) -> None:
-        """Initialize the Shutter device."""
-        super().__init__(coordinator, iotty_cloud, iotty_device)
-
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the shutter.
 
@@ -117,6 +108,7 @@ class IottyShutter(IottyEntity, CoverEntity):
         return self._iotty_device.percentage
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return true if the Shutter is closed."""
         _LOGGER.debug(
@@ -131,20 +123,24 @@ class IottyShutter(IottyEntity, CoverEntity):
         )
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return true if the Shutter is opening."""
         return self._iotty_device.status is ShutterState.OPENING
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return true if the Shutter is closing."""
         return self._iotty_device.status is ShutterState.CLOSING
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._iotty_cloud.command(
@@ -152,6 +148,7 @@ class IottyShutter(IottyEntity, CoverEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._iotty_cloud.command(
@@ -159,6 +156,7 @@ class IottyShutter(IottyEntity, CoverEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         percentage = kwargs[ATTR_POSITION]
@@ -169,6 +167,7 @@ class IottyShutter(IottyEntity, CoverEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._iotty_cloud.command(
@@ -177,6 +176,7 @@ class IottyShutter(IottyEntity, CoverEntity):
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 

@@ -1,0 +1,15 @@
+get_forecast:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: google_air_quality
+    hours:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 96
+          step: 1
+          mode: box
