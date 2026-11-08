@@ -232,16 +232,16 @@
         "default": "mdi:cash-clock"
       },
       "epex_high_today_hour": {
-        "default": "mdi:trending-up"
+        "default": "mdi:cash-multiple"
       },
       "epex_high_today_quarter_hour": {
-        "default": "mdi:trending-up"
+        "default": "mdi:cash-multiple"
       },
       "epex_low_today_hour": {
-        "default": "mdi:trending-down"
+        "default": "mdi:cash-minus"
       },
       "epex_low_today_quarter_hour": {
-        "default": "mdi:trending-down"
+        "default": "mdi:cash-minus"
       },
       "epex_next_hour": {
         "default": "mdi:cash-fast"
