@@ -31,6 +31,7 @@ from .history import state_changes_during_period
 from .statistics import statistics_during_period
 from .tasks import PurgeEntitiesTask, PurgeTask
 
+
 class RecorderService(StrEnum):
     """Store keys for recorder services."""
 
@@ -45,6 +46,7 @@ class RecorderService(StrEnum):
 class RecorderServiceArgument(StrEnum):
     """Store keys for recorder service arguments."""
 
+    ALLOW_TRUNCATION = "allow_truncation"
     APPLY_FILTER = "apply_filter"
     DOMAINS = "domains"
     END_TIME = "end_time"
@@ -138,6 +140,9 @@ SERVICE_GET_HISTORY_SCHEMA = probatio.Schema(
         probatio.Required(RecorderServiceArgument.START_TIME): cv.datetime,
         probatio.Optional(RecorderServiceArgument.END_TIME): cv.datetime,
         probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_ids,
+        probatio.Optional(
+            RecorderServiceArgument.ALLOW_TRUNCATION, default=False
+        ): cv.boolean,
     }
 )
 
@@ -243,10 +248,9 @@ def _get_history(
     start_time: datetime,
     end_time: datetime | None,
     entity_ids: list[str],
-) -> tuple[dict[str, list[State]], set[str]]:
+) -> dict[str, list[State]]:
     """Fetch history states for entities in a single executor job."""
     result: dict[str, list[State]] = {}
-    incomplete_results: set[str] = set()
 
     for entity_id in entity_ids:
         result.update(
@@ -257,18 +261,12 @@ def _get_history(
                 entity_id=entity_id,
                 no_attributes=True,
                 descending=False,
-                limit=MAX_GET_HISTORY_RECORDS,
+                limit=MAX_GET_HISTORY_RECORDS + 1,
                 include_start_time_state=True,
             )
         )
 
-        if (
-            entity_id in result
-            and len(result[entity_id]) == MAX_GET_HISTORY_RECORDS + 1
-        ):
-            incomplete_results.add(entity_id)
-
-    return result, incomplete_results
+    return result
 
 
 async def _async_handle_get_history_service(
@@ -296,7 +294,8 @@ async def _async_handle_get_history_service(
         )
 
     entity_ids: list[str] = service.data[CommonServiceArgument.ENTITY_ID]
-    result, incomplete_results = await hass.data[DATA_INSTANCE].async_add_executor_job(
+    allow_truncation: bool = service.data[RecorderServiceArgument.ALLOW_TRUNCATION]
+    result = await hass.data[DATA_INSTANCE].async_add_executor_job(
         _get_history,
         hass,
         start_time,
@@ -316,11 +315,24 @@ async def _async_handle_get_history_service(
                 continue
             history_states.append(state)
 
+        is_truncated = len(history_states) > MAX_GET_HISTORY_RECORDS
+        if is_truncated:
+            if not allow_truncation:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="max_records_exceeded",
+                    translation_placeholders={
+                        "entity_id": entity_id,
+                        "max_records": str(MAX_GET_HISTORY_RECORDS),
+                    },
+                )
+            history_states = history_states[: MAX_GET_HISTORY_RECORDS + 1]
+
         formatted_history_states: JsonArrayType = []
 
         for index, state in enumerate(history_states):
             if index == len(history_states) - 1:
-                if entity_id in incomplete_results:
+                if is_truncated:
                     continue
                 end = end_time or dt_util.utcnow()
             else:

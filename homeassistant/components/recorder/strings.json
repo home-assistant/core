@@ -3,6 +3,9 @@
     "end_time_before_start_time": {
       "message": "End time must be greater than or equal to start time"
     },
+    "max_records_exceeded": {
+      "message": "Query for `{entity_id}` exceeded the maximum of {max_records} records"
+    },
     "start_time_before_now": {
       "message": "Start time must be in the past"
     }
@@ -37,6 +40,10 @@
     "get_history": {
       "description": "Retrieves history data for entities within a specific time period.",
       "fields": {
+        "allow_truncation": {
+          "description": "Allow truncating the returned history if the number of records exceeds the maximum limit.",
+          "name": "Allow truncation"
+        },
         "end_time": {
           "description": "The end time for the history query. If omitted, returns all history from start time onward.",
           "name": "End time"

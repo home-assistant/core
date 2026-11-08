@@ -42,6 +42,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+
 @pytest.fixture
 def multiple_start_time_chunk_sizes(
     ids_for_start_time_chunk_sizes: int,
@@ -1477,14 +1478,71 @@ async def test_get_history_service_invalid_times(
 
 
 @pytest.mark.parametrize(
+    "start_time",
+    [
+        pytest.param("2023-05-08 06:30:00Z", id="with_start_time_state"),
+        pytest.param("2023-05-08 05:00:00Z", id="without_start_time_state"),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_max_records_exceeded(
+    hass: HomeAssistant,
+    start_time: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the get_history service raises when max records is exceeded by default."""
+    monkeypatch.setattr(
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS", 3
+    )
+
+    times: list[tuple[datetime, float | str]] = [
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:00:00")), "unknown"),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00")), 0.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00")), 1.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00")), 2.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00")), 3.0),
+    ]
+    now = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+
+    for time, value in times:
+        hass.states.async_set(
+            entity_id="sensor.sensor",
+            new_state=value,
+            timestamp=time.timestamp(),
+        )
+    await async_recorder_block_till_done(hass)
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    with (
+        patch("homeassistant.util.dt.utcnow", return_value=now),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
+            {
+                "start_time": start_time,
+                "entity_id": ["sensor.sensor"],
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "max_records_exceeded"
+
+
+@pytest.mark.parametrize(
     ("service_args", "expected_result"),
     [
-        (
+        pytest.param(
             {
                 "start_time": "2023-05-08 06:30:00Z",
                 "entity_id": [
                     "sensor.sensor",
                 ],
+                "allow_truncation": True,
             },
             {
                 "history": {
@@ -1507,6 +1565,99 @@ async def test_get_history_service_invalid_times(
                     ],
                 }
             },
+            id="with_start_time_state_truncated",
+        ),
+        pytest.param(
+            {
+                "start_time": "2023-05-08 05:00:00Z",
+                "entity_id": [
+                    "sensor.sensor",
+                ],
+                "allow_truncation": True,
+            },
+            {
+                "history": {
+                    "sensor.sensor": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:00:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                    ],
+                }
+            },
+            id="without_start_time_state_truncated",
+        ),
+        pytest.param(
+            {
+                "start_time": "2023-05-08 08:30:00Z",
+                "entity_id": [
+                    "sensor.sensor",
+                ],
+            },
+            {
+                "history": {
+                    "sensor.sensor": [
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:30:00+00:00",
+                            "state": "1.0",
+                        },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                }
+            },
+            id="exact_max_records_with_start_time_state",
+        ),
+        pytest.param(
+            {
+                "start_time": "2023-05-08 05:00:00Z",
+                "end_time": "2023-05-08 08:30:00Z",
+                "entity_id": [
+                    "sensor.sensor",
+                ],
+            },
+            {
+                "history": {
+                    "sensor.sensor": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:00:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T08:30:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                    ],
+                }
+            },
+            id="exact_max_records_without_start_time_state",
         ),
     ],
 )

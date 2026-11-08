@@ -132,3 +132,9 @@ get_history:
       selector:
         entity:
           multiple: true
+
+    allow_truncation:
+      required: false
+      default: false
+      selector:
+        boolean:
