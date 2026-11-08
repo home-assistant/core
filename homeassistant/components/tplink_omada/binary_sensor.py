@@ -138,7 +138,9 @@ class OmadaGatewayPortBinarySensor(
         self._do_update()
 
     def _do_update(self) -> None:
-        gateway = self.coordinator.data[self.device.mac]
+        gateway = self.coordinator.data.get(self.device.mac)
+        if gateway is None:
+            return
 
         port = next(
             (p for p in gateway.port_status if p.port_number == self._port_number),
@@ -162,7 +164,9 @@ class OmadaGatewayPortBinarySensor(
     @override
     def available(self) -> bool:
         """Return availability based on the port still being reported."""
-        gateway = self.coordinator.data[self.device.mac]
-        return super().available and any(
-            p.port_number == self._port_number for p in gateway.port_status
+        gateway = self.coordinator.data.get(self.device.mac)
+        return (
+            super().available
+            and gateway is not None
+            and any(p.port_number == self._port_number for p in gateway.port_status)
         )
