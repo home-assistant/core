@@ -160,7 +160,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         )
         if (
             (
-                option_definition := self.appliance.options.get(
+                option_definition := self.appliance.available_options.get(
                     OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
                 )
             )

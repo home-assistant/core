@@ -261,7 +261,7 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_native_value = cast(float | None, self.option_value)
-        option_definition = self.appliance.options.get(self.bsh_key)
+        option_definition = self.appliance.available_options.get(self.bsh_key)
         if option_definition:
             if option_definition.unit:
                 candidate_unit = UNIT_MAP.get(

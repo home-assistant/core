@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohomeconnect.model import (
     ApplianceType,
     ArrayOfEvents,
+    ArrayOfOptions,
     ArrayOfSettings,
     Event,
     EventKey,
@@ -14,6 +15,7 @@ from aiohomeconnect.model import (
     EventType,
     GetSetting,
     HomeAppliance,
+    Option,
     OptionKey,
     ProgramDefinition,
     ProgramKey,
@@ -640,6 +642,134 @@ async def test_options_functionality(
         "value": 80,
     }
     assert hass.states.is_state(entity_id, "80.0")
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
+@pytest.mark.parametrize(
+    "active_selected",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_options_entities_available_non_writable(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    active_selected: EventKey,
+) -> None:
+    """Test that option enters in read-only mode when is not listed in available program.
+
+    The entity is still available because is listed as selected/active program option,
+    but because is not listed in available program options, it cannot be set.
+    """
+    entity_id = "number.oven_setpoint_temperature"
+    client.get_active_program_options = client.get_selected_program_options = AsyncMock(
+        return_value=ArrayOfOptions(
+            [Option(OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE, 200)]
+        )
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE, "Double"
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+        blocking=True,
+    )
+
+    client.set_active_program_option.assert_awaited_once_with(
+        appliance.ha_id,
+        option_key=OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+        value=80,
+    )
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.COOKING_OVEN_HEATING_MODE_INTENSIVE_HEAT,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            active_selected,
+                            active_selected.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=ProgramKey.COOKING_OVEN_HEATING_MODE_INTENSIVE_HEAT,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "200"
+
+    client.set_active_program_option.reset_mock()
+    with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+            blocking=True,
+        )
+
+    client.set_active_program_option.assert_not_awaited()
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+                            raw_key=OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=90,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "90"
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)

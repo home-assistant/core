@@ -169,7 +169,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Return the native unit of measurement."""
         if (
             (
-                option_definition := self.appliance.options.get(
+                option_definition := self.appliance.available_options.get(
                     OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
                 )
             )
@@ -181,7 +181,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     def _get_temperature_constraints(self) -> ProgramDefinitionConstraints | None:
         """Get the temperature constraints for the appliance."""
-        if option_definition := self.appliance.options.get(
+        if option_definition := self.appliance.available_options.get(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
         ):
             return option_definition.constraints
@@ -226,12 +226,14 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
-        if self.appliance.options.get(
+        if (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+            in self.appliance.options
         ):
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if self.appliance.options.get(
+        if (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+            in self.appliance.options
         ):
             features |= ClimateEntityFeature.FAN_MODE
         return features
@@ -316,7 +318,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Return the list of available fan modes."""
         if (
             (
-                option_definition := self.appliance.options.get(
+                option_definition := self.appliance.available_options.get(
                     OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
                 )
             )

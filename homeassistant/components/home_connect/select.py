@@ -589,7 +589,7 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
             else None
         )
         if (
-            (option_definition := self.appliance.options.get(self.bsh_key))
+            (option_definition := self.appliance.available_options.get(self.bsh_key))
             and (option_constraints := option_definition.constraints)
             and option_constraints.allowed_values
             and self._original_option_keys != set(option_constraints.allowed_values)

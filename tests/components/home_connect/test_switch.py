@@ -7,12 +7,14 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohomeconnect.model import (
     ApplianceType,
     ArrayOfEvents,
+    ArrayOfOptions,
     ArrayOfSettings,
     Event,
     EventMessage,
     EventType,
     GetSetting,
     HomeAppliance,
+    Option,
     OptionKey,
     ProgramDefinition,
     ProgramKey,
@@ -757,6 +759,128 @@ async def test_options_functionality(
         "value": True,
     }
     assert hass.states.is_state(entity_id, STATE_ON)
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
+@pytest.mark.parametrize(
+    "active_selected",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_options_entities_available_non_writable(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    active_selected: EventKey,
+) -> None:
+    """Test that option enters in read-only mode when is not listed in available program.
+
+    The entity is still available because is listed as selected/active program option,
+    but because is not listed in available program options, it cannot be set.
+    """
+    entity_id = "switch.dishwasher_half_load"
+    client.get_active_program_options = client.get_selected_program_options = AsyncMock(
+        return_value=ArrayOfOptions(
+            [Option(OptionKey.DISHCARE_DISHWASHER_HALF_LOAD, False)]
+        )
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.DISHCARE_DISHWASHER_HALF_LOAD, "Boolean"
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    client.set_active_program_option.assert_awaited_once_with(
+        appliance.ha_id,
+        option_key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+        value=True,
+    )
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            active_selected,
+                            active_selected.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    client.set_active_program_option.reset_mock()
+    with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    client.set_active_program_option.assert_not_awaited()
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                            raw_key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=False,
+                        ),
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
