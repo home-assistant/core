@@ -615,9 +615,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Handle 'null' or empty values from API
         if start_time_raw in ("null", None, ""):
-            start_time_raw = "0:0"
+            start_time_raw = "00:00"
         if end_time_raw in ("null", None, ""):
-            end_time_raw = "0:0"
+            end_time_raw = "00:00"
 
         # Format times with leading zeros (HH:MM)
         start_time = self._format_time(str(start_time_raw))
