@@ -26,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -116,6 +117,24 @@ async def test_fan_speed_missing(hass: HomeAssistant) -> None:
     assert state
     assert state.attributes[ATTR_PERCENTAGE] is None
     assert state.attributes["fan_speed_home"] is None
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("metrics", [{"A_CYC_MODE": None}])
+async def test_fan_mode_missing(
+    hass: HomeAssistant, mock_vallox_client: AsyncMock
+) -> None:
+    """Test the fan when the unit does not report whether it is on."""
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    # The unit may well be on, so turning it off must not be skipped.
+    await hass.services.async_call(
+        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
+    )
+
+    mock_vallox_client.set_values.assert_called_once_with(UNIT_OFF)
 
 
 @pytest.mark.usefixtures("init_integration")
