@@ -14158,8 +14158,8 @@
           "name": "Sony PlayStation 4"
         },
         "sony_projector": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "categories": [
             "media_entertainment.tv_streaming"

@@ -794,6 +794,7 @@ FLOWS = {
         "sonarr",
         "songpal",
         "sonos",
+        "sony_projector",
         "soundtouch",
         "specialized_turbo",
         "speedtestdotnet",

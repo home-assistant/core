@@ -1,24 +1,32 @@
 """Support for Sony projectors via SDCP network control."""
 
-import logging
 from typing import Any, override
 
 import probatio
-import pysdcp
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DOMAIN
+from .coordinator import SonyProjectorConfigEntry, SonyProjectorCoordinator
 
-DEFAULT_NAME = "Sony Projector"
+PARALLEL_UPDATES = 1
+
+BREAKS_IN_HA_VERSION = "2027.7.0"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
@@ -28,62 +36,89 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Connect to Sony projector using network."""
+    """Import the YAML platform into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: config[CONF_HOST], CONF_NAME: config[CONF_NAME]},
+    )
 
-    host = config[CONF_HOST]
-    name = config[CONF_NAME]
-    sdcp_connection = pysdcp.Projector(host)
+    translation_placeholders = {"domain": DOMAIN, "integration_title": DEFAULT_NAME}
 
-    # Sanity check the connection
-    try:
-        sdcp_connection.get_power()
-    except ConnectionError:
-        _LOGGER.error("Failed to connect to projector '%s'", host)
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['reason']}",
+            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            translation_placeholders=translation_placeholders,
+        )
         return
-    _LOGGER.debug("Validated projector '%s' OK", host)
-    add_entities([SonyProjector(sdcp_connection, name)], True)
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders=translation_placeholders,
+    )
 
 
-class SonyProjector(SwitchEntity):
-    """Represents a Sony Projector as a switch."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SonyProjectorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the projector switch from a config entry."""
+    async_add_entities([SonyProjectorSwitch(entry.runtime_data)])
 
-    def __init__(self, sdcp_connection, name):
-        """Init of the Sony projector."""
-        self._sdcp = sdcp_connection
-        self._attr_available = False
-        self._attr_name = name
 
-    def update(self) -> None:
-        """Get the latest state from the projector."""
-        try:
-            self._attr_is_on = self._sdcp.get_power()
-            self._attr_available = True
-        except ConnectionRefusedError:
-            _LOGGER.error("Projector connection refused")
-            self._attr_available = False
+class SonyProjectorSwitch(CoordinatorEntity[SonyProjectorCoordinator], SwitchEntity):
+    """Represents a Sony projector as a switch."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(self, coordinator: SonyProjectorCoordinator) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator)
+        entry = coordinator.config_entry
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer="Sony",
+            name=entry.title,
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return whether the projector is on."""
+        return self.coordinator.data
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
-        _LOGGER.debug("Powering on projector '%s'", self.name)
-        if self._sdcp.set_power(True):
-            _LOGGER.debug("Powered on successfully")
-            self._attr_is_on = True
-        else:
-            _LOGGER.error("Power on command was not successful")
+        await self.coordinator.async_set_power(True)
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the projector off."""
-        _LOGGER.debug("Powering off projector '%s'", self.name)
-        if self._sdcp.set_power(False):
-            _LOGGER.debug("Powered off successfully")
-            self._attr_is_on = False
-        else:
-            _LOGGER.error("Power off command was not successful")
+        await self.coordinator.async_set_power(False)

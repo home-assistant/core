@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the projector."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "power_command_failed": {
+      "message": "Failed to send the power command to the projector: {error}"
+    },
+    "update_failed": {
+      "message": "Failed to read the power state of the projector: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed, but the projector could not be reached while importing your YAML configuration. Make sure the projector is connected and its PJ Talk service is on, then restart Home Assistant to try the import again. Alternatively, remove the `{domain}` entries from your `switch` configuration and set up the integration from the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    }
+  }
+}
