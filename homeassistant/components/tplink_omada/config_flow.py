@@ -15,7 +15,6 @@ from tplink_omada_client.exceptions import (
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -110,9 +109,9 @@ class OmadaOptionsFlow(OptionsFlowWithReload):
             )
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_SHOW_ONLY_ADOPTED_DEVICES,
                         default=self.config_entry.options.get(
                             CONF_SHOW_ONLY_ADOPTED_DEVICES, False
@@ -130,6 +129,7 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OmadaOptionsFlow:
         """Get the options flow for the site."""
         return OmadaOptionsFlow()

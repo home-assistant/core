@@ -15,6 +15,7 @@ from homeassistant.components.tplink_omada.const import (
 )
 from homeassistant.components.tplink_omada.coordinator import POLL_CLIENTS
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -87,17 +88,34 @@ async def test_adopted_devices_only_detaches_client_tracker(
     assert tracker is not None
     device_id = tracker.device_id
     assert device_id is not None
-
-    hass.config_entries.async_update_entry(
-        init_integration, options={CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
+    device_registry.async_update_device(
+        device_id, new_identifiers={("esphome", "shared-hardware")}
     )
-    assert await hass.config_entries.async_reload(init_integration.entry_id)
+
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
     tracker = entity_registry.async_get(entity_id)
     assert tracker is not None
     assert tracker.device_id is None
     assert device_registry.async_get(device_id) is None
+
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SHOW_ONLY_ADOPTED_DEVICES: False}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    restored_tracker = entity_registry.async_get(entity_id)
+    assert restored_tracker is not None
+    assert restored_tracker.device_id is not None
 
 
 async def test_device_scanner_update_to_away_nulls_properties(

@@ -67,7 +67,7 @@ def _detach_client_trackers(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
         if (
             (device := devices.async_get(device_id)) is not None
             and device.config_entry_id == entry.entry_id
-            and not device.identifiers
+            and not any(domain == DOMAIN for domain, _ in device.identifiers)
             and not er.async_entries_for_device(
                 entities, device_id, include_disabled_entities=True
             )
