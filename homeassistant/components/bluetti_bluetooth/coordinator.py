@@ -32,10 +32,6 @@ class BluettiBluetoothCoordinator(DataUpdateCoordinator):
         self.mac = config_entry.data.get(CONF_ADDRESS)
         self.mac_str = str(self.mac).replace(":", "")
 
-        ble_device = bluetooth.async_ble_device_from_address(
-            hass, str(self.mac), connectable=True
-        )
-
         super().__init__(
             hass,
             logging.getLogger(f"{__name__}.{self.mac_str}"),
@@ -44,9 +40,6 @@ class BluettiBluetoothCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=60),
         )
 
-        if ble_device is None:
-            raise ConfigEntryNotReady(f"Cannot connect to {self.mac}")
-
         if config_entry.data.get(CONF_API_VERSION) == 1:
             self.device = BaseDeviceV1()
         elif config_entry.data.get(CONF_API_VERSION) == 2:
@@ -54,22 +47,29 @@ class BluettiBluetoothCoordinator(DataUpdateCoordinator):
         else:
             raise HomeAssistantError("Unknown protocol")
 
-        self.reader = DeviceReader(
-            self.mac,
-            self.device,
-            self.hass.loop.create_future,
-            DeviceReaderConfig(
-                use_encryption=config_entry.data.get(CONF_ENCRYPTION),
-            ),
-            ble_device=ble_device,
-            lock=asyncio.Lock(),
-        )
-
     @override
     async def _async_update_data(
         self,
     ) -> dict[str, bool | int | float | Enum | str | bytes]:
         """Fetch data from bluetooth device."""
+
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, str(self.mac), connectable=True
+        )
+
+        if ble_device is None:
+            raise ConfigEntryNotReady(f"Cannot connect to {self.mac}")
+
+        reader = DeviceReader(
+            self.mac,
+            self.device,
+            self.hass.loop.create_future,
+            DeviceReaderConfig(
+                use_encryption=self.config_entry.data.get(CONF_ENCRYPTION),
+            ),
+            ble_device=ble_device,
+            lock=asyncio.Lock(),
+        )
 
         if (
             bluetooth.async_address_present(self.hass, str(self.mac), connectable=True)
@@ -79,7 +79,7 @@ class BluettiBluetoothCoordinator(DataUpdateCoordinator):
 
         data: (
             dict[str, bool | int | float | Enum | str | bytes] | None
-        ) = await self.reader.read()
+        ) = await reader.read()
 
         if not data:
             raise UpdateFailed("Device returned no data")
