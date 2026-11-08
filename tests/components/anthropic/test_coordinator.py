@@ -700,6 +700,7 @@ async def test_successful_conversation_preserves_in_flight_catalogue_retry(
         )
 
     mock_model_list.reset_mock()
+    side_effect = mock_model_list.side_effect
     mock_model_list.side_effect = timeout_models_list
     mock_create_stream.return_value = [create_content_block(0, ["Hello"])] * 2
     coordinator.mark_connection_error()
@@ -721,8 +722,7 @@ async def test_successful_conversation_preserves_in_flight_catalogue_retry(
     assert not coordinator.last_update_success
     assert coordinator.update_interval == UPDATE_INTERVAL_DISCONNECTED
     mock_model_list.assert_awaited_once()
-    mock_model_list.side_effect = None
-    mock_model_list.return_value = AsyncPage(data=model_list, has_more=False)
+    mock_model_list.side_effect = side_effect
 
     result = await conversation.async_converse(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
@@ -831,6 +831,7 @@ async def test_connection_restore(
     assert state
     assert state.state == "unavailable"
 
+    side_effect = mock_model_list.side_effect
     mock_model_list.side_effect = APITimeoutError(
         request=Request(method="POST", url=URL()),
     )
@@ -848,8 +849,7 @@ async def test_connection_restore(
     assert state.state == "unavailable"
 
     # Now make the background check succeed
-    mock_model_list.side_effect = None
-    mock_model_list.return_value = AsyncPage(data=model_list, has_more=False)
+    mock_model_list.side_effect = side_effect
     test_time += UPDATE_INTERVAL_DISCONNECTED
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
