@@ -1500,6 +1500,14 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
     ),
+    "fan_light": RpcSensorDescription(
+        key="fan",
+        sub_key="light",
+        translation_key="illuminance_level",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: status["level"],
+        options=["dark", "twilight", "bright"],
+    ),
     "number_average_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
