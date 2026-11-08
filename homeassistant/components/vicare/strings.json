@@ -470,6 +470,12 @@
       "heating_rod_hours": {
         "name": "Heating rod hours"
       },
+      "heating_rod_runtime_level_one": {
+        "name": "Heating rod runtime level 1"
+      },
+      "heating_rod_runtime_level_two": {
+        "name": "Heating rod runtime level 2"
+      },
       "heating_rod_starts": {
         "name": "Heating rod starts"
       },
