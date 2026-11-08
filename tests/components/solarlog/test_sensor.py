@@ -22,7 +22,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.solarlog.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -230,6 +229,7 @@ async def test_firmware_auth_recovery_probe_auth_error_fails_config_entry(
     hass: HomeAssistant,
     mock_solarlog_connector: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test auth errors from the extended-data probe are reported as auth failures."""
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
@@ -243,8 +243,14 @@ async def test_firmware_auth_recovery_probe_auth_error_fails_config_entry(
     )
     coordinator._update_counter = 99
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator._async_update_data()
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.solarlog_power_ac")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 @pytest.mark.usefixtures("mock_solarlog_connector")
