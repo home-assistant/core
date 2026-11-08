@@ -2674,8 +2674,10 @@ class ConfigEntries:
             # If the component is not loaded, just load it as
             # the config entry will be loaded as well. We need
             # to do this before holding the lock to avoid a
-            # deadlock. A component which failed to set up before is retried.
-            async_clear_failed_setup(self.hass, entry.domain)
+            # deadlock. A component which failed to set up before is retried,
+            # except for a disabled entry, which is not meant to load anything.
+            if not entry.disabled_by:
+                async_clear_failed_setup(self.hass, entry.domain)
             await async_setup_component(self.hass, entry.domain, self._hass_config)
             return entry.state is ConfigEntryState.LOADED
 

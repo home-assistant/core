@@ -4310,17 +4310,33 @@ async def test_entry_reload_error(
 
 
 @pytest.mark.parametrize(
-    ("disabled_by", "action"),
+    ("disabled_by", "action", "result", "setup_calls", "expected_state"),
     [
         pytest.param(
             config_entries.ConfigEntryDisabler.USER,
             lambda manager, entry: manager.async_set_disabled_by(entry.entry_id, None),
+            True,
+            2,
+            config_entries.ConfigEntryState.LOADED,
             id="enable",
         ),
         pytest.param(
             None,
             lambda manager, entry: manager.async_reload(entry.entry_id),
+            True,
+            2,
+            config_entries.ConfigEntryState.LOADED,
             id="reload",
+        ),
+        pytest.param(
+            None,
+            lambda manager, entry: manager.async_set_disabled_by(
+                entry.entry_id, config_entries.ConfigEntryDisabler.USER
+            ),
+            False,
+            1,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            id="disable",
         ),
     ],
 )
@@ -4331,8 +4347,14 @@ async def test_entry_retries_failed_component_setup(
     action: Callable[
         [config_entries.ConfigEntries, config_entries.ConfigEntry], Awaitable[bool]
     ],
+    result: bool,
+    setup_calls: int,
+    expected_state: config_entries.ConfigEntryState,
 ) -> None:
-    """Test enabling or reloading an entry retries a failed component setup."""
+    """Test enabling or reloading an entry retries a failed component setup.
+
+    Disabling an entry does not retry it.
+    """
     entry = MockConfigEntry(domain="comp", disabled_by=disabled_by)
     entry.add_to_hass(hass)
 
@@ -4352,11 +4374,10 @@ async def test_entry_retries_failed_component_setup(
     assert len(async_setup_entry.mock_calls) == 0
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
-    assert await action(manager, entry)
-    assert len(async_setup.mock_calls) == 2
-    assert len(async_setup_entry.mock_calls) == 1
-    assert "comp" in hass.config.components
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert await action(manager, entry) is result
+    assert len(async_setup.mock_calls) == setup_calls
+    assert ("comp" in hass.config.components) is result
+    assert entry.state is expected_state
 
 
 async def test_entry_add_retries_failed_component_setup(
