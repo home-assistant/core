@@ -1,0 +1,116 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'devices': dict({
+      '80:65:99:34:F9:B4': dict({
+        'connected': True,
+        'data': dict({
+          'id': '80:65:99:34:F9:B4',
+        }),
+        'device_id': '80:65:99:34:F9:B4',
+        'device_type': 'SHELFY-R1',
+        'firmware_version': '1.2.3',
+        'maintenance': dict({
+          'filter': dict({
+            'due_date': '2026-08-02T06:45:07.623Z',
+          }),
+          'fridge': dict({
+            'due_date': '2026-10-31T06:45:07.623Z',
+          }),
+        }),
+        'measurement': dict({
+          'score': 0.49045833333333333,
+          'sensors_data': list([
+            dict({
+              'id': 'TMP01-SY',
+              'value': dict({
+                'avg': 9.59,
+                'max': 9.59,
+                'min': 9.59,
+              }),
+            }),
+            dict({
+              'id': 'DOC-SY',
+              'value': dict({
+                'avg': 11,
+                'max': 11,
+                'min': 11,
+              }),
+            }),
+            dict({
+              'id': 'DOT-SY',
+              'value': dict({
+                'avg': 205,
+                'max': 205,
+                'min': 205,
+              }),
+            }),
+          ]),
+          'status_data': list([
+            dict({
+              'id': 'battery',
+              'value': dict({
+                'avg': 27,
+                'max': 27,
+                'min': 27,
+              }),
+            }),
+            dict({
+              'id': 'charging',
+              'value': False,
+            }),
+            dict({
+              'id': 'mode',
+              'value': 'eco',
+            }),
+            dict({
+              'id': 'firmware',
+              'value': '1.2.3',
+            }),
+          ]),
+          'timestamp': '2026-09-10T17:19:38+02:00',
+        }),
+        'model': 'SH02AA02',
+        'name': 'Kitchen Shelfy',
+        'program_id': 'eco-s1',
+        'programs': dict({
+          'eco-s1': dict({
+            'id': 'eco-s1',
+            'metadata': dict({
+              'fan': 'MID',
+              'power': 'HIGH',
+            }),
+            'name': 'Eco',
+            'preset': dict({
+              'mode': 'eco',
+            }),
+          }),
+          'performance-s1': dict({
+            'id': 'performance-s1',
+            'metadata': dict({
+              'fan': 'HIGH',
+              'power': 'LOW',
+            }),
+            'name': 'Performance',
+            'preset': dict({
+              'mode': 'boost',
+            }),
+          }),
+        }),
+        'readings': dict({
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'email': '**REDACTED**',
+      'password': '**REDACTED**',
+    }),
+    'mode_status': dict({
+      '80:65:99:34:F9:B4': dict({
+        'current_mode': 'eco',
+        'desired_mode': 'eco',
+        'pending': False,
+      }),
+    }),
+  })
+# ---
