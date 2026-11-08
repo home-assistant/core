@@ -1,14 +1,16 @@
 """Tests for the System Bridge binary sensor platform."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.modules import Module
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,3 +42,30 @@ async def test_binary_sensor_platform(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("locked", "expected_state"),
+    [
+        pytest.param(True, STATE_OFF, id="locked"),
+        pytest.param(False, STATE_ON, id="unlocked"),
+        pytest.param(None, STATE_UNKNOWN, id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_session_lock(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    locked: bool | None,
+    expected_state: str,
+) -> None:
+    """Test the session lock is on when unlocked, as the lock device class expects."""
+    coordinator = mock_config_entry.runtime_data
+
+    await coordinator.async_handle_module(
+        Module.SYSTEM, replace(coordinator.data.system, locked=locked)
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("binary_sensor.hostname_session_lock"))
+    assert state.state == expected_state
