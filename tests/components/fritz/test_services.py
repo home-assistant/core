@@ -552,21 +552,36 @@ async def test_get_mesh_info_non_admin_not_allowed(
         )
 
 
+@pytest.fixture
+async def caller_context(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> Context:
+    """Return a service call context for a user in the given group.
+
+    A group of None returns a context without user, as for internal calls.
+    """
+    if request.param is None:
+        return Context()
+    group = await hass.auth.async_get_group(request.param)
+    user = MockUser(groups=[group]).add_to_hass(hass)
+    return Context(user_id=user.id)
+
+
 @pytest.mark.parametrize(
-    ("allow_non_admin", "group_id"),
+    ("allow_non_admin", "caller_context"),
     [
         pytest.param(True, GROUP_ID_READ_ONLY, id="non_admin_allowed"),
         pytest.param(False, GROUP_ID_ADMIN, id="admin_always_allowed"),
-        # No user simulates an automation or internal call.
         pytest.param(False, None, id="internal_call_always_allowed"),
     ],
+    indirect=["caller_context"],
 )
 @pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
 async def test_get_mesh_info_allowed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     allow_non_admin: bool,
-    group_id: str | None,
+    caller_context: Context,
 ) -> None:
     """Test get_mesh_info succeeds for permitted callers."""
     entry = MockConfigEntry(
@@ -579,14 +594,6 @@ async def test_get_mesh_info_allowed(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    user_id = (
-        MockUser(groups=[await hass.auth.async_get_group(group_id)])
-        .add_to_hass(hass)
-        .id
-        if group_id
-        else None
-    )
-
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
@@ -598,7 +605,7 @@ async def test_get_mesh_info_allowed(
         {"device_id": device.id},
         blocking=True,
         return_response=True,
-        context=Context(user_id=user_id),
+        context=caller_context,
     )
     assert result == {
         "mesh_topology": MOCK_MESH_DATA,
