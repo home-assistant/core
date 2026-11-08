@@ -26,7 +26,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -518,9 +519,7 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Switch to the new table once the user accepted the trackers it drops."""
         if user_input is not None:
-            ent_reg = er.async_get(self.hass)
-            for entity_id in self._pending_stale:
-                ent_reg.async_remove(entity_id)
+            self._async_remove_stale_trackers()
             return self._async_switch_table(self._pending_baseoid)
 
         return self.async_show_form(
@@ -529,11 +528,43 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
         )
 
     @callback
+    def _async_remove_stale_trackers(self) -> None:
+        """Remove the dropped trackers and the devices left without one."""
+        ent_reg = er.async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
+        device_ids: set[str] = set()
+        for entity_id in self._pending_stale:
+            entity = ent_reg.async_get(entity_id)
+            if entity is not None and entity.device_id is not None:
+                device_ids.add(entity.device_id)
+        for entity_id in self._pending_stale:
+            ent_reg.async_remove(entity_id)
+        for device_id in device_ids:
+            if dev_reg.async_get(
+                device_id
+            ) is not None and not async_entries_for_device(
+                ent_reg, device_id, include_disabled_entities=True
+            ):
+                dev_reg.async_remove_device(device_id)
+
+    @callback
     def _async_switch_table(self, baseoid: str) -> SubentryFlowResult:
         """Store the watched table under its normalized OID."""
-        return self.async_update_and_abort(
-            self._get_entry(),
-            self._get_reconfigure_subentry(),
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+        if entry.update_listeners:
+            # The update listener of the entry reloads it once the subentry changed
+            return self.async_update_and_abort(
+                entry,
+                subentry,
+                title=baseoid,
+                data={CONF_BASEOID: baseoid},
+                unique_id=baseoid,
+            )
+        # A failed setup never registered the listener, so reload explicitly
+        return self.async_update_reload_and_abort(
+            entry,
+            subentry,
             title=baseoid,
             data={CONF_BASEOID: baseoid},
             unique_id=baseoid,

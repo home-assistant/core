@@ -34,6 +34,7 @@ from .util import (
     async_create_transport_target,
     async_get_snmp_engine,
     create_auth_data,
+    create_context_data,
     is_unknown_context,
 )
 
@@ -69,7 +70,6 @@ class SnmpClient:
         """Create a client for the device described by the entry data."""
         host = data[CONF_HOST]
         port = data.get(CONF_PORT, DEFAULT_PORT)
-        context_name = data.get(CONF_CONTEXT_NAME)
 
         try:
             auth_data = create_auth_data(data, data.get(CONF_VERSION, DEFAULT_VERSION))
@@ -82,11 +82,7 @@ class SnmpClient:
             engine=await async_get_snmp_engine(hass),
             auth_data=auth_data,
             target=await async_create_transport_target(host, port, DEFAULT_TIMEOUT),
-            context_data=(
-                ContextData(contextName=context_name.encode())
-                if context_name
-                else ContextData()
-            ),
+            context_data=create_context_data(data.get(CONF_CONTEXT_NAME)),
         )
 
     async def async_walk(self, baseoid: str) -> AsyncGenerator[tuple[Any, Any]]:

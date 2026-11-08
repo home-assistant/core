@@ -28,10 +28,9 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, Config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import ARP_TABLE_MAC_OID, mock_entry
-
-pytestmark = pytest.mark.usefixtures("mock_udp_transport")
 
 MAC = "00:11:22:33:44:55"
 MAC_BYTES = "001122334455"
@@ -54,6 +53,13 @@ def _async_mac_entity_id(hass: HomeAssistant, subentry_id: str) -> str | None:
     """Return the registry entity id of the MAC the tests walk."""
     return er.async_get(hass).async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, f"{subentry_id}_{MAC}"
+    )
+
+
+def _mac_device(hass: HomeAssistant, entry_id: str) -> dr.DeviceEntry | None:
+    """Return the device of the MAC the tests walk."""
+    return dr.async_get(hass).async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, MAC), entry_id
     )
 
 
@@ -475,6 +481,42 @@ async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> 
     assert entry.runtime_data.coordinators[subentry_id] is not previous_coordinator
 
 
+async def test_subentry_reconfigure_reloads_a_failed_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a subentry of an entry whose setup failed reloads the entry."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Report the SNMPv3 context as unknown."""
+        yield errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), None, None, []
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=_async_mock_walk_with_mac,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_BASEOID: BRIDGE_MAC_OID},
+        )
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.state is ConfigEntryState.LOADED
+
+
 async def test_subentry_reconfigure_keeps_trackers_of_both_tables(
     hass: HomeAssistant,
 ) -> None:
@@ -534,6 +576,7 @@ async def test_subentry_reconfigure_removes_trackers_after_confirming(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert _async_mac_entity_id(hass, subentry_id) is not None
+        assert _mac_device(hass, entry.entry_id) is not None
 
         # The new table holds no device, so the tracker is dropped on request
         macs = []
@@ -552,3 +595,4 @@ async def test_subentry_reconfigure_removes_trackers_after_confirming(
 
     assert result["reason"] == "reconfigure_successful"
     assert _async_mac_entity_id(hass, subentry_id) is None
+    assert _mac_device(hass, entry.entry_id) is None

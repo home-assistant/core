@@ -80,7 +80,9 @@ rules:
   icon-translations: todo
   reconfiguration-flow: done
   repair-issues: done
-  stale-devices: todo
+  stale-devices:
+    status: done
+    comment: A device is removed when its last tracker goes away.
 
   # Platinum
   async-dependency: todo

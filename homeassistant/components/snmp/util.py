@@ -141,6 +141,13 @@ async def async_normalize_oid(hass: HomeAssistant, oid: str) -> str | None:
     return ".".join(str(component) for component in resolved)
 
 
+def create_context_data(context_name: str | None) -> ContextData:
+    """Return the SNMPv3 context to address, if the entry names one."""
+    if context_name is None:
+        return ContextData()
+    return ContextData(contextName=context_name.encode())
+
+
 async def async_create_command_cmd_args(
     hass: HomeAssistant,
     auth_data: UsmUserData | CommunityData,
@@ -152,12 +159,7 @@ async def async_create_command_cmd_args(
     The ObjectType needs to be created dynamically by the caller.
     """
     engine = await async_get_snmp_engine(hass)
-    context_data = (
-        ContextData(contextName=context_name.encode())
-        if context_name
-        else ContextData()
-    )
-    return (engine, auth_data, target, context_data)
+    return (engine, auth_data, target, create_context_data(context_name))
 
 
 async def async_create_request_cmd_args(

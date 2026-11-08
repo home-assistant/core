@@ -48,8 +48,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_entry
 
-pytestmark = pytest.mark.usefixtures("mock_udp_transport")
-
 MAC = "00:11:22:33:44:55"
 MAC2 = "aa:bb:cc:dd:ee:ff"
 

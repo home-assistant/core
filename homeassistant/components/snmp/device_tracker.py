@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 class SnmpScanner(DeviceScanner):
     """Queries any SNMP capable Access Point for connected devices."""
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner after testing the target device."""
 
         community = config[CONF_COMMUNITY]
@@ -98,7 +98,7 @@ class SnmpScanner(DeviceScanner):
         self._target: UdpTransportTarget | Udp6TransportTarget
         self.request_args: RequestArgsType | None = None
         self.baseoid = baseoid
-        self.last_results = []
+        self.last_results: list[dict[str, str]] = []
         self.success_init = False
 
     @classmethod
@@ -222,7 +222,6 @@ async def async_get_scanner(
         breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         is_persistent=False,
-        issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml_device_tracker",
         translation_placeholders={"integration_title": "SNMP"},
