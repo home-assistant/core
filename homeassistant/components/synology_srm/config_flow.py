@@ -1,5 +1,6 @@
 """Config flow for Synology SRM."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -59,6 +60,33 @@ class SynologySrmConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self._devices: list[SelectOptionDict] = []
 
+    async def _async_validate_input(self, data: dict[str, Any]) -> dict[str, str]:
+        """Validate credentials and fetch the available devices."""
+        client = create_client(data)
+        try:
+            devices = await self.hass.async_add_executor_job(
+                client.core.get_network_nsm_device
+            )
+        except SynologyApiError as err:
+            return {
+                "base": "invalid_auth"
+                if err.code in (400, 401, 402, 403, 404)
+                else "cannot_connect"
+            }
+        except SynologyException, RequestException:
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception connecting to Synology SRM")
+            return {"base": "unknown"}
+        self._devices = [
+            SelectOptionDict(
+                value=format_mac(device["mac"]),
+                label=f"{device.get('hostname') or device['mac']} ({device['mac']})",
+            )
+            for device in devices
+        ]
+        return {}
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -67,40 +95,53 @@ class SynologySrmConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            client = create_client(user_input)
-            try:
-                devices = await self.hass.async_add_executor_job(
-                    client.core.get_network_nsm_device
-                )
-            except SynologyApiError as err:
-                errors["base"] = (
-                    "invalid_auth"
-                    if err.code in (400, 401, 402, 403, 404)
-                    else "cannot_connect"
-                )
-            except SynologyException, RequestException:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception connecting to Synology SRM")
-                errors["base"] = "unknown"
-            else:
-                if not devices:
+            errors = await self._async_validate_input(user_input)
+            if not errors:
+                if not self._devices:
                     errors["base"] = "no_devices_found"
                 else:
                     self._data = user_input
-                    self._devices = [
-                        SelectOptionDict(
-                            value=format_mac(device["mac"]),
-                            label=f"{device.get('hostname') or device['mac']} ({device['mac']})",
-                        )
-                        for device in devices
-                    ]
                     return await self.async_step_devices()
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Reauthenticate an existing router."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Validate the updated credentials without changing device selections."""
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors = await self._async_validate_input({**entry.data, **user_input})
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(
+                            CONF_USERNAME, default=entry.data[CONF_USERNAME]
+                        ): str,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
         )

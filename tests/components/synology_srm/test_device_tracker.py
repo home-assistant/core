@@ -264,3 +264,48 @@ async def test_selected_devices(
         entity_registry.async_get(other_id).disabled_by
         is er.RegistryEntryDisabler.DEVICE
     )
+
+
+async def test_shared_mac_keeps_router_ownership(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A second router cannot claim or change another router's tracker."""
+    first = MockConfigEntry(domain=DOMAIN, data={**CONFIG, CONF_TRACKED_DEVICES: [MAC]})
+    first.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(first.entry_id)
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id("device_tracker", DOMAIN, MAC)
+    original = entity_registry.async_get(entity_id)
+    other_mac = "11:22:33:44:55:66"
+    mock_client.core.get_network_nsm_device.return_value = [
+        CLIENT,
+        {**CLIENT, "mac": other_mac, "hostname": "Other"},
+    ]
+    second = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG, "host": "192.168.2.1", CONF_TRACKED_DEVICES: [other_mac]},
+    )
+    second.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(second.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) == original
+    assert not device_registry.async_get(original.device_id).disabled
+    assert hass.states.get(entity_id).state == STATE_HOME
+    other_id = entity_registry.async_get_entity_id("device_tracker", DOMAIN, other_mac)
+    assert entity_registry.async_get(other_id).config_entry_id == second.entry_id
+    assert hass.states.get(other_id).state == STATE_HOME
+
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_reload(second.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) == original
+    assert entity_registry.async_get(other_id).config_entry_id == second.entry_id
+    assert not device_registry.async_get(original.device_id).disabled
+    assert hass.states.get(entity_id).state == STATE_HOME
+    assert hass.states.get(other_id).state == STATE_HOME

@@ -189,6 +189,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     tracked: set[str] = set()
     device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     registered = {
         entity.unique_id
         for entity in er.async_entries_for_config_entry(
@@ -211,6 +212,17 @@ async def async_setup_entry(
             ):
                 device_registry.async_update_device(registered_device.id, name=name)
         new_macs = (coordinator.data.keys() | registered) - tracked
+        new_macs = {
+            mac
+            for mac in new_macs
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    "device_tracker", DOMAIN, mac
+                )
+            )
+            is None
+            or entity_registry.entities[entity_id].config_entry_id == entry.entry_id
+        }
         tracked.update(new_macs)
         for mac in new_macs:
             connection = (dr.CONNECTION_NETWORK_MAC, mac)
@@ -240,7 +252,6 @@ async def async_setup_entry(
                     if mac in entry.data[CONF_TRACKED_DEVICES]
                     else dr.DeviceEntryDisabler.INTEGRATION,
                 )
-            entity_registry = er.async_get(hass)
             existing_entity_id = entity_registry.async_get_entity_id(
                 "device_tracker", DOMAIN, mac
             )

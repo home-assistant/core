@@ -18,6 +18,14 @@
         "description": "All devices are disabled by default. Select at least one device to enable tracking. Devices you leave unselected and devices discovered later remain disabled.",
         "title": "Select devices to track"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Enter the updated credentials for your Synology SRM router. Your device selections will be preserved.",
+        "title": "Reauthenticate Synology SRM"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
