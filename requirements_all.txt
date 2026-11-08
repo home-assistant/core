@@ -2879,7 +2879,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.16.0
+python-roborock==7.17.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2952,7 +2952,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.5.0
+pyvesync==3.5.1
 
 # homeassistant.components.velux
 pyvlx==0.2.36
@@ -3042,7 +3042,7 @@ refoss-ha==1.2.6
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.6.2
+renault-api==0.6.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2

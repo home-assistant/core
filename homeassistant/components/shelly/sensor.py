@@ -1083,6 +1083,16 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    "energy_fan": RpcSensorDescription(
+        key="fan",
+        sub_key="aenergy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     "total_act": RpcSensorDescription(
         key="emdata",
         sub_key="total_act",
