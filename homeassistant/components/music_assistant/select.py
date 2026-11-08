@@ -173,8 +173,14 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
                 self._on_dsp_presets_updated, EventType.DSP_PRESETS_UPDATED
             )
         )
-        self._dsp_presets = await self.mass.config.get_dsp_preset()
-        self._dsp_config = await self.mass.config.get_player_dsp_config(self.player_id)
+        # an update that arrived while loading is newer than the response
+        presets_before = self._dsp_presets
+        presets = await self.mass.config.get_dsp_preset()
+        if self._dsp_presets is presets_before:
+            self._dsp_presets = presets
+        config = await self.mass.config.get_player_dsp_config(self.player_id)
+        if self._dsp_config is None:
+            self._dsp_config = config
         await super().async_added_to_hass()
 
     @property

@@ -1,10 +1,13 @@
 """Test Music Assistant select entities."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.dsp import DSPConfig, DSPConfigPreset
 from music_assistant_models.enums import EventType
 from music_assistant_models.errors import MusicAssistantError
+from music_assistant_models.event import MassEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -220,6 +223,50 @@ async def test_dsp_preset_select(
 
     # a group applies the DSP of each member
     assert hass.states.get("select.test_group_player_1_dsp_preset") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dsp_preset_select_update_while_loading(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test an update that arrives while loading wins over the older response."""
+    music_assistant_client.server_info.schema_version = 101
+    night = DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night")
+    old = DSPConfigPreset(name="Old", config=DSPConfig(), preset_id="old")
+
+    def subscription(*filters: Any) -> Callable[[MassEvent], None]:
+        # the latest subscription is the one of the select that is loading
+        return next(
+            sub.args[0]
+            for sub in reversed(music_assistant_client.subscribe.call_args_list)
+            if sub.args[1:] == filters
+        )
+
+    async def presets_while_loading() -> list[DSPConfigPreset]:
+        subscription(EventType.DSP_PRESETS_UPDATED)(
+            MassEvent(EventType.DSP_PRESETS_UPDATED, data=[night.to_dict()])
+        )
+        return [old]
+
+    async def config_while_loading(player_id: str) -> DSPConfig:
+        subscription(EventType.PLAYER_DSP_CONFIG_UPDATED, player_id)(
+            MassEvent(
+                EventType.PLAYER_DSP_CONFIG_UPDATED,
+                object_id=player_id,
+                data=DSPConfig(enabled=True, preset_id="night").to_dict(),
+            )
+        )
+        return DSPConfig(enabled=True, preset_id="old")
+
+    config = music_assistant_client.config
+    config.get_dsp_preset = AsyncMock(side_effect=presets_while_loading)
+    config.get_player_dsp_config = AsyncMock(side_effect=config_while_loading)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    state = hass.states.get("select.test_player_1_dsp_preset")
+    assert state
+    assert state.state == "Night"
+    assert state.attributes["options"] == ["Night"]
 
 
 async def test_dsp_preset_select_registry(
