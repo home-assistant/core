@@ -63,94 +63,6 @@ class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
 
 
-class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
-    """Coordinator for an evohome account (the user's config, high-precision temps).
-
-    Its data is the latest high-precision temperatures, by DHW/zone id. They are
-    polled, but are not refreshed on demand (unlike a location).
-    """
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: logging.Logger,
-        client_v2: ec2.EvohomeClient,
-        *,
-        name: str,
-        update_interval: timedelta,
-        client_v1: ec1.EvohomeClient | None = None,
-    ) -> None:
-        """Class to manage fetching data."""
-
-        super().__init__(
-            hass,
-            logger,
-            config_entry=None,
-            name=name,
-            update_interval=update_interval,
-        )
-
-        self.client = client_v2
-        self.client_v1 = client_v1
-
-        self.data = {}
-
-    @override
-    async def _async_setup(self) -> None:
-        """Set up the coordinator.
-
-        Fetch the user information, and the configuration of their locations.
-        """
-
-        try:
-            await self.client.setup()  # only config for now
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
-
-    @override
-    async def _async_update_data(self) -> _HighPrecisionTemps:
-        """Get the latest high-precision temperatures of the account's locations.
-
-        Never raises UpdateFailed, as the temperatures are optional.
-        """
-
-        if self.client_v1 is None:
-            return self.data
-
-        try:
-            await self.client_v1.get_status()
-
-        except ec1.BadUserCredentialsError as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain high-precision temperatures. "
-                    "The feature will be disabled until next restart: %r"
-                ),
-                err,
-            )
-            self.client_v1 = None
-            return self.data
-
-        except ec1.EvohomeError as err:
-            self.logger.warning(
-                (
-                    "Unable to obtain the latest high-precision temperatures. "
-                    "They will be ignored this refresh cycle: %r"
-                ),
-                err,
-            )
-            temps: _HighPrecisionTemps = {}  # now considered stale
-
-        else:
-            temps = {}
-            for loc in self.client_v1.location_by_id.values():
-                if loc.tcs:
-                    temps |= await loc.tcs.get_temperatures(dont_update_status=True)
-
-        self.logger.debug("Status (high-res temps) = %s", temps)
-        return temps
-
-
 class EvoDataUpdateCoordinator(_EvoCoordinator[EvoLocStatusT]):
     """Coordinator for an evohome location (its status and schedules)."""
 
@@ -358,3 +270,91 @@ class EvoDataUpdateCoordinator(_EvoCoordinator[EvoLocStatusT]):
             self._first_refresh_done = True
 
         return self.loc.status
+
+
+class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
+    """Coordinator for an evohome account (the user's config, high-precision temps).
+
+    Its data is the latest high-precision temperatures, by DHW/zone id. They are
+    polled, but are not refreshed on demand (unlike a location).
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        client_v2: ec2.EvohomeClient,
+        *,
+        name: str,
+        update_interval: timedelta,
+        client_v1: ec1.EvohomeClient | None = None,
+    ) -> None:
+        """Class to manage fetching data."""
+
+        super().__init__(
+            hass,
+            logger,
+            config_entry=None,
+            name=name,
+            update_interval=update_interval,
+        )
+
+        self.client = client_v2
+        self.client_v1 = client_v1
+
+        self.data = {}
+
+    @override
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Fetch the user information, and the configuration of their locations.
+        """
+
+        try:
+            await self.client.setup()  # only config for now
+        except ec2.EvohomeError as err:
+            raise UpdateFailed(err) from err
+
+    @override
+    async def _async_update_data(self) -> _HighPrecisionTemps:
+        """Get the latest high-precision temperatures of the account's locations.
+
+        Never raises UpdateFailed, as the temperatures are optional.
+        """
+
+        if self.client_v1 is None:
+            return self.data
+
+        try:
+            await self.client_v1.get_status()
+
+        except ec1.BadUserCredentialsError as err:
+            self.logger.warning(
+                (
+                    "Unable to obtain high-precision temperatures. "
+                    "The feature will be disabled until next restart: %r"
+                ),
+                err,
+            )
+            self.client_v1 = None
+            return self.data
+
+        except ec1.EvohomeError as err:
+            self.logger.warning(
+                (
+                    "Unable to obtain the latest high-precision temperatures. "
+                    "They will be ignored this refresh cycle: %r"
+                ),
+                err,
+            )
+            temps: _HighPrecisionTemps = {}  # now considered stale
+
+        else:
+            temps = {}
+            for loc in self.client_v1.location_by_id.values():
+                if loc.tcs:
+                    temps |= await loc.tcs.get_temperatures(dont_update_status=True)
+
+        self.logger.debug("Status (high-res temps) = %s", temps)
+        return temps
