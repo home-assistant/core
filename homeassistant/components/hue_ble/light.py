@@ -105,7 +105,9 @@ class HueBLELight(LightEntity):
             sw_version=light.firmware,
         )
         self._attr_supported_color_modes = get_available_color_modes(self._api)
-        if self._api.supports_effects:
+        if self._api.supports_effects and (
+            self._api.supports_colour_temp or self._api.supports_colour_xy
+        ):
             self._attr_supported_features = LightEntityFeature.EFFECT
             self._attr_effect_list = [str(_get_effect_name(e)) for e in EffectType]
         self._update_updatable_attributes()
@@ -190,10 +192,11 @@ class HueBLELight(LightEntity):
 
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
-            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
-            _LOGGER.debug("Setting effect of %s to %s", self.name, effect)
-            await self._async_set_effect(effect, brightness, kwargs)  # type: ignore[arg-type]
-            return
+            if effect != EFFECT_OFF:
+                _LOGGER.debug("Setting effect of %s to %s", self.name, effect)
+                brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+                await self._async_set_effect(effect, brightness, kwargs)  # type: ignore[arg-type]
+                return
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
