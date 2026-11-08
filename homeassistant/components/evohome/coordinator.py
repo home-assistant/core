@@ -151,7 +151,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
         return temps
 
 
-class EvoDataUpdateCoordinator(_EvoCoordinator[EvoLocStatusT]):
+class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
     """Coordinator for an evohome location (its status and schedules)."""
 
     # These will not be None after _async_setup())

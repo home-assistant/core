@@ -33,7 +33,7 @@ from .const import (
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
 )
-from .coordinator import EvoAccountCoordinator, EvoDataUpdateCoordinator
+from .coordinator import EvoAccountCoordinator, EvoLocationCoordinator
 from .services import async_setup_services
 from .storage import TokenManager
 
@@ -63,7 +63,7 @@ class EvoData:
     """Dataclass for storing evohome data."""
 
     account: EvoAccountCoordinator
-    coordinator: EvoDataUpdateCoordinator
+    coordinator: EvoLocationCoordinator
     loc_idx: int
     tcs: ec2.ControlSystem
 
@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[DOMAIN][CONF_PASSWORD],
         async_get_clientsession(hass),
     )
-    user_coord = EvoAccountCoordinator(
+    account_coord = EvoAccountCoordinator(
         hass,
         _LOGGER,
         ec2.EvohomeClient(token_manager),
@@ -94,16 +94,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         client_v1=ec1.EvohomeClient(token_manager),
     )
-    coordinator = EvoDataUpdateCoordinator(
+    location_coord = EvoLocationCoordinator(
         hass,
         _LOGGER,
-        user_coord,
-        name=f"{DOMAIN}_coordinator",
+        account_coord,
+        name=f"{DOMAIN}_location_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         location_idx=config[DOMAIN][CONF_LOCATION_IDX],
     )
 
-    for c in (user_coord, coordinator):
+    for c in (account_coord, location_coord):
         await c.async_register_shutdown()
         await c.async_first_refresh()
 
@@ -111,13 +111,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error(f"Failed to fetch initial data: {c.last_exception}")  # noqa: G004
             return False
 
-    assert coordinator.tcs is not None  # mypy
+    assert location_coord.tcs is not None  # mypy
 
     hass.data[EVOHOME_DATA] = EvoData(
-        account=user_coord,
-        coordinator=coordinator,
-        loc_idx=coordinator.loc_idx,
-        tcs=coordinator.tcs,
+        account=account_coord,
+        coordinator=location_coord,
+        loc_idx=location_coord.loc_idx,
+        tcs=location_coord.tcs,
     )
 
     hass.async_create_task(
@@ -126,7 +126,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(
         async_load_platform(hass, Platform.BUTTON, DOMAIN, {}, config)
     )
-    if coordinator.tcs.hotwater:
+    if location_coord.tcs.hotwater:
         hass.async_create_task(
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )

@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import EVOHOME_DATA, NEXT_SP_FROM
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoLocationCoordinator
 from .entity import EvoChild
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _evo_state_attr_names = (SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.HotWater
     ) -> None:
         """Initialize an evohome-compatible DHW controller."""
 
