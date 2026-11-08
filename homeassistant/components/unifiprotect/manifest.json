@@ -7,11 +7,12 @@
   ],
   "codeowners": ["@RaHehl"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "repairs", "unifi_discovery"],
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["uiprotect"],
   "quality_scale": "platinum",
-  "requirements": ["uiprotect==25.0.0"]
+  "requirements": ["uiprotect==25.0.2"]
 }

@@ -1265,8 +1265,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                CONF_MODEL: model,
-                CONF_HOST: self.host,
+                "model": model,
+                "host": self.host,
             },
             errors=errors,
         )

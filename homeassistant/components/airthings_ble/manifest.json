@@ -26,6 +26,7 @@
   "categories": ["sensors.air_quality"],
   "codeowners": ["@vincegio", "@LaStrada"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/airthings_ble",
   "integration_type": "device",

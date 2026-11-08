@@ -143,7 +143,7 @@ async def test_block_sensor_em3(
     monkeypatch.setattr(mock_block_device, "blocks", blocks)
     await init_integration(hass, 1, model=MODEL_EM3)
 
-    assert hass.states.get(f"{SENSOR_DOMAIN}.grid_l1_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_grid_l1_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_b_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_c_power")
 
@@ -890,6 +890,42 @@ async def test_rpc_restored_sleeping_last_seen_sensor(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "2026-10-08T10:00:00+00:00"
+
+
+async def test_rpc_restored_sleeping_device_adds_new_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a sensor missing from the registry is added once a restored device wakes."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    device = register_device(device_registry, entry)
+    register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        entry,
+        device_id=device.id,
+    )
+    entity_id = f"{SENSOR_DOMAIN}.test_name_last_seen"
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entities can only be restored from the registry while the device sleeps
+    assert hass.states.get(entity_id) is None
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id)
+    assert entity_registry.async_get(entity_id)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -1957,6 +1993,98 @@ async def test_rpc_switch_no_energy_returned_sensor(
 
     assert hass.states.get("sensor.test_name_test_switch_0_energy_returned") is None
     assert hass.states.get("sensor.test_name_test_switch_0_energy_consumed") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_switch_counters_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test usage counters sensors for switch component."""
+    status = {
+        "sys": {},
+        "switch:0": {
+            "id": 0,
+            "output": True,
+            "counts": {
+                "on_time": 7200,
+                "on_time_rst_ts": 1654512115,
+                "switch_on": 10,
+                "switch_on_rst_ts": 1654513510,
+                "on_above_thr": 5400,
+                "on_above_thr_rst_ts": 1654514611,
+            },
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 4)
+
+    for entity in (
+        "total_runtime",
+        "switching_cycles",
+        "runtime_above_power_threshold",
+    ):
+        entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+    mutate_rpc_device_status(
+        monkeypatch,
+        mock_rpc_device,
+        "switch:0",
+        "counts",
+        {"on_time": 0, "switch_on": 0, "on_above_thr": 0},
+    )
+    mock_rpc_device.mock_update()
+
+    assert (
+        state := hass.states.get(
+            f"{SENSOR_DOMAIN}.test_name_test_switch_0_total_runtime"
+        )
+    )
+    assert state.state == "0.0"
+
+
+@pytest.mark.parametrize(
+    ("switch_status", "missing_entities"),
+    [
+        pytest.param(
+            {"id": 0, "output": True},
+            ("total_runtime", "switching_cycles", "runtime_above_power_threshold"),
+            id="counts_disabled",
+        ),
+        pytest.param(
+            {"id": 0, "output": True, "counts": {"on_time": 7200, "switch_on": 10}},
+            ("runtime_above_power_threshold",),
+            id="no_power_threshold_counter",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_switch_no_counters_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    switch_status: dict[str, Any],
+    missing_entities: tuple[str, ...],
+) -> None:
+    """Test switch component without some or all usage counters."""
+    monkeypatch.setattr(
+        mock_rpc_device, "status", {"sys": {}, "switch:0": switch_status}
+    )
+    await init_integration(hass, 4)
+
+    for entity in missing_entities:
+        assert (
+            hass.states.get(f"{SENSOR_DOMAIN}.test_name_test_switch_0_{entity}") is None
+        )
 
 
 async def test_rpc_shelly_ev_sensors(

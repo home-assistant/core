@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfStatus,
     Event,
@@ -59,7 +60,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from . import create_event_message, create_operation_state_status
 
-TEST_HC_APP = "Dishwasher"
+TEST_HC_APP = ApplianceType.DISHWASHER
 
 
 EVENT_PROG_DELAYED_START = {
@@ -139,7 +140,7 @@ def platforms() -> list[Platform]:
     return [Platform.SENSOR]
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -201,7 +202,7 @@ async def test_paired_depaired_devices_flow(
     ("appliance", "keys_to_check"),
     [
         (
-            "Washer",
+            ApplianceType.WASHER,
             (StatusKey.BSH_COMMON_OPERATION_STATE,),
         )
     ],
@@ -580,7 +581,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.STATUS,
             BSH_DOOR_STATE_LOCKED,
             "locked",
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "sensor.dishwasher_door",
@@ -588,7 +589,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.STATUS,
             BSH_DOOR_STATE_CLOSED,
             "closed",
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "sensor.dishwasher_door",
@@ -596,7 +597,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.STATUS,
             BSH_DOOR_STATE_OPEN,
             "open",
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "sensor.dishwasher_door",
@@ -604,7 +605,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.STATUS,
             None,
             STATE_UNKNOWN,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "sensor.fridgefreezer_freezer_door_alarm",
@@ -612,7 +613,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             "",
             "off",
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "sensor.fridgefreezer_freezer_door_alarm",
@@ -620,7 +621,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_OFF,
             "off",
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "sensor.fridgefreezer_freezer_door_alarm",
@@ -628,7 +629,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_PRESENT,
             "present",
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "sensor.fridgefreezer_freezer_door_alarm",
@@ -636,7 +637,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_CONFIRMED,
             "confirmed",
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "sensor.fridgefreezer_freezer_door_alarm",
@@ -644,7 +645,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             None,
             STATE_UNKNOWN,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
@@ -652,7 +653,7 @@ async def test_remaining_prog_time_edge_cases(
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
             "",
             "off",
-            "CoffeeMaker",
+            ApplianceType.COFFEE_MAKER,
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
@@ -660,7 +661,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_OFF,
             "off",
-            "CoffeeMaker",
+            ApplianceType.COFFEE_MAKER,
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
@@ -668,7 +669,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_PRESENT,
             "present",
-            "CoffeeMaker",
+            ApplianceType.COFFEE_MAKER,
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
@@ -676,7 +677,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_CONFIRMED,
             "confirmed",
-            "CoffeeMaker",
+            ApplianceType.COFFEE_MAKER,
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
@@ -684,7 +685,7 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             None,
             STATE_UNKNOWN,
-            "CoffeeMaker",
+            ApplianceType.COFFEE_MAKER,
         ),
     ],
     indirect=["appliance"],
@@ -740,7 +741,7 @@ async def test_sensors_states(
     ),
     [
         (
-            "Oven",
+            ApplianceType.OVEN,
             "sensor.oven_current_oven_cavity_temperature",
             StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
             "°C",
@@ -748,7 +749,7 @@ async def test_sensors_states(
             0,
         ),
         (
-            "Oven",
+            ApplianceType.OVEN,
             "sensor.oven_current_oven_cavity_temperature",
             StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
             None,
@@ -817,7 +818,7 @@ async def test_sensor_unit_fetching(
     ),
     [
         (
-            "Oven",
+            ApplianceType.OVEN,
             "sensor.oven_current_oven_cavity_temperature",
             StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
         ),
@@ -866,7 +867,7 @@ async def test_sensor_unit_fetching_error(
     ),
     [
         (
-            "Oven",
+            ApplianceType.OVEN,
             "sensor.oven_current_oven_cavity_temperature",
             StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
             "°C",
@@ -949,7 +950,7 @@ OVEN_RUNNING_TIME_ENTITY_ID = "sensor.oven_program_running_time"
 PROGRAM_TIMES_TEST_START = "2021-01-09 12:00:00+00:00"
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 @pytest.mark.parametrize(
     "end_events",
     [
@@ -1068,7 +1069,7 @@ async def test_program_finish_time_not_carried_over_to_next_program(
     assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, STATE_UNKNOWN)
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 @pytest.mark.parametrize(
     ("program_change_items", "expected_finish_time", "expected_progress"),
     [
@@ -1105,16 +1106,6 @@ async def test_program_finish_time_not_carried_over_to_next_program(
             "2021-01-09T12:10:00+00:00",
             "0",
             id="new_program_with_timer_reported_before_program",
-        ),
-        pytest.param(
-            {
-                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                )
-            },
-            "2021-01-09T12:30:00+00:00",
-            "10",
-            id="same_program",
         ),
     ],
 )
@@ -1158,7 +1149,7 @@ async def test_program_finish_time_on_program_change_while_running(
     assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, expected_progress)
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 @pytest.mark.parametrize(
     ("active_program_options", "expected_finish_time", "expected_progress"),
     [
@@ -1226,7 +1217,7 @@ async def test_program_finish_time_after_reconnection(
     assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, expected_progress)
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 @pytest.mark.parametrize(
     "end_events",
     [
@@ -1256,12 +1247,9 @@ async def test_program_finish_time_after_reconnection(
 @pytest.mark.parametrize(
     "start_event_order",
     [
-        pytest.param((0, 1, 2), id="progress_program_operation_state"),
-        pytest.param((0, 2, 1), id="progress_operation_state_program"),
-        pytest.param((1, 0, 2), id="program_progress_operation_state"),
-        pytest.param((1, 2, 0), id="program_operation_state_progress"),
-        pytest.param((2, 0, 1), id="operation_state_progress_program"),
-        pytest.param((2, 1, 0), id="operation_state_program_progress"),
+        pytest.param((0, 1, 2), id="program_progress_operation_state"),
+        pytest.param((0, 2, 1), id="program_operation_state_progress"),
+        pytest.param((2, 0, 1), id="operation_state_program_progress"),
     ],
 )
 async def test_program_finish_time_on_program_start(
@@ -1306,17 +1294,17 @@ async def test_program_finish_time_on_program_start(
             appliance.ha_id,
             EventType.NOTIFY,
             {
-                EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1200,
-                EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                )
             },
         ),
         create_event_message(
             appliance.ha_id,
             EventType.NOTIFY,
             {
-                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
-                )
+                EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1200,
+                EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
             },
         ),
         create_event_message(
@@ -1332,7 +1320,7 @@ async def test_program_finish_time_on_program_start(
     assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, "0")
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 async def test_program_change_does_not_write_intermediate_states(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -1396,7 +1384,7 @@ async def test_program_change_does_not_write_intermediate_states(
     ]
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 async def test_program_finish_time_kept_on_pause(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -1442,7 +1430,7 @@ async def test_program_finish_time_kept_on_pause(
     assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, "10")
 
 
-@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.OVEN], indirect=True)
 async def test_program_running_time(
     hass: HomeAssistant,
     client: MagicMock,

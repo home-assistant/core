@@ -38,8 +38,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import StateType, Undefined
 
-from . import EcovacsConfigEntry
 from .const import LEGACY_SUPPORTED_LIFESPANS, SUPPORTED_LIFESPANS
+from .controller import EcovacsConfigEntry
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,

@@ -1,6 +1,7 @@
 """Binary sensor platform for the ENGIE Belgium integration."""
 
 from collections.abc import Mapping
+from itertools import chain
 from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import EpexGranularity
@@ -55,22 +56,26 @@ async def async_setup_entry(
             return
         known_bans.update(new_bans)
         async_add_entities(
-            EngieBeEpexTomorrowAvailableSensor(
-                epex,
-                ban=ban,
-                device_info=runtime_data.households[ban].prices.device_info,
+            chain(
+                (
+                    EngieBeEpexTomorrowAvailableSensor(
+                        epex,
+                        ban=ban,
+                        device_info=runtime_data.households[ban].prices.device_info,
+                    )
+                    for ban in new_bans
+                ),
+                (
+                    EngieBeEpexNegativeSensor(
+                        epex,
+                        ban=ban,
+                        granularity=granularity,
+                        device_info=runtime_data.households[ban].prices.device_info,
+                    )
+                    for ban in new_bans
+                    for granularity in EpexGranularity
+                ),
             )
-            for ban in new_bans
-        )
-        async_add_entities(
-            EngieBeEpexNegativeSensor(
-                epex,
-                ban=ban,
-                granularity=granularity,
-                device_info=runtime_data.households[ban].prices.device_info,
-            )
-            for ban in new_bans
-            for granularity in EpexGranularity
         )
 
     runtime_data.epex_ready_callbacks.append(_async_add_epex_binary_sensors)

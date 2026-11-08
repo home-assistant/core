@@ -18,6 +18,11 @@ def normalize_hue_brightness(brightness: float | None) -> float | None:
     return brightness
 
 
+def hue_brightness_to_ha(brightness: float) -> int:
+    """Convert a Hue brightness (0-100) to a Home Assistant brightness (0-255)."""
+    return round((brightness / 100) * 255)
+
+
 def normalize_hue_transition(transition: float | None) -> float | None:
     """Return rounded transition values."""
     if transition is not None:
