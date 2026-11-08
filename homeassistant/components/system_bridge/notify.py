@@ -17,6 +17,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
+    DOMAIN as NOTIFY_DOMAIN,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
@@ -163,9 +164,7 @@ async def async_get_service(
         return None
 
     notification_service = SystemBridgeNotificationService(entry.runtime_data)
-    # The notify platform skips an action that already exists, so remove it
-    # with the entry and let the next setup register its own
-    entry.async_on_unload(notification_service.async_unregister_services)
+    entry.async_on_unload(notification_service.async_entry_unloaded)
     return notification_service
 
 
@@ -175,6 +174,32 @@ class SystemBridgeNotificationService(BaseNotificationService):
     def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
         """Initialize the service."""
         self._coordinator = coordinator
+        self._owns_action = False
+        self._unloaded = False
+
+    async def async_entry_unloaded(self) -> None:
+        """Remove the action with the entry, so the next setup registers its own."""
+        self._unloaded = True
+        await self.async_unregister_services()
+
+    @override
+    async def async_register_services(self) -> None:
+        """Register the action, unless the entry has unloaded or another has it."""
+        # The entry can unload while the notify platform sets this service up
+        if self._unloaded or self.hass.services.has_service(
+            NOTIFY_DOMAIN, self._service_name
+        ):
+            return
+        self._owns_action = True
+        await super().async_register_services()
+
+    @override
+    async def async_unregister_services(self) -> None:
+        """Remove the action, only if this service registered it."""
+        if not self._owns_action:
+            return
+        self._owns_action = False
+        await super().async_unregister_services()
 
     @override
     async def async_send_message(
