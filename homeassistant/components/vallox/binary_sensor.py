@@ -38,7 +38,11 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
     @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data.get(self.entity_description.metric_key) == 1
+        if (
+            value := self.coordinator.data.get(self.entity_description.metric_key)
+        ) is None:
+            return None
+        return value == 1
 
 
 @dataclass(frozen=True, kw_only=True)

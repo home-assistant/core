@@ -70,7 +70,9 @@ from .entity import (
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
+    async_firewall_policy_supported_fn,
     async_port_poe_supported_fn,
+    async_unifi_network_device_info_fn,
     async_wlan_device_info_fn,
 )
 from .hub import UnifiHub
@@ -112,20 +114,6 @@ def async_dpi_group_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     )
 
 
-@callback
-def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for the UniFi Network application."""
-    unique_id = hub.config.entry.unique_id
-    assert unique_id is not None
-    return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
-        identifiers={(SWITCH_DOMAIN, unique_id)},
-        manufacturer=ATTR_MANUFACTURER,
-        model="UniFi Network",
-        name="UniFi Network",
-    )
-
-
 async def async_block_client_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
 ) -> None:
@@ -151,13 +139,6 @@ async def async_firewall_policy_control_fn(
     policy = hub.api.firewall_policies[obj_id].raw
     policy["enabled"] = target
     await hub.api.request(FirewallPolicyUpdateRequest.create(policy))
-
-
-@callback
-def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if firewall policy can be controlled."""
-    policy = hub.api.firewall_policies[obj_id]
-    return not policy.predefined and policy.name != ""
 
 
 async def async_object_oriented_network_config_control_fn(

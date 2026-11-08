@@ -12,7 +12,7 @@ from homeassistant.components.image import (
     ImageEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import validators as tcv
-from .const import CONF_PICTURE
+from .const import CONF_PICTURE, DEFAULT_NAMES
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
@@ -36,7 +36,7 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Image"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.IMAGE]
 
 GET_IMAGE_TIMEOUT = 10
 

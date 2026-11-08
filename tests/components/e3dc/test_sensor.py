@@ -15,6 +15,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.e3dc.const import SCAN_INTERVAL
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -27,6 +28,12 @@ BATTERY_LIMIT_SENSORS = [
     "sensor.e3_dc_s10_x_stored_energy",
     "sensor.e3_dc_s10_x_battery_capacity",
 ]
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

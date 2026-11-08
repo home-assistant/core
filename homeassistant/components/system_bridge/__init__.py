@@ -177,11 +177,8 @@ async def async_setup_entry(
     if coordinator.data.system is None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="timeout",
-            translation_placeholders={
-                "title": entry.title,
-                "host": entry.data[CONF_HOST],
-            },
+            translation_key="no_data_received",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         )
 
     # Fetch initial data so we have data when entities subscribe
