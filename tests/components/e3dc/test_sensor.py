@@ -22,6 +22,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import MOCK_SERIAL, int32_words, seed
 
 PV_POWER = "sensor.e3_dc_s10_x_pv_power"
+GRID_POWER_L1 = "sensor.e3_dc_s10_x_grid_power_l1"
 BATTERY_LIMIT_SENSORS = [
     "sensor.e3_dc_s10_x_maximum_charge_power",
     "sensor.e3_dc_s10_x_maximum_discharge_power",
@@ -290,16 +291,26 @@ async def test_part_devices(
 
 
 @pytest.mark.parametrize(
-    ("holding", "entity_id"),
+    ("holding", "entity_id", "names"),
     [
         pytest.param(
             {40113: 2, 40150: int32_words(300)},
             "sensor.power_meter_3_power",
+            {
+                "power_meter_2": "Power meter 2",
+                "power_meter_3": "Power meter 3",
+                "inverter_1": "Inverter",
+            },
             id="power_meter",
         ),
         pytest.param(
             {41034 + 18: 2302, 41034 + 6: int32_words(1200)},
             "sensor.inverter_2_active_power_l1",
+            {
+                "power_meter_2": "Power meter",
+                "inverter_1": "Inverter 1",
+                "inverter_2": "Inverter 2",
+            },
             id="inverter",
         ),
     ],
@@ -308,11 +319,17 @@ async def test_part_devices(
 async def test_part_added_when_reported(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
     mock_unit: MockModbusUnit,
+    mock_config_entry: MockConfigEntry,
     holding: dict[int, int | list[int]],
     entity_id: str,
+    names: dict[str, str],
 ) -> None:
-    """Test a meter configured or an inverter connected after setup gets its sensors."""
+    """Test a meter configured or an inverter connected after setup gets its sensors.
+
+    The part that was the only one of its kind gets numbered too.
+    """
     assert hass.states.get(entity_id) is None
 
     seed(mock_unit, holding)
@@ -321,3 +338,41 @@ async def test_part_added_when_reported(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is not None
+    station = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
+    parts = {
+        identifier.removeprefix(f"{MOCK_SERIAL}_"): device.name
+        for device in (
+            *dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            ),
+            *dr.async_entries_for_parent_device(device_registry, station.id),
+        )
+        if device.id != station.id
+        for _, identifier in device.identifiers
+    }
+    assert parts == names
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_grid_meter_added_when_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_unit: MockModbusUnit,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a meter configured at the grid connection point after setup gets the phase sensors."""
+    seed(mock_unit, {40105: 0})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(GRID_POWER_L1) is None
+
+    seed(mock_unit, {40105: 1})
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(GRID_POWER_L1) is not None

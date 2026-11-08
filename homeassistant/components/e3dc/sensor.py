@@ -1,7 +1,7 @@
 """Support for E3/DC sensors."""
 
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import IntEnum
 from operator import attrgetter
 from typing import TYPE_CHECKING, override
@@ -35,11 +35,13 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
-from .entity import E3dcEntity, E3dcPart
+from .entity import E3dcEntity, E3dcPart, part_device_info
 
 PARALLEL_UPDATES = 0
 
@@ -540,38 +542,60 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     device = coordinator.device
     served = {*device.readings_components, *device.settings_components}
-    async_add_entities(
-        E3dcSensor(coordinator, description)
-        for description in SENSORS
-        if description.component in served and description.exists_fn(device)
-    )
-
-    added: set[tuple[str, int]] = set()
+    device_registry = dr.async_get(hass)
+    added_sensors: set[str] = set()
+    added_parts: dict[tuple[str, int], E3dcPart] = {}
 
     @callback
-    def _async_add_parts() -> None:
-        """Add a part's sensors the first time the power station reports it."""
-        entities: list[E3dcPartSensor] = []
+    def _async_add_new() -> None:
+        """Add sensors for hardware the first time the power station reports it."""
+        entities: list[SensorEntity] = []
+        for description in SENSORS:
+            if (
+                description.key not in added_sensors
+                and description.component in served
+                and description.exists_fn(device)
+            ):
+                added_sensors.add(description.key)
+                entities.append(E3dcSensor(coordinator, description))
         for part_kind in PARTS:
             slots = list(part_kind.present_fn(device))
-            # Number a part while the power station has another one of its kind
-            numbered = len(slots) > 1 or any(
-                kind == part_kind.kind for kind, _ in added
-            )
+            known = {slot for kind, slot in added_parts if kind == part_kind.kind}
+            # Number the parts once the power station has had several of a kind
+            numbered = len({*slots, *known}) > 1
             for slot in slots:
-                if (part_kind.kind, slot) in added:
+                if (part_kind.kind, slot) in added_parts:
                     continue
-                added.add((part_kind.kind, slot))
                 part = E3dcPart(kind=part_kind.kind, slot=slot, numbered=numbered)
+                added_parts[part_kind.kind, slot] = part
                 entities.extend(
                     E3dcPartSensor(coordinator, description, part)
                     for description in part_kind.sensors
                 )
+            if numbered:
+                _async_number_parts(part_kind.kind)
         if entities:
             async_add_entities(entities)
 
-    _async_add_parts()
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_parts))
+    @callback
+    def _async_number_parts(kind: str) -> None:
+        """Rename the devices of the parts added while they were the only one."""
+        for key, part in added_parts.items():
+            if part.kind != kind or part.numbered:
+                continue
+            part = added_parts[key] = replace(part, numbered=True)
+            device_info = part_device_info(coordinator, part)
+            if isinstance(device_info, ChildDeviceInfo):
+                device_registry.async_get_or_create_child_from_info(
+                    config_entry_id=entry.entry_id, device_info=device_info
+                )
+            else:
+                device_registry.async_get_or_create_from_info(
+                    config_entry_id=entry.entry_id, device_info=device_info
+                )
+
+    _async_add_new()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new))
 
 
 def _state(value: StateType | IntEnum) -> StateType:

@@ -52,14 +52,15 @@ class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
             self._attr_device_info = coordinator.device_info
         else:
             prefix = f"{serial}_{part.kind}_{part.number}"
-            self._attr_device_info = _part_device_info(coordinator, part, prefix)
+            self._attr_device_info = part_device_info(coordinator, part)
         self._attr_unique_id = f"{prefix}_{entity_description.key}"
 
 
-def _part_device_info(
-    coordinator: E3dcDataUpdateCoordinator, part: E3dcPart, identifier: str
+def part_device_info(
+    coordinator: E3dcDataUpdateCoordinator, part: E3dcPart
 ) -> DeviceInfo | ChildDeviceInfo:
     """A part of the power station, or a device connected through it."""
+    identifier = f"{coordinator.config_entry.unique_id}_{part.kind}_{part.number}"
     if part.numbered:
         translation_key = f"numbered_{part.kind}"
         placeholders: dict[str, str] | None = {"number": str(part.number)}
