@@ -2806,7 +2806,7 @@ python-google-drive-api==0.2.0
 python-google-maps-routing-api==0.0.3
 
 # homeassistant.components.google_weather
-python-google-weather-api==0.0.9
+python-google-weather-api==0.0.10
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
