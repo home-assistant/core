@@ -229,3 +229,122 @@ async def test_reauth_errors(
     assert result["reason"] == "reauth_successful"
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_devices_owned_by_another_router_are_excluded(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Only offer clients whose tracker is not already owned by another router."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    original = entity_registry.async_get(
+        entity_registry.async_get_entity_id("device_tracker", DOMAIN, MAC)
+    )
+    other_mac = "11:22:33:44:55:66"
+    mock_client.core.get_network_nsm_device.return_value = [
+        CLIENT,
+        {**CLIENT, "mac": other_mac, "hostname": "Other"},
+    ]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={**CONFIG, "host": "192.168.2.1"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "devices"
+    selector = result["data_schema"].schema[CONF_TRACKED_DEVICES]
+    assert selector.config["options"] == [
+        {"value": other_mac, "label": f"Other ({other_mac})"}
+    ]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRACKED_DEVICES: [other_mac]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    tracker = entity_registry.async_get(original.entity_id)
+    assert tracker.id == original.id
+    assert tracker.config_entry_id == mock_config_entry.entry_id
+    other_id = entity_registry.async_get_entity_id("device_tracker", DOMAIN, other_mac)
+    assert (
+        entity_registry.async_get(other_id).config_entry_id == result["result"].entry_id
+    )
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_all_devices_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Do not create an unusable entry when every client is already owned."""
+    mock_config_entry.add_to_hass(hass)
+    original = entity_registry.async_get_or_create(
+        "device_tracker", DOMAIN, MAC, config_entry=mock_config_entry
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={**CONFIG, "host": "192.168.2.1"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "all_devices_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    tracker = entity_registry.async_get(original.entity_id)
+    assert tracker.id == original.id
+    assert tracker.config_entry_id == mock_config_entry.entry_id
+
+
+async def test_device_claimed_while_selection_is_open(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Recheck ownership on submission and allow retrying with a free client."""
+    mock_client.core.get_network_nsm_device.return_value = []
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    other_mac = "11:22:33:44:55:66"
+    mock_client.core.get_network_nsm_device.return_value = [
+        CLIENT,
+        {**CLIENT, "mac": other_mac, "hostname": "Other"},
+    ]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={**CONFIG, "host": "192.168.2.1"}
+    )
+    original = entity_registry.async_get_or_create(
+        "device_tracker", DOMAIN, MAC, config_entry=mock_config_entry
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRACKED_DEVICES: [MAC, other_mac]}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "devices"
+    assert result["errors"] == {"base": "devices_already_configured"}
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+    selector = result["data_schema"].schema[CONF_TRACKED_DEVICES]
+    assert selector.config["options"] == [
+        {"value": other_mac, "label": f"Other ({other_mac})"}
+    ]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRACKED_DEVICES: [other_mac]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    tracker = entity_registry.async_get(original.entity_id)
+    assert tracker.id == original.id
+    assert tracker.config_entry_id == mock_config_entry.entry_id
+    other_id = entity_registry.async_get_entity_id("device_tracker", DOMAIN, other_mac)
+    assert (
+        entity_registry.async_get(other_id).config_entry_id == result["result"].entry_id
+    )

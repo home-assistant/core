@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -150,14 +150,27 @@ class SynologySrmConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select the clients to enable, leaving all others disabled."""
+        registry = er.async_get(self.hass)
+        devices = [
+            device
+            for device in self._devices
+            if registry.async_get_entity_id("device_tracker", DOMAIN, device["value"])
+            is None
+        ]
+        if not devices:
+            return self.async_abort(reason="all_devices_configured")
+        available = {device["value"] for device in devices}
         errors: dict[str, str] = {}
         if user_input is not None:
-            if user_input[CONF_TRACKED_DEVICES]:
+            if set(user_input[CONF_TRACKED_DEVICES]) - available:
+                errors["base"] = "devices_already_configured"
+            elif not user_input[CONF_TRACKED_DEVICES]:
+                errors["base"] = "no_devices_selected"
+            else:
                 self._async_abort_entries_match({CONF_HOST: self._data[CONF_HOST]})
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data={**self._data, **user_input}
                 )
-            errors["base"] = "no_devices_selected"
 
         return self.async_show_form(
             step_id="devices",
@@ -165,7 +178,7 @@ class SynologySrmConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_TRACKED_DEVICES, default=[]): SelectSelector(
                         SelectSelectorConfig(
-                            options=self._devices,
+                            options=devices,
                             multiple=True,
                             sort=True,
                             mode=SelectSelectorMode.LIST,
