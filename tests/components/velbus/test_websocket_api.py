@@ -822,7 +822,10 @@ async def test_source_channel_above_eight_rejected(
             CONF_CHANNEL: 1,
             "source_address": 1,
             "source_channel": 9,
-            "action": "on",
+            **{
+                "velbus/config_panel/module/actions/set": {"action": "on"},
+                "velbus/config_panel/module/actions/clear": {},
+            }[command],
         },
     )
 

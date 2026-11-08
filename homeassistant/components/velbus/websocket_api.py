@@ -143,6 +143,13 @@ async def async_update_panel(
             panel_data[DATA_STATIC_REGISTERED] = True
 
     panel_version = await hass.async_add_executor_job(version, FRONTEND_PACKAGE)
+    if not _any_advanced_mode_enabled(
+        hass,
+        unloading_entry_id=unloading_entry_id,
+        setting_up_entry_id=setting_up_entry_id,
+    ):
+        frontend.async_remove_panel(hass, DOMAIN, warn_if_unknown=False)
+        return
     module_url = f"{URL_BASE}/{velbus_panel.entrypoint_js}?v={panel_version}"
     if async_panel_exists(hass, DOMAIN):
         if panel_data.get(DATA_BUILD_ID) == panel_version:
