@@ -269,7 +269,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.engie_be
-aioengiebelgium==0.9.0
+aioengiebelgium==0.13.0
 
 # homeassistant.components.esphome
 aioesphomeapi==46.25.0
