@@ -668,7 +668,7 @@ async def test_chime_ring_volume_setup(
     )
     device_info = platform.entities[entity_id].device_info
     assert device_info is not None
-    assert device_info["sw_version"] == chime.firmware_version
+    assert device_info.sw_version == chime.firmware_version
 
 
 async def test_chime_ring_volume_ignores_local_permissions(
