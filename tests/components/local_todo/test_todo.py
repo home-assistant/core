@@ -27,6 +27,7 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -1281,33 +1282,35 @@ async def test_categories_attribute(
 
 async def _set_categories(
     hass: HomeAssistant, entry_id: str, categories: list[str]
-) -> None:
+) -> ConfigFlowResult:
     """Set the categories with the options flow."""
     result = await hass.config_entries.options.async_init(entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "categories"}
     )
-    await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"categories": categories}
     )
     await hass.async_block_till_done()
+    return result
 
 
-async def _remove_fresh_produce(hass: HomeAssistant, entry_id: str) -> None:
+async def _remove_fresh_produce(hass: HomeAssistant, entry_id: str) -> ConfigFlowResult:
     """Remove the Fresh produce category with the options flow."""
-    await _set_categories(hass, entry_id, ["Grocery", "Household"])
+    return await _set_categories(hass, entry_id, ["Grocery", "Household"])
 
 
-async def _rename_fresh_produce(hass: HomeAssistant, entry_id: str) -> None:
+async def _rename_fresh_produce(hass: HomeAssistant, entry_id: str) -> ConfigFlowResult:
     """Rename the Fresh produce category to Produce with the options flow."""
     result = await hass.config_entries.options.async_init(entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "rename_category"}
     )
-    await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"category": "Fresh produce", "new_name": "Produce"}
     )
     await hass.async_block_till_done()
+    return result
 
 
 @pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
@@ -1356,7 +1359,9 @@ async def test_remove_category(
 async def test_category_change_entry_not_loaded(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    change_categories: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    change_categories: Callable[
+        [HomeAssistant, str], Coroutine[Any, Any, ConfigFlowResult]
+    ],
     expected_options: list[str],
     expected_categories: list[list[str]],
 ) -> None:
@@ -1460,7 +1465,9 @@ async def test_change_undeclared_category(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     ws_get_items: WsGetItemsType,
-    change_categories: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    change_categories: Callable[
+        [HomeAssistant, str], Coroutine[Any, Any, ConfigFlowResult]
+    ],
     expected_options: list[str],
     expected_categories: list[list[str]],
 ) -> None:
@@ -1491,13 +1498,13 @@ async def test_remove_category_write_error(
     """Test the options are kept when the items can't be updated."""
     await prepare_entry(hass, config_entry)
 
-    with (
-        patch.object(
-            LocalTodoListStore, "_store", side_effect=OSError(errno.EIO, "Error")
-        ),
-        pytest.raises(HomeAssistantError),
+    with patch.object(
+        LocalTodoListStore, "_store", side_effect=OSError(errno.EIO, "Error")
     ):
-        await _remove_fresh_produce(hass, config_entry.entry_id)
+        result = await _remove_fresh_produce(hass, config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_save"}
 
     assert config_entry.options == {
         "categories": ["Fresh produce", "Grocery", "Household"]
@@ -1591,7 +1598,9 @@ async def test_category_change_entity_disabled(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    change_categories: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    change_categories: Callable[
+        [HomeAssistant, str], Coroutine[Any, Any, ConfigFlowResult]
+    ],
     expected_options: list[str],
     expected_categories: list[list[str]],
 ) -> None:
@@ -1652,11 +1661,8 @@ async def test_category_change_write_error_keeps_items(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test a failed category change isn't saved by a later item change."""
-    with (
-        patch.object(
-            LocalTodoListStore, "_store", side_effect=OSError(errno.EIO, "Error")
-        ),
-        pytest.raises(HomeAssistantError),
+    with patch.object(
+        LocalTodoListStore, "_store", side_effect=OSError(errno.EIO, "Error")
     ):
         await _remove_fresh_produce(hass, config_entry.entry_id)
 

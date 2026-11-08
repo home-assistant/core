@@ -26,6 +26,7 @@
   },
   "options": {
     "error": {
+      "cannot_save": "The to-do list couldn't be saved, try again.",
       "category_exists": "A category with this name already exists.",
       "invalid_category": "Categories can't be empty or contain a comma."
     },

@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -112,8 +113,14 @@ class LocalTodoOptionsFlow(OptionsFlow):
                 errors[CONF_CATEGORIES] = "invalid_category"
             else:
                 removed = set(known) - set(categories)
-                await self._async_change_categories(categories, dict.fromkeys(removed))
-                return self.async_create_entry(data={CONF_CATEGORIES: categories})
+                try:
+                    await self._async_change_categories(
+                        categories, dict.fromkeys(removed)
+                    )
+                except HomeAssistantError:
+                    errors["base"] = "cannot_save"
+                else:
+                    return self.async_create_entry(data={CONF_CATEGORIES: categories})
 
         return self.async_show_form(
             step_id="categories",
@@ -141,8 +148,14 @@ class LocalTodoOptionsFlow(OptionsFlow):
                     new_name if declared == category else declared
                     for declared in self._categories
                 ]
-                await self._async_change_categories(categories, {category: new_name})
-                return self.async_create_entry(data={CONF_CATEGORIES: categories})
+                try:
+                    await self._async_change_categories(
+                        categories, {category: new_name}
+                    )
+                except HomeAssistantError:
+                    errors["base"] = "cannot_save"
+                else:
+                    return self.async_create_entry(data={CONF_CATEGORIES: categories})
 
         schema = probatio.Schema(
             {
@@ -174,14 +187,16 @@ class LocalTodoOptionsFlow(OptionsFlow):
         self, categories: list[str], changes: Mapping[str, str | None]
     ) -> None:
         """Apply category changes to the list before saving the options."""
-        if self.config_entry.state is ConfigEntryState.LOADED:
-            data = self.config_entry.runtime_data
-            if data.entity is not None:
-                await data.entity.async_change_categories(categories, changes)
-                return
-            # The entity is disabled: enabling it reloads the entry from disk
-            store = data.store
-        else:
-            store = get_store(self.hass, self.config_entry)
-        if changes:
-            await store.async_change_categories(changes)
+        # Hold the setup lock so the entry can't load a stale copy of the file
+        async with self.config_entry.setup_lock:
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                data = self.config_entry.runtime_data
+                if data.entity is not None:
+                    await data.entity.async_change_categories(categories, changes)
+                    return
+                # The entity is disabled: enabling it reloads the entry from disk
+                store = data.store
+            else:
+                store = get_store(self.hass, self.config_entry)
+            if changes:
+                await store.async_change_categories(changes)
