@@ -12,12 +12,7 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.evohome import EvoData
-from homeassistant.components.evohome.const import (
-    DOMAIN,
-    EVOHOME_DATA,
-    SCHEDULE_MAX_AGE,
-)
+from homeassistant.components.evohome.const import EVOHOME_DATA, SCHEDULE_MAX_AGE
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -44,8 +39,9 @@ async def test_setup_platform(
 ) -> None:
     """Test entities and their states after setup of evohome."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.coordinator.update_interval
+    assert update_interval is not None
 
     # confirm initial state after coordinator.async_first_refresh()...
     state = hass.states.get("climate.my_home")
@@ -95,8 +91,9 @@ async def test_high_precision_temps(
 ) -> None:
     """Test a zone uses the v1 API's temperature, if its location has a TCS."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.coordinator.update_interval
+    assert update_interval is not None
 
     evo_data.account.data = {"3432521": 99.9}  # stale, so must be replaced
 
@@ -126,7 +123,7 @@ async def test_update_intervals(
     config[CONF_SCAN_INTERVAL] = 600
 
     async for _ in setup_evohome(hass, config, install="default"):
-        evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
+        evo_data = hass.data[EVOHOME_DATA]
 
         assert evo_data.coordinator.update_interval == timedelta(seconds=600)
         assert evo_data.account.update_interval == timedelta(seconds=600)
@@ -140,7 +137,7 @@ async def test_high_precision_temps_update_entities(
 ) -> None:
     """Test an update of (only) the account coordinator updates a zone's state."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
+    evo_data = hass.data[EVOHOME_DATA]
 
     evo_data.account.async_set_updated_data({"3432521": 19.8})
     await hass.async_block_till_done()
@@ -148,6 +145,44 @@ async def test_high_precision_temps_update_entities(
     state = hass.states.get(zone_id)
     assert state is not None
     assert state.attributes["current_temperature"] == 19.8
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_high_precision_temps_multiple_locations(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test high-precision temps from all of an account's locations are retained."""
+
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.account.update_interval
+    assert update_interval is not None
+
+    with (
+        patch("evohomeasync.EvohomeClient.get_status"),
+        patch(
+            "evohomeasync.EvohomeClient.location_by_id",
+            new_callable=PropertyMock,
+            return_value={
+                "1111111": MagicMock(
+                    tcs=MagicMock(
+                        get_temperatures=AsyncMock(return_value={"3432521": 19.8})
+                    )
+                ),
+                "2222222": MagicMock(
+                    tcs=MagicMock(
+                        get_temperatures=AsyncMock(return_value={"9999999": 21.3})
+                    )
+                ),
+            },
+        ),
+    ):
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert evo_data.account.data == {"3432521": 19.8, "9999999": 21.3}
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -159,8 +194,9 @@ async def test_schedules_fetched_only_when_stale(
 ) -> None:
     """Test schedules are re-fetched only after SCHEDULE_MAX_AGE, not every poll."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.coordinator.update_interval
+    assert update_interval is not None
 
     num_children = len(tcs.zones) + (tcs.hotwater is not None)
 
