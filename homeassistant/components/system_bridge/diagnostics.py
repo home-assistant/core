@@ -29,6 +29,7 @@ TO_REDACT = {
     "microphone_usage",
     "mount_point",
     "ptp",
+    "serial",
     "ssid",
     "subtitle",
     "thumbnail",
