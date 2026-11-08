@@ -1,6 +1,7 @@
 """Text to speech support for Google Generative AI."""
 
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any, override
 
 from google.genai import types
@@ -8,16 +9,17 @@ from google.genai.errors import APIError, ClientError
 from propcache.api import cached_property
 
 from homeassistant.components.tts import (
-    ATTR_VOICE,
+    TextToSpeechCommonOption,
     TextToSpeechEntity,
     TtsAudioType,
     Voice,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import GoogleGenerativeAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_TEMPERATURE,
@@ -33,7 +35,12 @@ from .entity import (
 )
 from .helpers import convert_to_wav
 
-ATTR_STYLE = "style"
+
+class GoogleGenerativeAITextToSpeechOption(StrEnum):
+    """Store keys for the Google Generative AI text-to-speech options."""
+
+    STYLE = "style"
+
 
 VOICES_PAGE_SIZE = 1000
 VOICES_MAX_PAGES = 10
@@ -41,7 +48,7 @@ VOICES_MAX_PAGES = 10
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoogleGenerativeAIConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TTS entities."""
@@ -250,7 +257,9 @@ class GoogleGenerativeAITextToSpeechEntity(
         )
     ]
 
-    def __init__(self, config_entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+    def __init__(
+        self, config_entry: GoogleGenerativeAIConfigEntry, subentry: ConfigSubentry
+    ) -> None:
         """Initialize the TTS entity."""
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
         self._library_voices: dict[str, list[Voice]] = {}
@@ -313,8 +322,11 @@ class GoogleGenerativeAITextToSpeechEntity(
         """Return the options supported by the configured model."""
         model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
         if supports_speech_metadata(model):
-            return [ATTR_VOICE, ATTR_STYLE]
-        return [ATTR_VOICE]
+            return [
+                TextToSpeechCommonOption.VOICE,
+                GoogleGenerativeAITextToSpeechOption.STYLE,
+            ]
+        return [TextToSpeechCommonOption.VOICE]
 
     @callback
     @override
@@ -327,7 +339,7 @@ class GoogleGenerativeAITextToSpeechEntity(
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
-            ATTR_VOICE: self._supported_voices[0].voice_id,
+            TextToSpeechCommonOption.VOICE: self._supported_voices[0].voice_id,
         }
 
     @override
@@ -345,13 +357,13 @@ class GoogleGenerativeAITextToSpeechEntity(
         config.speech_config = types.SpeechConfig(
             voice_config=types.VoiceConfig(
                 prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                    voice_name=options[ATTR_VOICE]
+                    voice_name=options[TextToSpeechCommonOption.VOICE]
                 )
             )
         )
 
         contents: str | types.Part = message
-        if style := options.get(ATTR_STYLE):
+        if style := options.get(GoogleGenerativeAITextToSpeechOption.STYLE):
             contents = types.Part(
                 text=message,
                 speech_metadata=types.SpeechMetadata(style=style),

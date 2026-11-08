@@ -62,7 +62,7 @@
           "appliance": "Appliance",
           "house_net": "Mains / house net",
           "solar": "Solar",
-          "unknown": "Unknown",
+          "unsupported": "Unsupported",
           "water": "Water"
         }
       },

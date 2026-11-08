@@ -6,13 +6,13 @@ from pyinsteon.constants import HC_LOOKUP
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
-    CONF_ENTITY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PLATFORM,
     CONF_PORT,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
+    CommonServiceArgument,
 )
 from homeassistant.helpers import config_validation as cv
 
@@ -26,19 +26,16 @@ from .const import (
     HOUSECODES,
     PORT_HUB_V1,
     PORT_HUB_V2,
-    SRV_ALL_LINK_GROUP,
-    SRV_ALL_LINK_MODE,
     SRV_CONTROLLER,
-    SRV_HOUSECODE,
-    SRV_LOAD_DB_RELOAD,
     SRV_RESPONDER,
     X10_PLATFORMS,
+    InsteonServiceArgument,
 )
 
 ADD_ALL_LINK_SCHEMA = probatio.Schema(
     {
-        probatio.Required(SRV_ALL_LINK_GROUP): probatio.Byte(),
-        probatio.Required(SRV_ALL_LINK_MODE): probatio.In(
+        probatio.Required(InsteonServiceArgument.GROUP): probatio.Byte(),
+        probatio.Required(InsteonServiceArgument.MODE): probatio.In(
             [SRV_CONTROLLER, SRV_RESPONDER]
         ),
     }
@@ -46,33 +43,37 @@ ADD_ALL_LINK_SCHEMA = probatio.Schema(
 
 
 DEL_ALL_LINK_SCHEMA = probatio.Schema(
-    {probatio.Required(SRV_ALL_LINK_GROUP): probatio.Byte()}
+    {probatio.Required(InsteonServiceArgument.GROUP): probatio.Byte()}
 )
 
 
 LOAD_ALDB_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_ENTITY_ID): probatio.Any(cv.entity_id, ENTITY_MATCH_ALL),
-        probatio.Optional(SRV_LOAD_DB_RELOAD, default=False): cv.boolean,
+        probatio.Required(CommonServiceArgument.ENTITY_ID): probatio.Any(
+            cv.entity_id, ENTITY_MATCH_ALL
+        ),
+        probatio.Optional(InsteonServiceArgument.RELOAD, default=False): cv.boolean,
     }
 )
 
 
-PRINT_ALDB_SCHEMA = probatio.Schema({probatio.Required(CONF_ENTITY_ID): cv.entity_id})
+PRINT_ALDB_SCHEMA = probatio.Schema(
+    {probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_id}
+)
 
 
 X10_HOUSECODE_SCHEMA = probatio.Schema(
-    {probatio.Required(SRV_HOUSECODE): probatio.In(HOUSECODES)}
+    {probatio.Required(InsteonServiceArgument.HOUSECODE): probatio.In(HOUSECODES)}
 )
 
 
 TRIGGER_SCENE_SCHEMA = probatio.Schema(
-    {probatio.Required(SRV_ALL_LINK_GROUP): probatio.Byte()}
+    {probatio.Required(InsteonServiceArgument.GROUP): probatio.Byte()}
 )
 
 
 ADD_DEFAULT_LINKS_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_ENTITY_ID): cv.entity_id}
+    {probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_id}
 )
 
 

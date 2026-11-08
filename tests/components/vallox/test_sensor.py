@@ -94,12 +94,18 @@ async def test_current_profile_sensor(hass: HomeAssistant, expected_state: str) 
         pytest.param({"A_CYC_MODE": 0}, ("30", "1310", "1270"), id="fan_on"),
         # The unit keeps reporting its last fan speeds after it is turned off.
         pytest.param({"A_CYC_MODE": 5}, ("0", "0", "0"), id="fan_off"),
+        # Without the power state, the reported fan speeds cannot be trusted.
+        pytest.param(
+            {"A_CYC_MODE": None},
+            (STATE_UNKNOWN, STATE_UNKNOWN, STATE_UNKNOWN),
+            id="mode_missing",
+        ),
     ],
 )
 async def test_fan_speed_sensors(
     hass: HomeAssistant, expected_states: tuple[str, str, str]
 ) -> None:
-    """Test that the fan speed sensors report 0 while the unit is off."""
+    """Test the fan speed sensors in each power state of the unit."""
     states = tuple(
         hass.states.get(entity_id).state
         for entity_id in (

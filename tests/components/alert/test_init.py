@@ -20,6 +20,7 @@ from homeassistant.components.alert.const import (
     CONF_SKIP_FIRST,
     CONF_TITLE,
     DOMAIN,
+    AlertService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -27,9 +28,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -133,7 +131,7 @@ async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) ->
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_OFF,
+        AlertService.TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -170,7 +168,7 @@ async def test_silence_can_acknowledge_false(hass: HomeAssistant) -> None:
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TURN_OFF,
+            AlertService.TURN_OFF,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
@@ -188,7 +186,7 @@ async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_OFF,
+        AlertService.TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -197,7 +195,7 @@ async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TURN_ON,
+        AlertService.TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -213,7 +211,7 @@ async def test_toggle(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> 
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TOGGLE,
+        AlertService.TOGGLE,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
@@ -221,7 +219,7 @@ async def test_toggle(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> 
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TOGGLE,
+        AlertService.TOGGLE,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )

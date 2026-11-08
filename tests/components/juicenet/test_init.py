@@ -11,7 +11,7 @@ from homeassistant.helpers import issue_registry as ir
 async def test_juicenet_repair_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the JuiceNet configuration entry loading/unloading handles the repair."""
+    """Test the JuiceNet repair issue is kept on reload and deleted on removal."""
     config_entry_1 = MockConfigEntry(
         title="Example 1",
         domain=DOMAIN,
@@ -20,6 +20,17 @@ async def test_juicenet_repair_issue(
     await hass.config_entries.async_setup(config_entry_1.entry_id)
     await hass.async_block_till_done()
     assert config_entry_1.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
+
+    # Reloading must not delete and re-create the issue, which loses the ignore
+    ir.async_ignore_issue(hass, DOMAIN, DOMAIN, True)
+    await hass.config_entries.async_reload(config_entry_1.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_1.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, DOMAIN)
+    assert issue
+    assert issue.dismissed_version is not None
 
     # Add a second one
     config_entry_2 = MockConfigEntry(

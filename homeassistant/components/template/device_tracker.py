@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
     TrackerEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -27,6 +27,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
+from .const import DEFAULT_NAMES
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -41,7 +42,7 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-DEFAULT_NAME = "Template Device Tracker"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.DEVICE_TRACKER]
 
 CONF_IN_ZONES = "in_zones"
 CONF_LOCATION_ACCURACY = "location_accuracy"
