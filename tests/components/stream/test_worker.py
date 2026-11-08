@@ -970,8 +970,13 @@ async def test_stop_after_update_source_while_stopped(
 
     stream.update_source(STREAM_SOURCE + "-updated-source")
     await stream.start()
-    assert await hass.async_add_executor_job(worker_stub.running.wait, TIMEOUT)
-    await stream.stop()
+    try:
+        assert await hass.async_add_executor_job(worker_stub.running.wait, TIMEOUT)
+        # start() dropped the restart request update_source() left behind, so
+        # the running worker does not inherit it
+        assert not stream._fast_restart_once
+    finally:
+        await stream.stop()
 
     assert worker_stub.sources == [STREAM_SOURCE + "-updated-source"]
 
