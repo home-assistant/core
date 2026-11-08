@@ -307,12 +307,14 @@ class Remote:
             if self._control is None:
                 return None
         try:
-            return await self._hass.async_add_executor_job(
+            device_info = await self._hass.async_add_executor_job(
                 self._control.get_device_info
             )
         except OSError as err:
-            _LOGGER.debug("Could not fetch the device description: %s", err)
+            _LOGGER.error("Could not fetch the device description: %s", err)
             return None
+        else:
+            return device_info
 
     async def _handle_errors[_R, *_Ts](
         self, func: Callable[[*_Ts], _R], *args: *_Ts
