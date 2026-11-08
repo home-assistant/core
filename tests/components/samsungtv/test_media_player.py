@@ -799,6 +799,7 @@ async def test_turn_off_websocket(
     remote_websocket.send_commands.assert_not_called()
 
 
+@pytest.mark.usefixtures("art_api")
 async def test_turn_off_websocket_frame(
     hass: HomeAssistant, remote_websocket: Mock, rest_api: Mock
 ) -> None:

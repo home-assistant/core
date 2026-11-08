@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .bridge import SamsungTVBridge
+from .bridge import SamsungTVBridge, SamsungTVWSBridge
 from .const import DOMAIN, LOGGER
 
 SCAN_INTERVAL = 10
@@ -38,6 +38,7 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.bridge = bridge
         self.is_on: bool | None = None
+        self.art_mode: bool | None = None
         self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
 
     @override
@@ -57,6 +58,9 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 old_state,
                 self.is_on,
             )
+
+        if isinstance(self.bridge, SamsungTVWSBridge):
+            self.art_mode = await self.bridge.async_get_art_mode(is_on=bool(self.is_on))
 
         if self.async_extra_update:
             await self.async_extra_update()

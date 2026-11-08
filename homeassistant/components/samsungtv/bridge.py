@@ -8,6 +8,7 @@ import contextlib
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
+from samsungtvws.art import SamsungTVArt
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.async_rest import SamsungTVAsyncRest
 from samsungtvws.command import SamsungTVCommand
@@ -29,6 +30,7 @@ from samsungtvws.exceptions import (
 )
 from samsungtvws.legacy.remote import SamsungTVLegacyAsyncRemote
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
+from websocket import WebSocketException as SyncWebSocketException
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant.const import (
@@ -81,6 +83,13 @@ ENCRYPTED_MODEL_USES_POWER_OFF = {"H6400", "H6410"}
 ENCRYPTED_MODEL_USES_POWER = {"JU6400", "JU641D"}
 
 REST_EXCEPTIONS = (HttpApiError, AsyncioTimeoutError, ResponseError)
+ART_EXCEPTIONS = (
+    ConnectionFailure,
+    ResponseError,
+    UnauthorizedError,
+    SyncWebSocketException,
+    OSError,
+)
 
 
 def mac_from_device_info(info: dict[str, Any]) -> str | None:
@@ -487,12 +496,75 @@ class SamsungTVWSBridge(
             self.token = entry_data.get(CONF_TOKEN)
         self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
+        self._art: SamsungTVArt | None = None
+        self._art_lock = asyncio.Lock()
 
     def _get_device_spec(self, key: str) -> Any | None:
         """Check if a flag exists in latest device info."""
         if not ((info := self._device_info) and (device := info.get("device"))):
             return None
         return device.get(key)
+
+    @property
+    def supports_art_mode(self) -> bool:
+        """Return whether the TV supports Art Mode."""
+        return str(self._get_device_spec("FrameTVSupport")).lower() == "true"
+
+    async def async_get_art_mode(self, *, is_on: bool) -> bool | None:
+        """Fetch Art Mode status without waking a TV in standby."""
+        async with self._art_lock:
+            if not self.supports_art_mode or not is_on or self.power_off_in_progress:
+                await self._async_close_art()
+                return None
+
+            if self._art is None:
+                self._art = SamsungTVArt(  # type: ignore[no-untyped-call]
+                    host=self.host,
+                    port=self.port,
+                    token=self.token,
+                    timeout=TIMEOUT_WEBSOCKET,
+                    key_press_delay=0,
+                    name=VALUE_CONF_NAME,
+                )
+
+            try:
+                status = await self.hass.async_add_executor_job(self._art.get_artmode)
+            except ART_EXCEPTIONS as err:
+                LOGGER.debug(
+                    "Failed to get Art Mode status from %s: %s", self.host, err
+                )
+                await self._async_close_art()
+                return None
+
+            if self._art.token and self.token != self._art.token:
+                self.token = self._art.token
+                self._notify_update_config_entry({CONF_TOKEN: self.token})
+
+            if not isinstance(status, str) or status not in ("on", "off"):
+                LOGGER.debug(
+                    "Unexpected Art Mode status from %s: %s", self.host, status
+                )
+                return None
+            return status == "on"
+
+    async def _async_close_art(self) -> None:
+        """Close the Art Mode connection while holding the Art Mode lock."""
+        if self._art is None:
+            return
+        art, self._art = self._art, None
+        try:
+            await self.hass.async_add_executor_job(art.close)
+        except ART_EXCEPTIONS as err:
+            LOGGER.debug(
+                "Failed to close Art Mode connection to %s: %s", self.host, err
+            )
+
+    @override
+    async def async_close_remote(self) -> None:
+        """Close the remote and Art Mode connections."""
+        await super().async_close_remote()
+        async with self._art_lock:
+            await self._async_close_art()
 
     @override
     async def async_is_on(self) -> bool:

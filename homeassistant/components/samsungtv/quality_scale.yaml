@@ -64,14 +64,10 @@ rules:
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: only 2 main entities
-  entity-translations:
-    status: exempt
-    comment: using only device name
+    comment: All entities expose primary TV functions.
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: no custom icons, only default icons
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
@@ -81,6 +77,8 @@ rules:
     comment: device type integration
 
   # Platinum
-  async-dependency: done
+  async-dependency:
+    status: todo
+    comment: The Art Mode API is synchronous and runs in the executor.
   inject-websession: done
   strict-typing: done

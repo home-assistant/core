@@ -206,6 +206,23 @@ def rest_api_failure_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture
+def art_api_class() -> Generator[Mock]:
+    """Mock the synchronous Art Mode client class."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVArt", autospec=True
+    ) as art_class:
+        yield art_class
+
+
+@pytest.fixture
+def art_api(art_api_class: Mock) -> Mock:
+    """Mock the synchronous Art Mode API."""
+    art_api_class.return_value.token = "FAKE_TOKEN"
+    art_api_class.return_value.get_artmode.return_value = "on"
+    return art_api_class.return_value
+
+
 @pytest.fixture(name="remote_encrypted_websocket_failing")
 def remote_encrypted_websocket_failing_fixture() -> Generator[None]:
     """Patch the samsungtvws SamsungTVEncryptedWSAsyncRemote."""
