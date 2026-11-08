@@ -91,6 +91,10 @@
         "user": "Add device tracker"
       },
       "step": {
+        "confirm": {
+          "description": "The new table does not hold {count} of the tracked devices. Their entities are removed when you continue, and a device which is only away comes back as a disabled entity when it reappears in the table.",
+          "title": "Change the tracked table"
+        },
         "reconfigure": {
           "data": {
             "baseoid": "Base OID"

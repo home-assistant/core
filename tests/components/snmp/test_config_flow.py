@@ -11,12 +11,14 @@ from pysnmp.smi.error import WrongValueError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.snmp.config_flow import (
     AUTH_PROTOCOL_SELECTOR,
     PRIV_PROTOCOL_SELECTOR,
     SNMP_VERSION_SELECTOR,
 )
 from homeassistant.components.snmp.const import (
+    CONF_BASEOID,
     DOMAIN,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
@@ -27,9 +29,15 @@ from homeassistant.config_entries import SOURCE_USER, SubentryFlowContext
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import SelectSelector
 
-from . import mock_entry
+from . import ARP_TABLE_MAC_OID, mock_entry
+
+MAC = "00:11:22:33:44:55"
+
+# 1.3.6.1.2.1.17.4.3.1.1, the MAC column of the bridge forwarding table
+BRIDGE_MAC_OID = "1.3.6.1.2.1.17.4.3.1.1"
 
 
 @pytest.fixture
@@ -497,15 +505,78 @@ async def test_subentry_flow_reconfigure(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"baseoid": "1.3.6.1.2.1.17.4.3.1.1"},
+        {CONF_BASEOID: BRIDGE_MAC_OID},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     subentry = entry.subentries[subentry_id]
-    assert subentry.data["baseoid"] == "1.3.6.1.2.1.17.4.3.1.1"
-    assert subentry.title == "1.3.6.1.2.1.17.4.3.1.1"
-    assert subentry.unique_id == "1.3.6.1.2.1.17.4.3.1.1"
+    assert subentry.data[CONF_BASEOID] == BRIDGE_MAC_OID
+    assert subentry.title == BRIDGE_MAC_OID
+    assert subentry.unique_id == BRIDGE_MAC_OID
+
+
+@pytest.mark.usefixtures("mock_walk_empty")
+async def test_subentry_flow_reconfigure_normalizes_oid(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that the same table written differently keeps its trackers."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+    entity_id = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        f"{subentry_id}_{MAC}",
+        config_entry=entry,
+        config_subentry_id=subentry_id,
+    ).entity_id
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_BASEOID: f" {ARP_TABLE_MAC_OID}."},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry_id].data[CONF_BASEOID] == ARP_TABLE_MAC_OID
+    assert entity_registry.async_get(entity_id) is not None
+
+
+@pytest.mark.usefixtures("mock_walk_empty")
+async def test_subentry_flow_reconfigure_confirms_removing_trackers(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that a table change removes the dropped trackers only once confirmed."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+    entity_id = entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN,
+        DOMAIN,
+        f"{subentry_id}_{MAC}",
+        config_entry=entry,
+        config_subentry_id=subentry_id,
+    ).entity_id
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_BASEOID: BRIDGE_MAC_OID},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {"count": "1"}
+    assert entity_registry.async_get(entity_id) is not None
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry_id].data[CONF_BASEOID] == BRIDGE_MAC_OID
+    assert entity_registry.async_get(entity_id) is None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

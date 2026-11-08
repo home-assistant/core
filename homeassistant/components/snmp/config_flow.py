@@ -63,7 +63,7 @@ from .coordinator import mac_from_value
 from .util import (
     async_create_request_cmd_args,
     async_create_transport_target,
-    async_validate_oid,
+    async_normalize_oid,
     create_auth_data,
     is_unknown_context,
 )
@@ -452,6 +452,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
 class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
     """Handle the device tracker subentry of an SNMP device."""
 
+    _pending_baseoid: str
+    _pending_stale: list[str]
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -461,14 +464,16 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            error, _ = await self._async_validate_baseoid(user_input[CONF_BASEOID])
+            error, baseoid, _ = await self._async_validate_baseoid(
+                user_input[CONF_BASEOID]
+            )
             if error:
                 errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_BASEOID],
-                    data=user_input,
-                    unique_id=user_input[CONF_BASEOID],
+                    title=baseoid,
+                    data={CONF_BASEOID: baseoid},
+                    unique_id=baseoid,
                 )
 
         return self.async_show_form(
@@ -480,26 +485,25 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Change the device tracker of the SNMP device."""
+        """Change the table the device tracker of the SNMP device watches."""
         subentry = self._get_reconfigure_subentry()
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            error, table_macs = await self._async_validate_baseoid(
+            error, baseoid, table_macs = await self._async_validate_baseoid(
                 user_input[CONF_BASEOID]
             )
             if error:
                 errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
             else:
-                if user_input[CONF_BASEOID] != subentry.data[CONF_BASEOID]:
-                    self._async_remove_entities(subentry, table_macs)
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    subentry,
-                    title=user_input[CONF_BASEOID],
-                    data=user_input,
-                    unique_id=user_input[CONF_BASEOID],
-                )
+                # The same table written differently, so nothing to switch to
+                if baseoid == subentry.data[CONF_BASEOID]:
+                    return self._async_switch_table(baseoid)
+                self._pending_baseoid = baseoid
+                self._pending_stale = self._async_stale_entities(subentry, table_macs)
+                if self._pending_stale:
+                    return await self.async_step_confirm()
+                return self._async_switch_table(baseoid)
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -509,53 +513,78 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
             errors=errors,
         )
 
-    @callback
-    def _async_remove_entities(
-        self, subentry: ConfigSubentry, keep_macs: set[str]
-    ) -> None:
-        """Remove the trackers of the table which is no longer watched.
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Switch to the new table once the user accepted the trackers it drops."""
+        if user_input is not None:
+            ent_reg = er.async_get(self.hass)
+            for entity_id in self._pending_stale:
+                ent_reg.async_remove(entity_id)
+            return self._async_switch_table(self._pending_baseoid)
 
-        Setup restores every MAC of the subentry from the registry, so keeping them
-        would leave the previous table as permanent not_home. MACs the new table
-        also holds are kept, which preserves their registry entry and with it the
-        person associations pointing at it.
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={"count": str(len(self._pending_stale))},
+        )
+
+    @callback
+    def _async_switch_table(self, baseoid: str) -> SubentryFlowResult:
+        """Store the watched table under its normalized OID."""
+        return self.async_update_and_abort(
+            self._get_entry(),
+            self._get_reconfigure_subentry(),
+            title=baseoid,
+            data={CONF_BASEOID: baseoid},
+            unique_id=baseoid,
+        )
+
+    @callback
+    def _async_stale_entities(
+        self, subentry: ConfigSubentry, table_macs: set[str]
+    ) -> list[str]:
+        """Return the trackers of the subentry which the new table does not hold.
+
+        Setup restores every MAC of the subentry from the registry, so a tracker of
+        a table which is no longer watched would stay forever as not_home. MACs
+        which both tables hold are kept, which preserves their registry entry and
+        with it the person associations pointing at it.
         """
         ent_reg = er.async_get(self.hass)
         prefix = f"{subentry.subentry_id}_"
-        for reg_entry in er.async_entries_for_config_entry(
-            ent_reg, self._get_entry().entry_id
-        ):
-            if reg_entry.config_subentry_id != subentry.subentry_id:
-                continue
-            if reg_entry.unique_id and (
-                reg_entry.unique_id.removeprefix(prefix) in keep_macs
-            ):
-                continue
-            ent_reg.async_remove(reg_entry.entity_id)
+        return [
+            reg_entry.entity_id
+            for reg_entry in er.async_entries_for_config_entry(
+                ent_reg, self._get_entry().entry_id
+            )
+            if reg_entry.config_subentry_id == subentry.subentry_id
+            and reg_entry.unique_id
+            and reg_entry.unique_id.removeprefix(prefix) not in table_macs
+        ]
 
     async def _async_validate_baseoid(
         self, baseoid: str
-    ) -> tuple[str | None, set[str]]:
-        """Return an error key and the MACs the base OID holds.
+    ) -> tuple[str | None, str, set[str]]:
+        """Return an error key, the normalized OID and the MACs the OID holds.
 
         The OID has to resolve in the MIB and the device has to serve it. An empty
         table is valid, so a walk which yields no rows is accepted. The whole table
         is read because the MACs decide which trackers survive a table change.
         """
-        if not await async_validate_oid(self.hass, baseoid):
-            return "invalid_oid", set()
+        if (normalized := await async_normalize_oid(self.hass, baseoid)) is None:
+            return "invalid_oid", "", set()
 
         macs: set[str] = set()
         try:
             client = await SnmpClient.async_create(self.hass, self._get_entry().data)
-            async for _oid, value in client.async_walk(baseoid):
+            async for _oid, value in client.async_walk(normalized):
                 if (mac := mac_from_value(value)) is not None:
                     macs.add(mac)
         except ConfigEntryAuthFailed:
-            return "invalid_auth", set()
+            return "invalid_auth", normalized, set()
         except PySnmpError, SnmpWalkError:
-            return "cannot_connect", set()
-        return None, macs
+            return "cannot_connect", normalized, set()
+        return None, normalized, macs
 
 
 class CannotConnect(Exception):

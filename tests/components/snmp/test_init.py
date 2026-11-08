@@ -13,7 +13,7 @@ from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
-from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import snmp
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -456,28 +456,19 @@ async def test_subentry_reconfigure_reloads_coordinator(hass: HomeAssistant) -> 
     assert entry.runtime_data.coordinators[subentry_id] is not previous_coordinator
 
 
-@pytest.mark.parametrize(
-    "survives",
-    [
-        pytest.param(False, id="mac_only_in_previous_table"),
-        pytest.param(True, id="mac_in_both_tables"),
-    ],
-)
-async def test_subentry_reconfigure_switches_table(
-    hass: HomeAssistant, survives: bool
+async def test_subentry_reconfigure_keeps_trackers_of_both_tables(
+    hass: HomeAssistant,
 ) -> None:
-    """Test which trackers survive a change to a table that holds other MACs."""
+    """Test that a tracker which both tables hold survives a table change."""
     entry = mock_entry()
     entry.add_to_hass(hass)
     subentry_id = next(iter(entry.subentries))
-    table = {"macs": [MAC_BYTES]}
 
     async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
         """Yield the MACs of the table which is currently being walked."""
         oid = Mock()
         oid.asTuple.return_value = (*ARP_MAC_OID, 1, 192, 168, 1, 1)
-        for mac in table["macs"]:
-            yield None, None, None, [(oid, OctetString(binascii.unhexlify(mac)))]
+        yield None, None, None, [(oid, OctetString(binascii.unhexlify(MAC_BYTES)))]
 
     with patch(
         "homeassistant.components.snmp.client.bulk_walk_cmd",
@@ -488,8 +479,6 @@ async def test_subentry_reconfigure_switches_table(
         entity_id = _async_mac_entity_id(hass, subentry_id)
         assert entity_id is not None
 
-        table["macs"] = [MAC_BYTES] if survives else []
-        events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
@@ -497,11 +486,50 @@ async def test_subentry_reconfigure_switches_table(
         )
         await hass.async_block_till_done()
 
-    removed = {
-        event.data["entity_id"] for event in events if event.data["action"] == "remove"
-    }
     assert result["reason"] == "reconfigure_successful"
-    assert (entity_id in removed) is not survives
     # A surviving tracker keeps its registry entry, and with it the person
     # associations which are dropped when an entity is removed.
-    assert (_async_mac_entity_id(hass, subentry_id) == entity_id) is survives
+    assert _async_mac_entity_id(hass, subentry_id) == entity_id
+
+
+async def test_subentry_reconfigure_removes_trackers_after_confirming(
+    hass: HomeAssistant,
+) -> None:
+    """Test that trackers only the previous table holds are removed on request."""
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+    macs = [MAC_BYTES]
+
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Yield the MACs of the table which is currently being walked."""
+        oid = Mock()
+        oid.asTuple.return_value = (*ARP_MAC_OID, 1, 192, 168, 1, 1)
+        for mac in macs:
+            yield None, None, None, [(oid, OctetString(binascii.unhexlify(mac)))]
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert _async_mac_entity_id(hass, subentry_id) is not None
+
+        # The new table holds no device, so the tracker is dropped on request
+        macs = []
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_BASEOID: BRIDGE_MAC_OID},
+        )
+        assert result["step_id"] == "confirm"
+        assert _async_mac_entity_id(hass, subentry_id) is not None
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert _async_mac_entity_id(hass, subentry_id) is None

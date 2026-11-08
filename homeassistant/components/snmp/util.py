@@ -115,23 +115,27 @@ async def async_create_transport_target(
         )
 
 
-async def async_validate_oid(hass: HomeAssistant, oid: str) -> bool:
-    """Return True if pysnmp can resolve the OID.
+async def async_normalize_oid(hass: HomeAssistant, oid: str) -> str | None:
+    """Return the OID in its canonical numeric form, or None if it does not resolve.
 
     pysnmp only parses an OID when it is resolved, so creating an ObjectIdentity
-    is not enough to tell a valid OID from an invalid one.
+    is not enough to tell a valid OID from an invalid one. Resolving also turns the
+    different ways to write the same OID into one string, so OIDs which mean the
+    same table compare equal.
     """
     engine = await async_get_snmp_engine(hass)
     mib_view_controller = engine.cache["mibViewController"]
 
-    def _resolve() -> None:
-        ObjectIdentity(oid).resolve_with_mib(mib_view_controller)
+    def _resolve() -> tuple[int, ...]:
+        object_identity = ObjectIdentity(oid.strip())
+        object_identity.resolve_with_mib(mib_view_controller)
+        return object_identity.get_oid().asTuple()
 
     try:
-        await hass.async_add_executor_job(_resolve)
+        resolved = await hass.async_add_executor_job(_resolve)
     except PySnmpError:
-        return False
-    return True
+        return None
+    return ".".join(str(component) for component in resolved)
 
 
 async def async_create_command_cmd_args(
