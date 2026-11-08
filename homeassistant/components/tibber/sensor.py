@@ -874,7 +874,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         """Return True if entity is available."""
         return (
             super().available
-            and self.coordinator.get_live_measurement() is not None
+            and bool(self.coordinator.get_live_measurement())
             and self._tibber_home.rt_subscription_running
         )
 
