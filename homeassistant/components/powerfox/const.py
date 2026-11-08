@@ -7,4 +7,5 @@ from typing import Final
 DOMAIN: Final = "powerfox"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=10)
+REPORT_SCAN_INTERVAL = timedelta(minutes=5)
 DEVICE_LIST_SCAN_INTERVAL = timedelta(minutes=30)

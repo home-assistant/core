@@ -11,7 +11,12 @@ from powerfox import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.powerfox.const import DEVICE_LIST_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.powerfox.const import (
+    DEVICE_LIST_SCAN_INTERVAL,
+    DOMAIN,
+    REPORT_SCAN_INTERVAL,
+    SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -92,6 +97,32 @@ async def test_config_entry_auth_failed(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_gas_report_polled_less_often_than_live_data(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the slowly changing gas report is not polled at the live data rate."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    mock_powerfox_client.report.reset_mock()
+    mock_powerfox_client.device.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_powerfox_client.device.await_count > 0
+    mock_powerfox_client.report.assert_not_awaited()
+
+    freezer.tick(REPORT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_powerfox_client.report.assert_awaited_once()
 
 
 async def test_new_device_is_added(

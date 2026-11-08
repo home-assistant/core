@@ -24,6 +24,8 @@ from .coordinator import (
 )
 from .entity import PowerfoxEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class PowerfoxSensorEntityDescription[T: (PowerMeter, WaterMeter, HeatMeter)](

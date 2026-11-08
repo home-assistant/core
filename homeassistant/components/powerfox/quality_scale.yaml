@@ -48,10 +48,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: |
-      This integration uses a coordinator to handle updates.
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
@@ -67,11 +64,11 @@ rules:
     comment: |
       It can find poweropti devices via zeroconf, and will start a normal user flow.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
   entity-category: done

@@ -1,7 +1,7 @@
 """Coordinator for Powerfox integration."""
 
 from datetime import timedelta
-from typing import override
+from typing import ClassVar, override
 
 from powerfox import (
     Device,
@@ -20,7 +20,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DEVICE_LIST_SCAN_INTERVAL, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import (
+    DEVICE_LIST_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    REPORT_SCAN_INTERVAL,
+    SCAN_INTERVAL,
+)
 
 type PowerfoxCoordinator = (
     PowerfoxDataUpdateCoordinator | PowerfoxReportDataUpdateCoordinator
@@ -98,6 +104,8 @@ class PowerfoxDeviceListCoordinator(PowerfoxApiCoordinator[list[Device]]):
 class PowerfoxBaseCoordinator[T](PowerfoxApiCoordinator[T]):
     """Base coordinator handling shared Powerfox device logic."""
 
+    scan_interval: ClassVar[timedelta] = SCAN_INTERVAL
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -106,7 +114,7 @@ class PowerfoxBaseCoordinator[T](PowerfoxApiCoordinator[T]):
         device: Device,
     ) -> None:
         """Initialize shared Powerfox device coordinator."""
-        super().__init__(hass, config_entry, client, SCAN_INTERVAL)
+        super().__init__(hass, config_entry, client, self.scan_interval)
         self.device = device
 
     @override
@@ -139,6 +147,8 @@ class PowerfoxDataUpdateCoordinator(PowerfoxBaseCoordinator[Poweropti]):
 
 class PowerfoxReportDataUpdateCoordinator(PowerfoxBaseCoordinator[DeviceReport]):
     """Coordinator handling report data from the API."""
+
+    scan_interval = REPORT_SCAN_INTERVAL
 
     @override
     async def _async_fetch_data(self) -> DeviceReport:
