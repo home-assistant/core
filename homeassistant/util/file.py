@@ -19,11 +19,15 @@ class WriteError(HomeAssistantError):
 def safe_join(base: str | Path, *parts: str) -> Path:
     """Join parts to base and raise ValueError if the result is outside base.
 
+    An absolute part or a relative base is accepted if the result is in base.
+    Input with a NUL character causes ValueError.
     This function does not follow symlinks. Open the path that it returns.
     """
+    if any("\0" in os.fspath(value) for value in (base, *parts)):
+        raise ValueError("The path contains a NUL character")
     base_path = Path(os.path.abspath(base))
     path = Path(os.path.abspath(os.path.join(base_path, *parts)))
-    if "\0" in str(path) or not path.is_relative_to(base_path):
+    if not path.is_relative_to(base_path):
         raise ValueError("The path is outside the base folder")
     return path
 

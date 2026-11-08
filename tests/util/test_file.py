@@ -146,7 +146,6 @@ def test_safe_join(base: str | Path, parts: tuple[str, ...], expected: str) -> N
         pytest.param("/base", ("/etc/passwd",), id="absolute"),
         pytest.param("/base", ("a", "/etc", "b"), id="later_absolute"),
         pytest.param("/base", ("../base2/x",), id="sibling_same_prefix"),
-        pytest.param("/base", ("a\0b",), id="nul"),
         pytest.param(".", ("../x",), id="relative_base_dot"),
         pytest.param("", ("../x",), id="relative_base_empty"),
         pytest.param("..", ("../x",), id="relative_base_parent"),
@@ -155,4 +154,18 @@ def test_safe_join(base: str | Path, parts: tuple[str, ...], expected: str) -> N
 def test_safe_join_outside_base(base: str | Path, parts: tuple[str, ...]) -> None:
     """Test that safe_join raises an error for a path outside the base folder."""
     with pytest.raises(ValueError, match="outside the base folder"):
+        safe_join(base, *parts)
+
+
+@pytest.mark.parametrize(
+    ("base", "parts"),
+    [
+        pytest.param("/base", ("a\0b",), id="part"),
+        pytest.param("/base", ("bad\0/../x",), id="removed_by_normalization"),
+        pytest.param("/ba\0se", ("x",), id="base"),
+    ],
+)
+def test_safe_join_nul(base: str, parts: tuple[str, ...]) -> None:
+    """Test that safe_join raises an error for a NUL character in the input."""
+    with pytest.raises(ValueError, match="NUL character"):
         safe_join(base, *parts)
