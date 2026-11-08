@@ -1965,7 +1965,7 @@ pigpio==1.78
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.14
+plexwebsocket==0.1.0
 
 # homeassistant.components.plugwise
 plugwise==1.16.0
