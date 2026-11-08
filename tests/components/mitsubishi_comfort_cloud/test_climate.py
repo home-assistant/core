@@ -12,19 +12,140 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
+    DOMAIN as CLIMATE_DOMAIN,
+    HVACAction,
+)
 from homeassistant.components.mitsubishi_comfort_cloud.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .conftest import MOCK_SERIAL
 
 ENTITY_ID = "climate.living_room"
+
+
+@pytest.mark.parametrize(
+    ("units", "requested", "celsius", "step", "minimum", "maximum"),
+    [
+        pytest.param(US_CUSTOMARY_SYSTEM, 69, 21.0, 1.0, 61, 86, id="69F"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 70, 21.5, 1.0, 61, 86, id="70F"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 71, 22.0, 1.0, 61, 86, id="71F"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 72, 22.5, 1.0, 61, 86, id="72F"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 73, 23.0, 1.0, 61, 86, id="73F"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 74, 23.5, 1.0, 61, 86, id="74F"),
+        pytest.param(METRIC_SYSTEM, 22.5, 22.5, 0.5, 16, 30, id="celsius"),
+    ],
+)
+@pytest.mark.parametrize(("mode", "field"), [("cool", "spCool"), ("heat", "spHeat")])
+async def test_app_setpoint_conversion(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    units: UnitSystem,
+    requested: float,
+    celsius: float,
+    step: float,
+    minimum: float,
+    maximum: float,
+    mode: str,
+    field: str,
+) -> None:
+    """App selections survive service conversion, optimistic state, and polling."""
+    hass.config.units = units
+    mock_cloud_account.get_device_details.return_value["operationMode"] = mode
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_temperature",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: requested},
+        blocking=True,
+    )
+    mock_cloud_account.send_command.assert_awaited_once_with(
+        MOCK_SERIAL, {field: celsius}
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == requested
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == step
+    assert state.attributes[ATTR_MIN_TEMP] == minimum
+    assert state.attributes[ATTR_MAX_TEMP] == maximum
+
+    mock_cloud_account.get_device_details.return_value[field] = celsius
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == requested
+
+
+@pytest.mark.parametrize("mode", ["auto", "autoCool", "autoHeat"])
+async def test_fahrenheit_target_range(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    mode: str,
+) -> None:
+    """Automatic stages retain both targets and the app's room temperature."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_cloud_account.get_device_details.return_value.update(
+        {"operationMode": mode, "roomTemp": 22.0}
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_temperature",
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TARGET_TEMP_LOW: 71,
+            ATTR_TARGET_TEMP_HIGH: 73,
+        },
+        blocking=True,
+    )
+    assert mock_cloud_account.send_command.await_args_list == [
+        call(MOCK_SERIAL, {"spCool": 23.0}),
+        call(MOCK_SERIAL, {"spHeat": 22.0}),
+    ]
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 71
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 73
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 71
+
+    mock_cloud_account.get_device_details.return_value.update(
+        {"spHeat": 22.0, "spCool": 23.0}
+    )
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 71
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 73
 
 
 @pytest.mark.parametrize(
@@ -38,6 +159,18 @@ ENTITY_ID = "climate.living_room"
         ),
         pytest.param(
             "set_fan_mode", {"fan_mode": "auto"}, {"fanSpeed": "auto"}, id="fan"
+        ),
+        pytest.param(
+            "set_fan_mode",
+            {"fan_mode": "super_quiet"},
+            {"fanSpeed": "superQuiet"},
+            id="super-quiet-fan",
+        ),
+        pytest.param(
+            "set_fan_mode",
+            {"fan_mode": "super_powerful"},
+            {"fanSpeed": "superPowerful"},
+            id="super-powerful-fan",
         ),
         pytest.param(
             "set_swing_mode",
@@ -587,3 +720,161 @@ async def test_reject_invalid_mode_setpoint(
         )
     mock_cloud_account.send_command.assert_not_awaited()
     assert hass.states.get(ENTITY_ID) == before
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("off", HVACAction.OFF),
+        ("auto", HVACAction.IDLE),
+        ("autoCool", HVACAction.COOLING),
+        ("autoHeat", HVACAction.HEATING),
+        ("vent", HVACAction.FAN),
+        ("cool", None),
+        ("heat", None),
+        ("dry", None),
+        ("unknown", None),
+        (None, None),
+    ],
+)
+async def test_reported_hvac_action(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mode: str | None,
+    expected: HVACAction | None,
+) -> None:
+    """Report observed stages without guessing compressor activity from mode."""
+    mock_cloud_account.get_device_details.return_value["operationMode"] = mode
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_HVAC_ACTION) == expected
+
+
+async def test_hvac_action_waits_for_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Selecting a mode cannot manufacture an observed operating stage."""
+    mock_cloud_account.get_device_details.return_value["operationMode"] = "off"
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": "heat_cool"},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == "heat_cool"
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+
+    mock_cloud_account.get_device_details.return_value["operationMode"] = "autoHeat"
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] is None
+
+
+@pytest.mark.parametrize(
+    ("units", "celsius", "expected"),
+    [
+        (US_CUSTOMARY_SYSTEM, 21.5, 70),
+        (US_CUSTOMARY_SYSTEM, 22.0, 71),
+        (US_CUSTOMARY_SYSTEM, 22.5, 72),
+        (US_CUSTOMARY_SYSTEM, 23.0, 73),
+        (US_CUSTOMARY_SYSTEM, 10.0, 50),
+        (US_CUSTOMARY_SYSTEM, None, None),
+        (METRIC_SYSTEM, 22.0, 22.0),
+        (METRIC_SYSTEM, None, None),
+    ],
+)
+async def test_app_room_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    units: UnitSystem,
+    celsius: float | None,
+    expected: float | None,
+) -> None:
+    """Cloud roomTemp uses Mitsubishi's display scale, including 22 C -> 71 F."""
+    hass.config.units = units
+    mock_cloud_account.get_device_details.return_value["roomTemp"] = celsius
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == expected
+
+
+@pytest.mark.parametrize(
+    ("attribute", "value", "label"),
+    [
+        ("fan_mode", "super_quiet", "Super quiet"),
+        ("swing_mode", "midhorizontal", "Mid-horizontal"),
+    ],
+)
+async def test_mode_translations(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    attribute: str,
+    value: str,
+    label: str,
+) -> None:
+    """Custom protocol values have labels through the entity translation key."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    translations = await async_get_translations(hass, "en", "entity", {DOMAIN})
+    assert (
+        translations[
+            f"component.{DOMAIN}.entity.climate.{entry.translation_key}"
+            f".state_attributes.{attribute}.state.{value}"
+        ]
+        == label
+    )
+
+
+@pytest.mark.parametrize(
+    ("fan_mode", "raw"),
+    [("super_quiet", "superQuiet"), ("super_powerful", "superPowerful")],
+)
+async def test_fan_mode_round_trip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    fan_mode: str,
+    raw: str,
+) -> None:
+    """Translated fan identifiers survive commands and subsequent polling."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_fan_mode",
+        {ATTR_ENTITY_ID: ENTITY_ID, "fan_mode": fan_mode},
+        blocking=True,
+    )
+    mock_cloud_account.send_command.assert_awaited_once_with(
+        MOCK_SERIAL, {"fanSpeed": raw}
+    )
+    assert hass.states.get(ENTITY_ID).attributes["fan_mode"] == fan_mode
+
+    mock_cloud_account.get_device_details.return_value["fanSpeed"] = raw
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes["fan_mode"] == fan_mode

@@ -3,7 +3,13 @@
 import logging
 from typing import Any, NoReturn, override
 
-from mitsubishi_comfort import FanSpeed, Mode, VaneDirection
+from mitsubishi_comfort import (
+    FanSpeed,
+    Mode,
+    VaneDirection,
+    fahrenheit_to_setpoint,
+    setpoint_to_fahrenheit,
+)
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -52,7 +58,16 @@ _HVAC_TO_MODE: dict[HVACMode, Mode] = {
 
 _LIB_MODE_TO_HVAC: dict[Mode, HVACMode] = {v: k for k, v in _HVAC_TO_MODE.items()}
 
-_FAN_SPEED_MAP: dict[str, FanSpeed] = {s.value: s for s in FanSpeed}
+_MODE_TO_ACTION: dict[str, HVACAction] = {
+    "off": HVACAction.OFF,
+    "auto": HVACAction.IDLE,
+    "autoCool": HVACAction.COOLING,
+    "autoHeat": HVACAction.HEATING,
+    "vent": HVACAction.FAN,
+}
+
+_FAN_SPEED_MAP: dict[str, FanSpeed] = {s.name.lower(): s for s in FanSpeed}
+_FAN_SPEED_TO_MODE = {speed.value: mode for mode, speed in _FAN_SPEED_MAP.items()}
 _VANE_DIR_MAP: dict[str, VaneDirection] = {d.value: d for d in VaneDirection}
 
 _OPT_MODE = "mode"
@@ -79,7 +94,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     """Climate entity for a Mitsubishi indoor unit."""
 
     _attr_name = None
-    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "thermostat"
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: MitsubishiComfortCloudCoordinator) -> None:
@@ -100,6 +115,34 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
 
     @property
     @override
+    def native_temperature_unit(self) -> str:
+        """Preserve Fahrenheit requests for Mitsubishi's setpoint conversion."""
+        return self.hass.config.units.temperature_unit
+
+    @property
+    @override
+    def target_temperature_step(self) -> float:
+        """Return the app's selectable temperature step."""
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return 1.0
+        return 0.5
+
+    def _native_temperature(self, temperature: float | None) -> float | None:
+        """Convert device temperatures to the app's display unit."""
+        if temperature is None:
+            return None
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return setpoint_to_fahrenheit(temperature)
+        return temperature
+
+    def _celsius_setpoint(self, temperature: float) -> float:
+        """Convert a requested setpoint to the library's Celsius unit."""
+        if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return fahrenheit_to_setpoint(temperature)
+        return temperature
+
+    @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         mode = self._effective_mode
@@ -109,7 +152,9 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
-        return HVACAction.OFF if self._effective_mode == "off" else None
+        # Use polled stages, not an optimistically selected operating mode.
+        mode = self._device.status.mode
+        return _MODE_TO_ACTION.get(mode) if mode else None
 
     @property
     @override
@@ -125,7 +170,8 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._device.status.room_temperature
+        # The cloud's roomTemp uses the same display table as its setpoints.
+        return self._native_temperature(self._device.status.room_temperature)
 
     @property
     @override
@@ -138,13 +184,17 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         mode = self._effective_mode
-        if mode in ("cool", "autoCool"):
-            return self._optimistic.get(
-                _OPT_COOL_SETPOINT, self._device.status.cool_setpoint
+        if mode == "cool":
+            return self._native_temperature(
+                self._optimistic.get(
+                    _OPT_COOL_SETPOINT, self._device.status.cool_setpoint
+                )
             )
-        if mode in ("heat", "autoHeat"):
-            return self._optimistic.get(
-                _OPT_HEAT_SETPOINT, self._device.status.heat_setpoint
+        if mode == "heat":
+            return self._native_temperature(
+                self._optimistic.get(
+                    _OPT_HEAT_SETPOINT, self._device.status.heat_setpoint
+                )
             )
         return None
 
@@ -153,8 +203,10 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     def native_target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         if self._effective_mode in ("auto", "autoCool", "autoHeat"):
-            return self._optimistic.get(
-                _OPT_COOL_SETPOINT, self._device.status.cool_setpoint
+            return self._native_temperature(
+                self._optimistic.get(
+                    _OPT_COOL_SETPOINT, self._device.status.cool_setpoint
+                )
             )
         return None
 
@@ -163,8 +215,10 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     def native_target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         if self._effective_mode in ("auto", "autoCool", "autoHeat"):
-            return self._optimistic.get(
-                _OPT_HEAT_SETPOINT, self._device.status.heat_setpoint
+            return self._native_temperature(
+                self._optimistic.get(
+                    _OPT_HEAT_SETPOINT, self._device.status.heat_setpoint
+                )
             )
         return None
 
@@ -172,13 +226,14 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        return self._optimistic.get(_OPT_FAN_SPEED, self._device.status.fan_speed)
+        speed = self._optimistic.get(_OPT_FAN_SPEED, self._device.status.fan_speed)
+        return _FAN_SPEED_TO_MODE.get(speed) if speed else None
 
     @property
     @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return [s.value for s in self._device.supported_fan_speeds]
+        return [s.name.lower() for s in self._device.supported_fan_speeds]
 
     @property
     @override
@@ -201,7 +256,9 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
         # Service validation runs before a requested HVAC mode change.
         return min(
             (
-                bound
+                setpoint_to_fahrenheit(bound)
+                if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
+                else bound
                 for bound in (
                     self._device.status.min_heat_setpoint,
                     self._device.status.min_cool_setpoint,
@@ -218,7 +275,9 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
         """Return the maximum temperature."""
         return max(
             (
-                bound
+                setpoint_to_fahrenheit(bound)
+                if self.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
+                else bound
                 for bound in (
                     self._device.status.max_heat_setpoint,
                     self._device.status.max_cool_setpoint,
@@ -268,6 +327,9 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
+        for key in (ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW):
+            if key in kwargs:
+                kwargs[key] = self._celsius_setpoint(kwargs[key])
         if ATTR_HVAC_MODE in kwargs:
             await self.async_handle_set_hvac_mode_service(kwargs[ATTR_HVAC_MODE])
         mode = self._effective_mode

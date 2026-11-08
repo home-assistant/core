@@ -36,6 +36,35 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "low": "[%key:common::state::low%]",
+              "powerful": "Powerful",
+              "quiet": "Quiet",
+              "super_powerful": "Super powerful",
+              "super_quiet": "Super quiet"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "horizontal": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::horizontal%]",
+              "midhorizontal": "Mid-horizontal",
+              "midpoint": "Middle",
+              "midvertical": "Mid-vertical",
+              "swing": "Swing",
+              "vertical": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::vertical%]"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication with Mitsubishi Comfort failed"
