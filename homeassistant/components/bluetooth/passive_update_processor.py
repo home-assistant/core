@@ -661,6 +661,7 @@ class PassiveBluetoothDataProcessor[_T, _DataT]:
                 " instead of a DeviceInfo",
                 breaks_in_ha_version="2027.12",
                 core_behavior=ReportBehavior.LOG,
+                exclude_integrations={DOMAIN},
                 integration_domain=self.coordinator.integration_domain,
             )
         return DeviceInfo(
