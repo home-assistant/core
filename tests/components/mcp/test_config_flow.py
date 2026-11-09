@@ -1263,6 +1263,13 @@ async def test_hassio_discovery_updates_entry(
 
 
 @pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param(ADDON_DISCOVERY_INFO.uuid, id="same_uuid"),
+        pytest.param("old-uuid", id="new_uuid"),
+    ],
+)
+@pytest.mark.parametrize(
     "state",
     [
         config_entries.ConfigEntryState.LOADED,
@@ -1272,13 +1279,18 @@ async def test_hassio_discovery_updates_entry(
     ],
 )
 async def test_hassio_discovery_new_token_reloads_entry(
-    hass: HomeAssistant, state: config_entries.ConfigEntryState
+    hass: HomeAssistant, state: config_entries.ConfigEntryState, unique_id: str
 ) -> None:
     """Test a new token from the app reloads the entry so it gets used."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=ADDON_DISCOVERY_INFO.uuid,
-        data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "old-token"},
+        source=config_entries.SOURCE_HASSIO,
+        unique_id=unique_id,
+        data={
+            CONF_URL: MCP_SERVER_URL,
+            CONF_API_TOKEN: "old-token",
+            CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+        },
         title=TEST_API_NAME,
         state=state,
     )
@@ -1293,8 +1305,86 @@ async def test_hassio_discovery_new_token_reloads_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert config_entry.unique_id == ADDON_DISCOVERY_INFO.uuid
     assert config_entry.data[CONF_API_TOKEN] == ADDON_TOKEN
     mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "discovery_info", "expected_data"),
+    [
+        pytest.param(
+            {
+                CONF_URL: "http://1.1.1.1:8080/mcp/secret",
+                CONF_API_TOKEN: "old-token",
+                CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+            },
+            ADDON_DISCOVERY_INFO_WITH_TOKEN,
+            {
+                CONF_URL: MCP_SERVER_URL,
+                CONF_API_TOKEN: ADDON_TOKEN,
+                CONF_SLUG: ADDON_DISCOVERY_INFO.slug,
+            },
+            id="app_moved",
+        ),
+        pytest.param(
+            {CONF_URL: MCP_SERVER_URL, CONF_SLUG: ADDON_DISCOVERY_INFO.slug},
+            ADDON_DISCOVERY_INFO,
+            {CONF_URL: MCP_SERVER_URL, CONF_SLUG: ADDON_DISCOVERY_INFO.slug},
+            id="unchanged",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_new_uuid_updates_entry(
+    hass: HomeAssistant,
+    entry_data: dict[str, str],
+    discovery_info: HassioServiceInfo,
+    expected_data: dict[str, str],
+) -> None:
+    """Test an app that sends its discovery again with a new uuid keeps its entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_HASSIO,
+        unique_id="old-uuid",
+        data=entry_data,
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.unique_id == ADDON_DISCOVERY_INFO.uuid
+    assert config_entry.data == expected_data
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_hassio_discovery_other_app(hass: HomeAssistant) -> None:
+    """Test discovery of another app leaves the existing app entry alone."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_HASSIO,
+        unique_id="5678",
+        data={CONF_URL: "http://1.1.1.1:9999/mcp", CONF_SLUG: "other_mcp_server"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+    assert config_entry.unique_id == "5678"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
