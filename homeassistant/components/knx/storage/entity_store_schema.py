@@ -40,7 +40,7 @@ from ..validation import (
     validate_sensor_attributes,
 )
 from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
-from .dpa import FB417, FB418, FB422, FB423, FB427, FB800
+from .dpa import FB372, FB417, FB418, FB422, FB423, FB427, FB800
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
@@ -316,7 +316,15 @@ DATETIME_KNX_SCHEMA = probatio.DataclassSchema(DatetimeKnxConfig)
 class FanSpeedPercentage:
     """Fan speed controlled in percent."""
 
-    ga_speed: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="5.001")]
+    ga_speed: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[FB372.ACT_TARGET_FAN_SPEED],
+            dpa_state=[FB372.ACT_CURR_FAN_SPEED],
+        ),
+    ]
 
 
 @dataclass(kw_only=True, slots=True)
