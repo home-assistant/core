@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -58,6 +59,36 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_apps_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+    entity_registry_enabled_by_default: None,
+) -> None:
+    """Test that setup succeeds when the device does not report its apps."""
+    mock_lametric.apps.side_effect = LaMetricConnectionError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # The device entities keep working.
+    state = hass.states.get("sensor.frenck_s_lametric_wi_fi_signal")
+    assert state
+    assert state.state == "21"
+
+    # The app entities are unavailable until the apps can be fetched.
+    for entity_id in (
+        "sensor.frenck_s_lametric_current_app",
+        "select.frenck_s_lametric_app",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

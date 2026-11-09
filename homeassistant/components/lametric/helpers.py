@@ -1,9 +1,10 @@
 """Helpers for LaMetric."""
 
+from collections import Counter
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from demetriek import Device, LaMetricConnectionError, LaMetricError
+from demetriek import App, Device, LaMetricConnectionError, LaMetricError
 import probatio
 
 from homeassistant.components import media_source
@@ -11,13 +12,13 @@ from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
-from .entity import LaMetricEntity
 
 
-def lametric_exception_handler[_LaMetricEntityT: LaMetricEntity, **_P](
+def lametric_exception_handler[_LaMetricEntityT: CoordinatorEntity[Any], **_P](
     func: Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate LaMetric calls to handle LaMetric exceptions.
@@ -57,7 +58,49 @@ def async_get_coordinator_by_device_id(
     """Get the LaMetric coordinator for this device ID."""
     config_entry: LaMetricConfigEntry
     _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
-    return config_entry.runtime_data
+    return config_entry.runtime_data.device
+
+
+def widget_labels(apps: dict[str, App]) -> list[tuple[str, str, str]]:
+    """Return all widgets of a device as (label, package, widget ID).
+
+    Widgets are ordered like the carousel on the device. A widget is named
+    after its own title, falling back to the title of its app. Names that
+    occur more than once get their position in the carousel appended.
+    """
+    entries = [
+        (
+            widget.index,
+            app.package,
+            widget_id,
+            str(widget.settings.get("_title") or app.title),
+        )
+        for app in apps.values()
+        for widget_id, widget in app.widgets.items()
+    ]
+    entries.sort()
+    counts = Counter(entry[3] for entry in entries)
+    return [
+        (f"{label} {index}" if counts[label] > 1 else label, package, widget_id)
+        for index, package, widget_id, label in entries
+    ]
+
+
+def widget_options(apps: dict[str, App]) -> list[str]:
+    """Return the selectable widgets of a device, in carousel order."""
+    return [label for label, _, _ in widget_labels(apps)]
+
+
+def current_widget(apps: dict[str, App]) -> str | None:
+    """Return the widget currently shown on a device.
+
+    Devices with firmware older than 2.3.0 do not report which widget is
+    visible, so there may be no current widget even though apps are known.
+    """
+    for label, package, widget_id in widget_labels(apps):
+        if apps[package].widgets[widget_id].visible:
+            return label
+    return None
 
 
 def has_audio(device: Device) -> bool:

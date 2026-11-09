@@ -20,7 +20,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: LaMetricConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
     # Round-trip via JSON to trigger serialization
-    data = json.loads(coordinator.data.to_json())
+    data = json.loads(runtime_data.device.data.to_json())
+    # Apps are only reported by devices with firmware 2.1.0 and newer.
+    if (apps := runtime_data.apps.data) is not None:
+        data["apps"] = {
+            package: json.loads(app.to_json()) for package, app in apps.items()
+        }
     return async_redact_data(data, TO_REDACT)

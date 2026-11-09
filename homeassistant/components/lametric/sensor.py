@@ -15,8 +15,13 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
-from .entity import LaMetricEntity
+from .coordinator import (
+    LaMetricAppsUpdateCoordinator,
+    LaMetricConfigEntry,
+    LaMetricDataUpdateCoordinator,
+)
+from .entity import LaMetricAppsEntity, LaMetricEntity
+from .helpers import current_widget
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -48,13 +53,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric sensor based on a config entry."""
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
     async_add_entities(
-        LaMetricSensorEntity(
-            coordinator=coordinator,
-            description=description,
-        )
-        for description in SENSORS
+        [
+            *(
+                LaMetricSensorEntity(
+                    coordinator=runtime_data.device,
+                    description=description,
+                )
+                for description in SENSORS
+            ),
+            LaMetricAppsSensorEntity(runtime_data.device, runtime_data.apps),
+        ]
     )
 
 
@@ -78,3 +88,26 @@ class LaMetricSensorEntity(LaMetricEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class LaMetricAppsSensorEntity(LaMetricAppsEntity, SensorEntity):
+    """Representation of the widget currently shown on a LaMetric device."""
+
+    _attr_translation_key = "current_app"
+
+    def __init__(
+        self,
+        device_coordinator: LaMetricDataUpdateCoordinator,
+        apps_coordinator: LaMetricAppsUpdateCoordinator,
+    ) -> None:
+        """Initialize the LaMetric apps sensor."""
+        super().__init__(device_coordinator, apps_coordinator)
+        self._attr_unique_id = f"{device_coordinator.data.serial_number}-current_app"
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the widget currently shown on the device."""
+        if not (apps := self.coordinator.data):
+            return None
+        return current_widget(apps)
