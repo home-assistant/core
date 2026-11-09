@@ -71,8 +71,6 @@ async def _async_setup_tag(
     discovery_id = discovery_hash[1]
 
     device_id = update_device(hass, config_entry, config)
-    if device_id is not None and device_id not in (tags := hass.data[DATA_MQTT].tags):
-        tags[device_id] = {}
 
     tag_scanner = MQTTTagScanner(
         hass,
@@ -84,8 +82,8 @@ async def _async_setup_tag(
 
     await tag_scanner.subscribe_topics()
 
-    if device_id:
-        tags[device_id][discovery_id] = tag_scanner
+    # Tag scanners without a device are kept under None
+    hass.data[DATA_MQTT].tags.setdefault(device_id, {})[discovery_id] = tag_scanner
 
     send_discovery_done(hass, discovery_data)
 

@@ -26,8 +26,10 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_BROKER,
     CONF_CHILD_DEVICE,
+    CONF_CHILD_DEVICES,
     CONF_COMPONENTS,
     CONF_DISCOVERY_PREFIX,
+    CONF_IDENTIFIERS,
     CONF_ORIGIN,
     CONF_QOS,
     CONF_TOPIC,
@@ -129,10 +131,12 @@ def _entity_source(
 
 
 @callback
-def _artifacts(hass: HomeAssistant) -> list[tuple[str, str, str, DiscoveryInfoType]]:
+def _artifacts(
+    hass: HomeAssistant,
+) -> list[tuple[str, str, str | None, DiscoveryInfoType]]:
     """Return artifact ID, type, device ID and discovery data of all artifacts."""
     mqtt_data = hass.data[DATA_MQTT]
-    artifacts: list[tuple[str, str, str, DiscoveryInfoType]] = [
+    artifacts: list[tuple[str, str, str | None, DiscoveryInfoType]] = [
         (
             f"{ARTIFACT_DEVICE_TRIGGER}:{discovery_id}",
             ARTIFACT_DEVICE_TRIGGER,
@@ -204,10 +208,17 @@ def _node_id(discovery_data: DiscoveryInfoType, discovery_prefix: str) -> str | 
     return parts[1] if len(parts) == 4 else None
 
 
+def _discovery_prefix(entry: ConfigEntry) -> str:
+    prefix: str = (entry.data | entry.options).get(
+        CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX
+    )
+    return prefix
+
+
 @callback
 def _async_structure(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     conf = entry.data | entry.options
-    discovery_prefix: str = conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+    discovery_prefix = _discovery_prefix(entry)
     sources = _Sources(entry)
     device_sources: dict[str, set[str]] = {}
 
@@ -260,7 +271,8 @@ def _async_structure(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     artifacts: list[dict[str, Any]] = []
     for artifact_id, artifact_type, device_id, discovery_data in _artifacts(hass):
         source = sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD])
-        device_sources.setdefault(device_id, set()).add(source)
+        if device_id is not None:
+            device_sources.setdefault(device_id, set()).add(source)
         artifacts.append(
             {
                 "artifact_id": artifact_id,
@@ -352,8 +364,45 @@ def _discovery_config(source: str, discovery_data: DiscoveryInfoType) -> dict[st
     }
 
 
+@callback
+def _device_discovery_items(
+    hass: HomeAssistant,
+    artifacts: list[tuple[str, str, str | None, DiscoveryInfoType]],
+) -> list[tuple[str | None, DiscoveryInfoType]]:
+    """Return the device ID and discovery data of the items from device discovery.
+
+    Disabled entities are included, as their component is part of the payload.
+    """
+    mqtt_data = hass.data[DATA_MQTT]
+    entity_registry = er.async_get(hass)
+    items: list[tuple[str | None, DiscoveryInfoType]] = [
+        (device_id, discovery_data) for _, _, device_id, discovery_data in artifacts
+    ]
+    entities: list[tuple[str | None, DiscoveryInfoType]] = [
+        (entity_id, entity_info["discovery_data"])
+        for entity_id, entity_info in mqtt_data.debug_info_entities.items()
+        if entity_info["discovery_data"]
+    ]
+    entities.extend(
+        (
+            entity_registry.async_get_entity_id(*disabled_entity.registry_key),
+            disabled_entity.discovery_data,
+        )
+        for disabled_entity in mqtt_data.discovery_discovered_and_disabled.values()
+    )
+    for entity_id, discovery_data in entities:
+        registry_entry = entity_registry.async_get(entity_id) if entity_id else None
+        items.append(
+            (registry_entry.device_id if registry_entry else None, discovery_data)
+        )
+    return [item for item in items if _is_device_discovery(item[1])]
+
+
 def _add_device_discovery_component(
-    configs: dict[str, dict[str, Any]], source: str, discovery_data: DiscoveryInfoType
+    configs: dict[str, dict[str, Any]],
+    source: str,
+    discovery_data: DiscoveryInfoType,
+    discovery_prefix: str,
 ) -> None:
     """Add a component to the config of the device discovery it came from.
 
@@ -363,7 +412,7 @@ def _add_device_discovery_component(
     topic: str = discovery_data[ATTR_DISCOVERY_TOPIC]
     payload: dict[str, Any] = dict(discovery_data[ATTR_DISCOVERY_PAYLOAD])
     device_payload: dict[str, Any] = dict(payload.pop(CONF_DEVICE, None) or {})
-    device_payload.pop(CONF_CHILD_DEVICE, None)
+    child_device: dict[str, Any] | None = device_payload.pop(CONF_CHILD_DEVICE, None)
     origin = payload.pop(CONF_ORIGIN, None)
     config = configs.setdefault(
         topic,
@@ -373,18 +422,30 @@ def _add_device_discovery_component(
             "discovery_topic": topic,
             "origin": _origin_as_dict(origin) if origin else None,
             "payload": {CONF_DEVICE: device_payload}
-            | ({CONF_ORIGIN: origin} if origin else {})
-            | {CONF_COMPONENTS: {}},
+            | ({CONF_ORIGIN: origin} if origin else {}),
             "device_payload": device_payload,
             "device_discovery": True,
         },
     )
     platform, discovery_id = discovery_data[ATTR_DISCOVERY_HASH]
-    # The discovery ID ends with the component ID of the device discovery payload
-    component_id = discovery_id.rsplit(" ", 1)[-1]
-    config["payload"][CONF_COMPONENTS][component_id] = {
-        CONF_PLATFORM: platform
-    } | payload
+    # The discovery ID is "<object_id> [<node_id> ]<component_id>", the topic
+    # parts cannot hold a space, but the component ID can
+    prefix_parts = 1 if _node_id(discovery_data, discovery_prefix) is None else 2
+    component_id = discovery_id.split(" ", prefix_parts)[-1]
+    component = {CONF_PLATFORM: platform} | payload
+    if child_device is None:
+        config["payload"].setdefault(CONF_COMPONENTS, {})[component_id] = component
+        return
+    child_devices: list[dict[str, Any]] = config["payload"].setdefault(
+        CONF_CHILD_DEVICES, []
+    )
+    for child_config in child_devices:
+        if child_config[CONF_IDENTIFIERS] == child_device[CONF_IDENTIFIERS]:
+            break
+    else:
+        child_config = {**child_device, CONF_COMPONENTS: {}}
+        child_devices.append(child_config)
+    child_config[CONF_COMPONENTS][component_id] = component
 
 
 def _yaml_config(
@@ -491,40 +552,54 @@ def _async_details(
         return None
 
     device_id: str = msg["device_id"]
-    device = dr.async_get(hass).async_get(device_id)
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(device_id)
     if device is None or device.config_entry_id != entry.entry_id:
         return None
-    # The device part per source, and the device discovery configs per topic
+    # The device part per source
     configs: dict[str, dict[str, Any]] = {}
-    device_discovery_configs: dict[str, dict[str, Any]] = {}
     for entity_id, registry_entry in entity_ids.items():
         if registry_entry is None or registry_entry.device_id != device_id:
             continue
         if (
-            entity_discovery_data := _entity_discovery_data(hass, entity_id)
-        ) is not None and _is_device_discovery(entity_discovery_data):
-            _add_device_discovery_component(
-                device_discovery_configs,
-                sources.discovery(entity_discovery_data[ATTR_DISCOVERY_PAYLOAD]),
-                entity_discovery_data,
-            )
-        elif (
             config := _async_entity_config(
                 hass, entry, sources, entity_id, registry_entry
             )
-        ) is not None:
+        ) is not None and not config["device_discovery"]:
             configs.setdefault(config["source"], _device_part(config))
     for _, _, artifact_device_id, discovery_data in artifacts:
-        if artifact_device_id != device_id:
+        if artifact_device_id != device_id or _is_device_discovery(discovery_data):
             continue
         source = sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD])
-        if _is_device_discovery(discovery_data):
-            _add_device_discovery_component(
-                device_discovery_configs, source, discovery_data
+        configs.setdefault(
+            source, _device_part(_discovery_config(source, discovery_data))
+        )
+    # A device discovery payload is built again whole, also when the device only
+    # has some of its components, or only its child devices have components
+    device_ids = {
+        device_id,
+        *(
+            child_device.id
+            for child_device in dr.async_entries_for_parent_device(
+                device_registry, device_id
             )
-        else:
-            configs.setdefault(
-                source, _device_part(_discovery_config(source, discovery_data))
+        ),
+    }
+    device_discovery_items = _device_discovery_items(hass, artifacts)
+    device_discovery_topics = {
+        discovery_data[ATTR_DISCOVERY_TOPIC]
+        for item_device_id, discovery_data in device_discovery_items
+        if item_device_id in device_ids
+    }
+    discovery_prefix = _discovery_prefix(entry)
+    device_discovery_configs: dict[str, dict[str, Any]] = {}
+    for _, discovery_data in device_discovery_items:
+        if discovery_data[ATTR_DISCOVERY_TOPIC] in device_discovery_topics:
+            _add_device_discovery_component(
+                device_discovery_configs,
+                sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD]),
+                discovery_data,
+                discovery_prefix,
             )
     if (subentry_id := device.config_subentry_id) is not None:
         source = sources.subentry(subentry_id)

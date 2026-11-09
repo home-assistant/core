@@ -572,7 +572,7 @@ class MqttData:
     reload_schema: dict[str, VolSchemaType] = field(default_factory=dict)
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: set[Subscription] = field(default_factory=set)
-    tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
+    tags: dict[str | None, dict[str, MQTTTagScanner]] = field(default_factory=dict)
     subscription_id_generator: SubscriptionID = field(default_factory=SubscriptionID)
 
 

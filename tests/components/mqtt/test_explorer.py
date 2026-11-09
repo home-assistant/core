@@ -710,6 +710,120 @@ async def test_device_discovery_details(
     ]
 
 
+async def test_device_discovery_child_devices_details(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a device discovery payload with a child device is built again whole."""
+    await mqtt_mock_entry()
+    topic = "homeassistant/device/z2m_node/z2m_hub/config"
+    config = {
+        "device": {"identifiers": ["z2m_hub"], "name": "Hub"},
+        "origin": ORIGIN,
+        "components": {
+            # Component IDs can hold a space
+            "power total": {
+                "platform": "sensor",
+                "unique_id": "z2m_hub_power_total",
+                "state_topic": "z2m/hub/power",
+            },
+            # A disabled component is still part of the payload
+            "energy total": {
+                "platform": "sensor",
+                "unique_id": "z2m_hub_energy_total",
+                "state_topic": "z2m/hub/energy",
+                "enabled_by_default": False,
+            },
+        },
+        "child_devices": [
+            {
+                "identifiers": ["z2m_hub_child"],
+                "name": "Child",
+                "components": {
+                    "humidity": {
+                        "platform": "sensor",
+                        "unique_id": "z2m_hub_child_humidity",
+                        "state_topic": "z2m/hub/child/humidity",
+                    }
+                },
+            }
+        ],
+    }
+    async_fire_mqtt_message(hass, topic, json.dumps(config))
+    await hass.async_block_till_done()
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "z2m_hub_child"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    assert child_device is not None
+    client = await hass_ws_client(hass)
+
+    # The parent and the child device show the same payload
+    for device_id in (_device_id(hass, device_registry, "z2m_hub"), child_device.id):
+        await client.send_json_auto_id(
+            {"type": "mqtt/explorer/details", "device_id": device_id}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"]["configs"] == [
+            {
+                "source": "origin:Zigbee2MQTT",
+                "type": "discovery",
+                "discovery_topic": topic,
+                "origin": ORIGIN,
+                "payload": config,
+                "device_discovery": True,
+            }
+        ]
+
+
+async def test_tag_without_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test a tag scanner without a device."""
+    await mqtt_mock_entry()
+    config = {"topic": "foobar/tag_scanned"}
+    async_fire_mqtt_message(hass, DISCOVERY_TAG_TOPIC, json.dumps(config))
+    await hass.async_block_till_done()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "mqtt/explorer/structure"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["artifacts"] == [
+        {
+            "artifact_id": "tag:z2m_tag",
+            "type": "tag",
+            "source": "discovery",
+            "device_id": None,
+            "node_id": None,
+            "topics": [
+                {"topic": "foobar/tag_scanned", "direction": "subscribe", "qos": 0}
+            ],
+        }
+    ]
+    assert response["result"]["devices"] == []
+
+    await client.send_json_auto_id(
+        {"type": "mqtt/explorer/details", "artifact_id": "tag:z2m_tag"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["configs"] == [
+        {
+            "source": "discovery",
+            "type": "discovery",
+            "discovery_topic": DISCOVERY_TAG_TOPIC,
+            "origin": None,
+            "payload": config,
+            "device_discovery": False,
+        }
+    ]
+
+
 async def test_topic_qos_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
