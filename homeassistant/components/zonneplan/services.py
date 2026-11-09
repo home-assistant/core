@@ -15,7 +15,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector, service
 
 from .const import DOMAIN
-from .coordinator import ZonneplanConfigEntry
 
 
 class ZonneplanService(StrEnum):
@@ -45,7 +44,7 @@ GET_ELECTRICITY_PRICES_SCHEMA = probatio.Schema(
 
 async def _async_get_electricity_prices(call: ServiceCall) -> ServiceResponse:
     """Return the electricity prices the integration has fetched."""
-    entry: ZonneplanConfigEntry = service.async_get_config_entry(
+    entry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ZonneplanServiceArgument.CONFIG_ENTRY]
     )
     data = entry.runtime_data.coordinator.data
