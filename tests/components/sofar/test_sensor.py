@@ -518,13 +518,14 @@ async def _setup_hybrid_with_tower(
     return entry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_battery_pack_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a pack's entities match their snapshot."""
+    """Test a pack's entities match their snapshot, one per cell it has."""
     pack = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"),
         (
