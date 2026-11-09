@@ -201,12 +201,18 @@ async def test_api_keys_update_independently(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
     mock_braendstofpriser_class: MagicMock,
+    mock_other_braendstofpriser: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test separate API keys have their own station selections and updates."""
     data = await async_load_json_array_fixture(hass, "bulk_prices.json", DOMAIN)
-    mock_braendstofpriser.get_prices_bulk.side_effect = [data[:1], data[1:]]
+    mock_braendstofpriser_class.side_effect = {
+        TEST_API_KEY: mock_braendstofpriser,
+        "other-api-key": mock_other_braendstofpriser,
+    }.__getitem__
+    mock_braendstofpriser.get_prices_bulk.return_value = data[:1]
+    mock_other_braendstofpriser.get_prices_bulk.return_value = data[1:]
     await setup_integration(hass, mock_config_entry)
     other_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -226,24 +232,20 @@ async def test_api_keys_update_independently(
         call(TEST_API_KEY),
         call("other-api-key"),
     ]
-    assert mock_braendstofpriser.get_prices_bulk.await_args_list == [
-        call([1234]),
-        call([4321]),
-    ]
+    mock_braendstofpriser.get_prices_bulk.assert_awaited_once_with([1234])
+    mock_other_braendstofpriser.get_prices_bulk.assert_awaited_once_with([4321])
     assert hass.states.get("sensor.aarhus_c_blyfri95").state == "14.29"
     assert hass.states.get("sensor.aarhus_n_blyfri95").state == "15.29"
 
     mock_braendstofpriser.get_prices_bulk.reset_mock()
+    mock_other_braendstofpriser.get_prices_bulk.reset_mock()
     data[0]["prices"]["Blyfri95"] = "16.29"
     data[1]["prices"]["Blyfri95"] = "17.29"
-    mock_braendstofpriser.get_prices_bulk.side_effect = [data[:1], data[1:]]
     freezer.tick(3600)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_braendstofpriser.get_prices_bulk.await_args_list == [
-        call([1234]),
-        call([4321]),
-    ]
+    mock_braendstofpriser.get_prices_bulk.assert_awaited_once_with([1234])
+    mock_other_braendstofpriser.get_prices_bulk.assert_awaited_once_with([4321])
     assert hass.states.get("sensor.aarhus_c_blyfri95").state == "16.29"
     assert hass.states.get("sensor.aarhus_n_blyfri95").state == "17.29"

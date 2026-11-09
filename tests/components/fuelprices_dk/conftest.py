@@ -1,9 +1,9 @@
 """Common fixtures for Fuelprices.dk tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
-from pybraendstofpriser import Flist
+from pybraendstofpriser import Braendstofpriser, Flist
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
@@ -83,3 +83,9 @@ def mock_braendstofpriser(
         "bulk_prices.json", DOMAIN
     )[:1]
     return client
+
+
+@pytest.fixture
+def mock_other_braendstofpriser() -> MagicMock:
+    """Return an API client for a second API key."""
+    return create_autospec(Braendstofpriser, instance=True)
