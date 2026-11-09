@@ -25,46 +25,11 @@ type VictronRemoteMonitoringConfigEntry = ConfigEntry[
 
 @dataclass
 class VRMForecastStore:
-    """Daily forecast aggregations and the hourly watt-hours kept for the service."""
+    """Class to hold the forecast data."""
 
     site_id: int
     solar: ForecastAggregations | None
     consumption: ForecastAggregations | None
-    solar_wh: dict[dt.datetime, float]
-    consumption_wh: dict[dt.datetime, float]
-
-
-def _forecast_aggregation(value: object) -> ForecastAggregations | None:
-    """Return an aggregation, treating a missing or false series as absent."""
-    if isinstance(value, ForecastAggregations):
-        return value
-    return None
-
-
-def _as_watt_hours(value: object) -> float | None:
-    """Ignore booleans and other non-numeric samples."""
-    if isinstance(value, bool) or not isinstance(value, int | float):
-        return None
-    return float(value)
-
-
-def _hourly_watt_hours(
-    aggregation: ForecastAggregations | None, time_zone: dt.tzinfo
-) -> dict[dt.datetime, float]:
-    """Return hourly watt-hours keyed by timezone-aware timestamps.
-
-    ForecastAggregations.records stores unix seconds. The API sends milliseconds
-    and the client converts them before building the aggregation.
-    """
-    if aggregation is None:
-        return {}
-    points: dict[dt.datetime, float] = {}
-    for timestamp, value in aggregation.records:
-        watt_hours = _as_watt_hours(value)
-        if watt_hours is None:
-            continue
-        points[dt.datetime.fromtimestamp(timestamp, time_zone)] = watt_hours
-    return dict(sorted(points.items()))
 
 
 async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastStore:
@@ -92,15 +57,10 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
         return_aggregations=True,
         time_zone=time_zone,
     )
-    solar = _forecast_aggregation(stats.get("solar_yield"))
-    consumption = _forecast_aggregation(stats.get("consumption"))
-    # UTC keys stay distinct when a local hour is repeated.
     return VRMForecastStore(
+        solar=stats["solar_yield"],
+        consumption=stats["consumption"],
         site_id=site_id,
-        solar=solar,
-        consumption=consumption,
-        solar_wh=_hourly_watt_hours(solar, dt.UTC),
-        consumption_wh=_hourly_watt_hours(consumption, dt.UTC),
     )
 
 

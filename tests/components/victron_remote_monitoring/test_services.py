@@ -1,6 +1,5 @@
 """Tests for the Victron Remote Monitoring forecast service."""
 
-from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock
@@ -27,20 +26,20 @@ _SOLAR_WH = {
     "2025-04-25T10:00:00+00:00": 1000.5,
     "2025-04-25T11:00:00+00:00": 500.6,
 }
+
+
+def _forecast_hours(series: dict[str, float]) -> list[dict[str, float | str]]:
+    """Return forecast hours where solar and consumption share one series."""
+    return [
+        {"datetime": timestamp, "solar": watt_hours, "consumption": watt_hours}
+        for timestamp, watt_hours in series.items()
+    ]
+
+
 _SOLAR_TODAY = "sensor.victron_remote_monitoring_estimated_energy_production_today"
 _CONSUMPTION_TODAY = (
     "sensor.victron_remote_monitoring_estimated_energy_consumption_today"
 )
-
-
-def _mark_consumption_false(stats: dict[str, Any]) -> None:
-    """Replace the consumption aggregation with the API's false sentinel."""
-    stats["consumption"] = False
-
-
-def _drop_consumption(stats: dict[str, Any]) -> None:
-    """Remove the consumption series from the stats payload."""
-    del stats["consumption"]
 
 
 @pytest.fixture
@@ -83,9 +82,8 @@ async def test_get_forecast_returns_cached_watt_hours(
     """Return both hourly series from memory without another VRM request."""
     response = await _async_get_forecast(hass, utc_entry.entry_id)
 
-    assert response == {"solar_wh": _SOLAR_WH, "consumption_wh": _SOLAR_WH}
-    assert list(response["solar_wh"]) == list(_SOLAR_WH)
-    assert all(isinstance(value, float) for value in response["solar_wh"].values())
+    assert response == {"forecast": _forecast_hours(_SOLAR_WH)}
+    assert all(isinstance(hour["solar"], float) for hour in response["forecast"])
     mock_vrm_client.installations.stats.assert_awaited_once()
     assert (
         mock_vrm_client.installations.stats.call_args.kwargs["return_aggregations"]
@@ -94,8 +92,25 @@ async def test_get_forecast_returns_cached_watt_hours(
     state = hass.states.get(_SOLAR_TODAY)
     assert state is not None
     assert state.state == "4.2507"
-    assert "solar_wh" not in state.attributes
-    assert "consumption_wh" not in state.attributes
+
+
+async def test_get_forecast_returns_hours_in_time_order(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vrm_client: AsyncMock,
+) -> None:
+    """Order the forecast by time when the cached records are not chronological."""
+    await hass.config.async_set_time_zone("UTC")
+    stats = mock_vrm_client.installations.stats.return_value
+    for series in (stats["solar_yield"], stats["consumption"]):
+        series.records = list(reversed(series.records))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await _async_get_forecast(hass, mock_config_entry.entry_id)
+
+    assert response["forecast"] == _forecast_hours(_SOLAR_WH)
 
 
 @pytest.mark.parametrize(
@@ -153,9 +168,9 @@ async def test_get_forecast_filters_series(
     """Keep hours at or after start and before end, and omit a missing bound."""
     response = await _async_get_forecast(hass, utc_entry.entry_id, **extra)
 
-    assert list(response["solar_wh"]) == expected_keys
-    assert response["solar_wh"] == {key: _SOLAR_WH[key] for key in expected_keys}
-    assert response["consumption_wh"] == response["solar_wh"]
+    assert response["forecast"] == _forecast_hours(
+        {key: _SOLAR_WH[key] for key in expected_keys}
+    )
 
 
 _BERLIN = ZoneInfo("Europe/Berlin")
@@ -248,8 +263,7 @@ async def test_get_forecast_keeps_dst_transition_hours(
 
     response = await _async_get_forecast(hass, mock_config_entry.entry_id)
 
-    assert response["solar_wh"] == expected
-    assert response["consumption_wh"] == expected
+    assert response["forecast"] == _forecast_hours(expected)
 
 
 @pytest.mark.parametrize(
@@ -296,9 +310,9 @@ async def test_get_forecast_repeated_hour_bounds_use_instants(
         },
     )
 
-    assert list(response["solar_wh"]) == expected_keys
-    assert response["solar_wh"] == {key: _FALL_BACK_WH[key] for key in expected_keys}
-    assert response["consumption_wh"] == response["solar_wh"]
+    assert response["forecast"] == _forecast_hours(
+        {key: _FALL_BACK_WH[key] for key in expected_keys}
+    )
 
 
 @pytest.mark.parametrize(
@@ -370,9 +384,7 @@ async def test_get_forecast_transition_bound_forms(
 
     response = await _async_get_forecast(hass, mock_config_entry.entry_id, **extra)
 
-    assert list(response["solar_wh"]) == list(expected)
-    assert response["solar_wh"] == expected
-    assert response["consumption_wh"] == expected
+    assert response["forecast"] == _forecast_hours(expected)
 
 
 async def test_get_forecast_naive_bounds_use_default_timezone(
@@ -394,11 +406,12 @@ async def test_get_forecast_naive_bounds_use_default_timezone(
         },
     )
 
-    assert response["solar_wh"] == {
-        "2025-04-23T13:00:00+02:00": 5000.2,
-        "2025-04-24T12:00:00+02:00": 2250.3,
-    }
-    assert response["consumption_wh"] == response["solar_wh"]
+    assert response["forecast"] == _forecast_hours(
+        {
+            "2025-04-23T13:00:00+02:00": 5000.2,
+            "2025-04-24T12:00:00+02:00": 2250.3,
+        }
+    )
 
 
 async def test_get_forecast_rejects_end_before_start(
@@ -440,7 +453,7 @@ async def test_get_forecast_allows_empty_half_open_range(
         },
     )
 
-    assert response == {"solar_wh": {}, "consumption_wh": {}}
+    assert response == {"forecast": []}
 
 
 async def test_consumption_series_can_be_shorter(
@@ -458,29 +471,28 @@ async def test_consumption_series_can_be_shorter(
 
     response = await _async_get_forecast(hass, mock_config_entry.entry_id)
 
-    assert response["solar_wh"] == _SOLAR_WH
-    assert response["consumption_wh"] == dict(tuple(_SOLAR_WH.items())[:-1])
+    shared = [
+        {"datetime": timestamp, "solar": watt_hours, "consumption": watt_hours}
+        for timestamp, watt_hours in tuple(_SOLAR_WH.items())[:-1]
+    ]
+    last_timestamp, last_watt_hours = tuple(_SOLAR_WH.items())[-1]
+    assert response["forecast"] == [
+        *shared,
+        {"datetime": last_timestamp, "solar": last_watt_hours},
+    ]
     state = hass.states.get(_SOLAR_TODAY)
     assert state is not None
     assert state.state == "4.2507"
 
 
-@pytest.mark.parametrize(
-    "adjust_stats",
-    [
-        pytest.param(_mark_consumption_false, id="false"),
-        pytest.param(_drop_consumption, id="missing"),
-    ],
-)
-async def test_false_or_missing_consumption_keeps_solar(
+async def test_absent_consumption_returns_solar_only(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vrm_client: AsyncMock,
-    adjust_stats: Callable[[dict[str, Any]], None],
 ) -> None:
-    """A false or missing consumption series does not fail the update."""
+    """An absent consumption aggregation leaves the solar hours in the forecast."""
     await hass.config.async_set_time_zone("UTC")
-    adjust_stats(mock_vrm_client.installations.stats.return_value)
+    mock_vrm_client.installations.stats.return_value["consumption"] = None
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -489,8 +501,10 @@ async def test_false_or_missing_consumption_keeps_solar(
     mock_vrm_client.installations.stats.assert_awaited_once()
     response = await _async_get_forecast(hass, mock_config_entry.entry_id)
 
-    assert response["solar_wh"] == _SOLAR_WH
-    assert response["consumption_wh"] == {}
+    assert response["forecast"] == [
+        {"datetime": timestamp, "solar": watt_hours}
+        for timestamp, watt_hours in _SOLAR_WH.items()
+    ]
     solar_state = hass.states.get(_SOLAR_TODAY)
     consumption_state = hass.states.get(_CONSUMPTION_TODAY)
     assert solar_state is not None

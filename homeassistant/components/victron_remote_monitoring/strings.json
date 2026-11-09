@@ -106,7 +106,7 @@
   },
   "services": {
     "get_forecast": {
-      "description": "Returns the cached hourly solar production and consumption forecast for a Victron Remote Monitoring entry. Values are watt-hours.",
+      "description": "Returns the cached hourly solar production and consumption forecast as a list of hours. Solar and consumption values are watt-hours.",
       "fields": {
         "config_entry": {
           "description": "The Victron Remote Monitoring configuration entry to query.",

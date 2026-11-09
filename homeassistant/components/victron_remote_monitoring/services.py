@@ -1,9 +1,11 @@
 """Services for the Victron Remote Monitoring integration."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
+from typing import cast
 
 import probatio
+from victron_vrm.models.aggregations import ForecastAggregations
 
 from homeassistant.core import (
     HomeAssistant,
@@ -47,24 +49,37 @@ GET_FORECAST_SCHEMA = probatio.Schema(
 )
 
 
-def _series_response(
-    points: dict[datetime, float],
+def _forecast_hours(
+    solar: ForecastAggregations | None,
+    consumption: ForecastAggregations | None,
     start: datetime | None,
     end: datetime | None,
-) -> dict[str, JsonValueType]:
-    """Return watt-hours keyed by local ISO timestamps.
+) -> list[dict[str, JsonValueType]]:
+    """Return hourly watt-hours inside the half-open window.
 
-    Points and bounds are UTC instants.
+    Local ISO offsets stay distinct when a civil hour repeats.
     """
     time_zone = dt_util.DEFAULT_TIME_ZONE
-    response: dict[str, JsonValueType] = {}
-    for timestamp in sorted(points):
-        if start is not None and timestamp < start:
+    hours: dict[datetime, dict[str, float]] = {}
+    for key, aggregation in (("solar", solar), ("consumption", consumption)):
+        if aggregation is None:
             continue
-        if end is not None and timestamp >= end:
-            break
-        response[timestamp.astimezone(time_zone).isoformat()] = points[timestamp]
-    return response
+        for unix_seconds, watt_hours in aggregation.records:
+            instant = datetime.fromtimestamp(unix_seconds, UTC)
+            if start is not None and instant < start:
+                continue
+            if end is not None and instant >= end:
+                continue
+            hours.setdefault(instant, {})[key] = watt_hours
+
+    forecast: list[dict[str, JsonValueType]] = []
+    for instant in sorted(hours):
+        point: dict[str, JsonValueType] = {
+            "datetime": instant.astimezone(time_zone).isoformat(),
+            **hours[instant],
+        }
+        forecast.append(point)
+    return forecast
 
 
 @callback
@@ -93,8 +108,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="end_before_start",
             )
         return {
-            "solar_wh": _series_response(store.solar_wh, start, end),
-            "consumption_wh": _series_response(store.consumption_wh, start, end),
+            "forecast": cast(
+                list[JsonValueType],
+                _forecast_hours(store.solar, store.consumption, start, end),
+            ),
         }
 
     hass.services.async_register(
