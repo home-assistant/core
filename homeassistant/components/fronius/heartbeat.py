@@ -105,30 +105,17 @@ class LimitHeartbeat:
     async def async_resend_power_limit(self) -> None:
         """Send an active power limit again to restart the fallback period.
 
-        Fronius documents the period as restarted by every received Modbus
-        message, but a Gen24 dropped the limit on time while being read every
-        five seconds - only writing the limit again restarts it.
-
-        Nothing to do while no limit is in force: without one there is no
-        period running that could be restarted or cleared. That is decided on
-        a fresh read, so a limit released on the device since the last poll
-        is not taken back here.
+        Only a write restarts the period, so the limit is written again
+        rather than just read. Nothing is sent while no limit is in force,
+        decided on a fresh read, so a limit released on the device since the
+        last poll is not taken back here.
         """
         controls = self._modbus_inverter.controls
         if controls is None:
             return
         try:
             async with self._device_lock:
-                await controls.async_update()
-                if not power_limit_active(controls) or (
-                    (limit := controls.power_limit) is None
-                ):
-                    return
-                # the same registers `set_power_limit` writes - but that one
-                # would enable the limit, and this may only refresh a running one
-                await controls.write("revert_seconds", self._revert_seconds)
-                await controls.write("power_limit", limit)
-                await controls.write("enabled", True)
+                await controls.refresh_power_limit(revert_seconds=self._revert_seconds)
         except (ModbusError, SunSpecError) as err:
             self._logger.warning(
                 "Could not send the AC power limit to inverter %s again: %s",
@@ -147,22 +134,7 @@ class LimitHeartbeat:
             return
         try:
             async with self._device_lock:
-                await storage.async_update()
-                if not battery_limits_active(storage):
-                    return
-                await storage.write("revert_seconds", self._revert_seconds)
-                enable_fields = []
-                for field, enable_field in (
-                    ("charge_limit", "charge_limit_enabled"),
-                    ("discharge_limit", "discharge_limit_enabled"),
-                ):
-                    if getattr(storage, enable_field) is not True:
-                        continue
-                    if (limit := getattr(storage, field)) is not None:
-                        await storage.write(field, limit)
-                    enable_fields.append(enable_field)
-                # both switches share one register, which a write merges into
-                await storage.write(enable_fields[0], True)
+                await storage.refresh_limits(revert_seconds=self._revert_seconds)
         except (ModbusError, SunSpecError) as err:
             self._logger.warning(
                 "Could not send the battery limits to inverter %s again: %s",

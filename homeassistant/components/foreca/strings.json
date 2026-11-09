@@ -16,7 +16,7 @@
         "data_description": {
           "api_key": "Your Foreca Weather API key from the My API page"
         },
-        "description": "Create a free account at developer.foreca.com to get an API key."
+        "description": "To get an API key, sign up for the [Freemium plan]({signup_url}) and create a key on the My API page. Freemium is free for non-commercial use."
       }
     }
   },
@@ -44,6 +44,36 @@
           }
         }
       }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "thunderstorm_probability": {
+        "name": "Thunderstorm probability"
+      }
+    }
+  },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts_extra": {
+      "description": "Retrieves the forecast values that weather.get_forecasts has no place for, such as precipitation type, snow, solar radiation, sunshine, sunrise and the ensemble range of the daily forecast. They come from the forecast already fetched, so the action makes no API requests.",
+      "fields": {
+        "type": {
+          "description": "The forecast to return the values for.",
+          "name": "Forecast type"
+        }
+      },
+      "name": "Get extra forecast values"
     }
   }
 }

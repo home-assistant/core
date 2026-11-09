@@ -1904,11 +1904,7 @@ class ConfigEntriesFlowManager(
                 result["handler"], flow.unique_id
             )
 
-        if (
-            existing_entry is not None
-            and flow.handler != "mobile_app"
-            and existing_entry.source != SOURCE_IGNORE
-        ):
+        if existing_entry is not None and existing_entry.source != SOURCE_IGNORE:
             # This causes the old entry to be removed and replaced, when the flow
             # should instead be aborted.
             # In case of manual flows, integrations should implement options, reauth,
@@ -2379,7 +2375,9 @@ class ConfigEntries:
         self._entries[entry.entry_id] = entry
         self.async_update_issues()
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
-        await self.async_setup(entry.entry_id)
+        # Ignored entries are never set up, so don't load the integration for them
+        if entry.source != SOURCE_IGNORE:
+            await self.async_setup(entry.entry_id)
         self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:

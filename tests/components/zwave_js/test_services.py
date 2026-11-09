@@ -980,14 +980,16 @@ async def test_refresh_value(
 
     client.async_send_command.reset_mock()
 
-    # Test polling against an invalid entity raises MultipleInvalid
-    with pytest.raises(probatio.MultipleInvalid):
+    # Test polling against an invalid entity raises ServiceValidationError
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_VALUE,
             {ATTR_ENTITY_ID: "sensor.fake_entity_id"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_entities_found"
 
 
 async def test_set_value(

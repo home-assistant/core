@@ -8,7 +8,6 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -32,6 +31,7 @@ from .const import (
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
+from .coordinator import ProximityConfigEntry
 
 RESULT_SUCCESS = "success"
 
@@ -88,7 +88,9 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> ProximityOptionsFlow:
+    def async_get_options_flow(
+        config_entry: ProximityConfigEntry,
+    ) -> ProximityOptionsFlow:
         """Get the options flow for this handler."""
         return ProximityOptionsFlow()
 
