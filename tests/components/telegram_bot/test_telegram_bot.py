@@ -1768,10 +1768,10 @@ async def test_send_video(
 
     await hass.async_block_till_done()
 
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "file_not_found"
+    assert err.value.translation_domain == "homeassistant"
+    assert err.value.translation_key == "os_read_not_found"
     assert err.value.translation_placeholders == {
-        "file_path": "/tmp/not-exists"  # noqa: S108
+        "path": "/tmp/not-exists"  # noqa: S108
     }
 
     # test: success with file
@@ -2848,10 +2848,11 @@ async def test_download_file_rejects_symlink_out_of_allowlist(
 @pytest.mark.parametrize(
     ("error", "translation_key"),
     [
-        (OSError(errno.ENOENT, "No such file"), "file_not_found"),
-        (OSError(errno.EACCES, "Permission denied"), "file_permission_denied"),
-        (OSError(errno.EPERM, "Operation not permitted"), "file_permission_denied"),
-        (OSError(errno.EIO, "Input/output error"), "failed_to_load_file"),
+        (OSError(errno.ENOENT, "No such file"), "os_read_not_found"),
+        (OSError(errno.EACCES, "Permission denied"), "os_read_permission_denied"),
+        (OSError(errno.EPERM, "Operation not permitted"), "os_read_permission_denied"),
+        (OSError(errno.EISDIR, "Is a directory"), "os_read_is_directory"),
+        (OSError(errno.EIO, "Input/output error"), "os_read_error"),
     ],
 )
 def test_read_file_errors(error: OSError, translation_key: str) -> None:
@@ -2862,5 +2863,6 @@ def test_read_file_errors(error: OSError, translation_key: str) -> None:
     ):
         _read_file_as_bytesio("/some/file.jpg")
 
+    assert err.value.translation_domain == "homeassistant"
     assert err.value.translation_key == translation_key
-    assert err.value.translation_placeholders == {"file_path": "/some/file.jpg"}
+    assert err.value.translation_placeholders == {"path": "/some/file.jpg"}

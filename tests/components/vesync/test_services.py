@@ -4,11 +4,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 from pyvesync import VeSync
+from pyvesync.utils.errors import VeSyncError
 
 from homeassistant.components.vesync.const import DOMAIN, SERVICE_UPDATE_DEVS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 
@@ -46,6 +47,24 @@ async def test_async_new_device_discovery_entry_not_loaded(
 
     with pytest.raises(ServiceValidationError, match="Entry not loaded"):
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+
+
+async def test_async_new_device_discovery_error(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+) -> None:
+    """Test VeSync errors are reported as translated Home Assistant errors."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    manager.get_devices = AsyncMock(side_effect=VeSyncError("API failure"))
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "api_response_error"
 
 
 async def test_async_new_device_discovery(

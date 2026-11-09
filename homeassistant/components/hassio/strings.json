@@ -18,6 +18,9 @@
       "disk_free": {
         "name": "Disk free"
       },
+      "disk_life_time": {
+        "name": "Disk lifetime"
+      },
       "disk_total": {
         "name": "Disk total"
       },

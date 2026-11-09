@@ -59,6 +59,8 @@ class Blueprint:
         schema: Callable[[Any], Any],
     ) -> None:
         """Initialize a blueprint."""
+        self._original_data = data
+
         try:
             data = self.data = schema(data)
         except probatio.Invalid as err:
@@ -129,10 +131,11 @@ class Blueprint:
         """Update metadata."""
         if source_url is not None:
             self.data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
+            self._original_data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
 
     def yaml(self) -> str:
         """Dump blueprint as YAML."""
-        return yaml_util.dump(self.data)
+        return yaml_util.dump(self._original_data)
 
     @callback
     def validate(self) -> list[str] | None:

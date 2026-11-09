@@ -3200,7 +3200,7 @@ snapcast==2.3.8
 soco==0.32.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.25.4
+sofar-modbus==0.26.0
 
 # homeassistant.components.solaredge
 solaredge-web==0.5.1
@@ -3287,7 +3287,7 @@ switchbot-api==2.13.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.24.0
+systembridgeconnector==5.27.0
 
 # homeassistant.components.tailscale
 tailscale==1.0.0

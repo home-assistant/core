@@ -3,10 +3,10 @@
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -93,7 +93,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Change vent position."""
-        position = round(kwargs[ATTR_POSITION] / 5) * 5
+        position = round(kwargs[CoverServiceArgument.POSITION] / 5) * 5
         if position == 0:
             await self.async_update_zone({"state": ADVANTAGE_AIR_STATE_CLOSE})
         else:

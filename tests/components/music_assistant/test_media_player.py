@@ -1169,6 +1169,46 @@ async def test_media_player_play_media_start_item_invalid(
     assert music_assistant_client.send_command.call_count == 0
 
 
+@pytest.mark.parametrize("shuffle", [True, False])
+async def test_media_player_play_media_shuffle(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    shuffle: bool,
+) -> None:
+    """Test that an explicit shuffle option is forwarded to the server's play_media command."""
+    music_assistant_client.server_info.schema_version = 51
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://playlist/1234",
+            ATTR_MEDIA_SHUFFLE: shuffle,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://playlist/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=shuffle,
+        start_from_beginning=False,
+        require_schema=51,
+    )
+
+
 async def test_media_player_standard_play_media_default_user(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
