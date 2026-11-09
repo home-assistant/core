@@ -4,12 +4,6 @@
       "camera_in_use": {
         "default": "mdi:webcam"
       },
-      "locked": {
-        "default": "mdi:lock-open-variant",
-        "state": {
-          "on": "mdi:lock"
-        }
-      },
       "pending_reboot": {
         "default": "mdi:restart"
       }
