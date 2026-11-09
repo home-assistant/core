@@ -52,49 +52,49 @@ async def test_all_entities(
     ("holding", "entity_id", "state"),
     [
         pytest.param(
-            {40206: int32_words(4200)},
+            {40206: int32_words(4200)},  # Battery remaining energy, in Wh
             "sensor.e3_dc_s10_x_stored_energy",
             "4.2",
             id="battery_limits",
         ),
         pytest.param(
-            {40137: 2},
+            {40137: 2},  # SG Ready status
             "sensor.e3_dc_s10_x_sg_ready_status",
             "normal",
             id="wide_power_meters",
         ),
         pytest.param(
-            {40137: 0},
+            {40137: 0},  # SG Ready status
             "sensor.e3_dc_s10_x_sg_ready_status",
             "unknown",
             id="sg_ready_unknown_value",
         ),
         pytest.param(
-            {40194: 60},
+            {40194: 60},  # Active power failsafe timeout, in s
             "sensor.e3_dc_s10_x_active_power_failsafe_timeout",
             "60",
             id="grid_control",
         ),
         pytest.param(
-            {40201: 10},
+            {40201: 10},  # Inverter mode
             "sensor.e3_dc_s10_x_inverter_mode",
             "idle_off_grid_power_save",
             id="inverter_mode_control",
         ),
         pytest.param(
-            {40138: int32_words(-500)},
+            {40138: int32_words(-500)},  # Power meter slot 0 power L1, 32 bit
             "sensor.e3_dc_s10_x_grid_power_l1",
             "-500",
             id="grid_meter",
         ),
         pytest.param(
-            {40144: int32_words(200)},
+            {40144: int32_words(200)},  # Power meter slot 1 power L1, 32 bit
             "sensor.power_meter_power",
             "400",
             id="power_meters",
         ),
         pytest.param(
-            {41006: int32_words(2000)},
+            {41006: int32_words(2000)},  # Inverter slot 0 active power L1, in W
             "sensor.e3_dc_s10_x_inverter_active_power_l1",
             "2000",
             id="inverters",
@@ -123,7 +123,7 @@ async def test_sensor_follows_poll(
     ("holding", "entity_ids"),
     [
         pytest.param(
-            {40088: 0},
+            {40088: 0},  # No wallbox available
             [
                 "sensor.e3_dc_s10_x_wallbox_power",
                 "sensor.e3_dc_s10_x_wallbox_solar_power",
@@ -131,12 +131,12 @@ async def test_sensor_follows_poll(
             id="no_wallbox",
         ),
         pytest.param(
-            {40109: 0},
+            {40109: 0},  # Power meter slot 1 not installed
             ["sensor.e3_dc_s10_x_additional_feeder_power"],
             id="no_additional_feeder",
         ),
         pytest.param(
-            {40105: 0},
+            {40105: 0},  # Power meter slot 0 not installed
             [
                 "sensor.e3_dc_s10_x_grid_power_l1",
                 "sensor.e3_dc_s10_x_grid_power_l2",
@@ -145,12 +145,12 @@ async def test_sensor_follows_poll(
             id="no_grid_meter",
         ),
         pytest.param(
-            {40084: 0},
+            {40084: 0},  # Emergency power not supported
             ["sensor.e3_dc_s10_x_emergency_power"],
             id="no_emergency_power",
         ),
         pytest.param(
-            {40208: int32_words(0)},
+            {40208: int32_words(0)},  # Battery full charge energy, in Wh
             BATTERY_LIMIT_SENSORS,
             id="no_battery_capacity",
         ),
@@ -180,12 +180,12 @@ async def test_optional_hardware_missing(
     ("refused_register", "entity_ids"),
     [
         pytest.param(
-            40137,
+            40137,  # Start of the SG Ready status and 32-bit power meter block
             ["sensor.e3_dc_s10_x_sg_ready_status"],
             id="no_wide_power_meters",
         ),
         pytest.param(
-            40186,
+            40186,  # Start of the grid control block
             [
                 "sensor.e3_dc_s10_x_active_power_failsafe_timeout",
                 "sensor.e3_dc_s10_x_reactive_power_failsafe_timeout",
@@ -193,13 +193,17 @@ async def test_optional_hardware_missing(
             id="no_grid_control",
         ),
         pytest.param(
-            40200,
+            40200,  # Start of the inverter mode block
             ["sensor.e3_dc_s10_x_inverter_mode"],
             id="no_inverter_mode_control",
         ),
-        pytest.param(40202, BATTERY_LIMIT_SENSORS, id="no_battery_limits"),
         pytest.param(
-            41000,
+            40202,  # Start of the battery limits block
+            BATTERY_LIMIT_SENSORS,
+            id="no_battery_limits",
+        ),
+        pytest.param(
+            41000,  # Start of the inverter slot 0 block
             [
                 "sensor.e3_dc_s10_x_inverter_active_power_l1",
                 "sensor.e3_dc_s10_x_inverter_dc_power_1",
@@ -240,7 +244,10 @@ async def test_block_missing_from_firmware(
             id="one_of_each",
         ),
         pytest.param(
-            {40113: 4, 41034 + 18: 2302},
+            {
+                40113: 4,  # Power meter slot 2 measures external consumption
+                41052: 2302,  # Inverter slot 1 voltage L1, in 0.1 V
+            },
             {
                 "power_meter_2": ("Power meter 2", "via"),
                 "power_meter_3": ("Power meter 3", "via"),
@@ -260,11 +267,7 @@ async def test_part_devices(
     holding: dict[int, int | list[int]],
     devices: dict[str, tuple[str, str]],
 ) -> None:
-    """Test the power meters and inverters get devices, numbered if there are several.
-
-    The power station's own inverter is a part of its device, the others are
-    connected through it. The meter at the grid connection point gets no device.
-    """
+    """Test the power meters and inverters get devices, numbered if there are several."""
     seed(mock_unit, holding)
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -287,6 +290,8 @@ async def test_part_devices(
         for _, identifier in device.identifiers
     }
 
+    # The power station's own inverter is a child device, the other parts are
+    # connected through it. The meter at the grid connection point has no device.
     assert parts == devices
 
 
@@ -312,7 +317,10 @@ def _part_names(
     ("holding", "entity_id", "names"),
     [
         pytest.param(
-            {40113: 2, 40150: int32_words(300)},
+            {
+                40113: 2,  # Power meter slot 2 measures external production
+                40150: int32_words(300),  # Power meter slot 2 power L1, 32 bit
+            },
             "sensor.power_meter_3_power",
             {
                 "power_meter_2": "Power meter 2",
@@ -322,7 +330,10 @@ def _part_names(
             id="power_meter",
         ),
         pytest.param(
-            {41034 + 18: 2302, 41034 + 6: int32_words(1200)},
+            {
+                41052: 2302,  # Inverter slot 1 voltage L1, in 0.1 V
+                41040: int32_words(1200),  # Inverter slot 1 active power L1, in W
+            },
             "sensor.inverter_2_active_power_l1",
             {
                 "power_meter_2": "Power meter",
@@ -344,10 +355,7 @@ async def test_part_added_when_reported(
     entity_id: str,
     names: dict[str, str],
 ) -> None:
-    """Test a meter configured or an inverter connected after setup gets its sensors.
-
-    The part that was the only one of its kind gets numbered too.
-    """
+    """Test a meter configured or an inverter connected after setup gets its sensors."""
     assert hass.states.get(entity_id) is None
 
     seed(mock_unit, holding)
@@ -356,6 +364,7 @@ async def test_part_added_when_reported(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is not None
+    # The part that was the only one of its kind gets numbered too
     assert _part_names(device_registry, mock_config_entry) == names
 
 
@@ -363,8 +372,8 @@ async def test_part_added_when_reported(
     ("setup_holding", "holding", "names"),
     [
         pytest.param(
-            {40113: 2},
-            {40113: 0},
+            {40113: 2},  # Power meter slot 2 measures external production
+            {40113: 0},  # Power meter slot 2 not installed
             {
                 "power_meter_2": "Power meter 2",
                 "power_meter_3": "Power meter 3",
@@ -373,8 +382,8 @@ async def test_part_added_when_reported(
             id="power_meter",
         ),
         pytest.param(
-            {41034 + 18: 2302},
-            {41034 + 18: 0},
+            {41052: 2302},  # Inverter slot 1 voltage L1, connected
+            {41052: 0},  # Inverter slot 1 voltage L1, disconnected
             {
                 "power_meter_2": "Power meter",
                 "inverter_1": "Inverter 1",
@@ -410,10 +419,15 @@ async def test_numbering_kept_after_reload(
 @pytest.mark.parametrize(
     ("setup_holding", "holding", "entity_id"),
     [
-        pytest.param({}, {40109: 0}, "sensor.power_meter_power", id="power_meter"),
         pytest.param(
-            {41034 + 18: 2302},
-            {41034 + 18: 0},
+            {},
+            {40109: 0},  # Power meter slot 1 not installed
+            "sensor.power_meter_power",
+            id="power_meter",
+        ),
+        pytest.param(
+            {41052: 2302},  # Inverter slot 1 voltage L1, connected
+            {41052: 0},  # Inverter slot 1 voltage L1, disconnected
             "sensor.inverter_2_active_power_l1",
             id="inverter",
         ),
@@ -429,7 +443,7 @@ async def test_part_unavailable_when_gone(
     holding: dict[int, int | list[int]],
     entity_id: str,
 ) -> None:
-    """Test a part's sensors become unavailable once the meter is removed or the inverter disconnects."""
+    """Test a part's sensors become unavailable once the part is gone."""
     seed(mock_unit, setup_holding)
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -452,14 +466,14 @@ async def test_grid_meter_added_when_reported(
     mock_unit: MockModbusUnit,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a meter configured at the grid connection point after setup gets the phase sensors."""
-    seed(mock_unit, {40105: 0})
+    """Test the grid phase sensors are added once a grid meter is configured."""
+    seed(mock_unit, {40105: 0})  # Power meter slot 0 not installed
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert entity_registry.async_get(GRID_POWER_L1) is None
 
-    seed(mock_unit, {40105: 1})
+    seed(mock_unit, {40105: 1})  # Power meter slot 0 at the grid connection point
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

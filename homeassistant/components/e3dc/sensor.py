@@ -40,7 +40,7 @@ from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import DOMAIN, PartKind
 from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
 from .entity import E3dcEntity, E3dcPart, part_device_info
 
@@ -519,17 +519,21 @@ def _connected_inverters(device: E3dcPowerStation) -> list[int]:
 class _PartKind:
     """A kind of part that gets a device for each slot the power station reports."""
 
-    kind: str
+    kind: PartKind
     present_fn: Callable[[E3dcPowerStation], Iterable[int]]
     sensors: tuple[E3dcPartSensorDescription, ...]
 
 
 PARTS = (
     _PartKind(
-        kind="power_meter", present_fn=_installed_meters, sensors=POWER_METER_SENSORS
+        kind=PartKind.POWER_METER,
+        present_fn=_installed_meters,
+        sensors=POWER_METER_SENSORS,
     ),
     _PartKind(
-        kind="inverter", present_fn=_connected_inverters, sensors=INVERTER_SENSORS
+        kind=PartKind.INVERTER,
+        present_fn=_connected_inverters,
+        sensors=INVERTER_SENSORS,
     ),
 )
 
@@ -538,7 +542,7 @@ def _registered_slots(
     device_registry: dr.DeviceRegistry,
     entry: E3dcConfigEntry,
     coordinator: E3dcDataUpdateCoordinator,
-) -> dict[str, set[int]]:
+) -> dict[PartKind, set[int]]:
     """The slots of the parts that already have a device, by kind."""
     identifiers = {
         identifier
@@ -551,7 +555,7 @@ def _registered_slots(
         for domain, identifier in device.identifiers
         if domain == DOMAIN
     }
-    slots: dict[str, set[int]] = {}
+    slots: dict[PartKind, set[int]] = {}
     for part_kind in PARTS:
         prefix = f"{entry.unique_id}_{part_kind.kind}_"
         slots[part_kind.kind] = {
@@ -572,8 +576,10 @@ async def async_setup_entry(
     device = coordinator.device
     served = {*device.readings_components, *device.settings_components}
     device_registry = dr.async_get(hass)
+    # The keys of the station sensors that are already added
     added_sensors: set[str] = set()
-    added_parts: dict[tuple[str, int], E3dcPart] = {}
+    # The parts whose sensors are already added, by kind and slot
+    added_parts: dict[tuple[PartKind, int], E3dcPart] = {}
     # Parts from earlier runs keep the numbering while they are absent
     seen_slots = _registered_slots(device_registry, entry, coordinator)
 
@@ -610,7 +616,7 @@ async def async_setup_entry(
             async_add_entities(entities)
 
     @callback
-    def _async_number_parts(kind: str) -> None:
+    def _async_number_parts(kind: PartKind) -> None:
         """Rename the devices of the parts added while they were the only one."""
         for key, part in added_parts.items():
             if part.kind != kind or part.numbered:

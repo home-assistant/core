@@ -7,7 +7,7 @@ from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, PartKind
 from .coordinator import E3dcDataUpdateCoordinator
 
 
@@ -15,7 +15,7 @@ from .coordinator import E3dcDataUpdateCoordinator
 class E3dcPart:
     """A power meter or inverter of the power station, with its own device."""
 
-    kind: str  # The device translation key, e.g. 'inverter'
+    kind: PartKind
     slot: int  # E3/DC counts the slots from 0
     numbered: bool  # False while the power station has only one part of this kind
 
@@ -27,7 +27,7 @@ class E3dcPart:
     @property
     def built_in(self) -> bool:
         """Whether this is the power station's own inverter."""
-        return self.kind == "inverter" and self.slot == 0
+        return self.kind is PartKind.INVERTER and self.slot == 0
 
 
 class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
@@ -59,7 +59,11 @@ class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
 def part_device_info(
     coordinator: E3dcDataUpdateCoordinator, part: E3dcPart
 ) -> DeviceInfo | ChildDeviceInfo:
-    """A part of the power station, or a device connected through it."""
+    """Describe the device of a part.
+
+    The power station's own inverter is a child of the power station device, every
+    other part is a device connected through it.
+    """
     identifier = f"{coordinator.config_entry.unique_id}_{part.kind}_{part.number}"
     if part.numbered:
         translation_key = f"numbered_{part.kind}"
