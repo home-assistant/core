@@ -18,6 +18,7 @@ description: Everything you need to know to build, test and review Home Assistan
 - Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue.
 - Do not add entities for data that Home Assistant intentionally only exposes through an action, for example weather forecasts (`weather.get_forecasts`).
 - In config flows, map known failures to the matching standard error (for example `invalid_auth`, `cannot_connect`) without logging them. If unexpected exceptions are caught, log them with `_LOGGER.exception()` and map them to `unknown`. Do not mix translated and untranslated text in an error shown to the user.
+- New integrations must not implement `async_migrate_entry`. They have no existing config entries to migrate, so they start at config entry version 1; migrating entries created by a custom integration of the same domain is not supported by core.
 - Bump dependencies in a standalone PR that contains only the compatibility adjustments the bump requires. Features that need the new version go in a follow-up PR.
 
 The following platforms have extra guidelines:
