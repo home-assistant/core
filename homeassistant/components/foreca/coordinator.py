@@ -1,6 +1,5 @@
-"""Data update coordinator for the Foreca integration."""
+"""Data update coordinators for the Foreca integration."""
 
-from collections.abc import Awaitable
 from dataclasses import dataclass
 import logging
 from typing import override
@@ -24,17 +23,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DAILY_PERIODS,
-    DOMAIN,
-    HOURLY_PERIODS,
-    UPDATE_INTERVAL,
-    OptionalRequest,
-)
+from .const import DAILY_PERIODS, DOMAIN, HOURLY_PERIODS, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-type ForecaConfigEntry = ConfigEntry[dict[str, ForecaUpdateCoordinator]]
+
+type ForecaConfigEntry = ConfigEntry[dict[str, ForecaLocationCoordinators]]
 
 
 @dataclass(slots=True)
@@ -44,12 +38,10 @@ class ForecaWeatherData:
     current: CurrentWeather
     hourly: list[HourlyForecast]
     daily: list[DailyForecast]
-    observation: Observation | None
-    failed_requests: frozenset[OptionalRequest]
 
 
-class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
-    """Class to manage fetching Foreca data for one location."""
+class ForecaCoordinator[DataT](DataUpdateCoordinator[DataT]):
+    """Base class for the coordinators of one Foreca location."""
 
     config_entry: ForecaConfigEntry
 
@@ -59,12 +51,13 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
         entry: ForecaConfigEntry,
         subentry: ConfigSubentry,
         client: ForecaApiClient,
+        name: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN} {subentry.title}",
+            name=name,
             update_interval=UPDATE_INTERVAL,
             config_entry=entry,
         )
@@ -78,7 +71,20 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             manufacturer="Foreca",
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._failed_requests: set[OptionalRequest] = set()
+
+
+class ForecaUpdateCoordinator(ForecaCoordinator[ForecaWeatherData]):
+    """Class to manage fetching the Foreca forecast for one location."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ForecaConfigEntry,
+        subentry: ConfigSubentry,
+        client: ForecaApiClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, entry, subentry, client, f"{DOMAIN} {subentry.title}")
 
     @override
     async def _async_update_data(self) -> ForecaWeatherData:
@@ -91,10 +97,6 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
             daily = await self.client.forecast_daily(
                 self.location, periods=DAILY_PERIODS, dataset="full", ensemble=True
             )
-            observation = await self._async_optional(
-                OptionalRequest.OBSERVATION,
-                self.client.observation_latest(self.location),
-            )
         except (ForecaAuthError, ForecaProductUnavailableError) as err:
             raise ConfigEntryAuthFailed(
                 f"The Foreca API rejected the API key: {err}"
@@ -104,33 +106,42 @@ class ForecaUpdateCoordinator(DataUpdateCoordinator[ForecaWeatherData]):
                 f"Error communicating with the Foreca API: {err}"
             ) from err
 
-        return ForecaWeatherData(
-            current=current,
-            hourly=hourly,
-            daily=daily,
-            observation=observation,
-            failed_requests=frozenset(self._failed_requests),
+        return ForecaWeatherData(current=current, hourly=hourly, daily=daily)
+
+
+class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
+    """Class to manage fetching the nearest station's observation for one location."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ForecaConfigEntry,
+        subentry: ConfigSubentry,
+        client: ForecaApiClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass, entry, subentry, client, f"{DOMAIN} {subentry.title} observation"
         )
 
-    async def _async_optional[T](
-        self, request: OptionalRequest, response: Awaitable[T]
-    ) -> T | None:
-        """Return the response of a request the update can do without.
-
-        If the request fails, return None and mark it failed, so that only the
-        sensors reading it become unavailable. A rejected key still fails the
-        whole update.
-        """
+    @override
+    async def _async_update_data(self) -> Observation | None:
+        """Fetch the latest observation, or None where no station reports nearby."""
         try:
-            result = await response
-        except ForecaAuthError:
-            raise
+            return await self.client.observation_latest(self.location)
+        except ForecaAuthError as err:
+            raise ConfigEntryAuthFailed(
+                f"The Foreca API rejected the API key: {err}"
+            ) from err
         except ForecaError as err:
-            if request not in self._failed_requests:
-                self._failed_requests.add(request)
-                _LOGGER.info("Error fetching %s %s data: %s", self.name, request, err)
-            return None
-        if request in self._failed_requests:
-            self._failed_requests.remove(request)
-            _LOGGER.info("Fetching %s %s data recovered", self.name, request)
-        return result
+            raise UpdateFailed(
+                f"Error communicating with the Foreca API: {err}"
+            ) from err
+
+
+@dataclass(slots=True)
+class ForecaLocationCoordinators:
+    """The coordinators of one Foreca location."""
+
+    weather: ForecaUpdateCoordinator
+    observation: ForecaObservationCoordinator

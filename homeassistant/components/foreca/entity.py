@@ -3,10 +3,10 @@
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION
-from .coordinator import ForecaUpdateCoordinator
+from .coordinator import ForecaCoordinator
 
 
-class ForecaEntity(CoordinatorEntity[ForecaUpdateCoordinator]):
+class ForecaEntity[CoordinatorT: ForecaCoordinator](CoordinatorEntity[CoordinatorT]):
     """Defines a base Foreca entity."""
 
     _attr_attribution = ATTRIBUTION

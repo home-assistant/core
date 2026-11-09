@@ -44,9 +44,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Foreca weather entity for every configured location."""
-    for subentry_id, coordinator in entry.runtime_data.items():
+    for subentry_id, coordinators in entry.runtime_data.items():
         async_add_entities(
-            [ForecaWeather(coordinator, subentry_id)],
+            [ForecaWeather(coordinators.weather, subentry_id)],
             config_subentry_id=subentry_id,
         )
 
@@ -99,7 +99,8 @@ def _hourly_to_forecast(hour: HourlyForecast) -> Forecast | None:
 
 
 class ForecaWeather(
-    SingleCoordinatorWeatherEntity[ForecaUpdateCoordinator], ForecaEntity
+    SingleCoordinatorWeatherEntity[ForecaUpdateCoordinator],
+    ForecaEntity[ForecaUpdateCoordinator],
 ):
     """Define a Foreca weather entity."""
 

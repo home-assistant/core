@@ -48,7 +48,6 @@ async def test_setup_retries_on_connection_error(
     [
         ("current", ForecaAuthError),
         ("current", ForecaProductUnavailableError),
-        ("observation_latest", ForecaAuthError),
     ],
 )
 async def test_setup_fails_on_rejected_key(

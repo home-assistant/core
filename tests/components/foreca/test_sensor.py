@@ -1,11 +1,11 @@
 """Test the Foreca sensor platform."""
 
-import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyforeca import (
     CurrentWeather,
+    ForecaAuthError,
     ForecaConnectionError,
     ForecaProductUnavailableError,
     Observation,
@@ -149,17 +149,12 @@ async def test_failed_observation_leaves_other_entities_available(
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a failing observation request makes only its sensors unavailable.
-
-    The failure and the recovery are each logged once, however many updates
-    the failure lasts.
-    """
-    caplog.set_level(logging.INFO, logger="homeassistant.components.foreca")
+    """Test a failing observation request makes only its sensors unavailable."""
     mock_foreca_client.observation_latest.side_effect = ForecaConnectionError("Timeout")
     await init_integration(hass, mock_config_entry)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
     assert hass.states.get(PRECIPITATION_PROBABILITY).state == "5"
     assert hass.states.get("weather.helsinki").state == "partlycloudy"
@@ -168,6 +163,7 @@ async def test_failed_observation_leaves_other_entities_available(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
+    assert hass.states.get(PRECIPITATION_PROBABILITY).state == "5"
 
     mock_foreca_client.observation_latest.side_effect = None
     freezer.tick(UPDATE_INTERVAL)
@@ -176,15 +172,20 @@ async def test_failed_observation_leaves_other_entities_available(
 
     assert hass.states.get(OBSERVED_TEMPERATURE).state == "8"
     assert mock_foreca_client.observation_latest.await_count == 3
-    assert [
-        (record.levelno, record.getMessage())
-        for record in caplog.records
-        if record.name == "homeassistant.components.foreca.coordinator"
-        and record.levelno >= logging.INFO
-    ] == [
-        (logging.INFO, "Error fetching foreca Helsinki observation data: Timeout"),
-        (logging.INFO, "Fetching foreca Helsinki observation data recovered"),
-    ]
+
+
+async def test_rejected_key_on_the_station_request_keeps_the_entry_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test a key rejected only by the station request leaves the forecast running."""
+    mock_foreca_client.observation_latest.side_effect = ForecaAuthError
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
+    assert hass.states.get("weather.helsinki").state == "partlycloudy"
 
 
 async def test_observations_missing_from_plan_keep_the_entry_loaded(
