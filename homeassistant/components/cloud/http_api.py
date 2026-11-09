@@ -65,6 +65,7 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
+    PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_WITHOUT_AUTH_TIMEOUT,
     USER_REQUEST_TIMEOUT,
@@ -974,6 +975,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
         probatio.Optional(PREF_GOOGLE_REPORT_STATE): bool,
         probatio.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): probatio.Any(None, str),
         probatio.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
+        probatio.Optional(PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE): bool,
         probatio.Optional(PREF_TTS_DEFAULT_VOICE): probatio.All(
             probatio.Coerce(tuple), validate_language_voice
         ),
@@ -1161,6 +1163,7 @@ async def _account_data(
         "remote_connected": remote.is_connected,
         "remote_domain": remote.instance_domain,
         "http_use_ssl": hass.config.api.use_ssl,
+        "http_ssl_peer_certificate": hass.http.ssl_peer_certificate is not None,
         "active_subscription": not cloud.subscription_expired,
     }
 

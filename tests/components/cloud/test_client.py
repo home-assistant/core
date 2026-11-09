@@ -497,6 +497,29 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("require_client_certificate", "ssl_peer_certificate", "expected"),
+    [
+        (False, None, None),
+        (False, "/config/ssl/client_ca.pem", None),
+        (True, None, None),
+        (True, "/config/ssl/client_ca.pem", "/config/ssl/client_ca.pem"),
+    ],
+)
+async def test_remote_ssl_peer_certificate(
+    hass: HomeAssistant,
+    require_client_certificate: bool,
+    ssl_peer_certificate: str | None,
+    expected: str | None,
+) -> None:
+    """Test the remote connection only requires client certificates when opted in."""
+    hass.http = Mock(ssl_peer_certificate=ssl_peer_certificate)
+    prefs = MagicMock(remote_require_client_certificate=require_client_certificate)
+    client = CloudClient(hass, prefs, None, {}, {})
+
+    assert client.remote_ssl_peer_certificate == expected
+
+
+@pytest.mark.parametrize(
     "translation_key",
     sorted(VALID_REPAIR_TRANSLATION_KEYS),
 )

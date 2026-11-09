@@ -119,6 +119,13 @@ class CloudClient(Interface):
         return self._prefs.remote_enabled
 
     @property
+    def remote_ssl_peer_certificate(self) -> str | None:
+        """Return CA file used to require client certificates on remote access."""
+        if not self._prefs.remote_require_client_certificate:
+            return None
+        return self._hass.http.ssl_peer_certificate
+
+    @property
     @override
     def client_name(self) -> str:
         """Return the client name that will be used for API calls."""

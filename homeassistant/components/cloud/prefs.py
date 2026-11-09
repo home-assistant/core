@@ -47,6 +47,7 @@ from .const import (
     PREF_ONBOARDING_POSTPONED_UNTIL,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_REMOTE_DOMAIN,
+    PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
 )
@@ -182,6 +183,7 @@ class CloudPreferences:
         onboarded_items: list[str] | Undefined = Undefined,
         onboarding_postponed_until: str | Undefined | None = Undefined,
         remote_enabled: bool | Undefined = Undefined,
+        remote_require_client_certificate: bool | Undefined = Undefined,
         tts_default_voice: tuple[str, str] | Undefined = Undefined,
     ) -> None:
         """Update user preferences."""
@@ -207,6 +209,10 @@ class CloudPreferences:
                     (PREF_ONBOARDING_POSTPONED_UNTIL, onboarding_postponed_until),
                     (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
                     (PREF_REMOTE_DOMAIN, remote_domain),
+                    (
+                        PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE,
+                        remote_require_client_certificate,
+                    ),
                     (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
                 )
                 if value is not Undefined
@@ -258,6 +264,9 @@ class CloudPreferences:
             PREF_ONBOARDED_ITEMS: self.onboarded_items,
             PREF_ONBOARDING_POSTPONED_UNTIL: self.onboarding_postponed_until,
             PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
+            PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE: (
+                self.remote_require_client_certificate
+            ),
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
         }
 
@@ -266,6 +275,12 @@ class CloudPreferences:
         """Return if it's allowed to remotely activate remote."""
         allowed: bool = self._prefs.get(PREF_REMOTE_ALLOW_REMOTE_ENABLE, True)
         return allowed
+
+    @property
+    def remote_require_client_certificate(self) -> bool:
+        """Return if remote access requires client certificates."""
+        required: bool = self._prefs.get(PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE, False)
+        return required
 
     @property
     def remote_enabled(self) -> bool:

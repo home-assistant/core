@@ -11,7 +11,7 @@ from hass_nabucasa import (
     LoginFailedReason,
     LogoutEvent,
 )
-from hass_nabucasa.remote import Certificate
+from hass_nabucasa.remote import Certificate, RemoteClientCertificateError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 
@@ -35,6 +35,7 @@ from homeassistant.components.cloud.const import (
     PREF_ALEXA_SETTINGS_VERSION,
     PREF_CLOUDHOOKS,
     PREF_GOOGLE_SETTINGS_VERSION,
+    PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE,
 )
 from homeassistant.components.cloud.prefs import (
     ALEXA_SETTINGS_VERSION,
@@ -119,6 +120,55 @@ async def test_disabling_remote_without_backend(
 
     assert not prefs.remote_enabled
     assert "RemoteNotConnected" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_toggling_remote_client_certificate(hass: HomeAssistant) -> None:
+    """Test toggling client certificates updates the remote connection."""
+    cl = hass.data[DATA_CLOUD]
+    prefs = cl.client.prefs
+
+    with (
+        patch.object(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem"),
+        patch.object(cl.remote, "reload_client_certificates") as reload,
+    ):
+        await prefs.async_update(remote_require_client_certificate=True)
+        await hass.async_block_till_done()
+
+        assert cl.client.remote_ssl_peer_certificate == "/ssl/client_ca.pem"
+        assert reload.call_count == 1
+
+        await prefs.async_update(alexa_enabled=False)
+        await hass.async_block_till_done()
+
+        assert reload.call_count == 1
+
+        await prefs.async_update(remote_require_client_certificate=False)
+        await hass.async_block_till_done()
+
+        assert cl.client.remote_ssl_peer_certificate is None
+        assert reload.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_toggling_remote_client_certificate_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a failure to require client certificates is logged."""
+    cl = hass.data[DATA_CLOUD]
+
+    with (
+        patch.object(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem"),
+        patch.object(
+            cl.remote,
+            "reload_client_certificates",
+            side_effect=RemoteClientCertificateError("No client CA"),
+        ),
+    ):
+        await cl.client.prefs.async_update(remote_require_client_certificate=True)
+        await hass.async_block_till_done()
+
+    assert "Unable to require client certificates for remote access" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
@@ -750,6 +800,39 @@ async def test_assistant_settings_migrated_at_startup(
 
     assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
     assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
+
+
+@pytest.mark.parametrize(
+    ("ssl_peer_certificate", "expected"),
+    [(None, False), ("/ssl/client_ca.pem", True)],
+)
+async def test_require_client_certificate_reset_without_ca(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    ssl_peer_certificate: str | None,
+    expected: bool,
+) -> None:
+    """Test requiring client certificates is turned off when no CA is configured."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 4,
+        "data": {
+            PREF_ALEXA_SETTINGS_VERSION: ALEXA_SETTINGS_VERSION,
+            PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION,
+            PREF_REMOTE_REQUIRE_CLIENT_CERTIFICATE: True,
+        },
+    }
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "http", {})
+
+    with (
+        patch.object(hass.http, "ssl_peer_certificate", ssl_peer_certificate),
+        patch("hass_nabucasa.Cloud.initialize"),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    prefs = hass.data[DATA_CLOUD].client.prefs
+    assert prefs.remote_require_client_certificate is expected
 
 
 @pytest.mark.parametrize(
