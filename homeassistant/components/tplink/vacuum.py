@@ -150,8 +150,8 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
         """Locate the device."""
         await self._speaker_module.locate()
 
-    @override
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_activity = STATUS_TO_ACTIVITY.get(self._vacuum_module.status)

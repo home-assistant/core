@@ -319,8 +319,8 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         finally:
             self._update_task = None
 
-    @override
     @callback
+    @override
     def _update_callback(self) -> None:
         """Handle device update. Use a task when opening/closing is in progress."""
         super()._update_callback()

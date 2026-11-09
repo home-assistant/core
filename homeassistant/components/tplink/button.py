@@ -131,8 +131,8 @@ class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):
         """Execute action."""
         await self._feature.set_value(True)
 
-    @override
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """No need to update anything."""
         return self.entity_description.available_fn(self._device)

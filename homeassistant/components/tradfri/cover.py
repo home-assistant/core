@@ -56,8 +56,8 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
         self._device_control = self._device.blind_control
         self._device_data = self._device_control.blinds[0]
 
-    @override
     @callback
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self._device_control.blinds[0]

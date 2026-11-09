@@ -83,8 +83,8 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         self._device_control = self._device.air_purifier_control
         self._device_data = self._device_control.air_purifiers[0]
 
-    @override
     @callback
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self._device_control.air_purifiers[0]

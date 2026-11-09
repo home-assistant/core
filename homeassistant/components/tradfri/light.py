@@ -97,8 +97,8 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # supports_hsb_xy_color is False for color bulbs that also report mireds
         return self._device_data.raw.color_hue is not None
 
-    @override
     @callback
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self._device_control.lights[0]

@@ -56,8 +56,8 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
         self._device_control = self._device.socket_control
         self._device_data = self._device_control.sockets[0]
 
-    @override
     @callback
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self._device_control.sockets[0]

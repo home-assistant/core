@@ -886,8 +886,8 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
-    @override
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_value(

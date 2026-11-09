@@ -513,8 +513,8 @@ class ProtectIsOnEntity(BaseProtectEntity):
     _attr_is_on: bool | None
     entity_description: ProtectEntityDescription
 
-    @override
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         was_on = self._attr_is_on
