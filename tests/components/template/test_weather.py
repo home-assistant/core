@@ -1,5 +1,7 @@
 """The tests for the Template Weather platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -30,6 +32,7 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
     Forecast,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
 )
 from homeassistant.const import (
@@ -1049,7 +1052,7 @@ async def test_extra_template_attributes(
 
 @pytest.mark.parametrize(
     "attribute",
-    list(WeatherEntityStateAttribute),
+    list(chain(WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute)),
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1096,7 +1099,7 @@ async def test_attributes_template(
 
 @pytest.mark.parametrize(
     "attribute",
-    list(WeatherEntityStateAttribute),
+    list(chain(WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute)),
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1104,7 +1107,7 @@ async def test_attributes_template(
 async def test_attributes_template_with_blocked_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute: WeatherEntityStateAttribute,
+    attribute: StrEnum,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked attributes for a single attributes template."""
