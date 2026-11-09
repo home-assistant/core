@@ -141,7 +141,7 @@ class BackupAgentClient:
         traceback: TracebackType | None,
     ) -> None:
         """Async Context Manager exit routine."""
-        if self.sftp:  # type: ignore[truthy-bool]
+        if self.sftp:
             self.sftp.exit()
             await self.sftp.wait_closed()
 
