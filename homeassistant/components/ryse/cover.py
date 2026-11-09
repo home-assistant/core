@@ -136,20 +136,23 @@ class RyseCoverEntity(CoverEntity):
             return
         client.set_disconnected_callback(self._on_ble_disconnect)
 
-    def _on_ble_disconnect(self, _client: BleakClient) -> None:
+    def _on_ble_disconnect(self, client: BleakClient) -> None:
         """Handle a GATT disconnect, which may arrive off the event loop."""
-        self.hass.loop.call_soon_threadsafe(self._async_ble_disconnected)
+        self.hass.loop.call_soon_threadsafe(self._async_ble_disconnected, client)
 
     @callback
-    def _async_ble_disconnected(self) -> None:
+    def _async_ble_disconnected(self, client: BleakClient) -> None:
         """Mark the cover unavailable as soon as the GATT link drops."""
         if self._expected_disconnect:
+            return
+        current = self._device.client
+        # A reconnect can replace the client before this deferred handler runs.
+        if current is not None and current is not client:
             return
         self._reconnect_when_seen = True
         self._clear_cached_position()
         self._set_available(False, "disconnected")
         self.async_write_ha_state()
-        client = self._device.client
         self._config_entry.async_create_background_task(
             self.hass,
             self._async_cleanup_disconnected_client(client),

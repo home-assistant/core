@@ -581,6 +581,26 @@ async def test_disconnect_callback_marks_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_stale_disconnect_callback_does_not_unpair_new_client(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a late disconnect from an old client does not tear down a new connection."""
+    old_client = mock_device.client
+    disconnect = _disconnect_callback(old_client)
+    mock_device.client = MagicMock(is_connected=True)
+    mock_device.unpair.reset_mock()
+
+    disconnect(old_client)
+    await hass.async_block_till_done()
+
+    mock_device.unpair.assert_not_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
 async def test_advertisement_reconnects_after_disconnect(
     hass: HomeAssistant,
     local_ryse_scanner: BLEDevice,
