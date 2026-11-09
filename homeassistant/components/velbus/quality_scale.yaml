@@ -60,11 +60,7 @@ rules:
   entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: done
-  entity-translations:
-    status: exempt
-    comment: |
-      Channel and device names are user-defined in VelbusLink and read from
-      module EEPROM or VLP file.
+  entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
