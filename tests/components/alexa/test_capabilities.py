@@ -10,8 +10,8 @@ from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.lock import LockState
@@ -23,7 +23,7 @@ from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_GAS,
     STATE_HEAT_PUMP,
-    WaterHeaterStateAttribute,
+    WaterHeaterCapabilityAttribute,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -1027,7 +1027,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.downstairs")
@@ -1046,7 +1046,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.downstairs")
@@ -1065,7 +1065,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.downstairs")
@@ -1082,7 +1082,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 31,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.downstairs")
@@ -1098,7 +1098,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
             "friendly_name": "Climate Heat",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.heat")
@@ -1114,7 +1114,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
             "friendly_name": "Climate Cool",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.cool")
@@ -1141,7 +1141,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
             "friendly_name": "Climate Unsupported",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     msg = await reported_properties(hass, "climate.unsupported", True)
@@ -1164,7 +1164,7 @@ async def test_report_on_off_climate_state(hass: HomeAssistant) -> None:
                 "friendly_name": "Climate Downstairs",
                 "supported_features": on_off_features,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.onoff")
@@ -1183,7 +1183,7 @@ async def test_report_on_off_climate_state(hass: HomeAssistant) -> None:
                 "friendly_name": "Climate Downstairs",
                 "supported_features": on_off_features,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "climate.onoff")
@@ -1205,7 +1205,7 @@ async def test_report_water_heater_state(hass: HomeAssistant) -> None:
                 "friendly_name": "Boyler",
                 "supported_features": 11,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 ATTR_OPERATION_LIST: [STATE_ECO, STATE_GAS, STATE_HEAT_PUMP],
                 ATTR_OPERATION_MODE: operation_mode,
             },
@@ -1231,7 +1231,7 @@ async def test_report_water_heater_state(hass: HomeAssistant) -> None:
                 "friendly_name": "Boyler",
                 "supported_features": 11,
                 ATTR_CURRENT_TEMPERATURE: 34,
-                WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             },
         )
         properties = await reported_properties(hass, "water_heater.boyler")
@@ -1268,7 +1268,7 @@ async def test_report_singe_mode_water_heater(hass: HomeAssistant) -> None:
             "friendly_name": "Boyler",
             "supported_features": 11,
             ATTR_CURRENT_TEMPERATURE: 34,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_OPERATION_LIST: [STATE_ECO],
             ATTR_OPERATION_MODE: operation_mode,
         },
@@ -1316,7 +1316,7 @@ async def test_temperature_sensor_climate(hass: HomeAssistant) -> None:
             HVACMode.HEAT,
             {
                 ATTR_CURRENT_TEMPERATURE: bad_value,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             },
         )
 
@@ -1328,7 +1328,7 @@ async def test_temperature_sensor_climate(hass: HomeAssistant) -> None:
         HVACMode.HEAT,
         {
             ATTR_CURRENT_TEMPERATURE: 34,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "climate.downstairs")
@@ -1346,7 +1346,7 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
             {
                 "supported_features": 11,
                 ATTR_CURRENT_TEMPERATURE: bad_value,
-                WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             },
         )
 
@@ -1359,7 +1359,7 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
         {
             "supported_features": 11,
             ATTR_CURRENT_TEMPERATURE: 34,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     properties = await reported_properties(hass, "water_heater.boyler")
@@ -1569,7 +1569,7 @@ async def test_get_property_blowup(
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
             ATTR_CURRENT_TEMPERATURE: 34,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     with patch(

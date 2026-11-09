@@ -1066,7 +1066,7 @@ async def async_api_set_target_temp(
 
     min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
     max_temp = entity.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
-    unit = entity.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+    unit = entity.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
 
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
@@ -1137,7 +1137,7 @@ async def async_api_adjust_target_temp(
     domain = entity.domain
     min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
     max_temp = entity.attributes[MIN_MAX_TEMP[domain]["max_temp"]]
-    unit = entity.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+    unit = entity.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
 
     temp_delta = temperature_from_object(
         directive.payload["targetSetpointDelta"], unit, interval=True

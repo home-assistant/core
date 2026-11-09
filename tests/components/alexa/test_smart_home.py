@@ -20,14 +20,14 @@ from homeassistant.components import camera
 from homeassistant.components.alexa import smart_home, state_report
 from homeassistant.components.alexa.handlers import RTC_MAX_SESSION_DURATION
 from homeassistant.components.climate import (
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
 )
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
-from homeassistant.components.water_heater import WaterHeaterStateAttribute
+from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
@@ -2904,7 +2904,7 @@ async def test_thermostat(hass: HomeAssistant, unit_system: UnitSystem) -> None:
             "preset_modes": ["eco"],
             "min_temp": 50,
             "max_temp": 90,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3179,7 +3179,7 @@ async def test_onoff_thermostat(hass: HomeAssistant) -> None:
             "hvac_modes": ["auto"],
             "min_temp": 7,
             "max_temp": 30,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3272,7 +3272,7 @@ async def test_onoff_thermostat(hass: HomeAssistant) -> None:
             "hvac_modes": ["auto"],
             "min_temp": 7,
             "max_temp": 30,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3314,7 +3314,7 @@ async def test_water_heater(hass: HomeAssistant, unit_system: UnitSystem) -> Non
             "operation_mode": "gas",
             "min_temp": 50,
             "max_temp": 90,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3491,7 +3491,7 @@ async def test_no_current_target_temp_adjusting_temp(hass: HomeAssistant) -> Non
             "preset_modes": ["eco"],
             "min_temp": 50,
             "max_temp": 90,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3571,7 +3571,7 @@ async def test_thermostat_dual(hass: HomeAssistant, unit_system: UnitSystem) -> 
             "preset_modes": ["eco"],
             "min_temp": 50,
             "max_temp": 90,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     appliance = await discovery_test(device, hass)
