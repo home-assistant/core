@@ -68,16 +68,12 @@ rules:
   dynamic-devices: done
   entity-category:
     status: exempt
-    comment: The weather entity is primary data and needs no category.
-  entity-device-class:
-    status: exempt
-    comment: The weather platform does not support device classes.
+    comment: Every entity is primary weather data.
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: The integration has a single always-useful entity.
-  entity-translations:
-    status: exempt
-    comment: The weather entity uses the device name.
+    comment: Every entity is primary weather data that is useful by default.
+  entity-translations: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
