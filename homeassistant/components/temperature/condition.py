@@ -4,15 +4,18 @@ from typing import override
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityStateAttribute,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterStateAttribute,
 )
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
 )
 from homeassistant.const import EntityStateAttribute, UnitOfTemperature
@@ -70,13 +73,15 @@ class TemperatureCondition(EntityNumericalConditionWithUnitBase):
             return entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         if entity_state.domain == CLIMATE_DOMAIN:
             return entity_state.attributes.get(
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
             )
         if entity_state.domain == WATER_HEATER_DOMAIN:
             return entity_state.attributes.get(
-                WaterHeaterStateAttribute.TEMPERATURE_UNIT
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
             )
-        return entity_state.attributes.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
+        return entity_state.attributes.get(
+            WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT
+        )
 
 
 CONDITIONS: dict[str, type[Condition]] = {
