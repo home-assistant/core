@@ -305,30 +305,15 @@ async def _async_handle_get_history_service(
         entity_ids,
     )
 
+    start_ts = start_time.timestamp()
     formatted_result: JsonObjectType = {}
-    for entity_id, history_states_with_dups in result.items():
-        has_start_state = bool(
-            history_states_with_dups
-            and history_states_with_dups[0].last_updated_timestamp
-            == start_time.timestamp()
+    for entity_id, states in result.items():
+        # The start time state is clamped to start_time, in-window states are later
+        in_window_count = sum(
+            state.last_updated_timestamp > start_ts for state in states
         )
-        in_window_count = len(history_states_with_dups) - (1 if has_start_state else 0)
-
-        # Remove consecutive states that are the same, this can occur due to restarts
-        history_states: list[State] = []
-        for index, state in enumerate(history_states_with_dups):
-            if index == 0:
-                history_states.append(state)
-                continue
-            if history_states_with_dups[index - 1].state == state.state:
-                continue
-            history_states.append(state)
-
-        is_truncated = (
-            in_window_count == MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1
-            or len(history_states) > MAX_GET_HISTORY_RECORDS_PER_ENTITY
-        )
-        if is_truncated:
+        cutoff: datetime | None = None
+        if in_window_count > MAX_GET_HISTORY_RECORDS_PER_ENTITY:
             if not allow_truncation:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -338,19 +323,28 @@ async def _async_handle_get_history_service(
                         "max_records": str(MAX_GET_HISTORY_RECORDS_PER_ENTITY),
                     },
                 )
-            history_states = history_states[: MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1]
+            # The extra state was only fetched to detect truncation
+            cutoff = dt_util.utc_from_timestamp(states[-1].last_updated_timestamp)
+            states = states[:-1]
+
+        # Remove consecutive states that are the same, this can occur due to restarts
+        history_states = [
+            state
+            for index, state in enumerate(states)
+            if index == 0 or states[index - 1].state != state.state
+        ]
 
         formatted_history_states: JsonArrayType = []
 
         for index, state in enumerate(history_states):
-            if index == len(history_states) - 1:
-                if is_truncated:
-                    continue
-                end = min(end_time, now) if end_time else now
-            else:
+            if index < len(history_states) - 1:
                 end = dt_util.utc_from_timestamp(
                     history_states[index + 1].last_updated_timestamp
                 )
+            elif cutoff is not None:
+                end = cutoff
+            else:
+                end = min(end_time, now) if end_time else now
             formatted_state: JsonObjectType = {
                 "start": dt_util.utc_from_timestamp(
                     state.last_updated_timestamp
