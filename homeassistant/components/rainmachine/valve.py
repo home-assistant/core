@@ -11,8 +11,6 @@ from homeassistant.components.valve import (
     ValveEntityDescription,
     ValveEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,72 +25,6 @@ from .const import (
 )
 from .entity import RainMachineEntity, RainMachineEntityDescription
 from .services import async_update_programs_and_zones
-from .util import RUN_STATE_MAP
-
-ATTR_AREA = "area"
-ATTR_CURRENT_CYCLE = "current_cycle"
-ATTR_FIELD_CAPACITY = "field_capacity"
-ATTR_NO_CYCLES = "number_of_cycles"
-ATTR_PRECIP_RATE = "sprinkler_head_precipitation_rate"
-ATTR_RESTRICTIONS = "restrictions"
-ATTR_SLOPE = "slope"
-ATTR_SOIL_TYPE = "soil_type"
-ATTR_SPRINKLER_TYPE = "sprinkler_head_type"
-ATTR_STATUS = "status"
-ATTR_SUN_EXPOSURE = "sun_exposure"
-ATTR_VEGETATION_TYPE = "vegetation_type"
-ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
-
-SOIL_TYPE_MAP = {
-    0: "Not Set",
-    1: "Clay Loam",
-    2: "Silty Clay",
-    3: "Clay",
-    4: "Loam",
-    5: "Sandy Loam",
-    6: "Loamy Sand",
-    7: "Sand",
-    8: "Sandy Clay",
-    9: "Silt Loam",
-    10: "Silt",
-    99: "Other",
-}
-
-SLOPE_TYPE_MAP = {
-    0: "Not Set",
-    1: "Flat",
-    2: "Moderate",
-    3: "High",
-    4: "Very High",
-    99: "Other",
-}
-
-SPRINKLER_TYPE_MAP = {
-    0: "Not Set",
-    1: "Popup Spray",
-    2: "Rotors Low Rate",
-    3: "Surface Drip",
-    4: "Bubblers Drip",
-    5: "Rotors High Rate",
-    99: "Other",
-}
-
-SUN_EXPOSURE_MAP = {0: "Not Set", 1: "Full Sun", 2: "Partial Shade", 3: "Full Shade"}
-
-VEGETATION_MAP = {
-    0: "Not Set",
-    1: "Not Set",
-    2: "Cool Season Grass",
-    3: "Fruit Trees",
-    4: "Flowers",
-    5: "Vegetables",
-    6: "Citrus",
-    7: "Bushes",
-    9: "Drought Tolerant Plants",
-    10: "Warm Season Grass",
-    11: "Trees",
-    99: "Other",
-}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -135,7 +67,7 @@ class RainMachineZoneValve(RainMachineEntity, ValveEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineValveDescription,
     ) -> None:
@@ -160,11 +92,15 @@ class RainMachineZoneValve(RainMachineEntity, ValveEntity):
 
     def _default_duration(self) -> int:
         """Return the configured run time for this zone."""
-        if (
-            self._entry.options[CONF_USE_APP_RUN_TIMES]
-            and ATTR_ZONE_RUN_TIME in self._attr_extra_state_attributes
-        ):
-            return int(self._attr_extra_state_attributes[ATTR_ZONE_RUN_TIME])
+        if self._entry.options[CONF_USE_APP_RUN_TIMES]:
+            provision_data = self._data.coordinators[DATA_PROVISION_SETTINGS].data
+            zone_durations = provision_data.get("system", {}).get("zoneDuration")
+            if zone_durations:
+                zone_index = list(self.coordinator.data).index(
+                    self.entity_description.uid
+                )
+                if zone_index < len(zone_durations):
+                    return int(zone_durations[zone_index])
         return int(self._entry.options[CONF_DEFAULT_ZONE_RUN_TIME])
 
     async def _async_open(self, duration: int) -> None:
@@ -203,40 +139,7 @@ class RainMachineZoneValve(RainMachineEntity, ValveEntity):
     @callback
     @override
     def update_from_latest_data(self) -> None:
-        """Update the valve state and RainMachine zone attributes."""
-        data = self.coordinator.data[self.entity_description.uid]
-        self._attr_is_closed = not bool(data["state"])
-
-        attrs = {
-            ATTR_CURRENT_CYCLE: data["cycle"],
-            ATTR_ID: data["uid"],
-            ATTR_NO_CYCLES: data["noOfCycles"],
-            ATTR_RESTRICTIONS: data["restriction"],
-            ATTR_SLOPE: SLOPE_TYPE_MAP.get(data["slope"], 99),
-            ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data["soil"], 99),
-            ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data["group_id"], 99),
-            ATTR_STATUS: RUN_STATE_MAP[data["state"]],
-            ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
-            ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data["type"], 99),
-        }
-
-        if "waterSense" in data:
-            if "area" in data["waterSense"]:
-                attrs[ATTR_AREA] = round(data["waterSense"]["area"], 2)
-            if "fieldCapacity" in data["waterSense"]:
-                attrs[ATTR_FIELD_CAPACITY] = round(
-                    data["waterSense"]["fieldCapacity"], 2
-                )
-            if "precipitationRate" in data["waterSense"]:
-                attrs[ATTR_PRECIP_RATE] = round(
-                    data["waterSense"]["precipitationRate"], 2
-                )
-
-        if self._entry.options[CONF_USE_APP_RUN_TIMES]:
-            provision_data = self._data.coordinators[DATA_PROVISION_SETTINGS].data
-            if zone_durations := provision_data.get("system", {}).get("zoneDuration"):
-                attrs[ATTR_ZONE_RUN_TIME] = zone_durations[
-                    list(self.coordinator.data).index(self.entity_description.uid)
-                ]
-
-        self._attr_extra_state_attributes.update(attrs)
+        """Update the valve state."""
+        self._attr_is_closed = not bool(
+            self.coordinator.data[self.entity_description.uid]["state"]
+        )

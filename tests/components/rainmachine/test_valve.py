@@ -4,11 +4,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainmachine.const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_USE_APP_RUN_TIMES,
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
@@ -23,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _async_setup_valves(
@@ -56,6 +56,12 @@ async def test_valves(
     """Test valves."""
     await _async_setup_valves(hass, config, client)
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+    valve = hass.states.get("valve.12345_landscaping")
+    assert valve is not None
+    assert "sprinkler_head_precipitation_rate" not in valve.attributes
+    assert "area" not in valve.attributes
+    assert "field_capacity" not in valve.attributes
 
 
 async def test_valve_services(
@@ -138,3 +144,26 @@ async def test_inactive_zone_can_open_when_allowed(
         blocking=True,
     )
     controller.zones.start.assert_awaited_once_with(3, DEFAULT_ZONE_RUN)
+
+
+async def test_valve_uses_app_zone_run_time(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    config_entry: MockConfigEntry,
+    client: AsyncMock,
+    controller: AsyncMock,
+) -> None:
+    """Open the valve using the app-specific run time without state attributes."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={**config_entry.options, CONF_USE_APP_RUN_TIMES: True},
+    )
+    await _async_setup_valves(hass, config, client)
+
+    await hass.services.async_call(
+        VALVE_DOMAIN,
+        SERVICE_OPEN_VALVE,
+        {ATTR_ENTITY_ID: "valve.12345_landscaping"},
+        blocking=True,
+    )
+    controller.zones.start.assert_awaited_once_with(1, 300)
