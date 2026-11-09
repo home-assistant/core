@@ -7,17 +7,11 @@
       "bandwidth_up": {
         "default": "mdi:upload-network-outline"
       },
-      "connection_media": {
-        "default": "mdi:ethernet-cable"
-      },
       "connection_state": {
         "default": "mdi:web",
         "state": {
           "down": "mdi:web-off"
         }
-      },
-      "connection_type": {
-        "default": "mdi:ethernet"
       },
       "ipv4": {
         "default": "mdi:ip-network"

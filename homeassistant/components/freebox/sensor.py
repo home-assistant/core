@@ -51,16 +51,6 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         options=["going_up", "up", "going_down", "down"],
     ),
     SensorEntityDescription(
-        key="type",
-        translation_key="connection_type",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="media",
-        translation_key="connection_media",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
         key="ipv4",
         translation_key="ipv4",
         entity_category=EntityCategory.DIAGNOSTIC,

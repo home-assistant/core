@@ -204,56 +204,6 @@
     'state': '88.27',
   })
 # ---
-# name: test_sensors[sensor.freebox_server_r2_connection_media-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.freebox_server_r2_connection_media',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Connection media',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Connection media',
-    'platform': 'freebox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'connection_media',
-    'unique_id': '68:A3:78:00:00:00 media',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.freebox_server_r2_connection_media-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Connection media',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.freebox_server_r2_connection_media',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'ftth',
-  })
-# ---
 # name: test_sensors[sensor.freebox_server_r2_connection_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -316,56 +266,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'up',
-  })
-# ---
-# name: test_sensors[sensor.freebox_server_r2_connection_type-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.freebox_server_r2_connection_type',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Connection type',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Connection type',
-    'platform': 'freebox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'connection_type',
-    'unique_id': '68:A3:78:00:00:00 type',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.freebox_server_r2_connection_type-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) Connection type',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.freebox_server_r2_connection_type',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'ethernet',
   })
 # ---
 # name: test_sensors[sensor.freebox_server_r2_disque_dur-entry]

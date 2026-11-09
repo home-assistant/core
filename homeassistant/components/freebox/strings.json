@@ -46,9 +46,6 @@
       "bandwidth_up": {
         "name": "Upload bandwidth"
       },
-      "connection_media": {
-        "name": "Connection media"
-      },
       "connection_state": {
         "name": "Connection state",
         "state": {
@@ -57,9 +54,6 @@
           "going_up": "Going up",
           "up": "Up"
         }
-      },
-      "connection_type": {
-        "name": "Connection type"
       },
       "ipv4": {
         "name": "WAN IPv4 address"
