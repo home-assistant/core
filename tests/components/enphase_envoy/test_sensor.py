@@ -2067,9 +2067,11 @@ async def test_sensor_daily_production_consumption_phase_upper_limit(
     ],
     indirect=["mock_envoy"],
 )
+@pytest.mark.parametrize("target", ["generator", "generator_config", "generator_mode"])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_generator_data(
     hass: HomeAssistant,
+    target: str,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
@@ -2110,22 +2112,33 @@ async def test_sensor_generator_data(
         assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
         assert entity_state.state == str(getattr(mock_envoy.data.generator_mode, item))
 
-    mock_envoy.data.generator = None
-    mock_envoy.data.generator_config = None
-    mock_envoy.data.generator_mode = None
+    setattr(mock_envoy.data, target, None)
 
     mock_envoy.data.raw = {"changed": True}
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    for entity, _item in GENERATOR_ITEMS:
+    for entity, item in GENERATOR_ITEMS:
         assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
-        assert entity_state.state == STATE_UNAVAILABLE
+        assert (
+            entity_state.state == STATE_UNAVAILABLE
+            if target == "generator"
+            else str(getattr(mock_envoy.data.generator, item))
+        )
 
-    for entity, _item in GENERATOR_CONFIG_ITEMS:
+    for entity, item in GENERATOR_CONFIG_ITEMS:
         assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
-        assert entity_state.state == STATE_UNAVAILABLE
-    for entity, _item in GENERATOR_MODE_ITEMS:
+        assert (
+            entity_state.state == STATE_UNAVAILABLE
+            if target == "generator_config"
+            else str(getattr(mock_envoy.data.generator_config, item))
+        )
+
+    for entity, item in GENERATOR_MODE_ITEMS:
         assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
-        assert entity_state.state == STATE_UNAVAILABLE
+        assert (
+            entity_state.state == STATE_UNAVAILABLE
+            if target == "generator_mode"
+            else str(getattr(mock_envoy.data.generator_mode, item))
+        )
