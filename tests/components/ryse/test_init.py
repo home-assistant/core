@@ -20,6 +20,7 @@ from . import (
     make_ble_device,
     register_local_scanner,
     register_remote_scanner,
+    selected_ble_backend,
 )
 
 
@@ -194,16 +195,25 @@ async def test_setup_reports_pairing_outcome_when_unpair_fails(
 async def test_setup_uses_local_adapter_not_proxy(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
     mock_ryse_ble_device: MagicMock,
 ) -> None:
-    """Test setup resolves the BLEDevice from a local adapter, not a proxy."""
+    """Test setup pairs through the local adapter, not a stronger proxy backend."""
     local_device = make_ble_device()
-    advertisement = make_advertisement()
+    advertisement = make_advertisement(rssi=-80)
     proxy_device = make_ble_device()
-    remote, cancel_remote = register_remote_scanner(hass)
+    remote, cancel_remote = register_remote_scanner(hass, can_connect=True)
     cancel_local = register_local_scanner(hass, local_device, advertisement)
+    backends_during_pair: list[BLEDevice] = []
+
+    async def _pair() -> bool:
+        backends_during_pair.append(selected_ble_backend(hass, local_device))
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    mock_device.pair.side_effect = _pair
     try:
-        remote.inject_advertisement(proxy_device, advertisement)
+        remote.inject_advertisement(proxy_device, make_advertisement(rssi=-20))
 
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -211,6 +221,8 @@ async def test_setup_uses_local_adapter_not_proxy(
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
         mock_ryse_ble_device.assert_called_once_with(local_device)
+        assert backends_during_pair == [local_device]
+        assert selected_ble_backend(hass, local_device) is not local_device
     finally:
         cancel_local()
         cancel_remote()
@@ -249,6 +261,7 @@ async def test_setup_uses_strongest_local_adapter(
 async def test_setup_prefers_bonded_local_adapter(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
     mock_ryse_ble_device: MagicMock,
 ) -> None:
     """Test setup prefers the adapter that already holds the BlueZ bond."""
@@ -264,6 +277,14 @@ async def test_setup_prefers_bonded_local_adapter(
         source=LOCAL_SOURCE_HCI1,
         adapter="hci1",
     )
+    backends_during_pair: list[BLEDevice] = []
+
+    async def _pair() -> bool:
+        backends_during_pair.append(selected_ble_backend(hass, bonded))
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    mock_device.pair.side_effect = _pair
     try:
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -271,6 +292,8 @@ async def test_setup_prefers_bonded_local_adapter(
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
         mock_ryse_ble_device.assert_called_once_with(bonded)
+        assert backends_during_pair == [bonded]
+        assert selected_ble_backend(hass, bonded) is strong_unpaired
     finally:
         cancel_unpaired()
         cancel_bonded()

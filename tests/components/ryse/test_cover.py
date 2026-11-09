@@ -35,7 +35,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import inject_ryse, make_advertisement
+from . import (
+    inject_ryse,
+    make_advertisement,
+    make_ble_device,
+    register_remote_scanner,
+    selected_ble_backend,
+)
 
 DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 ENTITY_ID = "cover.test_device"
@@ -553,6 +559,40 @@ async def test_ble_error_while_polling_resets_connection(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_cover_reconnect_pins_pair_to_local_adapter(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    local_ryse_scanner: BLEDevice,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a reconnect pairs through the local adapter, not a proxy backend."""
+    remote, cancel_remote = register_remote_scanner(hass, can_connect=True)
+    backends_during_pair: list[BLEDevice] = []
+
+    async def _pair() -> bool:
+        backends_during_pair.append(selected_ble_backend(hass, local_ryse_scanner))
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    try:
+        remote.inject_advertisement(
+            make_ble_device(), make_advertisement(pairing=False, rssi=-20)
+        )
+        mock_device.pair.side_effect = _pair
+        mock_device.pair.reset_mock()
+        client = mock_device.client
+        _disconnect_callback(client)(client)
+        await hass.async_block_till_done()
+
+        await async_see_shade(hass, local_ryse_scanner)
+
+        mock_device.pair.assert_awaited_once()
+        assert backends_during_pair == [local_ryse_scanner]
+        assert selected_ble_backend(hass, local_ryse_scanner) is not local_ryse_scanner
+    finally:
+        cancel_remote()
 
 
 @pytest.mark.usefixtures("local_ryse_scanner")

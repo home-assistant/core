@@ -20,7 +20,11 @@ from homeassistant.core import HomeAssistant
 
 from . import _async_unpair
 from .const import DOMAIN, MANUFACTURER_ID, SERVICE_UUID
-from .helpers import async_local_scanner_devices, best_local_scanner_device
+from .helpers import (
+    async_local_scanner_devices,
+    best_local_scanner_device,
+    pin_ble_connection,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,8 +83,9 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device = RyseBLEDevice(local.ble_device)
         try:
-            if await device.pair():
-                return None
+            with pin_ble_connection(local.ble_device):
+                if await device.pair():
+                    return None
         except TimeoutError, OSError, EOFError, BleakError:
             return "cannot_connect"
         except Exception:

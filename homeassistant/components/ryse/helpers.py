@@ -1,8 +1,11 @@
 """Helpers for the RYSE integration."""
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
+from typing import Any
 
 from bleak.backends.device import BLEDevice
+from habluetooth.wrappers import HaBleakClientWrapper
 
 from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
@@ -10,6 +13,8 @@ from homeassistant.components.bluetooth import (
     async_scanner_devices_by_address,
 )
 from homeassistant.core import HomeAssistant
+
+_GET_BEST_BACKEND = "_async_get_best_available_backend_and_device"
 
 
 def async_local_scanner_devices(
@@ -70,6 +75,55 @@ def best_local_scanner_device(
             device.score_connection_path(rssi_diff),
         ),
     )
+
+
+class _PinnedBluetoothManager:
+    """Expose only *ble_device*'s local adapter to HA's Bleak wrapper."""
+
+    def __init__(self, manager: Any, ble_device: BLEDevice) -> None:
+        self._manager = manager
+        self._ble_device = ble_device
+        self._address = ble_device.address.upper()
+
+    def async_scanner_devices_by_address(
+        self, address: str, connectable: bool
+    ) -> list[BluetoothScannerDevice]:
+        """Return scanner devices, limited to the pinned local adapter."""
+        devices = self._manager.async_scanner_devices_by_address(address, connectable)
+        if address.upper() != self._address:
+            return devices
+        return [
+            scanner_device
+            for scanner_device in devices
+            if not isinstance(scanner_device.scanner, BaseHaRemoteScanner)
+            and _same_ble_adapter(scanner_device.ble_device, self._ble_device)
+        ]
+
+    def __getattr__(self, name: str) -> Any:
+        """Forward remaining Bluetooth manager API to the real manager."""
+        return getattr(self._manager, name)
+
+
+@contextmanager
+def pin_ble_connection(ble_device: BLEDevice) -> Iterator[None]:
+    """Restrict HA's Bleak wrapper to *ble_device*'s adapter for this address.
+
+    HaBleakClientWrapper reselects a backend by address and can connect through
+    a proxy even when the client was constructed with a local BLEDevice. RYSE
+    pairing needs the host BlueZ adapter that holds the bond. The Bluetooth
+    manager itself is a Cython type whose methods cannot be assigned, so the
+    wrapper's backend selection is wrapped instead.
+    """
+    original = getattr(HaBleakClientWrapper, _GET_BEST_BACKEND)
+
+    def _pinned(self: Any, manager: Any) -> Any:
+        return original(self, _PinnedBluetoothManager(manager, ble_device))
+
+    setattr(HaBleakClientWrapper, _GET_BEST_BACKEND, _pinned)
+    try:
+        yield
+    finally:
+        setattr(HaBleakClientWrapper, _GET_BEST_BACKEND, original)
 
 
 def _ble_device_is_paired(device: BLEDevice) -> bool:

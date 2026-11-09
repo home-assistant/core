@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -32,6 +33,7 @@ from . import (
     make_ble_device,
     register_local_scanner,
     register_remote_scanner,
+    selected_ble_backend,
 )
 
 PAIRING_ERRORS = [
@@ -409,11 +411,19 @@ async def test_async_step_user_keeps_proxy_selected_when_also_local(
 ) -> None:
     """Test a proxy-selected advertisement is kept if a local adapter also sees it."""
     device = make_ble_device()
-    advertisement = make_advertisement()
-    remote, cancel_remote = register_remote_scanner(hass)
-    remote.inject_advertisement(device, advertisement)
+    advertisement = make_advertisement(rssi=-80)
+    remote, cancel_remote = register_remote_scanner(hass, can_connect=True)
+    remote.inject_advertisement(device, make_advertisement(rssi=-20))
     cancel_local = register_local_scanner(hass, device, advertisement)
     await _abort_bluetooth_flows(hass)
+    backends_during_pair: list[BLEDevice] = []
+
+    async def _pair() -> bool:
+        backends_during_pair.append(selected_ble_backend(hass, device))
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    mock_device.pair.side_effect = _pair
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -426,6 +436,8 @@ async def test_async_step_user_keeps_proxy_selected_when_also_local(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once()
+    assert backends_during_pair == [device]
+    assert selected_ble_backend(hass, device) is not device
     cancel_local()
     cancel_remote()
 
@@ -675,13 +687,21 @@ async def test_async_step_bluetooth_proxy_selected_when_also_local(
 ) -> None:
     """Test bluetooth discovery proceeds when a proxy wins but a local adapter sees it."""
     device = make_ble_device()
-    advertisement = make_advertisement()
-    remote, cancel_remote = register_remote_scanner(hass)
+    advertisement = make_advertisement(rssi=-80)
+    remote, cancel_remote = register_remote_scanner(hass, can_connect=True)
     cancel_local = register_local_scanner(hass, device, advertisement)
+    backends_during_pair: list[BLEDevice] = []
+
+    async def _pair() -> bool:
+        backends_during_pair.append(selected_ble_backend(hass, device))
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    mock_device.pair.side_effect = _pair
     try:
         # Register the local adapter before the proxy advertisement so the
         # discovery flow can see a local route when it starts.
-        remote.inject_advertisement(device, advertisement)
+        remote.inject_advertisement(device, make_advertisement(rssi=-20))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -692,6 +712,8 @@ async def test_async_step_bluetooth_proxy_selected_when_also_local(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == DEVICE_ADDRESS
         mock_device.pair.assert_awaited_once()
+        assert backends_during_pair == [device]
+        assert selected_ble_backend(hass, device) is not device
     finally:
         cancel_local()
         cancel_remote()

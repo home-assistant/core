@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RyseConfigEntry, _async_unpair
 from .const import MANUFACTURER_NAME
+from .helpers import async_best_local_scanner_device, pin_ble_connection
 
 PARALLEL_UPDATES = 1  # one BLE connection at a time
 _RECONNECT_COOLDOWN = 5.0
@@ -284,7 +285,7 @@ class RyseCoverEntity(CoverEntity):
             if self._is_connected():
                 self._async_attach_disconnect_callback()
                 return True
-            if await self._device.pair():
+            if await self._async_pair_on_local_adapter():
                 if self._expected_disconnect:
                     await self._async_release_client()
                     return False
@@ -298,6 +299,16 @@ class RyseCoverEntity(CoverEntity):
             if start_reauth:
                 self._config_entry.async_start_reauth(self.hass)
             return False
+
+    async def _async_pair_on_local_adapter(self) -> bool:
+        """Bond on the selected local adapter, not a proxy-selected backend."""
+        scanner_device = async_best_local_scanner_device(
+            self.hass, self._device.address
+        )
+        if scanner_device is None:
+            return False
+        with pin_ble_connection(scanner_device.ble_device):
+            return await self._device.pair()
 
     async def _async_send_command(
         self, description: str, send: Callable[[], Coroutine[Any, Any, None]]
