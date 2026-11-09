@@ -30,11 +30,8 @@ def _parse_timestamp(value: str | None) -> datetime | None:
     if value is None:
         return None
     try:
-        parsed = dt_util.parse_datetime(value)
+        parsed = dt_util.parse_datetime(value, raise_on_error=True)
     except ValueError:
-        # Well formatted but not a valid date, for example 2024-02-30
-        return None
-    if parsed is None:
         return None
     return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
