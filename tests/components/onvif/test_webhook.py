@@ -180,9 +180,8 @@ async def test_webhook_id_changes_on_reload(
 @pytest.mark.parametrize(
     "error",
     [
-        pytest.param(Fault("no notification support"), id="handled_error"),
-        # Raised past the webhook manager and suppressed when starting events.
-        pytest.param(TransportError("error", 500), id="unhandled_error"),
+        pytest.param(Fault("no notification support"), id="fault"),
+        pytest.param(TransportError("error", 500), id="transport_error"),
     ],
 )
 async def test_webhook_unregistered_when_subscription_fails(

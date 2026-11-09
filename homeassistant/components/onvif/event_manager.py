@@ -50,6 +50,7 @@ CREATE_ERRORS = (
     asyncio.TimeoutError,
     XMLParseError,
     ValidationError,
+    TransportError,
 )
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
@@ -571,14 +572,9 @@ class WebHookManager:
         )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
-        started = False
-        try:
-            started = await self._async_start_webhook()
-        finally:
-            if not started:
-                # Unload skips stopping events if no event subscription started.
-                self._async_unregister_webhook()
-        if not started:
+        if not await self._async_start_webhook():
+            # Unload skips stopping events if no event subscription started.
+            self._async_unregister_webhook()
             self.state = WebHookManagerState.FAILED
             return False
         self.state = WebHookManagerState.STARTED
