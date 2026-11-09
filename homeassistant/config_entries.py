@@ -77,6 +77,7 @@ from .helpers.json import (
     cached_json_fragment,
     cached_json_fragment_sorted,
     json_fragment,
+    save_json,
 )
 from .helpers.typing import ConfigType, DiscoveryInfoType, NoEventData, Undefined
 from .loader import async_suggest_report_issue
@@ -147,6 +148,7 @@ SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
 SETUP_RETRY_AFTER_MAX_WAIT = 86400  # 1 day
 
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
+ISSUE_UNIQUE_ID_COLLISIONS_REMOVED = "config_entry_unique_id_collisions_removed"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
 
 
@@ -2273,6 +2275,8 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = ConfigEntryItems(hass)
         self._store = ConfigEntryStore(hass)
+        # Colliding entries which were not loaded and could not be backed up
+        self._unloaded_colliding_entries: list[dict[str, Any]] = []
         self._initialized = asyncio.Event()
         EntityRegistryDisabledHandler(hass).async_setup()
 
@@ -2451,9 +2455,13 @@ class ConfigEntries:
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
         migrated_domains: set[str] = set()
+        stored_entries: dict[str, dict[str, Any]] = {}
+        # Removed entry, and the entry kept instead of it
+        removed_entries: list[tuple[dict[str, Any], ConfigEntry]] = []
         for entry in config["entries"]:
             entry_id = entry["entry_id"]
             entry_domain = entry["domain"]
+            stored_entries[entry_id] = entry
 
             # A custom integration that a built-in integration took over keeps its
             # entries, they belong to the built-in domain from now on. Recovery
@@ -2466,6 +2474,20 @@ class ConfigEntries:
             ):
                 migrated_domains.add(entry_domain)
                 entry_domain = replacement
+
+            replaced_entry: ConfigEntry | None = None
+            if (unique_id := entry["unique_id"]) is not None and (
+                existing_entry := entries.get_entry_by_domain_and_unique_id(
+                    entry_domain, unique_id
+                )
+            ) is not None:
+                if _colliding_entry_rank(entry) <= _colliding_entry_rank(
+                    stored_entries[existing_entry.entry_id]
+                ):
+                    removed_entries.append((entry, existing_entry))
+                    continue
+                replaced_entry = existing_entry
+                del entries[replaced_entry.entry_id]
 
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
@@ -2491,8 +2513,15 @@ class ConfigEntries:
                 version=entry["version"],
             )
             entries[entry_id] = config_entry
+            if replaced_entry is not None:
+                removed_entries.append(
+                    (stored_entries[replaced_entry.entry_id], config_entry)
+                )
 
         self._entries = entries
+
+        if removed_entries:
+            await self._async_remove_unique_id_collisions(removed_entries)
 
         if migrated_domains:
             _LOGGER.info(
@@ -3100,6 +3129,83 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass, integration=integration)
 
+    async def _async_remove_unique_id_collisions(
+        self, removed_entries: list[tuple[dict[str, Any], ConfigEntry]]
+    ) -> None:
+        """Back up stored entries which were not loaded because of a collision.
+
+        The entries have the same domain and unique id as an entry which was
+        loaded. They are saved as they were stored and removed from the store.
+        """
+        timestamp = f"{utcnow():%Y%m%d%H%M%S}"
+        path = self.hass.config.path(
+            storage.STORAGE_DIR,
+            f"{STORAGE_KEY}.unique_id_collisions.{timestamp}.json",
+        )
+        try:
+            await self.hass.async_add_executor_job(
+                functools.partial(
+                    save_json,
+                    path,
+                    {"entries": [entry for entry, _ in removed_entries]},
+                    private=True,
+                    atomic_writes=True,
+                )
+            )
+        except HomeAssistantError:
+            # Keep the entries in the store, the backup is retried on next start
+            self._unloaded_colliding_entries = [entry for entry, _ in removed_entries]
+            for entry, kept_entry in removed_entries:
+                _LOGGER.error(
+                    (
+                        "Config entry '%s' (%s) of integration %s was not loaded"
+                        " because config entry '%s' (%s) has the same unique id"
+                        " '%s'. It could not be backed up to %s and is kept in"
+                        " storage"
+                    ),
+                    entry["title"],
+                    entry["entry_id"],
+                    kept_entry.domain,
+                    kept_entry.title,
+                    kept_entry.entry_id,
+                    kept_entry.unique_id,
+                    path,
+                )
+            return
+
+        for entry, kept_entry in removed_entries:
+            _LOGGER.warning(
+                (
+                    "Config entry '%s' (%s) of integration %s was removed because"
+                    " config entry '%s' (%s) has the same unique id '%s'. It was"
+                    " backed up to %s"
+                ),
+                entry["title"],
+                entry["entry_id"],
+                kept_entry.domain,
+                kept_entry.title,
+                kept_entry.entry_id,
+                kept_entry.unique_id,
+                path,
+            )
+        ir.async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"{ISSUE_UNIQUE_ID_COLLISIONS_REMOVED}_{timestamp}",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_UNIQUE_ID_COLLISIONS_REMOVED,
+            translation_placeholders={
+                "backup_path": path,
+                "entries": "\n".join(
+                    f"- '{entry['title']}' ({kept_entry.domain})"
+                    for entry, kept_entry in removed_entries
+                ),
+            },
+        )
+        self._async_schedule_save()
+
     @callback
     def _async_schedule_save(self) -> None:
         """Save the entity registry to a file."""
@@ -3110,7 +3216,10 @@ class ConfigEntries:
         """Return data to save."""
         # typing does not know that the storage fragment will serialize to a dict
         return {
-            "entries": [entry.as_storage_fragment for entry in self._entries.values()]  # type: ignore[misc]
+            "entries": [
+                *(entry.as_storage_fragment for entry in self._entries.values()),  # type: ignore[list-item]
+                *self._unloaded_colliding_entries,
+            ]
         }
 
     async def async_wait_component(self, entry: ConfigEntry) -> bool:
@@ -3189,6 +3298,15 @@ class ConfigEntries:
                     )
 
                     break  # Only create one issue per domain
+
+
+def _colliding_entry_rank(entry: dict[str, Any]) -> tuple[bool, bool, datetime]:
+    """Rank a stored entry, the highest ranked of entries with a colliding unique id is kept."""
+    return (
+        entry["source"] != SOURCE_IGNORE,
+        entry["disabled_by"] is None,
+        datetime.fromisoformat(entry["modified_at"]),
+    )
 
 
 @callback

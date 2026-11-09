@@ -3,9 +3,11 @@
 import asyncio
 from collections.abc import Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
+from copy import deepcopy
 from datetime import timedelta
 from ipaddress import ip_address
 import logging
+from pathlib import Path
 import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -11278,6 +11280,186 @@ async def test_unique_id_collision_issue_keeps_ignore(
     await manager.async_remove(entries[1].entry_id)
 
     assert not issue_registry.issues
+
+
+def _stored_entry(
+    entry_id: str,
+    domain: str,
+    unique_id: str | None,
+    *,
+    disabled_by: str | None = None,
+    modified_at: str = "1970-01-01T00:00:00+00:00",
+    source: str = "user",
+) -> dict[str, Any]:
+    """Return a config entry as it is stored."""
+    return {
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "data": {"host": entry_id},
+        "disabled_by": disabled_by,
+        "discovery_keys": {},
+        "domain": domain,
+        "entry_id": entry_id,
+        "minor_version": 1,
+        "modified_at": modified_at,
+        "options": {},
+        "pref_disable_new_entities": False,
+        "pref_disable_polling": False,
+        "source": source,
+        "subentries": {},
+        "title": f"Title {entry_id}",
+        "unique_id": unique_id,
+        "version": 1,
+    }
+
+
+@pytest.mark.freeze_time("2026-11-03 12:34:56+00:00")
+async def test_load_unique_id_collisions(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """Test only the highest ranked stored entry with a unique_id is loaded."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / ".storage").mkdir()
+    ignore = config_entries.SOURCE_IGNORE
+    stored_entries = [
+        _stored_entry("a1", "test", "uid"),
+        _stored_entry("b1", "test", None),
+        # Equally ranked, the first stored entry is kept
+        _stored_entry("a2", "test", "uid"),
+        _stored_entry("b2", "test", None),
+        # Same unique_id in another domain is not a collision
+        _stored_entry("c1", "test2", "uid"),
+        _stored_entry("a3", "test", "uid", source=ignore),
+        _stored_entry("d1", "test3", "uid", source=ignore),
+        _stored_entry("d2", "test3", "uid", source=ignore),
+        # An entry which is not ignored replaces an ignored entry stored before it
+        _stored_entry("d3", "test3", "uid"),
+        _stored_entry("d4", "test3", "uid"),
+        # An enabled entry replaces a disabled entry
+        _stored_entry("f1", "test4", "uid", disabled_by="user"),
+        _stored_entry("f2", "test4", "uid"),
+        # A more recently modified entry replaces an older entry
+        _stored_entry("g1", "test5", "uid"),
+        _stored_entry("g2", "test5", "uid", modified_at="2026-01-01T00:00:00+00:00"),
+        # An entry of a taken over custom integration collides after migration
+        _stored_entry("e1", "marketplace", "12345"),
+        _stored_entry("e2", "hacs", "12345"),
+    ]
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "data": {"entries": deepcopy(stored_entries)},
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    loaded_entry_ids = ["a1", "b1", "b2", "c1", "d3", "f2", "g2", "e1"]
+    assert manager.async_entry_ids() == loaded_entry_ids
+    for domain, unique_id, entry_id in (
+        ("test", "uid", "a1"),
+        ("test3", "uid", "d3"),
+        ("test4", "uid", "f2"),
+        ("test5", "uid", "g2"),
+        ("marketplace", "12345", "e1"),
+    ):
+        entry = manager.async_entry_for_domain_unique_id(domain, unique_id)
+        assert entry.entry_id == entry_id
+
+    backup_path = (
+        tmp_path / ".storage" / "core.config_entries.unique_id_collisions."
+        "20261103123456.json"
+    )
+    removed = [
+        ("a2", "a1", "test", "uid"),
+        ("a3", "a1", "test", "uid"),
+        ("d2", "d1", "test3", "uid"),
+        ("d1", "d3", "test3", "uid"),
+        ("d4", "d3", "test3", "uid"),
+        ("f1", "f2", "test4", "uid"),
+        ("g1", "g2", "test5", "uid"),
+        ("e2", "e1", "marketplace", "12345"),
+    ]
+    stored_by_id = {entry["entry_id"]: entry for entry in stored_entries}
+    assert json_loads(backup_path.read_text()) == {
+        "entries": [stored_by_id[entry_id] for entry_id, *_ in removed]
+    }
+    assert backup_path.stat().st_mode & 0o777 == 0o600
+
+    assert [
+        record.getMessage()
+        for record in caplog.records
+        if "has the same unique id" in record.message
+    ] == [
+        f"Config entry 'Title {entry_id}' ({entry_id}) of integration {domain} was "
+        f"removed because config entry 'Title {kept}' ({kept}) has the same unique "
+        f"id '{unique_id}'. It was backed up to {backup_path}"
+        for entry_id, kept, domain, unique_id in removed
+    ]
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collisions_removed_20261103123456"
+    )
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.is_persistent
+    assert issue.translation_key == "config_entry_unique_id_collisions_removed"
+    assert issue.translation_placeholders == {
+        "backup_path": str(backup_path),
+        "entries": "\n".join(
+            f"- 'Title {entry_id}' ({domain})" for entry_id, _, domain, _ in removed
+        ),
+    }
+
+    await flush_store(manager._store)
+    assert [
+        entry["entry_id"]
+        for entry in hass_storage[config_entries.STORAGE_KEY]["data"]["entries"]
+    ] == loaded_entry_ids
+
+
+async def test_load_unique_id_collisions_backup_fails(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """Test colliding entries are kept in storage when they can't be backed up."""
+    # There is no .storage directory to write the backup to
+    hass.config.config_dir = str(tmp_path)
+    stored_entries = [
+        _stored_entry("a1", "test", "uid"),
+        _stored_entry("a2", "test", "uid"),
+    ]
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "data": {"entries": deepcopy(stored_entries)},
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    assert manager.async_entry_ids() == ["a1"]
+    assert "Saving file failed" in caplog.text
+    assert (
+        "Config entry 'Title a2' (a2) of integration test was not loaded because "
+        "config entry 'Title a1' (a1) has the same unique id 'uid'. It could not be "
+        "backed up to"
+    ) in caplog.text
+    assert not issue_registry.issues
+
+    # A later save keeps the entry which was not loaded
+    manager.async_update_entry(manager.async_get_entry("a1"), title="New title")
+    await flush_store(manager._store)
+    saved_entries = hass_storage[config_entries.STORAGE_KEY]["data"]["entries"]
+    assert [entry["entry_id"] for entry in saved_entries] == ["a1", "a2"]
+    assert saved_entries[0]["title"] == "New title"
+    assert saved_entries[1] == stored_entries[1]
 
 
 async def test_context_no_leak(hass: HomeAssistant) -> None:
