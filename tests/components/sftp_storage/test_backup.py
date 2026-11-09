@@ -687,3 +687,37 @@ async def test_agents_download_closed_while_connecting(
     assert not downloaded_files
     # One connection to find the archive, one to read it
     assert [conn.close.call_count for conn in ssh_connections] == [1, 1]
+
+
+async def test_agents_download_aclosed_while_connecting(
+    hass: HomeAssistant,
+    ssh_connections: list[SSHClientConnectionMock],
+    downloaded_files: list[SFTPOpenMock],
+) -> None:
+    """Test the download can be closed gracefully while connecting."""
+    agent = async_get_manager(hass).backup_agents[f"{DOMAIN}.{TEST_AGENT_ID}"]
+    stream = await agent.async_download_backup(TEST_AGENT_BACKUP.backup_id)
+
+    connect = sftp_client.connect.side_effect
+    connecting = asyncio.Event()
+    connected = asyncio.Event()
+
+    @async_context_manager
+    async def paused_connect(*args: Any, **kwargs: Any) -> SSHClientConnectionMock:
+        connecting.set()
+        await connected.wait()
+        return await connect(*args, **kwargs)
+
+    sftp_client.connect.side_effect = paused_connect
+
+    read = asyncio.create_task(anext(stream))
+    await connecting.wait()
+    await stream.aclose()
+    connected.set()
+    with pytest.raises(StopAsyncIteration):
+        await read
+
+    # The archive is opened before the closed download aborts the connection
+    assert len(downloaded_files) == 1
+    # One connection to find the archive, one to read it
+    assert [conn.close.call_count for conn in ssh_connections] == [1, 1]
