@@ -61,8 +61,14 @@ async def async_attach_trigger(
     config: ConfigType,
     action: TriggerActionType,
     trigger_info: TriggerInfo,
+    *,
+    message_callback: Callable[[ReceiveMessage], None] | None = None,
 ) -> CALLBACK_TYPE:
-    """Listen for state changes based on configuration."""
+    """Listen for state changes based on configuration.
+
+    The message callback gets every received message, also those that do not
+    fire the trigger.
+    """
     trigger_data: TriggerData = trigger_info["trigger_data"]
     command_template: Callable[
         [PublishPayloadType, TemplateVarsType], PublishPayloadType
@@ -87,6 +93,8 @@ async def async_attach_trigger(
     @callback
     def mqtt_automation_listener(mqttmsg: ReceiveMessage) -> None:
         """Listen for MQTT messages."""
+        if message_callback is not None:
+            message_callback(mqttmsg)
         if wanted_payload is None or (
             (payload := value_template(mqttmsg.payload, PayloadSentinel.DEFAULT))
             and payload is not PayloadSentinel.DEFAULT

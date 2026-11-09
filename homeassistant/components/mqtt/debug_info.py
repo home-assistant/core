@@ -1,6 +1,7 @@
 """Helper to handle a set of topics to subscribe to."""
 
 from collections import deque
+from collections.abc import Iterable
 from dataclasses import dataclass
 import datetime as dt
 import time
@@ -139,7 +140,19 @@ def add_trigger_discovery_data(
     hass.data[DATA_MQTT].debug_info_triggers[discovery_hash] = {
         "device_id": device_id,
         "discovery_data": discovery_data,
+        "messages": deque(maxlen=STORED_MESSAGES),
     }
+
+
+def log_trigger_message(
+    hass: HomeAssistant, discovery_hash: tuple[str, str], msg: ReceiveMessage
+) -> None:
+    """Log a message received by a device trigger."""
+    if (
+        trigger := hass.data[DATA_MQTT].debug_info_triggers.get(discovery_hash)
+    ) is not None and msg not in (messages := trigger["messages"]):
+        # Each automation that uses the trigger receives the message
+        messages.append(msg)
 
 
 def update_trigger_discovery_data(
@@ -175,13 +188,20 @@ def _message_as_dict(
     }
 
 
+def messages_as_dicts(
+    messages: Iterable[ReceiveMessage | TimestampedPublishMessage],
+) -> list[dict[str, Any]]:
+    """Return stored messages with their time as a datetime."""
+    monotonic_time_diff = time.time() - time.monotonic()
+    return [_message_as_dict(msg, monotonic_time_diff) for msg in messages]
+
+
 def topics_for_entity(
     hass: HomeAssistant, entity_id: str, include_messages: bool
 ) -> list[dict[str, Any]]:
     """Return the subscribed and published topics of an entity."""
     if (entity_info := hass.data[DATA_MQTT].debug_info_entities.get(entity_id)) is None:
         return []
-    monotonic_time_diff = time.time() - time.monotonic()
     topics: list[dict[str, Any]] = []
     for topic, subscription in entity_info["subscriptions"].items():
         item: dict[str, Any] = {
@@ -190,10 +210,7 @@ def topics_for_entity(
             "qos": subscription["qos"],
         }
         if include_messages:
-            item["messages"] = [
-                _message_as_dict(msg, monotonic_time_diff)
-                for msg in subscription["messages"]
-            ]
+            item["messages"] = messages_as_dicts(subscription["messages"])
         topics.append(item)
     for topic, transmitted in entity_info["transmitted"].items():
         messages = transmitted["messages"]
@@ -203,9 +220,7 @@ def topics_for_entity(
             "qos": messages[-1].qos,
         }
         if include_messages:
-            item["messages"] = [
-                _message_as_dict(msg, monotonic_time_diff) for msg in messages
-            ]
+            item["messages"] = messages_as_dicts(messages)
         topics.append(item)
     return topics
 

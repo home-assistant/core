@@ -183,6 +183,8 @@ class TriggerDebugInfo(TypedDict):
 
     device_id: str
     discovery_data: DiscoveryInfoType
+    # Only received while an automation uses the trigger
+    messages: deque[ReceiveMessage]
 
 
 class PendingDiscovered(TypedDict):

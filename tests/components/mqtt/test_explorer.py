@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockUser, async_fire_mqtt_message
 from pytest_homeassistant.components.mqtt.common import MOCK_SENSOR_SUBENTRY_DATA
 from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
-from homeassistant.components import button, light, mqtt, sensor
+from homeassistant.components import automation, button, light, mqtt, sensor
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 YAML_LIGHT_CONFIG = {
     "name": "Kitchen",
@@ -639,7 +640,7 @@ async def test_artifact_details(
                 "device_discovery": False,
             }
         ],
-        # The debug info keeps no messages for device triggers
+        # No automation uses the trigger, so it receives no messages
         "topics": [
             {
                 "topic": "z2m/action",
@@ -649,6 +650,73 @@ async def test_artifact_details(
             }
         ],
     }
+
+
+@pytest.mark.usefixtures("tag_mock")
+async def test_artifact_messages(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the received messages of a tag and of a device trigger in use."""
+    await mqtt_mock_entry()
+    for topic, config in (
+        (DISCOVERY_TRIGGER_TOPIC, DISCOVERY_TRIGGER_CONFIG),
+        (DISCOVERY_TAG_TOPIC, DISCOVERY_TAG_CONFIG),
+    ):
+        async_fire_mqtt_message(hass, topic, json.dumps(config))
+    await hass.async_block_till_done()
+    # Two automations use the trigger, the message is kept once
+    trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": _device_id(hass, device_registry, "z2m_device"),
+        "discovery_id": "z2m_button",
+        "type": "button_short_press",
+        "subtype": "button_1",
+    }
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {"trigger": trigger, "action": {"event": "test_event"}},
+                {"trigger": trigger, "action": {"event": "test_event"}},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "z2m/action", "single")
+    async_fire_mqtt_message(hass, "z2m/tag", "tag_1")
+    await hass.async_block_till_done()
+    client = await hass_ws_client(hass)
+
+    for artifact_id, topic, payload in (
+        ("device_trigger:z2m_button", "z2m/action", "single"),
+        ("tag:z2m_tag", "z2m/tag", "tag_1"),
+    ):
+        await client.send_json_auto_id(
+            {"type": "mqtt/explorer/details", "artifact_id": artifact_id}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"]["topics"] == [
+            {
+                "topic": topic,
+                "direction": "subscribe",
+                "qos": 0,
+                "messages": [
+                    {
+                        "payload": payload,
+                        "qos": 0,
+                        "retain": False,
+                        "time": ANY,
+                        "topic": topic,
+                    }
+                ],
+            }
+        ]
 
 
 async def test_device_discovery_details(

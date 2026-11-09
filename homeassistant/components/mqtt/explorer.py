@@ -1,6 +1,7 @@
 """Websocket API to explore how MQTT items are set up."""
 
-from typing import Any
+from collections.abc import Iterable
+from typing import Any, NamedTuple
 
 import probatio
 
@@ -38,7 +39,7 @@ from .const import (
     DEFAULT_QOS,
     DOMAIN,
 )
-from .models import DATA_MQTT
+from .models import DATA_MQTT, ReceiveMessage
 
 SOURCE_DISCOVERY = "discovery"
 SOURCE_SUBENTRY = "subentry"
@@ -130,28 +131,37 @@ def _entity_source(
     return sources.yaml()
 
 
+class _Artifact(NamedTuple):
+    """A device trigger or tag scanner."""
+
+    artifact_id: str
+    type: str
+    device_id: str | None
+    discovery_data: DiscoveryInfoType
+    messages: Iterable[ReceiveMessage]
+
+
 @callback
-def _artifacts(
-    hass: HomeAssistant,
-) -> list[tuple[str, str, str | None, DiscoveryInfoType]]:
-    """Return artifact ID, type, device ID and discovery data of all artifacts."""
+def _artifacts(hass: HomeAssistant) -> list[_Artifact]:
     mqtt_data = hass.data[DATA_MQTT]
-    artifacts: list[tuple[str, str, str | None, DiscoveryInfoType]] = [
-        (
+    artifacts = [
+        _Artifact(
             f"{ARTIFACT_DEVICE_TRIGGER}:{discovery_id}",
             ARTIFACT_DEVICE_TRIGGER,
             trigger["device_id"],
             trigger["discovery_data"],
+            trigger["messages"],
         )
         for (_, discovery_id), trigger in mqtt_data.debug_info_triggers.items()
         if trigger["discovery_data"] is not None
     ]
     artifacts.extend(
-        (
+        _Artifact(
             f"{ARTIFACT_TAG}:{discovery_id}",
             ARTIFACT_TAG,
             device_id,
             tag_scanner.discovery_data,
+            tag_scanner.messages,
         )
         for device_id, tag_scanners in mqtt_data.tags.items()
         for discovery_id, tag_scanner in tag_scanners.items()
@@ -160,13 +170,10 @@ def _artifacts(
 
 
 def _artifact_topics(
-    discovery_data: DiscoveryInfoType, include_messages: bool
+    artifact: _Artifact, include_messages: bool
 ) -> list[dict[str, Any]]:
-    """Return the topic a device trigger or tag subscribes to.
-
-    The debug info keeps no messages for them, so there are no stored messages.
-    """
-    payload = discovery_data[ATTR_DISCOVERY_PAYLOAD]
+    """Return the topic a device trigger or tag subscribes to."""
+    payload = artifact.discovery_data[ATTR_DISCOVERY_PAYLOAD]
     if CONF_TOPIC not in payload:
         return []
     topic: dict[str, Any] = {
@@ -175,7 +182,7 @@ def _artifact_topics(
         "qos": payload.get(CONF_QOS, DEFAULT_QOS),
     }
     if include_messages:
-        topic["messages"] = []
+        topic["messages"] = debug_info.messages_as_dicts(artifact.messages)
     return [topic]
 
 
@@ -269,18 +276,18 @@ def _async_structure(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
         )
 
     artifacts: list[dict[str, Any]] = []
-    for artifact_id, artifact_type, device_id, discovery_data in _artifacts(hass):
-        source = sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD])
-        if device_id is not None:
-            device_sources.setdefault(device_id, set()).add(source)
+    for artifact in _artifacts(hass):
+        source = sources.discovery(artifact.discovery_data[ATTR_DISCOVERY_PAYLOAD])
+        if artifact.device_id is not None:
+            device_sources.setdefault(artifact.device_id, set()).add(source)
         artifacts.append(
             {
-                "artifact_id": artifact_id,
-                "type": artifact_type,
+                "artifact_id": artifact.artifact_id,
+                "type": artifact.type,
                 "source": source,
-                "device_id": device_id,
-                "node_id": _node_id(discovery_data, discovery_prefix),
-                "topics": _artifact_topics(discovery_data, include_messages=False),
+                "device_id": artifact.device_id,
+                "node_id": _node_id(artifact.discovery_data, discovery_prefix),
+                "topics": _artifact_topics(artifact, include_messages=False),
             }
         )
 
@@ -367,7 +374,7 @@ def _discovery_config(source: str, discovery_data: DiscoveryInfoType) -> dict[st
 @callback
 def _device_discovery_items(
     hass: HomeAssistant,
-    artifacts: list[tuple[str, str, str | None, DiscoveryInfoType]],
+    artifacts: list[_Artifact],
 ) -> list[tuple[str | None, DiscoveryInfoType]]:
     """Return the device ID and discovery data of the items from device discovery.
 
@@ -376,7 +383,7 @@ def _device_discovery_items(
     mqtt_data = hass.data[DATA_MQTT]
     entity_registry = er.async_get(hass)
     items: list[tuple[str | None, DiscoveryInfoType]] = [
-        (device_id, discovery_data) for _, _, device_id, discovery_data in artifacts
+        (artifact.device_id, artifact.discovery_data) for artifact in artifacts
     ]
     entities: list[tuple[str | None, DiscoveryInfoType]] = [
         (entity_id, entity_info["discovery_data"])
@@ -540,14 +547,15 @@ def _async_details(
 
     artifacts = _artifacts(hass)
     if (artifact_id := msg.get("artifact_id")) is not None:
-        for item_id, _, _, discovery_data in artifacts:
-            if item_id == artifact_id:
+        for artifact in artifacts:
+            if artifact.artifact_id == artifact_id:
+                discovery_data = artifact.discovery_data
                 source = sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD])
                 return {
                     "configs": [
                         _config_result(_discovery_config(source, discovery_data))
                     ],
-                    "topics": _artifact_topics(discovery_data, include_messages=True),
+                    "topics": _artifact_topics(artifact, include_messages=True),
                 }
         return None
 
@@ -567,8 +575,9 @@ def _async_details(
             )
         ) is not None and not config["device_discovery"]:
             configs.setdefault(config["source"], _device_part(config))
-    for _, _, artifact_device_id, discovery_data in artifacts:
-        if artifact_device_id != device_id or _is_device_discovery(discovery_data):
+    for artifact in artifacts:
+        discovery_data = artifact.discovery_data
+        if artifact.device_id != device_id or _is_device_discovery(discovery_data):
             continue
         source = sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD])
         configs.setdefault(
