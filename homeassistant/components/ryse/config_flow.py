@@ -122,7 +122,6 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=name, data={})
 
-        self._set_confirm_only()
         self.context["title_placeholders"] = {"name": name}
         return self.async_show_form(
             step_id="bluetooth_confirm",
