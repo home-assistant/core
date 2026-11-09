@@ -482,6 +482,7 @@ RPC_SWITCHES = {
         key="switch",
         translation_key="input_lock",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         # on a device in cover profile the "switch" key resolves to the cover
         # component, which is handled by "cover_in_locked"
         removal_condition=lambda config, _status, key: (
@@ -497,6 +498,7 @@ RPC_SWITCHES = {
         key="cover",
         translation_key="input_lock",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         removal_condition=lambda config, _status, key: "in_locked" not in config[key],
         is_on=lambda config: bool(config["in_locked"]),
         method_on="cover_setconfig",

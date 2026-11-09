@@ -35,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from . import (
     init_integration,
@@ -763,6 +763,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
     assert entity_registry.async_get(entity_id2) is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_switch_input_lock(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -782,7 +783,6 @@ async def test_rpc_switch_input_lock(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-switch:0-switch_in_locked"
     assert entry.entity_category is EntityCategory.CONFIG
-    assert entry.disabled_by is None
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -822,6 +822,7 @@ async def test_rpc_switch_input_lock(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_cover_input_lock(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -849,6 +850,23 @@ async def test_rpc_cover_input_lock(
         blocking=True,
     )
     mock_rpc_device.cover_setconfig.assert_awaited_once_with(0, {"in_locked": False})
+
+
+async def test_rpc_input_lock_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the input lock switch is disabled by default."""
+    monkeypatch.setitem(mock_rpc_device.config["cover:0"], "in_locked", False)
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_cover_0_input_lock"
+
+    assert hass.states.get(entity_id) is None
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
 
 
 async def test_rpc_input_lock_not_supported(

@@ -132,15 +132,15 @@
         "default": "mdi:swap-horizontal"
       },
       "input_lock": {
-        "default": "mdi:gesture-tap-button",
+        "default": "mdi:lock-open-outline",
         "state": {
-          "on": "mdi:cancel"
+          "on": "mdi:lock-outline"
         }
       },
       "input_lock_with_channel_name": {
-        "default": "mdi:gesture-tap-button",
+        "default": "mdi:lock-open-outline",
         "state": {
-          "on": "mdi:cancel"
+          "on": "mdi:lock-outline"
         }
       },
       "left_slot": {
