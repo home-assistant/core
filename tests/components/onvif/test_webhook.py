@@ -1,5 +1,6 @@
 """Tests for the ONVIF event webhook."""
 
+import asyncio
 from collections.abc import Generator
 from http import HTTPStatus
 from ipaddress import ip_address
@@ -12,6 +13,7 @@ from yarl import URL
 from zeep.exceptions import Fault, TransportError
 
 from homeassistant.components.onvif.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -123,12 +125,12 @@ async def test_webhook_notification(
     notification_manager.process.assert_called_once_with(NOTIFICATION)
 
 
+@pytest.mark.usefixtures("mock_onvif_camera")
 async def test_mac_based_webhook_not_registered(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     notification_manager: MagicMock,
-    mock_onvif_camera: MagicMock,
 ) -> None:
     """Test the webhook can't be reached with an id derived from the MAC."""
     await _async_setup(hass, config_entry)
@@ -189,7 +191,6 @@ async def test_webhook_unregistered_when_subscription_fails(
     hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     mock_onvif_camera: MagicMock,
-    notification_manager: MagicMock,
     caplog: pytest.LogCaptureFixture,
     error: Exception,
 ) -> None:
@@ -204,7 +205,52 @@ async def test_webhook_unregistered_when_subscription_fails(
 
     assert resp.status == HTTPStatus.OK
     assert f"Received message for unregistered webhook {url.name}" in caplog.text
-    notification_manager.process.assert_not_called()
+
+
+async def test_webhook_unregistered_when_subscription_cancelled(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    mock_onvif_camera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the webhook is unregistered when creating the subscription is cancelled."""
+    mock_onvif_camera.create_notification_manager.side_effect = asyncio.CancelledError
+    assert await async_setup_component(hass, "webhook", {})
+    await async_process_ha_core_config(hass, {"internal_url": INTERNAL_URL})
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    url = _subscribed_url(mock_onvif_camera)
+
+    client = await hass_client_no_auth()
+    resp = await client.post(url.path, data=NOTIFICATION)
+    await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.OK
+    assert f"Received message for unregistered webhook {url.name}" in caplog.text
+
+
+async def test_webhook_used_when_pullpoint_transport_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    mock_onvif_camera: MagicMock,
+    notification_manager: MagicMock,
+) -> None:
+    """Test the webhook is still used when PullPoint fails with a transport error."""
+    mock_onvif_camera.create_pullpoint_manager.side_effect = TransportError(
+        "error", 500
+    )
+    await _async_setup(hass, config_entry)
+    url = _subscribed_url(mock_onvif_camera)
+
+    client = await hass_client_no_auth()
+    resp = await client.post(url.path, data=NOTIFICATION)
+    await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.OK
+    notification_manager.process.assert_called_once_with(NOTIFICATION)
 
 
 async def test_webhook_external_url_fallback(

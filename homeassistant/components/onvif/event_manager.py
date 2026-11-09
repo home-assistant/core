@@ -572,8 +572,13 @@ class WebHookManager:
         )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
-        if not await self._async_start_webhook():
-            # Unload skips stopping events if no event subscription started.
+        # Unload skips stopping events if no event subscription started.
+        try:
+            started = await self._async_start_webhook()
+        except asyncio.CancelledError:
+            self._async_unregister_webhook()
+            raise
+        if not started:
             self._async_unregister_webhook()
             self.state = WebHookManagerState.FAILED
             return False
