@@ -11,7 +11,15 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import (
+    METRICS_PROFILE_AWAY,
+    METRICS_PROFILE_BOOST,
+    METRICS_PROFILE_HOME,
+    METRICS_PROFILE_UNKNOWN,
+    METRICS_UNIT_OFF,
+    METRICS_UNIT_ON,
+    setup_integration,
+)
 
 FILTER_SENSOR_ENTITY_ID = "sensor.vallox_remaining_time_for_filter"
 
@@ -74,9 +82,9 @@ async def test_remaining_time_for_filter(
 @pytest.mark.parametrize(
     ("metrics", "expected_state"),
     [
-        pytest.param({"A_CYC_STATE": 1}, "Away", id="away"),
-        pytest.param({"A_CYC_BOOST_TIMER": 30}, "Boost", id="boost"),
-        pytest.param({"A_CYC_STATE": 3}, STATE_UNKNOWN, id="unknown_profile"),
+        pytest.param(METRICS_PROFILE_AWAY, "Away", id="away"),
+        pytest.param(METRICS_PROFILE_BOOST, "Boost", id="boost"),
+        pytest.param(METRICS_PROFILE_UNKNOWN, STATE_UNKNOWN, id="unknown_profile"),
     ],
 )
 async def test_current_profile_sensor(hass: HomeAssistant, expected_state: str) -> None:
@@ -91,9 +99,9 @@ async def test_current_profile_sensor(hass: HomeAssistant, expected_state: str) 
     ("metrics", "expected_states"),
     [
         # The fan speeds come from metrics.json: 30%, 1310 rpm and 1270 rpm.
-        pytest.param({"A_CYC_MODE": 0}, ("30", "1310", "1270"), id="fan_on"),
+        pytest.param(METRICS_UNIT_ON, ("30", "1310", "1270"), id="unit_on"),
         # The unit keeps reporting its last fan speeds after it is turned off.
-        pytest.param({"A_CYC_MODE": 5}, ("0", "0", "0"), id="fan_off"),
+        pytest.param(METRICS_UNIT_OFF, ("0", "0", "0"), id="unit_off"),
         # Without the power state, the reported fan speeds cannot be trusted.
         pytest.param(
             {"A_CYC_MODE": None},
@@ -140,8 +148,8 @@ async def test_cell_state_sensor(hass: HomeAssistant, expected_state: str) -> No
 @pytest.mark.parametrize(
     ("metrics", "expected_state"),
     [
-        pytest.param({"A_CYC_STATE": 0}, STATE_UNKNOWN, id="home"),
-        pytest.param({"A_CYC_STATE": 1}, STATE_UNKNOWN, id="away"),
+        pytest.param(METRICS_PROFILE_HOME, STATE_UNKNOWN, id="home"),
+        pytest.param(METRICS_PROFILE_AWAY, STATE_UNKNOWN, id="away"),
         pytest.param({"A_CYC_EXTRA_TIMER": 10}, "10", id="extra"),
         pytest.param({"A_CYC_FIREPLACE_TIMER": 9}, "9", id="fireplace"),
         pytest.param({"A_CYC_BOOST_TIMER": 8}, "8", id="boost"),

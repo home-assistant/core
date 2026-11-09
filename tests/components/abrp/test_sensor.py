@@ -20,6 +20,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -266,6 +267,7 @@ async def test_availability_follows_stream_auth_not_connection(
     assert [
         record.levelno for record in caplog.records if "auth failed" in record.message
     ] == [logging.WARNING]
+    assert any(config_entry_with_vehicles.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     fire_connection(
         mock_telemetry_stream,

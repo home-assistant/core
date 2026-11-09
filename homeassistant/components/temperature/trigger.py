@@ -13,6 +13,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
 )
 from homeassistant.const import EntityStateAttribute, UnitOfTemperature
@@ -73,7 +74,9 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
         if state.domain == SENSOR_DOMAIN:
             return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         if state.domain == WEATHER_DOMAIN:
-            return state.attributes.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
+            return state.attributes.get(
+                WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT
+            )
         # Climate and water_heater: show_temp converts to system unit
         return self._hass.config.units.temperature_unit
 

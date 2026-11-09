@@ -9289,6 +9289,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[u20gvrqvaktexwfvbdnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'u20gvrqvaktexwfvbdnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'PC311_W_TY',
+    'model_id': 'vfwxetkavqrvg02u',
+    'name': 'Single-Phase Power Clamp /w 2 CTs',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[u8h3bty7qgg]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

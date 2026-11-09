@@ -100,6 +100,9 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "co2": {
+        "name": "Carbon dioxide"
+      },
       "cook_set_temp": {
         "name": "Cooking set temperature"
       },

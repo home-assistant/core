@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Literal, Self, overload
 from aiogithubapi import (
     GitHubAPI,
     GitHubAuthenticationException,
+    GitHubConnectionException,
     GitHubException,
     GitHubNotModifiedException,
     GitHubRatelimitException,
@@ -627,8 +628,15 @@ class MarketplaceManager:
                 f"{reset.hour}:{reset.minute}:{reset.second}",
             )
             self.disable(DisabledReason.RATE_LIMIT)
-        except MarketplaceError:
-            LOGGER.exception("Could not get the GitHub API rate limit")
+        except MarketplaceError as err:
+            # The queue tries again on its next run, a network hiccup needs no traceback
+            if isinstance(err.__cause__, GitHubConnectionException):
+                LOGGER.debug(
+                    "Could not reach GitHub to get the API rate limit: %s",
+                    err.__cause__,
+                )
+            else:
+                LOGGER.exception("Could not get the GitHub API rate limit")
 
         return 0
 
