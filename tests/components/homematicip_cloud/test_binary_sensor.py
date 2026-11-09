@@ -1061,16 +1061,25 @@ async def test_hmip_chamber_degraded_per_channel(
 async def test_hmip_smoke_detector_unknown_device_type(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
-    """Test a smoke sensor without a known alarm type is unknown, not off."""
+    """Test a device type the library does not know reads its smoke alarm."""
+    entity_id = "binary_sensor.unknown_smoke_smoke"
     device_data = json.loads(FIXTURE_DATA)["devices"]["3014F7110000000000000018"]
     device_data.update(
         id="3014F711000000000000UNKN", label="Unknown smoke", type="NEW_SMOKE"
     )
-    await default_mock_hap_factory.async_get_mock_hap(
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Unknown smoke"], extra_devices=[device_data]
     )
 
-    assert hass.states.get("binary_sensor.unknown_smoke_smoke").state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_manipulate_test_data(
+        hass,
+        mock_hap.hmip_device_by_entity_id[entity_id],
+        "smokeDetectorAlarmType",
+        SmokeDetectorAlarmType.PRIMARY_ALARM,
+        channel_real_index=1,
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 async def test_hmip_binary_sensor_unique_ids(

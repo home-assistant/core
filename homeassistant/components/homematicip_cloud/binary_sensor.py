@@ -21,7 +21,6 @@ from homematicip.device import (
     RotaryHandleSensor,
     ShutterContact,
     ShutterContactMagnetic,
-    SmokeDetector,
     TiltVibrationSensor,
     WeatherSensor,
     WeatherSensorPlus,
@@ -126,10 +125,8 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
         HmipBinarySensorDescription(
             key="smoke",
             device_class=BinarySensorDeviceClass.SMOKE,
-            device_value_fn=lambda device: (
-                device.smokeDetectorAlarmType == SmokeDetectorAlarmType.PRIMARY_ALARM
-                if isinstance(device, SmokeDetector)
-                else None
+            value_fn=lambda channel: (
+                channel.smokeDetectorAlarmType == SmokeDetectorAlarmType.PRIMARY_ALARM
             ),
             unique_id_channel=1,
         ),
