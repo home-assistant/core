@@ -29,6 +29,9 @@ DPT_PERCENT = {"main": 5, "sub": 1}
 DPT_COLOR_TEMP_ABS = {"main": 7, "sub": 600}
 DPT_COLOR_RGB = {"main": 232, "sub": 600}
 DPT_COLOR_RGBW = {"main": 251, "sub": 600}
+DPT_TIME = {"main": 10, "sub": 1}
+DPT_DATE = {"main": 11, "sub": 1}
+DPT_DATETIME = {"main": 19, "sub": 1}
 
 
 def _channel(
@@ -87,6 +90,12 @@ TEST_PROJECT: dict[str, Any] = {
         "6/1/4": _group_address("6/1/4", DPT_PERCENT),
         "6/1/5": _group_address("6/1/5", DPT_PERCENT),
         "6/1/6": _group_address("6/1/6", DPT_PERCENT),
+        "7/3/1": _group_address("7/3/1", DPT_DATETIME),
+        "7/3/2": _group_address("7/3/2", DPT_DATETIME),
+        "7/3/3": _group_address("7/3/3", DPT_TIME),
+        "7/3/4": _group_address("7/3/4", DPT_TIME),
+        "7/3/5": _group_address("7/3/5", DPT_DATE),
+        "7/3/6": _group_address("7/3/6", DPT_DATETIME),
     },
     "devices": {
         "1.1.1": {
@@ -152,6 +161,18 @@ TEST_PROJECT: dict[str, Any] = {
                 ),
             },
         },
+        "1.3.4": {
+            "name": "Zeitgeber",
+            "channels": {
+                "CH-1": _channel(
+                    "Systemuhr",
+                    ["1001"],
+                    ["co-130", "co-131", "co-132", "co-133", "co-134", "co-135"],
+                ),
+                # only sends date and time - nothing to set
+                "CH-2": _channel("Zeitsender", ["1001"], ["co-131", "co-133"]),
+            },
+        },
     },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
@@ -183,6 +204,12 @@ TEST_PROJECT: dict[str, Any] = {
         "co-73": _com_object(["423.84"], ["6/1/4"]),
         "co-74": _com_object(["423.64"], ["6/1/5"]),
         "co-75": _com_object(["423.85"], ["6/1/6"]),
+        "co-130": _com_object(["1001.52"], ["7/3/1"]),
+        "co-131": _com_object(["1001.51"], ["7/3/2"]),
+        "co-132": _com_object(["1001.57"], ["7/3/3"]),
+        "co-133": _com_object(["1001.54"], ["7/3/4"]),
+        "co-134": _com_object(["1001.55"], ["7/3/5"]),
+        "co-135": _com_object(["1001.56"], ["7/3/6"]),
     },
 }
 
@@ -256,6 +283,8 @@ def test_functional_block_platforms() -> None:
         "423": [Platform.LIGHT],
         "427": [Platform.LIGHT],
         "800": [Platform.COVER],
+        # datetime is the default for FB 1001
+        "1001": [Platform.DATETIME, Platform.DATE, Platform.TIME],
     }
 
 
@@ -445,6 +474,44 @@ def test_incomplete_config_dropped() -> None:
     assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
 
 
+@pytest.mark.parametrize(
+    ("platform", "knx_config", "unmatched"),
+    [
+        (
+            Platform.DATETIME,
+            # the first com object targeting the write address wins
+            {"ga_datetime": {"write": "7/3/1", "state": "7/3/2"}},
+            ["1001.54", "1001.55", "1001.56", "1001.57"],
+        ),
+        (
+            Platform.TIME,
+            {"ga_time": {"write": "7/3/3", "state": "7/3/4"}},
+            ["1001.51", "1001.52", "1001.55", "1001.56"],
+        ),
+    ],
+)
+def test_system_clock_suggestion(
+    platform: Platform, knx_config: dict[str, Any], unmatched: list[str]
+) -> None:
+    """Test FB 1001 suggestions."""
+    channel = _test_channel("1.3.4", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, platform)
+    assert suggestion is not None
+    assert suggestion["knx"] == knx_config
+    assert suggestion["unmatched"] == unmatched
+
+
+def test_system_clock_without_write_address_dropped() -> None:
+    """Test that date and time entities require an address to send to."""
+    # the date of the channel is only sent by the device
+    channel = _test_channel("1.3.4", "CH-1")
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.DATE) is None
+
+    channel = _test_channel("1.3.4", "CH-2")
+    for platform in (Platform.DATE, Platform.DATETIME, Platform.TIME):
+        assert _build_platform_suggestion(TEST_PROJECT, channel, platform) is None
+
+
 async def test_ws_get_entity_suggestions(
     knx: KNXTestKit,
     get_entity_suggestions: KnxSuggestionGetter,
@@ -457,7 +524,7 @@ async def test_ws_get_entity_suggestions(
 
     assert result["providers"]["fb"] == {
         "state": "ok",
-        "functional_blocks_found": ["417", "423", "427", "800", "999"],
+        "functional_blocks_found": ["1001", "417", "423", "427", "800", "999"],
     }
     suggestions = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
     assert sorted(suggestions) == [
@@ -467,6 +534,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.1.3_CH-1",
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
+        "fb_1.3.4_CH-1",
     ]
 
     switch_actuator = suggestions["fb_1.1.1_CH-1"]
@@ -488,6 +556,8 @@ async def test_ws_get_entity_suggestions(
     assert suggestions["fb_1.1.1_CH-2"]["suggested_name"] == "Ausgang 2"
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
+    # only platforms with a complete configuration are offered
+    assert suggestions["fb_1.3.4_CH-1"]["platform_options"] == ["datetime", "time"]
 
 
 async def test_ws_get_entity_suggestions_duplicates(

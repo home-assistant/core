@@ -40,7 +40,7 @@ from ..validation import (
     validate_sensor_attributes,
 )
 from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
-from .dpa import FB417, FB418, FB422, FB423, FB427, FB800
+from .dpa import FB417, FB418, FB422, FB423, FB427, FB800, FB1001
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
@@ -290,7 +290,15 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
 class DateKnxConfig:
     """UI configuration of a KNX date entity."""
 
-    ga_date: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="11.001")]
+    ga_date: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="11.001",
+            dpa_write=[FB1001.DATE_IN],
+            dpa_state=[FB1001.DATE_OUT],
+        ),
+    ]
     respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
     sync_state: SyncState = True
 
@@ -303,7 +311,13 @@ class DatetimeKnxConfig:
     """UI configuration of a KNX datetime entity."""
 
     ga_datetime: Annotated[
-        GroupAddressConfig, ga(write_required=True, valid_dpt="19.001")
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="19.001",
+            dpa_write=[FB1001.SYSTEM_CLOCK_SETTING, FB1001.SYSTEM_CLOCK_IN],
+            dpa_state=[FB1001.SYSTEM_CLOCK_OUT],
+        ),
     ]
     respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
     sync_state: SyncState = True
@@ -913,7 +927,15 @@ TEXT_KNX_SCHEMA = probatio.DataclassSchema(TextKnxConfig)
 class TimeKnxConfig:
     """UI configuration of a KNX time entity."""
 
-    ga_time: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="10.001")]
+    ga_time: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="10.001",
+            dpa_write=[FB1001.TIME_IN],
+            dpa_state=[FB1001.TIME_OUT],
+        ),
+    ]
     respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
     sync_state: SyncState = True
 

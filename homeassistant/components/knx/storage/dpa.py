@@ -89,3 +89,15 @@ class FB800(StrEnum):
     MOVE_UP_DOWN = "800.81"
     STOP_STEP_UP_DOWN = "800.82"
     CURRENT_ABS_POS_BLINDS_PERCENT = "800.85"
+
+
+class FB1001(StrEnum):
+    """FB 1001 System Clock."""
+
+    SYSTEM_CLOCK_OUT = "1001.51"
+    SYSTEM_CLOCK_SETTING = "1001.52"
+    TIME_OUT = "1001.54"
+    DATE_OUT = "1001.55"
+    SYSTEM_CLOCK_IN = "1001.56"
+    TIME_IN = "1001.57"
+    DATE_IN = "1001.58"

@@ -52,7 +52,10 @@ if TYPE_CHECKING:
 MIN_SEMANTICS_PARSER_VERSION = AwesomeVersion("3.9.0")
 
 # default platform of functional blocks representable by multiple platforms
-FUNCTIONAL_BLOCK_DEFAULT_PLATFORM: Final = {"417": Platform.LIGHT}
+FUNCTIONAL_BLOCK_DEFAULT_PLATFORM: Final = {
+    "417": Platform.LIGHT,
+    "1001": Platform.DATETIME,
+}
 
 type ConfigPath = tuple[str, ...]
 type GaSlot = Literal["write", "state"]
