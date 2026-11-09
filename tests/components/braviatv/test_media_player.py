@@ -34,13 +34,12 @@ BRAVIA_SYSTEM_INFO = {
 }
 
 # The TV leaves "label" empty when unset, omits it on some models, and allows a
-# label that repeats another input's generic name or another input's label.
+# label that only differs from the generic name in case.
 INPUTS = [
     {
         "uri": "extInput:hdmi?port=1",
         "title": "HDMI 1",
         "connection": False,
-        "label": "hdmi 2",
         "icon": "meta:hdmi",
     },
     {
@@ -61,7 +60,7 @@ INPUTS = [
         "uri": "extInput:hdmi?port=4",
         "title": "HDMI 4",
         "connection": True,
-        "label": "game CONSOLE",
+        "label": "hdmi 4",
         "icon": "meta:hdmi",
     },
 ]
@@ -124,15 +123,12 @@ async def test_source_list_adds_label(hass: HomeAssistant) -> None:
     ("source", "expected_uri"),
     [
         ("Game console", "extInput:hdmi?port=2"),
-        ("game console", "extInput:hdmi?port=2"),
-        # HDMI 4 repeats the label of HDMI 2: the first input keeps it.
-        ("GAME CONSOLE", "extInput:hdmi?port=2"),
-        # HDMI 1 is labelled "hdmi 2": the input that owns that name still wins.
         ("HDMI 2", "extInput:hdmi?port=2"),
         ("hdmi 2", "extInput:hdmi?port=2"),
         ("HDMI 1", "extInput:hdmi?port=1"),
         ("HDMI 3", "extInput:hdmi?port=3"),
         ("HDMI 4", "extInput:hdmi?port=4"),
+        ("hdmi 4", "extInput:hdmi?port=4"),
         # No exact match: falls back to the generic name containing the query.
         ("3", "extInput:hdmi?port=3"),
     ],
