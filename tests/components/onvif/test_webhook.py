@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
+from zeep.exceptions import Fault
 
 from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.const import (
@@ -174,6 +175,30 @@ async def test_webhook_id_changes_on_reload(
 
     assert resp.status == HTTPStatus.OK
     notification_manager.process.assert_called_once_with(NOTIFICATION)
+
+
+async def test_webhook_unregistered_when_subscription_fails(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    mock_onvif_camera: MagicMock,
+    notification_manager: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the webhook is unregistered when the subscription can't be created."""
+    mock_onvif_camera.create_notification_manager.side_effect = Fault(
+        "no notification support"
+    )
+    await _async_setup(hass, config_entry)
+    url = _subscribed_url(mock_onvif_camera)
+
+    client = await hass_client_no_auth()
+    resp = await client.post(url.path, data=NOTIFICATION)
+    await hass.async_block_till_done()
+
+    assert resp.status == HTTPStatus.OK
+    assert f"Received message for unregistered webhook {url.name}" in caplog.text
+    notification_manager.process.assert_not_called()
 
 
 async def test_webhook_external_url_fallback(
