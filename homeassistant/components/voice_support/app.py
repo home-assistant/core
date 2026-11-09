@@ -1,10 +1,4 @@
-"""Installing and starting the app through the Supervisor.
-
-Everything here is for the one case where the app is not already running:
-someone adds Voice from the integrations list before the app exists. The
-usual path -- the app is installed, starts, and announces itself -- needs
-none of it.
-"""
+"""Install and start the Voice app through the Supervisor."""
 
 import asyncio
 from dataclasses import dataclass
@@ -23,7 +17,7 @@ DATA_APP_MANAGER = f"{DOMAIN}_app_manager"
 
 @dataclass(frozen=True)
 class DiscoveredApp:
-    """The app, as the Supervisor has it."""
+    """The app as discovered through the Supervisor."""
 
     uuid: str
     host: str
@@ -47,7 +41,7 @@ def get_app_manager(hass: HomeAssistant) -> AddonManager:
 
 
 async def async_get_discovery(hass: HomeAssistant) -> DiscoveredApp | None:
-    """The app's standing discovery message, if it has sent one."""
+    """Return the app's discovery message, if there is one."""
     client = get_supervisor_client(hass)
     try:
         messages = await client.discovery.list()
@@ -60,13 +54,7 @@ async def async_get_discovery(hass: HomeAssistant) -> DiscoveredApp | None:
 
 
 async def async_wait_for_discovery(hass: HomeAssistant) -> DiscoveredApp | None:
-    """Wait for a freshly started app to announce itself.
-
-    Starting an app only tells the Supervisor to start it. The app announces
-    itself once it is answering, which on a fresh install is after it has
-    built a decoding graph for each wake word, so this is a wait and not a
-    read.
-    """
+    """Wait for a started app to send its discovery message."""
     try:
         async with asyncio.timeout(DISCOVERY_TIMEOUT):
             while True:

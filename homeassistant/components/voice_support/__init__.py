@@ -1,19 +1,4 @@
-"""Voice support: the Voice app, and what the Assist pipeline asks of it.
-
-The app is installed from the OHF Voice apps repository and announces itself
-through the Supervisor; there is nothing to set up or configure. It watches
-a run's audio and says whether that was the wake word and where the command
-begins and ends.
-
-This integration owns the app -- installed, reachable, what it can do today
--- which is why the pipeline depends on it rather than the other way round.
-The pipeline asks ``async_get_client`` each run.
-
-Whether the person wants one at all is a Labs preview feature, and not a
-switch over an answer collected anyway: a satellite told to send its wake
-word audio detects at a lower threshold, so turning it off has to leave the
-pipeline exactly as it was.
-"""
+"""The Voice support integration."""
 
 from datetime import datetime, timedelta
 
@@ -58,12 +43,7 @@ type VoiceSupportConfigEntry = ConfigEntry[VoiceSupportClient]
 
 @callback
 def async_get_client(hass: HomeAssistant) -> VoiceSupportClient | None:
-    """Return the app the pipeline should use this run, if there is one.
-
-    Asked per run rather than held, because every reason there might not be
-    one -- app stopped, entry unloaded, preview feature off -- can change
-    between runs.
-    """
+    """Return the Voice app client, if the app is set up and enabled."""
     if not async_is_preview_feature_enabled(
         hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION
     ):
@@ -89,8 +69,6 @@ async def async_setup_entry(
     LOGGER.debug("Connected to %s %s at %s", info.name, info.version, client.url)
     entry.runtime_data = client
 
-    # What it can verify follows the models it has, and an update can change
-    # those without moving the app, so this is asked again now and then.
     async def _refresh(_now: datetime) -> None:
         try:
             await client.async_update_info()
@@ -107,8 +85,4 @@ async def async_setup_entry(
 async def async_unload_entry(
     hass: HomeAssistant, entry: VoiceSupportConfigEntry
 ) -> None:
-    """Unload a config entry.
-
-    Everything was registered with ``async_on_unload``, and the pipeline
-    asks per run, so an unloaded entry is already one it will not find.
-    """
+    """Unload a config entry."""

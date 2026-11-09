@@ -1,8 +1,4 @@
-"""Talking to the Voice app, a server on the Supervisor's network.
-
-``GET /info`` is how the pipeline knows whether to ask satellites for wake
-word audio at all. The run itself is a websocket, in ``run.py``.
-"""
+"""Client for the Voice app."""
 
 import asyncio
 from collections.abc import Callable
@@ -20,17 +16,13 @@ from .run import AudioRun, AudioRunRequest
 
 @dataclass(frozen=True)
 class AppInfo:
-    """What the app says it is and what it can do."""
+    """Information about the app."""
 
     name: str
     version: str
     api_version: int
     wake_words: dict[str, str | None] = field(default_factory=dict)
-    """Normalized wake word id -> the phrase said, when it gave one."""
-
     max_run_ms: int = 0
-    """The most audio it holds for one run. Nothing here enforces it; it is
-    somewhere for a run cut short to be explained."""
 
     @staticmethod
     def from_json(data: dict[str, Any]) -> AppInfo:
@@ -49,20 +41,16 @@ class AppInfo:
 
 
 def normalize_wake_word(wake_word: str) -> str:
-    """Treat "Okay Nabu", "okay-nabu" and "okay_nabu" as one wake word.
-
-    Pipelines name a wake word by the phrase said and detectors by an id,
-    and the difference between the two spellings has never meant anything.
-    """
+    """Normalize a wake word phrase or ID for comparison."""
     lowered = wake_word.lower().replace("-", "_").replace(" ", "_")
     return "".join(c for c in lowered if c.isalnum() or c == "_")
 
 
 class VoiceSupportClient:
-    """The Voice app, as the pipeline's audio run provider."""
+    """Client for the Voice app."""
 
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
-        """Set up a client for the app at this address."""
+        """Initialize the client."""
         self.hass = hass
         self.url = f"http://{host}:{port}"
         self.info: AppInfo | None = None
@@ -70,17 +58,12 @@ class VoiceSupportClient:
 
     @property
     def available(self) -> bool:
-        """Whether the app answered and can verify anything right now."""
+        """Return if the app can verify wake words."""
         return (self.info is not None) and bool(self.info.wake_words)
 
     @callback
     def async_add_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Follow whether the app can verify, and return how to stop.
-
-        Whether to ask a satellite for wake word audio is decided once, not
-        per detection, so an app going away has to be noticed rather than
-        discovered at the next one.
-        """
+        """Listen for changes to the app's availability."""
         self._listeners.append(listener)
 
         @callback
@@ -90,7 +73,7 @@ class VoiceSupportClient:
         return _remove
 
     async def async_update_info(self) -> AppInfo:
-        """Ask the app what it is and what it can verify."""
+        """Update the app's information."""
         was_available = self.available
         session = async_get_clientsession(self.hass)
         try:
@@ -123,20 +106,20 @@ class VoiceSupportClient:
 
     @callback
     def _async_set_info(self, info: AppInfo | None, was_available: bool) -> None:
-        """Keep what the app said, and say so if that changed."""
+        """Store the app's information and notify listeners of changes."""
         self.info = info
         if self.available != was_available:
             for listener in list(self._listeners):
                 listener()
 
     def supports_wake_word(self, wake_word_phrase: str) -> bool:
-        """Whether the app can verify this wake word."""
+        """Return if the app can verify this wake word."""
         return (self.info is not None) and (
             normalize_wake_word(wake_word_phrase) in self.info.wake_words
         )
 
     async def async_start_run(self, request: AudioRunRequest) -> AudioRun | None:
-        """Open a run with the app, or None to leave it out of this one."""
+        """Start a run with the app, or return None if it is unavailable."""
         if self.info is None:
             return None
 
