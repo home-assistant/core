@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[climate.kitchen_vmb2ble_temperature_temperature-entry]
+# name: test_entities[climate.kitchen_vmb2ble_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27,7 +27,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.kitchen_vmb2ble_temperature_temperature',
+    'entity_id': 'climate.kitchen_vmb2ble_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -50,11 +50,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.kitchen_vmb2ble_temperature_temperature-state]
+# name: test_entities[climate.kitchen_vmb2ble_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature Temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
@@ -73,7 +73,7 @@
       <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.kitchen_vmb2ble_temperature_temperature',
+    'entity_id': 'climate.kitchen_vmb2ble_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

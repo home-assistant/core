@@ -33,10 +33,12 @@ def test_unique_id_falls_back_to_module_address(
     channel.get_channel_number.return_value = 2
     channel.get_module_serial.return_value = module_serial
     channel.get_name.return_value = "channel"
+    channel.is_sub_device.return_value = False
 
     entity = VelbusEntity(channel)
 
     assert entity.unique_id == expected_unique_id
+    assert entity._attr_name == "channel"
 
 
 def _channel_mock(*, sub_device: bool) -> AsyncMock:
@@ -97,3 +99,4 @@ def test_device_info_child_device(
     assert device_info.identifiers == {(DOMAIN, "88-9")}
     assert device_info.name == "CoverName"
     assert device_info.parent_device_id == parent.id
+    assert entity._attr_name is None

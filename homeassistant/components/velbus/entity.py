@@ -31,7 +31,12 @@ class VelbusEntity(Entity):
         """Initialize a Velbus entity."""
         self._channel = channel
         self._module_address = str(channel.get_module_address())
-        self._attr_name = channel.get_name()
+        if channel.is_sub_device():
+            # Child device already carries the channel name; avoid duplicating it
+            # in the entity friendly name (device name + entity name).
+            self._attr_name = None
+        else:
+            self._attr_name = channel.get_name()
         serial = channel.get_module_serial()
         # Modules like the VMB4RY report a serial of "0"; fall back to the module
         # address so entities on multiple such modules keep distinct unique ids.

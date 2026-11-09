@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[switch.kitchen_vmb2ble_relayname_relayname-entry]
+# name: test_entities[switch.kitchen_vmb2ble_relayname-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_vmb2ble_relayname_relayname',
+    'entity_id': 'switch.kitchen_vmb2ble_relayname',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.kitchen_vmb2ble_relayname_relayname-state]
+# name: test_entities[switch.kitchen_vmb2ble_relayname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName RelayName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_vmb2ble_relayname_relayname',
+    'entity_id': 'switch.kitchen_vmb2ble_relayname',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_disabled[switch.kitchen_vmb2ble_relayname_relayname-entry]
+# name: test_switch_disabled[switch.kitchen_vmb2ble_relayname-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.kitchen_vmb2ble_relayname_relayname',
+    'entity_id': 'switch.kitchen_vmb2ble_relayname',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,13 +86,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_disabled[switch.kitchen_vmb2ble_relayname_relayname-state]
+# name: test_switch_disabled[switch.kitchen_vmb2ble_relayname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName RelayName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RelayName',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kitchen_vmb2ble_relayname_relayname',
+    'entity_id': 'switch.kitchen_vmb2ble_relayname',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

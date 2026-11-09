@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[cover.kitchen_vmb2ble_covername_covername-entry]
+# name: test_entities[cover.kitchen_vmb2ble_covername-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.kitchen_vmb2ble_covername_covername',
+    'entity_id': 'cover.kitchen_vmb2ble_covername',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,23 +36,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[cover.kitchen_vmb2ble_covername_covername-state]
+# name: test_entities[cover.kitchen_vmb2ble_covername-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoverName CoverName',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoverName',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.kitchen_vmb2ble_covername_covername',
+    'entity_id': 'cover.kitchen_vmb2ble_covername',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_entities[cover.kitchen_vmb2ble_covernamenopos_covernamenopos-entry]
+# name: test_entities[cover.kitchen_vmb2ble_covernamenopos-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -66,7 +66,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.kitchen_vmb2ble_covernamenopos_covernamenopos',
+    'entity_id': 'cover.kitchen_vmb2ble_covernamenopos',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -89,16 +89,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[cover.kitchen_vmb2ble_covernamenopos_covernamenopos-state]
+# name: test_entities[cover.kitchen_vmb2ble_covernamenopos-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoverNameNoPos CoverNameNoPos',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoverNameNoPos',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.kitchen_vmb2ble_covernamenopos_covernamenopos',
+    'entity_id': 'cover.kitchen_vmb2ble_covernamenopos',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
