@@ -1,5 +1,6 @@
 """Tests for the Sony Projector switch."""
 
+import dataclasses
 import threading
 from unittest.mock import MagicMock, patch
 
@@ -35,6 +36,8 @@ from homeassistant.setup import async_setup_component
 from .conftest import TEST_HOST
 
 ENTITY_ID = "switch.sony_projector"
+UNREACHABLE_HOST = "192.0.2.20"
+ISSUE_PLACEHOLDERS = {"domain": DOMAIN, "integration_title": "Sony Projector"}
 YAML_CONFIG = {
     SWITCH_DOMAIN: [
         {
@@ -285,6 +288,88 @@ async def test_yaml_import_already_configured(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_yaml_import_partial_failure(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a successful import doesn't raise the warning after another failed."""
+
+    def create_projector(host: str) -> MagicMock:
+        """Return a projector that only answers on the reachable host."""
+        projector = MagicMock()
+        projector.get_power.side_effect = (
+            ConnectionRefusedError if host == UNREACHABLE_HOST else None
+        )
+        return projector
+
+    config = {
+        SWITCH_DOMAIN: [
+            {CONF_PLATFORM: DOMAIN, CONF_HOST: host, CONF_NAME: host}
+            for host in (TEST_HOST, UNREACHABLE_HOST)
+        ]
+    }
+    with patch("pysdcp.Projector", side_effect=create_projector):
+        assert await async_setup_component(hass, SWITCH_DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+async def test_yaml_import_failure_removes_warning(
+    hass: HomeAssistant, mock_projector: MagicMock, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test a failed import removes the warning raised by an earlier success."""
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders=ISSUE_PLACEHOLDERS,
+    )
+    mock_projector.get_power.side_effect = ConnectionRefusedError
+
+    assert await async_setup_component(hass, SWITCH_DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+@pytest.mark.usefixtures("mock_projector")
+async def test_yaml_import_ignores_failure_from_previous_start(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test an import failure restored from storage doesn't hide the warning."""
+    issue_id = "deprecated_yaml_import_issue_cannot_connect"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key=issue_id,
+        translation_placeholders=ISSUE_PLACEHOLDERS,
+    )
+    issue_registry.issues[(DOMAIN, issue_id)] = dataclasses.replace(
+        issue_registry.async_get_issue(DOMAIN, issue_id), active=False
+    )
+
+    assert await async_setup_component(hass, SWITCH_DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
 
 
 async def test_yaml_import_failure(

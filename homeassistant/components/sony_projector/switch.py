@@ -70,6 +70,17 @@ async def async_setup_platform(
             translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
             translation_placeholders=translation_placeholders,
         )
+        # The shared warning says to remove all YAML, which would drop this one.
+        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+        return
+
+    # Each YAML block imports on its own, so another one may already have failed.
+    if any(
+        issue.active
+        and issue.domain == DOMAIN
+        and issue.issue_id.startswith("deprecated_yaml_import_issue_")
+        for issue in ir.async_get(hass).issues.values()
+    ):
         return
 
     ir.async_create_issue(
