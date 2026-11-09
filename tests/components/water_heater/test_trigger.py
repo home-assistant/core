@@ -26,7 +26,7 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
-    WaterHeaterStateAttribute,
+    WaterHeaterCapabilityAttribute,
 )
 from homeassistant.components.water_heater.trigger import TRIGGERS
 from homeassistant.const import (
@@ -58,7 +58,7 @@ async def target_water_heaters(hass: HomeAssistant) -> list[str]:
 
 
 _WATER_HEATER_UNIT_ATTRIBUTES = {
-    WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
 }
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _CROSSED_THRESHOLD = {
@@ -446,7 +446,7 @@ async def test_water_heater_target_temperature_trigger_temperature_unit(
         STATE_ECO,
         {
             ATTR_TEMPERATURE: 70,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -470,7 +470,7 @@ async def test_water_heater_target_temperature_trigger_temperature_unit(
         STATE_ECO,
         {
             ATTR_TEMPERATURE: 72,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -482,7 +482,7 @@ async def test_water_heater_target_temperature_trigger_temperature_unit(
         STATE_ECO,
         {
             ATTR_TEMPERATURE: 80,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()

@@ -26,7 +26,7 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
-    WaterHeaterStateAttribute,
+    WaterHeaterCapabilityAttribute,
 )
 from homeassistant.components.water_heater.condition import CONDITIONS
 from homeassistant.const import (
@@ -59,7 +59,7 @@ async def target_water_heaters(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 _WATER_HEATER_UNIT_ATTRIBUTES = {
-    WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
 }
 _TEMPERATURE_THRESHOLD = {
     "threshold": {
@@ -330,7 +330,7 @@ async def test_water_heater_numerical_condition_unit_conversion(
                 "state": "eco",
                 "attributes": {
                     ATTR_TEMPERATURE: 130,
-                    WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 },
             },
         ],
@@ -343,7 +343,7 @@ async def test_water_heater_numerical_condition_unit_conversion(
                 "state": "eco",
                 "attributes": {
                     ATTR_TEMPERATURE: 104,
-                    WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 },
             },
         ],
