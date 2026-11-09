@@ -4,11 +4,12 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_TRACKED_ENTITIES, DOMAIN
 from .coordinator import (
@@ -20,6 +21,8 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -39,7 +42,9 @@ def _async_migrate_tracked_entity_removed_issues(hass: HomeAssistant) -> None:
             TRACKED_ENTITY_REMOVED_ISSUE_PREFIX
         )
         for entry in hass.config_entries.async_entries(DOMAIN):
-            if entity_id not in entry.options[CONF_TRACKED_ENTITIES]:
+            # Entries are only migrated from data to options when set up, after this
+            settings = {**entry.data, **entry.options}
+            if entity_id not in settings[CONF_TRACKED_ENTITIES]:
                 continue
             async_create_tracked_entity_removed_issue(hass, entry, entity_id)
             if legacy_issue.dismissed_version is not None:
@@ -72,6 +77,12 @@ def _async_delete_untracked_entity_removed_issues(
             ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the proximity component."""
+    _async_migrate_tracked_entity_removed_issues(hass)
+    return True
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> None:
     """Migrate old entry."""
     if entry.version == 1:
@@ -84,7 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) ->
     """Set up Proximity from a config entry."""
     _LOGGER.debug("setup %s with config:%s", entry.title, entry.options)
 
-    _async_migrate_tracked_entity_removed_issues(hass)
     _async_delete_untracked_entity_removed_issues(hass, entry)
 
     coordinator = ProximityDataUpdateCoordinator(hass, entry)

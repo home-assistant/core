@@ -16,7 +16,7 @@ from homeassistant.components.proximity.const import (
     CONF_TRACKED_ENTITIES,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ZONE,
@@ -994,19 +994,29 @@ async def test_create_removed_tracked_entity_issue(
 
 
 def _mock_proximity_entry(
-    hass: HomeAssistant, title: str, zone: str, tracked_entities: list[str]
+    hass: HomeAssistant,
+    title: str,
+    zone: str,
+    tracked_entities: list[str],
+    *,
+    version: int = 2,
+    disabled_by: ConfigEntryDisabler | None = None,
 ) -> MockConfigEntry:
     """Add a proximity config entry to hass without setting it up."""
+    settings = {
+        CONF_ZONE: zone,
+        CONF_TRACKED_ENTITIES: tracked_entities,
+        CONF_IGNORED_ZONES: [],
+        CONF_TOLERANCE: 1,
+    }
+    # Version 1 entries store their settings in data
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=title,
-        version=2,
-        options={
-            CONF_ZONE: zone,
-            CONF_TRACKED_ENTITIES: tracked_entities,
-            CONF_IGNORED_ZONES: [],
-            CONF_TOLERANCE: 1,
-        },
+        version=version,
+        data=settings if version == 1 else {},
+        options=settings if version > 1 else {},
+        disabled_by=disabled_by,
     )
     entry.add_to_hass(hass)
     return entry
@@ -1107,19 +1117,42 @@ async def test_removed_tracked_entity_issue_deleted_when_untracked(
         pytest.param("2025.1.0", HA_VERSION, id="ignored"),
     ],
 )
+@pytest.mark.parametrize(
+    "entry_version",
+    [
+        pytest.param(1, id="settings_in_data"),
+        pytest.param(2, id="settings_in_options"),
+    ],
+)
 async def test_migrate_legacy_removed_tracked_entity_issue(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
     legacy_dismissed_version: str | None,
     expected_dismissed_version: str | None,
+    entry_version: int,
 ) -> None:
     """Test a legacy removed tracked entity issue is migrated per config entry."""
     tracked_entity_id = "device_tracker.test1"
     untracked_entity_id = "device_tracker.test2"
-    home_entry = _mock_proximity_entry(hass, "Home", "zone.home", [tracked_entity_id])
-    work_entry = _mock_proximity_entry(hass, "Work", "zone.work", [tracked_entity_id])
-    other_entry = _mock_proximity_entry(hass, "Other", "zone.home", [])
+    home_entry = _mock_proximity_entry(
+        hass, "Home", "zone.home", [tracked_entity_id], version=entry_version
+    )
+    work_entry = _mock_proximity_entry(
+        hass, "Work", "zone.work", [tracked_entity_id], version=entry_version
+    )
+    other_entry = _mock_proximity_entry(
+        hass, "Other", "zone.home", [], version=entry_version
+    )
+    # Disabled entries are not set up, so they are never migrated
+    disabled_entry = _mock_proximity_entry(
+        hass,
+        "Disabled",
+        "zone.work",
+        [tracked_entity_id],
+        version=1,
+        disabled_by=ConfigEntryDisabler.USER,
+    )
     hass_storage[ir.STORAGE_KEY] = {
         "version": ir.STORAGE_VERSION_MAJOR,
         "minor_version": ir.STORAGE_VERSION_MINOR,
@@ -1176,8 +1209,10 @@ async def test_migrate_legacy_removed_tracked_entity_issue(
             {"entity_id": tracked_entity_id, "name": entry.title},
             expected_dismissed_version,
         )
-        for entry in (home_entry, work_entry)
+        for entry in (home_entry, work_entry, disabled_entry)
     }
+    assert home_entry.state is ConfigEntryState.LOADED
+    assert work_entry.state is ConfigEntryState.LOADED
     assert other_entry.state is ConfigEntryState.LOADED
 
 
