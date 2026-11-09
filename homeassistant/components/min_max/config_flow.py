@@ -9,6 +9,7 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_TYPE
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -71,6 +72,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
