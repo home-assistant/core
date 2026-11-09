@@ -13,8 +13,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.util.json import JsonValueType
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.json import JsonValueType
 
 from . import setup_integration
 
