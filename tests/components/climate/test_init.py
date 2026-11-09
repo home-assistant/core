@@ -1154,7 +1154,8 @@ async def test_native_temperature_unit_conversion(
     )
     # The published unit is the one the published temperatures are converted to
     assert (
-        state.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT] == expected_unit
+        state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == expected_unit
     )
 
 
@@ -2226,7 +2227,7 @@ def _restored(
             US_CUSTOMARY_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2239,7 +2240,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2252,7 +2253,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2289,7 +2290,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 20,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: "invalid",
             },
             None,
             False,
