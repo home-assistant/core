@@ -486,7 +486,10 @@ async def test_native_temperature_unit_conversion(
         == expected_temperature
     )
     # The published unit is the one the published temperatures are converted to
-    assert state.attributes[WaterHeaterStateAttribute.TEMPERATURE_UNIT] == expected_unit
+    assert (
+        state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        == expected_unit
+    )
 
 
 async def test_native_temperature_unit_property(hass: HomeAssistant) -> None:
