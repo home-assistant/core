@@ -9,6 +9,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import Undefined
 
 from .auth import AbrpAuth
 from .const import ABRP_APP_KEY, DOMAIN
@@ -68,7 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
         """Create a device per garage vehicle, then subscribe the stream to new ones."""
         for raw, display in garage_coordinator.data:
             scope = f"{entry.unique_id}_{raw.vehicle_id}"
-            if display is None and raw.vehicle_id not in known:
+            manufacturer: str | Undefined | None = Undefined
+            model: str | Undefined | None = Undefined
+            if display is not None:
+                manufacturer, model = display.manufacturer, display.model_name
+            elif raw.vehicle_id not in known:
+                # A known vehicle keeps what an earlier poll resolved.
+                model = raw.vehicle_model
                 _LOGGER.info(
                     "No display metadata for vehicle %d (typecode %s); the device "
                     "shows the raw typecode until a later garage check resolves it",
@@ -78,8 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, scope)},
-                manufacturer=display.manufacturer if display is not None else None,
-                model=display.model_name if display is not None else raw.vehicle_model,
+                manufacturer=manufacturer,
+                model=model,
                 name=raw.name or raw.vehicle_model,
                 configuration_url=(
                     f"https://abetterrouteplanner.com/?vehicle_id={raw.vehicle_id}"

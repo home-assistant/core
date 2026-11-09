@@ -368,6 +368,34 @@ async def test_display_failure_degrades_only_that_vehicle(
     )
 
 
+@pytest.mark.usefixtures("mock_telemetry_stream")
+async def test_display_failure_on_poll_keeps_device_metadata(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed display lookup on a poll keeps the make and model already shown."""
+    display = build_vehicle_model_display(manufacturer="Rivian", model="R2")
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = display
+    await setup_integration(hass, config_entry_with_vehicles)
+
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = AbrpApiError("HTTP 503")
+    freezer.tick(GARAGE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry_with_vehicles.unique_id}_{MOCK_VEHICLE_ID}"),
+        config_entry_with_vehicles.entry_id,
+    )
+    assert (device.manufacturer, device.model) == (
+        display.manufacturer,
+        display.model_name,
+    )
+
+
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_connection_logged_once_per_transition(
     hass: HomeAssistant,
