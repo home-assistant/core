@@ -407,10 +407,10 @@ async def test_rpc_ledstrip_palette_select_availability(
 
 
 @pytest.mark.parametrize(
-    ("component", "update_method", "set_method"),
+    ("component", "set_method"),
     [
-        ("plugs_ui", "update_plugs_ui_config", "plugs_ui_setconfig"),
-        ("powerstrip_ui", "update_powerstrip_ui_config", "powerstrip_ui_setconfig"),
+        ("plugs_ui", "plugs_ui_setconfig"),
+        ("powerstrip_ui", "powerstrip_ui_setconfig"),
     ],
 )
 async def test_rpc_ui_led_mode_select(
@@ -420,7 +420,6 @@ async def test_rpc_ui_led_mode_select(
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
     component: str,
-    update_method: str,
     set_method: str,
 ) -> None:
     """Test RPC plug/power strip LED mode select."""
@@ -446,9 +445,11 @@ async def test_rpc_ui_led_mode_select(
     )
 
     # The device reports the change with an event, the new config is then fetched
-    getattr(mock_rpc_device, update_method).side_effect = lambda: (
-        mock_rpc_device.config[component]["leds"].update(mode="switch")
-    )
+    def _update_component_config(key: str) -> set[str]:
+        mock_rpc_device.config[key]["leds"].update(mode="switch")
+        return {"leds"}
+
+    mock_rpc_device.update_component_config.side_effect = _update_component_config
     inject_rpc_device_event(
         monkeypatch,
         mock_rpc_device,
