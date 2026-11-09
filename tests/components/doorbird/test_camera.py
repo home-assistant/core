@@ -30,6 +30,7 @@ from . import VALID_CONFIG, mock_not_found_exception
 from .conftest import DoorbirdMockerType
 
 LIVE_CAMERA_ENTITY_ID = "camera.mydoorbird_live"
+LIVE_1080P_CAMERA_ENTITY_ID = "camera.mydoorbird_live_1080p"
 LAST_RING_CAMERA_ENTITY_ID = "camera.mydoorbird_last_ring"
 LAST_MOTION_CAMERA_ENTITY_ID = "camera.mydoorbird_last_motion"
 LAST_RING_ISSUE_ID = "deprecated_camera_1234ABCD_last_ring"
@@ -76,6 +77,35 @@ async def test_doorbird_live_camera(
 
     freezer.tick(60)
     assert (await async_get_image(hass, LIVE_CAMERA_ENTITY_ID)).content == b"notyet"
+
+
+async def test_live_1080p_camera_disabled_by_default(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the 1080p camera is disabled by default."""
+    await doorbird_mocker()
+
+    assert hass.states.get(LIVE_1080P_CAMERA_ENTITY_ID) is None
+    entry = entity_registry.async_get(LIVE_1080P_CAMERA_ENTITY_ID)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_live_1080p_camera(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test the 1080p camera streams from the 1080p RTSP URL."""
+    doorbird_entry = await doorbird_mocker()
+
+    assert hass.states.get(LIVE_1080P_CAMERA_ENTITY_ID).state == CameraState.IDLE
+    assert (
+        await async_get_stream_source(hass, LIVE_1080P_CAMERA_ENTITY_ID)
+        == doorbird_entry.api.rtsp_live_video_1080p_url
+    )
 
 
 @pytest.mark.parametrize(

@@ -23,14 +23,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ScreenlogicDataUpdateCoordinator
+from .coordinator import ScreenLogicConfigEntry, ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
-from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)

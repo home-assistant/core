@@ -5,12 +5,15 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
@@ -198,3 +201,41 @@ async def test_setup_site_not_active(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason == "The SolarEdge site is not active"
+
+
+async def test_remove_device(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test removing a device is only allowed when no API key is configured."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SITE_ID), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+
+    # Cannot remove the device while the API key is configured.
+    response = await client.remove_device(device_entry.id)
+    assert not response["success"]
+    assert device_registry.async_get(device_entry.id) is not None
+
+    # After removing the API key (switching to web login only), the device can be removed.
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            CONF_SITE_ID: SITE_ID,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    response = await client.remove_device(device_entry.id)
+    assert response["success"]
+    assert device_registry.async_get(device_entry.id) is None

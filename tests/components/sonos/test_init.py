@@ -2,11 +2,12 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from functools import partial
 from http import HTTPStatus
 from itertools import chain, repeat
 import logging
 from typing import Any
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
@@ -21,8 +22,11 @@ from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
     UPNP_ISSUE_ID,
+    UPNP_ST,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
+from homeassistant.components.sonos.speaker import RESUB_COOLDOWN_SECONDS
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -30,7 +34,11 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -126,6 +134,208 @@ async def test_upnp_disabled_discovery(
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(sonos.DOMAIN, issue_id) is None
+
+
+def _speaker_services(soco: MockSoCo) -> tuple[MagicMock, ...]:
+    """Return the services a speaker subscribes to."""
+    return (
+        soco.alarmClock,
+        soco.avTransport,
+        soco.contentDirectory,
+        soco.deviceProperties,
+        soco.renderingControl,
+        soco.zoneGroupTopology,
+    )
+
+
+def _wrap_unsubscribes(soco: MockSoCo) -> list[AsyncMock]:
+    """Wrap the unsubscribe methods of all speaker subscriptions in mocks."""
+    unsubscribes = []
+    for service in _speaker_services(soco):
+        subscription = service.subscribe.return_value
+        subscription.unsubscribe = AsyncMock(wraps=subscription.unsubscribe)
+        unsubscribes.append(subscription.unsubscribe)
+    return unsubscribes
+
+
+async def test_disable_device_unsubscribes_speaker(
+    hass: HomeAssistant,
+    async_autosetup_sonos: None,
+    soco: MockSoCo,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    fire_zgs_event: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Test disable tears down subscriptions and re-enable restores them."""
+    unsubscribes = _wrap_unsubscribes(soco)
+    device = device_registry.async_get_device_by_identifier(
+        (sonos.DOMAIN, soco.uid), config_entry.entry_id
+    )
+    assert device is not None
+
+    device_registry.async_update_device(
+        device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for unsubscribe in unsubscribes:
+        unsubscribe.assert_awaited_once()
+
+    for service in _speaker_services(soco):
+        service.subscribe.reset_mock()
+    # Let fire_zgs_event wait for the callback set by the reloaded entry.
+    soco.zoneGroupTopology.subscribe.return_value.callback_future = None
+
+    # Re-enabling the device re-enables its entities, which reloads the entry.
+    device_registry.async_update_device(device.id, disabled_by=None)
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await fire_zgs_event()
+
+    for service in _speaker_services(soco):
+        service.subscribe.assert_awaited()
+
+
+async def test_disabled_device_ignores_household_poll_activity(
+    hass: HomeAssistant,
+    async_autosetup_sonos: None,
+    soco: MockSoCo,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a household poll doesn't resubscribe a disabled device."""
+    device = device_registry.async_get_device_by_identifier(
+        (sonos.DOMAIN, soco.uid), config_entry.entry_id
+    )
+    assert device is not None
+    device_registry.async_update_device(
+        device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for service in _speaker_services(soco):
+        service.subscribe.reset_mock()
+
+    # The household poll emits this signal after a successful update.
+    freezer.tick(RESUB_COOLDOWN_SECONDS + 1)
+    async_dispatcher_send(
+        hass, f"{SONOS_SPEAKER_ACTIVITY}-{soco.uid}", "household poll"
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for service in _speaker_services(soco):
+        service.subscribe.assert_not_awaited()
+
+
+async def test_device_disabled_during_setup_does_not_subscribe(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a device disabled before speaker setup completes is not subscribed."""
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+    )
+    speaker_info = soco.get_speaker_info.return_value
+
+    def _disable_during_setup(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Runs in the executor while the speaker is being created
+        hass.loop.call_soon_threadsafe(
+            partial(
+                device_registry.async_update_device,
+                device.id,
+                disabled_by=dr.DeviceEntryDisabler.USER,
+            )
+        )
+        return speaker_info
+
+    soco.get_speaker_info.side_effect = _disable_during_setup
+    await async_setup_sonos()
+
+    assert not config_entry.runtime_data.discovered[soco.uid].available
+    # ZoneGroupTopology is subscribed by discovery before the speaker is created
+    for service in (
+        soco.alarmClock,
+        soco.avTransport,
+        soco.contentDirectory,
+        soco.deviceProperties,
+        soco.renderingControl,
+    ):
+        service.subscribe.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("identifiers", "update"),
+    [
+        pytest.param(
+            {(sonos.DOMAIN, "RINCON_test")},
+            {"name_by_user": "Renamed"},
+            id="other_change",
+        ),
+        pytest.param(
+            {(sonos.DOMAIN, "RINCON_undiscovered")},
+            {"disabled_by": dr.DeviceEntryDisabler.USER},
+            id="undiscovered_speaker",
+        ),
+        pytest.param(
+            {("other_domain", "RINCON_test")},
+            {"disabled_by": dr.DeviceEntryDisabler.USER},
+            id="other_domain",
+        ),
+    ],
+)
+async def test_device_registry_update_ignored(
+    hass: HomeAssistant,
+    async_autosetup_sonos: None,
+    soco: MockSoCo,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    identifiers: set[tuple[str, str]],
+    update: dict[str, Any],
+) -> None:
+    """Test device registry updates that must not take the speaker offline."""
+    unsubscribes = _wrap_unsubscribes(soco)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers=identifiers
+    )
+
+    device_registry.async_update_device(device.id, **update)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for unsubscribe in unsubscribes:
+        unsubscribe.assert_not_awaited()
+
+
+async def test_device_disabled_in_other_config_entry_ignored(
+    hass: HomeAssistant,
+    async_autosetup_sonos: None,
+    soco: MockSoCo,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test disabling a device of another config entry with the same uid."""
+    unsubscribes = _wrap_unsubscribes(soco)
+    other_entry = MockConfigEntry(domain="other_domain")
+    other_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+    )
+
+    device_registry.async_update_device(
+        device.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for unsubscribe in unsubscribes:
+        unsubscribe.assert_not_awaited()
 
 
 async def test_upnp_disabled_manual_hosts(
@@ -233,6 +443,95 @@ async def test_discovery_reenable_device_on_new_discovery(
 
     assert soco.zoneGroupTopology.subscribe.await_count > 0
     assert er.async_entries_for_device(entity_registry, device.id)
+
+
+async def test_discovery_from_ssdp_advertisement(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    discover: MagicMock,
+    fire_zgs_event: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Test speakers are set up when SSDP only receives advertisements."""
+    # NOTIFY advertisements carry "nt" but no "st" header.
+    advertisement_headers = {
+        "nt": UPNP_ST,
+        "nts": "ssdp:alive",
+        "location": f"http://{soco.ip_address}/",
+    }
+
+    def replay_advertisement(
+        hass: HomeAssistant,
+        callback: Callable[[SsdpServiceInfo, SsdpChange], None],
+        match_dict: dict[str, str],
+    ) -> MagicMock:
+        if match_dict.items() <= advertisement_headers.items():
+            callback(
+                SsdpServiceInfo(
+                    ssdp_location=f"http://{soco.ip_address}/",
+                    ssdp_st=UPNP_ST,
+                    ssdp_nt=UPNP_ST,
+                    ssdp_usn=f"uuid:{soco.uid}::{UPNP_ST}",
+                    upnp={ATTR_UPNP_UDN: f"uuid:{soco.uid}"},
+                ),
+                SsdpChange.ALIVE,
+            )
+        return MagicMock()
+
+    discover.side_effect = replay_advertisement
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    soco.zoneGroupTopology.subscribe.assert_awaited()
+    await fire_zgs_event()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("media_player.zone_a")
+
+
+@pytest.mark.parametrize(
+    ("speaker_changes", "expected_subscribes"),
+    [
+        pytest.param([], 0, id="speaker_available"),
+        pytest.param([SsdpChange.BYEBYE], 1, id="speaker_unavailable"),
+    ],
+)
+async def test_discovery_unknown_uid_on_known_speaker_ip(
+    hass: HomeAssistant,
+    async_autosetup_sonos: None,
+    soco: MockSoCo,
+    discover: MagicMock,
+    speaker_changes: list[SsdpChange],
+    expected_subscribes: int,
+) -> None:
+    """Test an unknown uid on a known speaker's IP, e.g. an Arc headphone zone."""
+    ssdp_callback = discover.call_args.args[1]
+    for change in speaker_changes:
+        ssdp_callback(
+            SsdpServiceInfo(
+                ssdp_location=f"http://{soco.ip_address}:1400/",
+                ssdp_st=UPNP_ST,
+                ssdp_usn=f"uuid:{soco.uid}::{UPNP_ST}",
+                upnp={ATTR_UPNP_UDN: f"uuid:{soco.uid}"},
+            ),
+            change,
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    soco.zoneGroupTopology.subscribe.reset_mock()
+
+    headphone_uid = "RINCON_test01500"
+    ssdp_callback(
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco.ip_address}:1500/xml/device_description.xml",
+            ssdp_st=UPNP_ST,
+            ssdp_usn=f"uuid:{headphone_uid}::{UPNP_ST}",
+            upnp={ATTR_UPNP_UDN: f"uuid:{headphone_uid}"},
+        ),
+        SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert soco.zoneGroupTopology.subscribe.await_count == expected_subscribes
 
 
 async def test_async_poll_manual_hosts_warnings(

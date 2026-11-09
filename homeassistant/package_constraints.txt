@@ -40,7 +40,7 @@ habluetooth==7.1.2
 hass-nabucasa==2.8.1
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20261028.2
+home-assistant-frontend==20261028.5
 home-assistant-intents==2026.10.27
 httpx2==2.14.0
 ifaddr==0.2.0
@@ -67,7 +67,7 @@ PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.10.0
 serialx==1.15.1
-SQLAlchemy==2.0.54
+SQLAlchemy==2.1.6
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 truststore==0.10.4
@@ -77,7 +77,7 @@ urllib3>=2.0
 uv==0.13.6
 webrtc-models==0.3.0
 yarl==1.25.1
-zeroconf==0.151.5
+zeroconf==0.153.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -100,8 +100,8 @@ grpcio-reflection==1.83.1
 # runtime requirement install cannot pull in a botocore version that is
 # incompatible with aiobotocore.
 # see https://github.com/home-assistant/core/issues/167399
-boto3==1.42.97
-botocore==1.42.97
+boto3==1.43.117
+botocore==1.43.117
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -141,7 +141,7 @@ multidict>=6.0.2
 Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.14.1
+pydantic==2.14.2
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
