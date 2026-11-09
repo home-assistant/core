@@ -73,12 +73,16 @@ async def async_remove_config_entry_device(
     try:
         devices = await _create_client(hass, entry).all_devices()
     except PowerfoxNoDataError:
-        return True
+        devices = []
     except PowerfoxError:
         return False
-    return device_entry.identifiers.isdisjoint(
+    if not device_entry.identifiers.isdisjoint(
         {(DOMAIN, device.id) for device in devices}
-    )
+    ):
+        return False
+    # Without a reload, a device returning to the account would not be set up again.
+    hass.config_entries.async_schedule_reload(entry.entry_id)
+    return True
 
 
 def _create_client(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> Powerfox:
