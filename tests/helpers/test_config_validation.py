@@ -2048,6 +2048,35 @@ def test_empty_schema(caplog: pytest.LogCaptureFixture) -> None:
     assert expected_message in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("config_domain", "expected_keys"),
+    [
+        ({"password": "secret-value", "host": "example"}, "got host, password."),
+        (
+            [
+                {"platform": "test", "api_key": "secret-value"},
+                {"platform": "other", "token": "secret-value"},
+            ],
+            "got api_key, platform, token.",
+        ),
+        ("secret-value", "got a value of type str."),
+        (["secret-value"], "got a value of type list."),
+    ],
+)
+def test_empty_schema_does_not_log_values(
+    caplog: pytest.LogCaptureFixture, config_domain: Any, expected_keys: str
+) -> None:
+    """Test empty_config_schema logs key names but never configuration values."""
+    cv.empty_config_schema("test_domain")({"test_domain": config_domain})
+
+    assert (
+        "The test_domain integration does not support any configuration parameters"
+        in caplog.text
+    )
+    assert expected_keys in caplog.text
+    assert "secret-value" not in caplog.text
+
+
 def test_empty_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
     cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
