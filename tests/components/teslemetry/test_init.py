@@ -115,7 +115,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -2604,6 +2604,24 @@ async def test_energy_stream_grace_cancelled_on_unload(
     await hass.config_entries.async_unload(entry.entry_id)
     await _tick(hass, freezer, STREAM_GRACE)
 
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
+
+
+async def test_energy_stream_grace_expiring_while_stopping(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    mock_add_connection_listener: MagicMock,
+) -> None:
+    """A grace that expires while Home Assistant stops fails nothing."""
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+
+    mock_add_connection_listener.send(False)
+    hass.set_state(CoreState.stopping)
+    await _tick(hass, freezer, STREAM_GRACE)
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
     assert "Disconnected from the Teslemetry stream" not in caplog.text
 
 

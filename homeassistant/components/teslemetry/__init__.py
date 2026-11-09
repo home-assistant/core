@@ -1070,6 +1070,9 @@ def create_handle_energy_stream_connection(
         """
         nonlocal cancel_grace
         cancel_grace = None
+        # A drop just before shutdown leaves the timer pending while stopping.
+        if hass.is_stopping:
+            return
         error = UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="stream_disconnected",
