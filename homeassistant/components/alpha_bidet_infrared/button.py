@@ -1,4 +1,5 @@
 """Button platform for the Alpha Bidet Infrared integration."""
+# pylint: disable=home-assistant-action-exceptions-exempt
 
 from dataclasses import dataclass
 from typing import override

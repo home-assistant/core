@@ -1,4 +1,5 @@
 """Support for DALI Center Scene entities."""
+# pylint: disable=home-assistant-action-exceptions-exempt
 
 import logging
 from typing import Any, override

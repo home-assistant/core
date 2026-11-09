@@ -177,6 +177,7 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
+| `W7464` | [`home-assistant-action-exceptions-exempt`](#w7464-home-assistant-action-exceptions-exempt) | `action-exceptions` should not be exempt when a platform provides entity actions |
 
 ## `home_assistant_logger` checker
 
@@ -1296,6 +1297,20 @@ Silver rule. Fires only when the integration claims the rule as `done`.
 ### `W7411`: `home-assistant-missing-parallel-updates`
 
 Platform module should define a module-level `PARALLEL_UPDATES` constant.
+
+
+## `home_assistant_action_exceptions` checker
+
+Quality-scale-gated checker for the
+[`action-exceptions`](https://contributors.home-assistant.io/core/quality-scale/action-exceptions/)
+Silver rule. Fires only when the integration marks the rule as `exempt`.
+
+### `W7464`: `home-assistant-action-exceptions-exempt`
+
+The `action-exceptions` rule covers entity actions too, not only actions the
+integration registers. A platform module for a platform whose entities can be
+controlled, such as `switch`, `light`, `cover`, `climate`, `button`, `number`
+or `select`, provides entity actions, so the rule should not be exempt.
 
 
 ## `home_assistant_diagnostics` checker

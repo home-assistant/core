@@ -1,4 +1,5 @@
 """Button entities for Acaia scales."""
+# pylint: disable=home-assistant-action-exceptions-exempt
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
