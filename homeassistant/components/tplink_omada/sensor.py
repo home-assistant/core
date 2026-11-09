@@ -205,9 +205,7 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data."""
-        # The device may no longer be reported (e.g. it was removed from the
-        # controller) — the entity becomes unavailable instead of raising
-        # KeyError. The stale value is kept only for when it reappears.
+        # A device can stay registered after the controller stops reporting it.
         if (current := self.coordinator.data.get(self.device.mac)) is not None:
             self._attr_native_value = self.entity_description.update_func(current)
         super()._handle_coordinator_update()
@@ -286,9 +284,8 @@ class OmadaSwitchPortSensor(
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data."""
-        # The port may no longer be reported (e.g. after a firmware update or
-        # a port reconfiguration) — the entity becomes unavailable instead of
-        # raising KeyError. The stale value is kept for when it reappears.
+        # A port can stay registered after the controller stops reporting it,
+        # for example after a firmware update or a port reconfiguration.
         if (current := self.coordinator.data.get(self._port_id)) is not None:
             self._attr_native_value = self.entity_description.update_func(current)
         super()._handle_coordinator_update()
