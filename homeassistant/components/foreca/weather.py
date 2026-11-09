@@ -357,7 +357,6 @@ class ForecaWeather(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="minute_forecast_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         return {
             "resolution": minutes.resolution,

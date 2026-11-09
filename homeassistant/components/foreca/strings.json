@@ -58,7 +58,7 @@
   },
   "exceptions": {
     "minute_forecast_error": {
-      "message": "Error fetching the minute forecast: {error}"
+      "message": "Error fetching the minute forecast."
     },
     "three_hour_forecast_error": {
       "message": "Error fetching the 3-hour forecast."

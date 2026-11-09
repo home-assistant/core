@@ -371,3 +371,4 @@ async def test_minute_forecast_error(
             return_response=True,
         )
     assert exc_info.value.translation_key == "minute_forecast_error"
+    assert str(exc_info.value) == "Error fetching the minute forecast"
