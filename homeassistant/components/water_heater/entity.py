@@ -112,6 +112,9 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             WaterHeaterCapabilityAttribute.MAX_TEMP: show_temp(
                 self.hass, self.max_temp, native_temperature_unit, self.precision
             ),
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: (
+                self.hass.config.units.temperature_unit
+            ),
         }
         if target_temperature_step := self.target_temperature_step:
             data[WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP] = (
@@ -153,9 +156,6 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.native_target_temperature_low,
                 native_temperature_unit,
                 self.precision,
-            ),
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: (
-                self.hass.config.units.temperature_unit
             ),
         }
 

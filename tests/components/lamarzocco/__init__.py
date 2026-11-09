@@ -1,8 +1,17 @@
 """Mock inputs for tests."""
 
-from pylamarzocco.const import ModelName
-from pytest_homeassistant.common import MockConfigEntry
+from unittest.mock import AsyncMock, MagicMock
 
+from pylamarzocco.const import ModelName
+from pylamarzocco.models import (
+    ThingDashboardConfig,
+    ThingSchedulingSettings,
+    ThingSettings,
+    ThingStatistics,
+)
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+
+from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -34,6 +43,44 @@ async def async_init_integration(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+def configure_machine_mock(
+    machine_mock: MagicMock, model: ModelName, serial_number: str
+) -> None:
+    """Configure a mocked LaMarzoccoMachine for the given model and serial."""
+    if model == ModelName.LINEA_MINI:
+        config = load_json_object_fixture("config_mini.json", DOMAIN)
+    elif model == ModelName.LINEA_MICRA:
+        config = load_json_object_fixture("config_micra.json", DOMAIN)
+    else:
+        config = load_json_object_fixture("config_gs3.json", DOMAIN)
+    schedule = load_json_object_fixture("schedule.json", DOMAIN)
+    settings = load_json_object_fixture("settings.json", DOMAIN)
+    statistics = load_json_object_fixture("statistics.json", DOMAIN)
+
+    machine_mock.serial_number = serial_number
+    machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
+    machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
+    machine_mock.settings = ThingSettings.from_dict(settings)
+    machine_mock.statistics = ThingStatistics.from_dict(statistics)
+    machine_mock.dashboard.model_name = model
+    machine_mock.to_dict.return_value = {
+        "serial_number": machine_mock.serial_number,
+        "dashboard": machine_mock.dashboard.to_dict(),
+        "schedule": machine_mock.schedule.to_dict(),
+        "settings": machine_mock.settings.to_dict(),
+    }
+    machine_mock.connect_dashboard_websocket = AsyncMock()
+    machine_mock.websocket = MagicMock()
+    machine_mock.websocket.connected = True
+    machine_mock.websocket.disconnect = AsyncMock()
+    machine_mock.bluetooth_shot_counter_active = False
+    machine_mock.bluetooth_connected = True
+    machine_mock.register_bluetooth_connection_callback.return_value = MagicMock(
+        return_value=None
+    )
+    machine_mock.connect_bluetooth_shot_counter.return_value = True
 
 
 def get_bluetooth_service_info(model: ModelName, serial: str) -> BluetoothServiceInfo:
