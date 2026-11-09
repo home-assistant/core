@@ -118,6 +118,32 @@ async def test_rest_sensor_unavailable_with_empty_observation(
     )
 
 
+async def test_rest_sensor_unavailable_when_station_is_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rest_api: AsyncMock,
+    mock_websocket_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test REST sensors are unavailable when the payload no longer has the station."""
+    with patch(
+        "homeassistant.components.weatherflow_cloud.PLATFORMS", [Platform.SENSOR]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.my_home_station_temperature").state == "10.5"
+
+    mock_rest_api.get_all_data.return_value = {}
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.my_home_station_temperature").state == STATE_UNAVAILABLE
+    )
+
+
 async def test_websocket_sensor_observation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

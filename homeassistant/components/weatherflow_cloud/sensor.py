@@ -487,10 +487,11 @@ class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
 
         if self.device_id is not None:
             # Websocket sensors - have Device IDs
-            return bool(
-                self.coordinator.data
-                and self.coordinator.data[self.station_id][self.device_id] is not None
-            )
+            if not self.coordinator.data:
+                return False
+            if (station := self.coordinator.data.get(self.station_id)) is None:
+                return False
+            return station.get(self.device_id) is not None
 
         return True
 
@@ -535,7 +536,11 @@ class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
     @property
     def _observation(self) -> Observation | None:
         """Return the current station observation."""
-        observations = self.coordinator.data[self.station_id].observation.obs
+        if not self.coordinator.data:
+            return None
+        if (station := self.coordinator.data.get(self.station_id)) is None:
+            return None
+        observations = station.observation.obs
         if not observations:
             return None
         return observations[0]
