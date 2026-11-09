@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import significant_change
 
@@ -34,7 +34,7 @@ async def test_signicant_change(
 ) -> None:
     """Test initialize helper works."""
     ent_id = "test_domain.test_entity"
-    attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
+    attrs = {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.BATTERY}
 
     assert checker.async_is_significant_change(State(ent_id, "100", attrs))
 
@@ -60,7 +60,7 @@ async def test_significant_change_extra(
 ) -> None:
     """Test extra significant checker works."""
     ent_id = "test_domain.test_entity"
-    attrs = {ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY}
+    attrs = {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.BATTERY}
 
     assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
     assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=1)

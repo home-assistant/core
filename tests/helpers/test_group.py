@@ -2,7 +2,12 @@
 
 from pytest_homeassistant.common import MockEntity, MockEntityPlatform
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    EntityCapabilityAttribute,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, group
 from homeassistant.helpers.group import (
@@ -319,8 +324,11 @@ async def test_generic_group_attribute_in_state(hass: HomeAssistant) -> None:
 
     state = hass.states.get("light.group_with_attrs")
     assert state is not None
-    assert ATTR_GROUP_ENTITIES in state.attributes
-    assert state.attributes[ATTR_GROUP_ENTITIES] == ["light.lamp1", "light.lamp2"]
+    assert EntityCapabilityAttribute.GROUP_ENTITIES in state.attributes
+    assert state.attributes[EntityCapabilityAttribute.GROUP_ENTITIES] == [
+        "light.lamp1",
+        "light.lamp2",
+    ]
 
 
 async def test_integration_specific_group_member_entity_ids(
@@ -497,8 +505,8 @@ async def test_integration_specific_group_attribute_in_state(
 
     state = hass.states.get("light.int_group_attrs")
     assert state is not None
-    assert ATTR_GROUP_ENTITIES in state.attributes
-    assert sorted(state.attributes[ATTR_GROUP_ENTITIES]) == [
+    assert EntityCapabilityAttribute.GROUP_ENTITIES in state.attributes
+    assert sorted(state.attributes[EntityCapabilityAttribute.GROUP_ENTITIES]) == [
         "light.member1",
         "light.member2",
     ]
