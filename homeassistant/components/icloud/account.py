@@ -474,7 +474,7 @@ class IcloudAccount:
                 # Nothing for the user to act on, so retry like setup does
                 # rather than ask for a code that cannot be sent.
                 _LOGGER.warning(
-                    "iCloud asked for a verification code but has no way to send "
+                    "Apple asked for a verification code but has no way to send "
                     "one, will retry"
                 )
             else:
