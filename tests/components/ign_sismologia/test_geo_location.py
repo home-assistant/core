@@ -8,7 +8,7 @@ from georss_ign_sismologia_client import IgnSismologiaFeed
 from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location import ATTR_SOURCE
+from homeassistant.components.geo_location import GeolocationEntityStateAttribute
 from homeassistant.components.ign_sismologia.geo_location import (
     ATTR_EXTERNAL_ID,
     ATTR_IMAGE_URL,
@@ -130,7 +130,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_IMAGE_URL: "http://image.url/map.jpg",
                 ATTR_MAGNITUDE: 5.7,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "ign_sismologia",
+                GeolocationEntityStateAttribute.SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
             assert float(state.state) == 15.5
@@ -146,7 +146,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_TITLE: "Title 2",
                 ATTR_MAGNITUDE: 4.6,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "ign_sismologia",
+                GeolocationEntityStateAttribute.SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
             assert float(state.state) == 20.5
@@ -162,7 +162,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_TITLE: "Title 3",
                 ATTR_REGION: "Region 3",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "ign_sismologia",
+                GeolocationEntityStateAttribute.SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
             assert float(state.state) == 25.5

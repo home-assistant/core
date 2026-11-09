@@ -7,10 +7,10 @@ from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import geonetnz_volcano
-from homeassistant.components.geo_location import ATTR_DISTANCE
 from homeassistant.components.geonetnz_volcano import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.geonetnz_volcano.const import (
     ATTR_ACTIVITY,
+    ATTR_DISTANCE,
     ATTR_EXTERNAL_ID,
     ATTR_HAZARDS,
 )

@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location import ATTR_SOURCE
+from homeassistant.components.geo_location import GeolocationEntityStateAttribute
 from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
     ATTR_CATEGORY,
     ATTR_COUNCIL_AREA,
@@ -153,7 +153,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_SIZE: "Size 1",
                 ATTR_RESPONSIBLE_AGENCY: "Agency 1",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "nsw_rural_fire_service_feed",
+                GeolocationEntityStateAttribute.SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:fire",
             }
             assert round(abs(float(state.state) - 15.5), 7) == 0
@@ -168,7 +168,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_FIRE: False,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "nsw_rural_fire_service_feed",
+                GeolocationEntityStateAttribute.SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:alarm-light",
             }
             assert round(abs(float(state.state) - 20.5), 7) == 0
@@ -183,7 +183,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_FIRE: True,
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                ATTR_SOURCE: "nsw_rural_fire_service_feed",
+                GeolocationEntityStateAttribute.SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:fire",
             }
             assert round(abs(float(state.state) - 25.5), 7) == 0

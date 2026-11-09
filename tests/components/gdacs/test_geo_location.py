@@ -20,7 +20,7 @@ from homeassistant.components.gdacs.geo_location import (
     ATTR_TO_DATE,
     ATTR_VULNERABILITY,
 )
-from homeassistant.components.geo_location import ATTR_SOURCE
+from homeassistant.components.geo_location import GeolocationEntityStateAttribute
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
@@ -136,7 +136,7 @@ async def test_setup(
             ATTR_SEVERITY: "Severity 1",
             ATTR_VULNERABILITY: "Vulnerability 1",
             ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "gdacs",
+            GeolocationEntityStateAttribute.SOURCE: "gdacs",
             ATTR_ICON: "mdi:water-off",
         }
         assert float(state.state) == 15.5
@@ -152,7 +152,7 @@ async def test_setup(
             ATTR_DESCRIPTION: "Description 2",
             ATTR_EVENT_TYPE: "Tropical Cyclone",
             ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "gdacs",
+            GeolocationEntityStateAttribute.SOURCE: "gdacs",
             ATTR_ICON: "mdi:weather-hurricane",
         }
         assert float(state.state) == 20.5
@@ -169,7 +169,7 @@ async def test_setup(
             ATTR_EVENT_TYPE: "Tropical Cyclone",
             ATTR_COUNTRY: "Country 2",
             ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "gdacs",
+            GeolocationEntityStateAttribute.SOURCE: "gdacs",
             ATTR_ICON: "mdi:weather-hurricane",
         }
         assert float(state.state) == 25.5
