@@ -70,7 +70,7 @@ class SystemBridgeSensorEntityDescription(SensorEntityDescription):
 
 def battery_time_remaining(data: SystemBridgeData) -> datetime | None:
     """Return the battery time remaining."""
-    if (battery_time := data.battery.time_remaining) is not None:
+    if data.battery and (battery_time := data.battery.time_remaining) is not None:
         return dt_util.utcnow() + timedelta(seconds=battery_time)
     return None
 
@@ -87,6 +87,8 @@ def with_battery(func) -> Callable:
 
     def wrapper(data: SystemBridgeData, name: str) -> StateType:
         """Wrap a function to ensure a battery is available."""
+        if not data.battery:
+            return None
         for battery in data.battery.batteries:
             if battery.name == name:
                 return func(battery)
@@ -1276,9 +1278,11 @@ async def async_setup_entry(
     @callback
     def _async_add_battery_sensors() -> None:
         """Add battery sensors not seen before."""
+        if not (battery_data := coordinator.data.battery):
+            return
         new_descriptions = [
             description
-            for battery in coordinator.data.battery.batteries
+            for battery in battery_data.batteries
             for description in battery_info_sensor_types(battery)
             if description.key not in known_battery_sensors
         ]

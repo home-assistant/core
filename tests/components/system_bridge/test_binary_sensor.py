@@ -1,7 +1,8 @@
 """Tests for the System Bridge binary sensor platform."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from dataclasses import replace
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,6 +15,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import mock_data_listener
 
 
 @pytest.fixture(autouse=True)
@@ -43,6 +46,36 @@ async def test_binary_sensor_platform(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_binary_sensor_platform_no_battery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test setup of the binary sensor platform without battery data."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, battery=None
+    )
+
+    async def listen_without_battery(
+        callback: Callable[[str, Any], Awaitable[None]], *args: Any, **kwargs: Any
+    ) -> None:
+        async def module_callback(module: str, data: Any) -> None:
+            await callback(module, None if module == Module.BATTERY else data)
+
+        await mock_data_listener(module_callback, *args, **kwargs)
+
+    mock_websocket_client.listen.side_effect = listen_without_battery
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("binary_sensor.hostname_session_lock")
+    assert not hass.states.get("binary_sensor.hostname_ac_power")
+    assert not hass.states.get("binary_sensor.hostname_charging")
 
 
 @pytest.mark.parametrize(

@@ -102,7 +102,7 @@ async def async_setup_entry(
         )
 
     # Desktops have no mains supply to report, so leave the sensor out there
-    if coordinator.data.battery.ac_connected is not None:
+    if coordinator.data.battery and coordinator.data.battery.ac_connected is not None:
         entities.append(
             SystemBridgeBinarySensor(
                 coordinator, AC_CONNECTED_BINARY_SENSOR_TYPE, entry.data[CONF_PORT]
