@@ -86,13 +86,11 @@ async def async_setup_platform(
 
     if switches := config.get(CONF_SWITCHES):
         platform_data = hass.data[BROADLINK_DATA].platforms.get(Platform.SWITCH, {})
+        if not (switch_platform_data := platform_data.get(mac_addr)):
+            raise PlatformNotReady
         async_add_entities_config_entry: AddConfigEntryEntitiesCallback
         device: BroadlinkDevice
-        async_add_entities_config_entry, device = platform_data.get(
-            mac_addr, (None, None)
-        )
-        if not async_add_entities_config_entry:
-            raise PlatformNotReady
+        async_add_entities_config_entry, device = switch_platform_data
 
         async_add_entities_config_entry(
             BroadlinkRMSwitch(device, config) for config in switches
