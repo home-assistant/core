@@ -100,6 +100,8 @@ class TeslaFleetWindowEntity(TeslaFleetVehicleEntity, CoverEntity):
 class TeslaFleetChargePortEntity(TeslaFleetVehicleEntity, CoverEntity):
     """Cover entity for the charge port."""
 
+    _attr_device_class = CoverDeviceClass.DOOR
+
     def __init__(self, vehicle: TeslaFleetVehicleData, scopes: list[Scope]) -> None:
         """Initialize the cover."""
         super().__init__(vehicle, "charge_state_charge_port_door_open")
@@ -138,6 +140,8 @@ class TeslaFleetChargePortEntity(TeslaFleetVehicleEntity, CoverEntity):
 class TeslaFleetFrontTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
     """Cover entity for the front trunk."""
 
+    _attr_device_class = CoverDeviceClass.DOOR
+
     def __init__(self, vehicle: TeslaFleetVehicleData, scopes: list[Scope]) -> None:
         """Initialize the cover."""
         super().__init__(vehicle, "vehicle_state_ft")
@@ -163,6 +167,8 @@ class TeslaFleetFrontTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
 
 class TeslaFleetRearTrunkEntity(TeslaFleetVehicleEntity, CoverEntity):
     """Cover entity for the rear trunk."""
+
+    _attr_device_class = CoverDeviceClass.DOOR
 
     def __init__(self, vehicle: TeslaFleetVehicleData, scopes: list[Scope]) -> None:
         """Initialize the cover."""

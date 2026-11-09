@@ -24,7 +24,7 @@
     'object_id_base': 'Charge port door',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
@@ -39,6 +39,7 @@
 # name: test_cover[cover.test_charge_port_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge port door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -76,7 +77,7 @@
     'object_id_base': 'Frunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
     'platform': 'teslemetry',
@@ -91,6 +92,7 @@
 # name: test_cover[cover.test_frunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Frunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 1>,
@@ -181,7 +183,7 @@
     'object_id_base': 'Trunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
     'platform': 'teslemetry',
@@ -196,6 +198,7 @@
 # name: test_cover[cover.test_trunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Trunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -286,7 +289,7 @@
     'object_id_base': 'Charge port door',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
@@ -301,6 +304,7 @@
 # name: test_cover_alt[cover.test_charge_port_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge port door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -338,7 +342,7 @@
     'object_id_base': 'Frunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
     'platform': 'teslemetry',
@@ -353,6 +357,7 @@
 # name: test_cover_alt[cover.test_frunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Frunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 1>,
@@ -390,7 +395,7 @@
     'object_id_base': 'Trunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
     'platform': 'teslemetry',
@@ -405,6 +410,7 @@
 # name: test_cover_alt[cover.test_trunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Trunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -495,7 +501,7 @@
     'object_id_base': 'Charge port door',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
@@ -510,6 +516,7 @@
 # name: test_cover_cybertruck[cover.test_charge_port_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge port door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -547,7 +554,7 @@
     'object_id_base': 'Frunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
     'platform': 'teslemetry',
@@ -562,6 +569,7 @@
 # name: test_cover_cybertruck[cover.test_frunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Frunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 1>,
@@ -599,7 +607,7 @@
     'object_id_base': 'Tonneau',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Tonneau',
     'platform': 'teslemetry',
@@ -614,6 +622,7 @@
 # name: test_cover_cybertruck[cover.test_tonneau-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tonneau',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
@@ -651,7 +660,7 @@
     'object_id_base': 'Trunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
     'platform': 'teslemetry',
@@ -666,6 +675,7 @@
 # name: test_cover_cybertruck[cover.test_trunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Trunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -756,7 +766,7 @@
     'object_id_base': 'Charge port door',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
@@ -771,6 +781,7 @@
 # name: test_cover_none[cover.test_charge_port_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge port door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -808,7 +819,7 @@
     'object_id_base': 'Frunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
     'platform': 'teslemetry',
@@ -823,6 +834,7 @@
 # name: test_cover_none[cover.test_frunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Frunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 1>,
@@ -913,7 +925,7 @@
     'object_id_base': 'Trunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
     'platform': 'teslemetry',
@@ -928,6 +940,7 @@
 # name: test_cover_none[cover.test_trunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Trunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
@@ -1018,7 +1031,7 @@
     'object_id_base': 'Charge port door',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
@@ -1033,6 +1046,7 @@
 # name: test_cover_noscope[cover.test_charge_port_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge port door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 0>,
@@ -1070,7 +1084,7 @@
     'object_id_base': 'Frunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Frunk',
     'platform': 'teslemetry',
@@ -1085,6 +1099,7 @@
 # name: test_cover_noscope[cover.test_frunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Frunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 0>,
@@ -1175,7 +1190,7 @@
     'object_id_base': 'Trunk',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
     'original_icon': None,
     'original_name': 'Trunk',
     'platform': 'teslemetry',
@@ -1190,6 +1205,7 @@
 # name: test_cover_noscope[cover.test_trunk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Trunk',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 0>,
