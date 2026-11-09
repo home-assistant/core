@@ -6684,8 +6684,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "iot_class": "cloud_polling"
     },
     "idrive_e2": {
       "name": "IDrive e2",
