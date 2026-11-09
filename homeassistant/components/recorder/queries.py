@@ -1,6 +1,6 @@
 """Queries for the recorder."""
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from datetime import datetime
 
 from sqlalchemy import and_, bindparam, delete, func, lambda_stmt, select, update
@@ -282,14 +282,40 @@ def find_events_to_purge(
 
 
 def find_states_to_purge(
-    purge_before: float, max_bind_vars: int
+    purge_before: float, max_bind_vars: int, keep_state_ids: Collection[int]
+) -> Select:
+    """Find states to purge, except the states in keep_state_ids.
+
+    Not a lambda statement: keep_state_ids is rendered inline since it can
+    exceed max_bind_vars and a NOT IN cannot be chunked, and a plain select
+    avoids the lambda analysis overhead.
+    """
+    return (
+        select(States.state_id, States.attributes_id)
+        .filter(States.last_updated_ts < purge_before)
+        .filter(
+            States.state_id.not_in(
+                bindparam(
+                    "keep_state_ids",
+                    list(keep_state_ids),
+                    expanding=True,
+                    literal_execute=True,
+                )
+            )
+        )
+        .limit(max_bind_vars)
+    )
+
+
+def find_linked_old_state_ids(
+    purge_before: float, state_ids: Iterable[int]
 ) -> StatementLambdaElement:
-    """Find states to purge."""
+    """Find which of state_ids are the old_state of a state not purged yet."""
     return lambda_stmt(
         lambda: (
-            select(States.state_id, States.attributes_id)
-            .filter(States.last_updated_ts < purge_before)
-            .limit(max_bind_vars)
+            select(States.old_state_id)
+            .filter(States.old_state_id.in_(state_ids))
+            .filter(States.last_updated_ts >= purge_before)
         )
     )
 

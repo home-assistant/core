@@ -33,7 +33,7 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsShortTerm,
 )
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.recorder.purge import purge_old_data
+from homeassistant.components.recorder.purge import _purge_state_ids, purge_old_data
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
     RecorderService,
@@ -110,8 +110,10 @@ async def test_purge_big_database(hass: HomeAssistant, recorder_mock: Recorder) 
         with session_scope(hass=hass) as session:
             states = session.query(States)
             state_attributes = session.query(StateAttributes)
-            assert states.count() == 24
-            assert state_attributes.count() == 1
+            # Each of the 12 runs keeps the old state its first state in the
+            # window links to
+            assert states.count() == 36
+            assert state_attributes.count() == 2
 
 
 async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) -> None:
@@ -157,8 +159,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 2
-        assert state_attributes.count() == 1
+        assert states.count() == 3
+        assert state_attributes.count() == 2
 
     assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
@@ -169,9 +171,12 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         state_map_by_state = {state.state: state for state in states_after_purge}
         dontpurgeme_5 = state_map_by_state["dontpurgeme_5"]
         dontpurgeme_4 = state_map_by_state["dontpurgeme_4"]
+        # Kept since dontpurgeme_4 links to it
+        purgeme_3 = state_map_by_state["purgeme_3"]
 
         assert dontpurgeme_5.old_state_id == dontpurgeme_4.state_id
-        assert dontpurgeme_4.old_state_id is None
+        assert dontpurgeme_4.old_state_id == purgeme_3.state_id
+        assert purgeme_3.old_state_id is None
 
     finished = purge_old_data(recorder_mock, purge_before, repack=False)
     assert finished
@@ -179,10 +184,10 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     assert recorder_mock.states_manager.oldest_ts != oldest_ts
 
     with session_scope(hass=hass) as session:
-        states = session.query(States)
+        states = session.query(States).order_by(States.last_updated_ts)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 2
-        assert state_attributes.count() == 1
+        assert states.count() == 3
+        assert state_attributes.count() == 2
 
         assert recorder_mock.states_manager.oldest_ts != oldest_ts
         assert recorder_mock.states_manager.oldest_ts == states[0].last_updated_ts
@@ -203,21 +208,23 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     # states_manager.oldest_ts is not updated until after the purge is complete
     assert recorder_mock.states_manager.oldest_ts == oldest_ts
 
+    # The current state of test.recorder2 is kept
     with session_scope(hass=hass) as session:
-        assert states.count() == 0
-        assert state_attributes.count() == 0
+        assert states.count() == 1
+        assert states[0].state == "dontpurgeme_5"
+        assert state_attributes.count() == 1
 
-    assert "test.recorder2" not in recorder_mock.states_manager._last_committed_id
+    assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
     # Add some more states
     await _add_test_states(hass)
 
-    # make sure we start with 6 states
+    # make sure the new states link to the kept state
     with session_scope(hass=hass) as session:
-        states = session.query(States)
-        assert states.count() == 6
-        assert states[0].old_state_id is None
-        assert states[5].old_state_id == states[4].state_id
+        states = session.query(States).order_by(States.state_id)
+        assert states.count() == 7
+        assert states[1].old_state_id == states[0].state_id
+        assert states[6].old_state_id == states[5].state_id
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
@@ -562,8 +569,9 @@ async def test_purge_method(
         )
         statistics = session.query(StatisticsShortTerm)
 
-        # only purged old states, events and statistics
-        assert states.count() == 4
+        # only purged old states, events and statistics, the newest old state
+        # is kept since the oldest state in the window links to it
+        assert states.count() == 5
         assert events.count() == 4
         assert statistics.count() == 4
 
@@ -585,8 +593,9 @@ async def test_purge_method(
         recorder_runs = session.query(RecorderRuns)
         statistics_runs = session.query(StatisticsRuns)
 
-        # we should only have 2 states, events and statistics left after purging
-        assert states.count() == 2
+        # we should only have 2 events and statistics left after purging, and
+        # 3 states since the oldest state in the window links to an old one
+        assert states.count() == 3
         assert events.count() == 2
         assert statistics.count() == 2
 
@@ -2437,3 +2446,268 @@ async def test_purge_entities_keep_days(
     )
     assert len(states["sensor.keep"]) == 2
     assert "sensor.purge" not in states
+
+
+async def test_purge_keeps_current_state_of_recorded_entities(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purge keeps the current state of entities that are still recorded."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("binary_sensor.idle", "off")
+        hass.states.async_set("binary_sensor.removed", "off")
+        hass.states.async_remove("binary_sensor.removed")
+        await async_wait_recording_done(hass)
+
+    finished = purge_old_data(
+        recorder_mock, dt_util.utcnow() - timedelta(days=10), repack=False
+    )
+    assert finished
+
+    hass.states.async_set("binary_sensor.idle", "on")
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        assert session.query(StatesMeta.entity_id).all() == [("binary_sensor.idle",)]
+        off_state, on_state = session.query(States).order_by(States.state_id)
+        assert off_state.state == "off"
+        assert on_state.state == "on"
+        # The logbook only shows state changes that link to the previous state
+        assert on_state.old_state_id == off_state.state_id
+
+
+async def test_purge_after_state_that_cannot_be_serialized(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test a state that was never saved does not stop the purge."""
+
+    class CannotSerializeMe:
+        """Make the attributes fail to serialize."""
+
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("sensor.old", "1")
+        hass.states.async_set("sensor.old", "2")
+        await async_wait_recording_done(hass)
+    # This state is not saved, so it is committed without a state_id
+    hass.states.async_set("sensor.bad", "on", {"fail": CannotSerializeMe()})
+    hass.states.async_set("sensor.new", "1")
+    await async_wait_recording_done(hass)
+
+    finished = purge_old_data(
+        recorder_mock, dt_util.utcnow() - timedelta(days=10), repack=False
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States).order_by(States.state_id)
+        assert [state.state for state in states] == ["2", "1"]
+
+
+async def test_purge_keeps_old_state_of_states_in_retention_window(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purge keeps the state a not yet purged state change links to."""
+    now = dt_util.utcnow()
+    with freeze_time(now - timedelta(days=35)):
+        hass.states.async_set("binary_sensor.smoke", "off")
+        await async_wait_recording_done(hass)
+    with freeze_time(now - timedelta(days=2)):
+        hass.states.async_set("binary_sensor.smoke", "on")
+        await async_wait_recording_done(hass)
+    with freeze_time(now):
+        hass.states.async_set("binary_sensor.smoke", "off")
+        await async_wait_recording_done(hass)
+
+    def _states() -> list[tuple[str, bool]]:
+        with session_scope(hass=hass) as session:
+            states = list(session.query(States).order_by(States.state_id))
+            ids = {state.state_id for state in states}
+            return [(state.state, state.old_state_id in ids) for state in states]
+
+    # The "on" change links to the old "off", which must survive the purge
+    assert purge_old_data(recorder_mock, now - timedelta(days=10), repack=False)
+    assert _states() == [("off", False), ("on", True), ("off", True)]
+
+    # Once the "on" change is outside the window, the old "off" is purged too
+    assert purge_old_data(recorder_mock, now - timedelta(days=1), repack=False)
+    assert _states() == [("on", False), ("off", True)]
+
+
+async def test_purge_service_keeps_latest_state(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test the purge action keeps the latest state of each entity."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=1)):
+        hass.states.async_set("sensor.one", "1")
+        hass.states.async_set("sensor.one", "2")
+        hass.states.async_set("sensor.two", "1")
+        await async_wait_recording_done(hass)
+
+    await hass.services.async_call(
+        DOMAIN, RecorderService.PURGE, {RecorderServiceArgument.KEEP_DAYS: 0}
+    )
+    await hass.async_block_till_done()
+    await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = (
+            session.query(StatesMeta.entity_id, States.state)
+            .join(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .order_by(States.state_id)
+        )
+        assert states.all() == [("sensor.one", "2"), ("sensor.two", "1")]
+
+
+async def test_purge_entity_removed_while_recording_disabled(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purge removes an entity that was removed while recording was off."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("sensor.removed", "1")
+        await async_wait_recording_done(hass)
+
+    await hass.services.async_call(DOMAIN, RecorderService.DISABLE, blocking=True)
+    await async_wait_recording_done(hass)
+    hass.states.async_remove("sensor.removed")
+    await async_wait_recording_done(hass)
+    await hass.services.async_call(DOMAIN, RecorderService.ENABLE, blocking=True)
+    await async_wait_recording_done(hass)
+
+    finished = purge_old_data(
+        recorder_mock, dt_util.utcnow() - timedelta(days=10), repack=False
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        assert session.query(States).count() == 0
+
+
+async def test_purge_finishes_when_kept_states_fill_the_batches(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test the purge makes progress when the oldest batch only holds kept states."""
+    now = dt_util.utcnow()
+    for days, entity_id in ((30, "sensor.a"), (29, "sensor.b")):
+        with freeze_time(now - timedelta(days=days)):
+            hass.states.async_set(entity_id, "old")
+            await async_wait_recording_done(hass)
+    for days in (20, 19, 18):
+        with freeze_time(now - timedelta(days=days)):
+            hass.states.async_set("sensor.c", str(days))
+            await async_wait_recording_done(hass)
+    for entity_id in ("sensor.a", "sensor.b", "sensor.c"):
+        hass.states.async_set(entity_id, "new")
+    await async_wait_recording_done(hass)
+
+    # One batch of two states per purge call
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 2),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 2),
+    ):
+        for _ in range(5):
+            if purge_old_data(
+                recorder_mock,
+                now - timedelta(days=10),
+                repack=False,
+                states_batch_size=1,
+                events_batch_size=1,
+            ):
+                break
+        else:
+            pytest.fail("The purge did not finish")
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States.state).order_by(States.state_id)
+        assert [state for (state,) in states] == [
+            "old",
+            "old",
+            "18",
+            "new",
+            "new",
+            "new",
+        ]
+
+
+async def test_purge_finishes_when_two_purges_alternate(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test two purges with different cutoffs that take turns both finish."""
+    now = dt_util.utcnow()
+    for days, entity_id in ((30, "sensor.a"), (29, "sensor.b")):
+        with freeze_time(now - timedelta(days=days)):
+            hass.states.async_set(entity_id, "old")
+            await async_wait_recording_done(hass)
+    for days in (20, 19, 18):
+        with freeze_time(now - timedelta(days=days)):
+            hass.states.async_set("sensor.c", str(days))
+            await async_wait_recording_done(hass)
+    for entity_id in ("sensor.a", "sensor.b", "sensor.c"):
+        hass.states.async_set(entity_id, "new")
+    await async_wait_recording_done(hass)
+
+    # One batch of two states per purge call, the purges take turns like
+    # requeued purge tasks do
+    pending = [now - timedelta(days=10), now - timedelta(days=15)]
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 2),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 2),
+    ):
+        for _ in range(10):
+            pending = [
+                purge_before
+                for purge_before in pending
+                if not purge_old_data(
+                    recorder_mock,
+                    purge_before,
+                    repack=False,
+                    states_batch_size=1,
+                    events_batch_size=1,
+                )
+            ]
+            if not pending:
+                break
+        else:
+            pytest.fail("The purges did not finish")
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States.state).order_by(States.state_id)
+        assert [state for (state,) in states] == [
+            "old",
+            "old",
+            "18",
+            "new",
+            "new",
+            "new",
+        ]
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(None, id="finished"),
+        pytest.param(OperationalError("statement", {}, []), id="database_error"),
+        pytest.param(RuntimeError("unexpected"), id="other_error"),
+    ],
+)
+async def test_purge_task_forgets_linked_states(
+    hass: HomeAssistant, recorder_mock: Recorder, exception: Exception | None
+) -> None:
+    """Test a purge task that ends does not keep the linked states it found."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("sensor.a", "old")
+        await async_wait_recording_done(hass)
+    hass.states.async_set("sensor.a", "new")
+    await async_wait_recording_done(hass)
+
+    # The error comes after the batch found the linked old state
+    with patch(
+        "homeassistant.components.recorder.purge._purge_state_ids",
+        wraps=_purge_state_ids,
+        side_effect=exception,
+    ):
+        await hass.services.async_call(
+            DOMAIN, RecorderService.PURGE, {RecorderServiceArgument.KEEP_DAYS: 10}
+        )
+        await hass.async_block_till_done()
+        await async_wait_purge_done(hass)
+
+    assert not recorder_mock.states_manager._linked_state_ids
