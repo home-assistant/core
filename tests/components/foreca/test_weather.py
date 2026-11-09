@@ -355,14 +355,20 @@ async def test_air_quality_forecast_without_a_time_is_dropped(
 
 
 @pytest.mark.parametrize(
-    ("error", "translation_key"),
+    ("error", "translation_key", "message"),
     [
         pytest.param(
             ForecaProductUnavailableError,
             "air_quality_not_on_plan",
+            "The plan of this API key does not include air quality",
             id="not_on_plan",
         ),
-        pytest.param(ForecaError("timeout"), "air_quality_forecast_error", id="error"),
+        pytest.param(
+            ForecaError("timeout"),
+            "air_quality_forecast_error",
+            "Error fetching the air quality forecast",
+            id="error",
+        ),
     ],
 )
 async def test_air_quality_forecast_error(
@@ -371,6 +377,7 @@ async def test_air_quality_forecast_error(
     mock_foreca_client: MagicMock,
     error: Exception | type[Exception],
     translation_key: str,
+    message: str,
 ) -> None:
     """Test a failed air quality request raises a translated error."""
     mock_foreca_client.air_quality_daily.side_effect = error
@@ -386,3 +393,4 @@ async def test_air_quality_forecast_error(
             return_response=True,
         )
     assert exc_info.value.translation_key == translation_key
+    assert str(exc_info.value) == message

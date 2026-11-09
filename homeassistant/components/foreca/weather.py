@@ -135,7 +135,6 @@ async def _fetch_air_quality[T](request: Awaitable[T]) -> T:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="air_quality_forecast_error",
-            translation_placeholders={"error": str(err)},
         ) from err
 
 
