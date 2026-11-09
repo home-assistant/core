@@ -18,6 +18,24 @@ def functional_block(dpa: str) -> str:
     return dpa.partition(".")[0]
 
 
+class FB343(StrEnum):
+    """FB 343 Window Switch."""
+
+    WINDOW_STATUS = "343.51"
+
+
+class FB344(StrEnum):
+    """FB 344 Dew Point Status Sensor."""
+
+    DEW_POINT_STATUS = "344.51"
+
+
+class FB345(StrEnum):
+    """FB 345 Presence Detector."""
+
+    PRESENCE_STATUS = "345.51"
+
+
 class FB417(StrEnum):
     """FB 417 Light Switching Actuator Basic."""
 
@@ -89,3 +107,39 @@ class FB800(StrEnum):
     MOVE_UP_DOWN = "800.81"
     STOP_STEP_UP_DOWN = "800.82"
     CURRENT_ABS_POS_BLINDS_PERCENT = "800.85"
+
+
+class FB802(StrEnum):
+    """FB 802 Wind Sensor."""
+
+    WIND_ALARM = "802.51"
+
+
+class FB803(StrEnum):
+    """FB 803 Rain Sensor."""
+
+    RAIN_ALARM = "803.51"
+
+
+class FB804(StrEnum):
+    """FB 804 Frost Sensor."""
+
+    FROST_ALARM = "804.51"
+
+
+class FB1002(StrEnum):
+    """FB 1002 Alarm Source."""
+
+    IN_ALARM = "1002.57"
+
+
+class FB1014(StrEnum):
+    """FB 1014 General Purpose Digital Input."""
+
+    DIGITAL_INPUT_VALUE = "1014.51"
+
+
+class FB1021(StrEnum):
+    """FB 1021 Lock Sensor."""
+
+    LOCK = "1021.100"

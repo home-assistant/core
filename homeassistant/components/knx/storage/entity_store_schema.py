@@ -40,7 +40,23 @@ from ..validation import (
     validate_sensor_attributes,
 )
 from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
-from .dpa import FB417, FB418, FB422, FB423, FB427, FB800
+from .dpa import (
+    FB343,
+    FB344,
+    FB345,
+    FB417,
+    FB418,
+    FB422,
+    FB423,
+    FB427,
+    FB800,
+    FB802,
+    FB803,
+    FB804,
+    FB1002,
+    FB1014,
+    FB1021,
+)
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
@@ -109,7 +125,23 @@ class BinarySensorKnxConfig:
     """UI configuration of a KNX binary sensor."""
 
     ga_sensor: Annotated[
-        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="1")
+        GroupAddressConfig,
+        ga(
+            write=False,
+            state_required=True,
+            valid_dpt="1",
+            dpa_state=[
+                FB343.WINDOW_STATUS,
+                FB344.DEW_POINT_STATUS,
+                FB345.PRESENCE_STATUS,
+                FB802.WIND_ALARM,
+                FB803.RAIN_ALARM,
+                FB804.FROST_ALARM,
+                FB1002.IN_ALARM,
+                FB1014.DIGITAL_INPUT_VALUE,
+                FB1021.LOCK,
+            ],
+        ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
     section_advanced_options: Annotated[
