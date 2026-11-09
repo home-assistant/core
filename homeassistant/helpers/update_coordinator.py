@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar, override
+from typing import Any, Generic, Protocol, TypeVar, cast, override
 import urllib.error
 
 import aiohttp
@@ -49,8 +49,6 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
-
-RESTORE_SAVE_DELAY = 10
 
 
 class UpdateFailed(HomeAssistantError):
@@ -674,15 +672,22 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator that persists data and restores it on creation.
 
-    The data must be JSON-serializable and is persisted by reference, so replace
-    it rather than mutate it in place. storage_key must be stable and unique
-    within the config entry, or the domain when there is no config entry; a
-    second live coordinator with the same key raises ValueError. Coordinators
-    with a config entry release their key on unload or failed setup, but domain
-    scoped ones only release it in async_shutdown, so shut the old one down
-    before recreating it, e.g. on a YAML reload. Stored data is restored at the
-    end of __init__, so a subclass assigning self.data in its own __init__
-    after calling super shadows it.
+    Data is saved periodically and on shutdown, together with that of all other
+    restore coordinators. It is serialized only when saved, so replace it rather
+    than mutate it in place. It must be made of dicts with str keys, lists, str,
+    int, finite float, bool and None, or it is not saved; override
+    _serialize_data and _restore_data to convert other types. Bump
+    storage_version when the stored format changes, as data stored under another
+    version is only restored if _restore_data migrates it.
+
+    storage_key must be stable and unique within the config entry, or the domain
+    when there is no config entry; a second live coordinator with the same key
+    raises ValueError. Coordinators with a config entry release their key on
+    unload or failed setup, but domain scoped ones only release it in
+    async_shutdown, so shut the old one down before recreating it, e.g. on a YAML
+    reload. Stored data is restored at the end of __init__, so a subclass
+    assigning self.data in its own __init__ after calling super shadows it, and
+    _restore_data cannot use attributes the subclass sets after calling super.
     """
 
     def __init__(
@@ -694,12 +699,12 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         domain: str | None = None,
         name: str,
         storage_key: str = "",
+        storage_version: int = 1,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
         setup_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         always_update: bool = True,
-        save_delay: float = RESTORE_SAVE_DELAY,
     ) -> None:
         """Initialize the restoring data update coordinator."""
         storage_scope: RestoreScope
@@ -710,7 +715,13 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         else:
             raise ValueError("config_entry or domain is required")
         store_manager = _async_get_restore_store_manager(hass)
-        store_manager.async_register(self, storage_scope, storage_key)
+        store_manager.async_register(
+            self,
+            storage_scope,
+            storage_key,
+            storage_version,
+            lambda: self._serialize_data(self.data),
+        )
         super().__init__(
             hass,
             logger,
@@ -722,12 +733,14 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             request_refresh_debouncer=request_refresh_debouncer,
             always_update=always_update,
         )
-        self._save_delay = save_delay
         self._storage_key = storage_key
         self._storage_scope = storage_scope
+        self._storage_version = storage_version
         self._store_manager = store_manager
-        if (stored := store_manager.async_get(storage_scope, storage_key)) is not None:
-            self.data = stored
+        if (
+            stored := store_manager.async_get(storage_scope, storage_key)
+        ) is not None and (restored := self._restore_data(*stored)) is not None:
+            self.data = restored
 
     @override
     async def async_shutdown(self) -> None:
@@ -737,11 +750,24 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         )
         await super().async_shutdown()
 
+    def _serialize_data(self, data: _DataT) -> Any:
+        """Return data converted to JSON types for storage."""
+        return data
+
+    def _restore_data(self, data: Any, version: int) -> _DataT | None:
+        """Return the data to restore from what was stored, or None for nothing.
+
+        data is what _serialize_data returned when it was stored under version.
+        """
+        if version != self._storage_version:
+            return None
+        return cast(_DataT, data)
+
     @callback
     def _schedule_save(self) -> None:
         """Schedule saving the current data to storage."""
         self._store_manager.async_schedule_save(
-            self, self._storage_scope, self._storage_key, self.data, self._save_delay
+            self, self._storage_scope, self._storage_key
         )
 
     @override

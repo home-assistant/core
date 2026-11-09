@@ -2,8 +2,10 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 import logging
+import math
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
@@ -12,15 +14,14 @@ import weakref
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    flush_store,
-)
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -1558,12 +1559,17 @@ async def set_stored_data(
     hass_storage: dict[str, Any],
     entry: MockConfigEntry | None,
     data: Any,
+    version: int = 1,
 ) -> None:
     """Seed the restore coordinator store and load it, as bootstrap would."""
     if entry is not None:
-        store_data = make_store_data(entries={entry.entry_id: {RESTORE_KEY: data}})
+        store_data = make_store_data(
+            entries={entry.entry_id: {RESTORE_KEY: data}}, version=version
+        )
     else:
-        store_data = make_store_data(domains={RESTORE_DOMAIN: {RESTORE_KEY: data}})
+        store_data = make_store_data(
+            domains={RESTORE_DOMAIN: {RESTORE_KEY: data}}, version=version
+        )
     hass_storage[restore_state.RESTORE_STORAGE_KEY] = {
         "version": 1,
         "data": store_data,
@@ -1575,25 +1581,45 @@ def make_store_data(
     *,
     entries: dict[str, dict[str, Any]] | None = None,
     domains: dict[str, dict[str, Any]] | None = None,
+    version: int = 1,
 ) -> dict[str, dict[str, dict[str, Any]]]:
-    """Return the restore coordinator store data for the given scopes."""
+    """Return the restore coordinator store data for the given scopes.
+
+    Each scope maps a storage key to the data, which is stored under version.
+    """
     return {
-        restore_state.RESTORE_SCOPE_CONFIG_ENTRIES: entries or {},
-        restore_state.RESTORE_SCOPE_DOMAINS: domains or {},
+        bucket: {
+            scope_id: {
+                storage_key: {"version": version, "data": data}
+                for storage_key, data in scope_data.items()
+            }
+            for scope_id, scope_data in (scopes or {}).items()
+        }
+        for bucket, scopes in (
+            (restore_state.RESTORE_SCOPE_CONFIG_ENTRIES, entries),
+            (restore_state.RESTORE_SCOPE_DOMAINS, domains),
+        )
     }
 
 
-def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry) -> Any:
-    """Return the stored data of the coordinator under test."""
+def get_stored_item(
+    hass_storage: dict[str, Any], entry: MockConfigEntry
+) -> dict[str, Any]:
+    """Return the stored version and data of the coordinator under test."""
     store_data = hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"]
     return store_data[restore_state.RESTORE_SCOPE_CONFIG_ENTRIES][entry.entry_id][
         RESTORE_KEY
     ]
 
 
+def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry) -> Any:
+    """Return the stored data of the coordinator under test."""
+    return get_stored_item(hass_storage, entry)["data"]
+
+
 async def flush_restore_store(hass: HomeAssistant) -> None:
-    """Make sure all delayed writes of the restore coordinator store are written."""
-    await flush_store(restore_state._async_get_restore_store_manager(hass)._store)
+    """Save the data of all restore coordinators that changed."""
+    await restore_state._async_get_restore_store_manager(hass).async_dump()
 
 
 def get_restore_crd(
@@ -1603,7 +1629,6 @@ def get_restore_crd(
     domain: str | None = None,
     storage_key: str = RESTORE_KEY,
     update_method: Callable[[], Awaitable[Any]] | None = None,
-    save_delay: float = 0,
 ) -> update_coordinator.RestoreDataUpdateCoordinator[Any]:
     """Make a restore coordinator with its config entry ready for first refresh."""
     if config_entry is not None:
@@ -1618,7 +1643,6 @@ def get_restore_crd(
         name="test",
         storage_key=storage_key,
         update_method=update_method,
-        save_delay=save_delay,
     )
 
 
@@ -1781,34 +1805,6 @@ async def test_save_preserves_other_stored_data(
     )
 
 
-async def test_save_delay_honored(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-    restore_entry: MockConfigEntry,
-) -> None:
-    """Test nothing is written until save_delay has elapsed."""
-
-    async def update_method() -> dict[str, Any]:
-        return {"value": "fetched"}
-
-    crd = get_restore_crd(
-        hass,
-        config_entry=restore_entry,
-        update_method=update_method,
-        save_delay=30,
-    )
-    await crd.async_config_entry_first_refresh()
-
-    assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
-
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert get_stored_data(hass_storage, restore_entry) == {"value": "fetched"}
-
-
 @pytest.mark.parametrize(
     "stored",
     [[], {}],
@@ -1842,7 +1838,7 @@ async def test_generic_non_dict_roundtrip(
     restore_entry: MockConfigEntry,
 ) -> None:
     """Test a coordinator with a non-dict generic data type round-trips."""
-    payload = [{"id": 1}, {"id": 2}]
+    payload = [{"id": 1, "temperature": 21.5, "on": True, "note": None}, {"id": 2}]
 
     crd1: update_coordinator.RestoreDataUpdateCoordinator[list[dict[str, Any]]] = (
         update_coordinator.RestoreDataUpdateCoordinator(
@@ -1875,23 +1871,6 @@ async def test_generic_non_dict_roundtrip(
     assert seen == [payload]
 
     await flush_restore_store(hass)
-
-
-async def test_persist_non_serializable_data(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    restore_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test persisting non-JSON-serializable data logs an error and writes nothing."""
-    crd = get_restore_crd(hass, config_entry=restore_entry)
-    crd.async_set_updated_data({"value": object()})
-    await flush_restore_store(hass)
-
-    assert (
-        f"Error writing config for {restore_state.RESTORE_STORAGE_KEY}" in caplog.text
-    )
-    assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
 
 
 async def test_load_error_not_fatal(
@@ -2062,8 +2041,8 @@ async def test_storage_removed_on_entry_removal(
     await restore_state.async_load(hass)
 
     await hass.config_entries.async_remove(entry.entry_id)
+    # The removal is written right away, not with the next periodic dump
     await hass.async_block_till_done()
-    await flush_restore_store(hass)
 
     assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == make_store_data(
         entries={other_entry.entry_id: {RESTORE_KEY: {"value": "other"}}}
@@ -2083,77 +2062,6 @@ async def test_storage_kept_on_entry_update(
     await flush_restore_store(hass)
 
     assert get_stored_data(hass_storage, entry) == {"value": "stored"}
-
-
-async def test_default_save_delay(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-    restore_entry: MockConfigEntry,
-) -> None:
-    """Test saves are batched by a default delay when none is given."""
-    crd: update_coordinator.RestoreDataUpdateCoordinator[Any] = (
-        update_coordinator.RestoreDataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            config_entry=restore_entry,
-            name="test",
-            storage_key=RESTORE_KEY,
-        )
-    )
-    crd.async_set_updated_data({"value": "pushed"})
-    await hass.async_block_till_done()
-
-    assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
-
-    freezer.tick(timedelta(seconds=update_coordinator.RESTORE_SAVE_DELAY))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert get_stored_data(hass_storage, restore_entry) == {"value": "pushed"}
-
-
-@pytest.mark.parametrize(
-    "save_delay",
-    [0, 30],
-    ids=["immediate", "delayed"],
-)
-async def test_save_does_not_outlive_entry_removal(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-    save_delay: float,
-) -> None:
-    """Test entry removal cleans up stored data despite an in-flight save.
-
-    Removal cleanup mutates the shared in-memory data and schedules its own save,
-    coalescing with any save still pending for the removed coordinator, so a save
-    scheduled before the removal can never write the removed data back.
-    """
-    entry = MockConfigEntry()
-    entry.add_to_hass(hass)
-    crd: update_coordinator.RestoreDataUpdateCoordinator[Any] = (
-        update_coordinator.RestoreDataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            config_entry=entry,
-            name="test",
-            storage_key=RESTORE_KEY,
-            save_delay=save_delay,
-        )
-    )
-
-    # Push and remove the entry without yielding to the event loop in between
-    crd.async_set_updated_data({"value": "pushed"})
-    await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # A save delayed past the removal must not fire and recreate the data
-    freezer.tick(timedelta(seconds=save_delay))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == make_store_data()
 
 
 async def test_no_persist_initial_none(
@@ -2186,7 +2094,8 @@ async def test_async_remove_stored_data_helper(
     crd = get_restore_crd(hass, config_entry=restore_entry)
 
     crd.async_remove_stored_data()
-    await flush_restore_store(hass)
+    # The removal is written right away, not with the next periodic dump
+    await hass.async_block_till_done()
     assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == make_store_data()
 
     # Harmless to call again
@@ -2374,7 +2283,7 @@ async def test_no_save_after_entry_removed_without_unload(
     crd.async_set_updated_data({"value": "pushed"})
     await flush_restore_store(hass)
 
-    assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == make_store_data()
+    assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
 
 
 async def test_refresh_finishing_after_shutdown_not_saved(
@@ -2454,64 +2363,304 @@ async def test_repeated_shutdown_keeps_new_registration(
         get_restore_crd(hass, config_entry=restore_entry)
 
 
-async def test_interleaved_coordinators_cannot_postpone_save(
+async def test_save_does_not_outlive_entry_removal(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test data pushed but not yet saved is not written back after entry removal."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    crd = get_restore_crd(hass, config_entry=entry)
+    crd.async_set_updated_data({"value": "saved"})
+    await flush_restore_store(hass)
+
+    crd.async_set_updated_data({"value": "pushed"})
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    await flush_restore_store(hass)
+
+    assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == make_store_data()
+
+
+async def test_dump_periodically(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
     restore_entry: MockConfigEntry,
 ) -> None:
-    """Test updates from another coordinator do not keep moving the save deadline."""
-    crd = get_restore_crd(hass, config_entry=restore_entry, save_delay=10)
-    other_crd = get_restore_crd(
-        hass, config_entry=restore_entry, storage_key="other", save_delay=10
+    """Test data is saved with the periodic dump, not on every update."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    crd.async_set_updated_data({"value": "pushed"})
+    await hass.async_block_till_done()
+
+    assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
+
+    async_fire_time_changed(hass, utcnow() + restore_state.STATE_DUMP_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "pushed"}
+
+
+async def test_dump_at_final_write(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test data pushed until the final write of a shutdown is saved."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    crd.async_set_updated_data({"value": "pushed"})
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "pushed"}
+
+
+async def test_no_write_when_data_unchanged(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test a dump writes nothing when no coordinator's data changed."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    crd.async_set_updated_data({"value": "pushed"})
+    await flush_restore_store(hass)
+    del hass_storage[restore_state.RESTORE_STORAGE_KEY]
+
+    # Refreshing to equal data, or not updating at all, does not write the store
+    crd.async_set_updated_data({"value": "pushed"})
+    await flush_restore_store(hass)
+    await flush_restore_store(hass)
+
+    assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
+
+
+@dataclass
+class ZoneState:
+    """State of a zone, which JSON does not restore without help."""
+
+    name: str
+    temperature: float
+    updated: datetime
+
+
+ZONES = {
+    17: ZoneState("Kitchen", 21.5, datetime(2026, 11, 9, 8, 0, tzinfo=UTC)),
+    42: ZoneState("Bedroom", 19.0, datetime(2026, 11, 9, 8, 0, tzinfo=UTC)),
+}
+
+
+@pytest.mark.parametrize(
+    "bad_data",
+    [
+        pytest.param(ZONES, id="non_str_key"),
+        pytest.param({"value": (1, 2)}, id="tuple"),
+        pytest.param({"value": ZONES[17]}, id="dataclass"),
+        pytest.param({"value": ZONES[17].updated}, id="datetime"),
+        pytest.param({"value": math.nan}, id="nan"),
+        pytest.param({"value": {1, 2}}, id="set"),
+        pytest.param({"value": object()}, id="object"),
+    ],
+)
+async def test_non_json_data_not_saved(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    bad_data: Any,
+) -> None:
+    """Test data JSON would not restore unchanged is not saved.
+
+    The error is contained to that coordinator: it keeps its last good data, and
+    other coordinators are still saved.
+    """
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    other_crd = get_restore_crd(hass, config_entry=restore_entry, storage_key="other")
+    crd.async_set_updated_data({"value": "good"})
+    await flush_restore_store(hass)
+
+    crd.async_set_updated_data(bad_data)
+    other_crd.async_set_updated_data({"value": "other"})
+    await flush_restore_store(hass)
+
+    assert (
+        f"Error serializing restore coordinator data for {RESTORE_KEY}" in caplog.text
+    )
+    assert hass_storage[restore_state.RESTORE_STORAGE_KEY]["data"] == make_store_data(
+        entries={
+            restore_entry.entry_id: {
+                RESTORE_KEY: {"value": "good"},
+                "other": {"value": "other"},
+            }
+        }
     )
 
-    for update in range(4):
-        (crd if update % 2 else other_crd).async_set_updated_data({"update": update})
-        freezer.tick(timedelta(seconds=7.5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert restore_state.RESTORE_STORAGE_KEY in hass_storage
-
-
-async def test_shorter_save_delay_moves_deadline_earlier(
+async def test_serialize_and_restore_data_hooks(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
     restore_entry: MockConfigEntry,
 ) -> None:
-    """Test a shorter delay brings forward a save pending with a longer delay."""
-    slow_crd = get_restore_crd(hass, config_entry=restore_entry, save_delay=30)
-    fast_crd = get_restore_crd(
-        hass, config_entry=restore_entry, storage_key="other", save_delay=10
+    """Test a subclass converts data JSON cannot represent across a restart."""
+
+    class ZoneCoordinator(
+        update_coordinator.RestoreDataUpdateCoordinator[dict[int, ZoneState]]
+    ):
+        """Coordinator storing zones keyed by int id."""
+
+        def _serialize_data(self, data: dict[int, ZoneState]) -> dict[str, Any]:
+            """Convert zones to JSON types."""
+            return {
+                str(zone_id): {
+                    "name": zone.name,
+                    "temperature": zone.temperature,
+                    "updated": zone.updated.isoformat(),
+                }
+                for zone_id, zone in data.items()
+            }
+
+        def _restore_data(
+            self, data: dict[str, Any], version: int
+        ) -> dict[int, ZoneState]:
+            """Convert stored zones back."""
+            return {
+                int(zone_id): ZoneState(
+                    zone["name"],
+                    zone["temperature"],
+                    datetime.fromisoformat(zone["updated"]),
+                )
+                for zone_id, zone in data.items()
+            }
+
+    crd = ZoneCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=restore_entry,
+        name="test",
+        storage_key=RESTORE_KEY,
     )
-    slow_crd.async_set_updated_data({"value": "slow"})
-    fast_crd.async_set_updated_data({"value": "fast"})
+    crd.async_set_updated_data(ZONES)
+    await flush_restore_store(hass)
+    await crd.async_shutdown()
 
-    freezer.tick(timedelta(seconds=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # Load what was written to disk, as a restart would
+    await restore_state.async_load(hass)
+    restored = ZoneCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=restore_entry,
+        name="test",
+        storage_key=RESTORE_KEY,
+    )
 
-    assert get_stored_data(hass_storage, restore_entry) == {"value": "slow"}
+    assert restored.data == ZONES
 
 
-async def test_save_after_immediate_removal_not_skipped(
+async def test_restore_without_dump_after_reload(
+    hass: HomeAssistant, restore_entry: MockConfigEntry
+) -> None:
+    """Test a reloaded coordinator restores data that was not dumped yet.
+
+    It gets a fresh copy decoded from JSON, as it would after a restart.
+    """
+    pushed = {"value": ["pushed"]}
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    crd.async_set_updated_data(pushed)
+    await crd.async_shutdown()
+
+    replacement = get_restore_crd(hass, config_entry=restore_entry)
+
+    assert replacement.data == pushed
+    assert replacement.data["value"] is not pushed["value"]
+
+
+async def test_other_storage_version_not_restored(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
     restore_entry: MockConfigEntry,
 ) -> None:
-    """Test a removal that writes at once leaves no deadline to skip the next save."""
-    crd = get_restore_crd(hass, config_entry=restore_entry, save_delay=30)
-    crd.async_set_updated_data({"value": "first"})
-    crd.async_remove_stored_data()
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    """Test data stored under another version is not restored by default."""
+    await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
 
-    crd.async_set_updated_data({"value": "second"})
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    crd: update_coordinator.RestoreDataUpdateCoordinator[Any] = (
+        update_coordinator.RestoreDataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            config_entry=restore_entry,
+            name="test",
+            storage_key=RESTORE_KEY,
+            storage_version=2,
+        )
+    )
+
+    assert crd.data is None
+
+    crd.async_set_updated_data({"value": "pushed"})
+    await flush_restore_store(hass)
+
+    assert get_stored_item(hass_storage, restore_entry) == {
+        "version": 2,
+        "data": {"value": "pushed"},
+    }
+
+
+async def test_restore_data_migrates_older_version(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test _restore_data can migrate data stored under an older version."""
+    await set_stored_data(hass, hass_storage, restore_entry, {"old": "stored"})
+
+    class MigratingCoordinator(
+        update_coordinator.RestoreDataUpdateCoordinator[dict[str, Any]]
+    ):
+        """Coordinator that renamed a key in version 2."""
+
+        def _restore_data(
+            self, data: dict[str, Any], version: int
+        ) -> dict[str, Any] | None:
+            """Migrate version 1 data."""
+            if version == 1:
+                return {"value": data["old"]}
+            return super()._restore_data(data, version)
+
+    crd = MigratingCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=restore_entry,
+        name="test",
+        storage_key=RESTORE_KEY,
+        storage_version=2,
+    )
+
+    assert crd.data == {"value": "stored"}
+
+
+async def test_update_during_write_is_saved(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test data that changes while a write is in progress is saved after it."""
+    store = restore_state._async_get_restore_store_manager(hass)._store
+    write_started = asyncio.Event()
+    finish_write = asyncio.Event()
+    original_write = store._async_write_data
+
+    async def slow_write(data: dict[str, Any]) -> None:
+        write_started.set()
+        await finish_write.wait()
+        await original_write(data)
+
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    with patch.object(store, "_async_write_data", slow_write):
+        crd.async_set_updated_data({"value": "first"})
+        first_dump = hass.async_create_task(flush_restore_store(hass))
+        await write_started.wait()
+
+        crd.async_set_updated_data({"value": "second"})
+        second_dump = hass.async_create_task(flush_restore_store(hass))
+        finish_write.set()
+        await first_dump
+        await second_dump
 
     assert get_stored_data(hass_storage, restore_entry) == {"value": "second"}
