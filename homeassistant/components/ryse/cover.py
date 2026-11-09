@@ -134,7 +134,16 @@ class RyseCoverEntity(CoverEntity):
         client = self._device.client
         if client is None:
             return
-        client.set_disconnected_callback(self._on_ble_disconnect)
+        # BleakClient takes disconnected_callback in its constructor; ryseble
+        # builds the client, so attach afterward on the backend setter.
+        setter = getattr(client, "set_disconnected_callback", None)
+        if callable(setter):
+            setter(self._on_ble_disconnect)
+            return
+        backend = getattr(client, "_backend", None)
+        if backend is None:
+            return
+        backend.set_disconnected_callback(lambda: self._on_ble_disconnect(client))
 
     def _on_ble_disconnect(self, client: BleakClient) -> None:
         """Handle a GATT disconnect, which may arrive off the event loop."""

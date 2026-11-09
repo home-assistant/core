@@ -20,7 +20,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.ryse.const import MANUFACTURER_NAME, SERVICE_UUID
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -547,6 +547,42 @@ async def test_ble_error_while_polling_resets_connection(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("local_ryse_scanner")
+async def test_cover_setup_attaches_disconnect_on_bleak_backend(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test cover setup uses the Bleak backend when the client has no callback setter."""
+    backend = MagicMock()
+    client = MagicMock(spec=["is_connected", "_backend"], is_connected=True)
+    client._backend = backend
+
+    async def _pair() -> bool:
+        mock_device.client = client
+        return True
+
+    mock_device.pair.side_effect = _pair
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    backend.set_disconnected_callback.assert_called()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_device.unpair.reset_mock()
+    backend.set_disconnected_callback.call_args[0][0]()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    mock_device.unpair.assert_awaited_once()
 
 
 async def test_disconnect_callback_marks_unavailable(
