@@ -8,7 +8,6 @@ import probatio
 from pyhomematic import HMConnection
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_HOST,
     CONF_HOSTS,
@@ -21,7 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -38,7 +37,6 @@ from .const import (
     ATTR_MESSAGE,
     ATTR_PARAM,
     ATTR_UNIQUE_ID,
-    ATTR_VALUE,
     CONF_CALLBACK_IP,
     CONF_CALLBACK_PORT,
     CONF_INTERFACES,
@@ -49,6 +47,7 @@ from .const import (
     CONF_RESOLVENAMES_OPTIONS,
     DATA_CONF,
     DATA_HOMEMATIC,
+    DATA_HUBS,
     DATA_STORE,
     DISCOVER_BATTERY,
     DISCOVER_BINARY_SENSORS,
@@ -67,7 +66,6 @@ from .const import (
     HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS,
     HM_IMPULSE_EVENTS,
     HM_PRESS_EVENTS,
-    SERVICE_SET_VARIABLE_VALUE,
 )
 from .entity import HMHub
 from .services import setup_services
@@ -153,14 +151,6 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-SCHEMA_SERVICE_SET_VARIABLE_VALUE = probatio.Schema(
-    {
-        probatio.Required(ATTR_NAME): cv.string,
-        probatio.Required(ATTR_VALUE): cv.match_all,
-        probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    }
-)
-
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Homematic component."""
@@ -214,36 +204,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hass.data[DATA_HOMEMATIC].stop)
 
     # Init homematic hubs
-    entity_hubs = [HMHub(hass, homematic, hub_name) for hub_name in hosts]
-
-    def _service_handle_value(service: ServiceCall) -> None:
-        """Service to call setValue method for HomeMatic system variable."""
-        entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
-        name = service.data[ATTR_NAME]
-        value = service.data[ATTR_VALUE]
-
-        if entity_ids:
-            entities = [
-                entity for entity in entity_hubs if entity.entity_id in entity_ids
-            ]
-        else:
-            entities = entity_hubs
-
-        if not entities:
-            _LOGGER.error("No HomeMatic hubs available")
-            return
-
-        for hub in entities:
-            hub.hm_set_variable(name, value)
-
-    # Should be adjusted to register actions in setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.register(
-        DOMAIN,
-        SERVICE_SET_VARIABLE_VALUE,
-        _service_handle_value,
-        schema=SCHEMA_SERVICE_SET_VARIABLE_VALUE,
-    )
+    hass.data[DATA_HUBS] = [HMHub(hass, homematic, hub_name) for hub_name in hosts]
 
     setup_services(hass)
 
