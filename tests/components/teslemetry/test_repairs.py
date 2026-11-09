@@ -1062,7 +1062,7 @@ async def test_ble_key_fix_flow_aborts_when_issue_already_gone(
     flow = BluetoothKeyRepairFlow("entry_id", "subentry_id")
     flow.hass = hass
     flow.handler = DOMAIN
-    flow.issue_id = BLE_KEY_ISSUE_ID
+    flow.context = {"issue_id": BLE_KEY_ISSUE_ID}
 
     result = await flow.async_step_init()
 
