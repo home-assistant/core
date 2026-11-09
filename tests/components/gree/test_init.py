@@ -320,7 +320,11 @@ async def test_stop_during_endpoint_creation_closes_late_transport(
         protocol_factory: Callable[[], RealDiscovery], **kwargs: object
     ) -> tuple[asyncio.DatagramTransport, RealDiscovery]:
         started.set()
-        await release.wait()
+        try:
+            await release.wait()
+        except asyncio.CancelledError:
+            # Model endpoint creation completing despite cancellation.
+            await release.wait()
         protocol = protocol_factory()
         protocol.connection_made(transport)
         assert not transport.is_closing()

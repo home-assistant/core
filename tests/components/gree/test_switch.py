@@ -191,14 +191,11 @@ async def test_entity_state(
     assert state == snapshot
 
 
-@pytest.mark.parametrize(
-    ("response", "expected_state"),
-    [(Response.DATA, STATE_ON), (Response.RESULT, STATE_OFF)],
-)
+@pytest.mark.parametrize("response", [Response.DATA, Response.RESULT])
 async def test_device_response(
-    hass: HomeAssistant, device: MagicMock, response: Response, expected_state: str
+    hass: HomeAssistant, device: MagicMock, response: Response
 ) -> None:
-    """Test only a command RESULT immediately updates an existing switch."""
+    """Both device reply types immediately update an existing switch."""
     await async_setup_gree(hass)
     assert hass.states.get(ENTITY_ID_PANEL_LIGHT).state == STATE_ON
 
@@ -206,4 +203,4 @@ async def test_device_response(
     device().emit_response(response)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID_PANEL_LIGHT).state == expected_state
+    assert hass.states.get(ENTITY_ID_PANEL_LIGHT).state == STATE_OFF

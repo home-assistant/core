@@ -40,6 +40,27 @@
       }
     },
     "sensor": {
+      "bandwidth_down": {
+        "name": "Download bandwidth"
+      },
+      "bandwidth_up": {
+        "name": "Upload bandwidth"
+      },
+      "connection_state": {
+        "name": "Connection state",
+        "state": {
+          "down": "Down",
+          "going_down": "Going down",
+          "going_up": "Going up",
+          "up": "Up"
+        }
+      },
+      "ipv4": {
+        "name": "WAN IPv4 address"
+      },
+      "ipv6": {
+        "name": "WAN IPv6 address"
+      },
       "missed": {
         "name": "Missed calls"
       },

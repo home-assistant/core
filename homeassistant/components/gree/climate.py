@@ -31,7 +31,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW, TARGET_TEMPERATURE_STEP
@@ -332,6 +332,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""

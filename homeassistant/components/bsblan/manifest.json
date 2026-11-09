@@ -4,6 +4,7 @@
   "categories": ["climate.thermostats_heating", "diy_makers.boards_hardware"],
   "codeowners": ["@liudger"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/bsblan",
   "integration_type": "device",
   "iot_class": "local_polling",

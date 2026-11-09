@@ -35,7 +35,7 @@ class AirVisualProEntity(CoordinatorEntity[AirVisualProCoordinator]):
                 )
             },
             manufacturer="AirVisual",
-            model=self.coordinator.data["status"]["model"],
+            model=str(self.coordinator.data["status"]["model"]),
             name=self.coordinator.data["settings"]["node_name"],
             hw_version=self.coordinator.data["status"]["system_version"],
             sw_version=self.coordinator.data["status"]["app_version"],

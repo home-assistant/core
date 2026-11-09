@@ -111,13 +111,25 @@ async def test_coordinator_updates(
 ) -> None:
     """Polling updates the entity from the device's public properties."""
     await async_setup_gree(hass)
-    device().power = True
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 1
+
+    async def fake_update_state() -> None:
+        """Fake update state."""
+        device().power = True
+        device().raw_properties["Pow"] = 1
+        device().emit_response(Response.DATA)
+
+    device().update_state.side_effect = fake_update_state
 
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID_1).state == HVACMode.AUTO
+    state = hass.states.get(ENTITY_ID_1)
+    assert state is not None
+    assert state.state == HVACMode.AUTO
 
 
 async def test_unload_one_device_leaves_other_connected(

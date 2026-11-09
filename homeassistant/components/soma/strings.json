@@ -21,5 +21,15 @@
         "description": "Please enter connection settings of your SOMA Connect."
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_connection_error": {
+      "description": "Configuring {integration_title} using YAML is being removed, but SOMA Connect could not be reached while importing your YAML configuration. Make sure SOMA Connect is running and restart Home Assistant to try the import again, or remove the `{domain}` configuration from your `configuration.yaml` file and set up the integration from the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_result_error": {
+      "description": "Configuring {integration_title} using YAML is being removed, but SOMA Connect responded with an error status while importing your YAML configuration. Make sure SOMA Connect is working correctly and restart Home Assistant to try the import again, or remove the `{domain}` configuration from your `configuration.yaml` file and set up the integration from the UI.",
+      "title": "[%key:component::soma::issues::deprecated_yaml_import_issue_connection_error::title%]"
+    }
   }
 }

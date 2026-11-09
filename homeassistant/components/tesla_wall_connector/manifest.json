@@ -4,6 +4,7 @@
   "categories": ["energy.ev_charging"],
   "codeowners": ["@einarhauks", "@sarabveer"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "teslawallconnector_*",

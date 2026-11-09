@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
@@ -43,7 +43,7 @@ async def async_bind_device(hass: HomeAssistant, device: Device) -> None:
 
 
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Poll one device without replacing its connection under entity actions."""
+    """Poll one device and publish state received in its replies."""
 
     config_entry: GreeConfigEntry
 
@@ -75,6 +75,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
         self.device.add_handler(Response.RESULT, self.device_state_updated)
+        self.device.add_handler(Response.DATA, self.device_state_updated)
         self._unsub_shutdown = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self._async_hass_stop
         )
@@ -85,8 +86,18 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.async_shutdown()
 
     @callback
+    @override
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> CALLBACK_TYPE:
+        """Initialize a listener from cached state before subscribing it."""
+        if self.data is not None:
+            update_callback()
+        return super().async_add_listener(update_callback, context)
+
+    @callback
     def device_state_updated(self, *args: Any) -> None:
-        """Handle device state updates."""
+        """Publish a device reply and reset response freshness."""
         if self._shutdown_requested:
             return
         _LOGGER.debug("Device state updated: %s", json_dumps(args))
@@ -141,7 +152,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         f"Device {self.name} has no valid state"
                     ) from error
                 # Under normal conditions GREE units timeout every once in a while
-                if self.last_update_success and self._error_count >= MAX_ERRORS:
+                if self._error_count >= MAX_ERRORS:
                     raise UpdateFailed(
                         f"Device {self.name} at {self.device.device_info.ip} is"
                         " unavailable, could not send update request"
@@ -167,13 +178,12 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     )
                 else:
                     self._error_count = 0
-                if self.last_update_success and self._error_count >= MAX_ERRORS:
+                if self._error_count >= MAX_ERRORS:
                     raise UpdateFailed(
                         f"Device {self.name} is unresponsive for"
                         " too long and now unavailable"
                     )
 
-            self._last_response_time = utcnow()
             return copy.deepcopy(self.device.raw_properties)
         finally:
             self._device_task = None

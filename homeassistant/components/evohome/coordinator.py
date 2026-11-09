@@ -42,7 +42,7 @@ _ERR_SCHEDULE_UPDATE: Final = (
 )
 
 
-class EvoDataUpdateCoordinator(DataUpdateCoordinator):
+class EvoDataUpdateCoordinator(DataUpdateCoordinator[EvoLocStatusT]):
     """Coordinator for evohome integration/client."""
 
     # These will not be None after _async_setup())
@@ -289,7 +289,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self._schedules_fetched[child.id] = dt_util.utcnow()
 
     @override
-    async def _async_update_data(self) -> EvoLocStatusT:  # type: ignore[override]
+    async def _async_update_data(self) -> EvoLocStatusT:
         """Fetch the latest state of an entire TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
