@@ -2384,16 +2384,21 @@ async def test_save_does_not_outlive_entry_removal(
 async def test_dump_periodically(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
     restore_entry: MockConfigEntry,
 ) -> None:
     """Test data is saved with the periodic dump, not on every update."""
+    # Emulate a fresh load, so the dump interval starts on the frozen clock
+    hass.data.pop(restore_state.DATA_RESTORE_STORE)
+    await restore_state.async_load(hass)
     crd = get_restore_crd(hass, config_entry=restore_entry)
     crd.async_set_updated_data({"value": "pushed"})
     await hass.async_block_till_done()
 
     assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
 
-    async_fire_time_changed(hass, utcnow() + restore_state.STATE_DUMP_INTERVAL)
+    freezer.tick(restore_state.STATE_DUMP_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert get_stored_data(hass_storage, restore_entry) == {"value": "pushed"}
