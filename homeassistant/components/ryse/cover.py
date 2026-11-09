@@ -113,6 +113,11 @@ class RyseCoverEntity(CoverEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Ignore the GATT disconnect that unload itself causes."""
         self._expected_disconnect = True
+        if self._reconnect_debouncer is not None:
+            self._reconnect_debouncer.async_shutdown()
+        # Wait for an in-flight pair() so unload can release that client.
+        async with self._connect_lock:
+            pass
         await super().async_will_remove_from_hass()
 
     def _clear_callback(self) -> None:
@@ -180,6 +185,15 @@ class RyseCoverEntity(CoverEntity):
         if self._reconnect_debouncer is not None:
             self._reconnect_debouncer.async_schedule_call()
 
+    async def _async_release_client(self) -> None:
+        """Unpair while ignoring the GATT disconnect this unpair causes."""
+        unloading = self._expected_disconnect
+        self._expected_disconnect = True
+        try:
+            await _async_unpair(self._device)
+        finally:
+            self._expected_disconnect = unloading
+
     async def _async_cleanup_disconnected_client(
         self, client: BleakClient | None
     ) -> None:
@@ -187,21 +201,13 @@ class RyseCoverEntity(CoverEntity):
         async with self._connect_lock:
             if self._device.client is not client:
                 return
-            self._expected_disconnect = True
-            try:
-                await _async_unpair(self._device)
-            finally:
-                self._expected_disconnect = False
+            await self._async_release_client()
 
     async def _async_drop_client(self, reason: str) -> None:
         """Release the BLE link and wait for a later advertisement to reconnect."""
         self._reconnect_when_seen = True
         async with self._connect_lock:
-            self._expected_disconnect = True
-            try:
-                await _async_unpair(self._device)
-            finally:
-                self._expected_disconnect = False
+            await self._async_release_client()
         self._clear_cached_position()
         self._set_available(False, reason)
 
@@ -212,13 +218,20 @@ class RyseCoverEntity(CoverEntity):
         if any(self._config_entry.async_get_active_flows(self.hass, {SOURCE_REAUTH})):
             return
         if not await self._async_ensure_connected():
-            self.async_write_ha_state()
+            if not self._expected_disconnect:
+                self.async_write_ha_state()
+            return
+        if self._expected_disconnect:
             return
         try:
             await self._device.send_get_position()
         except (TimeoutError, OSError, EOFError, BleakError) as err:
+            if self._expected_disconnect:
+                return
             await self._async_drop_client(str(err))
         else:
+            if self._expected_disconnect:
+                return
             self._reconnect_when_seen = False
             self._set_available(True)
         self.async_write_ha_state()
@@ -259,27 +272,31 @@ class RyseCoverEntity(CoverEntity):
             self._clear_cached_position()
         self.async_write_ha_state()
 
-    async def _async_ensure_connected(self) -> bool:
+    async def _async_ensure_connected(self, *, start_reauth: bool = False) -> bool:
         """Reconnect when the BLE client is missing or dropped.
 
         ryseble's writes are no-ops when ``client`` is None, so a command that
         runs after a failed poll would otherwise appear to succeed.
         """
         async with self._connect_lock:
+            if self._expected_disconnect:
+                return False
             if self._is_connected():
                 self._async_attach_disconnect_callback()
                 return True
             if await self._device.pair():
+                if self._expected_disconnect:
+                    await self._async_release_client()
+                    return False
                 self._async_attach_disconnect_callback()
                 return True
-            self._expected_disconnect = True
-            try:
-                await _async_unpair(self._device)
-            finally:
-                self._expected_disconnect = False
+            await self._async_release_client()
+            if self._expected_disconnect:
+                return False
             self._reconnect_when_seen = True
             self._set_available(False, "failed to pair")
-            self._config_entry.async_start_reauth(self.hass)
+            if start_reauth:
+                self._config_entry.async_start_reauth(self.hass)
             return False
 
     async def _async_send_command(
@@ -287,13 +304,15 @@ class RyseCoverEntity(CoverEntity):
     ) -> None:
         """Send a cover command, reconnecting first if needed."""
         try:
-            if not await self._async_ensure_connected():
+            if not await self._async_ensure_connected(start_reauth=True):
                 self.async_write_ha_state()
                 raise HomeAssistantError(f"Failed to {description}: failed to pair")
             await send()
             self._reconnect_when_seen = False
             self._set_available(True)
         except (TimeoutError, OSError, EOFError, BleakError) as err:
+            await self._async_drop_client(str(err))
+            self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to {description}: {err}") from err
 
     @override

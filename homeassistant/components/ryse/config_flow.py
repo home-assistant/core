@@ -82,7 +82,6 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             if await device.pair():
                 return None
         except TimeoutError, OSError, EOFError, BleakError:
-            _LOGGER.error("Connection error during pairing")
             return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected error during pairing")

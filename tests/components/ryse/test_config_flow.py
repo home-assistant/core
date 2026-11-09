@@ -321,8 +321,9 @@ async def test_async_step_user_skips_already_configured(
 
 async def test_async_step_user_skips_nameless_device(hass: HomeAssistant) -> None:
     """Test that we skip nameless devices in user flow discovery."""
-    device = make_ble_device()
-    advertisement = make_advertisement()
+    device = make_ble_device("")
+    advertisement = make_advertisement(name="")
+    cancel = register_local_scanner(hass, device, advertisement)
     nameless = BluetoothServiceInfoBleak(
         name=None,
         address=DEVICE_ADDRESS,
@@ -347,6 +348,7 @@ async def test_async_step_user_skips_nameless_device(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+    cancel()
 
 
 async def test_async_step_user_skips_non_pairing_device(hass: HomeAssistant) -> None:
@@ -945,6 +947,35 @@ async def test_async_step_bluetooth_fallback_name(
     assert result["title"] == "RYSE device"
     assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once()
+    cancel()
+
+
+@pytest.mark.parametrize(("pair_result", "expected_error"), PAIRING_ERRORS)
+async def test_reauth_pairing_errors_can_be_recovered(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+    pair_result: Exception | bool,
+    expected_error: str,
+) -> None:
+    """Test reauth pairing errors can be recovered from in the same flow."""
+    mock_config_entry.add_to_hass(hass)
+    mock_device.pair.side_effect = [pair_result, True]
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    cancel, _ = _see_on_local(hass)
+    await _abort_bluetooth_flows(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     cancel()
 
 

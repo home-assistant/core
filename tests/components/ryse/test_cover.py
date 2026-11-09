@@ -1,5 +1,6 @@
 """Test RYSE Cover entity behavior."""
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -306,7 +307,10 @@ async def test_cover_services_ble_error(
     error: str,
 ) -> None:
     """Test BLE errors during a cover action surface as HomeAssistantError."""
+    await mock_device.update_callback(50)
+    await hass.async_block_till_done()
     getattr(mock_device, method).side_effect = exception
+    mock_device.unpair.reset_mock()
 
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
@@ -318,7 +322,9 @@ async def test_cover_services_ble_error(
 
     state = hass.states.get(ENTITY_ID)
     assert state
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    mock_device.unpair.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -635,6 +641,74 @@ async def test_stale_disconnect_callback_does_not_unpair_new_client(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_advertisement_reconnect_does_not_start_reauth(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a failed background reconnect does not start reauthentication."""
+    client = mock_device.client
+    mock_device.unpair.reset_mock()
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+
+    mock_device.pair.reset_mock()
+    mock_device.pair.side_effect = AsyncMock(return_value=False)
+    mock_device.send_get_position.reset_mock()
+
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.send_get_position.assert_not_awaited()
+    assert not list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_unload_releases_in_flight_reconnect(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test unload waits for an in-flight reconnect and releases that client."""
+    client = mock_device.client
+    pair_started = asyncio.Event()
+    finish_pair = asyncio.Event()
+
+    async def _slow_pair() -> bool:
+        pair_started.set()
+        await finish_pair.wait()
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    mock_device.pair.side_effect = _slow_pair
+    mock_device.unpair.reset_mock()
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+
+    inject_ryse(
+        hass,
+        local_ryse_scanner,
+        make_advertisement(pairing=False, service_data={SERVICE_UUID: b"\x01"}),
+    )
+    async with asyncio.timeout(1):
+        await pair_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(setup_integration.entry_id)
+    )
+    await asyncio.sleep(0)
+    finish_pair.set()
+    assert await unload_task
+    await hass.async_block_till_done()
+
+    assert setup_integration.state is ConfigEntryState.NOT_LOADED
+    assert mock_device.unpair.await_count >= 1
 
 
 async def test_advertisement_reconnects_after_disconnect(
