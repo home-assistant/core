@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 from .const import PORT_TCP
 
 
@@ -197,16 +197,18 @@ async def test_api_call(
     hass: HomeAssistant,
     mock_relay: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the api call decorator action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, SWITCH_DOMAIN, "qwerty123-55")
 
     mock_relay.turn_on.side_effect = OSError()
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.kitchen_relayname_relayname"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -306,7 +308,8 @@ async def test_legacy_sub_device_converted_to_child_device(
     assert device_parent is not None
     assert device_entry.parent_device_id == device_parent.id
 
-    cover_entry = entity_registry.async_get("cover.kitchen_vmb2ble_covername_covername")
+    cover_entity_id = get_entity_id(entity_registry, "cover", "1234-9")
+    cover_entry = entity_registry.async_get(cover_entity_id)
     assert cover_entry is not None
     assert cover_entry.device_id == legacy_device.id
 
