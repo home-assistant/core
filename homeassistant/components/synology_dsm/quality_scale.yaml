@@ -7,7 +7,11 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: |
+      The reboot and shutdown actions are deprecated in favor of the button
+      entities, and deprecated features are not documented.
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
