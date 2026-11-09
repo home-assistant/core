@@ -16,7 +16,7 @@ from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
-    ClimateEntityStateAttribute,
+    ClimateEntityCapabilityAttribute,
     HVACMode,
 )
 
@@ -841,7 +841,7 @@ async def test_raising_error_trait(hass: HomeAssistant) -> None:
         {
             ATTR_MIN_TEMP: 15,
             ATTR_MAX_TEMP: 30,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
     )
 

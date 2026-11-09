@@ -1200,7 +1200,7 @@ class TemperatureControlTrait(_Trait):
         attrs = self.state.attributes
 
         if domain == WATER_HEATER_DOMAIN:
-            unit = attrs[WaterHeaterStateAttribute.TEMPERATURE_UNIT]
+            unit = attrs[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
             response["temperatureUnitForUX"] = _google_temp_unit(unit)
             min_temp = round(
                 TemperatureConverter.convert(
@@ -1240,7 +1240,9 @@ class TemperatureControlTrait(_Trait):
         response = {}
         domain = self.state.domain
         if domain == WATER_HEATER_DOMAIN:
-            unit = self.state.attributes[WaterHeaterStateAttribute.TEMPERATURE_UNIT]
+            unit = self.state.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             target_temp = self.state.attributes[WaterHeaterStateAttribute.TEMPERATURE]
             current_temp = self.state.attributes[
                 WaterHeaterStateAttribute.CURRENT_TEMPERATURE
@@ -1288,7 +1290,9 @@ class TemperatureControlTrait(_Trait):
         domain = self.state.domain
 
         if domain == WATER_HEATER_DOMAIN and command == COMMAND_SET_TEMPERATURE:
-            unit = self.state.attributes[WaterHeaterStateAttribute.TEMPERATURE_UNIT]
+            unit = self.state.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             min_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MIN_TEMP]
             max_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MAX_TEMP]
             temp = TemperatureConverter.convert(
@@ -1386,7 +1390,7 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
         attrs = self.state.attributes
-        unit = attrs[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+        unit = attrs[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         response["thermostatTemperatureUnit"] = _google_temp_unit(unit)
 
         min_temp = round(
@@ -1444,7 +1448,7 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes query attributes."""
         response: dict[str, Any] = {}
         attrs = self.state.attributes
-        unit = attrs[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+        unit = attrs[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
 
         operation = self.state.state
         preset = attrs.get(ClimateEntityStateAttribute.PRESET_MODE)
@@ -1520,7 +1524,7 @@ class TemperatureSettingTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
-        unit = self.state.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+        unit = self.state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         min_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MIN_TEMP]
         max_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
 

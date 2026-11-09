@@ -264,7 +264,7 @@ async def test_query_climate_request_f(
     for entity_id in ("climate.hvac", "climate.heatpump", "climate.ecobee"):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
-        attr[climate.ClimateEntityStateAttribute.TEMPERATURE_UNIT] = (
+        attr[climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT] = (
             UnitOfTemperature.FAHRENHEIT
         )
         hass_fixture.states.async_set(entity_id, state.state, attr)
