@@ -152,7 +152,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(ATTR_MEDIA_ENQUEUE): probatio.Coerce(QueueOption),
             probatio.Optional(ATTR_ARTIST): cv.string,
             probatio.Optional(ATTR_ALBUM): cv.string,
-            probatio.Optional(ATTR_RADIO_MODE): probatio.Coerce(bool),
+            probatio.Optional(ATTR_RADIO_MODE): cv.boolean,
             probatio.Optional(ATTR_MEDIA_SHUFFLE): cv.boolean,
             probatio.Optional(ATTR_START_ITEM): cv.string,
             probatio.Optional(ATTR_USERNAME): cv.string,
@@ -173,7 +173,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     probatio.Inclusive(
                         ATTR_TTS_ENTITY_ID, "spoken_announcement"
                     ): probatio.All(cv.entity_id, cv.entity_domain(TTS_DOMAIN)),
-                    probatio.Optional(ATTR_USE_PRE_ANNOUNCE): probatio.Coerce(bool),
+                    probatio.Optional(ATTR_USE_PRE_ANNOUNCE): cv.boolean,
                     probatio.Optional(ATTR_PRE_ANNOUNCE_URL): cv.string,
                     probatio.Optional(ATTR_ANNOUNCE_VOLUME): probatio.Coerce(int),
                 }
@@ -191,7 +191,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema={
             probatio.Optional(ATTR_SOURCE_PLAYER): cv.entity_id,
-            probatio.Optional(ATTR_AUTO_PLAY): probatio.Coerce(bool),
+            probatio.Optional(ATTR_AUTO_PLAY): cv.boolean,
         },
         func="_async_handle_transfer_queue",
     )
