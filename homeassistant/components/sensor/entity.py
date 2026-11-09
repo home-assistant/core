@@ -776,15 +776,13 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if display_precision is not None:
             if default_unit_of_measurement != unit_of_measurement:
-                return (
-                    _calculate_precision_from_ratio(
-                        device_class,
-                        default_unit_of_measurement,
-                        unit_of_measurement,
-                        display_precision,
-                    )
-                    or display_precision
+                precision = _calculate_precision_from_ratio(
+                    device_class,
+                    default_unit_of_measurement,
+                    unit_of_measurement,
+                    display_precision,
                 )
+                return display_precision if precision is None else precision
             return display_precision
 
         # Get the base unit and precision for the device class so we can use it to infer
