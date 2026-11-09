@@ -16,11 +16,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import service
 from homeassistant.helpers.selector import ConfigEntrySelector
 
-from .const import DOMAIN
+from .const import DOMAIN, GeoSphereService
 from .coordinator import GeoSphereConfigEntry
 from .warnings import serialize_warnings
-
-SERVICE_GET_WARNINGS = "get_warnings"
 
 SERVICE_GET_WARNINGS_SCHEMA = probatio.Schema(
     {
@@ -62,7 +60,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_WARNINGS,
+        GeoSphereService.GET_WARNINGS,
         get_warnings,
         schema=SERVICE_GET_WARNINGS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

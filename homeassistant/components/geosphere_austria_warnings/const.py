@@ -4,7 +4,15 @@ Warning data is provided by GeoSphere Austria (https://www.geosphere.at)
 under the Creative Commons Attribution 4.0 license.
 """
 
+from enum import StrEnum
 import logging
+
+
+class GeoSphereService(StrEnum):
+    """Store keys for GeoSphere Austria Warnings services."""
+
+    GET_WARNINGS = "get_warnings"
+
 
 DOMAIN = "geosphere_austria_warnings"
 
