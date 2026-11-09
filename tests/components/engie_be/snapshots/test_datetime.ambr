@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_entities[datetime.my_car_departure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('engie_be', 'vehicle_10001')]>,
+    'disabled_by': None,
+    'domain': 'datetime',
+    'entity_category': None,
+    'entity_id': 'datetime.my_car_departure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Departure time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Departure time',
+    'platform': 'engie_be',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time',
+    'unique_id': '10001_departure_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[datetime.my_car_departure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My car Departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'datetime.my_car_departure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-05-04T05:00:00+00:00',
+  })
+# ---

@@ -21,10 +21,15 @@ from .coordinator import (
     EngieBePeaksCoordinator,
     EngieBePricesCoordinator,
     EngieBeRelationsCoordinator,
+    EngieBeVehiclesCoordinator,
     mask_identifier,
 )
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DATETIME,
+    Platform.SENSOR,
+]
 
 
 @dataclass
@@ -42,6 +47,7 @@ class EngieBeRuntimeData:
 
     client: EngieBeClient
     relations: EngieBeRelationsCoordinator
+    vehicles: EngieBeVehiclesCoordinator
     epex: EngieBeEpexCoordinator | None
     households: dict[str, EngieBeHouseholdCoordinators]
     epex_ready_callbacks: list[Callable[[], None]] = field(default_factory=list)
@@ -128,7 +134,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
     if any(household.is_dynamic is not False for household in households.values()):
         epex = EngieBeEpexCoordinator(hass, entry, client)
 
+    vehicles = EngieBeVehiclesCoordinator(hass, entry, client)
+
     await asyncio.gather(
+        vehicles.async_refresh(),
         *(
             refresh
             for household in households.values()
@@ -136,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
                 household.prices.async_refresh(),
                 household.peaks.async_refresh(),
             )
-        )
+        ),
     )
     if epex is not None:
         try:
@@ -147,6 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
     entry.runtime_data = EngieBeRuntimeData(
         client=client,
         relations=relations,
+        vehicles=vehicles,
         epex=epex,
         households=households,
     )

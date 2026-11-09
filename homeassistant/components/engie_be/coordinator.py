@@ -4,14 +4,18 @@ import asyncio
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from http import HTTPStatus
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
 from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     BusinessAgreement,
+    ChargingSessionChargeSettings,
+    ElectricVehicle,
     EngieBeAuthenticationError,
     EngieBeClient,
+    EngieBeCommunicationError,
     EngieBeError,
     EpexGranularity,
     EpexSlot,
@@ -35,6 +39,7 @@ from .const import (
     LOGGER,
     PEAKS_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
+    VEHICLES_SCAN_INTERVAL,
 )
 
 if TYPE_CHECKING:
@@ -467,3 +472,82 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                 )
             ),
         )
+
+
+@dataclass
+class EngieBeVehicleData:
+    """Smart Charge state of one electric vehicle."""
+
+    vehicle: ElectricVehicle
+    departure: datetime | None
+    target_battery_level: int
+    direct: bool
+
+
+class EngieBeVehiclesCoordinator(DataUpdateCoordinator[dict[int, EngieBeVehicleData]]):
+    """Coordinator that tracks the Smart Charge settings of the account's vehicles."""
+
+    config_entry: EngieBeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: EngieBeConfigEntry,
+        client: EngieBeClient,
+    ) -> None:
+        """Initialize the vehicles coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_vehicles",
+            update_interval=VEHICLES_SCAN_INTERVAL,
+        )
+        self.client = client
+
+    async def _async_fetch_charge_settings(
+        self, vehicle: ElectricVehicle
+    ) -> ChargingSessionChargeSettings | None:
+        """Return the settings of the latest session, or None without a Smart Charge session."""
+        try:
+            return await self.client.async_get_latest_charging_session_charge_settings(
+                vehicle.id
+            )
+        except EngieBeCommunicationError as err:
+            if err.status == HTTPStatus.NOT_FOUND:
+                return None
+            raise
+
+    @override
+    async def _async_update_data(self) -> dict[int, EngieBeVehicleData]:
+        """Fetch the Smart Charge vehicles and the settings of their latest session."""
+        data: dict[int, EngieBeVehicleData] = {}
+        try:
+            relations = await self.client.async_get_customer_account_relations()
+            for account in relations.accounts:
+                vehicles = await self.client.async_get_electric_vehicles(
+                    account.customer_account.customer_account_number
+                )
+                for vehicle in vehicles.items:
+                    if (
+                        not vehicle.active
+                        or vehicle.capabilities is None
+                        or not vehicle.capabilities.smart_charging
+                    ):
+                        continue
+                    settings = await self._async_fetch_charge_settings(vehicle)
+                    if settings is None or settings.target_battery_level is None:
+                        continue
+                    data[vehicle.id] = EngieBeVehicleData(
+                        vehicle=vehicle,
+                        departure=settings.departure_time_override,
+                        target_battery_level=settings.target_battery_level,
+                        direct=bool(settings.direct),
+                    )
+        except EngieBeAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
+        except EngieBeError as err:
+            raise UpdateFailed(str(err)) from err
+        return data

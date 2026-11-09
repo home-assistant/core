@@ -9,12 +9,16 @@ from aioengiebelgium import (
     AccountRelation,
     AuthFlow,
     BusinessAgreement,
+    ChargingSessionChargeSettings,
     ConsumptionAddress,
     CustomerAccount,
     CustomerAccountRelations,
     EanPrices,
+    ElectricVehicle,
+    ElectricVehiclesResponse,
     EnergyContract,
     EnergyContractsResponse,
+    EngieBeCommunicationError,
     EngieBeEpexNotPublishedError,
     EpexGranularity,
     EpexPayload,
@@ -26,6 +30,7 @@ from aioengiebelgium import (
     PricesResponse,
     ProductConfiguration,
     ServicePoint,
+    VehicleCapabilities,
     bare_ean,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -50,6 +55,11 @@ BAN = "000000000001"
 BAN_2 = "000000000002"
 OFFTAKE_ONLY_EAN = "541448820000000001_ID1"
 OFFTAKE_INJECTION_EAN = "541448820000000002_ID1"
+VEHICLE_ID = 10001
+VEHICLE_WITHOUT_SESSION_ID = 10002
+VEHICLE_WITHOUT_SMART_CHARGING_ID = 10003
+VEHICLE_INACTIVE_ID = 10004
+VEHICLE_WITHOUT_CAPABILITIES_ID = 10005
 _SERVICE_POINT_ENERGY_TYPES = {
     bare_ean(OFFTAKE_ONLY_EAN): "GAS",
     bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY",
@@ -176,6 +186,53 @@ def build_contracts(*, dynamic: bool = False) -> EnergyContractsResponse:
             ),
         )
     )
+
+
+def build_vehicles() -> ElectricVehiclesResponse:
+    """Build vehicles: one usable, and four that must not get an entity."""
+    smart = VehicleCapabilities(smart_charging=True)
+    return ElectricVehiclesResponse(
+        items=(
+            ElectricVehicle(
+                id=VEHICLE_ID,
+                active=True,
+                model_name="Model 3",
+                display_name="My car",
+                brand_name="Tesla",
+                capabilities=smart,
+            ),
+            ElectricVehicle(
+                id=VEHICLE_WITHOUT_SESSION_ID,
+                active=True,
+                capabilities=smart,
+            ),
+            ElectricVehicle(
+                id=VEHICLE_WITHOUT_SMART_CHARGING_ID,
+                active=True,
+                capabilities=VehicleCapabilities(smart_charging=False),
+            ),
+            ElectricVehicle(id=VEHICLE_INACTIVE_ID, active=False, capabilities=smart),
+            ElectricVehicle(id=VEHICLE_WITHOUT_CAPABILITIES_ID, active=True),
+        )
+    )
+
+
+def build_charge_settings(
+    departure: datetime | None = None,
+) -> ChargingSessionChargeSettings:
+    """Build the charge settings of the latest session."""
+    return ChargingSessionChargeSettings(
+        target_battery_level=80,
+        departure_time_override=departure or datetime(2026, 5, 4, 5, 0, tzinfo=UTC),
+        direct=False,
+    )
+
+
+def build_charge_settings_for_vehicle(vehicle_id: int) -> ChargingSessionChargeSettings:
+    """Return the settings, or a 404 for a vehicle without a Smart Charge session."""
+    if vehicle_id == VEHICLE_WITHOUT_SESSION_ID:
+        raise EngieBeCommunicationError("not found", status=404)
+    return build_charge_settings()
 
 
 def _api_timestamp(moment: datetime) -> datetime:
@@ -326,6 +383,10 @@ def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
         client.async_get_energy_contracts.return_value = build_contracts()
         client.async_get_epex_prices.side_effect = build_epex_payload
         client.async_get_monthly_peaks.side_effect = build_monthly_peaks_for_request
+        client.async_get_electric_vehicles.return_value = ElectricVehiclesResponse()
+        client.async_get_latest_charging_session_charge_settings.side_effect = (
+            build_charge_settings_for_vehicle
+        )
         client.async_start_authentication.return_value = mock_auth_flow
         yield mock_client_class
 
