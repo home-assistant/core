@@ -1,11 +1,8 @@
 """The Samsung TV integration."""
 
 from collections.abc import Coroutine, Mapping
-from functools import partial
 from typing import Any
 from urllib.parse import urlparse
-
-import getmac
 
 from homeassistant.components import ssdp
 from homeassistant.const import (
@@ -185,11 +182,6 @@ async def _async_create_bridge_with_updated_data(
         LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)
-
-        if not mac:
-            mac = await hass.async_add_executor_job(
-                partial(getmac.get_mac_address, ip=host)
-            )
 
         if mac and mac != "none":
             # Samsung sometimes returns a value of "none" for the mac address
