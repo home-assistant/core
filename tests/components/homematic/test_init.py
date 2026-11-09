@@ -6,8 +6,13 @@ import pytest
 from pytest_homeassistant.common import MockUser
 
 from homeassistant.components.homematic.const import (
+    ATTR_ADDRESS,
     ATTR_INTERFACE,
+    ATTR_PARAMSET,
+    ATTR_PARAMSET_KEY,
     DATA_HOMEMATIC,
+    SERVICE_PUT_PARAMSET,
+    SERVICE_RECONNECT,
     SERVICE_SET_INSTALL_MODE,
 )
 from homeassistant.core import Context, HomeAssistant
@@ -61,3 +66,29 @@ async def test_set_install_mode_non_admin_rejected(
             blocking=True,
             context=Context(user_id=hass_read_only_user.id),
         )
+
+
+@pytest.mark.usefixtures("setup_homematic")
+async def test_reconnect(hass: HomeAssistant) -> None:
+    """Test the reconnect action."""
+    await hass.services.async_call(DOMAIN, SERVICE_RECONNECT, blocking=True)
+    hass.data[DATA_HOMEMATIC].reconnect.assert_called_once_with()
+
+
+@pytest.mark.usefixtures("setup_homematic")
+async def test_put_paramset(hass: HomeAssistant) -> None:
+    """Test the put_paramset action."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PUT_PARAMSET,
+        {
+            ATTR_INTERFACE: "ccu2",
+            ATTR_ADDRESS: "abc123",
+            ATTR_PARAMSET_KEY: "master",
+            ATTR_PARAMSET: {"WEEK_PROGRAM_POINTER": 1},
+        },
+        blocking=True,
+    )
+    hass.data[DATA_HOMEMATIC].putParamset.assert_called_once_with(
+        "ccu2", "ABC123", "MASTER", {"WEEK_PROGRAM_POINTER": 1}, None
+    )

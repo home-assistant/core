@@ -14,7 +14,7 @@ from homeassistant.components.update import (
     UpdateEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -25,7 +25,7 @@ from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -42,7 +42,7 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Update"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.UPDATE]
 
 ATTR_BACKUP = "backup"
 ATTR_SPECIFIC_VERSION = "specific_version"

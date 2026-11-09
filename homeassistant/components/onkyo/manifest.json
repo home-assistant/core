@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@arturpragacz", "@eclair4151"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
   "integration_type": "device",

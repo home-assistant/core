@@ -7,6 +7,7 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.services import AbodeService
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
@@ -94,7 +95,7 @@ async def test_trigger_automation(hass: HomeAssistant) -> None:
     with patch("jaraco.abode.automation.Automation.trigger") as mock:
         await hass.services.async_call(
             DOMAIN,
-            "trigger_automation",
+            AbodeService.TRIGGER_AUTOMATION,
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
@@ -145,7 +146,7 @@ async def test_trigger_automation_after_entity_id_change(
     with patch("jaraco.abode.automation.Automation.trigger") as mock:
         await hass.services.async_call(
             DOMAIN,
-            "trigger_automation",
+            AbodeService.TRIGGER_AUTOMATION,
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
@@ -154,7 +155,7 @@ async def test_trigger_automation_after_entity_id_change(
 
         await hass.services.async_call(
             DOMAIN,
-            "trigger_automation",
+            AbodeService.TRIGGER_AUTOMATION,
             {ATTR_ENTITY_ID: "switch.renamed_automation"},
             blocking=True,
         )

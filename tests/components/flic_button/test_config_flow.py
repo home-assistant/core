@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
-from contextlib import suppress
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak import BleakError
@@ -26,7 +26,7 @@ from homeassistant.components.flic_button.const import (
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
 from . import (
     ADDRESS_FOR_DEVICE_TYPE,
@@ -393,9 +393,18 @@ async def test_pairing_disconnect_error_ignored(
 
 
 @pytest.mark.usefixtures("mock_discovered_service_info", "mock_setup_entry")
+@pytest.mark.parametrize(
+    "inputs_while_pairing",
+    [
+        pytest.param([{}], id="resubmit"),
+        # Refreshing the page loads the step without user input
+        pytest.param([None, {}], id="refresh_then_resubmit"),
+    ],
+)
 async def test_pairing_duplicate_submission_ignored(
     hass: HomeAssistant,
     mock_flic_client: MagicMock,
+    inputs_while_pairing: list[dict[str, Any] | None],
 ) -> None:
     """Test a second pair submission while pairing runs does not start pairing again."""
     started = asyncio.Event()
@@ -413,10 +422,15 @@ async def test_pairing_duplicate_submission_ignored(
         hass.config_entries.flow.async_configure(flow_id, user_input={})
     )
     await started.wait()
+    # Only the first attempt waits, so a second one would complete the flow
+    mock_flic_client.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
+    for user_input in inputs_while_pairing:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input=user_input
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
 
     release.set()
     result = await first
@@ -427,16 +441,70 @@ async def test_pairing_duplicate_submission_ignored(
 
 
 @pytest.mark.usefixtures("mock_discovered_service_info")
-async def test_abort_during_pairing_disconnects_client(
+@pytest.mark.parametrize(
+    "inputs_while_setting_up",
+    [
+        pytest.param([{}], id="resubmit"),
+        pytest.param([None, {}], id="refresh_then_resubmit"),
+    ],
+)
+async def test_pairing_submission_during_entry_setup_ignored(
     hass: HomeAssistant,
     mock_flic_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    inputs_while_setting_up: list[dict[str, Any] | None],
 ) -> None:
-    """Test aborting the flow while pairing disconnects the BLE client."""
+    """Test a pair submission while the paired entry is set up does not pair again."""
     started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _setup_entry(*args: Any) -> bool:
+        started.set()
+        await release.wait()
+        return True
+
+    mock_setup_entry.side_effect = _setup_entry
+
+    result = await _init_bt_flow(hass, DeviceType.FLIC2)
+    flow_id = result["flow_id"]
+    first = asyncio.create_task(
+        hass.config_entries.flow.async_configure(flow_id, user_input={})
+    )
+    # The flow stays on the pair step until the entry is set up
+    await started.wait()
+    # A second attempt fails, rather than waiting on the entry being set up
+    mock_flic_client.connect.side_effect = BleakError("Connection failed")
+
+    for user_input in inputs_while_setting_up:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input=user_input
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
+        assert not result["errors"]
+
+    release.set()
+    result = await first
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == FLIC2_ADDRESS
+    mock_flic_client.connect.assert_awaited_once()
+    mock_flic_client.full_verify_pairing.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_discovered_service_info")
+async def test_abort_while_connecting_skips_pairing(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test aborting the flow while connecting skips pairing and disconnects."""
+    started = asyncio.Event()
+    release = asyncio.Event()
 
     async def _connect() -> None:
         started.set()
-        await asyncio.Event().wait()
+        await release.wait()
 
     mock_flic_client.connect.side_effect = _connect
 
@@ -448,9 +516,14 @@ async def test_abort_during_pairing_disconnects_client(
 
     hass.config_entries.flow.async_abort(result["flow_id"])
     await hass.async_block_till_done(wait_background_tasks=True)
+    # The library can't disconnect while it is still connecting, so the step
+    # has to disconnect once the connection is up
+    mock_flic_client.disconnect.reset_mock()
 
-    mock_flic_client.disconnect.assert_awaited_once()
-
-    pairing.cancel()
-    with suppress(asyncio.CancelledError):
+    release.set()
+    with pytest.raises(UnknownFlow):
         await pairing
+
+    mock_flic_client.full_verify_pairing.assert_not_awaited()
+    mock_flic_client.disconnect.assert_awaited_once()
+    assert "Unexpected exception" not in caplog.text

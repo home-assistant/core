@@ -58,8 +58,10 @@ from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.tree import tree_entry_filename, tree_entry_is_directory
 from ..utils.url import (
+    RemoteFile,
     github_archive,
     github_commit_archive,
+    github_listed_release_asset,
     github_raw_file,
     github_release_asset,
     ref_version,
@@ -198,7 +200,7 @@ def _check_archive_size(archive: zipfile.ZipFile) -> None:
 class FileInformation:
     """FileInformation."""
 
-    def __init__(self, url: str, path: str, name: str) -> None:
+    def __init__(self, url: RemoteFile, path: str, name: str) -> None:
         """Initialize the file information."""
         self.download_url = url
         self.path = path
@@ -402,7 +404,7 @@ class RepositoryManifest:
             if (validator := REPOSITORY_MANIFEST_VALUES.get(key)) is None:
                 continue
             try:
-                validator(value)
+                value = validator(value)
             except probatio.Invalid:
                 LOGGER.warning("Ignoring %s in hacs.json, %r is not valid", key, value)
                 continue
@@ -762,7 +764,7 @@ class Repository:
                 MarketplaceError(
                     translation_domain=DOMAIN,
                     translation_key="file_not_downloaded",
-                    translation_placeholders={"file": content["url"]},
+                    translation_placeholders={"file": str(content["url"])},
                 )
             )
             return
@@ -1013,6 +1015,7 @@ class Repository:
 
         self.data.installed_version = None
         self.data.installed_commit = None
+        self._clear_readme_cache()
         self.async_dispatch_changed("uninstall")
 
         await self.async_remove_entity_device()
@@ -1177,7 +1180,18 @@ class Repository:
         """Forget the version picked for the install and end its progress."""
         self.data.selected_tag = None
         self.force_branch = False
+        # Clear it first, the panel asks for the page right after it hears of the end
+        self._clear_readme_cache()
         self._async_dispatch_install_progress(False)
+
+    def _clear_readme_cache(self) -> None:
+        """Clear the cached README, so the next info request fetches it again.
+
+        The cached README is of the version installed before, whose addresses
+        can point at files the version installed now no longer has.
+        """
+        self.additional_info = ""
+        self.updated_info = False
 
     async def async_post_installation(self) -> None:
         """Run post install steps."""
@@ -1678,7 +1692,14 @@ class Repository:
                 if ref == release.tag_name:
                     files.extend(
                         FileInformation(
-                            asset.browser_download_url, asset.name, asset.name
+                            github_listed_release_asset(
+                                repository=self.data.full_name,
+                                version=release.tag_name,
+                                filename=asset.name,
+                                url=asset.browser_download_url,
+                            ),
+                            asset.name,
+                            asset.name,
                         )
                         for asset in release.assets or []
                     )
@@ -1745,7 +1766,12 @@ class Repository:
 
         return [
             FileInformation(
-                url=asset.get("browser_download_url"),
+                url=github_listed_release_asset(
+                    repository=self.data.full_name,
+                    version=release.data.get("tag_name", version),
+                    filename=asset.get("name"),
+                    url=asset.get("browser_download_url"),
+                ),
                 path=asset.get("name"),
                 name=asset.get("name"),
             )
@@ -1912,7 +1938,9 @@ class Repository:
             return None
 
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{target_version}/{filename}",
+            github_raw_file(
+                repository=self.data.full_name, ref=target_version, path=filename
+            ),
             nolog=True,
         )
 
@@ -1942,7 +1970,9 @@ class Repository:
         """Get the hacs.json file of the repository."""
         self.logger.debug("%s Getting hacs.json for version=%s", self.string, version)
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/hacs.json",
+            github_raw_file(
+                repository=self.data.full_name, ref=version, path="hacs.json"
+            ),
             nolog=True,
             handle_rate_limit=True,
         )

@@ -20,6 +20,11 @@ trigger:
       example: "MY_HA_EVENT"
       selector:
         text:
+    target:
+      example: "my_key_name"
+      selector:
+        text:
+          multiple: true
     value1:
       example: "Hello World"
       selector:

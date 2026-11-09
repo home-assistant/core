@@ -48,7 +48,7 @@ from .conftest import (
 )
 
 DEVICE_BLOCK_ID = 4
-LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"
+LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_effect_speed"
 
 
 @pytest.fixture(autouse=True)
@@ -648,7 +648,7 @@ async def test_rpc_ledstrip_number(
     ledstrip_status: dict[str, Any],
 ) -> None:
     """Test RPC LED strip effect control number."""
-    entity_id = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_{control}"
+    entity_id = f"{NUMBER_DOMAIN}.test_name_effect_{control}"
     monkeypatch.setitem(
         mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status)
     )

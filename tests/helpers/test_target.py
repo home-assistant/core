@@ -7,6 +7,8 @@ from typing import Any
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
     RegistryEntryWithDefaults,
     mock_area_registry,
     mock_device_registry,
@@ -36,6 +38,7 @@ from homeassistant.helpers import (
     label_registry as lr,
     target,
 )
+from homeassistant.helpers.group import GenericGroup
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
@@ -486,16 +489,12 @@ def registries_mock(hass: HomeAssistant) -> None:
         ),
     ],
 )
-@pytest.mark.parametrize(
-    "selection_class", [target.TargetSelection, target.TargetSelectorData]
-)
 @pytest.mark.usefixtures("registries_mock")
 async def test_extract_referenced_entity_ids(
     hass: HomeAssistant,
     selector_config: ConfigType,
     expand_group: bool,
     expected_selected: target.SelectedEntities,
-    selection_class,
 ) -> None:
     """Test extract_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
@@ -516,7 +515,7 @@ async def test_extract_referenced_entity_ids(
         context=None,
     )
 
-    target_selection = selection_class(selector_config)
+    target_selection = target.TargetSelection(selector_config)
     assert (
         target.async_extract_referenced_entity_ids(
             hass, target_selection, expand_group=expand_group
@@ -741,6 +740,163 @@ async def test_extract_excluded_entity_ids(
         target.async_extract_excluded_entity_ids(hass, target.TargetSelection(config))
         == expected_excluded
     )
+
+
+@pytest.mark.usefixtures("registries_mock")
+async def test_explain_target(hass: HomeAssistant) -> None:
+    """Test explaining what each exclude takes out of each targeted item."""
+    target_selection = target.TargetSelection(
+        {
+            ATTR_ENTITY_ID: ["light.hidden_in_area"],
+            ATTR_DEVICE_ID: "device-no-area-id",
+            ATTR_AREA_ID: "test-area",
+            CONF_EXCLUDE: {
+                ATTR_ENTITY_ID: ["light.no_area", "light.kitchen"],
+                ATTR_DEVICE_ID: "device-test-area",
+            },
+        }
+    )
+    assert target.async_explain_target(
+        hass, target_selection
+    ) == target.TargetExplanation(
+        includes=[
+            target.TargetIncludeEntities(
+                "entity", "light.hidden_in_area", {"light.hidden_in_area"}
+            ),
+            target.TargetIncludeEntities(
+                "device",
+                "device-no-area-id",
+                {"light.no_area"},
+                referenced_devices={"device-no-area-id"},
+            ),
+            # The areas and devices an item reaches, so the frontend can
+            # narrow it like it does the item's own row
+            target.TargetIncludeEntities(
+                "area",
+                "test-area",
+                {"light.in_area", "light.assigned_to_area"},
+                referenced_areas={"test-area"},
+                referenced_devices={"device-test-area"},
+            ),
+        ],
+        excludes=[
+            # Takes nothing out of any item, so it has no effect
+            target.ExcludeEffect("entity", "light.kitchen"),
+            target.ExcludeEffect(
+                "entity",
+                "light.no_area",
+                removed=[
+                    target.TargetItemEntities(
+                        "device", "device-no-area-id", {"light.no_area"}
+                    )
+                ],
+            ),
+            # Excludes resolve hidden entities, and one exclude can take
+            # entities out of several items
+            target.ExcludeEffect(
+                "device",
+                "device-test-area",
+                removed=[
+                    target.TargetItemEntities(
+                        "entity", "light.hidden_in_area", {"light.hidden_in_area"}
+                    ),
+                    target.TargetItemEntities(
+                        "area",
+                        "test-area",
+                        {"light.in_area", "light.assigned_to_area"},
+                    ),
+                ],
+            ),
+        ],
+    )
+
+
+@pytest.mark.usefixtures("registries_mock")
+async def test_explain_target_without_exclude(hass: HomeAssistant) -> None:
+    """Test explaining a target selection without an exclude block."""
+    assert target.async_explain_target(
+        hass, target.TargetSelection({ATTR_DEVICE_ID: "device-no-area-id"})
+    ) == target.TargetExplanation(
+        includes=[
+            target.TargetIncludeEntities(
+                "device",
+                "device-no-area-id",
+                {"light.no_area"},
+                referenced_devices={"device-no-area-id"},
+            )
+        ],
+        excludes=[],
+    )
+
+
+@pytest.mark.usefixtures("registries_mock")
+async def test_explain_target_all_entities(hass: HomeAssistant) -> None:
+    """Test explaining an exclude when all entities are targeted."""
+    hass.states.async_set("light.in_area", STATE_ON)
+    explanation = target.async_explain_target(
+        hass,
+        target.TargetSelection(
+            {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"}}
+        ),
+    )
+    assert explanation.includes == [
+        target.TargetIncludeEntities(
+            "entity",
+            "all",
+            {"light.bowl", "light.ceiling", "light.kitchen", "light.in_area"},
+        )
+    ]
+    assert explanation.excludes == [
+        target.ExcludeEffect(
+            "area",
+            "test-area",
+            removed=[target.TargetItemEntities("entity", "all", {"light.in_area"})],
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    ("expand_group", "expected_removed"),
+    [
+        # The targeted group is replaced by its members
+        (
+            True,
+            [
+                target.TargetItemEntities(
+                    "entity", "light.direct_group", {"light.no_area"}
+                )
+            ],
+        ),
+        # The targeted group stays, so excluding a member takes nothing out
+        (False, []),
+    ],
+)
+@pytest.mark.usefixtures("registries_mock")
+async def test_explain_target_expand_group(
+    hass: HomeAssistant,
+    expand_group: bool,
+    expected_removed: list[target.TargetItemEntities],
+) -> None:
+    """Test a targeted group is resolved like a call to the target does."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    direct_group = MockEntity(entity_id="light.direct_group", unique_id="direct")
+    direct_group.group = GenericGroup(direct_group, ["light.no_area"])
+    await platform.async_add_entities([direct_group])
+    await hass.async_block_till_done()
+
+    explanation = target.async_explain_target(
+        hass,
+        target.TargetSelection(
+            {
+                ATTR_ENTITY_ID: "light.direct_group",
+                CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.no_area"},
+            }
+        ),
+        expand_group=expand_group,
+    )
+    assert explanation.excludes == [
+        target.ExcludeEffect("entity", "light.no_area", removed=expected_removed)
+    ]
 
 
 @pytest.mark.parametrize(

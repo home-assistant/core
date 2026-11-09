@@ -1,4 +1,65 @@
 # serializer version: 1
+# name: test_selects[aqara_camera_hub_g350][select.aqara_camera_hub_g350_night_vision-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'auto',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000000BB-MatterNodeDevice'), ('matter', 'serial_serial_187')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_camera_hub_g350_night_vision',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Night vision',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Night vision',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'night_vision',
+    'unique_id': '00000000000004D2-00000000000000BB-MatterNodeDevice-2-CameraAvStreamManagementNightVision-1361-22',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_camera_hub_g350][select.aqara_camera_hub_g350_night_vision-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Camera Hub G350 Night vision',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'on',
+        'auto',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_camera_hub_g350_night_vision',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
 # name: test_selects[aqara_led_strip_t2][select.aqara_led_strip_t2_music_sync_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -9,6 +9,7 @@ from pyflic_ble import FlicProtocolError, FlicState, PushTwistMode
 from pyflic_ble.const import TWIST_MODE_SLOT_CHANGING
 
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntityDescription,
     NumberMode,
     RestoreNumber,
@@ -16,6 +17,7 @@ from homeassistant.components.number import (
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FlicButtonConfigEntry, FlicButtonData
@@ -71,11 +73,24 @@ async def async_setup_entry(
     push_twist_mode = PushTwistMode(
         entry.options.get(CONF_PUSH_TWIST_MODE, PushTwistMode.DEFAULT)
     )
-    descriptions = (
-        SLOT_DESCRIPTIONS
-        if push_twist_mode is PushTwistMode.SELECTOR
-        else POSITION_DESCRIPTIONS
-    )
+    descriptions: tuple[FlicTwistNumberEntityDescription, ...]
+    if push_twist_mode is PushTwistMode.SELECTOR:
+        descriptions = SLOT_DESCRIPTIONS
+    elif push_twist_mode is PushTwistMode.DEFAULT:
+        descriptions = POSITION_DESCRIPTIONS
+    else:
+        # The continuous LED shows the raw rotation, which a position write
+        # does not move
+        descriptions = ()
+
+    entity_registry = er.async_get(hass)
+    for description in (*SLOT_DESCRIPTIONS, *POSITION_DESCRIPTIONS):
+        if description not in descriptions and (
+            entity_id := entity_registry.async_get_entity_id(
+                NUMBER_DOMAIN, DOMAIN, f"{data.client.address}-{description.key}"
+            )
+        ):
+            entity_registry.async_remove(entity_id)
 
     async_add_entities(
         FlicTwistNumberEntity(data, description) for description in descriptions

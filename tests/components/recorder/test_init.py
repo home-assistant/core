@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta
+from pathlib import Path
 import sqlite3
 import sys
 import threading
@@ -10,6 +11,7 @@ from typing import Any, cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.common import (
     MockEntity,
@@ -35,6 +37,7 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     RecorderInstanceGenerator,
 )
+from sqlalchemy import make_url
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
@@ -48,9 +51,11 @@ from homeassistant.components.recorder import (
     CONF_DB_RETRY_WAIT,
     CONF_DB_URL,
     CONFIG_SCHEMA,
+    DEFAULT_DB_FILE,
     DOMAIN,
     Recorder,
     db_schema,
+    get_default_url,
     get_instance,
     migration,
     statistics,
@@ -73,18 +78,14 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsRuns,
 )
 from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.components.recorder.pool import MutexPool, RecorderPool
 from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.services import (
-    SERVICE_DISABLE,
-    SERVICE_ENABLE,
-    SERVICE_PURGE,
-    SERVICE_PURGE_ENTITIES,
-)
+from homeassistant.components.recorder.services import RecorderService
 from homeassistant.components.recorder.table_managers import (
     state_attributes as state_attributes_table_manager,
     states_meta as states_meta_table_manager,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import dburl_to_path, session_scope
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -1618,10 +1619,10 @@ async def test_saving_state_with_serializable_data(
 
 async def test_has_services(hass: HomeAssistant, setup_recorder: None) -> None:
     """Test the services exist."""
-    assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
+    assert hass.services.has_service(DOMAIN, RecorderService.DISABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.ENABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE_ENTITIES)
 
 
 async def test_service_disable_events_not_recording(
@@ -1631,7 +1632,7 @@ async def test_service_disable_events_not_recording(
     """Test that events are not recorded when recorder is disabled using service."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1665,7 +1666,7 @@ async def test_service_disable_events_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1714,7 +1715,7 @@ async def test_service_disable_states_not_recording(
     """Test state changes are not recorded when recorder is disabled."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1727,7 +1728,7 @@ async def test_service_disable_states_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1771,7 +1772,7 @@ async def test_service_disable_run_information_recorded(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DISABLE,
+            RecorderService.DISABLE,
             {},
             blocking=True,
         )
@@ -2333,7 +2334,7 @@ async def test_async_block_till_done(
 @pytest.mark.parametrize(
     ("db_url", "echo"),
     [
-        ("sqlite://blabla", None),
+        ("sqlite:///blabla", None),
         ("mariadb://blabla", False),
         ("mysql://blabla", False),
         ("mariadb+pymysql://blabla", False),
@@ -2395,7 +2396,7 @@ async def test_disable_echo(
             {},
         ),
         (
-            "sqlite://blabla",
+            "sqlite:///blabla",
             {},
         ),
     ],
@@ -2423,6 +2424,201 @@ async def test_mysql_missing_utf8mb4(
         connect_args = create_engine_mock.mock_calls[0][2].get("connect_args", {})
         for key, value in expected_connect_args.items():
             assert connect_args[key] == value
+
+
+async def test_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
+    """Test the engine for a driverless PostgreSQL URL uses psycopg2."""
+    recorder_helper.async_initialize_recorder(hass)
+
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    mock_event = MockEvent()
+    with (
+        patch(
+            "homeassistant.components.recorder.core.create_engine"
+        ) as create_engine_mock,
+        patch("homeassistant.components.recorder.core.sqlalchemy_event", mock_event),
+    ):
+        await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_DB_URL: "postgresql://user:pass@host/db"}}
+        )
+        create_engine_mock.assert_called_once()
+        assert create_engine_mock.mock_calls[0].args[0] == make_url(
+            "postgresql+psycopg2://user:pass@host/db"
+        )
+
+
+@pytest.mark.parametrize(
+    ("config_url", "poolclass", "charset", "echo", "checks_file"),
+    [
+        pytest.param("sqlite://", MutexPool, None, None, False, id="sqlite_memory"),
+        pytest.param(
+            "sqlite:///:memory:",
+            MutexPool,
+            None,
+            None,
+            False,
+            id="sqlite_memory_database",
+        ),
+        pytest.param(
+            "sqlite:///blabla", RecorderPool, None, None, True, id="sqlite_file"
+        ),
+        pytest.param(
+            "sqlite+pysqlite:///blabla",
+            RecorderPool,
+            None,
+            None,
+            True,
+            id="pysqlite_file",
+        ),
+        pytest.param(
+            "sqlite+pysqlcipher://:key@/blabla",
+            None,
+            None,
+            False,
+            False,
+            id="pysqlcipher_file",
+        ),
+        pytest.param(
+            "mysql://user:pass@host/db", None, "utf8mb4", False, False, id="mysqldb"
+        ),
+        pytest.param(
+            "mysql+mysqldb://user:pass@host/db",
+            None,
+            "utf8mb4",
+            False,
+            False,
+            id="explicit_mysqldb",
+        ),
+        pytest.param(
+            "mariadb+pymysql://user:pass@host/db",
+            None,
+            "utf8mb4",
+            False,
+            False,
+            id="pymysql",
+        ),
+        pytest.param(
+            "mariadb+mariadbconnector://user:pass@host/db",
+            None,
+            None,
+            False,
+            False,
+            id="mariadbconnector",
+        ),
+        pytest.param(
+            "postgresql://user:pass@host/db", None, None, False, False, id="postgresql"
+        ),
+    ],
+)
+async def test_engine_options_for_backend_and_driver(
+    hass: HomeAssistant,
+    config_url: str,
+    poolclass: type[MutexPool | RecorderPool] | None,
+    charset: str | None,
+    echo: bool | None,
+    checks_file: bool,
+) -> None:
+    """Test the engine options are chosen from the backend and driver of the URL.
+
+    Only pysqlite databases are checked with sqlite3 before connecting, as
+    other SQLite drivers such as pysqlcipher use files sqlite3 can't open.
+    """
+    recorder_helper.async_initialize_recorder(hass)
+
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    mock_event = MockEvent()
+    with (
+        patch(
+            "homeassistant.components.recorder.core.create_engine"
+        ) as create_engine_mock,
+        patch("homeassistant.components.recorder.core.sqlalchemy_event", mock_event),
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+        patch(
+            "homeassistant.components.recorder.core.validate_or_move_away_sqlite_database"
+        ) as validate_mock,
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
+        create_engine_mock.assert_called_once()
+
+    kwargs = create_engine_mock.mock_calls[0].kwargs
+    assert kwargs.get("poolclass") is poolclass
+    assert kwargs.get("connect_args", {}).get("charset") == charset
+    assert kwargs.get("echo") is echo
+    assert validate_mock.called is checks_file
+
+
+@pytest.mark.parametrize(
+    "db_url",
+    [
+        pytest.param("", id="empty"),
+        pytest.param("sqlite:////config/home-assistant_v2.db", id="sqlite"),
+        pytest.param("sqlite+pysqlite:////config/db.db", id="pysqlite"),
+        pytest.param("sqlite+pysqlcipher://:key@/config/db.db", id="pysqlcipher"),
+        pytest.param("mysql://user:pass@host/db?charset=utf8mb4", id="mysql"),
+        pytest.param("postgresql://user:pass@host/db", id="postgresql"),
+    ],
+)
+def test_validate_db_url(db_url: str) -> None:
+    """Test valid database URLs are accepted."""
+    assert recorder.validate_db_url(db_url) == db_url
+
+
+@pytest.mark.parametrize(
+    ("db_url", "message"),
+    [
+        pytest.param("sqlite://", "In-memory SQLite", id="sqlite_memory"),
+        pytest.param("sqlite:///:memory:", "In-memory SQLite", id="memory_database"),
+        pytest.param(
+            "sqlite+pysqlite:///:memory:", "In-memory SQLite", id="pysqlite_memory"
+        ),
+        pytest.param(
+            "sqlite://host//config/db.db", "Invalid database URL", id="sqlite_host"
+        ),
+        pytest.param(
+            "sqlite+pysqlite://user:pass@/config/db.db",
+            "Invalid database URL",
+            id="pysqlite_credentials",
+        ),
+        pytest.param(
+            "sqlite://:1234//config/db.db", "Invalid database URL", id="sqlite_port"
+        ),
+        pytest.param("garbage", "Invalid database URL", id="garbage"),
+        pytest.param(
+            "mysql://user:pass@host:port/db", "Invalid database URL", id="bad_port"
+        ),
+    ],
+)
+def test_validate_db_url_invalid(db_url: str, message: str) -> None:
+    """Test invalid database URLs are rejected."""
+    with pytest.raises(probatio.Invalid, match=message):
+        recorder.validate_db_url(db_url)
+
+
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        pytest.param("config", id="plain"),
+        pytest.param("ha%20copy", id="percent_escape"),
+        pytest.param("100%", id="percent"),
+        pytest.param("a#b", id="hash"),
+        pytest.param("a:b", id="colon"),
+        pytest.param("a@b", id="at"),
+        pytest.param("a b", id="space"),
+    ],
+)
+async def test_default_url(
+    hass: HomeAssistant, tmp_path: Path, config_dir: str
+) -> None:
+    """Test the default URL points at the database file in the config directory."""
+    hass.config.config_dir = str(tmp_path / config_dir)
+
+    assert dburl_to_path(get_default_url(hass)) == hass.config.path(DEFAULT_DB_FILE)
 
 
 @pytest.mark.parametrize(
@@ -2457,6 +2653,8 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
 
         def create_connect_args(self, url):
             return ([], {"charset": "invalid"})
+
+        driver = "mysqldb"
 
         @property
         def name(self) -> str:

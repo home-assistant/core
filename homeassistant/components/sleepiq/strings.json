@@ -45,5 +45,15 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed, but the SleepIQ service could not be reached while importing your YAML configuration. Check your internet connection and restart Home Assistant to try the import again, or remove the `{domain}` configuration from your configuration.yaml file and set up the integration from the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} using YAML is being removed, but the username or password in your YAML configuration was rejected while importing it. Correct the credentials and restart Home Assistant to try the import again, or remove the `{domain}` configuration from your configuration.yaml file and set up the integration from the UI.",
+      "title": "[%key:component::sleepiq::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
   }
 }

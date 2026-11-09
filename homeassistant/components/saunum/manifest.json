@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas", "climate.thermostats_heating"],
   "codeowners": ["@mettolen"],
   "config_flow": true,
+  "connectivity": ["modbus"],
   "documentation": "https://www.home-assistant.io/integrations/saunum",
   "integration_type": "device",
   "iot_class": "local_polling",
