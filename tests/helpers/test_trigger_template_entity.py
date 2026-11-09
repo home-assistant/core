@@ -371,17 +371,25 @@ async def test_manual_trigger_sensor_entity_with_none(
     assert entity.native_value is None
 
 
+@pytest.mark.parametrize(
+    "numeric_config",
+    [
+        pytest.param(
+            {CONF_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE}, id="device_class"
+        ),
+        pytest.param(
+            {CONF_STATE_CLASS: SensorStateClass.MEASUREMENT}, id="state_class"
+        ),
+        pytest.param({CONF_UNIT_OF_MEASUREMENT: "°C"}, id="unit_of_measurement"),
+    ],
+)
 async def test_manual_trigger_sensor_entity_non_numeric_value(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    numeric_config: dict[str, Any],
 ) -> None:
     """Test a non-numeric value for a numeric sensor becomes unknown and warns once."""
-    config = {
-        CONF_NAME: template.Template("test_entity", hass),
-        CONF_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-        CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
-        CONF_UNIT_OF_MEASUREMENT: "°C",
-    }
+    config = {CONF_NAME: template.Template("test_entity", hass), **numeric_config}
     entity = ManualTriggerSensorEntity(hass, config)
     entity.entity_id = "sensor.test"
     warning = "returned the non-numeric value 'unavailable'"
