@@ -25,7 +25,9 @@ async def async_get_config_entry_diagnostics(
     data = json.loads(runtime_data.device.data.to_json())
     # Apps are only reported by devices with firmware 2.1.0 and newer.
     if (apps := runtime_data.apps.data) is not None:
-        data["apps"] = {
-            package: json.loads(app.to_json()) for package, app in apps.items()
-        }
+        # The widget settings hold user-defined titles and configuration.
+        data["apps"] = async_redact_data(
+            {package: json.loads(app.to_json()) for package, app in apps.items()},
+            {"settings"},
+        )
     return async_redact_data(data, TO_REDACT)

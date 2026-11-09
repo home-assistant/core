@@ -112,6 +112,43 @@ def test_widget_labels_duplicates() -> None:
     ]
 
 
+def test_widget_labels_generated_suffix_collision() -> None:
+    """Test that generated labels do not collide with custom titles."""
+    apps = {
+        "com.a": _app(
+            "com.a",
+            "App A",
+            {
+                "a1": {
+                    "index": 0,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather"},
+                },
+                "a2": {
+                    "index": 1,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather"},
+                },
+                # A custom title that a generated label would produce.
+                "a3": {
+                    "index": 2,
+                    "package": "com.a",
+                    "settings": {"_title": "Weather 0"},
+                },
+            },
+        ),
+    }
+
+    labels = widget_labels(apps)
+    assert labels == [
+        ("Weather 1", "com.a", "a1"),
+        ("Weather 2", "com.a", "a2"),
+        ("Weather 0", "com.a", "a3"),
+    ]
+    # Every label stays unique, so each option maps to one widget.
+    assert len({label for label, _, _ in labels}) == len(labels)
+
+
 def test_current_widget() -> None:
     """Test resolving the widget shown on a device."""
     apps = {

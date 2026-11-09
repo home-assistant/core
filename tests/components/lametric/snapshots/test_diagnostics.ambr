@@ -60,9 +60,7 @@
           '1_com.lametric.clock': dict({
             'index': 0,
             'package': 'com.lametric.clock',
-            'settings': dict({
-              '_title': 'Clock',
-            }),
+            'settings': '**REDACTED**',
             'visible': True,
           }),
         }),
@@ -141,9 +139,7 @@
           '6_com.lametric.countdown': dict({
             'index': 5,
             'package': 'com.lametric.countdown',
-            'settings': dict({
-              '_title': 'Timer',
-            }),
+            'settings': '**REDACTED**',
             'visible': False,
           }),
         }),
@@ -162,9 +158,7 @@
           '3_com.lametric.custommessage': dict({
             'index': 2,
             'package': 'com.lametric.custommessage',
-            'settings': dict({
-              '_title': 'Message Board',
-            }),
+            'settings': '**REDACTED**',
             'visible': False,
           }),
         }),
@@ -201,9 +195,7 @@
           '4_com.lametric.radio': dict({
             'index': 3,
             'package': 'com.lametric.radio',
-            'settings': dict({
-              '_title': 'Radio',
-            }),
+            'settings': '**REDACTED**',
             'visible': False,
           }),
         }),
@@ -228,9 +220,7 @@
           '5_com.lametric.stopwatch': dict({
             'index': 4,
             'package': 'com.lametric.stopwatch',
-            'settings': dict({
-              '_title': 'Stopwatch',
-            }),
+            'settings': '**REDACTED**',
             'visible': False,
           }),
         }),
@@ -255,9 +245,7 @@
           '2_com.lametric.weather': dict({
             'index': 1,
             'package': 'com.lametric.weather',
-            'settings': dict({
-              '_title': 'Weather',
-            }),
+            'settings': '**REDACTED**',
             'visible': False,
           }),
         }),

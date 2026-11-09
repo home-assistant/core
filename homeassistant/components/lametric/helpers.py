@@ -66,7 +66,8 @@ def widget_labels(apps: dict[str, App]) -> list[tuple[str, str, str]]:
 
     Widgets are ordered like the carousel on the device. A widget is named
     after its own title, falling back to the title of its app. Names that
-    occur more than once get their position in the carousel appended.
+    occur more than once get their position in the carousel appended; a
+    generated label never collides with another widget's name.
     """
     entries = [
         (
@@ -80,10 +81,23 @@ def widget_labels(apps: dict[str, App]) -> list[tuple[str, str, str]]:
     ]
     entries.sort()
     counts = Counter(entry[3] for entry in entries)
-    return [
-        (f"{label} {index}" if counts[label] > 1 else label, package, widget_id)
-        for index, package, widget_id, label in entries
-    ]
+    # Reserve the names of the widgets that keep theirs, so a generated
+    # label cannot take the place of an actual title.
+    used = {label for _, _, _, label in entries if counts[label] == 1}
+    labeled: list[tuple[str, str, str]] = []
+    for index, package, widget_id, label in entries:
+        if counts[label] == 1:
+            labeled.append((label, package, widget_id))
+            continue
+        name = f"{label} {index}"
+        while name in used:
+            # The position is already taken by another widget's title;
+            # step forward until the label is free.
+            index += 1
+            name = f"{label} {index}"
+        used.add(name)
+        labeled.append((name, package, widget_id))
+    return labeled
 
 
 def widget_options(apps: dict[str, App]) -> list[str]:
