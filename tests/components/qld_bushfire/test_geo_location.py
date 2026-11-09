@@ -8,7 +8,7 @@ from georss_qld_bushfire_alert_client import QldBushfireAlertFeed
 from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location import GeolocationEntityStateAttribute
+from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.qld_bushfire.geo_location import (
     ATTR_CATEGORY,
     ATTR_EXTERNAL_ID,
@@ -124,7 +124,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_UPDATED_DATE: dt.datetime(2018, 9, 22, 8, 10, tzinfo=dt.UTC),
                 ATTR_STATUS: "Status 1",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                GeolocationEntityStateAttribute.SOURCE: "qld_bushfire",
+                ATTR_SOURCE: "qld_bushfire",
                 ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 15.5
@@ -138,7 +138,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_LONGITUDE: -3.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                GeolocationEntityStateAttribute.SOURCE: "qld_bushfire",
+                ATTR_SOURCE: "qld_bushfire",
                 ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 20.5
@@ -152,7 +152,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_LONGITUDE: -3.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-                GeolocationEntityStateAttribute.SOURCE: "qld_bushfire",
+                ATTR_SOURCE: "qld_bushfire",
                 ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 25.5

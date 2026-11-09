@@ -13,8 +13,8 @@ from homeassistant.components.geo_json_events.const import (
     SIGNAL_UPDATE_ENTITY,
 )
 from homeassistant.components.geo_location import (
+    ATTR_SOURCE,
     DOMAIN as GEO_LOCATION_DOMAIN,
-    GeolocationEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -92,7 +92,7 @@ async def test_entity_lifecycle(
             ATTR_LONGITUDE: 150.0,
             ATTR_FRIENDLY_NAME: "Properties 1",
             ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
+            ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 15.5), 7) == 0
 
@@ -105,7 +105,7 @@ async def test_entity_lifecycle(
             ATTR_LONGITUDE: 150.1,
             ATTR_FRIENDLY_NAME: "271310188",
             ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
+            ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 20.5), 7) == 0
 
@@ -118,7 +118,7 @@ async def test_entity_lifecycle(
             ATTR_LONGITUDE: 150.2,
             ATTR_FRIENDLY_NAME: "Title 3",
             ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
+            ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 25.5), 7) == 0
 
