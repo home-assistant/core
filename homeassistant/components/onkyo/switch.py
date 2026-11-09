@@ -46,7 +46,7 @@ async def async_setup_entry(
     )
 
 
-# OnkyoEntity comes first, so that its availability wins over CoordinatorEntity's.
+# OnkyoEntity must precede CoordinatorEntity so its available property takes priority.
 class OnkyoChannelMutingSwitch(
     OnkyoEntity, CoordinatorEntity[ChannelMutingCoordinator], SwitchEntity
 ):

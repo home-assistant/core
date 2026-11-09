@@ -161,7 +161,7 @@ async def async_setup_entry(
             zone_entity = OnkyoMediaPlayer(
                 manager,
                 zone,
-                device_id=data.device_id,
+                parent_device_id=data.parent_device_id,
                 volume_resolution=volume_resolution,
                 max_volume=max_volume,
                 sources=sources,
@@ -192,7 +192,7 @@ class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
         manager: ReceiverManager,
         zone: Zone,
         *,
-        device_id: str,
+        parent_device_id: str,
         volume_resolution: VolumeResolution,
         max_volume: float,
         sources: dict[InputSource, str],
@@ -210,7 +210,7 @@ class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
         if zone is not Zone.MAIN:
             self._attr_device_info = ChildDeviceInfo(
                 identifiers={(DOMAIN, self._attr_unique_id)},
-                parent_device_id=device_id,
+                parent_device_id=parent_device_id,
                 translation_key=ZONE_TRANSLATION_KEYS[zone],
             )
 

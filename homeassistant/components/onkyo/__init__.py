@@ -33,7 +33,7 @@ class OnkyoData:
     """Config Entry data."""
 
     manager: ReceiverManager
-    device_id: str
+    parent_device_id: str
     sources: dict[InputSource, str]
     sound_modes: dict[ListeningMode, str]
 
@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     # Registered here, so that the device is present even before any zone or
     # feature of the receiver has announced itself.
-    device = dr.async_get(hass).async_get_or_create(
+    parent_device = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, info.identifier)},
         name=info.model_name,
@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
-    entry.runtime_data = OnkyoData(manager, device.id, sources, sound_modes)
+    entry.runtime_data = OnkyoData(manager, parent_device.id, sources, sound_modes)
 
     ChannelMutingCoordinator(hass, entry, manager)
 
@@ -107,15 +107,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
     entry.runtime_data.manager.start_unloading()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: OnkyoConfigEntry, device: dr.AnyDeviceEntry
-) -> bool:
-    """Remove a device from the config entry.
-
-    Zones are child devices. A zone the receiver stopped reporting cannot be told
-    apart from one that is merely switched off, so removing it is left to the user.
-    The receiver itself is removed by deleting the config entry.
-    """
-    return isinstance(device, dr.ChildDeviceEntry)
