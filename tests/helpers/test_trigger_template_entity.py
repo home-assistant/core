@@ -4,7 +4,11 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.sensor.helpers import async_parse_date_datetime  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -12,6 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -364,3 +369,35 @@ async def test_manual_trigger_sensor_entity_with_none(
     entity._set_native_value_with_possible_timestamp(value)
 
     assert entity.native_value is None
+
+
+async def test_manual_trigger_sensor_entity_non_numeric_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a non-numeric value for a numeric sensor becomes unknown and warns once."""
+    config = {
+        CONF_NAME: template.Template("test_entity", hass),
+        CONF_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        CONF_UNIT_OF_MEASUREMENT: "°C",
+    }
+    entity = ManualTriggerSensorEntity(hass, config)
+    entity.entity_id = "sensor.test"
+    warning = "returned the non-numeric value 'unavailable'"
+
+    entity._set_native_value_with_possible_timestamp("unavailable")
+    assert entity.native_value is None
+    assert entity.state is None
+    assert caplog.text.count(warning) == 1
+
+    entity._set_native_value_with_possible_timestamp("unavailable")
+    assert caplog.text.count(warning) == 1
+
+    entity._set_native_value_with_possible_timestamp("21.5")
+    assert entity.native_value == "21.5"
+    assert entity.state == "21.5"
+
+    entity._set_native_value_with_possible_timestamp("unavailable")
+    assert entity.native_value is None
+    assert caplog.text.count(warning) == 2
