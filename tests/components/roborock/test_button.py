@@ -177,7 +177,7 @@ async def test_update_failure(
             blocking=True,
             target={"entity_id": entity_id},
         )
-    assert consumeables_trait.reset_consumable.assert_called_once
+    consumeables_trait.reset_consumable.assert_called_once()
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 

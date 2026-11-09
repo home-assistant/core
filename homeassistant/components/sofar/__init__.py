@@ -29,7 +29,6 @@ from .const import (
     CONF_UNIT_ID,
     DOMAIN,
     FAULT_LOG,
-    METER_ENERGY,
     SCAN_INTERVAL,
     SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
@@ -63,24 +62,6 @@ def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
     for key in _REMOVED_SENSOR_KEYS:
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{key}"
-        )
-        if entity_id is not None:
-            registry.async_remove(entity_id)
-
-
-@callback
-def _async_remove_denied_meter_energy(
-    hass: HomeAssistant, serial: str, served: frozenset[str]
-) -> None:
-    """Drop meter sensors a model denies, so they don't linger unavailable."""
-    if METER_ENERGY in served:
-        return
-    registry = er.async_get(hass)
-    for description in TOTAL_SENSOR_DESCRIPTIONS:
-        if description.component != METER_ENERGY:
-            continue
-        entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
         if entity_id is not None:
             registry.async_remove(entity_id)
@@ -214,15 +195,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         config_entry_id=entry.entry_id, device_info=readings.device_info
     )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, served)
-    # Until the masks settle the type, nothing is served or denied.
-    if device.inverter_type:
-        _async_remove_denied_meter_energy(hass, serial, served)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-def _battery_pack_number(serial: str, identifier: str) -> int | None:
-    """The battery pack a device identifier names, if it names one."""
+def _battery_string_number(serial: str, identifier: str) -> int | None:
+    """The battery string a device identifier names, if it names one."""
     prefix = f"{serial}_battery_"
     if not identifier.startswith(prefix):
         return None
@@ -236,7 +214,7 @@ async def async_remove_config_entry_device(
     config_entry: SofarConfigEntry,
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
-    """Allow removing a battery pack the inverter no longer reports."""
+    """Allow removing a battery string the inverter no longer reports."""
     serial = config_entry.unique_id
     if TYPE_CHECKING:
         assert serial is not None
@@ -245,23 +223,23 @@ async def async_remove_config_entry_device(
         if config_entry.state is ConfigEntryState.LOADED
         else None
     )
-    packs: set[int] = set()
+    strings: set[int] = set()
     for domain, identifier in device_entry.identifiers:
         if domain != DOMAIN:
             continue
         if identifier == serial or identifier.startswith(f"{serial}_pv_string_"):
             return False
-        if (number := _battery_pack_number(serial, identifier)) is None:
+        if (number := _battery_string_number(serial, identifier)) is None:
             continue
         if (
             runtime_data is not None
             and number in runtime_data.readings.device.wired_battery_strings
         ):
             return False
-        packs.add(number)
+        strings.add(number)
 
     if runtime_data is not None:
-        runtime_data.wired_packs -= packs
+        runtime_data.added_battery_strings -= strings
     return True
 
 

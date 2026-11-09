@@ -169,6 +169,7 @@ class ClimateEntityCapabilityAttribute(StrEnum):
     PRESET_MODES = "preset_modes"
     SWING_MODES = "swing_modes"
     SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 class ClimateEntityStateAttribute(
@@ -177,6 +178,10 @@ class ClimateEntityStateAttribute(
     deprecated={
         "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.2.0"),
         "HUMIDITY": ("ClimateEntityStateAttribute.TARGET_HUMIDITY", "2027.2.0"),
+        "TEMPERATURE_UNIT": (
+            "ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT",
+            "2027.6.0",
+        ),
     },
 ):
     """State attributes for climate entities."""
@@ -194,7 +199,7 @@ class ClimateEntityStateAttribute(
     PRESET_MODE = "preset_mode"
     SWING_MODE = "swing_mode"
     SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
-    TEMPERATURE_UNIT = "temperature_unit"
+    TEMPERATURE_UNIT = "temperature_unit"  # Deprecated, moved to capability attributes
 
 
 class ClimateEntityFeature(IntFlag):

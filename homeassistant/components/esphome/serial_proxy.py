@@ -2,10 +2,20 @@
 
 import asyncio
 from collections.abc import Callable
-from typing import NotRequired, TypedDict, Unpack, cast, override
+from typing import NotRequired, TypedDict, TypeGuard, Unpack, cast, override
 
-from aioesphomeapi import APIClient
-from serialx import register_uri_handler
+from aioesphomeapi import (
+    APIClient,
+    SerialProxyIdentity,
+    SerialProxyIdentityFlag,
+    SerialProxyIdentitySource,
+)
+from serialx import (
+    SerialPortInfo,
+    is_non_unique_serial,
+    register_uri_handler,
+    udev_serial_by_id_stem,
+)
 from serialx.common import BACKEND_CONNECT_KWARGS
 from serialx.platforms.serial_esphome import (
     ESPHomeSerial,
@@ -24,6 +34,8 @@ from .entry_data import ESPHomeConfigEntry
 # aioesphomeapi client. We cannot make any assumptions here, some packages run separate
 # asyncio event loops in dedicated threads.
 _HASS_LOOP: asyncio.AbstractEventLoop | None = None
+
+USB_CLASS_VENDOR_SPEC = 0xFF
 
 
 class SerialProxyFilters(TypedDict):
@@ -54,6 +66,86 @@ def build_url(entry_id: str, **filters: Unpack[SerialProxyFilters]) -> URL:
         path=f"/{entry_id}",
         query=trimmed_filters,
     )
+
+
+def identity_port_info(identity: SerialProxyIdentity) -> SerialPortInfo:
+    """Describe the device behind a serial proxy port."""
+    # Must agree with serialx's `identity_port_info` so both compute the same
+    # `udev_id`. A zero ID is never valid USB, so it means no USB descriptor was given.
+    has_usb = bool(identity.usb.vendor_id and identity.usb.product_id)
+
+    return SerialPortInfo(
+        device="",
+        resolved_device="",
+        vid=identity.usb.vendor_id if has_usb else None,
+        pid=identity.usb.product_id if has_usb else None,
+        serial_number=identity.serial_number or None,
+        manufacturer=identity.manufacturer or None,
+        product=identity.product or None,
+        bcd_device=identity.usb.bcd_device if has_usb else None,
+        interface_description=None,
+        interface_num=identity.usb.interface_number if has_usb else None,
+        # A vendor-specific interface is bound through a chip driver, which numbers its
+        # ports; a class interface (CDC ACM) is bound by the class driver itself
+        port_number=(
+            identity.usb.port_number
+            if has_usb and identity.usb.interface_class == USB_CLASS_VENDOR_SPEC
+            else None
+        ),
+    )
+
+
+def has_identity(
+    identity: SerialProxyIdentity | None,
+) -> TypeGuard[SerialProxyIdentity]:
+    """Return if a serial proxy port describes the device behind it."""
+    # Older ESPHome devices send no identity, and a port without a configured
+    # identity carries none
+    return (
+        identity is not None and identity.source is not SerialProxyIdentitySource.NONE
+    )
+
+
+def build_port_url(
+    entry_id: str, port_name: str, identity: SerialProxyIdentity | None
+) -> URL | None:
+    """Build the canonical URL of a serial proxy port, `None` if no device is behind it."""
+    if not has_identity(identity):
+        return build_url(entry_id, port_name=port_name)
+
+    # An empty USB socket, or a USB device whose descriptors cannot be read
+    if (
+        not identity.flags & SerialProxyIdentityFlag.CONNECTED
+        or identity.flags & SerialProxyIdentityFlag.ERROR
+    ):
+        return None
+
+    port_info = identity_port_info(identity)
+
+    if (port_udev_id := udev_serial_by_id_stem(port_info)) is None:
+        # If a port has incomplete metadata, it cannot be given a `udev_id`. We
+        # try to match based on everything else, including the name of the
+        # serial proxy. This is like `/dev/serial/by-path/`.
+        filters = SerialProxyFilters(
+            port_name=port_name,
+            port_manufacturer=port_info.manufacturer,
+            port_product=port_info.product,
+            port_serial_number=port_info.serial_number,
+            port_usb_vid=port_info.vid,
+            port_usb_pid=port_info.pid,
+            port_usb_bcd_device=port_info.bcd_device,
+            port_usb_interface_num=port_info.interface_num,
+        )
+    else:
+        # Otherwise, we match on `udev_id`, which is like `/dev/serial/by-id/`
+        filters = SerialProxyFilters(port_udev_id=port_udev_id)
+
+        # Identical devices without a unique serial number share a `udev_id`
+        # so they are told apart by the port they are on
+        if is_non_unique_serial(port_info.serial_number):
+            filters["port_name"] = port_name
+
+    return build_url(entry_id, **filters)
 
 
 async def _resolve_client(entry_id: str) -> APIClient:

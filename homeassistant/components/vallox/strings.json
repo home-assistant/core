@@ -111,6 +111,9 @@
     },
     "failed_to_set_profile_for_duration": {
       "message": "Failed to set profile to {profile} for {duration} minutes"
+    },
+    "preset_without_fan_speed": {
+      "message": "The {preset_mode} preset has no fan speed setting"
     }
   },
   "selector": {
