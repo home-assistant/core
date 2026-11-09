@@ -232,8 +232,8 @@ class Remote:
         if self.source_list is None:
             try:
                 self.source_list = self._control.list_inputs()
-            except SOAPError:
-                # The TV does not implement the optional PAC service
+            except SOAPError, HTTPError:
+                # TVs without the optional PAC service answer with an HTTP error
                 _LOGGER.debug("Input selection is not supported by the TV")
                 self.source_list = []
         if self.source_list:
@@ -295,6 +295,26 @@ class Remote:
         device_info = await self._handle_errors(self._control.get_device_info)
         _LOGGER.debug("Fetched device info: %s", str(device_info))
         return device_info
+
+    async def async_fetch_device_info(self) -> dict[str, Any] | None:
+        """Return the description the TV serves now, None when it is unreachable.
+
+        Unlike async_get_device_info, this leaves the state the entities report
+        alone, so a failed fetch cannot mark the TV off.
+        """
+        if self._control is None:
+            await self.async_create_remote_control()
+            if self._control is None:
+                return None
+        try:
+            device_info = await self._hass.async_add_executor_job(
+                self._control.get_device_info
+            )
+        except OSError as err:
+            _LOGGER.error("Could not fetch the device description: %s", err)
+            return None
+        else:
+            return device_info
 
     async def _handle_errors[_R, *_Ts](
         self, func: Callable[[*_Ts], _R], *args: *_Ts

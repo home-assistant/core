@@ -4,6 +4,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@RenierM26"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/ezviz",
   "iot_class": "cloud_polling",

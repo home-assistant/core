@@ -31,7 +31,7 @@ home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.10.27
 httpx2==2.14.0
 ifaddr==0.2.0
-infrared-protocols==10.5.0
+infrared-protocols==10.6.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
@@ -52,7 +52,7 @@ PyYAML==6.0.3
 requests==2.34.2
 rf-protocols==4.3.0
 securetar==2026.10.0
-SQLAlchemy==2.0.54
+SQLAlchemy==2.1.6
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 truststore==0.10.4
@@ -62,4 +62,4 @@ urllib3>=2.0
 uv==0.13.6
 webrtc-models==0.3.0
 yarl==1.25.1
-zeroconf==0.151.5
+zeroconf==0.153.0

@@ -21,6 +21,11 @@
       }
     }
   },
+  "device": {
+    "room": {
+      "name": "Room {room}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "burner": {
@@ -35,6 +40,9 @@
       "compressor": {
         "name": "Compressor"
       },
+      "condensation_risk": {
+        "name": "Condensation risk"
+      },
       "domestic_hot_water_charging": {
         "name": "DHW charging"
       },
@@ -46,6 +54,12 @@
       },
       "frost_protection": {
         "name": "Frost protection"
+      },
+      "holiday": {
+        "name": "Holiday"
+      },
+      "holiday_at_home": {
+        "name": "Holiday at home"
       },
       "identification_mode": {
         "name": "Identification mode"
@@ -150,6 +164,20 @@
           "efficient": "Efficient",
           "efficient_with_min_comfort": "Efficient with minimum comfort",
           "off": "[%key:common::state::off%]"
+        }
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "cooling": "[%key:component::vicare::entity::sensor::active_mode::state::cooling%]",
+          "dhw": "DHW only",
+          "dhw_and_heating": "DHW and heating",
+          "dhw_and_heating_cooling": "DHW, heating and cooling",
+          "forced_normal": "Permanently normal",
+          "forced_reduced": "Permanently reduced",
+          "heating": "[%key:component::vicare::entity::sensor::active_mode::state::heating%]",
+          "heating_cooling": "Heating and cooling",
+          "standby": "[%key:common::state::standby%]"
         }
       }
     },
@@ -442,8 +470,26 @@
       "heating_rod_hours": {
         "name": "Heating rod hours"
       },
+      "heating_rod_runtime_level_one": {
+        "name": "Heating rod runtime level 1"
+      },
+      "heating_rod_runtime_level_two": {
+        "name": "Heating rod runtime level 2"
+      },
       "heating_rod_starts": {
         "name": "Heating rod starts"
+      },
+      "holiday_at_home_end": {
+        "name": "Holiday at home end"
+      },
+      "holiday_at_home_start": {
+        "name": "Holiday at home start"
+      },
+      "holiday_end": {
+        "name": "Holiday end"
+      },
+      "holiday_start": {
+        "name": "Holiday start"
       },
       "hot_gas_pressure": {
         "name": "Hot gas pressure"

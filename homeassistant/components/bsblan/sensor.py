@@ -146,7 +146,7 @@ class BSBLanCircuitSensor(BSBLanCircuitEntity, SensorEntity):
         description: BSBLanCircuitSensorEntityDescription,
     ) -> None:
         """Initialize BSB-LAN heating circuit sensor."""
-        super().__init__(data.fast_coordinator, data, circuit)
+        super().__init__(data.fast_coordinator, data.slow_coordinator, data, circuit)
         self.entity_description = description
         # Circuit 1 keeps the unique ID it had on the main device
         if circuit == 1:

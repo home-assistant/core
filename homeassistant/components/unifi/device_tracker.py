@@ -32,6 +32,7 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_device_supported_fn,
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
@@ -189,6 +190,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         heartbeat_timedelta_fn=async_device_heartbeat_timedelta_fn,
         is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=async_device_supported_fn,
         unique_id_fn=lambda hub, obj_id: obj_id,
         ip_address_fn=lambda api, obj_id: api.devices[obj_id].ip,
         hostname_fn=lambda api, obj_id: None,

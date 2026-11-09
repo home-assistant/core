@@ -261,6 +261,7 @@ async def test_rpc_device_services(
     assert state.state == CoverState.CLOSING
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
@@ -293,6 +294,7 @@ async def test_rpc_device_update(
     """Test RPC device update."""
     entity_id = "cover.test_name_test_cover_0"
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0)
     await init_integration(hass, 2)
 
     state = hass.states.get(entity_id)
@@ -300,10 +302,45 @@ async def test_rpc_device_update(
     assert state.state == CoverState.CLOSED
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "open")
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "current_pos", 100
+    )
     mock_rpc_device.mock_update()
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    ("device_state", "current_pos", "expected_state"),
+    [
+        pytest.param("closed", 0, CoverState.CLOSED, id="closed"),
+        # Some OEM firmwares (e.g. RaexMP46) never report "closed"
+        pytest.param("stopped", 0, CoverState.CLOSED, id="stopped_at_zero"),
+        pytest.param("stopped", 35, CoverState.OPEN, id="stopped_partway"),
+        pytest.param("open", 100, CoverState.OPEN, id="open"),
+    ],
+)
+async def test_rpc_device_position_control_closed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    device_state: str,
+    current_pos: int,
+    expected_state: str,
+) -> None:
+    """Test RPC cover with position control is closed at position 0."""
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "state", device_state
+    )
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "current_pos", current_pos
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get("cover.test_name_test_cover_0"))
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == current_pos
 
 
 @pytest.mark.parametrize(
@@ -313,6 +350,9 @@ async def test_rpc_device_update(
         ("stopped", "open", CoverState.OPEN),
         # Nothing has moved since the device booted
         ("stopped", None, STATE_UNKNOWN),
+        # A limit switch reports the end position
+        ("closed", "close", CoverState.CLOSED),
+        ("open", "open", CoverState.OPEN),
     ],
 )
 async def test_rpc_device_no_position_control(

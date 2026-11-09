@@ -1,9 +1,9 @@
 """Class to hold all camera accessories."""
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
 from homekit_audio_proxy import AudioProxy
@@ -19,6 +19,7 @@ from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HassJobType,
@@ -27,6 +28,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers.event import (
+    async_call_later,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -117,6 +119,9 @@ RESOLUTIONS = [
 ]
 
 FFMPEG_WATCH_INTERVAL = timedelta(seconds=5)
+# pyhap coalesces events per characteristic, so a motion event must stay
+# detected long enough for HomeKit to receive it.
+MOTION_EVENT_RESET_SECONDS = 10
 FFMPEG_LOGGER = "ffmpeg_logger"
 FFMPEG_WATCHER = "ffmpeg_watcher"
 FFMPEG_PID = "ffmpeg_pid"
@@ -217,6 +222,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
 
         self._char_motion_detected = None
+        self._cancel_motion_reset: CALLBACK_TYPE | None = None
         self.linked_motion_sensor: str | None = self.config.get(
             CONF_LINKED_MOTION_SENSOR
         )
@@ -277,12 +283,16 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             ):
                 return
             _LOGGER.debug(
-                "%s: Set linked motion %s sensor to True/False",
+                "%s: Set linked motion %s sensor to True",
                 self.entity_id,
                 self.linked_motion_sensor,
             )
             char.set_value(True)
-            char.set_value(False)
+            if self._cancel_motion_reset:
+                self._cancel_motion_reset()
+            self._cancel_motion_reset = async_call_later(
+                self.hass, MOTION_EVENT_RESET_SECONDS, self._async_reset_motion
+            )
             return
 
         detected = state == STATE_ON
@@ -296,6 +306,14 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             self.linked_motion_sensor,
             detected,
         )
+
+    @callback
+    def _async_reset_motion(self, _now: datetime) -> None:
+        """Reset the motion detected characteristic after a motion event."""
+        self._cancel_motion_reset = None
+        if TYPE_CHECKING:
+            assert self._char_motion_detected is not None
+        self._char_motion_detected.set_value(False)
 
     @callback
     @override
@@ -466,6 +484,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     @override
     def async_stop(self) -> None:
         """Stop any streams when the accessory is stopped."""
+        if self._cancel_motion_reset:
+            self._cancel_motion_reset()
+            self._cancel_motion_reset = None
         for session_info in self.sessions.values():
             self.hass.async_create_background_task(
                 self.stop_stream(session_info), "homekit.camera-stop-stream"

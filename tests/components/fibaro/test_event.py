@@ -29,7 +29,9 @@ async def test_entity_setup(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("event.room_1_test_button_8_button_1")
+        entry = entity_registry.async_get(
+            "event.test_button_room_1_test_button_button_1"
+        )
         assert entry
         assert entry.unique_id == "hc2_111111.8.1"
         assert entry.original_name == "Room 1 Test button Button 1"

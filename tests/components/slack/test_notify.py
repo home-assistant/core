@@ -8,8 +8,8 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import notify
 from homeassistant.components.slack import DOMAIN
-from homeassistant.components.slack.notify import ATTR_THREAD_TS
-from homeassistant.const import ATTR_ICON
+from homeassistant.components.slack.notify import ATTR_ICON, ATTR_THREAD_TS
+from homeassistant.const import CONF_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -81,7 +81,7 @@ async def test_message_icon(
 ) -> None:
     """Test that the message icon comes from the entry data or the service data."""
     mock_fn = await _async_setup_notify_service(
-        hass, aioclient_mock, CONF_DATA | {ATTR_ICON: entry_icon}
+        hass, aioclient_mock, CONF_DATA | {CONF_ICON: entry_icon}
     )
 
     await hass.services.async_call(
