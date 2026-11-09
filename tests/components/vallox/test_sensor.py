@@ -99,9 +99,9 @@ async def test_current_profile_sensor(hass: HomeAssistant, expected_state: str) 
     ("metrics", "expected_states"),
     [
         # The fan speeds come from metrics.json: 30%, 1310 rpm and 1270 rpm.
-        pytest.param(METRICS_UNIT_ON, ("30", "1310", "1270"), id="fan_on"),
+        pytest.param(METRICS_UNIT_ON, ("30", "1310", "1270"), id="unit_on"),
         # The unit keeps reporting its last fan speeds after it is turned off.
-        pytest.param(METRICS_UNIT_OFF, ("0", "0", "0"), id="fan_off"),
+        pytest.param(METRICS_UNIT_OFF, ("0", "0", "0"), id="unit_off"),
         # Without the power state, the reported fan speeds cannot be trusted.
         pytest.param(
             {"A_CYC_MODE": None},
