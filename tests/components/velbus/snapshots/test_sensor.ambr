@@ -131,7 +131,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'ButtonCounter',
+    'object_id_base': None,
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -139,7 +139,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'ButtonCounter',
+    'original_name': None,
     'platform': 'velbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -165,7 +165,7 @@
     'state': '100.0',
   })
 # ---
-# name: test_entities[sensor.kitchen_vmb2ble_buttoncounter_counter-entry]
+# name: test_entities[sensor.kitchen_vmb2ble_buttoncounter_buttoncounter_counter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -181,7 +181,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.kitchen_vmb2ble_buttoncounter_counter',
+    'entity_id': 'sensor.kitchen_vmb2ble_buttoncounter_buttoncounter_counter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -207,17 +207,17 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_entities[sensor.kitchen_vmb2ble_buttoncounter_counter-state]
+# name: test_entities[sensor.kitchen_vmb2ble_buttoncounter_buttoncounter_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ButtonCounter counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ButtonCounter ButtonCounter counter',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.kitchen_vmb2ble_buttoncounter_counter',
+    'entity_id': 'sensor.kitchen_vmb2ble_buttoncounter_buttoncounter_counter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -248,7 +248,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'GasCounter',
+    'object_id_base': None,
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -256,7 +256,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
-    'original_name': 'GasCounter',
+    'original_name': None,
     'platform': 'velbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -282,7 +282,7 @@
     'state': '5.0',
   })
 # ---
-# name: test_entities[sensor.kitchen_vmb2ble_gascounter_counter-entry]
+# name: test_entities[sensor.kitchen_vmb2ble_gascounter_gascounter_counter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -298,7 +298,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.kitchen_vmb2ble_gascounter_counter',
+    'entity_id': 'sensor.kitchen_vmb2ble_gascounter_gascounter_counter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -324,17 +324,17 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_entities[sensor.kitchen_vmb2ble_gascounter_counter-state]
+# name: test_entities[sensor.kitchen_vmb2ble_gascounter_gascounter_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GasCounter counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GasCounter GasCounter counter',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.kitchen_vmb2ble_gascounter_counter',
+    'entity_id': 'sensor.kitchen_vmb2ble_gascounter_gascounter_counter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -365,7 +365,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature',
+    'object_id_base': None,
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -373,7 +373,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': None,
     'platform': 'velbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -423,7 +423,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'WaterCounter',
+    'object_id_base': None,
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -431,7 +431,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
-    'original_name': 'WaterCounter',
+    'original_name': None,
     'platform': 'velbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -457,7 +457,7 @@
     'state': '2.5',
   })
 # ---
-# name: test_entities[sensor.kitchen_vmb2ble_watercounter_counter-entry]
+# name: test_entities[sensor.kitchen_vmb2ble_watercounter_watercounter_counter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -473,7 +473,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.kitchen_vmb2ble_watercounter_counter',
+    'entity_id': 'sensor.kitchen_vmb2ble_watercounter_watercounter_counter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -499,17 +499,17 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_entities[sensor.kitchen_vmb2ble_watercounter_counter-state]
+# name: test_entities[sensor.kitchen_vmb2ble_watercounter_watercounter_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WaterCounter counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WaterCounter WaterCounter counter',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.kitchen_vmb2ble_watercounter_counter',
+    'entity_id': 'sensor.kitchen_vmb2ble_watercounter_watercounter_counter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -35,12 +35,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': None,
     'platform': 'velbus',
     'previous_unique_id': None,
     'suggested_object_id': None,
