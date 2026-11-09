@@ -4,6 +4,7 @@
   "categories": ["lighting.lighting_systems", "plugs_switches"],
   "codeowners": ["@gwww"],
   "config_flow": true,
+  "connectivity": ["network", "serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/upb",
   "iot_class": "local_push",

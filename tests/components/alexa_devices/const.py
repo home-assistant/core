@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from aioamazondevices.const.devices import DEVICE_TYPE_AQM
+from aioamazondevices.const.devices import DEVICE_TYPE_AQM, DEVICE_TYPE_GLOW
 from aioamazondevices.const.schedules import (
     NOTIFICATION_ALARM,
     NOTIFICATION_REMINDER,
@@ -285,6 +285,109 @@ TEST_DEVICE_AQM = AmazonDevice(
     unsupported_features={},
 )
 
+TEST_DEVICE_GLOW_SN = "glow_test_serial_number"
+TEST_DEVICE_GLOW = AmazonDevice(
+    account_name="Echo Glow Test",
+    capabilities=[],
+    device_family="LIGHT",
+    device_type=DEVICE_TYPE_GLOW,
+    primary_display_category="LIGHT",
+    household_device=False,
+    device_owner_customer_id="amazon_ower_id",
+    device_cluster_members={TEST_DEVICE_GLOW_SN: DEVICE_TYPE_GLOW},
+    parent_clusters=[],
+    online=True,
+    serial_number=TEST_DEVICE_GLOW_SN,
+    manufacturer="Amazon",
+    model="Echo Glow",
+    hardware_version=None,
+    software_version="glow_test_software_version",
+    entity_id="12121212-3434-5656-7878-909090909090",
+    endpoint_id="G1234567890123456789012345678D",
+    notifications_supported=False,
+    notifications={},
+    media_player_supported=False,
+    communication_settings={},
+    voice_control_supported=False,
+    features={
+        "power": {
+            "": AmazonDeviceFeature(
+                properties=["powerState"],
+                supported_operations=["turnOn", "turnOff"],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"powerState": "Power"},
+            )
+        },
+        "brightness": {
+            "": AmazonDeviceFeature(
+                properties=["brightness"],
+                supported_operations=["setBrightness", "adjustBrightness"],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"brightness": "Brightness"},
+            )
+        },
+        "color": {
+            "": AmazonDeviceFeature(
+                properties=["color"],
+                supported_operations=["setColor"],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={"color": "Color"},
+            )
+        },
+        "mode": {
+            "1": AmazonDeviceFeature(
+                properties=["mode"],
+                supported_operations=["setMode"],
+                supported_modes=["4", "1"],
+                friendly_name="Mode",
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ModeConfiguration",
+                    "friendlyName": {"value": {"text": "Mode"}},
+                    "order": "UNORDERED",
+                    "modeOptions": [
+                        {
+                            "value": "4",
+                            "modeResources": {
+                                "friendlyName": {"value": {"text": "Campfire"}}
+                            },
+                        },
+                        {
+                            "value": "1",
+                            "modeResources": {
+                                "friendlyName": {"value": {"text": "Solid Color"}}
+                            },
+                        },
+                    ],
+                },
+                sensor_keys={"mode": "Mode"},
+            )
+        },
+    },
+    unsupported_features={},
+)
+
 TEST_DEVICE_1_SENSORS: dict[str, AmazonDeviceSensor] = {
     "dnd": AmazonDeviceSensor(
         name="dnd",
@@ -412,6 +515,53 @@ TEST_DEVICE_AQM_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="toggle",
         property_name="toggleState",
         instance="11",
+    ),
+}
+
+TEST_DEVICE_GLOW_SENSORS: dict[str, AmazonDeviceSensor] = {
+    "Power": AmazonDeviceSensor(
+        name="Power",
+        value="ON",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="power",
+        property_name="powerState",
+        instance="",
+    ),
+    "Brightness": AmazonDeviceSensor(
+        name="Brightness",
+        value=30,
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale="%",
+        feature_name="brightness",
+        property_name="brightness",
+        instance="",
+    ),
+    "Color": AmazonDeviceSensor(
+        name="Color",
+        value={"hue": 120.0, "saturation": 0.5, "brightness": 1.0},
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="color",
+        property_name="color",
+        instance="",
+    ),
+    "Mode": AmazonDeviceSensor(
+        name="Mode",
+        value="4",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="mode",
+        property_name="mode",
+        instance="1",
     ),
 }
 

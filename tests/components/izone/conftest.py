@@ -56,10 +56,13 @@ def create_mock_controller(
     controller.bridge_connected = True
     controller.is_v2 = False
     controller.is_ipower = False
-    controller.mode = Controller.Mode.COOL
+    # pizone reports FREE_AIR as the mode whenever free air is on.
+    controller.mode = Controller.Mode.FREE_AIR if free_air else Controller.Mode.COOL
     controller.temp_setpoint = 24.0
     controller.control_setpoint_owner = None
     controller.control_setpoint = None
+    controller.airflow_lock = False
+    controller.airflow_min_lock = False
     controller.temp_return = 22.0
     controller.temp_supply = 16.0
     controller.temp_min = 15.0
@@ -143,6 +146,10 @@ def create_mock_zone(
     temp_current: float | None = 22.5,
     temp_setpoint: float = 24.0,
     zone_type: Zone.Type = Zone.Type.AUTO,
+    damper_position: int | None = 50,
+    sensor_type: Zone.SensorType | None = Zone.SensorType.WIRELESS,
+    rf_signal: Zone.RfSignal | None = Zone.RfSignal.FULL,
+    battery_level: Zone.BatteryLevel | None = Zone.BatteryLevel.FULL,
 ) -> Mock:
     """Create a mock Zone with configurable parameters."""
     zone = Mock(spec=Zone)
@@ -154,7 +161,10 @@ def create_mock_zone(
     zone.temp_setpoint = temp_setpoint
     zone.airflow_min = 0
     zone.airflow_max = 100
-    zone.is_on = True
+    zone.damper_position = damper_position
+    zone.sensor_type = sensor_type
+    zone.rf_signal = rf_signal
+    zone.battery_level = battery_level
     zone._zone_data = {
         "AirStreamDeviceUId": "000000001",
         "Id": 0,

@@ -20,7 +20,7 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 API_ACCOUNT_ID = "auth0|farmad-account"
 API_ACCOUNT_EMAIL = "test@example.com"
@@ -156,13 +156,13 @@ def get_mock_client() -> Mock:
 async def init_integration(
     hass: HomeAssistant,
     *,
-    data: dict[str, Any] | UndefinedType = UNDEFINED,
+    data: dict[str, Any] | Undefined = Undefined,
     entry_id: str | None = None,
 ) -> MockConfigEntry:
     """Set up the Mijn Farmad Apotheek integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=ENTRY_DATA if data is UNDEFINED else data,
+        data=ENTRY_DATA if data is Undefined else data,
         unique_id=API_ACCOUNT_ID,
         entry_id=entry_id,
     )

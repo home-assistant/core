@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning.cleaning", "appliances_cleaning.laundry"],
   "codeowners": ["@Lash-L", "@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dhcp": [
     {
       "macaddress": "249E7D*"
@@ -21,7 +22,7 @@
   "loggers": ["roborock"],
   "quality_scale": "silver",
   "requirements": [
-    "python-roborock==7.12.0",
+    "python-roborock==7.17.0",
     "vacuum-map-parser-roborock==0.1.5"
   ]
 }

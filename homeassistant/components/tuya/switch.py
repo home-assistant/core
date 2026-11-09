@@ -560,6 +560,14 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.MODE_ECO,
+            translation_key="eco_mode",
+        ),
+        TuyaSwitchEntityDescription(
+            key=DPCode.SLEEP,
+            translation_key="sleep",
+        ),
     ),
     DeviceCategory.KS: (
         TuyaSwitchEntityDescription(
@@ -873,19 +881,8 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    DeviceCategory.WKCZ: (
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "1"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "2"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
+    DeviceCategory.WKCZ: _channel_switches(
+        2, translation_key="switch", device_class=SwitchDeviceClass.OUTLET
     ),
     DeviceCategory.WKF: (
         TuyaSwitchEntityDescription(

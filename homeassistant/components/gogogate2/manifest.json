@@ -4,6 +4,7 @@
   "categories": ["blinds_curtains"],
   "codeowners": ["@vangorra"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "ismartgate*"

@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfPrograms,
     Event,
@@ -75,7 +76,7 @@ def platforms() -> list[Platform]:
     ),
     [
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             {
                 OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: "switch.dishwasher_half_load",
                 OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: (
@@ -235,7 +236,7 @@ async def test_program_options_retrieval(
         assert hass.states.is_state(entity_id, STATE_UNKNOWN)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("array_of_programs_program_arg", "event_key"),
     [
@@ -317,7 +318,7 @@ async def test_no_options_retrieval_on_unknown_program(
     ("appliance", "option_key", "option_entity_id"),
     [
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
             "switch.dishwasher_half_load",
         )

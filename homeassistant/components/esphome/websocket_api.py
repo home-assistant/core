@@ -18,7 +18,7 @@ from .sendspin import (
     async_sendspin_entry_data,
     async_subscribe_sendspin_clients,
 )
-from .serial_proxy import build_url
+from .serial_proxy import build_port_url
 
 TYPE = "type"
 ENTRY_ID = "entry_id"
@@ -102,6 +102,20 @@ def get_device_capabilities(
         return
 
     home_id = capabilities.zwave_proxy.home_id
+    identities = entry.runtime_data.serial_proxy_identities
+    serial_proxies: list[dict[str, Any]] = []
+    for instance, proxy in enumerate(capabilities.serial_proxies):
+        url = build_port_url(entry.entry_id, proxy.name, identities.get(instance))
+        serial_proxies.append(
+            {
+                "name": proxy.name,
+                "port_type": (
+                    proxy.port_type.name if proxy.port_type is not None else None
+                ),
+                "url": str(url) if url is not None else None,
+            }
+        )
+
     connection.send_result(
         msg["id"],
         {
@@ -113,16 +127,7 @@ def get_device_capabilities(
                 "home_id": home_id,
                 "config_entry_id": _zwave_js_config_entry_id(hass, home_id),
             },
-            "serial_proxies": [
-                {
-                    "name": proxy.name,
-                    "port_type": (
-                        proxy.port_type.name if proxy.port_type is not None else None
-                    ),
-                    "url": str(build_url(entry.entry_id, port_name=proxy.name)),
-                }
-                for proxy in capabilities.serial_proxies
-            ],
+            "serial_proxies": serial_proxies,
             "sendspin": {"supported": bool(capabilities.sendspin.feature_flags)},
         },
     )

@@ -668,6 +668,12 @@ async def test_reload_config_entry_invalid_args(
             id="brand_substring_match",
         ),
         pytest.param(
+            {"query": "yale bluetooth"},
+            [{"domain": "yalexs_ble", "name": "Yale Access Bluetooth"}],
+            {"yalexs_ble"},
+            id="multi_word_deduplicated",
+        ),
+        pytest.param(
             {"query": "actiontec"},
             [],
             set(),
@@ -704,8 +710,9 @@ async def test_search_integrations(
     assert res.error is False
     assert isinstance(items := res.data["result"], list)
     assert items[: len(expected_prefix)] == expected_prefix
-    domains = {item["domain"] for item in items if isinstance(item, dict)}
-    assert expected_domains <= domains
+    domains = [item["domain"] for item in items if isinstance(item, dict)]
+    assert len(domains) == len(set(domains))
+    assert expected_domains <= set(domains)
     assert bool(domains) is bool(expected_domains)
 
 
