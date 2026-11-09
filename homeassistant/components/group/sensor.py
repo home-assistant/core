@@ -287,8 +287,12 @@ def calc_range(
 
 def calc_stdev(
     sensor_values: list[tuple[str, float, State]],
-) -> tuple[dict[str, str | None], float]:
+) -> tuple[dict[str, str | None], float | None]:
     """Calculate standard deviation value."""
+    # The sample standard deviation is undefined for a single value
+    if len(sensor_values) < 2:
+        return {}, None
+
     result = (sensor_value for _, sensor_value, _ in sensor_values)
 
     value: float = statistics.stdev(result)
