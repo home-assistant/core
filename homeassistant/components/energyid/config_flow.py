@@ -7,10 +7,9 @@ from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -21,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
+from . import EnergyIDConfigEntry
 from .const import (
     CONF_DEVICE_NAME,
     CONF_PROVISIONING_KEY,
@@ -168,10 +168,12 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROVISIONING_KEY): str,
-                    vol.Required(CONF_PROVISIONING_SECRET): cv.string,
+                    probatio.Required(CONF_PROVISIONING_KEY): str,
+                    probatio.Required(
+                        probatio.Secret(CONF_PROVISIONING_SECRET)
+                    ): cv.string,
                 }
             ),
             errors=errors,
@@ -274,10 +276,12 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROVISIONING_KEY): str,
-                    vol.Required(CONF_PROVISIONING_SECRET): cv.string,
+                    probatio.Required(CONF_PROVISIONING_KEY): str,
+                    probatio.Required(
+                        probatio.Secret(CONF_PROVISIONING_SECRET)
+                    ): cv.string,
                 }
             ),
             errors=errors,
@@ -291,7 +295,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: EnergyIDConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"sensor_mapping": EnergyIDSensorMappingFlowHandler}

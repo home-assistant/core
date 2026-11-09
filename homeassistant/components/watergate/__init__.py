@@ -1,16 +1,24 @@
 """The Watergate integration."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
-from watergate_local_api import WatergateLocalApiClient
+from aiohttp.web import Request, Response
+from watergate_local_api import WatergateApiException, WatergateLocalApiClient
 from watergate_local_api.models import WebhookEvent
+from watergate_local_api.models.webhook_model import (
+    AutoShutOffReportData,
+    OnlineEvent,
+    PowerSupplyChangedEventData,
+    TelemetryEventData,
+    ValveEventData,
+    WifiChangedEventData,
+)
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
-    Request,
-    Response,
     async_generate_url,
     async_register,
     async_unregister,
@@ -25,20 +33,21 @@ from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-WEBHOOK_TELEMETRY_TYPE = "telemetry"
-WEBHOOK_VALVE_TYPE = "valve"
-WEBHOOK_WIFI_CHANGED_TYPE = "wifi-changed"
-WEBHOOK_POWER_SUPPLY_CHANGED_TYPE = "power-supply-changed"
-WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
+
+CLEAR_WEBHOOK_TIMEOUT = 10
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.EVENT,
+    Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.VALVE,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> None:
     """Set up Watergate from a config entry."""
     sonic_address = entry.data[CONF_IP_ADDRESS]
     webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -74,14 +83,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> None:
     """Unload a config entry."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     async_unregister(hass, webhook_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Best effort: an unreachable device must not block the unload.
+    try:
+        async with asyncio.timeout(CLEAR_WEBHOOK_TIMEOUT):
+            await entry.runtime_data.api.async_delete_webhook_url()
+    except (WatergateApiException, TimeoutError) as err:
+        _LOGGER.debug("Could not clear the webhook URL on the device: %s", err)
 
 
 def get_webhook_handler(
@@ -103,14 +116,18 @@ def get_webhook_handler(
 
         data = WebhookEvent.parse_webhook_event(body)
 
-        body_type = body.get("type")
+        if isinstance(data, OnlineEvent):
+            # The event carries no state, and it may have changed while the
+            # device was away, so fetch it instead of guessing.
+            await coordinator.async_request_refresh()
+            return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
         if not (coordinator_data := coordinator.data):
             pass
-        elif body_type == WEBHOOK_VALVE_TYPE:
+        elif isinstance(data, ValveEventData):
             coordinator_data.state.valve_state = data.state
-        elif body_type == WEBHOOK_TELEMETRY_TYPE:
-            errors = data.errors or {}
+        elif isinstance(data, TelemetryEventData):
+            errors = data.errors or []
             coordinator_data.telemetry.flow = (
                 data.flow if "flow" not in errors else None
             )
@@ -120,15 +137,15 @@ def get_webhook_handler(
             coordinator_data.telemetry.water_temperature = (
                 data.temperature if "temperature" not in errors else None
             )
-        elif body_type == WEBHOOK_WIFI_CHANGED_TYPE:
+        elif isinstance(data, WifiChangedEventData):
             coordinator_data.networking.ip = data.ip
             coordinator_data.networking.gateway = data.gateway
             coordinator_data.networking.subnet = data.subnet
             coordinator_data.networking.ssid = data.ssid
             coordinator_data.networking.rssi = data.rssi
-        elif body_type == WEBHOOK_POWER_SUPPLY_CHANGED_TYPE:
+        elif isinstance(data, PowerSupplyChangedEventData):
             coordinator_data.state.power_supply = data.supply
-        elif body_type == WEBHOOK_AUTO_SHUT_OFF:
+        elif isinstance(data, AutoShutOffReportData):
             async_dispatcher_send(
                 hass, AUTO_SHUT_OFF_EVENT_NAME.format(data.type.lower()), data
             )

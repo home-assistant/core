@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from unifi_access_api import (
     DoorLockRule,
     DoorLockRuleStatus,
@@ -22,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 FRONT_DOOR_LOCK_RULE_ENTITY = "sensor.front_door_lock_rule"
 

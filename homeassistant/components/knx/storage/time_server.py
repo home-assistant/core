@@ -1,13 +1,14 @@
 """Time server controller for KNX integration."""
 
-from typing import Any, TypedDict
+from dataclasses import dataclass
+from typing import Annotated, Any, TypedDict
 
-import voluptuous as vol
+import probatio
 from xknx import XKNX
 
 from ..expose import KnxExposeTime, create_time_server_exposures
 from .entity_store_validation import validate_config_store_data
-from .knx_selector import GASelector
+from .knx_selector import GroupAddressConfig, ga
 
 
 class KNXTimeServerStoreModel(TypedDict, total=False):
@@ -18,28 +19,31 @@ class KNXTimeServerStoreModel(TypedDict, total=False):
     datetime: dict[str, Any] | None
 
 
-TIME_SERVER_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional("time"): GASelector(
-            state=False, passive=False, valid_dpt="10.001"
-        ),
-        vol.Optional("date"): GASelector(
-            state=False, passive=False, valid_dpt="11.001"
-        ),
-        vol.Optional("datetime"): GASelector(
-            state=False, passive=False, valid_dpt="19.001"
-        ),
-    }
-)
+@dataclass(kw_only=True, slots=True)
+class TimeServerConfig:
+    """Group addresses the time server sends the current time, date and datetime to."""
+
+    time: Annotated[
+        GroupAddressConfig | None, ga(state=False, passive=False, valid_dpt="10.001")
+    ] = None
+    date: Annotated[
+        GroupAddressConfig | None, ga(state=False, passive=False, valid_dpt="11.001")
+    ] = None
+    datetime: Annotated[
+        GroupAddressConfig | None, ga(state=False, passive=False, valid_dpt="19.001")
+    ] = None
 
 
-def validate_time_server_data(time_server_data: dict) -> KNXTimeServerStoreModel:
+TIME_SERVER_CONFIG_SCHEMA = probatio.DataclassSchema(TimeServerConfig)
+
+
+def validate_time_server_data(time_server_data: dict) -> TimeServerConfig:
     """Validate time server data.
 
     Return validated data or raise EntityStoreValidationException.
     """
 
-    return validate_config_store_data(TIME_SERVER_CONFIG_SCHEMA, time_server_data)  # type: ignore[return-value]
+    return validate_config_store_data(TIME_SERVER_CONFIG_SCHEMA, time_server_data)
 
 
 class TimeServerController:
@@ -55,7 +59,7 @@ class TimeServerController:
             expose.async_remove()
         self.time_exposes.clear()
 
-    def start(self, xknx: XKNX, config: KNXTimeServerStoreModel) -> None:
+    def start(self, xknx: XKNX, config: TimeServerConfig) -> None:
         """Update time server configuration."""
         if self.time_exposes:
             self.stop()

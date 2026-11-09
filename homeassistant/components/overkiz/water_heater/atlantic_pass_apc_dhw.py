@@ -20,7 +20,7 @@ from ..entity import OverkizEntity
 class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     """Representation of Atlantic Pass APC DHW."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -30,7 +30,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature corresponding to the PRESET."""
         if self.is_boost_mode_on:
             return cast(

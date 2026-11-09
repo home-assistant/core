@@ -9,7 +9,7 @@ from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
-import voluptuous as vol
+import probatio
 
 from homeassistant import core as ha
 from homeassistant.auth.models import User
@@ -39,9 +39,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
+    HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
     ServiceNotFound,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
 )
@@ -66,7 +68,6 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
-SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -454,8 +455,16 @@ class APIDomainServicesView(HomeAssistantView):
                     f"api service call {domain}.{service}",
                 )
             )
-        except (vol.Invalid, ServiceNotFound) as ex:
+        except (probatio.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest from ex
+        except ServiceValidationError as ex:
+            return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
+        except Unauthorized:
+            # Handled by the view wrapper, which maps it to 401
+            raise
+        except HomeAssistantError as ex:
+            _LOGGER.error("Error during service call to %s.%s: %s", domain, service, ex)
+            return self.json_message(str(ex), HTTPStatus.INTERNAL_SERVER_ERROR)
         finally:
             cancel_listen()
 

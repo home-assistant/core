@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 import steam.api
 
 from homeassistant.components.steam_online.const import (
@@ -11,14 +12,17 @@ from homeassistant.components.steam_online.const import (
     DOMAIN,
     SUBENTRY_TYPE_FRIEND,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import ACCOUNT_1, ACCOUNT_2, ACCOUNT_NAME_1, ACCOUNT_NAME_2, API_KEY, CONF_DATA
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("steam_api")
@@ -254,11 +258,30 @@ async def test_add_friend_flow(hass: HomeAssistant, steam_api: MagicMock) -> Non
 
 
 @pytest.mark.usefixtures("steam_api")
-async def test_add_friend_flow_already_configured(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
+async def test_add_friend_flow_already_configured(hass: HomeAssistant) -> None:
     """Test add friend subentry flow aborts if friend is already configured as subentry."""
 
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONF_DATA,
+        unique_id="12345",
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_FRIEND,
+                title=ACCOUNT_NAME_2,
+                unique_id=ACCOUNT_2,
+            ),
+        ],
+        version=3,
+    ).add_to_hass(hass)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONF_DATA,
+        unique_id=ACCOUNT_1,
+        version=3,
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -269,7 +292,13 @@ async def test_add_friend_flow_already_configured(
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
-        data={CONF_ACCOUNT: ACCOUNT_2},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ACCOUNT: ACCOUNT_2}
     )
 
     assert result["type"] is FlowResultType.ABORT

@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import call, patch
 
 import pytest
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
@@ -50,7 +50,7 @@ def switch_platform_only():
 async def test_switch(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA switch platform."""
 

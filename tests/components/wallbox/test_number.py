@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -18,8 +19,6 @@ from .const import (
     MOCK_NUMBER_ENTITY_ID,
     WALLBOX_STATUS_RESPONSE_BIDIR,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_wallbox_number_power_class(

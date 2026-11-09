@@ -21,11 +21,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
+class TuyaBinarySensorEntityDescription(
+    TuyaEntityDescription, BinarySensorEntityDescription
+):
     """Describes a Tuya binary sensor."""
 
     # DPCode, to use. If None, the key will be used as DPCode
@@ -250,6 +252,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             key=DPCode.PRESENCE_STATE,
             device_class=BinarySensorDeviceClass.OCCUPANCY,
             on_value={"presence", "small_move", "large_move", "peaceful"},
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DROP_STATE,
+            translation_key="fall",
+            on_value="drop",
         ),
     ),
     DeviceCategory.JQBJ: (

@@ -5,7 +5,7 @@ import logging
 import math
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import util
 from homeassistant.components.sensor import (
@@ -34,7 +34,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -50,12 +50,10 @@ from .const import (
     CONF_INDOOR_TEMP,
     CONF_OUTDOOR_TEMP,
     DEFAULT_NAME,
+    MoldIndicatorEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CRITICAL_TEMP = "estimated_critical_temp"
-ATTR_DEWPOINT = "dewpoint"
 
 
 MAGNUS_K2 = 17.62
@@ -63,12 +61,12 @@ MAGNUS_K3 = 243.12
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_INDOOR_TEMP): cv.entity_id,
-        vol.Required(CONF_OUTDOOR_TEMP): cv.entity_id,
-        vol.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
-        vol.Optional(CONF_CALIBRATION_FACTOR): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_INDOOR_TEMP): cv.entity_id,
+        probatio.Required(CONF_OUTDOOR_TEMP): cv.entity_id,
+        probatio.Required(CONF_INDOOR_HUMIDITY): cv.entity_id,
+        probatio.Optional(CONF_CALIBRATION_FACTOR): probatio.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -149,7 +147,7 @@ class MoldIndicator(SensorEntity):
         indoor_humidity_sensor: str,
         calib_factor: float,
         unique_id: str | None,
-        device: DeviceEntry | None = None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._attr_name = name
@@ -437,6 +435,10 @@ class MoldIndicator(SensorEntity):
         )
 
         return {
-            ATTR_DEWPOINT: round(dewpoint, 2) if dewpoint else None,
-            ATTR_CRITICAL_TEMP: round(crit_temp, 2) if crit_temp else None,
+            MoldIndicatorEntityStateAttribute.DEWPOINT: (
+                round(dewpoint, 2) if dewpoint else None
+            ),
+            MoldIndicatorEntityStateAttribute.CRITICAL_TEMP: (
+                round(crit_temp, 2) if crit_temp else None
+            ),
         }

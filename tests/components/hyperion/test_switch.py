@@ -10,6 +10,7 @@ from hyperion.const import (
     KEY_COMPONENTSTATE,
     KEY_STATE,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.hyperion import get_hyperion_device_id
 from homeassistant.components.hyperion.const import (
@@ -35,8 +36,6 @@ from . import (
     register_test_entity,
     setup_test_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 TEST_COMPONENTS = [
     {"enabled": True, "name": "ALL"},
@@ -172,7 +171,7 @@ async def test_device_info(
         (DOMAIN, device_identifer), TEST_CONFIG_ENTRY_ID
     )
     assert device
-    assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
+    assert device.config_entry_id == TEST_CONFIG_ENTRY_ID
     assert device.identifiers == {(DOMAIN, device_identifer)}
     assert device.manufacturer == HYPERION_MANUFACTURER_NAME
     assert device.model == HYPERION_MODEL_NAME

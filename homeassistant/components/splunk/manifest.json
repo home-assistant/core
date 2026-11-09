@@ -1,8 +1,10 @@
 {
   "domain": "splunk",
   "name": "Splunk",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@Bre77"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/splunk",
   "integration_type": "service",
   "iot_class": "local_push",

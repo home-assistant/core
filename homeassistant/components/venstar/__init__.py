@@ -20,7 +20,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: VenstarConfigEntry
-) -> bool:
+) -> None:
     """Set up the Venstar thermostat."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
@@ -48,11 +48,9 @@ async def async_setup_entry(
     config_entry.runtime_data = venstar_data_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: VenstarConfigEntry
-) -> bool:
+) -> None:
     """Unload the config and platforms."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

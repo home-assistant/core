@@ -1,12 +1,11 @@
 """Represent an air purifier."""
 
-from collections.abc import Callable
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, override
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_GATEWAY_ID
@@ -69,7 +68,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
@@ -79,13 +78,16 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
             gateway_id=gateway_id,
         )
 
+        if TYPE_CHECKING:
+            assert self._device.air_purifier_control is not None
         self._device_control = self._device.air_purifier_control
         self._device_data = self._device_control.air_purifiers[0]
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""
-        self._device_data = self.coordinator.data.air_purifier_control.air_purifiers[0]
+        self._device_data = self._device_control.air_purifiers[0]
 
     @property
     @override
@@ -93,7 +95,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         """Return true if switch is on."""
         if not self._device_data:
             return False
-        return cast(bool, self._device_data.state)
+        return self._device_data.state
 
     @property
     @override

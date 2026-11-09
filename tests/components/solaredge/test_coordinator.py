@@ -2,15 +2,20 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from solaredge_web import EnergyData
+from yarl import URL
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import (
+    StatisticData,
     StatisticMeanType,
     StatisticMetaData,
 )
@@ -23,8 +28,13 @@ from homeassistant.components.solaredge.const import (
     CONF_SITE_ID,
     DATA_MODULES_COORDINATOR,
     DEFAULT_NAME,
+    DETAILS_UPDATE_DELAY,
     DOMAIN,
+    ENERGY_DETAILS_DELAY,
+    INVENTORY_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
+    POWER_FLOW_UPDATE_DELAY,
+    STORAGE_DATA_UPDATE_DELAY,
 )
 from homeassistant.components.solaredge.coordinator import SolarEdgeModulesCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -34,6 +44,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     STATE_UNKNOWN,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -41,9 +52,6 @@ from homeassistant.util.unit_conversion import EnergyConverter
 
 from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -141,6 +149,89 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
 
 
+@pytest.mark.parametrize(
+    ("api_method", "delay"),
+    [
+        pytest.param("get_overview", OVERVIEW_UPDATE_DELAY, id="overview"),
+        pytest.param("get_details", DETAILS_UPDATE_DELAY, id="details"),
+        pytest.param("get_inventory", INVENTORY_UPDATE_DELAY, id="inventory"),
+        pytest.param("get_energy_details", ENERGY_DETAILS_DELAY, id="energy-details"),
+        pytest.param(
+            "get_current_power_flow", POWER_FLOW_UPDATE_DELAY, id="power-flow"
+        ),
+        pytest.param("get_storage_data", STORAGE_DATA_UPDATE_DELAY, id="storage"),
+    ],
+)
+async def test_api_error_does_not_leak_secret(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    solaredge_api: Mock,
+    mock_config_entry: MockConfigEntry,
+    api_method: str,
+    delay: timedelta,
+) -> None:
+    """Test a failed API request does not leak the API key into the log.
+
+    The Monitoring API key is sent as a query parameter, so the URL embedded
+    in a ClientResponseError contains it. Regression test for
+    https://github.com/home-assistant/core/issues/188395 .
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    url = URL(
+        "https://monitoringapi.solaredge.com"
+        f"/equipment/{SITE_ID}/overview.json?api_key={API_KEY}"
+    )
+    request_info = RequestInfo(url, "GET", CIMultiDictProxy(CIMultiDict()), url)
+    setattr(
+        solaredge_api,
+        api_method,
+        AsyncMock(
+            side_effect=ClientResponseError(
+                request_info, (), status=503, message="Service Unavailable"
+            )
+        ),
+    )
+
+    freezer.tick(delay)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error requesting" in caplog.text
+    assert API_KEY not in caplog.text
+    assert "api_key" not in caplog.text
+
+
+async def test_power_flow_null_response(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    solaredge_api: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a null power flow response raises UpdateFailed, not TypeError.
+
+    The API returns "siteCurrentPowerFlow": null for sites without
+    power flow reporting. Regression test for
+    https://github.com/home-assistant/core/issues/188399 .
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    solaredge_api.get_current_power_flow = AsyncMock(
+        return_value={"siteCurrentPowerFlow": None}
+    )
+
+    freezer.tick(POWER_FLOW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Missing power flow data, skipping update" in caplog.text
+    assert "Unexpected error" not in caplog.text
+
+
 async def _trigger_and_wait_for_refresh(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -178,8 +269,8 @@ def mock_solar_edge_web() -> AsyncMock:
     ) as mock_api:
         api = mock_api.return_value
         api.async_get_equipment.return_value = {
-            "7A012345-CA": {"name": "Optimizer 1.1"},
-            "7A012346-CA": {"name": "Optimizer 1.2"},
+            "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+            "7A012346-CA": {"name": "Optimizer 1.2", "type": "OPTIMIZER"},
         }
         api.async_get_energy_data.return_value = [
             EnergyData(
@@ -239,7 +330,7 @@ async def test_modules_coordinator_subsequent_run(
 ) -> None:
     """Test the coordinator correctly updates statistics on subsequent runs."""
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -296,7 +387,7 @@ async def test_modules_coordinator_subsequent_run_with_gap(
 ) -> None:
     """Test the coordinator updates statistics with a gap in data."""
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -335,6 +426,312 @@ async def test_modules_coordinator_subsequent_run_with_gap(
             {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
             {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
             {"start": 1738465200.0, "end": 1738468800.0, "state": 24.0, "sum": 48.0},
+        ]
+    }
+
+
+async def test_modules_coordinator_reprocess_same_window_after_gap(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test the sum doesn't reset when the same window is refreshed again.
+
+    After a gap the window is filled starting from the last sum before it. A
+    later refresh of the same window, e.g. after reloading the integration the
+    same day, must keep continuing from that sum. The window is taken from the
+    energy data returned by the API, so the gap is simulated by moving the
+    returned data instead of the clock.
+
+    Regression test for https://github.com/home-assistant/core/issues/186653 .
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+
+    # Values a month later, simulating a gap in data. The first row is also
+    # exactly at the start of the window, with older statistics before it.
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 24.0, "7A012346-CA": 30.0},
+        ),
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    # Refresh the same window again, e.g. after reloading the integration the
+    # same day. The sums must not reset to 0.
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca", f"{DOMAIN}:{SITE_ID}_7a012346_ca"},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        f"{DOMAIN}:{SITE_ID}_7a012345_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 24.0, "sum": 48.0},
+        ],
+        f"{DOMAIN}:{SITE_ID}_7a012346_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 20.0, "sum": 20.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 24.0, "sum": 44.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 30.0, "sum": 74.0},
+        ],
+    }
+
+
+async def test_modules_coordinator_reprocess_same_window_new_equipment(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test reprocessing the same window with a newly added optimizer.
+
+    The optimizer that already has statistics continues from the last sum before
+    the window, while the newly added one, which has no earlier statistics,
+    starts from 0.
+    """
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+
+    # A second optimizer is added a month later, after a gap in the data.
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+        "7A012346-CA": {"name": "Optimizer 1.2", "type": "OPTIMIZER"},
+    }
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 24.0, "7A012346-CA": 30.0},
+        ),
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    # Refresh the same window again, e.g. after reloading the integration the
+    # same day.
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {f"{DOMAIN}:{SITE_ID}_7a012345_ca", f"{DOMAIN}:{SITE_ID}_7a012346_ca"},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        f"{DOMAIN}:{SITE_ID}_7a012345_ca": [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 24.0, "sum": 48.0},
+        ],
+        f"{DOMAIN}:{SITE_ID}_7a012346_ca": [
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 30.0, "sum": 30.0},
+        ],
+    }
+
+
+async def test_modules_coordinator_first_window_statistic_without_sum(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test the sum is still recovered when the first in-window statistic has no sum.
+
+    The recorder computes the change relative to the last sum before the window,
+    so the first in-window statistic that has a sum recovers the baseline even
+    when preceding statistics in the window have none.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"{DOMAIN}:{SITE_ID}_7a012345_ca"
+    # The first statistic in the window has no sum, the next one does. Its sum
+    # of 34 equals the 24 from the last statistic before the window plus 10.
+    async_add_external_statistics(
+        hass,
+        StatisticMetaData(
+            mean_type=StatisticMeanType.ARITHMETIC,
+            has_sum=True,
+            name=f"{entry.title} Optimizer 1.1",
+            source=DOMAIN,
+            statistic_id=statistic_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        ),
+        [
+            StatisticData(
+                start=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)).replace(
+                    tzinfo=dt_util.get_default_time_zone()
+                ),
+                state=None,
+                sum=None,
+            ),
+            StatisticData(
+                start=dt_util.as_utc(datetime(2025, 2, 1, 12, 0)).replace(
+                    tzinfo=dt_util.get_default_time_zone()
+                ),
+                state=10.0,
+                sum=34.0,
+            ),
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 10.0},
+        ),
+    ]
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 10.0, "sum": 34.0},
+            {"start": 1738468800.0, "end": 1738472400.0, "state": 10.0, "sum": 34.0},
+        ]
+    }
+
+
+async def test_modules_coordinator_window_statistics_without_sum(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test the sum is recovered when no in-window statistic has a sum.
+
+    With no usable sum in the window, the baseline must come from the last
+    statistic before the window rather than from the last in-window statistic.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    statistic_id = f"{DOMAIN}:{SITE_ID}_7a012345_ca"
+    # Every statistic in the window has no sum.
+    async_add_external_statistics(
+        hass,
+        StatisticMetaData(
+            mean_type=StatisticMeanType.ARITHMETIC,
+            has_sum=True,
+            name=f"{entry.title} Optimizer 1.1",
+            source=DOMAIN,
+            statistic_id=statistic_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        ),
+        [
+            StatisticData(
+                start=dt_util.as_utc(datetime(2025, 2, 1, hour, 0)).replace(
+                    tzinfo=dt_util.get_default_time_zone()
+                ),
+                state=None,
+                sum=None,
+            )
+            for hour in (11, 12)
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 11, 0)),
+            values={"7A012345-CA": 10.0},
+        ),
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 2, 1, 12, 0)),
+            values={"7A012345-CA": 5.0},
+        ),
+    ]
+    coordinator: SolarEdgeModulesCoordinator = entry.runtime_data[
+        DATA_MODULES_COORDINATOR
+    ]
+    await _trigger_and_wait_for_refresh(hass, freezer, coordinator)
+    await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+            {"start": 1738465200.0, "end": 1738468800.0, "state": 10.0, "sum": 34.0},
+            {"start": 1738468800.0, "end": 1738472400.0, "state": 5.0, "sum": 39.0},
         ]
     }
 
@@ -408,7 +805,7 @@ async def test_legacy_statistic_id_reused(
 
     # Equipment with matching name "1.1".
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
 
     entry = MockConfigEntry(
@@ -477,7 +874,7 @@ async def test_legacy_statistic_id_ambiguous(
 
     # Equipment with matching name "1.1".
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
 
     entry = MockConfigEntry(
@@ -498,3 +895,92 @@ async def test_legacy_statistic_id_ambiguous(
         coordinator.get_statistic_id("7A012345-CA") == f"{DOMAIN}:{SITE_ID}_7a012345_ca"
     )
     assert "ambiguous" in caplog.text
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_modules_coordinator_skips_non_pv_equipment(
+    hass: HomeAssistant,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test that non-PV equipment such as batteries is skipped.
+
+    Battery modules share the same positional short names (e.g. "1.1.1") as
+    optimizers. If not filtered out, they map to the same legacy statistic IDs
+    and overwrite the optimizer statistics with zero values.
+    """
+    legacy_statistic_id = f"{DOMAIN}:{SITE_ID}_310549011"
+    legacy_metadata = StatisticMetaData(
+        mean_type=StatisticMeanType.ARITHMETIC,
+        has_sum=True,
+        name="SolarEdge Battery Module 1.1.1",
+        source=DOMAIN,
+        statistic_id=legacy_statistic_id,
+        unit_class=EnergyConverter.UNIT_CLASS,
+        unit_of_measurement="Wh",
+    )
+    async_add_external_statistics(hass, legacy_metadata, [])
+    await async_wait_recording_done(hass)
+
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7E012345-57": {"name": "Inverter 1", "type": "INVERTER"},
+        "7E012345_31": {"name": "String 1.1", "type": "STRING"},
+        "7A012345-CA": {"name": "Optimizer 1.1.1", "type": "OPTIMIZER"},
+        "BAT-PACK-01": {"name": "Battery 1.1", "type": "BATTERY"},
+        "BAT-MOD-01": {"name": "Battery Module 1.1.1", "type": "BATTERY_MODULE"},
+    }
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 0)),
+            values={
+                "7E012345-57": 10.0,
+                "7E012345_31": 10.0,
+                "7A012345-CA": 10.0,
+            },
+        ),
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 0)),
+            values={
+                "7E012345-57": 14.0,
+                "7E012345_31": 14.0,
+                "7A012345-CA": 14.0,
+            },
+        ),
+    ]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge",
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    # Optimizer 1.1.1 reuses the legacy statistic ID without being overwritten
+    # by Battery Module 1.1.1, and its metadata name is updated to the
+    # optimizer's.
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {legacy_statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        legacy_statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+        ]
+    }
+
+    all_stats = await async_list_statistic_ids(hass)
+    stats_by_id = {s["statistic_id"]: s["name"] for s in all_stats}
+    assert stats_by_id == {
+        f"{DOMAIN}:{SITE_ID}_7e012345_57": "SolarEdge Inverter 1",
+        f"{DOMAIN}:{SITE_ID}_7e012345_31": "SolarEdge String 1.1",
+        legacy_statistic_id: "SolarEdge Optimizer 1.1.1",
+    }

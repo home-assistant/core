@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+import probatio
 from pysaunum import (
     DEFAULT_DURATION,
     DEFAULT_FAN_DURATION,
@@ -11,7 +12,6 @@ from pysaunum import (
     MAX_TEMPERATURE,
     MIN_TEMPERATURE,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -35,23 +35,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_START_SESSION,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Optional(
+            probatio.Optional(
                 ATTR_DURATION, default=timedelta(minutes=DEFAULT_DURATION)
-            ): vol.All(
+            ): probatio.All(
                 cv.time_period,
-                vol.Range(
+                probatio.Range(
                     min=timedelta(minutes=1),
                     max=timedelta(minutes=MAX_DURATION),
                 ),
             ),
-            vol.Optional(ATTR_TARGET_TEMPERATURE, default=DEFAULT_TEMPERATURE): vol.All(
-                cv.positive_int, vol.Range(min=MIN_TEMPERATURE, max=MAX_TEMPERATURE)
+            probatio.Optional(
+                ATTR_TARGET_TEMPERATURE, default=DEFAULT_TEMPERATURE
+            ): probatio.All(
+                cv.positive_int,
+                probatio.Range(min=MIN_TEMPERATURE, max=MAX_TEMPERATURE),
             ),
-            vol.Optional(
+            probatio.Optional(
                 ATTR_FAN_DURATION, default=timedelta(minutes=DEFAULT_FAN_DURATION)
-            ): vol.All(
+            ): probatio.All(
                 cv.time_period,
-                vol.Range(
+                probatio.Range(
                     min=timedelta(minutes=1),
                     max=timedelta(minutes=MAX_FAN_DURATION),
                 ),

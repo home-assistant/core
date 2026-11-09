@@ -1,11 +1,10 @@
 """Test Flo by Moen binary sensor entities."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

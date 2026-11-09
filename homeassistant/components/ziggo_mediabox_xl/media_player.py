@@ -4,7 +4,7 @@ import logging
 import socket
 from typing import override
 
-import voluptuous as vol
+import probatio
 from ziggo_mediabox_xl import ZiggoMediaboxXL
 
 from homeassistant.components.media_player import (
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_KNOWN_DEVICES = "ziggo_mediabox_xl_known_devices"
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {probatio.Required(CONF_HOST): cv.string, probatio.Optional(CONF_NAME): cv.string}
 )
 
 

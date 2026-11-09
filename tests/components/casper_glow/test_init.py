@@ -7,6 +7,12 @@ from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -17,13 +23,6 @@ from homeassistant.helpers.device_registry import format_mac
 import homeassistant.util.dt as dt_util
 
 from . import CASPER_GLOW_DISCOVERY_INFO, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info,
-)
 
 
 async def test_async_setup_entry_success(

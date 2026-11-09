@@ -5,7 +5,7 @@ import logging
 from typing import override
 
 import metno
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.air_quality import (
     PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
@@ -30,10 +30,12 @@ OVERRIDE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/airqualityforeca
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): probatio.Coerce(
+            int
+        ),
+        probatio.Optional(CONF_LATITUDE): cv.latitude,
+        probatio.Optional(CONF_LONGITUDE): cv.longitude,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

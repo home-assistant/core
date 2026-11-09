@@ -1,5 +1,7 @@
 """Tests for the Elmax component."""
 
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+
 from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_DIRECT,
@@ -12,8 +14,6 @@ from homeassistant.components.elmax.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 MOCK_USER_JWT = (
     "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"

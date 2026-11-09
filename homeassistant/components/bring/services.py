@@ -1,5 +1,7 @@
 """Actions for Bring! integration."""
 
+from enum import StrEnum
+
 from bring_api import (
     ActivityType,
     BringAuthException,
@@ -7,11 +9,11 @@ from bring_api import (
     BringRequestException,
     ReactionType,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -24,20 +26,30 @@ from .const import DOMAIN
 from .coordinator import BringConfigEntry
 
 ATTR_ACTIVITY = "uuid"
-ATTR_ITEM_NAME = "item"
-ATTR_NOTIFICATION_TYPE = "message"
-ATTR_REACTION = "reaction"
 ATTR_RECEIVER = "publicUserUuid"
 
-SERVICE_PUSH_NOTIFICATION = "send_message"
-SERVICE_ACTIVITY_STREAM_REACTION = "send_reaction"
 
-SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = vol.Schema(
+class BringService(StrEnum):
+    """Store keys for Bring! services."""
+
+    SEND_MESSAGE = "send_message"
+    SEND_REACTION = "send_reaction"
+
+
+class BringServiceArgument(StrEnum):
+    """Store keys for Bring! service arguments."""
+
+    MESSAGE = "message"
+    ITEM = "item"
+    REACTION = "reaction"
+
+
+SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_REACTION): vol.All(
-            vol.Upper,
-            vol.Coerce(ReactionType),
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_id,
+        probatio.Required(BringServiceArgument.REACTION): probatio.All(
+            probatio.Upper,
+            probatio.Coerce(ReactionType),
         ),
     }
 )
@@ -51,15 +63,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         """Send a reaction in response to recent activity of a list member."""
 
         if (
-            not (state := hass.states.get(call.data[ATTR_ENTITY_ID]))
-            or not (entity := er.async_get(hass).async_get(call.data[ATTR_ENTITY_ID]))
+            not (state := hass.states.get(call.data[CommonServiceArgument.ENTITY_ID]))
+            or not (
+                entity := er.async_get(hass).async_get(
+                    call.data[CommonServiceArgument.ENTITY_ID]
+                )
+            )
             or not entity.config_entry_id
         ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entity_not_found",
                 translation_placeholders={
-                    ATTR_ENTITY_ID: call.data[ATTR_ENTITY_ID],
+                    "entity_id": call.data[CommonServiceArgument.ENTITY_ID],
                 },
             )
         config_entry: BringConfigEntry = service.async_get_config_entry(
@@ -72,7 +88,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         activity = state.attributes[EventEntityStateAttribute.EVENT_TYPE]
 
-        reaction: ReactionType = call.data[ATTR_REACTION]
+        reaction: ReactionType = call.data[BringServiceArgument.REACTION]
 
         if not activity:
             raise ServiceValidationError(
@@ -96,7 +112,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ACTIVITY_STREAM_REACTION,
+        BringService.SEND_REACTION,
         async_send_activity_stream_reaction,
         SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA,
     )
@@ -104,13 +120,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_PUSH_NOTIFICATION,
+        BringService.SEND_MESSAGE,
         entity_domain=TODO_DOMAIN,
         schema={
-            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
-                vol.Upper, vol.Coerce(BringNotificationType)
+            probatio.Required(BringServiceArgument.MESSAGE): probatio.All(
+                probatio.Upper, probatio.Coerce(BringNotificationType)
             ),
-            vol.Optional(ATTR_ITEM_NAME): cv.string,
+            probatio.Optional(BringServiceArgument.ITEM): cv.string,
         },
         func="async_send_message",
     )

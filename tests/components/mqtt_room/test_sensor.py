@@ -1,11 +1,13 @@
 """The tests for the MQTT room presence sensor."""
 
-import datetime
+import datetime as dt
 import json
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import sensor
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
@@ -20,9 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 DEVICE_ID = "123TESTMAC"
 NAME = "test_device"
@@ -114,8 +113,10 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
     await assert_state(hass, LIVING_ROOM)
     await assert_distance(hass, 1)
 
-    time = dt_util.utcnow() + datetime.timedelta(seconds=7)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=time):
+    time = dt_util.utcnow() + dt.timedelta(seconds=7)
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow", return_value=time
+    ):
         await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
         await assert_state(hass, BEDROOM)
         await assert_distance(hass, 10)

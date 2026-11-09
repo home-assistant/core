@@ -1,6 +1,7 @@
 """Constants for the onvif component."""
 
 import asyncio
+from datetime import timedelta
 import logging
 
 import aiohttp
@@ -20,6 +21,10 @@ CONF_SNAPSHOT_AUTH = "snapshot_auth"
 CONF_ENABLE_WEBHOOKS = "enable_webhooks"
 CONF_MORE_OPTIONS = "more_options"
 DEFAULT_ENABLE_WEBHOOKS = True
+
+# Bounds each snapshot auth probe during setup, tighter than the library's
+# default so a camera whose snapshot never completes does not stall setup
+SNAPSHOT_TIMEOUT = timedelta(seconds=10)
 
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"

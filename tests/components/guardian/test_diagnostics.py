@@ -1,12 +1,12 @@
 """Test Guardian diagnostics."""
 
+from pytest_homeassistant.common import ANY, MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.guardian import GuardianData
 from homeassistant.core import HomeAssistant
-
-from tests.common import ANY, MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(

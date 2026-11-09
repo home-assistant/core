@@ -1,6 +1,7 @@
 {
   "domain": "generic_thermostat",
   "name": "Generic Thermostat",
+  "categories": ["helpers", "climate.thermostats_heating"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["sensor", "switch"],

@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -24,3 +25,15 @@ class VizioEntity(CoordinatorEntity[VizioDeviceCoordinator]):
             assert unique_id is not None
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
         self._device = coordinator.device
+
+
+class VizioDescriptionEntity(VizioEntity):
+    """Base class for Vizio entities described by an entity description."""
+
+    def __init__(
+        self, config_entry: VizioConfigEntry, description: EntityDescription
+    ) -> None:
+        """Initialize the Vizio entity from its description."""
+        super().__init__(config_entry)
+        self.entity_description = description
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"

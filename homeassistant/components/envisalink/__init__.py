@@ -1,10 +1,11 @@
 """Support for Envisalink devices."""
 
 import asyncio
+from dataclasses import dataclass
 import logging
 
+import probatio
 from pyenvisalink import EnvisalinkAlarmPanel
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_CODE,
@@ -13,99 +14,96 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
+
+from .const import (
+    CONF_EVL_KEEPALIVE,
+    CONF_EVL_PORT,
+    CONF_EVL_VERSION,
+    CONF_PANEL_TYPE,
+    CONF_PANIC,
+    CONF_PARTITIONNAME,
+    CONF_PARTITIONS,
+    CONF_PASS,
+    CONF_USERNAME,
+    CONF_ZONEDUMP_INTERVAL,
+    CONF_ZONENAME,
+    CONF_ZONES,
+    CONF_ZONETYPE,
+    DATA_EVL,
+    DEFAULT_EVL_VERSION,
+    DEFAULT_KEEPALIVE,
+    DEFAULT_PANIC,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_ZONEDUMP_INTERVAL,
+    DEFAULT_ZONETYPE,
+    DOMAIN,
+    PANEL_TYPE_DSC,
+    PANEL_TYPE_HONEYWELL,
+    SIGNAL_KEYPAD_UPDATE,
+    SIGNAL_PARTITION_UPDATE,
+    SIGNAL_ZONE_UPDATE,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "envisalink"
-
-DATA_EVL: HassKey[EnvisalinkAlarmPanel] = HassKey(DOMAIN)
-
-CONF_EVL_KEEPALIVE = "keepalive_interval"
-CONF_EVL_PORT = "port"
-CONF_EVL_VERSION = "evl_version"
-CONF_PANEL_TYPE = "panel_type"
-CONF_PANIC = "panic_type"
-CONF_PARTITIONNAME = "name"
-CONF_PARTITIONS = "partitions"
-CONF_PASS = "password"
-CONF_USERNAME = "user_name"
-CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
-CONF_ZONENAME = "name"
-CONF_ZONES = "zones"
-CONF_ZONETYPE = "type"
-
-PANEL_TYPE_HONEYWELL = "HONEYWELL"
-PANEL_TYPE_DSC = "DSC"
-
-DEFAULT_PORT = 4025
-DEFAULT_EVL_VERSION = 3
-DEFAULT_KEEPALIVE = 60
-DEFAULT_ZONEDUMP_INTERVAL = 30
-DEFAULT_ZONETYPE = "opening"
-DEFAULT_PANIC = "Police"
-DEFAULT_TIMEOUT = 10
-
-SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
-SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
-SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
-SIGNAL_ZONE_BYPASS_UPDATE = "envisalink.zone_bypass_updated"
-
-ZONE_SCHEMA = vol.Schema(
+ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ZONENAME): cv.string,
-        vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
+        probatio.Required(CONF_ZONENAME): cv.string,
+        probatio.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
     }
 )
 
-PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_PARTITIONNAME): cv.string})
+PARTITION_SCHEMA = probatio.Schema({probatio.Required(CONF_PARTITIONNAME): cv.string})
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PANEL_TYPE): vol.All(
-                    cv.string, vol.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PANEL_TYPE): probatio.All(
+                    cv.string, probatio.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
                 ),
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASS): cv.string,
-                vol.Optional(CONF_CODE): cv.string,
-                vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
-                vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-                vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
-                vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION): vol.All(
-                    vol.Coerce(int), vol.Range(min=3, max=4)
-                ),
-                vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
-                    vol.Coerce(int), vol.Range(min=15)
-                ),
-                vol.Optional(
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASS): cv.string,
+                probatio.Optional(CONF_CODE): cv.string,
+                probatio.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
+                probatio.Optional(CONF_ZONES): {probatio.Coerce(int): ZONE_SCHEMA},
+                probatio.Optional(CONF_PARTITIONS): {
+                    probatio.Coerce(int): PARTITION_SCHEMA
+                },
+                probatio.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): probatio.Port(),
+                probatio.Optional(
+                    CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=3, max=4)),
+                probatio.Optional(
+                    CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE
+                ): probatio.All(probatio.Coerce(int), probatio.Range(min=15)),
+                probatio.Optional(
                     CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
-                ): vol.Coerce(int),
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+                ): probatio.Coerce(int),
+                probatio.Optional(
+                    CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                ): probatio.Coerce(int),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
-ATTR_CUSTOM_FUNCTION = "pgm"
-ATTR_PARTITION = "partition"
 
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
-        vol.Required(ATTR_PARTITION): cv.string,
-    }
-)
+@dataclass
+class EnvisalinkData:
+    """Runtime data for the Envisalink integration."""
+
+    controller: EnvisalinkAlarmPanel
+    code: str | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -140,7 +138,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         connection_timeout,
         False,
     )
-    hass.data[DATA_EVL] = controller
+    hass.data[DATA_EVL] = EnvisalinkData(controller, code)
 
     @callback
     def async_login_fail_callback(data):
@@ -189,12 +187,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Shutting down Envisalink")
         controller.stop()
 
-    async def handle_custom_function(call: ServiceCall) -> None:
-        """Handle custom/PGM service."""
-        custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
-        partition = call.data.get(ATTR_PARTITION)
-        controller.command_output(code, partition, custom_function)
-
     controller.callback_zone_timer_dump = async_zones_updated_callback
     controller.callback_zone_state_change = async_zones_updated_callback
     controller.callback_partition_state_change = async_partition_updated_callback
@@ -241,8 +233,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # re-added in the future after some further refactoring
         # of the integration.
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
-    )
+    async_setup_services(hass)
 
     return True

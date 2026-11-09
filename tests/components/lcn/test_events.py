@@ -3,12 +3,11 @@
 from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockConfigEntry, init_integration
-
-from tests.common import async_capture_events
 
 LCN_TRANSPONDER = "lcn_transponder"
 LCN_FINGERPRINT = "lcn_fingerprint"

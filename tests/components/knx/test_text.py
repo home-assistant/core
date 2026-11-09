@@ -1,8 +1,11 @@
 """Test KNX number."""
 
+from pytest_homeassistant.common import mock_restore_cache
+
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import TextSchema
@@ -12,8 +15,6 @@ from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache
 
 
 async def test_text(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -120,6 +121,7 @@ async def test_text_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 CONF_NAME: "test",
                 KNX_ADDRESS: test_address,
                 CONF_STATE_ADDRESS: test_state_address,
+                CONF_SYNC_STATE: "init",
             }
         }
     )

@@ -11,9 +11,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from . import DOMAIN, HomeeConfigEntry
+from . import HomeeConfigEntry
+from .const import DOMAIN
 
 TO_REDACT = [
     CONF_ADDRESS,
@@ -42,7 +43,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: HomeeConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: HomeeConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
 

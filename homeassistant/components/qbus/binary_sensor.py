@@ -1,7 +1,7 @@
 """Support for Qbus binary sensor."""
 
 from dataclasses import dataclass
-from typing import cast, override
+from typing import override
 
 from qbusmqttapi.discovery import QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttTopicFactory
@@ -105,9 +105,11 @@ class QbusWeatherBinarySensor(QbusEntity, BinarySensorEntity):
 
     @override
     async def _handle_state_received(self, state: QbusMqttWeatherState) -> None:
-        if value := state.read_property(self.entity_description.property, None):
+        if (
+            value := state.read_property(self.entity_description.property, None)
+        ) is not None:
             self._attr_is_on = (
-                None if value is None else cast(str, value).lower() == "true"
+                value if isinstance(value, bool) else str(value).lower() == "true"
             )
 
 

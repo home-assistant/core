@@ -63,7 +63,7 @@ def is_uuid(value: str) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NotionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NotionConfigEntry) -> None:
     """Set up Notion as a config entry."""
     entry_updates: dict[str, Any] = {"data": {**entry.data}}
 
@@ -149,9 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NotionConfigEntry) -> bo
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NotionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NotionConfigEntry) -> None:
     """Unload a Notion config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,32 +1,60 @@
 """LLM tools for the homeassistant integration."""
 
+from collections.abc import Iterator, Mapping
 from decimal import Decimal
 from enum import Enum
 from operator import attrgetter
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.llm import LLMTools
-from homeassistant.components.sensor import SensorDeviceClass, async_rounded_state
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    async_rounded_state,
+)
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     intent,
+    translation,
 )
-from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
+from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    LLM_API_HOME_ASSISTANT,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
+from homeassistant.helpers.service import (
+    async_get_all_descriptions,
+    async_prepare_call_from_config,
+)
+from homeassistant.helpers.template import Template
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-from homeassistant.util.json import JsonObjectType
 
+from .const import DOMAIN
 from .exposed_entities import async_should_expose
 
 # Domains bucketed out of the exposed-entity overview.
 CALENDAR_DOMAIN = "calendar"
 SCRIPT_DOMAIN = "script"
+
+TEMPLATE_RENDER_TIMEOUT = 3
+TEMPLATE_MAX_OUTPUT = 16 * 1024
+
+ACTION_SEARCH_LIMIT = 3
+ACTION_DESCRIPTION_MAX_SIZE = 16 * 1024
 
 NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
@@ -36,7 +64,7 @@ NO_ENTITIES_PROMPT = (
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"
     " current state of\n"
-    "the home using the `GetLiveContext` tool."
+    "the home by retrieving live context."
     " This is a primary function."
     " Do not state you lack the\n"
     "functionality if the question requires live data.\n"
@@ -50,14 +78,13 @@ DYNAMIC_CONTEXT_PROMPT = (
     ' "What mode is the thermostat in?",'
     ' "What is the temperature outside?"):\n'
     "    1.  Recognize this requires live data.\n"
-    "    2.  You MUST call `GetLiveContext`."
+    "    2.  You MUST use the provided tool to retrieve live context."
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
-    "    3.  Use the tool's response** to answer the"
-    " user accurately"
-    ' (e.g., "The temperature outside is'
-    ' [value from tool].").\n'
+    "    3.  Use the tool's response to answer the"
+    " user accurately, stating the actual value or"
+    " state it returned.\n"
     "For general knowledge questions not about the"
     " home: Answer truthfully from internal"
     " knowledge.\n"
@@ -119,14 +146,12 @@ def async_get_exposed_entities(
                 area_names.append(area_entry.name)
                 area_names.extend(sorted(area_entry.aliases))
             elif device_entry is not None:
-                # Check device area
+                # Check the device's effective area
                 if (
-                    device_entry.area_id is not None
-                    and (
-                        area_entry := area_registry.async_get_area(device_entry.area_id)
-                    )
-                    is not None
-                ):
+                    device_area_id := dr.async_get_effective_area_id(hass, device_entry)
+                ) is not None and (
+                    area_entry := area_registry.async_get_area(device_area_id)
+                ) is not None:
                     area_names.append(area_entry.name)
                     area_names.extend(sorted(area_entry.aliases))
 
@@ -139,7 +164,7 @@ def async_get_exposed_entities(
             info["state"] = state.state
 
             # Format numeric states with configured display precision
-            if state.domain == "sensor":
+            if state.domain == SENSOR_DOMAIN:
                 info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
@@ -165,6 +190,14 @@ def async_get_exposed_entities(
                 if attr_name in interesting_attributes
             }
         ):
+            # Tools take brightness as a 0-100 percentage; the attribute is 0-255.
+            if state.domain == LIGHT_DOMAIN and isinstance(
+                brightness := state.attributes.get("brightness"), int
+            ):
+                pct = round(brightness / 255 * 100)
+                attributes["brightness_pct"] = str(
+                    max(pct, 1) if brightness > 0 else pct
+                )
             info["attributes"] = attributes
 
         entities[state.entity_id] = info
@@ -200,7 +233,8 @@ class GetLiveContextTool(Tool):
     returns state for entities based on intent parameters.
     """
 
-    name = "GetLiveContext"
+    name = "homeassistant__GetLiveContext"
+    title = "Get live context"
     description = (
         "Provides real-time information about the"
         " CURRENT state, value, or mode of devices,"
@@ -218,21 +252,23 @@ class GetLiveContextTool(Tool):
         "Prefer filtering by domain when searching"
         " for multiple devices of the same type."
     )
-    parameters = vol.Schema(
+    annotations = ToolAnnotations(read_only=True, open_world=False)
+    integration = DOMAIN
+    parameters = probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 "name",
                 description="Filter entities by name or alias (case-insensitive).",
             ): cv.string,
-            vol.Optional(
+            probatio.Optional(
                 "domain",
                 description=(
                     "Filter entities by domain"
                     " (e.g. 'light', 'sensor')."
                     " Accepts a single domain or a list."
                 ),
-            ): vol.Any(cv.string, [cv.string]),
-            vol.Optional(
+            ): probatio.Any(cv.string, [cv.string]),
+            probatio.Optional(
                 "area",
                 description="Filter entities by area name or alias (case-insensitive).",
             ): cv.string,
@@ -245,13 +281,13 @@ class GetLiveContextTool(Tool):
         hass: HomeAssistant,
         tool_input: ToolInput,
         llm_context: LLMContext,
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Get the current state of exposed entities."""
         args = self.parameters(tool_input.tool_args)
         exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
 
         if not exposed_entities:
-            return {"success": False, "error": NO_ENTITIES_PROMPT}
+            return ToolResult(data={"error": NO_ENTITIES_PROMPT}, error=True)
 
         name_filter = args.get("name")
         area_filter = args.get("area")
@@ -288,12 +324,14 @@ class GetLiveContextTool(Tool):
             )
 
             if not match_result.is_match:
-                return {
-                    "success": False,
-                    "error": _live_context_match_error(
-                        match_result, name_filter, area_filter, domain_filter
-                    ),
-                }
+                return ToolResult(
+                    data={
+                        "error": _live_context_match_error(
+                            match_result, name_filter, area_filter, domain_filter
+                        )
+                    },
+                    error=True,
+                )
 
             matched_ids = {state.entity_id for state in match_result.states}
             entities = [
@@ -309,17 +347,301 @@ class GetLiveContextTool(Tool):
             " and the devices in this smart home:",
             yaml_util.dump(entities),
         ]
-        return {
-            "success": True,
-            "result": "\n".join(prompt),
+        return ToolResult(data={"result": "\n".join(prompt)})
+
+
+class RenderTemplateTool(Tool):
+    """Tool for rendering a template."""
+
+    name = "homeassistant__render_template"
+    title = "Render template"
+    description = (
+        "Render a Home Assistant Jinja2 template and return the output as a string. "
+        "Templates can read the state and attributes of all entities and use "
+        "Home Assistant template functions, for example for areas, devices, "
+        "labels, and time."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "template", description="The Jinja2 template to render."
+            ): cv.string,
+            probatio.Optional(
+                "variables",
+                description=(
+                    "Variables available to the template, for example sample "
+                    "trigger data: {'trigger': {'to_state': {'state': 'on'}}}."
+                ),
+            ): dict,
         }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Render the template."""
+        args = self.parameters(tool_input.tool_args)
+        variables = args.get("variables")
+        template = Template(args["template"], hass)
+        try:
+            # Renders in a thread first, so a slow template cannot block the event loop.
+            if await template.async_render_will_timeout(
+                TEMPLATE_RENDER_TIMEOUT, variables, strict=True
+            ):
+                return ToolResult(
+                    data={
+                        "error": "Template rendering exceeded the maximum time of "
+                        f"{TEMPLATE_RENDER_TIMEOUT} seconds"
+                    },
+                    error=True,
+                )
+            result = template.async_render(variables, parse_result=False, strict=True)
+        except TemplateError as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        if len(result) > TEMPLATE_MAX_OUTPUT:
+            return ToolResult(
+                data={
+                    "error": f"Template output of {len(result)} characters exceeded "
+                    f"the maximum of {TEMPLATE_MAX_OUTPUT} characters"
+                },
+                error=True,
+            )
+        return ToolResult(data={"result": result})
+
+
+def _action_fields(fields: dict[str, Any]) -> Iterator[tuple[str, dict[str, Any]]]:
+    """Yield the fields of an action, including the fields inside sections."""
+    for field, config in fields.items():
+        if "fields" in config:
+            yield from config["fields"].items()
+        else:
+            yield field, config
+
+
+def _describe_action(
+    action_id: str, action_description: dict[str, Any], translations: dict[str, str]
+) -> dict[str, Any]:
+    """Return the name, description, target and fields of an action."""
+    domain, action = action_id.split(".", 1)
+    key = f"component.{domain}.services.{action}"
+    placeholders = action_description.get("description_placeholders", {})
+
+    def text(config: dict[str, Any], item: str, translation_key: str) -> str:
+        """Return a text of the description, else its translation."""
+        value = config.get(item) or translations.get(translation_key, "")
+        for placeholder, replacement in placeholders.items():
+            value = value.replace(f"{{{placeholder}}}", replacement)
+        return value
+
+    fields: dict[str, dict[str, Any]] = {}
+    for field, config in _action_fields(action_description["fields"]):
+        field_info: dict[str, Any] = {}
+        if description := text(
+            config, "description", f"{key}.fields.{field}.description"
+        ):
+            field_info["description"] = description
+        if config.get("required"):
+            field_info["required"] = True
+        if "selector" in config:
+            field_info["selector"] = config["selector"]
+        fields[field] = field_info
+
+    result: dict[str, Any] = {
+        "action": action_id,
+        "name": text(action_description, "name", f"{key}.name"),
+        "description": text(action_description, "description", f"{key}.description"),
+        "fields": fields,
+    }
+    if "target" in action_description:
+        # An empty target accepts any entity, device, area, floor or label
+        result["target"] = action_description["target"] or {}
+    return result
+
+
+class SearchActionsTool(Tool):
+    """Tool for searching the actions that Home Assistant can perform."""
+
+    name = "homeassistant__search_actions"
+    title = "Search actions"
+    description = (
+        "Search the actions that Home Assistant can perform. Each word of the query "
+        "must appear in the action ID, name or description. An exact action ID or "
+        "name ranks first. Returns the "
+        f"{ACTION_SEARCH_LIMIT} best matches with their target and fields."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "query",
+                description="Words to find, case-insensitive, e.g. 'light turn on'.",
+            ): probatio.All(str, probatio.NonEmpty()),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Search the actions."""
+        args = self.parameters(tool_input.tool_args)
+        query = args["query"].strip().casefold()
+        words = query.replace("_", " ").split()
+        descriptions = await async_get_all_descriptions(hass)
+        translations = await translation.async_get_translations(
+            hass, "en", "services", descriptions
+        )
+
+        matches: list[tuple[int, str, dict[str, Any]]] = []
+        for domain, domain_actions in descriptions.items():
+            for action, action_description in domain_actions.items():
+                found = _describe_action(
+                    f"{domain}.{action}", action_description, translations
+                )
+                head = f"{found['action']} {found['name']}".replace("_", " ").casefold()
+                text = f"{head} {found['description'].casefold()}"
+                if not all(word in text for word in words):
+                    continue
+                # Exact matches first, then matches on ID and name, then description
+                if query in (found["action"], found["name"].casefold()):
+                    rank = 0
+                elif all(word in head for word in words):
+                    rank = 1
+                else:
+                    rank = 2
+                matches.append((rank, found["action"], found))
+        matches.sort(key=lambda match: match[:2])
+
+        actions = [found for _, _, found in matches[:ACTION_SEARCH_LIMIT]]
+        for found in actions:
+            # Some actions list so many select options that they would fill the context
+            if len(json_dumps(found)) > ACTION_DESCRIPTION_MAX_SIZE:
+                for field_info in found["fields"].values():
+                    field_info.pop("selector", None)
+                found["note"] = (
+                    "The selectors of the fields are left out to save space."
+                )
+        result: dict[str, Any] = {"actions": actions}
+        if len(matches) > ACTION_SEARCH_LIMIT:
+            result["more"] = (
+                f"{len(matches)} actions match. Use a more specific query to "
+                "find the others."
+            )
+        return ToolResult(data=result)
+
+
+def _templates(value: Any) -> Iterator[Template]:
+    """Yield the templates in a complex template."""
+    if isinstance(value, Template):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from _templates(item)
+    elif isinstance(value, Mapping):
+        for key, item in value.items():
+            yield from _templates(key)
+            yield from _templates(item)
+
+
+class CallActionTool(Tool):
+    """Tool for calling an action."""
+
+    name = "homeassistant__call_action"
+    title = "Call action"
+    description = (
+        "Call a Home Assistant action and return its response, if the action has "
+        "one. Values in target and data can be templates, as in a script."
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Required(
+                "action", description="The action to call, e.g. 'light.turn_on'."
+            ): cv.service,
+            probatio.Optional(
+                "target",
+                description=(
+                    "What the action acts on, with the keys entity_id, device_id, "
+                    "area_id, floor_id and label_id."
+                ),
+            ): dict,
+            probatio.Optional("data", description="The fields of the action."): dict,
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Call the action."""
+        args = self.parameters(tool_input.tool_args)
+        domain, action = args["action"].split(".", 1)
+        try:
+            config = cv.SERVICE_SCHEMA(args)
+        except probatio.Invalid as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        for template in _templates(config):
+            # Renders in a thread first, so a slow template cannot block the event loop.
+            try:
+                will_timeout = await template.async_render_will_timeout(
+                    TEMPLATE_RENDER_TIMEOUT, strict=True
+                )
+            except TemplateError as err:
+                return ToolResult(data={"error": str(err)}, error=True)
+            if will_timeout:
+                return ToolResult(
+                    data={
+                        "error": "Template rendering exceeded the maximum time of "
+                        f"{TEMPLATE_RENDER_TIMEOUT} seconds"
+                    },
+                    error=True,
+                )
+        # Checked after rendering, which awaits, so a reload cannot remove the action
+        if not hass.services.has_service(domain, action):
+            return ToolResult(
+                data={"error": f"Action {args['action']} does not exist."},
+                error=True,
+            )
+        return_response = (
+            hass.services.supports_response(domain, action) is not SupportsResponse.NONE
+        )
+        try:
+            params = async_prepare_call_from_config(hass, config)
+        # A template that renders to a list or dict cannot be a key in the data
+        except (HomeAssistantError, TypeError) as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        try:
+            response = await hass.services.async_call(
+                **params,
+                blocking=True,
+                context=llm_context.context,
+                return_response=return_response,
+            )
+        except (HomeAssistantError, probatio.Invalid) as err:
+            return ToolResult(data={"error": str(err)}, error=True)
+        if return_response:
+            return ToolResult(data={"response": response})
+        return ToolResult(data={"success": True})
 
 
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Return the GetLiveContext tool and the smart home context prompt."""
+    """Return the homeassistant LLM tools for the given API."""
+    if api_id == LLM_API_HOME_ASSISTANT:
+        return LLMTools(
+            tools=[RenderTemplateTool(), SearchActionsTool(), CallActionTool()]
+        )
+
     if api_id != LLM_API_ASSIST:
         return None
 

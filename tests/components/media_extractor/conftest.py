@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockYoutubeDL
-from .const import AUDIO_QUERY
 
 
 @pytest.fixture(autouse=True)
@@ -33,7 +32,9 @@ async def setup_media_player(hass: HomeAssistant) -> None:
 async def setup_mock_yt_dlp(hass: HomeAssistant) -> MockYoutubeDL:
     """Mock YoutubeDL."""
     mock = MockYoutubeDL({})
-    with patch("homeassistant.components.media_extractor.YoutubeDL", return_value=mock):
+    with patch(
+        "homeassistant.components.media_extractor.services.YoutubeDL", return_value=mock
+    ):
         yield mock
 
 
@@ -43,16 +44,10 @@ def empty_media_extractor_config() -> dict[str, Any]:
     return {DOMAIN: {}}
 
 
-@pytest.fixture(name="audio_media_extractor_config")
-def audio_media_extractor_config() -> dict[str, Any]:
-    """Media extractor config for audio."""
-    return {DOMAIN: {"default_query": AUDIO_QUERY}}
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.media_extractor.async_setup_entry", return_value=True
+        "homeassistant.components.media_extractor.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

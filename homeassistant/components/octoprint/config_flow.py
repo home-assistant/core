@@ -6,8 +6,8 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
+import probatio
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
@@ -35,17 +34,28 @@ _LOGGER = logging.getLogger(__name__)
 def _schema_with_defaults(
     username="", host="", port=80, path="/", ssl=False, verify_ssl=True
 ):
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_USERNAME, default=username): str,
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_PORT, default=port): cv.port,
-            vol.Required(CONF_PATH, default=path): str,
-            vol.Required(CONF_SSL, default=ssl): bool,
-            vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
+            probatio.Required(CONF_USERNAME, default=username): str,
+            probatio.Required(CONF_HOST, default=host): str,
+            probatio.Required(CONF_PORT, default=port): probatio.Port(),
+            probatio.Required(CONF_PATH, default=path): str,
+            probatio.Required(CONF_SSL, default=ssl): bool,
+            probatio.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=probatio.ALLOW_EXTRA,
     )
+
+
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT): probatio.Port(),
+        probatio.Required(CONF_PATH): str,
+        probatio.Required(CONF_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL): bool,
+    }
+)
 
 
 class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,7 +64,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     api_key_task: asyncio.Task[None] | None = None
-    discovery_schema: vol.Schema | None = None
+    discovery_schema: probatio.Schema | None = None
     _reauth_data: dict[str, Any] | None = None
     _user_input: dict[str, Any] | None = None
 
@@ -145,6 +155,14 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="reauth_successful")
 
+        uuid = await self._async_get_uuid(user_input)
+        await self.async_set_unique_id(uuid, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+
+    async def _async_get_uuid(self, user_input: dict[str, Any]) -> str:
+        """Return the UPnP UUID of the OctoPrint instance."""
         octoprint = self._get_octoprint_client(user_input)
         octoprint.set_api_key(user_input[CONF_API_KEY])
 
@@ -156,10 +174,36 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await self._sessions.pop().close()
 
-        await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
+        return discovery.upnp_uuid
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                uuid = await self._async_get_uuid({**entry.data, **user_input})
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(uuid)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
 
     async def async_step_auth_failed(self, user_input: None) -> ConfigFlowResult:
         """Handle api fetch failure."""
@@ -167,7 +211,22 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(import_data)
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: import_data[CONF_HOST],
+                CONF_PORT: import_data[CONF_PORT],
+                CONF_PATH: import_data[CONF_PATH],
+            }
+        )
+        try:
+            return await self._finish_config(import_data)
+        except AbortFlow:
+            raise
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
     @override
     async def async_step_zeroconf(
@@ -180,7 +239,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: discovery_info.host},
+                "title_placeholders": {"host": discovery_info.host},
                 "configuration_url": (
                     f"http://{discovery_info.host}:{discovery_info.port}"
                     f"{discovery_info.properties[CONF_PATH]}"
@@ -208,7 +267,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         url = URL(discovery_info.upnp["presentationURL"])
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: url.host or "-"},
+                "title_placeholders": {"host": url.host or "-"},
                 "configuration_url": discovery_info.upnp["presentationURL"],
             }
         )
@@ -230,7 +289,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: entry_data[CONF_HOST]},
+                "title_placeholders": {"host": entry_data[CONF_HOST]},
             }
         )
 
@@ -245,9 +304,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_USERNAME, default=self._reauth_data[CONF_USERNAME]
                         ): str,
                     }

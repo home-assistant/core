@@ -6,7 +6,7 @@ import logging
 from typing import override
 
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
@@ -21,7 +21,7 @@ from .const import CONF_DELTA, DEFAULT_COUNTRY, DEFAULT_DELTA, DEFAULT_DIMENSION
 _LOGGER = logging.getLogger(__name__)
 
 # Maximum range according to docs
-DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
+DIM_RANGE = probatio.All(probatio.Coerce(int), probatio.Range(min=120, max=700))
 
 # Multiple choice for available Radar Map URL
 SUPPORTED_COUNTRY_CODES = ["NL", "BE"]

@@ -2,11 +2,12 @@
 
 from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -14,8 +15,6 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
@@ -25,7 +24,7 @@ HOST = "127.0.0.1"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.daikin.async_setup_entry", return_value=True
+        "homeassistant.components.daikin.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -66,24 +65,30 @@ async def test_user(hass: HomeAssistant, mock_daikin) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][KEY_MAC] == MAC
+    assert result["result"].unique_id == MAC
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
     """Test we abort if Daikin is already setup."""
     MockConfigEntry(domain="daikin", unique_id=MAC).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, KEY_MAC: MAC},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -101,30 +106,61 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:
         (Exception, "unknown"),
     ],
 )
-async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) -> None:
+async def test_device_abort(
+    hass: HomeAssistant,
+    mock_daikin: MagicMock,
+    s_effect: type[Exception] | Exception,
+    reason: str,
+) -> None:
     """Test device abort."""
     mock_daikin.side_effect = s_effect
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, KEY_MAC: MAC},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
     assert result["step_id"] == "user"
 
+    mock_daikin.side_effect = AsyncMock(return_value=mock_daikin)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_daikin")
 async def test_api_password_abort(hass: HomeAssistant) -> None:
     """Test device abort."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_API_KEY: "aa", CONF_PASSWORD: "aa"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST, CONF_API_KEY: "aa", CONF_PASSWORD: "aa"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_password"}
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -159,9 +195,15 @@ async def test_discovery_zeroconf(
 
     MockConfigEntry(domain="daikin", unique_id=unique_id).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER, "unique_id": unique_id},
-        data={CONF_HOST: HOST},
+        DOMAIN, context={"source": SOURCE_USER, "unique_id": unique_id}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: HOST},
     )
 
     assert result["type"] is FlowResultType.ABORT

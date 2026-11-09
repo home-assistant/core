@@ -13,7 +13,8 @@ from typing import Any
 from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
-import voluptuous as vol
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import (
     camera,
@@ -22,17 +23,22 @@ from homeassistant.components import (
     notify as hass_notify,
     tag,
 )
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     CONF_NAME,
@@ -47,6 +53,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    instance_id,
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -59,6 +66,8 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
@@ -118,29 +127,31 @@ WEBHOOK_COMMANDS: Registry[
     str, Callable[[HomeAssistant, ConfigEntry, Any], Coroutine[Any, Any, Response]]
 ] = Registry()
 
-WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
-    vol.Schema(
+WEBHOOK_PAYLOAD_SCHEMA = probatio.Any(
+    probatio.Schema(
         {
-            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
-            vol.Optional(ATTR_WEBHOOK_DATA): vol.Any(dict, list),
+            probatio.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            probatio.Optional(ATTR_WEBHOOK_DATA): probatio.Any(dict, list),
         }
     ),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(ATTR_WEBHOOK_TYPE): cv.string,
-            vol.Required(ATTR_WEBHOOK_ENCRYPTED): True,
-            vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
+            probatio.Required(ATTR_WEBHOOK_TYPE): cv.string,
+            probatio.Required(ATTR_WEBHOOK_ENCRYPTED): True,
+            probatio.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
         }
     ),
 )
 
-SENSOR_SCHEMA_FULL = vol.Schema(
+SENSOR_SCHEMA_FULL = probatio.Schema(
     {
-        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(None, cv.icon),
-        vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
-        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+        probatio.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+        probatio.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): probatio.Any(
+            None, cv.icon
+        ),
+        probatio.Required(ATTR_SENSOR_STATE): probatio.Any(None, bool, int, float, str),
+        probatio.Required(ATTR_SENSOR_TYPE): probatio.In(SENSOR_TYPES),
+        probatio.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
     }
 )
 
@@ -148,7 +159,7 @@ SENSOR_SCHEMA_FULL = vol.Schema(
 def validate_schema(schema):
     """Decorate a webhook function with a schema."""
     if isinstance(schema, dict):
-        schema = vol.Schema(schema)
+        schema = probatio.Schema(schema)
 
     def wrapper(func):
         """Wrap function so we validate schema."""
@@ -158,8 +169,8 @@ def validate_schema(schema):
             """Validate input and call handler."""
             try:
                 data = schema(data)
-            except vol.Invalid as ex:
-                err = vol.humanize.humanize_error(data, ex)
+            except probatio.Invalid as ex:
+                err = humanize_error(data, ex)
                 _LOGGER.error("Received invalid webhook payload: %s", err)
                 return empty_okay_response()
 
@@ -187,6 +198,11 @@ async def handle_webhook(
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
         return empty_okay_response(status=HTTPStatus.BAD_REQUEST)
 
+    if config_entry.data[CONF_WEBHOOK_ID] != webhook_id:
+        # The app registered again, possibly for another user, while the
+        # request was received
+        return Response(status=HTTPStatus.GONE)
+
     if (
         ATTR_WEBHOOK_ENCRYPTED not in req_data
         and config_entry.data[ATTR_SUPPORTS_ENCRYPTION]
@@ -199,8 +215,8 @@ async def handle_webhook(
 
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
-    except vol.Invalid as ex:
-        err = vol.humanize.humanize_error(req_data, ex)
+    except probatio.Invalid as ex:
+        err = humanize_error(req_data, ex)
         _LOGGER.error(
             "Received invalid webhook from %s with payload: %s", device_name, err
         )
@@ -253,17 +269,23 @@ async def handle_webhook(
     )
 
     # Shield so we make sure we finish the webhook, even if sender hangs up.
+    # Start eagerly, so the command reads the registration validated above
+    # before the app can register again.
     return await asyncio.shield(
-        WEBHOOK_COMMANDS[webhook_type](hass, config_entry, webhook_payload)
+        hass.async_create_task(
+            WEBHOOK_COMMANDS[webhook_type](hass, config_entry, webhook_payload),
+            f"mobile_app webhook {webhook_type}",
+            eager_start=True,
+        )
     )
 
 
 @WEBHOOK_COMMANDS.register("call_service")
 @validate_schema(
     {
-        vol.Required(ATTR_DOMAIN): cv.string,
-        vol.Required(ATTR_SERVICE): cv.string,
-        vol.Optional(ATTR_SERVICE_DATA, default={}): dict,
+        probatio.Required(ATTR_DOMAIN): cv.string,
+        probatio.Required(ATTR_SERVICE): cv.string,
+        probatio.Optional(ATTR_SERVICE_DATA, default={}): dict,
     }
 )
 async def webhook_call_service(
@@ -278,7 +300,7 @@ async def webhook_call_service(
             blocking=True,
             context=registration_context(config_entry.data),
         )
-    except (vol.Invalid, ServiceNotFound, Exception) as ex:
+    except (probatio.Invalid, ServiceNotFound, Exception) as ex:
         _LOGGER.error(
             (
                 "Error when calling service during mobile_app "
@@ -295,8 +317,8 @@ async def webhook_call_service(
 @WEBHOOK_COMMANDS.register("fire_event")
 @validate_schema(
     {
-        vol.Required(ATTR_EVENT_TYPE): cv.string,
-        vol.Optional(ATTR_EVENT_DATA, default={}): dict,
+        probatio.Required(ATTR_EVENT_TYPE): cv.string,
+        probatio.Optional(ATTR_EVENT_DATA, default={}): dict,
     }
 )
 async def webhook_fire_event(
@@ -316,35 +338,39 @@ async def webhook_fire_event(
 @WEBHOOK_COMMANDS.register("conversation_process")
 @validate_schema(
     {
-        vol.Required("text"): cv.string,
-        vol.Optional("language"): cv.string,
-        vol.Optional("conversation_id"): cv.string,
+        probatio.Required("text"): cv.string,
+        probatio.Optional("language"): cv.string,
+        probatio.Optional("conversation_id"): cv.string,
     }
 )
 async def webhook_conversation_process(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
     """Handle a conversation process webhook."""
+    # The app may register again while awaiting
+    registration = config_entry.data
     result = await conversation.async_converse(
         hass,
         text=data["text"],
         language=data.get("language"),
         conversation_id=data.get("conversation_id"),
-        context=registration_context(config_entry.data),
+        context=registration_context(registration),
     )
-    return webhook_response(result.as_dict(), registration=config_entry.data)
+    return webhook_response(result.as_dict(), registration=registration)
 
 
 @WEBHOOK_COMMANDS.register("stream_camera")
-@validate_schema({vol.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
+@validate_schema({probatio.Required(ATTR_CAMERA_ENTITY_ID): cv.string})
 async def webhook_stream_camera(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
 ) -> Response:
     """Handle a request to HLS-stream a camera."""
+    # The app may register again while awaiting
+    registration = config_entry.data
     if (camera_state := hass.states.get(data[ATTR_CAMERA_ENTITY_ID])) is None:
         return webhook_response(
             {"success": False},
-            registration=config_entry.data,
+            registration=registration,
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -365,7 +391,7 @@ async def webhook_stream_camera(
     else:
         resp["hls_path"] = None
 
-    return webhook_response(resp, registration=config_entry.data)
+    return webhook_response(resp, registration=registration)
 
 
 @lru_cache
@@ -378,8 +404,8 @@ def _cached_template(template_str: str, hass: HomeAssistant) -> template.Templat
 @validate_schema(
     {
         str: {
-            vol.Required(ATTR_TEMPLATE): cv.string,
-            vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
+            probatio.Required(ATTR_TEMPLATE): cv.string,
+            probatio.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
         }
     }
 )
@@ -413,12 +439,12 @@ async def webhook_update_location(
 @WEBHOOK_COMMANDS.register("update_registration")
 @validate_schema(
     {
-        vol.Optional(ATTR_APP_DATA): SCHEMA_APP_DATA,
-        vol.Required(ATTR_APP_VERSION): cv.string,
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(ATTR_MANUFACTURER): cv.string,
-        vol.Required(ATTR_MODEL): cv.string,
-        vol.Optional(ATTR_OS_VERSION): cv.string,
+        probatio.Optional(ATTR_APP_DATA): SCHEMA_APP_DATA,
+        probatio.Required(ATTR_APP_VERSION): cv.string,
+        probatio.Required(ATTR_DEVICE_NAME): cv.string,
+        probatio.Required(ATTR_MANUFACTURER): cv.string,
+        probatio.Required(ATTR_MODEL): cv.string,
+        probatio.Optional(ATTR_OS_VERSION): cv.string,
     }
 )
 async def webhook_update_registration(
@@ -481,7 +507,7 @@ def _validate_state_class_sensor(value: dict[str, Any]) -> dict[str, Any]:
         ATTR_SENSOR_STATE_CLASS in value
         and value[ATTR_SENSOR_TYPE] != ATTR_SENSOR_TYPE_SENSOR
     ):
-        raise vol.Invalid("state_class only allowed for sensors")
+        raise probatio.Invalid("state_class only allowed for sensors")
 
     return value
 
@@ -498,31 +524,31 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
 
 @WEBHOOK_COMMANDS.register("register_sensor")
 @validate_schema(
-    vol.All(
+    probatio.All(
         {
-            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
+            probatio.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+            probatio.Optional(ATTR_SENSOR_DEVICE_CLASS): probatio.Any(
                 None,
-                vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass)),
-                vol.All(vol.Lower, vol.Coerce(SensorDeviceClass)),
+                probatio.All(probatio.Lower, probatio.Coerce(BinarySensorDeviceClass)),
+                probatio.All(probatio.Lower, probatio.Coerce(SensorDeviceClass)),
             ),
-            vol.Required(ATTR_SENSOR_NAME): cv.string,
-            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-            vol.Optional(ATTR_SENSOR_UOM): vol.Any(None, cv.string),
-            vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
+            probatio.Required(ATTR_SENSOR_NAME): cv.string,
+            probatio.Required(ATTR_SENSOR_TYPE): probatio.In(SENSOR_TYPES),
+            probatio.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+            probatio.Optional(ATTR_SENSOR_UOM): probatio.Any(None, cv.string),
+            probatio.Optional(ATTR_SENSOR_STATE, default=None): probatio.Any(
                 None, bool, int, float, str
             ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): vol.Any(
-                None, vol.Coerce(EntityCategory)
+            probatio.Optional(ATTR_SENSOR_ENTITY_CATEGORY): probatio.Any(
+                None, probatio.Coerce(EntityCategory)
             ),
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
+            probatio.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): probatio.Any(
                 None, cv.icon
             ),
-            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.Any(
-                None, vol.Coerce(SensorStateClass)
+            probatio.Optional(ATTR_SENSOR_STATE_CLASS): probatio.Any(
+                None, probatio.Coerce(SensorStateClass)
             ),
-            vol.Optional(ATTR_SENSOR_DISABLED): bool,
+            probatio.Optional(ATTR_SENSOR_DISABLED): bool,
         },
         _validate_state_class_sensor,
     )
@@ -600,18 +626,18 @@ async def webhook_register_sensor(
 
 @WEBHOOK_COMMANDS.register("update_sensor_states")
 @validate_schema(
-    vol.All(
-        cv.ensure_list,
+    probatio.All(
+        probatio.EnsureList(),
         [
             # Partial schema, enough to identify schema.
             # We don't validate everything because otherwise 1 invalid sensor
             # will invalidate all sensors.
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-                    vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+                    probatio.Required(ATTR_SENSOR_TYPE): probatio.In(SENSOR_TYPES),
+                    probatio.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
                 },
-                extra=vol.ALLOW_EXTRA,
+                extra=probatio.ALLOW_EXTRA,
             )
         ],
     )
@@ -650,8 +676,8 @@ async def webhook_update_sensor_states(
 
         try:
             sensor = SENSOR_SCHEMA_FULL(sensor)
-        except vol.Invalid as err:
-            err_msg = vol.humanize.humanize_error(sensor, err)
+        except probatio.Invalid as err:
+            err_msg = humanize_error(sensor, err)
             _LOGGER.error(
                 "Received invalid sensor payload from %s for %s: %s",
                 device_name,
@@ -717,10 +743,12 @@ async def webhook_get_config(
     hass: HomeAssistant, config_entry: ConfigEntry, data: Any
 ) -> Response:
     """Handle a get config webhook."""
+    # The app may register again while awaiting
+    registration = config_entry.data
     hass_config = hass.config.as_dict()
 
     device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][
-        config_entry.data[CONF_WEBHOOK_ID]
+        registration[CONF_WEBHOOK_ID]
     ]
 
     resp = {
@@ -728,6 +756,7 @@ async def webhook_get_config(
         "longitude": hass_config["longitude"],
         "elevation": hass_config["elevation"],
         "hass_device_id": device.id,
+        "instance_id": await instance_id.async_get(hass),
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],
@@ -737,20 +766,20 @@ async def webhook_get_config(
     }
 
     if cloud.async_active_subscription(hass) and not await async_is_local_only_user(
-        hass, config_entry.data[CONF_USER_ID]
+        hass, registration[CONF_USER_ID]
     ):
-        if CONF_CLOUDHOOK_URL in config_entry.data:
-            resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
+        if CONF_CLOUDHOOK_URL in registration:
+            resp[CONF_CLOUDHOOK_URL] = registration[CONF_CLOUDHOOK_URL]
         with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    webhook_id = registration[CONF_WEBHOOK_ID]
 
     entities = {}
     for entry in er.async_entries_for_config_entry(
         er.async_get(hass), config_entry.entry_id
     ):
-        if entry.domain in ("binary_sensor", "sensor"):
+        if entry.domain in (BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN):
             unique_id = _extract_sensor_unique_id(webhook_id, entry.unique_id)
         else:
             unique_id = entry.unique_id
@@ -759,11 +788,11 @@ async def webhook_get_config(
 
     resp["entities"] = entities
 
-    return webhook_response(resp, registration=config_entry.data)
+    return webhook_response(resp, registration=registration)
 
 
 @WEBHOOK_COMMANDS.register("scan_tag")
-@validate_schema({vol.Required("tag_id"): cv.string})
+@validate_schema({probatio.Required("tag_id"): cv.string})
 async def webhook_scan_tag(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
 ) -> Response:

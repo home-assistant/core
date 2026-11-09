@@ -8,12 +8,14 @@
       "manufacturer_id": 36606
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@pantherale0"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/probe_plus",
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["pyprobeplus==1.1.2"]
+  "requirements": ["pyprobeplus==2.1.0"]
 }

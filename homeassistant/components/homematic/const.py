@@ -1,5 +1,12 @@
 """Constants for the homematic component."""
 
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .entity import HMHub
+
 DOMAIN = "homematic"
 
 DISCOVER_SWITCHES = "homematic.switch"
@@ -257,6 +264,7 @@ CONF_RESOLVENAMES_OPTIONS = ["metadata", "json", "xml", False]
 DATA_HOMEMATIC = "homematic"
 DATA_STORE = "homematic_store"
 DATA_CONF = "homematic_conf"
+DATA_HUBS: HassKey[list[HMHub]] = HassKey("homematic_hubs")
 
 CONF_INTERFACES = "interfaces"
 CONF_LOCAL_IP = "local_ip"

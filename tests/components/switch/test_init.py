@@ -1,6 +1,7 @@
 """The tests for the Switch component."""
 
 import pytest
+from pytest_homeassistant.common import MockUser, setup_test_component_platform
 
 from homeassistant import core
 from homeassistant.components import switch
@@ -11,8 +12,6 @@ from homeassistant.setup import async_setup_component
 
 from . import common
 from .common import MockSwitch
-
-from tests.common import MockUser, setup_test_component_platform
 
 
 @pytest.fixture(autouse=True)

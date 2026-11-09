@@ -15,8 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ChessConfigEntry
-from .coordinator import ChessCoordinator, ChessData
+from .coordinator import ChessConfigEntry, ChessCoordinator, ChessData
 from .entity import ChessEntity
 
 

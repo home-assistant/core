@@ -55,7 +55,6 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
-    BaseDiscoverySchemaDataTemplate,
     ConfigurableFanValueMappingDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
@@ -66,6 +65,7 @@ from .discovery_data_template import (
 from .entity import NewZwaveDiscoveryInfo
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .models import (
+    BaseDiscoverySchemaDataTemplate,
     FirmwareVersionRange,
     NewZWaveDiscoverySchema,
     ValueType,
@@ -130,6 +130,9 @@ class ZWaveDiscoverySchema:
     entity_registry_enabled_default: bool = True
     # [optional] the entity category for the discovered entity
     entity_category: EntityCategory | None = None
+    # [optional] if True, a value matching this schema is consumed but produces no
+    # entity (used to suppress redundant endpoint values while blocking fallthrough)
+    discovery_suppressed: bool = False
 
 
 DOOR_LOCK_CURRENT_MODE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -258,6 +261,18 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 25), (26, 50), (51, 75), (76, 99)]),
         ),
     ),
+    # Leviton VRF01 fan controllers using switch multilevel CC
+    ZWaveDiscoverySchema(
+        platform=Platform.FAN,
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x001D},
+        product_id={0x0209, 0x0334},
+        product_type={0x1001},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
+        ),
+    ),
     # Inovelli LZW36 light / fan controller combo using switch multilevel CC
     # The fan is endpoint 2, the light is endpoint 1.
     ZWaveDiscoverySchema(
@@ -363,9 +378,9 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR223
-    # Disable endpoint 2 (slat),
-    # as these are either combined with endpoint one as shutter_tilt
-    # or it has no practical function.
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as shutter_tilt
+    # or has no practical function. The value is consumed to block fallthrough to a
+    # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -379,7 +394,7 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             type={ValueType.NUMBER},
         ),
-        entity_registry_enabled_default=False,
+        discovery_suppressed=True,
     ),
     # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
     ZWaveDiscoverySchema(
@@ -428,9 +443,9 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Shelly Qubino Wave Shutter QNSH-001P10
-    # Disable endpoint 2 (slat),
-    # as these are either combined with endpoint one as shutter_tilt
-    # or it has no practical function.
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as shutter_tilt
+    # or has no practical function. The value is consumed to block fallthrough to a
+    # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -444,7 +459,7 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             type={ValueType.NUMBER},
         ),
-        entity_registry_enabled_default=False,
+        discovery_suppressed=True,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
@@ -538,12 +553,12 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         assumed_state=True,
     ),
-    # Heatit Z-TRM6
+    # Heatit Z-TRM6 / Z-TRM7 (same sensor-mode / endpoint mapping)
     ZWaveDiscoverySchema(
         platform=Platform.CLIMATE,
         hint="dynamic_current_temp",
         manufacturer_id={0x019B},
-        product_id={0x3001},
+        product_id={0x3001, 0x3006},
         product_type={0x0030},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
@@ -1445,6 +1460,7 @@ def async_discover_single_value(
                 additional_value_ids_to_watch=additional_value_ids_to_watch,
                 entity_registry_enabled_default=schema.entity_registry_enabled_default,
                 entity_category=schema.entity_category,
+                discovery_suppressed=schema.discovery_suppressed,
             )
 
         yield discovery_info

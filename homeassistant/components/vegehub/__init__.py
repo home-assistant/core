@@ -26,7 +26,7 @@ from .const import DOMAIN, NAME, PLATFORMS
 from .coordinator import VegeHubConfigEntry, VegeHubCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> None:
     """Set up VegeHub from a config entry."""
 
     device_mac = entry.data[CONF_MAC]
@@ -69,15 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
 
     await register_webhook()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> None:
     """Unload a VegeHub config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     # Unload platforms
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def get_webhook_handler(

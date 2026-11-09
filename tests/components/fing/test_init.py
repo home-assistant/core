@@ -1,15 +1,14 @@
 """Test the Fing integration init."""
 
 import pytest
+from pytest_homeassistant.common import AsyncMock
+from pytest_homeassistant.plugins import MockConfigEntry
 
 from homeassistant.components.fing.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
-
-from tests.common import AsyncMock
-from tests.conftest import MockConfigEntry
 
 
 @pytest.mark.parametrize("api_type", ["new", "old"])

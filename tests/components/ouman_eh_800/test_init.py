@@ -1,26 +1,32 @@
 """Test the Ouman EH-800 setup."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from ouman_eh_800_api import (
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.ouman_eh_800.const import DOMAIN, OumanDevice
+from homeassistant.components.ouman_eh_800.const import (
+    DEFAULT_SCAN_INTERVAL_SECONDS,
+    DOMAIN,
+    OumanDevice,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ouman_client")
@@ -29,7 +35,7 @@ async def test_sub_devices_link_to_main_device(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that the L1/L2 sub-devices link to the main device via via_device_id."""
+    """Test that the L1/L2 devices are child devices of the main device."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -41,11 +47,11 @@ async def test_sub_devices_link_to_main_device(
     assert main_device is not None
 
     for sub_device in (OumanDevice.L1, OumanDevice.L2):
-        device = device_registry.async_get_device_by_identifier(
+        device = device_registry.async_get_child_device_by_identifier(
             (DOMAIN, f"{entry_id}_{sub_device}"), config_entry_id=entry_id
         )
         assert device is not None
-        assert device.via_device_id == main_device.id
+        assert device.parent_device_id == main_device.id
 
 
 @pytest.mark.usefixtures("mock_ouman_client")
@@ -102,6 +108,41 @@ async def test_setup_error(
         DOMAIN, match_context={"source": SOURCE_REAUTH}
     )
     assert len(reauth_flows) == expected_reauth_flows
+
+
+@pytest.mark.parametrize(
+    ("failing_method", "error"),
+    [
+        pytest.param(
+            "get_values",
+            OumanClientCommunicationError("Timeout connecting to device"),
+            id="values_communication_error",
+        ),
+        pytest.param(
+            "get_is_l1_summer_function_active",
+            OumanClientError("Unexpected response from waterinfol1 request"),
+            id="summer_function_unexpected_response",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_update_failed(
+    hass: HomeAssistant,
+    mock_ouman_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    failing_method: str,
+    error: Exception,
+) -> None:
+    """Test that entities become unavailable when a data update fails."""
+    entity_id = "sensor.ouman_eh_800_outside_temperature"
+    assert hass.states.get(entity_id).state == "0.4"
+
+    getattr(mock_ouman_client, failing_method).side_effect = error
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("init_integration", [Platform.SELECT], indirect=True)

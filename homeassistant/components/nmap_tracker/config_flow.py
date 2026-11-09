@@ -4,7 +4,7 @@ from ipaddress import ip_address, ip_network, summarize_address_range
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import network
 from homeassistant.components.device_tracker import (
@@ -137,7 +137,7 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
 
 async def _async_build_schema_with_user_input(
     hass: HomeAssistant, user_input: dict[str, Any], include_options: bool
-) -> vol.Schema:
+) -> probatio.Schema:
     hosts = user_input.get(CONF_HOSTS_LIST, [await async_get_network(hass)])
     ip_exclude = user_input.get(
         CONF_HOSTS_EXCLUDE, [await network.async_get_source_ip(hass, MDNS_TARGET_IP)]
@@ -146,19 +146,19 @@ async def _async_build_schema_with_user_input(
     mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
 
     schema: VolDictType = {
-        vol.Required(CONF_HOSTS_LIST, default=hosts): TextSelector(
+        probatio.Required(CONF_HOSTS_LIST, default=hosts): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
-        vol.Required(
+        probatio.Required(
             CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
         ): int,
-        vol.Optional(CONF_HOSTS_EXCLUDE, default=ip_exclude): TextSelector(
+        probatio.Optional(CONF_HOSTS_EXCLUDE, default=ip_exclude): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
-        vol.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): TextSelector(
+        probatio.Optional(CONF_MAC_EXCLUDE, default=mac_exclude): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
         ): str,
     }
@@ -167,18 +167,22 @@ async def _async_build_schema_with_user_input(
             {
                 # Approved exemption: nmap scan interval is user-configurable
                 # pylint: disable-next=home-assistant-config-flow-polling-field
-                vol.Optional(
+                probatio.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
-                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=MAX_SCAN_INTERVAL)),
-                vol.Optional(
+                ): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=10, max=MAX_SCAN_INTERVAL)
+                ),
+                probatio.Optional(
                     CONF_CONSIDER_HOME,
                     default=user_input.get(CONF_CONSIDER_HOME)
                     or DEFAULT_CONSIDER_HOME.total_seconds(),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_CONSIDER_HOME)),
+                ): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=1, max=MAX_CONSIDER_HOME)
+                ),
             }
         )
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):

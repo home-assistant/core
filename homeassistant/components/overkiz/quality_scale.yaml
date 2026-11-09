@@ -41,7 +41,7 @@ rules:
 
   # Gold
   docs-examples: todo
-  discovery-update-info: done
+  discovery-update-info: todo
   entity-device-class: done
   entity-translations: todo
   docs-data-update: done

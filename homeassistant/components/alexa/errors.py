@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from homeassistant.core import HomeAssistant
+from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import API_TEMP_UNITS
@@ -103,10 +103,9 @@ class AlexaTempRangeError(AlexaError):
     error_type = "TEMPERATURE_VALUE_OUT_OF_RANGE"
 
     def __init__(
-        self, hass: HomeAssistant, temp: float, min_temp: float, max_temp: float
+        self, unit: UnitOfTemperature, temp: float, min_temp: float, max_temp: float
     ) -> None:
         """Initialize TempRange error."""
-        unit = hass.config.units.temperature_unit
         temp_range = {
             "minimumValue": {"value": min_temp, "scale": API_TEMP_UNITS[unit]},
             "maximumValue": {"value": max_temp, "scale": API_TEMP_UNITS[unit]},
@@ -122,6 +121,13 @@ class AlexaBridgeUnreachableError(AlexaError):
 
     namespace = "Alexa"
     error_type = "BRIDGE_UNREACHABLE"
+
+
+class AlexaEndpointUnreachableError(AlexaError):
+    """Class to represent EndpointUnreachable errors."""
+
+    namespace = "Alexa"
+    error_type = "ENDPOINT_UNREACHABLE"
 
 
 class AlexaSecurityPanelUnauthorizedError(AlexaError):

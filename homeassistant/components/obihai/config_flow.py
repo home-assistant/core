@@ -3,8 +3,8 @@
 from socket import gaierror, gethostbyname
 from typing import Any, override
 
+import probatio
 from pyobihai import PyObihai
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -15,15 +15,15 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .connectivity import validate_auth
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(
             CONF_USERNAME,
             default=DEFAULT_USERNAME,
         ): str,
-        vol.Required(
-            CONF_PASSWORD,
+        probatio.Required(
+            probatio.Secret(CONF_PASSWORD),
             default=DEFAULT_PASSWORD,
         ): str,
     }
@@ -52,7 +52,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Obihai."""
 
     VERSION = 2
-    discovery_schema: vol.Schema | None = None
+    discovery_schema: probatio.Schema | None = None
     _dhcp_discovery_info: DhcpServiceInfo | None = None
 
     @override
@@ -134,7 +134,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="dhcp_confirm",
                 data_schema=self.discovery_schema,
-                description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+                description_placeholders={"host": self._dhcp_discovery_info.ip},
             )
 
         return await self.async_step_user(user_input=user_input)

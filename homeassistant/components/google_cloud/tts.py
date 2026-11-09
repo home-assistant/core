@@ -7,7 +7,7 @@ from typing import Any, cast, override
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.api_core.retry import AsyncRetry
 from google.cloud import texttospeech
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     CONF_LANG,
@@ -126,7 +126,7 @@ class BaseGoogleCloudProvider:
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
         language: str,
-        options_schema: vol.Schema,
+        options_schema: probatio.Schema,
     ) -> None:
         """Init Google Cloud TTS base provider."""
         self._client = client
@@ -170,7 +170,7 @@ class BaseGoogleCloudProvider:
         """Load TTS from Google Cloud."""
         try:
             options = self._options_schema(options)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.error("Error: %s when validating options: %s", err, options)
             return None, None
 
@@ -240,7 +240,7 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
         language: str,
-        options_schema: vol.Schema,
+        options_schema: probatio.Schema,
     ) -> None:
         """Init Google Cloud TTS entity."""
         super().__init__(client, voices, language, options_schema)
@@ -276,7 +276,7 @@ class GoogleCloudTTSProvider(BaseGoogleCloudProvider, Provider):
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
         language: str,
-        options_schema: vol.Schema,
+        options_schema: probatio.Schema,
     ) -> None:
         """Init Google Cloud TTS service."""
         super().__init__(client, voices, language, options_schema)

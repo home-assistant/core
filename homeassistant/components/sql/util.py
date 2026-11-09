@@ -6,6 +6,7 @@ from decimal import Decimal
 import logging
 from typing import Any
 
+import probatio
 import sqlalchemy
 from sqlalchemy import lambda_stmt
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,9 +14,12 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
 import sqlparse
-import voluptuous as vol
 
-from homeassistant.components.recorder import SupportedDialect, get_instance
+from homeassistant.components.recorder import (
+    SupportedDialect,
+    get_engine_db_url,
+    get_instance,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -51,7 +55,7 @@ def validate_sql_select(value: Template) -> Template:
         assert value.hass
         check_and_render_sql_query(value.hass, value)
     except (TemplateError, InvalidSqlQuery) as err:
-        raise vol.Invalid(str(err)) from err
+        raise probatio.Invalid(str(err)) from err
     return value
 
 
@@ -115,6 +119,7 @@ def validate_query(
     query_template: str | Template,
     uses_recorder_db: bool,
     unique_id: str | None = None,
+    config_entry_id: str | None = None,
 ) -> None:
     """Validate the query against common performance issues.
 
@@ -124,6 +129,7 @@ def validate_query(
         uses_recorder_db: A boolean indicating if the query is
             against the recorder database.
         unique_id: The unique ID of the entity, used for creating issue registry keys.
+        config_entry_id: The config entry the issue belongs to, if any.
 
     Raises:
         ValueError: If the query uses `entity_id` without referencing `states_meta`.
@@ -157,6 +163,7 @@ def validate_query(
             hass,
             DOMAIN,
             f"entity_id_query_does_full_table_scan_{issue_key}",
+            config_entry_id=config_entry_id,
             translation_key="entity_id_query_does_full_table_scan",
             translation_placeholders={"query": redacted_query},
             is_fixable=False,
@@ -206,7 +213,7 @@ def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | 
     """
     sess: Session | None = None
     try:
-        engine = sqlalchemy.create_engine(db_url, future=True)
+        engine = sqlalchemy.create_engine(get_engine_db_url(db_url), future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
         # Run a dummy query just to test the db_url
         sess = sessmaker()

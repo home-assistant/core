@@ -6,6 +6,11 @@ from unittest.mock import MagicMock, patch
 from aiotedee import TedeeLock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 BINARY_SENSORS = ("charging", "semi_locked", "pullspring_enabled", "lock_uncalibrated")
 

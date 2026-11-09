@@ -101,7 +101,7 @@ class SFTPBackupAgent(BackupAgent):
         # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
         async with BackupAgentClient(self._entry, self._hass) as client:
             LOGGER.debug("Uploading backup: %s", backup.backup_id)
-            await client.async_upload_backup(iterator, backup)
+            await client.async_upload_backup(iterator, backup, on_progress)
         LOGGER.debug("Successfully uploaded backup id: %s", backup.backup_id)
 
     @override

@@ -1,6 +1,6 @@
 {
   "domain": "dhcp",
-  "name": "DHCP Discovery",
+  "name": "DHCP discovery",
   "codeowners": ["@bdraco"],
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/dhcp",

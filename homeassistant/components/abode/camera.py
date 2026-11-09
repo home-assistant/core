@@ -1,6 +1,8 @@
 """Support for Abode Security System cameras."""
 
+from collections.abc import Callable
 from datetime import timedelta
+from functools import partial
 from typing import Any, cast, override
 
 from jaraco.abode.devices.base import Device
@@ -10,8 +12,8 @@ import requests
 from requests.models import Response
 
 from homeassistant.components.camera import Camera
-from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
@@ -30,8 +32,17 @@ async def async_setup_entry(
     """Set up Abode camera devices."""
     data = entry.runtime_data
 
+    # jaraco.abode can't remove timeline callbacks, so register one per entry
+    # and let cameras subscribe and unsubscribe through the dispatcher.
+    signal = f"abode_camera_timeline_capture_{entry.entry_id}"
+    await hass.async_add_executor_job(
+        data.abode.events.add_timeline_callback,
+        timeline.CAPTURE_IMAGE,
+        partial(dispatcher_send, hass, signal),
+    )
+
     async_add_entities(
-        AbodeCamera(data, device, timeline.CAPTURE_IMAGE)
+        AbodeCamera(data, device, signal)
         for device in data.abode.get_devices(generic_type="camera")
     )
 
@@ -41,12 +52,13 @@ class AbodeCamera(AbodeDevice, Camera):
 
     _device: AbodeCam
     _attr_name = None
+    _unsub_capture_signal: Callable[[], None]
 
-    def __init__(self, data: AbodeSystem, device: Device, event: Event) -> None:
+    def __init__(self, data: AbodeSystem, device: Device, timeline_signal: str) -> None:
         """Initialize the Abode device."""
         AbodeDevice.__init__(self, data, device)
         Camera.__init__(self)
-        self._event = event
+        self._timeline_signal = timeline_signal
         self._response: Response | None = None
 
     @override
@@ -54,14 +66,32 @@ class AbodeCamera(AbodeDevice, Camera):
         """Subscribe Abode events."""
         await super().async_added_to_hass()
 
-        self.hass.async_add_executor_job(
-            self._data.abode.events.add_timeline_callback,
-            self._event,
-            self._capture_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._timeline_signal, self._capture_callback
+            )
         )
 
-        signal = f"abode_camera_capture_{self.entity_id}"
-        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.capture))
+        self._async_connect_capture_signal()
+        # The lambda is needed because _unsub_capture_signal is reassigned
+        # on entity id change.
+        # pylint: disable-next=unnecessary-lambda
+        self.async_on_remove(lambda: self._unsub_capture_signal())
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Reconnect the capture signal, which is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._unsub_capture_signal()
+        self._async_connect_capture_signal()
+
+    @callback
+    def _async_connect_capture_signal(self) -> None:
+        """Connect the capture signal for the current entity_id."""
+        self._unsub_capture_signal = async_dispatcher_connect(
+            self.hass, f"abode_camera_capture_{self.entity_id}", self.capture
+        )
 
     def capture(self) -> bool:
         """Request a new image capture."""

@@ -19,6 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DAILY_EVENTS,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_CANDLE_LIGHT,
@@ -27,8 +28,11 @@ from .const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from .coordinator import JewishCalendarData, JewishCalendarUpdateCoordinator
-from .entity import JewishCalendarConfigEntry
+from .coordinator import (
+    JewishCalendarConfigEntry,
+    JewishCalendarData,
+    JewishCalendarUpdateCoordinator,
+)
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
-) -> bool:
+) -> None:
     """Set up a configuration entry for Jewish calendar."""
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
@@ -81,24 +85,20 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        coordinator = config_entry.runtime_data
-        await coordinator.async_shutdown()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    coordinator = config_entry.runtime_data
+    await coordinator.async_shutdown()
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug("Migrating from version %s", config_entry.version)
@@ -140,4 +140,13 @@ async def async_migrate_entry(
         new_data[CONF_LANGUAGE] = config_entry.data[CONF_LANGUAGE][:2]
         hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
 
-    return True
+    if config_entry.version == 3:
+        new_options = {**config_entry.options}
+        if CONF_DAILY_EVENTS in new_options:
+            new_options[CONF_DAILY_EVENTS] = [
+                "tset_hakohavim" if event == "tset_hakohavim_tsom" else event
+                for event in new_options[CONF_DAILY_EVENTS]
+            ]
+        hass.config_entries.async_update_entry(
+            config_entry, options=new_options, version=4
+        )

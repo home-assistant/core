@@ -1,20 +1,21 @@
 """The tests for the Ring switch platform."""
 
-from unittest.mock import Mock
+from typing import Any
 
 import pytest
-import ring_doorbell
+from pytest_homeassistant.common import snapshot_platform
+from ring_doorbell import RingCapability
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ring.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -23,40 +24,57 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, setup_platform
 
-from tests.common import snapshot_platform
+
+class BadChimeDoorbell:
+    """Doorbell whose chime type is unknown to ring_doorbell."""
+
+    family = "doorbots"
+    id = 987654321
+    device_api_id = 987654321
+    device_id = "aa:bb:cc:dd:ee:ff"
+    name = "Bad Chime Doorbell"
+
+    @property
+    def existing_doorbell_type(self) -> str:
+        """Mimic ring_doorbell raising for an unknown chime type."""
+        raise KeyError(3)
+
+    def has_capability(self, capability: RingCapability) -> bool:
+        """Return False for all capabilities."""
+        return False
 
 
-@pytest.fixture
-def create_deprecated_siren_entity(
-    hass: HomeAssistant,
-    mock_config_entry: ConfigEntry,
-    entity_registry: er.EntityRegistry,
-):
-    """Create the entity so it is not ignored by the deprecation check."""
-    mock_config_entry.add_to_hass(hass)
+class ChimeCapabilityLostDoorbell:
+    """Doorbell whose chime enabled-state read raises after setup."""
 
-    def create_entry(device_name, device_id):
-        unique_id = f"{device_id}-siren"
+    family = "doorbots"
+    id = 987654322
+    device_api_id = 987654322
+    device_id = "aa:bb:cc:dd:ee:00"
+    name = "Chime Capability Lost Doorbell"
+    model = "doorbots"
+    existing_doorbell_type = "Mechanical"
 
-        entity_registry.async_get_or_create(
-            domain=SWITCH_DOMAIN,
-            platform=DOMAIN,
-            unique_id=unique_id,
-            suggested_object_id=f"{device_name}_siren",
-            config_entry=mock_config_entry,
-        )
+    @property
+    def existing_doorbell_type_enabled(self) -> bool:
+        """Mimic ring_doorbell raising when the chime type becomes unknown."""
+        raise KeyError(3)
 
-    create_entry("front", 765432)
-    create_entry("internal", 345678)
+    async def async_set_existing_doorbell_type_enabled(self, value: bool) -> None:
+        """Mimic ring_doorbell raising when the chime type becomes unknown."""
+        raise KeyError(3)
+
+    def has_capability(self, capability: RingCapability) -> bool:
+        """Return False for all capabilities."""
+        return False
 
 
+@pytest.mark.usefixtures("mock_ring_client")
 async def test_states(
     hass: HomeAssistant,
-    mock_ring_client: Mock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    create_deprecated_siren_entity,
 ) -> None:
     """Test states."""
 
@@ -65,42 +83,15 @@ async def test_states(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_siren_off_reports_correctly(
-    hass: HomeAssistant, mock_ring_client, create_deprecated_siren_entity
-) -> None:
-    """Tests that the initial state of a device that should be off is correct."""
-    await setup_platform(hass, Platform.SWITCH)
-
-    state = hass.states.get("switch.front_siren")
-    assert state.state == "off"
-    assert state.attributes.get("friendly_name") == "Front Siren"
-
-
-async def test_siren_on_reports_correctly(
-    hass: HomeAssistant, mock_ring_client, create_deprecated_siren_entity
-) -> None:
-    """Tests that the initial state of a device that should be on is correct."""
-    await setup_platform(hass, Platform.SWITCH)
-
-    state = hass.states.get("switch.internal_siren")
-    assert state.state == "on"
-    assert state.attributes.get("friendly_name") == "Internal Siren"
-
-
 @pytest.mark.parametrize(
     ("entity_id"),
     [
-        ("switch.front_siren"),
         ("switch.front_door_in_home_chime"),
         ("switch.front_motion_detection"),
     ],
 )
-async def test_switch_can_be_turned_on_and_off(
-    hass: HomeAssistant,
-    mock_ring_client,
-    create_deprecated_siren_entity,
-    entity_id,
-) -> None:
+@pytest.mark.usefixtures("mock_ring_client")
+async def test_switch_can_be_turned_on_and_off(hass: HomeAssistant, entity_id) -> None:
     """Tests the switch turns on and off correctly."""
     await setup_platform(hass, Platform.SWITCH)
 
@@ -115,6 +106,7 @@ async def test_switch_can_be_turned_on_and_off(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
+    assert state
     assert state.state == STATE_ON
 
     await hass.services.async_call(
@@ -126,46 +118,57 @@ async def test_switch_can_be_turned_on_and_off(
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
+    assert state
     assert state.state == STATE_OFF
 
 
-@pytest.mark.parametrize(
-    ("exception_type", "reauth_expected"),
-    [
-        (ring_doorbell.AuthenticationError, True),
-        (ring_doorbell.RingTimeout, False),
-        (ring_doorbell.RingError, False),
-    ],
-    ids=["Authentication", "Timeout", "Other"],
-)
-async def test_switch_errors_when_turned_on(
-    hass: HomeAssistant,
-    mock_ring_client,
-    mock_ring_devices,
-    exception_type,
-    reauth_expected,
-    create_deprecated_siren_entity,
+@pytest.mark.usefixtures("mock_ring_client")
+async def test_switch_setup_succeeds_with_unknown_chime_type(
+    hass: HomeAssistant, mock_ring_devices: Any
 ) -> None:
-    """Tests the switch turns on correctly."""
+    """Test that an unknown doorbell chime type does not abort switch setup."""
+    mock_ring_devices.all_devices.append(BadChimeDoorbell())
+
     await setup_platform(hass, Platform.SWITCH)
-    config_entry = hass.config_entries.async_entries("ring")[0]
 
-    assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert hass.states.get("switch.front_motion_detection")
+    assert not hass.states.get("switch.bad_chime_doorbell_in_home_chime")
 
-    front_siren_mock = mock_ring_devices.get_device(765432)
-    front_siren_mock.async_set_siren.side_effect = exception_type
 
-    with pytest.raises(HomeAssistantError):
+@pytest.mark.usefixtures("mock_ring_client")
+async def test_in_home_chime_unknown_when_type_becomes_unreadable(
+    hass: HomeAssistant, mock_ring_devices: Any
+) -> None:
+    """Test that an in-home chime switch reads as unknown when its type becomes unreadable."""
+    mock_ring_devices.all_devices.append(ChimeCapabilityLostDoorbell())
+
+    await setup_platform(hass, Platform.SWITCH)
+
+    state = hass.states.get("switch.chime_capability_lost_doorbell_in_home_chime")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_ring_client")
+async def test_in_home_chime_toggle_errors_when_type_unreadable(
+    hass: HomeAssistant, mock_ring_devices: Any
+) -> None:
+    """Test that toggling raises a translated error when the chime type becomes unreadable."""
+    mock_ring_devices.all_devices.append(ChimeCapabilityLostDoorbell())
+
+    await setup_platform(hass, Platform.SWITCH)
+
+    state = hass.states.get("switch.chime_capability_lost_doorbell_in_home_chime")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            "switch", "turn_on", {"entity_id": "switch.front_siren"}, blocking=True
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": state.entity_id},
+            blocking=True,
         )
+    assert err.value.translation_key == "chime_type_unknown"
+    assert err.value.translation_domain == DOMAIN
     await hass.async_block_till_done()
-    front_siren_mock.async_set_siren.assert_called_once()
-    assert (
-        any(
-            flow
-            for flow in config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
-            if flow["handler"] == "ring"
-        )
-        == reauth_expected
-    )

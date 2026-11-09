@@ -4,9 +4,10 @@ from collections.abc import Mapping
 from typing import Any, cast, override
 import zoneinfo
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_TIME_ZONE
+from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -42,16 +43,16 @@ async def validate_duplicate(
     return user_input
 
 
-async def get_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Get available timezones."""
     get_timezones: list[str] = list(
         await handler.parent_handler.hass.async_add_executor_job(
             zoneinfo.available_timezones
         )
     )
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_TIME_ZONE): SelectSelector(
+            probatio.Required(CONF_TIME_ZONE): SelectSelector(
                 SelectSelectorConfig(
                     options=get_timezones, mode=SelectSelectorMode.DROPDOWN, sort=True
                 )
@@ -60,9 +61,11 @@ async def get_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     ).extend(DATA_SCHEMA_OPTIONS.schema)
 
 
-DATA_SCHEMA_OPTIONS = vol.Schema(
+DATA_SCHEMA_OPTIONS = probatio.Schema(
     {
-        vol.Optional(CONF_TIME_FORMAT, default=DEFAULT_TIME_STR_FORMAT): SelectSelector(
+        probatio.Optional(
+            CONF_TIME_FORMAT, default=DEFAULT_TIME_STR_FORMAT
+        ): SelectSelector(
             SelectSelectorConfig(
                 options=TIME_STR_OPTIONS,
                 custom_value=True,
@@ -94,6 +97,7 @@ class WorldclockConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

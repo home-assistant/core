@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aio_ownet.exceptions import OWServerConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.onewire.const import (
     DOMAIN,
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 _HASSIO_DISCOVERY = HassioServiceInfo(
     config={"host": "1302b8e0-owserver", "port": 4304, "addon": "owserver (1-wire)"},

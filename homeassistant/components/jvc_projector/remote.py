@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import JVCConfigEntry
 from .entity import JvcProjectorEntity
 
+POWER_SLEEP = 1
+
 COMMANDS: list[str] = [
     cmd.Remote.MENU,
     cmd.Remote.UP,
@@ -92,14 +94,14 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.device.set(cmd.Power, cmd.Power.ON)
-        await asyncio.sleep(1)
+        await asyncio.sleep(POWER_SLEEP)
         await self.coordinator.async_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.device.set(cmd.Power, cmd.Power.OFF)
-        await asyncio.sleep(1)
+        await asyncio.sleep(POWER_SLEEP)
         await self.coordinator.async_refresh()
 
     @override

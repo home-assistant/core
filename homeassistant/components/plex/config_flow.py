@@ -4,20 +4,20 @@ from collections.abc import Mapping
 from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any, override
+from urllib.parse import urlparse
 
 from aiohttp import web_response
 import plexapi.exceptions
 from plexapi.gdm import GDM
 from plexauth import PlexAuth
+import probatio
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -56,7 +56,7 @@ from .const import (
     X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
-from .helpers import get_plex_server
+from .helpers import PlexConfigEntry, get_plex_server
 from .server import PlexServer
 
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
@@ -98,7 +98,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PlexConfigEntry,
     ) -> PlexOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlexOptionsFlowHandler(config_entry)
@@ -153,24 +153,24 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         previous_input = user_input or {}
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_HOST,
                     description={"suggested_value": previous_input.get(CONF_HOST)},
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PORT, default=previous_input.get(CONF_PORT, DEFAULT_PORT)
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_SSL, default=previous_input.get(CONF_SSL, DEFAULT_SSL)
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_VERIFY_SSL,
                     default=previous_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 ): bool,
-                vol.Optional(
-                    CONF_TOKEN,
+                probatio.Optional(
+                    probatio.Secret(CONF_TOKEN),
                     description={"suggested_value": previous_input.get(CONF_TOKEN)},
                 ): str,
             }
@@ -259,6 +259,78 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=url, data=data)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the server address."""
+        entry = self._get_reconfigure_entry()
+        server_config = entry.data[PLEX_SERVER_CONFIG]
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            prefix = "https" if user_input[CONF_SSL] else "http"
+            new_server_config = {
+                **server_config,
+                CONF_URL: f"{prefix}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+            }
+            plex_server = PlexServer(self.hass, new_server_config)
+            try:
+                await self.hass.async_add_executor_job(plex_server.connect)
+            except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
+                errors["base"] = "faulty_credentials"
+            except requests.exceptions.SSLError:
+                errors["base"] = "ssl_error"
+            except plexapi.exceptions.NotFound, requests.exceptions.ConnectionError:
+                errors[CONF_HOST] = "not_found"
+            except Exception:
+                _LOGGER.exception("Unknown error connecting to Plex server")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(plex_server.machine_identifier)
+                self._abort_if_unique_id_mismatch()
+                url = plex_server.url_in_use
+                if not url.startswith("https"):
+                    new_server_config.pop(CONF_VERIFY_SSL)
+                result = self.async_update_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_SERVER: plex_server.friendly_name,
+                        PLEX_SERVER_CONFIG: {**new_server_config, CONF_URL: url},
+                    },
+                )
+                # The update listener only applies options, it does not reload.
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
+        else:
+            parsed_url = urlparse(server_config[CONF_URL])
+            host = parsed_url.hostname
+            if host and ":" in host:
+                host = f"[{host}]"
+            ssl = parsed_url.scheme == "https"
+            user_input = {
+                CONF_HOST: host,
+                CONF_PORT: parsed_url.port or (443 if ssl else 80),
+                CONF_SSL: ssl,
+                CONF_VERIFY_SSL: server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Required(CONF_SSL): bool,
+                        probatio.Required(CONF_VERIFY_SSL): bool,
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )
+
     async def async_step_select_server(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -283,8 +355,12 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_server",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_SERVER_IDENTIFIER): vol.In(available_servers)}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_SERVER_IDENTIFIER): probatio.In(
+                        available_servers
+                    )
+                }
             ),
             errors={},
         )
@@ -366,7 +442,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 class PlexOptionsFlowHandler(OptionsFlow):
     """Handle Plex options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: PlexConfigEntry) -> None:
         """Initialize Plex options flow."""
         self.options = deepcopy(dict(config_entry.options))
         self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
@@ -423,20 +499,20 @@ class PlexOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="plex_mp_settings",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USE_EPISODE_ART,
                         default=plex_server.option_use_episode_art,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_MONITORED_USERS, default=default_accounts
                     ): cv.multi_select(available_accounts),
-                    vol.Required(
+                    probatio.Required(
                         CONF_IGNORE_NEW_SHARED_USERS,
                         default=plex_server.option_ignore_new_shared_users,
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_IGNORE_PLEX_WEB_CLIENTS,
                         default=plex_server.option_ignore_plexweb_clients,
                     ): bool,

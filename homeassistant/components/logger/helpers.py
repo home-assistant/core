@@ -9,6 +9,8 @@ from functools import lru_cache
 import logging
 from typing import Any
 
+import probatio
+
 from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
@@ -28,6 +30,10 @@ from .const import (
 )
 
 DATA_LOGGER: HassKey[LoggerDomainConfig] = HassKey(DOMAIN)
+
+VALID_LOG_LEVEL = probatio.All(
+    probatio.Upper, probatio.In(LOGSEVERITY), LOGSEVERITY.__getitem__
+)
 
 SAVE_DELAY = 15.0
 # At startup, we want to save after a long delay to avoid

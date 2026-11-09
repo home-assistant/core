@@ -5,7 +5,7 @@ import logging
 from typing import Any, Self, override
 
 from bleak_retry_connector import BleakError, BLEDevice
-import voluptuous as vol
+import probatio
 from yalexs_ble import (
     AuthError,
     DisconnectedError,
@@ -21,7 +21,6 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -31,6 +30,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+from . import YALEXSBLEConfigEntry
 from .config_cache import async_add_validated_config, async_get_validated_config
 from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 from .util import async_find_existing_service_info, human_readable_name
@@ -186,7 +186,6 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={
@@ -228,8 +227,11 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_validate",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_KEY): str, vol.Required(CONF_SLOT): int}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_KEY)): str,
+                    probatio.Required(CONF_SLOT): int,
+                }
             ),
             description_placeholders={
                 "address": reauth_entry.data[CONF_ADDRESS],
@@ -278,10 +280,10 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="key_slot",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_KEY): str,
-                    vol.Required(CONF_SLOT): int,
+                    probatio.Required(probatio.Secret(CONF_KEY)): str,
+                    probatio.Required(CONF_SLOT): int,
                 }
             ),
             errors=errors,
@@ -323,9 +325,9 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: self._async_get_name_from_address(
                             service_info.address
@@ -357,7 +359,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: YALEXSBLEConfigEntry,
     ) -> YaleXSBLEOptionsFlowHandler:
         """Get the options flow for this handler."""
         return YaleXSBLEOptionsFlowHandler()
@@ -383,9 +385,9 @@ class YaleXSBLEOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="device_options",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALWAYS_CONNECTED,
                         default=self.config_entry.options.get(
                             CONF_ALWAYS_CONNECTED, False

@@ -1,16 +1,19 @@
 """Backup platform for the Backblaze B2 integration."""
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Iterator
+from contextlib import suppress
 import functools
 import json
 import logging
 import mimetypes
+import threading
 from time import time
 from typing import Any, override
 
-from b2sdk.v2 import FileVersion
+from b2sdk.v2 import AbstractProgressListener, FileVersion
 from b2sdk.v2.exception import B2Error
+from requests import Response
 
 from homeassistant.components.backup import (
     AgentBackup,
@@ -22,7 +25,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util.async_iterator import AsyncIteratorReader
+from homeassistant.util.async_iterator import AsyncIteratorReader, ResourceChunkIterator
 
 from . import BackblazeConfigEntry
 from .const import (
@@ -44,6 +47,8 @@ UPLOAD_TIMEOUT = 43200  # 12 hours (matches B2 HTTP timeout)
 # Timeout for metadata download operations (in seconds)
 # This prevents the backup system from hanging when B2 connections fail
 METADATA_DOWNLOAD_TIMEOUT = 60
+
+DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
@@ -102,6 +107,19 @@ def _create_backup_from_metadata(
     return AgentBackup.from_dict(metadata)
 
 
+def _read_chunk(lock: threading.Lock, chunks: Iterator[bytes]) -> bytes:
+    """Read the next chunk of a download."""
+    with lock:
+        return next(chunks, b"")
+
+
+def _close_response(lock: threading.Lock, response: Response, file_name: str) -> None:
+    """Close a download response once no read is running."""
+    with lock:
+        response.close()
+    _LOGGER.debug("Finished streaming download for %s", file_name)
+
+
 def handle_b2_errors[T](
     func: Callable[..., Coroutine[Any, Any, T]],
 ) -> Callable[..., Coroutine[Any, Any, T]]:
@@ -149,6 +167,33 @@ def async_register_backup_agents_listener(
             hass.data.pop(DATA_BACKUP_AGENT_LISTENERS, None)
 
     return remove_listener
+
+
+class _ProgressListener(AbstractProgressListener):  # type: ignore[misc]
+    """Forward upload progress from B2 worker threads to the event loop."""
+
+    def __init__(self, hass: HomeAssistant, on_progress: OnProgressCallback) -> None:
+        """Initialize the listener."""
+        super().__init__()
+        self._hass = hass
+        self._on_progress = on_progress
+        # The worker thread can outlive a timed out or cancelled upload
+        self.active = True
+
+    def set_total_bytes(self, total_byte_count: int) -> None:
+        """Ignore the total, the backup size is already known."""
+
+    def bytes_completed(self, byte_count: int) -> None:
+        """Report the number of bytes uploaded so far."""
+        # The loop is closed if Home Assistant stops during the upload
+        with suppress(RuntimeError):
+            self._hass.loop.call_soon_threadsafe(self._report, byte_count)
+
+    @callback
+    def _report(self, byte_count: int) -> None:
+        """Report progress unless the upload has ended."""
+        if self.active:
+            self._on_progress(bytes_uploaded=byte_count)
 
 
 class BackblazeBackupAgent(BackupAgent):
@@ -220,22 +265,23 @@ class BackblazeBackupAgent(BackupAgent):
 
         downloaded_file = await self._hass.async_add_executor_job(file.download)
         response = downloaded_file.response
-
-        async def stream_response() -> AsyncIterator[bytes]:
-            """Stream the response into an AsyncIterator."""
-            try:
-                iterator = response.iter_content(chunk_size=1024 * 1024)
-                while True:
-                    chunk = await self._hass.async_add_executor_job(
-                        next, iterator, None
-                    )
-                    if chunk is None:
-                        break
-                    yield chunk
-            finally:
-                _LOGGER.debug("Finished streaming download for %s", file.file_name)
-
-        return stream_response()
+        chunks = response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE)
+        # Reads and closing run in the executor, closing waits for a running read
+        lock = threading.Lock()
+        close = functools.partial(
+            self._hass.async_add_executor_job,
+            _close_response,
+            lock,
+            response,
+            file.file_name,
+        )
+        return ResourceChunkIterator(
+            functools.partial(
+                self._hass.async_add_executor_job, _read_chunk, lock, chunks
+            ),
+            close=close,
+            aclose=close,
+        )
 
     @handle_b2_errors
     @override
@@ -272,7 +318,9 @@ class BackblazeBackupAgent(BackupAgent):
 
         tar_uploaded = False
         try:
-            await self._upload_backup_file(prefixed_tar_filename, open_stream, {})
+            await self._upload_backup_file(
+                prefixed_tar_filename, open_stream, {}, on_progress
+            )
             tar_uploaded = True
             _LOGGER.debug(
                 "Main backup file upload finished for %s", prefixed_tar_filename
@@ -321,6 +369,7 @@ class BackblazeBackupAgent(BackupAgent):
         filename: str,
         content_type: str,
         file_info: dict[str, Any],
+        progress_listener: AbstractProgressListener,
     ) -> FileVersion:
         """Synchronously upload unbound stream to B2."""
         return self._bucket.upload_unbound_stream(
@@ -328,6 +377,7 @@ class BackblazeBackupAgent(BackupAgent):
             filename,
             content_type=content_type,
             file_info=file_info,
+            progress_listener=progress_listener,
         )
 
     def _download_and_parse_metadata_sync(
@@ -343,12 +393,14 @@ class BackblazeBackupAgent(BackupAgent):
         filename: str,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         file_info: dict[str, Any],
+        on_progress: OnProgressCallback,
     ) -> None:
         """Upload backup file to B2 using streaming."""
         _LOGGER.debug("Starting streaming upload for %s", filename)
 
         stream = await open_stream()
         reader = AsyncIteratorReader(self._hass.loop, stream)
+        progress_listener = _ProgressListener(self._hass, on_progress)
 
         _LOGGER.debug("Uploading backup file %s with streaming", filename)
         try:
@@ -360,6 +412,7 @@ class BackblazeBackupAgent(BackupAgent):
                     filename,
                     content_type or "application/x-tar",
                     file_info,
+                    progress_listener,
                 ),
                 timeout=UPLOAD_TIMEOUT,
             )
@@ -377,6 +430,7 @@ class BackblazeBackupAgent(BackupAgent):
             raise
         finally:
             reader.close()
+            progress_listener.active = False
 
         _LOGGER.debug("Successfully uploaded %s (ID: %s)", filename, file_version.id_)
 

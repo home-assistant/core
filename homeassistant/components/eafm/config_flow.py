@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from aioeafm import get_stations
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -63,7 +63,7 @@ class UKFloodsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
-                {vol.Required("station"): vol.In(sorted(self.stations))}
+            data_schema=probatio.Schema(
+                {probatio.Required("station"): probatio.In(sorted(self.stations))}
             ),
         )

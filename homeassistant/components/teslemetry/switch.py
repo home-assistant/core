@@ -6,6 +6,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import AutoSeat, Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
@@ -20,13 +21,15 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
 from . import TeslemetryConfigEntry
+from .const import CHARGE_ON_SOLAR_SWITCH_KEY
 from .entity import (
+    TeslemetryChargeOnSolarEntity,
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import async_set_charge_on_solar, handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -37,8 +40,8 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
     polling: bool = False
-    on_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
-    off_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
+    on_func: Callable[[Vehicle | VehicleRouter], Awaitable[dict[str, Any]]]
+    off_func: Callable[[Vehicle | VehicleRouter], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
@@ -151,6 +154,11 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
 )
 
+CHARGE_ON_SOLAR_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key=CHARGE_ON_SOLAR_SWITCH_KEY,
+    device_class=SwitchDeviceClass.SWITCH,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -194,13 +202,23 @@ async def async_setup_entry(
         if energysite.info_coordinator.data.get("components_storm_mode_capable")
     )
 
+    if (store := entry.runtime_data.charge_on_solar_store) is not None:
+        entities.extend(
+            TeslemetryChargeOnSolarSwitchEntity(
+                vehicle,
+                CHARGE_ON_SOLAR_SWITCH_DESCRIPTION,
+                store,
+            )
+            for vehicle in entry.runtime_data.vehicles
+        )
+
     async_add_entities(entities)
 
 
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     """Base class for all Teslemetry switch entities."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: TeslemetrySwitchEntityDescription
 
@@ -326,6 +344,7 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
             )
         )
         self._attr_is_on = True
+        self.coordinator.async_set_command_value(self.key, False)
         self.async_write_ha_state()
 
     @override
@@ -338,6 +357,7 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
             )
         )
         self._attr_is_on = False
+        self.coordinator.async_set_command_value(self.key, True)
         self.async_write_ha_state()
 
 
@@ -367,6 +387,7 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.api.storm_mode(enabled=True))
         self._attr_is_on = True
+        self.coordinator.async_set_command_value(self.key, True)
         self.async_write_ha_state()
 
     @override
@@ -375,4 +396,40 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.api.storm_mode(enabled=False))
         self._attr_is_on = False
+        self.coordinator.async_set_command_value(self.key, False)
         self.async_write_ha_state()
+
+
+class TeslemetryChargeOnSolarSwitchEntity(TeslemetryChargeOnSolarEntity, SwitchEntity):
+    """Switch entity for Tesla charge-on-solar mode."""
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._attr_is_on = self.vehicle.charge_on_solar_enabled
+
+    async def _async_set_charge_on_solar(self, enabled: bool) -> None:
+        """Set charge-on-solar mode, omitting the upper bound if it isn't known yet."""
+        async with self.vehicle.charge_on_solar_lock:
+            await async_set_charge_on_solar(
+                handle_vehicle_command,
+                self.api,
+                enabled=enabled,
+                lower_charge_limit=self.vehicle.charge_on_solar_lower_limit,
+                charge_limit_soc=self.vehicle.charge_limit_soc,
+            )
+            self.vehicle.charge_on_solar_enabled = enabled
+            self._store.async_save(self.vehicle)
+            self._attr_is_on = enabled
+            self.async_write_ha_state()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on charge-on-solar mode."""
+        await self._async_set_charge_on_solar(enabled=True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off charge-on-solar mode."""
+        await self._async_set_charge_on_solar(enabled=False)
