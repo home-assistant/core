@@ -82,6 +82,9 @@
     "battery": {
       "name": "Battery {number}"
     },
+    "battery_pack": {
+      "name": "Battery pack {group}.{pack}"
+    },
     "pv_string": {
       "name": "PV string {number}"
     }
@@ -717,6 +720,12 @@
       "battery_state_of_health_total": {
         "name": "Battery state of health total"
       },
+      "cell_voltage_max": {
+        "name": "Highest cell voltage"
+      },
+      "cell_voltage_min": {
+        "name": "Lowest cell voltage"
+      },
       "charge_cycle": {
         "name": "Charge cycle"
       },
@@ -770,6 +779,9 @@
       "feedin_max_power": {
         "name": "Feed-in maximum power"
       },
+      "full_charge_capacity": {
+        "name": "Full charge capacity"
+      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
@@ -784,6 +796,9 @@
       },
       "import_energy_total": {
         "name": "Import energy total"
+      },
+      "internal_temperature": {
+        "name": "Internal temperature"
       },
       "inverter_temperature_1": {
         "name": "Inverter temperature 1"
@@ -802,6 +817,9 @@
       },
       "module_temperature_2": {
         "name": "Module temperature 2"
+      },
+      "mosfet_temperature": {
+        "name": "MOSFET temperature"
       },
       "off_grid_discharge_cutoff_soc": {
         "name": "Off-grid discharge cut-off state of charge"
@@ -977,6 +995,9 @@
       },
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
+      },
+      "remaining_capacity": {
+        "name": "Remaining capacity"
       },
       "solar_generation_today": {
         "name": "Solar generation today"

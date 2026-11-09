@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_GATEWAY_ID
@@ -56,6 +56,7 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
         self._device_control = self._device.blind_control
         self._device_data = self._device_control.blinds[0]
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""

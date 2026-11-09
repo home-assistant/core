@@ -56,7 +56,7 @@
         "name": "Camera in use"
       },
       "locked": {
-        "name": "Locked"
+        "name": "Session lock"
       },
       "pending_reboot": {
         "name": "Pending reboot"
