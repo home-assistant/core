@@ -73,6 +73,12 @@ from .dpa import (
     FB1013,
     FB1015,
     FB1016,
+    FB1101,
+    FB1102,
+    FB1103,
+    FB1104,
+    FB1105,
+    FB1110,
 )
 from .knx_selector import (
     AllSerializeFirst,
@@ -1183,6 +1189,13 @@ class SensorKnxConfig:
                 FB1013.ATMOSPHERIC_PRESSURE_ABS,
                 FB1015.ANALOG_INPUT_VALUE,
                 FB1016.TEMP_VALUE,
+                # meters: the consumption is the main value of the channel
+                FB1101.CURRENT_ENERGY_CONSUMPTION,
+                FB1102.CURRENT_ENERGY_CONSUMPTION,
+                FB1103.CURRENT_VOLUME_CONSUMPTION,
+                FB1104.CURRENT_ENERGY_CONSUMPTION,
+                FB1105.CURRENT_VOLUME_CONSUMPTION,
+                FB1110.CURRENT_ENERGY_CONSUMPTION,
             ],
         ),
     ]
