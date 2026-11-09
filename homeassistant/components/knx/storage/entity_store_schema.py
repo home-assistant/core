@@ -39,43 +39,8 @@ from ..validation import (
     validate_number_attributes,
     validate_sensor_attributes,
 )
+from . import dpa
 from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
-from .dpa import (
-    FB180,
-    FB187,
-    FB320,
-    FB321,
-    FB322,
-    FB323,
-    FB324,
-    FB325,
-    FB326,
-    FB327,
-    FB328,
-    FB329,
-    FB330,
-    FB331,
-    FB332,
-    FB333,
-    FB336,
-    FB337,
-    FB338,
-    FB339,
-    FB348,
-    FB398,
-    FB399,
-    FB409,
-    FB410,
-    FB417,
-    FB418,
-    FB422,
-    FB423,
-    FB427,
-    FB800,
-    FB1013,
-    FB1015,
-    FB1016,
-)
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
@@ -250,16 +215,16 @@ class CoverKnxConfig:
 
     ga_up_down: Annotated[
         GroupAddressConfig | None,
-        ga(state=False, valid_dpt="1", dpa_write=[FB800.MOVE_UP_DOWN]),
+        ga(state=False, valid_dpt="1", dpa_write=[dpa.FB800.MOVE_UP_DOWN]),
     ] = None
     invert_updown: Annotated[bool, selector.BooleanSelector()] = False
     ga_stop: Annotated[
         GroupAddressConfig | None,
-        ga(state=False, valid_dpt="1", dpa_write=[FB800.DEDICATED_STOP]),
+        ga(state=False, valid_dpt="1", dpa_write=[dpa.FB800.DEDICATED_STOP]),
     ] = None
     ga_step: Annotated[
         GroupAddressConfig | None,
-        ga(state=False, valid_dpt="1", dpa_write=[FB800.STOP_STEP_UP_DOWN]),
+        ga(state=False, valid_dpt="1", dpa_write=[dpa.FB800.STOP_STEP_UP_DOWN]),
     ] = None
     section_position_control: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -267,7 +232,9 @@ class CoverKnxConfig:
     ga_position_set: Annotated[
         GroupAddressConfig | None,
         ga(
-            state=False, valid_dpt="5.001", dpa_write=[FB800.SET_ABS_POS_BLINDS_PERCENT]
+            state=False,
+            valid_dpt="5.001",
+            dpa_write=[dpa.FB800.SET_ABS_POS_BLINDS_PERCENT],
         ),
     ] = None
     ga_position_state: Annotated[
@@ -275,7 +242,7 @@ class CoverKnxConfig:
         ga(
             write=False,
             valid_dpt="5.001",
-            dpa_state=[FB800.CURRENT_ABS_POS_BLINDS_PERCENT],
+            dpa_state=[dpa.FB800.CURRENT_ABS_POS_BLINDS_PERCENT],
         ),
     ] = None
     invert_position: Annotated[bool, selector.BooleanSelector()] = False
@@ -286,8 +253,8 @@ class CoverKnxConfig:
         GroupAddressConfig | None,
         ga(
             valid_dpt="5.001",
-            dpa_write=[FB800.SET_ABS_POS_SLATS_PERCENT],
-            dpa_state=[FB800.CURRENT_ABS_POS_SLATS_PERCENT],
+            dpa_write=[dpa.FB800.SET_ABS_POS_SLATS_PERCENT],
+            dpa_state=[dpa.FB800.CURRENT_ABS_POS_SLATS_PERCENT],
         ),
     ] = None
     invert_angle: Annotated[bool, selector.BooleanSelector()] = False
@@ -431,14 +398,14 @@ class LightColorSingleAddress:
             write_required=True,
             dpt=LightColorMode,
             dpa_write=[
-                FB422.COLOUR_SET_XYY,
-                FB423.COLOUR_SET_RGB,
-                FB423.COLOUR_SET_RGBW,
+                dpa.FB422.COLOUR_SET_XYY,
+                dpa.FB423.COLOUR_SET_RGB,
+                dpa.FB423.COLOUR_SET_RGBW,
             ],
             dpa_state=[
-                FB422.CURRENT_COLOUR_XYY,
-                FB423.CURRENT_COLOUR_RGB,
-                FB423.CURRENT_COLOUR_RGBW,
+                dpa.FB422.CURRENT_COLOUR_XYY,
+                dpa.FB423.CURRENT_COLOUR_RGB,
+                dpa.FB423.CURRENT_COLOUR_RGBW,
             ],
         ),
     ] = None
@@ -450,54 +417,68 @@ class LightColorIndividualAddresses:
 
     ga_red_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_RED]),
+        ga(
+            write_required=False, valid_dpt="1", dpa_write=[dpa.FB423.SWITCH_ON_OFF_RED]
+        ),
     ] = None
     ga_red_brightness: Annotated[
         GroupAddressConfig,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_RED],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_RED],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_RED],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_RED],
         ),
     ]
     ga_green_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_GREEN]),
+        ga(
+            write_required=False,
+            valid_dpt="1",
+            dpa_write=[dpa.FB423.SWITCH_ON_OFF_GREEN],
+        ),
     ] = None
     ga_green_brightness: Annotated[
         GroupAddressConfig,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_GREEN],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_GREEN],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_GREEN],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_GREEN],
         ),
     ]
     ga_blue_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_BLUE]),
+        ga(
+            write_required=False,
+            valid_dpt="1",
+            dpa_write=[dpa.FB423.SWITCH_ON_OFF_BLUE],
+        ),
     ] = None
     ga_blue_brightness: Annotated[
         GroupAddressConfig,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_BLUE],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_BLUE],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_BLUE],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_BLUE],
         ),
     ]
     ga_white_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_WHITE]),
+        ga(
+            write_required=False,
+            valid_dpt="1",
+            dpa_write=[dpa.FB423.SWITCH_ON_OFF_WHITE],
+        ),
     ] = None
     ga_white_brightness: Annotated[
         GroupAddressConfig | None,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_WHITE],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_WHITE],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_WHITE],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_WHITE],
         ),
     ] = None
 
@@ -527,18 +508,18 @@ class LightKnxConfig:
             write_required=True,
             valid_dpt="1",
             dpa_write=[
-                FB417.SWITCH_ON_OFF,
-                FB418.SWITCH_ON_OFF,
-                FB422.SWITCH_ON_OFF,
-                FB423.COMBINED_SWITCH_ON_OFF,
-                FB427.SWITCH_ON_OFF,
+                dpa.FB417.SWITCH_ON_OFF,
+                dpa.FB418.SWITCH_ON_OFF,
+                dpa.FB422.SWITCH_ON_OFF,
+                dpa.FB423.COMBINED_SWITCH_ON_OFF,
+                dpa.FB427.SWITCH_ON_OFF,
             ],
             dpa_state=[
-                FB417.INFO_ON_OFF,
-                FB418.INFO_ON_OFF,
-                FB422.INFO_ON_OFF,
-                FB423.COMBINED_INFO_ON_OFF,
-                FB427.INFO_ON_OFF,
+                dpa.FB417.INFO_ON_OFF,
+                dpa.FB418.INFO_ON_OFF,
+                dpa.FB422.INFO_ON_OFF,
+                dpa.FB423.COMBINED_INFO_ON_OFF,
+                dpa.FB427.INFO_ON_OFF,
             ],
         ),
     ] = None
@@ -548,14 +529,14 @@ class LightKnxConfig:
             write_required=True,
             valid_dpt="5.001",
             dpa_write=[
-                FB418.ABS_SETVALUE_CONTROL,
-                FB422.ABS_SETVALUE_CONTROL,
-                FB427.ABS_SETVALUE_CONTROL,
+                dpa.FB418.ABS_SETVALUE_CONTROL,
+                dpa.FB422.ABS_SETVALUE_CONTROL,
+                dpa.FB427.ABS_SETVALUE_CONTROL,
             ],
             dpa_state=[
-                FB418.ACTUAL_DIMMING_VALUE,
-                FB422.ACTUAL_DIMMING_VALUE,
-                FB427.ACTUAL_DIMMING_VALUE,
+                dpa.FB418.ACTUAL_DIMMING_VALUE,
+                dpa.FB422.ACTUAL_DIMMING_VALUE,
+                dpa.FB427.ACTUAL_DIMMING_VALUE,
             ],
         ),
     ] = None
@@ -567,8 +548,8 @@ class LightKnxConfig:
         ga(
             write_required=True,
             dpt=ColorTempModes,
-            dpa_write=[FB427.ABS_COLOUR_TEMPERATURE_CONTROL],
-            dpa_state=[FB427.CURRENT_COLOUR_TEMPERATURE],
+            dpa_write=[dpa.FB427.ABS_COLOUR_TEMPERATURE_CONTROL],
+            dpa_state=[dpa.FB427.CURRENT_COLOUR_TEMPERATURE],
         ),
     ] = None
     color_temp_min: Annotated[
@@ -910,8 +891,8 @@ class SwitchKnxConfig:
         ga(
             write_required=True,
             valid_dpt="1",
-            dpa_write=[FB417.SWITCH_ON_OFF],
-            dpa_state=[FB417.INFO_ON_OFF],
+            dpa_write=[dpa.FB417.SWITCH_ON_OFF],
+            dpa_state=[dpa.FB417.INFO_ON_OFF],
         ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
@@ -986,8 +967,11 @@ class ClimateTargetTemperature:
         ga(
             write_required=True,
             valid_dpt="9.001",
-            dpa_write=[FB398.TEMP_ROOM_SETP_USER_ABS],
-            dpa_state=[FB399.TEMP_ROOM_SETP_ACT, FB398.TEMP_ROOM_SETP_USER_ABS_EFF],
+            dpa_write=[dpa.FB398.TEMP_ROOM_SETP_USER_ABS],
+            dpa_state=[
+                dpa.FB399.TEMP_ROOM_SETP_ACT,
+                dpa.FB398.TEMP_ROOM_SETP_USER_ABS_EFF,
+            ],
         ),
     ]
     min_temp: Annotated[
@@ -1057,12 +1041,12 @@ class ClimateKnxConfig:
             write=False,
             state_required=True,
             valid_dpt="9.001",
-            dpa_state=[FB321.TEMP_ROOM],
+            dpa_state=[dpa.FB321.TEMP_ROOM],
         ),
     ]
     ga_humidity_current: Annotated[
         GroupAddressConfig | None,
-        ga(write=False, valid_dpt="9.007", dpa_state=[FB337.HUM_REL_ROOM]),
+        ga(write=False, valid_dpt="9.007", dpa_state=[dpa.FB337.HUM_REL_ROOM]),
     ] = None
     target_temperature: Annotated[
         ClimateTargetTemperature | ClimateSetpointShift,
@@ -1083,7 +1067,7 @@ class ClimateKnxConfig:
         ga(
             write=False,
             valid_dpt="5.001",
-            dpa_state=[FB399.ACT_TARGET_POS_HEAT_STAGE_A],
+            dpa_state=[dpa.FB399.ACT_TARGET_POS_HEAT_STAGE_A],
         ),
     ] = None
     section_operation_mode: Annotated[
@@ -1093,8 +1077,8 @@ class ClimateKnxConfig:
         GroupAddressConfig | None,
         ga(
             valid_dpt="20.102",
-            dpa_write=[FB398.HVAC_MODE_USER],
-            dpa_state=[FB399.HVAC_MODE_ACT],
+            dpa_write=[dpa.FB398.HVAC_MODE_USER],
+            dpa_state=[dpa.FB399.HVAC_MODE_ACT],
         ),
     ] = None
     ignore_auto_mode: Annotated[bool, selector.BooleanSelector()] = False
@@ -1118,7 +1102,7 @@ class ClimateKnxConfig:
     ] = None
     ga_heat_cool: Annotated[
         GroupAddressConfig | None,
-        ga(valid_dpt="1.100", dpa_state=[FB399.HEAT_COOL_MODE_ACT]),
+        ga(valid_dpt="1.100", dpa_state=[dpa.FB399.HEAT_COOL_MODE_ACT]),
     ] = None
     section_on_off: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -1132,8 +1116,8 @@ class ClimateKnxConfig:
         GroupAddressConfig | None,
         ga(
             valid_dpt="20.105",
-            dpa_write=[FB399.CONTR_MODE],
-            dpa_state=[FB399.CONTR_MODE_ACT],
+            dpa_write=[dpa.FB399.CONTR_MODE],
+            dpa_state=[dpa.FB399.CONTR_MODE_ACT],
         ),
     ] = None
     ga_controller_status: Annotated[GroupAddressConfig | None, ga(write=False)] = None
@@ -1190,32 +1174,32 @@ class SensorKnxConfig:
             state_required=True,
             dpt=["numeric", "string"],
             dpa_state=[
-                FB180.TEMP_DHW,
-                FB187.TEMP_COLLECTOR,
-                FB320.TEMP_OUTSIDE,
-                FB321.TEMP_ROOM,
-                FB322.TEMP_SUPPLY_AIR,
-                FB323.TEMP_RETURN_AIR,
-                FB324.TEMP_FLOW_WATER,
-                FB325.TEMP_RETURN_WATER,
-                FB326.TEMP_FLOW_WATER_COND,
-                FB327.TEMP_RETURN_WATER_COND,
-                FB328.TEMP_DISCHARGE_AIR,
-                FB329.TEMP_FLOOR,
-                FB330.AQ_OUTSIDE,
-                FB331.AQ_ROOM,
-                FB332.AQ_SUPPLY_AIR,
-                FB333.AQ_RETURN_AIR,
-                FB336.HUM_REL_OUTSIDE,
-                FB337.HUM_REL_ROOM,
-                FB338.HUM_REL_SUPPLY_AIR,
-                FB339.HUM_REL_RETURN_AIR,
-                FB348.SUN_INTENSITY,
-                FB409.ROOM_ILLUMINATION,
-                FB410.INDOOR_LUMINANCE,
-                FB1013.ATMOSPHERIC_PRESSURE_ABS,
-                FB1015.ANALOG_INPUT_VALUE,
-                FB1016.TEMP_VALUE,
+                dpa.FB180.TEMP_DHW,
+                dpa.FB187.TEMP_COLLECTOR,
+                dpa.FB320.TEMP_OUTSIDE,
+                dpa.FB321.TEMP_ROOM,
+                dpa.FB322.TEMP_SUPPLY_AIR,
+                dpa.FB323.TEMP_RETURN_AIR,
+                dpa.FB324.TEMP_FLOW_WATER,
+                dpa.FB325.TEMP_RETURN_WATER,
+                dpa.FB326.TEMP_FLOW_WATER_COND,
+                dpa.FB327.TEMP_RETURN_WATER_COND,
+                dpa.FB328.TEMP_DISCHARGE_AIR,
+                dpa.FB329.TEMP_FLOOR,
+                dpa.FB330.AQ_OUTSIDE,
+                dpa.FB331.AQ_ROOM,
+                dpa.FB332.AQ_SUPPLY_AIR,
+                dpa.FB333.AQ_RETURN_AIR,
+                dpa.FB336.HUM_REL_OUTSIDE,
+                dpa.FB337.HUM_REL_ROOM,
+                dpa.FB338.HUM_REL_SUPPLY_AIR,
+                dpa.FB339.HUM_REL_RETURN_AIR,
+                dpa.FB348.SUN_INTENSITY,
+                dpa.FB409.ROOM_ILLUMINATION,
+                dpa.FB410.INDOOR_LUMINANCE,
+                dpa.FB1013.ATMOSPHERIC_PRESSURE_ABS,
+                dpa.FB1015.ANALOG_INPUT_VALUE,
+                dpa.FB1016.TEMP_VALUE,
             ],
         ),
     ]
