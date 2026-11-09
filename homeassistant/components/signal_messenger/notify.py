@@ -179,6 +179,7 @@ class SignalNotificationService(BaseNotificationService):
                     _LOGGER.error("URL '%s' not in allow list", url)
                     continue
 
+                # pylint: disable-next=home-assistant-direct-http-request
                 resp = requests.get(
                     url, verify=data[ATTR_VERIFY_SSL], timeout=10, stream=True
                 )

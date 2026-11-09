@@ -48,6 +48,7 @@ def setup_platform(
 
     rest = CurrencylayerData(_RESOURCE, parameters)
 
+    # pylint: disable-next=home-assistant-direct-http-request
     response = requests.get(_RESOURCE, params=parameters, timeout=10)
     if "error" in response.json():
         return
@@ -89,6 +90,7 @@ class CurrencylayerData:
     def update(self):
         """Get the latest data from Currencylayer."""
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             result = requests.get(self._resource, params=self._parameters, timeout=10)
             if "error" in result.json():
                 raise ValueError(result.json()["error"]["info"])  # noqa: TRY301

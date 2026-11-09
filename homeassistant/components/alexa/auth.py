@@ -116,6 +116,7 @@ class Auth:
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
             async with timeout(10):
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = await session.post(
                     LWA_TOKEN_URI,
                     headers=LWA_HEADERS,

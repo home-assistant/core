@@ -104,10 +104,12 @@ class TomatoDeviceScanner(DeviceScanner):
 
         try:
             if self.ssl:
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = requests.Session().send(
                     self.req, timeout=60, verify=self.verify_ssl
                 )
             else:
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = requests.Session().send(self.req, timeout=60)
 
             # Calling and parsing the Tomato api here. We only need the

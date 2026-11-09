@@ -95,6 +95,7 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
+            # pylint: disable-next=home-assistant-direct-http-request
             async with websession.get(
                 url, timeout=aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT)
             ) as resp:

@@ -108,6 +108,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             }
         ]
         headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
+        # pylint: disable-next=home-assistant-direct-http-request
         return requests.post(
             f"http://{self.host}/JNAP/",
             timeout=DEFAULT_TIMEOUT,

@@ -128,6 +128,7 @@ class Ted5000Gateway:
         """Get the latest data from the Ted5000 XML API."""
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             request = requests.get(self.url, timeout=10)
         except requests.exceptions.RequestException as err:
             _LOGGER.error("No connection to endpoint: %s", err)

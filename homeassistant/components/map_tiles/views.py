@@ -130,6 +130,7 @@ class _MapTilesView(HomeAssistantView):
         # Keep the body in the encoding upstream sent, so a gzipped asset is
         # cached compressed instead of re-compressed for every client.
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             async with session.get(
                 url,
                 headers=UPSTREAM_HEADERS,

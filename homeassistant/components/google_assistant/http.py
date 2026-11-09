@@ -77,6 +77,7 @@ async def _get_homegraph_token(
     }
 
     session = async_get_clientsession(hass)
+    # pylint: disable-next=home-assistant-direct-http-request
     async with session.post(HOMEGRAPH_TOKEN_URL, headers=headers, data=data) as res:
         res.raise_for_status()
         return await res.json()
@@ -314,6 +315,7 @@ class GoogleConfig(AbstractConfig):
                 "Authorization": f"Bearer {self._access_token}",
                 "X-GFE-SSL": "yes",
             }
+            # pylint: disable-next=home-assistant-direct-http-request
             async with session.post(url, headers=headers, json=data) as res:
                 _LOGGER.debug(
                     "Response on %s with data %s was %s", url, data, await res.text()

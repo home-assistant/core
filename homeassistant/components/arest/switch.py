@@ -56,6 +56,7 @@ def setup_platform(
     resource = config[CONF_RESOURCE]
 
     try:
+        # pylint: disable-next=home-assistant-direct-http-request
         response = requests.get(resource, timeout=10)
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
@@ -112,6 +113,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         super().__init__(resource, location, name)
         self._func = func
 
+        # pylint: disable-next=home-assistant-direct-http-request
         request = requests.get(f"{self._resource}/{self._func}", timeout=10)
 
         if request.status_code != HTTPStatus.OK:
@@ -128,6 +130,7 @@ class ArestSwitchFunction(ArestSwitchBase):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+        # pylint: disable-next=home-assistant-direct-http-request
         request = requests.get(
             f"{self._resource}/{self._func}", timeout=10, params={"params": "1"}
         )
@@ -140,6 +143,7 @@ class ArestSwitchFunction(ArestSwitchBase):
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        # pylint: disable-next=home-assistant-direct-http-request
         request = requests.get(
             f"{self._resource}/{self._func}", timeout=10, params={"params": "0"}
         )
@@ -154,6 +158,7 @@ class ArestSwitchFunction(ArestSwitchBase):
     def update(self) -> None:
         """Get the latest data from aREST API and update the state."""
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             request = requests.get(f"{self._resource}/{self._func}", timeout=10)
             self._attr_is_on = request.json()["return_value"] != 0
             self._attr_available = True
@@ -177,6 +182,7 @@ class ArestSwitchPin(ArestSwitchBase):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         turn_on_payload = int(not self.invert)
+        # pylint: disable-next=home-assistant-direct-http-request
         request = requests.get(
             f"{self._resource}/digital/{self._pin}/{turn_on_payload}", timeout=10
         )
@@ -189,6 +195,7 @@ class ArestSwitchPin(ArestSwitchBase):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         turn_off_payload = int(self.invert)
+        # pylint: disable-next=home-assistant-direct-http-request
         request = requests.get(
             f"{self._resource}/digital/{self._pin}/{turn_off_payload}", timeout=10
         )
@@ -200,6 +207,7 @@ class ArestSwitchPin(ArestSwitchBase):
     def update(self) -> None:
         """Get the latest data from aREST API and update the state."""
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             request = requests.get(f"{self._resource}/digital/{self._pin}", timeout=10)
             status_value = int(self.invert)
             self._attr_is_on = request.json()["return_value"] != status_value
@@ -211,6 +219,7 @@ class ArestSwitchPin(ArestSwitchBase):
             self._attr_available = False
 
     def __set_pin_output(self) -> None:
+        # pylint: disable-next=home-assistant-direct-http-request
         request = requests.get(f"{self._resource}/mode/{self._pin}/o", timeout=10)
         if request.status_code != HTTPStatus.OK:
             _LOGGER.error("Can't set mode")

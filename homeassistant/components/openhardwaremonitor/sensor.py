@@ -134,6 +134,7 @@ class OpenHardwareMonitorData:
         )
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             response = requests.get(data_url, timeout=30)
             self.data = response.json()
         except requests.exceptions.ConnectionError:

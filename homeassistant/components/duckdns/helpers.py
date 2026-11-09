@@ -29,6 +29,7 @@ async def update_duckdns(
     if clear:
         params["clear"] = "true"
 
+    # pylint: disable-next=home-assistant-direct-http-request
     resp = await session.get(UPDATE_URL, params=params)
     body = await resp.text()
 

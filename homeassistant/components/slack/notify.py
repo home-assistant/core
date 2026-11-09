@@ -205,6 +205,7 @@ class SlackNotificationService(BaseNotificationService):
             kwargs = {"auth": BasicAuth(username, password=password)}
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             async with session.get(url, **kwargs) as resp:
                 resp.raise_for_status()
                 file_content = await resp.read()

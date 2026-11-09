@@ -111,6 +111,7 @@ async def _async_extract_color_from_url(
     try:
         session = aiohttp_client.async_get_clientsession(hass)
 
+        # pylint: disable-next=home-assistant-direct-http-request
         async with asyncio.timeout(10), session.get(url) as response:
             if response.status != HTTPStatus.OK:
                 raise HomeAssistantError(

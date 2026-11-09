@@ -63,10 +63,13 @@ class Itunes:
 
         try:
             if method == "GET":
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = requests.get(url, timeout=DEFAULT_TIMEOUT)
             elif method in ("POST", "PUT"):
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
             elif method == "DELETE":
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = requests.delete(url, timeout=DEFAULT_TIMEOUT)
 
             return response.json()

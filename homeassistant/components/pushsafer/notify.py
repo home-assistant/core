@@ -132,6 +132,7 @@ class PushsaferNotificationService(BaseNotificationService):
 
         for target in targets:
             payload["d"] = target
+            # pylint: disable-next=home-assistant-direct-http-request
             response = requests.post(_RESOURCE, data=payload, timeout=CONF_TIMEOUT)
             if response.status_code != HTTPStatus.OK:
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
@@ -154,8 +155,10 @@ class PushsaferNotificationService(BaseNotificationService):
             _LOGGER.debug("Downloading image from %s", url)
             if username is not None and password is not None:
                 auth_ = HTTPBasicAuth(username, password)
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = requests.get(url, auth=auth_, timeout=CONF_TIMEOUT)
             else:
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = requests.get(url, timeout=CONF_TIMEOUT)
             return self.get_base64(response.content, response.headers["content-type"])
         _LOGGER.warning("No url was found in param")

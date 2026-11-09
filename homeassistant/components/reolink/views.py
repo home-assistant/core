@@ -108,6 +108,7 @@ class PlaybackProxyView(HomeAssistantView):
             )
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             reolink_response = await self.session.get(
                 reolink_url,
                 headers=headers,

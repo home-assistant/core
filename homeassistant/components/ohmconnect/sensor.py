@@ -81,6 +81,7 @@ class OhmconnectSensor(SensorEntity):
         """Get the latest data from OhmConnect."""
         try:
             url = f"https://login.ohmconnect.com/verify-ohm-hour/{self._ohmid}"
+            # pylint: disable-next=home-assistant-direct-http-request
             response = requests.get(url, timeout=10)
             root = ET.fromstring(response.text)
 

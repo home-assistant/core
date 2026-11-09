@@ -161,6 +161,7 @@ async def _async_image_exists(client: AsyncClient, url: str) -> bool:
         return False
 
     try:
+        # pylint: disable-next=home-assistant-direct-http-request
         async with client.stream(
             "GET", url, headers=_HEADERS, timeout=10, follow_redirects=True
         ) as response:

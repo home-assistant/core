@@ -427,6 +427,7 @@ async def async_send_changereport_message(
     assert config.endpoint is not None
     try:
         async with timeout(DEFAULT_TIMEOUT):
+            # pylint: disable-next=home-assistant-direct-http-request
             response = await session.post(
                 config.endpoint,
                 headers=headers,
@@ -510,6 +511,7 @@ async def async_send_add_or_update_message(
     session = async_get_clientsession(hass)
 
     assert config.endpoint is not None
+    # pylint: disable-next=home-assistant-direct-http-request
     return await session.post(
         config.endpoint, headers=headers, json=message_serialized, allow_redirects=True
     )
@@ -549,6 +551,7 @@ async def async_send_delete_message(
     session = async_get_clientsession(hass)
 
     assert config.endpoint is not None
+    # pylint: disable-next=home-assistant-direct-http-request
     return await session.post(
         config.endpoint, headers=headers, json=message_serialized, allow_redirects=True
     )
@@ -584,6 +587,7 @@ async def async_send_doorbell_event_message(
     assert config.endpoint is not None
     try:
         async with timeout(DEFAULT_TIMEOUT):
+            # pylint: disable-next=home-assistant-direct-http-request
             response = await session.post(
                 config.endpoint,
                 headers=headers,

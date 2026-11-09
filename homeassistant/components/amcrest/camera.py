@@ -178,6 +178,7 @@ class AmcrestCam(Camera):
             # stream an MJPEG image stream directly from the camera
             websession = async_get_clientsession(self.hass)
             streaming_url = self._api.mjpeg_url(typeno=self._resolution)
+            # pylint: disable-next=home-assistant-direct-http-request
             stream_coro = websession.get(
                 streaming_url,
                 auth=self._token,

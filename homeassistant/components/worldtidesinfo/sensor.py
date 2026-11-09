@@ -128,6 +128,7 @@ class WorldTidesInfoSensor(SensorEntity):
         )
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             self.data = requests.get(resource, timeout=10).json()
             _LOGGER.debug("Data: %s", self.data)
             _LOGGER.debug("Tide data queried with start time set to: %s", start)

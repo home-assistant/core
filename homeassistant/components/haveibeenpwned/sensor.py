@@ -147,6 +147,7 @@ class HaveIBeenPwnedData:
             url = f"{URL}{self._email}?truncateResponse=false"
             header = {"User-Agent": HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
+            # pylint: disable-next=home-assistant-direct-http-request
             req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
 
         except requests.exceptions.RequestException:

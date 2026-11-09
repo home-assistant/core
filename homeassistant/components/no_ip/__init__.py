@@ -103,6 +103,7 @@ async def _update_no_ip(
 
     try:
         async with asyncio.timeout(timeout):
+            # pylint: disable-next=home-assistant-direct-http-request
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 

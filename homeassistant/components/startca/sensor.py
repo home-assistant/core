@@ -222,6 +222,7 @@ class StartcaData:
         _LOGGER.debug("Updating Start.ca usage data")
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
         async with asyncio.timeout(REQUEST_TIMEOUT):
+            # pylint: disable-next=home-assistant-direct-http-request
             req = await self.websession.get(url)
         if req.status != HTTPStatus.OK:
             _LOGGER.error("Request failed with status: %u", req.status)

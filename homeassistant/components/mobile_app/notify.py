@@ -294,6 +294,7 @@ async def _send_message(
 
     try:
         async with asyncio.timeout(10):
+            # pylint: disable-next=home-assistant-direct-http-request
             response = await session.post(
                 registration[ATTR_APP_DATA][ATTR_PUSH_URL],
                 json={

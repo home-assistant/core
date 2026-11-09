@@ -437,6 +437,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
         websession = async_get_clientsession(self.hass)
         with suppress(TimeoutError):
             async with asyncio.timeout(10):
+                # pylint: disable-next=home-assistant-direct-http-request
                 response = await websession.get(url, ssl=False)
                 if response.status == HTTPStatus.OK:
                     content = await response.read()

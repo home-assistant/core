@@ -52,6 +52,7 @@ class ClickatellNotificationService(BaseNotificationService):
         """Send a message to a user."""
         data = {"apiKey": self.api_key, "to": self.recipient, "content": message}
 
+        # pylint: disable-next=home-assistant-direct-http-request
         resp = requests.get(BASE_API_URL, params=data, timeout=5)
         if resp.status_code not in (HTTPStatus.OK, HTTPStatus.ACCEPTED):
             _LOGGER.error("Error %s : %s", resp.status_code, resp.text)

@@ -177,6 +177,7 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
+| `W7464` | [`home-assistant-direct-http-request`](#w7464-home-assistant-direct-http-request) | Integrations should not make HTTP requests directly; use a library published on PyPI |
 
 ## `home_assistant_logger` checker
 
@@ -344,8 +345,7 @@ event loop, where it must not do blocking I/O:
 ```python
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @callback
-    def _handle_coordinator_update(self) -> None:
-        ...
+    def _handle_coordinator_update(self) -> None: ...
 ```
 
 
@@ -435,8 +435,7 @@ it for the `config_entry` class annotation and `__init__` argument, so
 class MyCoordinator(DataUpdateCoordinator[MyData]):
     config_entry: MyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
-        ...
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None: ...
 ```
 
 When the alias lives in `__init__.py`, import it in the coordinator under
@@ -799,9 +798,7 @@ cause and finish the flow, so the test proves the flow recovers:
 assert result["errors"] == {"base": "cannot_connect"}
 
 mock_client.connect.side_effect = None
-result = await hass.config_entries.flow.async_configure(
-    result["flow_id"], USER_INPUT
-)
+result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
 assert result["type"] is FlowResultType.CREATE_ENTRY
 ```
 
@@ -1158,10 +1155,10 @@ such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
 
 ```python
 # Bad
-description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+description_placeholders = {CONF_USERNAME: entry.data[CONF_USERNAME]}
 
 # Good
-description_placeholders={"username": entry.data[CONF_USERNAME]}
+description_placeholders = {"username": entry.data[CONF_USERNAME]}
 
 # Bad
 self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
@@ -1568,3 +1565,37 @@ result = await hass.config_entries.flow.async_init(
 # Good
 result = await entry.start_reauth_flow(hass)
 ```
+
+
+## `home_assistant_direct_http_request` checker
+
+Prevents new integration code from talking to a device or service over HTTP
+itself.
+
+### `W7464`: `home-assistant-direct-http-request`
+
+All API-specific code has to be part of a third-party library published on
+PyPI ([docs](https://developers.home-assistant.io/docs/api_lib_index)). The
+check flags HTTP requests made with `requests`, `aiohttp` or `httpx` from an
+integration: module level request functions such as `requests.get()`, and
+request methods (`get`, `post`, `request`, `ws_connect`, ...) on a session or
+client, such as the one returned by `async_get_clientsession()`.
+
+Importing these packages is fine. Catching their exceptions, or passing a
+session to a library, does not make a request.
+
+```python
+# Bad
+session = async_get_clientsession(hass)
+async with session.get(f"http://{host}/api/status") as response:
+    data = await response.json()
+
+# Good
+client = MyDeviceClient(host, session=async_get_clientsession(hass))
+data = await client.get_status()
+```
+
+Integrations which exist to make generic HTTP requests (such as `rest`),
+entity base components and Home Assistant's own infrastructure are allowed to
+make requests. Requests that existed before this check was added disable it
+on the line; don't add new ones, but move the communication into a library.

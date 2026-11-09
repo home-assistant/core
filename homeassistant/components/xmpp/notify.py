@@ -274,6 +274,7 @@ async def async_send_message(  # noqa: C901
 
             def get_url(url):
                 """Return result for GET request to url."""
+                # pylint: disable-next=home-assistant-direct-http-request
                 return requests.get(
                     url, verify=data.get(ATTR_VERIFY, True), timeout=timeout
                 )

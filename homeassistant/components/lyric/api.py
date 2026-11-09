@@ -68,6 +68,7 @@ class LyricLocalOAuth2Implementation(
             "Content-Type": "application/x-www-form-urlencoded",
         }
 
+        # pylint: disable-next=home-assistant-direct-http-request
         resp = await session.post(self.token_url, headers=headers, data=data)
         resp.raise_for_status()
         return cast(dict, await resp.json())

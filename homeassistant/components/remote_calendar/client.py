@@ -14,6 +14,7 @@ async def get_calendar(
     if username is not None and password is not None:
         auth = BasicAuth(username, password)
 
+    # pylint: disable-next=home-assistant-direct-http-request
     return await client.get(
         url,
         auth=auth,

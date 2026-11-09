@@ -50,6 +50,7 @@ async def async_setup_platform(
     try:
         httpsession = async_get_clientsession(hass)
         async with asyncio.timeout(timeout):
+            # pylint: disable-next=home-assistant-direct-http-request
             scenes_resp = await httpsession.get(url, headers=headers)
 
     except TimeoutError, aiohttp.ClientError:
@@ -94,6 +95,7 @@ class LifxCloudScene(Scene):
         try:
             httpsession = async_get_clientsession(self.hass)
             async with asyncio.timeout(self._timeout):
+                # pylint: disable-next=home-assistant-direct-http-request
                 await httpsession.put(url, headers=self._headers)
 
         except (TimeoutError, aiohttp.ClientError) as err:

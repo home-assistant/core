@@ -81,6 +81,7 @@ class ClicksendNotificationService(BaseNotificationService):
             )
 
         api_url = f"{BASE_API_URL}/sms/send"
+        # pylint: disable-next=home-assistant-direct-http-request
         resp = requests.post(
             api_url,
             data=json.dumps(data),
@@ -102,6 +103,7 @@ class ClicksendNotificationService(BaseNotificationService):
 def _authenticate(config: ConfigType) -> bool:
     """Authenticate with ClickSend."""
     api_url = f"{BASE_API_URL}/account"
+    # pylint: disable-next=home-assistant-direct-http-request
     resp = requests.get(
         api_url,
         headers=HEADERS,

@@ -305,6 +305,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         websession = async_get_clientsession(self.hass)
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             async with websession.get(
                 url,
                 allow_redirects=False,

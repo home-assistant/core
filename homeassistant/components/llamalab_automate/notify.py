@@ -75,6 +75,7 @@ class AutomateNotificationService(BaseNotificationService):
             "payload": message,
         }
 
+        # pylint: disable-next=home-assistant-direct-http-request
         response = requests.post(_RESOURCE, json=data, timeout=10)
         if response.status_code != HTTPStatus.OK:
             _LOGGER.error("Error sending message: %s", response)

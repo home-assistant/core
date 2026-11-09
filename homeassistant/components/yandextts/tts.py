@@ -173,6 +173,7 @@ class YandexSpeechKitProvider(Provider):
                     "speed": options.get(YandexTextToSpeechOption.SPEED, self._speed),
                 }
 
+                # pylint: disable-next=home-assistant-direct-http-request
                 request = await websession.get(YANDEX_API_URL, params=url_param)
 
                 if request.status != HTTPStatus.OK:

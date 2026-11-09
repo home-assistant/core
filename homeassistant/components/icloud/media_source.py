@@ -630,6 +630,7 @@ class IcloudMediaSourceView(HomeAssistantView):
         if hdrs.RANGE in request.headers:
             request_headers[hdrs.RANGE] = request.headers[hdrs.RANGE]
 
+        # pylint: disable-next=home-assistant-direct-http-request
         icloud_response = await self.session.get(
             url,
             timeout=ClientTimeout(

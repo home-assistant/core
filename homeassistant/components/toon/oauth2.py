@@ -134,6 +134,7 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
             data["issuer"] = self.issuer
             headers["issuer"] = self.issuer
 
+        # pylint: disable-next=home-assistant-direct-http-request
         resp = await session.post(self.token_url, data=data, headers=headers)
         resp.raise_for_status()
         resp_json = cast(dict, await resp.json())

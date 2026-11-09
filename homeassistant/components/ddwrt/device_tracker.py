@@ -147,6 +147,7 @@ class DdWrtDeviceScanner(DeviceScanner):
     def get_ddwrt_data(self, url):
         """Retrieve data from DD-WRT and return parsed result."""
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             response = requests.get(
                 url,
                 auth=(self.username, self.password),

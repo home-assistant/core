@@ -101,6 +101,7 @@ class iOSNotificationService(BaseNotificationService):
 
             data[ATTR_TARGET] = target
 
+            # pylint: disable-next=home-assistant-direct-http-request
             req = requests.post(PUSH_URL, json=data, timeout=10)
 
             if req.status_code != HTTPStatus.CREATED:

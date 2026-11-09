@@ -63,6 +63,7 @@ class SynologyChatNotificationService(BaseNotificationService):
 
         to_send = f"payload={json.dumps(data)}"
 
+        # pylint: disable-next=home-assistant-direct-http-request
         response = requests.post(
             self._resource, data=to_send, timeout=10, verify=self._verify_ssl
         )

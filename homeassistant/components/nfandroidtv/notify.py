@@ -355,9 +355,11 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     else:
                         auth_ = HTTPBasicAuth(username, password)
                     # Load file from URL with authentication
+                    # pylint: disable-next=home-assistant-direct-http-request
                     req = requests.get(url, auth=auth_, timeout=DEFAULT_TIMEOUT)
                 else:
                     # Load file from URL without authentication
+                    # pylint: disable-next=home-assistant-direct-http-request
                     req = requests.get(url, timeout=DEFAULT_TIMEOUT)
                 return req.content
 

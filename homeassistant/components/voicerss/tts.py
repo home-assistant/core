@@ -216,6 +216,7 @@ class VoiceRSSProvider(Provider):
 
         try:
             async with asyncio.timeout(10):
+                # pylint: disable-next=home-assistant-direct-http-request
                 request = await websession.post(VOICERSS_API_URL, data=form_data)
 
                 if request.status != HTTPStatus.OK:

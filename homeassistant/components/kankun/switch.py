@@ -90,6 +90,7 @@ class KankunSwitch(SwitchEntity):
         _LOGGER.debug("Switching to state: %s", newstate)
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             req = requests.get(
                 f"{self._url}?set={newstate}", auth=self._auth, timeout=5
             )
@@ -102,6 +103,7 @@ class KankunSwitch(SwitchEntity):
         _LOGGER.debug("Querying state from: %s", self._url)
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             req = requests.get(f"{self._url}?get=state", auth=self._auth, timeout=5)
             return req.json()["state"] == "on"
         except requests.RequestException:

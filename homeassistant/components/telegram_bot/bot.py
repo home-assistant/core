@@ -1204,6 +1204,7 @@ async def load_data(
         async with get_async_client(hass, verify_ssl) as client:
             while retry_num < num_retries:
                 try:
+                    # pylint: disable-next=home-assistant-direct-http-request
                     response = await client.get(
                         url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
                     )

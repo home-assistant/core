@@ -207,6 +207,7 @@ async def handle_new_task(call: ServiceCall) -> None:
             "Authorization": f"Bearer {coordinator.token}",
             "Content-Type": "application/json",
         }
+        # pylint: disable-next=home-assistant-direct-http-request
         await async_get_clientsession(call.hass).post(
             sync_url, headers=headers, json=reminder_data
         )

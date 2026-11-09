@@ -104,6 +104,7 @@ class DiscordNotificationService(BaseNotificationService):
 
         session = async_get_clientsession(self.hass)
 
+        # pylint: disable-next=home-assistant-direct-http-request
         async with session.get(
             url,
             ssl=verify_ssl,

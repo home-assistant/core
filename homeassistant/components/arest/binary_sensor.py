@@ -45,6 +45,7 @@ def setup_platform(
     device_class = config.get(CONF_DEVICE_CLASS)
 
     try:
+        # pylint: disable-next=home-assistant-direct-http-request
         response = requests.get(resource, timeout=10).json()
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
@@ -81,6 +82,7 @@ class ArestBinarySensor(BinarySensorEntity):
         self._attr_device_class = device_class
 
         if pin is not None:
+            # pylint: disable-next=home-assistant-direct-http-request
             request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
             if request.status_code != HTTPStatus.OK:
                 _LOGGER.error("Can't set mode of %s", resource)
@@ -104,6 +106,7 @@ class ArestData:
     def update(self) -> None:
         """Get the latest data from aREST device."""
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             response = requests.get(f"{self._resource}/digital/{self._pin}", timeout=10)
             self.data = {"state": response.json()["return_value"]}
         except requests.exceptions.ConnectionError:

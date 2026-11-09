@@ -116,6 +116,7 @@ class BuienradarCam(Camera):
             headers = {}
 
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             async with session.get(
                 url, timeout=aiohttp.ClientTimeout(total=5), headers=headers
             ) as res:

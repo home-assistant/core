@@ -192,6 +192,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
         try:
             async with asyncio.timeout(self.timeout):
+                # pylint: disable-next=home-assistant-direct-http-request
                 request = await websession.post(
                     OPENALPR_API_URL, params=params, data=body
                 )

@@ -54,6 +54,7 @@ def _checkin_user(call: ServiceCall) -> None:
     """Check a user in on Swarm."""
     hass = call.hass
     url = f"https://api.foursquare.com/v2/checkins/add?oauth_token={hass.data[DATA_ACCESS_TOKEN]}&v=20160802&m=swarm"
+    # pylint: disable-next=home-assistant-direct-http-request
     response = requests.post(url, data=call.data, timeout=10)
 
     if response.status_code not in (HTTPStatus.OK, HTTPStatus.CREATED):

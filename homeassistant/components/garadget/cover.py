@@ -184,6 +184,7 @@ class GaradgetCover(CoverEntity):
             "password": self._password,
         }
         url = f"{self.particle_url}/oauth/token"
+        # pylint: disable-next=home-assistant-direct-http-request
         ret = requests.post(url, auth=("particle", "particle"), data=args, timeout=10)
 
         try:
@@ -194,6 +195,7 @@ class GaradgetCover(CoverEntity):
     def remove_token(self):
         """Remove authorization token from API."""
         url = f"{self.particle_url}/v1/access_tokens/{self.access_token}"
+        # pylint: disable-next=home-assistant-direct-http-request
         ret = requests.delete(url, auth=(self._username, self._password), timeout=10)
         return ret.text
 
@@ -263,6 +265,7 @@ class GaradgetCover(CoverEntity):
             f"{self.particle_url}/v1/devices/{self.device_id}"
             f"/{var}?access_token={self.access_token}"
         )
+        # pylint: disable-next=home-assistant-direct-http-request
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):
@@ -276,5 +279,6 @@ class GaradgetCover(CoverEntity):
         if arg:
             params["command"] = arg
         url = f"{self.particle_url}/v1/devices/{self.device_id}/{func}"
+        # pylint: disable-next=home-assistant-direct-http-request
         ret = requests.post(url, data=params, timeout=10)
         return ret.json()

@@ -118,6 +118,7 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
         )
     session = async_get_clientsession(hass)
     try:
+        # pylint: disable-next=home-assistant-direct-http-request
         async with session.get(url) as resp:
             resp.raise_for_status()
             data = await resp.read()

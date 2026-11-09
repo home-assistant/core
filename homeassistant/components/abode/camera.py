@@ -107,6 +107,7 @@ class AbodeCamera(AbodeDevice, Camera):
         """Attempt to download the most recent capture."""
         if self._device.image_url:
             try:
+                # pylint: disable-next=home-assistant-direct-http-request
                 self._response = requests.get(
                     self._device.image_url, stream=True, timeout=10
                 )

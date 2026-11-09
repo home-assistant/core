@@ -78,6 +78,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
                 assert camera_data.photourlfullsize is not None
             image_url = camera_data.photourlfullsize
 
+        # pylint: disable-next=home-assistant-direct-http-request
         async with self.session.get(
             image_url, timeout=aiohttp.ClientTimeout(total=10)
         ) as get_image:

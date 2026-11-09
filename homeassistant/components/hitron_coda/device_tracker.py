@@ -86,6 +86,7 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         try:
             data = [("user", self._username), (self._type, self._password)]
+            # pylint: disable-next=home-assistant-direct-http-request
             res = requests.post(self._loginurl, data=data, timeout=10)
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
@@ -111,6 +112,7 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         # doing a request
         try:
+            # pylint: disable-next=home-assistant-direct-http-request
             res = requests.get(self._url, timeout=10, cookies={"userid": self._userid})
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)

@@ -78,6 +78,7 @@ class FacebookNotificationService(BaseNotificationService):
                 "messaging_type": "MESSAGE_TAG",
                 "tag": "HUMAN_AGENT",
             }
+            # pylint: disable-next=home-assistant-direct-http-request
             resp = requests.post(
                 BASE_URL,
                 data=json.dumps(body),

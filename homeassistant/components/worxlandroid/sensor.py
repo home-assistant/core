@@ -102,6 +102,7 @@ class WorxLandroidSensor(SensorEntity):
             session = async_get_clientsession(self.hass)
             async with asyncio.timeout(self.timeout):
                 auth = aiohttp.helpers.BasicAuth("admin", self.pin)
+                # pylint: disable-next=home-assistant-direct-http-request
                 mower_response = await session.get(self.url, auth=auth)
         except TimeoutError, aiohttp.ClientError:
             if self.allow_unreachable is False:

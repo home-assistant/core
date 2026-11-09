@@ -115,6 +115,7 @@ def _retrieve_list(host, token, **kwargs):
     url = "http://{}/cgi-bin/luci/;stok={}/api/misystem/devicelist"
     url = url.format(host, token)
     try:
+        # pylint: disable-next=home-assistant-direct-http-request
         res = requests.get(url, timeout=10, **kwargs)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out at URL %s", url)
@@ -153,6 +154,7 @@ def _get_token(host, username, password):
     url = f"http://{host}/cgi-bin/luci/api/xqsystem/login"
     data = {"username": username, "password": password}
     try:
+        # pylint: disable-next=home-assistant-direct-http-request
         res = requests.post(url, data=data, timeout=5)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")

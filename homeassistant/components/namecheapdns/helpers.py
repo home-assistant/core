@@ -17,6 +17,7 @@ async def update_namecheapdns(
     """Update namecheap DNS entry."""
     params = {"host": host, "domain": domain, "password": password}
 
+    # pylint: disable-next=home-assistant-direct-http-request
     resp = await session.get(UPDATE_URL, params=params)
     xml_string = await resp.text()
 

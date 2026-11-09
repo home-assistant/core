@@ -280,6 +280,7 @@ class IndiAllSkyMediaSource(MediaSource):
             verify_ssl: bool = entry.data.get(CONF_VERIFY_SSL, True)
             session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
             try:
+                # pylint: disable-next=home-assistant-direct-http-request
                 async with session.get(
                     url, allow_redirects=False, timeout=REDIRECT_TIMEOUT
                 ) as resp:
