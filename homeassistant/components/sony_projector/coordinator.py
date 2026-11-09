@@ -42,6 +42,9 @@ class SonyProjectorCoordinator(DataUpdateCoordinator[bool]):
     @override
     async def _async_update_data(self) -> bool:
         """Fetch the power state."""
+        # Waiting for a running command would read the state it's about to replace.
+        if self._lock.locked():
+            return self.data
         async with self._lock:
             try:
                 return await self.hass.async_add_executor_job(self._projector.get_power)

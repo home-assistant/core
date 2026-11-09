@@ -58,10 +58,14 @@ class BlockingProjector:
         self.finish_poll = threading.Event()
         self.finish_poll.set()
         self.power_set = threading.Event()
+        self.finish_power_set = threading.Event()
+        self.finish_power_set.set()
+        self.poll_count = 0
         self.set_power_calls: list[bool] = []
 
     def get_power(self) -> bool:
         """Return the power state once the poll may finish."""
+        self.poll_count += 1
         self.poll_started.set()
         self.finish_poll.wait(5)
         return False
@@ -70,6 +74,7 @@ class BlockingProjector:
         """Record the power command."""
         self.set_power_calls.append(on)
         self.power_set.set()
+        self.finish_power_set.wait(5)
         return True
 
 
@@ -160,6 +165,39 @@ async def test_power_command_waits_for_running_poll(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert projector.set_power_calls == [True]
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_poll_skipped_during_power_command(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll due while a command runs can't overwrite the requested state."""
+    projector = BlockingProjector()
+    mock_config_entry.add_to_hass(hass)
+    with patch("pysdcp.Projector", return_value=projector):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    poll_count = projector.poll_count
+
+    projector.finish_power_set.clear()
+    command = hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    )
+    assert await hass.async_add_executor_job(projector.power_set.wait, 5)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_add_executor_job(lambda: None)
+
+    projector.finish_power_set.set()
+    await command
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert projector.poll_count == poll_count
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
