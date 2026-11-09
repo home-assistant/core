@@ -4,6 +4,7 @@
   "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@Noltari"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "macaddress": "E84F25*"
@@ -13,5 +14,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioairzone"],
-  "requirements": ["aioairzone==1.0.5"]
+  "requirements": ["aioairzone==1.0.6"]
 }

@@ -17,7 +17,7 @@ from aioairzone.const import (
     API_SYSTEMS,
     API_ZONE_ID,
 )
-from aioairzone.exceptions import AirzoneError
+from aioairzone.exceptions import AirzoneError, IaqSensorNotAvailable
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -98,6 +98,10 @@ async def test_airzone_climate_update_temp_limits(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
@@ -317,6 +321,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",

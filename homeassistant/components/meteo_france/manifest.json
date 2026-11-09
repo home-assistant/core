@@ -4,6 +4,7 @@
   "categories": ["weather_alerts.forecasts", "weather_alerts.public_warnings"],
   "codeowners": ["@oncleben31", "@Quentame"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/meteo_france",
   "integration_type": "service",
   "iot_class": "cloud_polling",

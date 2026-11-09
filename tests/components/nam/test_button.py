@@ -100,12 +100,16 @@ async def test_button_press_auth_error(
     await setup_integration(hass, mock_config_entry)
 
     mock_nam_client.async_restart.side_effect = AuthFailedError("auth error")
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Authentication failed for 10.10.2.3",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.nettigo_air_monitor_restart"},
+            blocking=True,
+        )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

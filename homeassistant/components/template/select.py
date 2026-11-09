@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     SelectEntityCapabilityAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -24,7 +24,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SELECT_OPTION = "select_option"
 
-DEFAULT_NAME = "Template Select"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.SELECT]
 
 SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
 

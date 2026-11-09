@@ -22,6 +22,7 @@ from homeassistant.components.watergate.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import init_integration
 from .const import DEFAULT_DEVICE_STATE_V2, MOCK_WEBHOOK_ID
@@ -123,6 +124,30 @@ async def test_setup_retry_when_device_unavailable(
     await init_integration(hass, mock_entry)
 
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_update_failure_is_translated(
+    hass: HomeAssistant,
+    mock_watergate_client: Generator[AsyncMock],
+    mock_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed refresh reports a translatable error."""
+    await init_integration(hass, mock_entry)
+
+    mock_watergate_client.async_get_telemetry_data.side_effect = WatergateApiException(
+        "boom"
+    )
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    error = mock_entry.runtime_data.last_exception
+    assert isinstance(error, UpdateFailed)
+    assert error.translation_domain == DOMAIN
+    assert error.translation_key == "device_unavailable"
+    assert not error.translation_placeholders
+    assert isinstance(error.__cause__, WatergateApiException)
 
 
 async def test_device_state_missing_from_the_v1_fallback(
