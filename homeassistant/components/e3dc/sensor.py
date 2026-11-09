@@ -1,6 +1,6 @@
 """Support for E3/DC sensors."""
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import IntEnum
 from operator import attrgetter
@@ -14,7 +14,6 @@ from e3dc_ess_modbus import (
     PowerMeterType,
     SgReadyStatus,
 )
-from e3dc_ess_modbus.inverter import Inverter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -356,110 +355,133 @@ POWER_METER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
 )
 
 
-def _inverter(device: E3dcPowerStation, number: int) -> Inverter:
-    """Inverter slot ``number``, which only exists when the slot answered."""
-    if TYPE_CHECKING:
-        assert device.inverters is not None
-    return device.inverters[number]
+def _inverter_value(attribute: str) -> Callable[[E3dcPowerStation, int], StateType]:
+    """Read ``attribute`` of an inverter slot, which only exists once the slot answered."""
+    get = attrgetter(attribute)
 
+    def _value(device: E3dcPowerStation, number: int) -> StateType:
+        if TYPE_CHECKING:
+            assert device.inverters is not None
+        value: StateType = get(device.inverters[number])
+        return value
 
-@dataclass(frozen=True, kw_only=True)
-class _InverterQuantity:
-    """A quantity an inverter reports, e.g. once per phase."""
-
-    device_class: SensorDeviceClass
-    unit: str
-    suggested_display_precision: int | None = None
-    enabled_default: bool = False
-
-
-PHASE_QUANTITIES = {
-    "active_power": _InverterQuantity(
-        device_class=SensorDeviceClass.POWER,
-        unit=UnitOfPower.WATT,
-        enabled_default=True,
-    ),
-    "apparent_power": _InverterQuantity(
-        device_class=SensorDeviceClass.APPARENT_POWER,
-        unit=UnitOfApparentPower.VOLT_AMPERE,
-    ),
-    "reactive_power": _InverterQuantity(
-        device_class=SensorDeviceClass.REACTIVE_POWER,
-        unit=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
-    ),
-    "voltage": _InverterQuantity(
-        device_class=SensorDeviceClass.VOLTAGE,
-        unit=UnitOfElectricPotential.VOLT,
-        suggested_display_precision=1,
-    ),
-    "current": _InverterQuantity(
-        device_class=SensorDeviceClass.CURRENT,
-        unit=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-    ),
-}
-DC_QUANTITIES = {
-    "dc_power": _InverterQuantity(
-        device_class=SensorDeviceClass.POWER,
-        unit=UnitOfPower.WATT,
-        enabled_default=True,
-    ),
-    "dc_voltage": _InverterQuantity(
-        device_class=SensorDeviceClass.VOLTAGE,
-        unit=UnitOfElectricPotential.VOLT,
-        suggested_display_precision=1,
-    ),
-    "dc_current": _InverterQuantity(
-        device_class=SensorDeviceClass.CURRENT,
-        unit=UnitOfElectricCurrent.AMPERE,
-        suggested_display_precision=2,
-    ),
-}
-
-
-def _inverter_sensor(
-    key: str,
-    quantity: _InverterQuantity,
-    translation_key: str | None = None,
-    translation_placeholders: Mapping[str, str] | None = None,
-) -> E3dcPartSensorDescription:
-    """A sensor for the inverter attribute named ``key``."""
-    get = attrgetter(key)
-    return E3dcPartSensorDescription(
-        key=key,
-        translation_key=translation_key,
-        translation_placeholders=translation_placeholders,
-        device_class=quantity.device_class,
-        native_unit_of_measurement=quantity.unit,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=quantity.suggested_display_precision,
-        entity_registry_enabled_default=quantity.enabled_default,
-        value_fn=lambda device, number: get(_inverter(device, number)),
-    )
+    return _value
 
 
 INVERTER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
     *(
-        _inverter_sensor(
-            f"{name}_{phase}",
-            quantity,
-            f"{name}_phase",
-            {"phase": phase.upper()},
+        E3dcPartSensorDescription(
+            key=f"active_power_{phase}",
+            translation_key="active_power_phase",
+            translation_placeholders={"phase": phase.upper()},
+            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=_inverter_value(f"active_power_{phase}"),
         )
-        for name, quantity in PHASE_QUANTITIES.items()
         for phase in PHASES
     ),
-    _inverter_sensor(
-        "frequency",
-        _InverterQuantity(
-            device_class=SensorDeviceClass.FREQUENCY,
-            unit=UnitOfFrequency.HERTZ,
-            suggested_display_precision=2,
-        ),
+    *(
+        E3dcPartSensorDescription(
+            key=f"apparent_power_{phase}",
+            translation_key="apparent_power_phase",
+            translation_placeholders={"phase": phase.upper()},
+            device_class=SensorDeviceClass.APPARENT_POWER,
+            native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+            value_fn=_inverter_value(f"apparent_power_{phase}"),
+        )
+        for phase in PHASES
     ),
     *(
-        _inverter_sensor(f"{name}_{tracker}", quantity, name, {"tracker": str(tracker)})
-        for name, quantity in DC_QUANTITIES.items()
+        E3dcPartSensorDescription(
+            key=f"reactive_power_{phase}",
+            translation_key="reactive_power_phase",
+            translation_placeholders={"phase": phase.upper()},
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+            value_fn=_inverter_value(f"reactive_power_{phase}"),
+        )
+        for phase in PHASES
+    ),
+    *(
+        E3dcPartSensorDescription(
+            key=f"voltage_{phase}",
+            translation_key="voltage_phase",
+            translation_placeholders={"phase": phase.upper()},
+            device_class=SensorDeviceClass.VOLTAGE,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=1,
+            entity_registry_enabled_default=False,
+            value_fn=_inverter_value(f"voltage_{phase}"),
+        )
+        for phase in PHASES
+    ),
+    *(
+        E3dcPartSensorDescription(
+            key=f"current_{phase}",
+            translation_key="current_phase",
+            translation_placeholders={"phase": phase.upper()},
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            entity_registry_enabled_default=False,
+            value_fn=_inverter_value(f"current_{phase}"),
+        )
+        for phase in PHASES
+    ),
+    E3dcPartSensorDescription(
+        key="frequency",
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        value_fn=_inverter_value("frequency"),
+    ),
+    *(
+        E3dcPartSensorDescription(
+            key=f"dc_power_{tracker}",
+            translation_key="dc_power",
+            translation_placeholders={"tracker": str(tracker)},
+            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=_inverter_value(f"dc_power_{tracker}"),
+        )
+        for tracker in DC_TRACKERS
+    ),
+    *(
+        E3dcPartSensorDescription(
+            key=f"dc_voltage_{tracker}",
+            translation_key="dc_voltage",
+            translation_placeholders={"tracker": str(tracker)},
+            device_class=SensorDeviceClass.VOLTAGE,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=1,
+            entity_registry_enabled_default=False,
+            value_fn=_inverter_value(f"dc_voltage_{tracker}"),
+        )
+        for tracker in DC_TRACKERS
+    ),
+    *(
+        E3dcPartSensorDescription(
+            key=f"dc_current_{tracker}",
+            translation_key="dc_current",
+            translation_placeholders={"tracker": str(tracker)},
+            device_class=SensorDeviceClass.CURRENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            entity_registry_enabled_default=False,
+            value_fn=_inverter_value(f"dc_current_{tracker}"),
+        )
         for tracker in DC_TRACKERS
     ),
 )
