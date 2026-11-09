@@ -256,14 +256,17 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """If cover is closed."""
-        if not self._positioning and self.status["state"] == "stopped":
-            # A stopped cover without position control only knows the
-            # direction it last travelled in
-            if not (last_direction := self.status.get("last_direction")):
-                return None
-            return cast(str, last_direction) == "close"
+        if not self._positioning:
+            if self.status["state"] == "stopped":
+                # A stopped cover without position control only knows the
+                # direction it last travelled in
+                if not (last_direction := self.status.get("last_direction")):
+                    return None
+                return cast(str, last_direction) == "close"
+            return cast(bool, self.status["state"] == "closed")
 
-        return cast(bool, self.status["state"] == "closed")
+        # Some OEM firmwares report "stopped" instead of "closed" at position 0
+        return cast(bool, self.status["current_pos"] == 0)
 
     @property
     @override

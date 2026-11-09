@@ -90,6 +90,7 @@ _CLIMATE_ACTIONS: EsphomeEnumMapper[ClimateAction, HVACAction] = EsphomeEnumMapp
         ClimateAction.IDLE: HVACAction.IDLE,
         ClimateAction.DRYING: HVACAction.DRYING,
         ClimateAction.FAN: HVACAction.FAN,
+        ClimateAction.DEFROSTING: HVACAction.DEFROSTING,
     }
 )
 _FAN_MODES: EsphomeEnumMapper[ClimateFanMode, str] = EsphomeEnumMapper(
