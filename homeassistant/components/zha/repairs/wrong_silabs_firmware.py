@@ -95,6 +95,18 @@ async def warn_on_wrong_silabs_firmware(
         # reconnect, it should work
         raise AlreadyRunningEZSP
 
+    if app_type == ApplicationType.SPINEL_ZIGGURAT:
+        # ZHA uses this firmware through the Ziggurat radio type
+        return False
+
+    # The entry may have been removed or disabled while probing, issues linked to
+    # disabled entries are hidden
+    if config_entry_id is not None and (
+        (entry := hass.config_entries.async_get_entry(config_entry_id)) is None
+        or entry.disabled_by is not None
+    ):
+        config_entry_id = None
+
     hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(
         hass,

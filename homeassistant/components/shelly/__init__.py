@@ -67,6 +67,7 @@ from .coordinator import (
     ShellyRpcPollingCoordinator,
 )
 from .repairs import (
+    async_create_issue_unsupported_firmware,
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_deprecated_firmware_issue,
     async_manage_ir_raw_receive_disabled_issue,
@@ -76,7 +77,6 @@ from .repairs import (
 )
 from .services import async_setup_services
 from .utils import (
-    async_create_issue_unsupported_firmware,
     async_migrate_rpc_sensor_description_unique_ids,
     async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
@@ -122,6 +122,7 @@ RPC_SLEEPING_PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.UPDATE,
 ]
+UNSUPPORTED_FIRMWARE_PLATFORMS: Final = [Platform.UPDATE]
 
 COAP_SCHEMA: Final = probatio.Schema(
     {
@@ -236,14 +237,6 @@ async def _async_setup_block_entry(
         runtime_data.platforms = PLATFORMS
         try:
             await device.initialize()
-            if not device.firmware_supported:
-                async_create_issue_unsupported_firmware(hass, entry)
-                await device.shutdown()
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="firmware_unsupported",
-                    translation_placeholders={"device": entry.title},
-                )
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(
@@ -262,6 +255,20 @@ async def _async_setup_block_entry(
         runtime_data.block = ShellyBlockCoordinator(hass, entry, device)
         runtime_data.block.async_setup()
         runtime_data.rest = ShellyRestCoordinator(hass, device, entry)
+        if not device.firmware_supported:
+            # Keep polling even without enabled entities to detect a firmware update
+            entry.async_on_unload(
+                runtime_data.rest.async_add_listener(
+                    runtime_data.rest.async_reload_on_supported_firmware
+                )
+            )
+            runtime_data.unsupported_firmware = True
+            runtime_data.platforms = UNSUPPORTED_FIRMWARE_PLATFORMS
+            await hass.config_entries.async_forward_entry_setups(
+                entry, runtime_data.platforms
+            )
+            async_create_issue_unsupported_firmware(hass, entry, is_fixable=True)
+            return
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
@@ -337,13 +344,16 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         try:
             await device.initialize()
             if not device.firmware_supported:
-                async_create_issue_unsupported_firmware(hass, entry)
-                await device.shutdown()
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="firmware_unsupported",
-                    translation_placeholders={"device": entry.title},
+                runtime_data.unsupported_firmware = True
+                runtime_data.platforms = UNSUPPORTED_FIRMWARE_PLATFORMS
+                runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
+                runtime_data.rpc.async_setup()
+                runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
+                await hass.config_entries.async_forward_entry_setups(
+                    entry, runtime_data.platforms
                 )
+                async_create_issue_unsupported_firmware(hass, entry, is_fixable=True)
+                return
             runtime_data.rpc_zigbee_firmware = device.zigbee_firmware
             runtime_data.rpc_supports_scripts = await device.supports_scripts()
             if runtime_data.rpc_supports_scripts:

@@ -132,3 +132,4 @@ async def test_async_setup_platform_creates_issue(
     issue = issue_registry.async_get_issue(DOMAIN, "yaml_deprecated")
     assert issue is not None
     assert issue.translation_key == "yaml_deprecated"
+    assert issue.breaks_in_ha_version == "2027.4.0"

@@ -9,6 +9,7 @@
   "categories": ["sensors"],
   "codeowners": ["@elafargue"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/medcom_ble",
   "integration_type": "device",

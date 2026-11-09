@@ -6,13 +6,12 @@ from typing import Any
 from aioharmony.const import SendCommandDevice
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.harmony.const import (
-    DOMAIN,
-    SERVICE_CHANGE_CHANNEL,
-    SERVICE_SYNC,
-)
+from homeassistant.components.harmony.const import DOMAIN
 from homeassistant.components.harmony.remote import ATTR_DELAY_SECS
-from homeassistant.components.harmony.services import ATTR_CHANNEL
+from homeassistant.components.harmony.services import (
+    HarmonyService,
+    HarmonyServiceArgument,
+)
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_COMMAND,
@@ -32,6 +31,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
@@ -351,8 +351,11 @@ async def test_change_channel(
     # Tell the remote to change channels
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CHANGE_CHANNEL,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE, ATTR_CHANNEL: 100},
+        HarmonyService.CHANGE_CHANNEL,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_REMOTE,
+            HarmonyServiceArgument.CHANNEL: 100,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -378,8 +381,8 @@ async def test_sync(
     # Tell the remote to change channels
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SYNC,
-        {ATTR_ENTITY_ID: ENTITY_REMOTE},
+        HarmonyService.SYNC,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()

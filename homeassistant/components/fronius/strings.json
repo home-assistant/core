@@ -29,17 +29,22 @@
       },
       "user": {
         "data": {
-          "auto_revert_power_limit": "Revert the AC power limit if Home Assistant stops",
+          "auto_revert_power_limit": "Revert the power and battery limits if Home Assistant stops",
           "host": "[%key:common::config_flow::data::host%]",
           "modbus_port": "Modbus port"
         },
         "data_description": {
-          "auto_revert_power_limit": "The inverter drops the AC power limit an hour after it last received it, and returns to its own settings. Home Assistant sends the limit again every 15 minutes, so this only takes effect once it stops sending - because Home Assistant is down, or because the integration was removed. Battery setpoints are not affected - the inverter supports no timeout for them.",
+          "auto_revert_power_limit": "The inverter drops the AC power limit and the battery charge and discharge limits an hour after it last received them, and returns to its own settings. Home Assistant sends active limits again every 15 minutes, so this only takes effect once it stops sending - because Home Assistant is down, or because the integration was removed. The battery minimum reserve and grid charging are not affected.",
           "host": "The IP address or hostname of your Fronius device.",
           "modbus_port": "Port of the device's Modbus TCP interface. Only used when Modbus is enabled on the device's web interface."
         },
         "description": "Configure your Fronius SolarAPI device."
       }
+    }
+  },
+  "device": {
+    "mppt": {
+      "name": "MPPT {mppt_no}"
     }
   },
   "entity": {
@@ -92,9 +97,6 @@
       },
       "current_dc": {
         "name": "DC current"
-      },
-      "current_dc_mppt_no": {
-        "name": "DC current {mppt_no}"
       },
       "delivery_factor": {
         "name": "Grid import tariff"
@@ -265,16 +267,13 @@
         "name": "Meter mode"
       },
       "modbus_mppt_current_dc": {
-        "name": "MPPT {mppt_no} DC current"
-      },
-      "modbus_mppt_energy": {
-        "name": "MPPT {mppt_no} energy"
+        "name": "DC current (Modbus)"
       },
       "modbus_mppt_power_dc": {
-        "name": "MPPT {mppt_no} DC power"
+        "name": "DC power"
       },
       "modbus_mppt_voltage_dc": {
-        "name": "MPPT {mppt_no} DC voltage"
+        "name": "DC voltage (Modbus)"
       },
       "power_ac": {
         "name": "AC power"
@@ -428,9 +427,6 @@
       },
       "voltage_dc_minimum_cell": {
         "name": "Minimum cell voltage"
-      },
-      "voltage_dc_mppt_no": {
-        "name": "DC voltage {mppt_no}"
       }
     },
     "switch": {
@@ -449,6 +445,9 @@
     }
   },
   "exceptions": {
+    "battery_limits_conflict": {
+      "message": "The inverter refuses a charge limit of {charge_limit}% together with a discharge limit of {discharge_limit}% while both limits are enabled. A negative limit forces the opposite direction and must not exceed the other limit, so the two have to add up to at least 0%. Change one of them or turn its limiting off first."
+    },
     "entry_cannot_connect": {
       "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
     },

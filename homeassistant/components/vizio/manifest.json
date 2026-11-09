@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@raman325"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/vizio",
   "integration_type": "device",
   "iot_class": "local_polling",

@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for the WattWächter Plus integration."""
+"""DataUpdateCoordinator for the WattWächter integration."""
 
 from dataclasses import dataclass
 from datetime import timedelta
@@ -44,7 +44,7 @@ class WattwaechterData:
 
 
 class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
-    """Coordinator for WattWächter Plus data updates."""
+    """Coordinator for WattWächter data updates."""
 
     config_entry: WattwaechterConfigEntry
 

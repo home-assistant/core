@@ -2,6 +2,7 @@
 
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -9,11 +10,13 @@ from homeassistant.components.bluetooth import (
     BaseHaRemoteScanner,
     async_register_scanner,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 from .const import DOMAIN
 from .coordinator import RuuviGatewayUpdateCoordinator
+
+if TYPE_CHECKING:
+    from . import RuuviGatewayConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +70,7 @@ class RuuviGatewayScanner(BaseHaRemoteScanner):
 
 def async_connect_scanner(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RuuviGatewayConfigEntry,
     coordinator: RuuviGatewayUpdateCoordinator,
 ) -> tuple[RuuviGatewayScanner, CALLBACK_TYPE]:
     """Connect scanner and start polling."""

@@ -6,12 +6,7 @@ import probatio
 from pyplaato.plaato import PlaatoDeviceType
 
 from homeassistant.components import cloud, webhook
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 
@@ -27,6 +22,7 @@ from .const import (
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
+from .coordinator import PlaatoConfigEntry
 
 AUTH_TOKEN_URL = "https://intercom.help/plaato/en/articles/5004720-auth_token"
 
@@ -187,7 +183,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PlaatoConfigEntry,
     ) -> PlaatoOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlaatoOptionsFlowHandler()

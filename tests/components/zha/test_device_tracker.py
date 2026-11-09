@@ -10,7 +10,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from zha.application.platforms.device_tracker import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -49,7 +49,7 @@ def device_tracker_platforms_only():
 async def test_device_tracker(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA device tracker platform."""
 

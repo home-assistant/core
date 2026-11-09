@@ -41,9 +41,9 @@ from . import (
     inject_rpc_device_event,
     mutate_rpc_device_status,
     patch_platforms,
+    register_child_device,
     register_device,
     register_entity,
-    register_sub_device,
 )
 from .conftest import MOCK_LEDSTRIP_STATUS_RAINBOW, MOCK_LEDSTRIP_STATUS_SOLID
 
@@ -52,7 +52,7 @@ LIGHT_BLOCK_ID = 2
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 MOTION_BLOCK_ID = 3
-LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_ledstrip_0_reverse_effect"
+LEDSTRIP_ENTITY_ID = f"{SWITCH_DOMAIN}.test_name_reverse_effect"
 
 
 @pytest.fixture(autouse=True)
@@ -738,7 +738,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
     )
 
     # create orphaned entity on sub device
-    sub_device_entry = register_sub_device(
+    sub_device_entry = register_child_device(
         device_registry,
         config_entry,
         "boolean:201-boolean_generic",

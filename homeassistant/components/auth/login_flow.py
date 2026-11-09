@@ -87,6 +87,7 @@ from homeassistant.components.http.ban import (
     process_success_login,
     process_wrong_login,
 )
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import (
@@ -258,6 +259,7 @@ class LoginFlowBaseView(HomeAssistantView):
     """Base class for the login views."""
 
     requires_auth = False
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     def __init__(
         self,

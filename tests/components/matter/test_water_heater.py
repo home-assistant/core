@@ -9,19 +9,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter import DOMAIN
-from homeassistant.components.matter.services import (
-    ATTR_DURATION,
-    ATTR_EMERGENCY_BOOST,
-    ATTR_TEMPORARY_SETPOINT,
-    SERVICE_WATER_HEATER_BOOST,
-)
+from homeassistant.components.matter.const import MatterService, MatterServiceArgument
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
     STATE_OFF,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,6 +25,12 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.WATER_HEATER
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -307,12 +308,12 @@ async def test_async_boost_actions(
     # Set boost with duration, emergency_boost, and temporary_setpoint
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_WATER_HEATER_BOOST,
+        MatterService.WATER_HEATER_BOOST,
         {
-            ATTR_ENTITY_ID: "water_heater.water_heater",
-            ATTR_DURATION: 60,
-            ATTR_EMERGENCY_BOOST: True,
-            ATTR_TEMPORARY_SETPOINT: 55,
+            CommonServiceArgument.ENTITY_ID: "water_heater.water_heater",
+            MatterServiceArgument.DURATION: 60,
+            MatterServiceArgument.EMERGENCY_BOOST: True,
+            MatterServiceArgument.TEMPORARY_SETPOINT: 55,
         },
         blocking=True,
     )
