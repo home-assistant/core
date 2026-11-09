@@ -144,6 +144,9 @@
     "play_failed": {
       "message": "Failed to play Yoto media: {error}"
     },
+    "sleep_timer_failed": {
+      "message": "Could not set the sleep timer on the Yoto player."
+    },
     "unknown_card": {
       "message": "Unknown Yoto card: {card_id}"
     },

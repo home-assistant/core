@@ -236,8 +236,7 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
         except YotoError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
+                translation_key="sleep_timer_failed",
             ) from err
 
     async def async_clear_sleep_timer(self) -> None:

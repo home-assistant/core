@@ -794,7 +794,7 @@ async def test_set_sleep_timer_end_of_track(
         pytest.param(
             NoTrackPlayingError("no track"), ServiceValidationError, id="no_track"
         ),
-        pytest.param(YotoError("nope"), HomeAssistantError, id="command_failed"),
+        pytest.param(YotoError("nope"), HomeAssistantError, id="sleep_timer_failed"),
     ],
 )
 async def test_set_sleep_timer_end_of_track_error(
