@@ -251,9 +251,11 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
             )
         # Home Assistant only checks the range; an odd value would be written
         # and shown as a target the thermostat itself can't select
-        if not math.isclose(
-            temperature / TEMPERATURE_STEP, round(temperature / TEMPERATURE_STEP)
-        ):
+        steps = temperature / TEMPERATURE_STEP
+        if self.hass.config.units.temperature_unit != UnitOfTemperature.CELSIUS:
+            # Converted from Fahrenheit, so 72 °F arrives as 22.22 °C
+            temperature = round(steps) * TEMPERATURE_STEP
+        elif not math.isclose(steps, round(steps)):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temperature_step_invalid",

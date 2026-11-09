@@ -47,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import DEVICE, DEVICE_ID
 
@@ -548,6 +549,23 @@ async def test_set_temperature_invalid_step(
         "step": "0.5",
     }
     mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_fahrenheit_rounds_to_step(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test a target converted from °F is rounded to the 0.5 °C step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 72},
+        blocking=True,
+    )
+
+    assert mock_fenix_client.set_setpoint.call_args.args[2] == 22.0
 
 
 @pytest.mark.usefixtures("init_integration")
