@@ -13,18 +13,15 @@ from homeassistant.components.geo_json_events.const import (
     SIGNAL_UPDATE_ENTITY,
 )
 from homeassistant.components.geo_location import (
-    ATTR_SOURCE,
     DOMAIN as GEO_LOCATION_DOMAIN,
+    GeolocationEntityStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_URL,
+    EntityStateAttribute,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
@@ -88,11 +85,11 @@ async def test_entity_lifecycle(
         assert state.name == "Properties 1"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "1234",
-            ATTR_LATITUDE: -31.0,
-            ATTR_LONGITUDE: 150.0,
-            ATTR_FRIENDLY_NAME: "Properties 1",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geo_json_events",
+            EntityStateAttribute.LATITUDE: -31.0,
+            EntityStateAttribute.LONGITUDE: 150.0,
+            EntityStateAttribute.FRIENDLY_NAME: "Properties 1",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 15.5), 7) == 0
 
@@ -101,11 +98,11 @@ async def test_entity_lifecycle(
         assert state.name == "271310188"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "2345",
-            ATTR_LATITUDE: -31.1,
-            ATTR_LONGITUDE: 150.1,
-            ATTR_FRIENDLY_NAME: "271310188",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geo_json_events",
+            EntityStateAttribute.LATITUDE: -31.1,
+            EntityStateAttribute.LONGITUDE: 150.1,
+            EntityStateAttribute.FRIENDLY_NAME: "271310188",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 20.5), 7) == 0
 
@@ -114,11 +111,11 @@ async def test_entity_lifecycle(
         assert state.name == "Title 3"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "3456",
-            ATTR_LATITUDE: -31.2,
-            ATTR_LONGITUDE: 150.2,
-            ATTR_FRIENDLY_NAME: "Title 3",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geo_json_events",
+            EntityStateAttribute.LATITUDE: -31.2,
+            EntityStateAttribute.LONGITUDE: 150.2,
+            EntityStateAttribute.FRIENDLY_NAME: "Title 3",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 25.5), 7) == 0
 
