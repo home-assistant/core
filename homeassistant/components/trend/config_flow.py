@@ -116,8 +116,8 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     }
     options_flow_reloads = True
 
-    @override
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
