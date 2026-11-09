@@ -35,6 +35,7 @@ async def test_weather(
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
+
 async def test_forecast_callbacks_return_none_when_station_is_missing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -53,6 +54,9 @@ async def test_forecast_callbacks_return_none_when_station_is_missing(
         "weather.my_home_station"
     )
     assert weather is not None
+
+    assert weather._async_forecast_daily()
+    assert weather._async_forecast_hourly()
 
     mock_rest_api.get_all_data.return_value = {}
 

@@ -186,6 +186,16 @@ async def test_websocket_sensor_observation(
     # Test that native_value returns the correct value
     assert sensor.native_value == 22.5
 
+    # Availability follows the station and device keys
+    coordinator.last_update_success = True
+    assert sensor.available is True
+    coordinator.data = {}
+    assert sensor.available is False
+    coordinator.data = {test_station_id: None}
+    assert sensor.available is False
+    coordinator.data = {test_station_id: {test_device_id: None}}
+    assert sensor.available is False
+
 
 async def test_websocket_sensor_wind(
     hass: HomeAssistant,
