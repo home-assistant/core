@@ -118,8 +118,6 @@ class EnvoyGeneratorEntity(EnvoyBaseEntity):
         config = self.data.generator_config
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self.envoy_serial_num}_generator")},
-            manufacturer=config.manufacturer if config else None,
-            model=config.model if config else None,
             name=f"Generator {self.envoy_serial_num}",
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
@@ -127,6 +125,9 @@ class EnvoyGeneratorEntity(EnvoyBaseEntity):
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
+        if config is not None:
+            self._attr_device_info.manufacturer = config.manufacturer
+            self._attr_device_info.model = config.model
 
 
 class EnvoyGeneratorStatusEntity(EnvoyGeneratorEntity):
