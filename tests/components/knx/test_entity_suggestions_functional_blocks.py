@@ -30,6 +30,7 @@ DPT_COLOR_TEMP_ABS = {"main": 7, "sub": 600}
 DPT_COLOR_RGB = {"main": 232, "sub": 600}
 DPT_COLOR_RGBW = {"main": 251, "sub": 600}
 DPT_TEMPERATURE = {"main": 9, "sub": 1}
+DPT_HVAC_MODE = {"main": 20, "sub": 102}
 
 
 def _channel(
@@ -93,6 +94,13 @@ TEST_PROJECT: dict[str, Any] = {
         "7/4/3": _group_address("7/4/3", DPT_PERCENT),
         "7/4/4": _group_address("7/4/4", None),
         "7/4/5": _group_address("7/4/5", {"main": 255, "sub": 1}),
+        "7/7/1": _group_address("7/7/1", DPT_TEMPERATURE),
+        "7/7/2": _group_address("7/7/2", DPT_TEMPERATURE),
+        "7/7/3": _group_address("7/7/3", DPT_TEMPERATURE),
+        "7/7/4": _group_address("7/7/4", DPT_HVAC_MODE),
+        "7/7/5": _group_address("7/7/5", DPT_HVAC_MODE),
+        "7/7/6": _group_address("7/7/6", DPT_PERCENT),
+        "7/7/7": _group_address("7/7/7", {"main": 9, "sub": 2}),
     },
     "devices": {
         "1.1.1": {
@@ -164,6 +172,24 @@ TEST_PROJECT: dict[str, Any] = {
                 "CH-1": _channel("Raumtemperatur", ["321"], ["co-140"]),
             },
         },
+        "1.3.8": {
+            "name": "Raumtemperaturregler",
+            "channels": {
+                "CH-1": _channel(
+                    "Regler",
+                    ["321", "398", "399"],
+                    [
+                        "co-170",
+                        "co-171",
+                        "co-172",
+                        "co-173",
+                        "co-174",
+                        "co-175",
+                        "co-176",
+                    ],
+                ),
+            },
+        },
     },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
@@ -196,6 +222,13 @@ TEST_PROJECT: dict[str, Any] = {
         "co-74": _com_object(["423.64"], ["6/1/5"]),
         "co-75": _com_object(["423.85"], ["6/1/6"]),
         "co-140": _com_object(["321.51"], ["7/4/1", "7/4/3", "7/4/2"]),
+        "co-170": _com_object(["321.51"], ["7/7/1"]),
+        "co-171": _com_object(["398.56"], ["7/7/2"]),
+        "co-172": _com_object(["399.101"], ["7/7/3"]),
+        "co-173": _com_object(["398.53"], ["7/7/4"]),
+        "co-174": _com_object(["399.100"], ["7/7/5"]),
+        "co-175": _com_object(["399.102"], ["7/7/6"]),
+        "co-176": _com_object(["398.57"], ["7/7/7"]),  # no config key for this DPA
     },
 }
 
@@ -272,7 +305,7 @@ def test_functional_block_platforms() -> None:
         "180": [Platform.SENSOR],
         "187": [Platform.SENSOR],
         "320": [Platform.SENSOR],
-        "321": [Platform.SENSOR],
+        "321": [Platform.CLIMATE, Platform.SENSOR],
         "322": [Platform.SENSOR],
         "323": [Platform.SENSOR],
         "324": [Platform.SENSOR],
@@ -286,10 +319,12 @@ def test_functional_block_platforms() -> None:
         "332": [Platform.SENSOR],
         "333": [Platform.SENSOR],
         "336": [Platform.SENSOR],
-        "337": [Platform.SENSOR],
+        "337": [Platform.CLIMATE, Platform.SENSOR],
         "338": [Platform.SENSOR],
         "339": [Platform.SENSOR],
         "348": [Platform.SENSOR],
+        "398": [Platform.CLIMATE],
+        "399": [Platform.CLIMATE],
         "409": [Platform.SENSOR],
         "410": [Platform.SENSOR],
         "1013": [Platform.SENSOR],
@@ -515,6 +550,37 @@ def test_sensor_unsupported_dpt_dropped(group_address: str) -> None:
     assert _build_platform_suggestion(project, channel, Platform.SENSOR) is None
 
 
+def test_climate_suggestion() -> None:
+    """Test climate suggestion of a channel combining FB 321, 398 and 399."""
+    channel = _test_channel("1.3.8", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.CLIMATE)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "ga_temperature_current": {"state": "7/7/1"},
+        "target_temperature": {
+            "ga_temperature_target": {"write": "7/7/2", "state": "7/7/3"}
+        },
+        "ga_operation_mode": {"write": "7/7/4", "state": "7/7/5"},
+        "ga_valve": {"state": "7/7/6"},
+    }
+    assert suggestion["unmatched"] == ["398.57"]
+
+
+@pytest.mark.parametrize(
+    "com_object_ids",
+    [
+        # no current temperature
+        ["co-171", "co-172", "co-173"],
+        # no address to set the target temperature
+        ["co-170", "co-172", "co-173"],
+    ],
+)
+def test_incomplete_climate_dropped(com_object_ids: list[str]) -> None:
+    """Test that a climate entity requires current and settable target temperature."""
+    channel = _channel("Regler", ["321", "398", "399"], com_object_ids)
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.CLIMATE) is None
+
+
 async def test_ws_get_entity_suggestions(
     knx: KNXTestKit,
     get_entity_suggestions: KnxSuggestionGetter,
@@ -527,7 +593,16 @@ async def test_ws_get_entity_suggestions(
 
     assert result["providers"]["fb"] == {
         "state": "ok",
-        "functional_blocks_found": ["321", "417", "423", "427", "800", "999"],
+        "functional_blocks_found": [
+            "321",
+            "398",
+            "399",
+            "417",
+            "423",
+            "427",
+            "800",
+            "999",
+        ],
     }
     suggestions = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
     assert sorted(suggestions) == [
@@ -538,6 +613,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
         "fb_1.3.5_CH-1",
+        "fb_1.3.8_CH-1",
     ]
 
     switch_actuator = suggestions["fb_1.1.1_CH-1"]
@@ -559,6 +635,9 @@ async def test_ws_get_entity_suggestions(
     assert suggestions["fb_1.1.1_CH-2"]["suggested_name"] == "Ausgang 2"
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
+    # a room temperature sensor is only suggested as climate with a controller
+    assert suggestions["fb_1.3.5_CH-1"]["platform_options"] == ["sensor"]
+    assert suggestions["fb_1.3.8_CH-1"]["platform_options"] == ["climate", "sensor"]
     assert suggestions["fb_1.3.5_CH-1"]["suggestions"]["sensor"]["knx"] == {
         "ga_sensor": {"state": "7/4/1", "dpt": "9.001", "passive": ["7/4/2"]}
     }

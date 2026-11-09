@@ -144,6 +144,25 @@ class FB348(StrEnum):
     SUN_INTENSITY = "348.51"
 
 
+class FB398(StrEnum):
+    """FB 398 Room Temperature Setpoint Manager."""
+
+    HVAC_MODE_USER = "398.53"
+    TEMP_ROOM_SETP_USER_ABS = "398.56"
+    TEMP_ROOM_SETP_USER_ABS_EFF = "398.84"
+
+
+class FB399(StrEnum):
+    """FB 399 Room Temperature Controller."""
+
+    CONTR_MODE = "399.65"
+    HVAC_MODE_ACT = "399.100"
+    TEMP_ROOM_SETP_ACT = "399.101"
+    ACT_TARGET_POS_HEAT_STAGE_A = "399.102"
+    HEAT_COOL_MODE_ACT = "399.109"
+    CONTR_MODE_ACT = "399.111"
+
+
 class FB409(StrEnum):
     """FB 409 Indoor Brightness Sensor."""
 

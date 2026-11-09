@@ -62,6 +62,8 @@ from .dpa import (
     FB338,
     FB339,
     FB348,
+    FB398,
+    FB399,
     FB409,
     FB410,
     FB417,
@@ -980,7 +982,13 @@ class ClimateTargetTemperature:
     """Target temperature set directly."""
 
     ga_temperature_target: Annotated[
-        GroupAddressConfig, ga(write_required=True, valid_dpt="9.001")
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="9.001",
+            dpa_write=[FB398.TEMP_ROOM_SETP_USER_ABS],
+            dpa_state=[FB399.TEMP_ROOM_SETP_ACT, FB398.TEMP_ROOM_SETP_USER_ABS_EFF],
+        ),
     ]
     min_temp: Annotated[
         float,
@@ -1044,10 +1052,17 @@ class ClimateKnxConfig:
     """UI configuration of a KNX climate entity."""
 
     ga_temperature_current: Annotated[
-        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="9.001")
+        GroupAddressConfig,
+        ga(
+            write=False,
+            state_required=True,
+            valid_dpt="9.001",
+            dpa_state=[FB321.TEMP_ROOM],
+        ),
     ]
     ga_humidity_current: Annotated[
-        GroupAddressConfig | None, ga(write=False, valid_dpt="9.007")
+        GroupAddressConfig | None,
+        ga(write=False, valid_dpt="9.007", dpa_state=[FB337.HUM_REL_ROOM]),
     ] = None
     target_temperature: Annotated[
         ClimateTargetTemperature | ClimateSetpointShift,
@@ -1064,14 +1079,24 @@ class ClimateKnxConfig:
         None
     )
     ga_valve: Annotated[
-        GroupAddressConfig | None, ga(write=False, valid_dpt="5.001")
+        GroupAddressConfig | None,
+        ga(
+            write=False,
+            valid_dpt="5.001",
+            dpa_state=[FB399.ACT_TARGET_POS_HEAT_STAGE_A],
+        ),
     ] = None
     section_operation_mode: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
-    ga_operation_mode: Annotated[GroupAddressConfig | None, ga(valid_dpt="20.102")] = (
-        None
-    )
+    ga_operation_mode: Annotated[
+        GroupAddressConfig | None,
+        ga(
+            valid_dpt="20.102",
+            dpa_write=[FB398.HVAC_MODE_USER],
+            dpa_state=[FB399.HVAC_MODE_ACT],
+        ),
+    ] = None
     ignore_auto_mode: Annotated[bool, selector.BooleanSelector()] = False
     section_operation_mode_individual: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -1091,7 +1116,10 @@ class ClimateKnxConfig:
     section_heat_cool: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
-    ga_heat_cool: Annotated[GroupAddressConfig | None, ga(valid_dpt="1.100")] = None
+    ga_heat_cool: Annotated[
+        GroupAddressConfig | None,
+        ga(valid_dpt="1.100", dpa_state=[FB399.HEAT_COOL_MODE_ACT]),
+    ] = None
     section_on_off: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
@@ -1100,9 +1128,14 @@ class ClimateKnxConfig:
     section_controller_mode: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
-    ga_controller_mode: Annotated[GroupAddressConfig | None, ga(valid_dpt="20.105")] = (
-        None
-    )
+    ga_controller_mode: Annotated[
+        GroupAddressConfig | None,
+        ga(
+            valid_dpt="20.105",
+            dpa_write=[FB399.CONTR_MODE],
+            dpa_state=[FB399.CONTR_MODE_ACT],
+        ),
+    ] = None
     ga_controller_status: Annotated[GroupAddressConfig | None, ga(write=False)] = None
     default_controller_mode: Annotated[
         str,
