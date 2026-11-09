@@ -7,11 +7,11 @@ from aiocomelit import ComelitDeviceObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -236,7 +236,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        target = kwargs[ATTR_POSITION]
+        target = kwargs[CoverServiceArgument.POSITION]
 
         # Let the motor end stop finish full travel instead of the timer
         if target == 0:
