@@ -1,18 +1,9 @@
 """Data update coordinator for NexBlue."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from typing import override
-
-from nexblue_api import (
-    NexBlueAuthError,
-    NexBlueClient,
-    NexBlueConnectionError,
-    NexBlueDeviceOfflineError,
-    NexBlueError,
-    NexBlueRateLimitError,
-)
-from nexblue_api.models import ChargerStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -20,8 +11,24 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
+from nexblue_api import (
+    NexBlueAuthError,
+    NexBlueClient,
+    NexBlueConnectionError,
+    NexBlueDeviceOfflineError,
+    NexBlueError,
+    NexBlueRateLimitError,
+    NexBlueStatisticsNotSupportedError,
+)
+from nexblue_api.models import ChargerStatus, LoadBalancer
 
-from .const import CONF_REFRESH_TOKEN, LOGGER, UPDATE_INTERVAL
+from .const import (
+    CHARGER_UPDATE_INTERVAL,
+    CONF_REFRESH_TOKEN,
+    LOGGER,
+    SMART_METER_UPDATE_INTERVAL,
+)
 
 type NexBlueConfigEntry = ConfigEntry[NexBlueDataUpdateCoordinator]
 
@@ -54,8 +61,8 @@ class NexBlueDataUpdateCoordinator(
             hass,
             LOGGER,
             config_entry=entry,
-            name=f"NexBlue {entry.title}",
-            update_interval=UPDATE_INTERVAL,
+            name=f"NexBlue Charger {entry.title}",
+            update_interval=CHARGER_UPDATE_INTERVAL,
         )
 
     @callback
@@ -111,7 +118,7 @@ class NexBlueDataUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, ChargerStatus | None]:
         """Fetch status for every charger visible to the configured account."""
         try:
-            await self._async_ensure_authorized()
+            await self.async_ensure_authorized()
             chargers = await self.client.async_list_chargers()
             data: dict[str, ChargerStatus | None] = {}
             for charger in chargers:
@@ -132,7 +139,7 @@ class NexBlueDataUpdateCoordinator(
 
         return data
 
-    async def _async_ensure_authorized(self) -> None:
+    async def async_ensure_authorized(self) -> None:
         """Refresh the access token, falling back to one saved-password login."""
         try:
             token = await self.client.async_ensure_access_token(
@@ -158,3 +165,79 @@ class NexBlueDataUpdateCoordinator(
                     CONF_REFRESH_TOKEN: token.refresh_token,
                 },
             )
+
+
+@dataclass(frozen=True, slots=True)
+class SmartMeterData:
+    """A Smart Meter and its most recently retrieved statistics."""
+
+    device: LoadBalancer
+    today: float | None
+    month: float | None
+    year: float | None
+
+
+class NexBlueSmartMeterCoordinator(
+    DataUpdateCoordinator[dict[str, SmartMeterData | None]]
+):
+    """Update Smart Meter statistics independently of charger telemetry."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: NexBlueConfigEntry,
+        charger_coordinator: NexBlueDataUpdateCoordinator,
+    ) -> None:
+        """Initialize Smart Meter updates."""
+        self.charger_coordinator = charger_coordinator
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"NexBlue Smart Meter {entry.title}",
+            update_interval=SMART_METER_UPDATE_INTERVAL,
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, SmartMeterData | None]:
+        """Retrieve each supported device once per update."""
+        client = self.charger_coordinator.client
+        try:
+            await self.charger_coordinator.async_ensure_authorized()
+            devices = await client.async_list_load_balancers()
+        except NexBlueAuthError as err:
+            raise ConfigEntryAuthFailed from err
+        except NexBlueError as err:
+            raise UpdateFailed("Unable to retrieve NexBlue load balancers") from err
+
+        now = dt_util.now()
+        day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        month = day.replace(day=1)
+        year = month.replace(month=1)
+        result: dict[str, SmartMeterData | None] = {}
+        for device in devices:
+            try:
+                values: list[float | None] = []
+                for start, granularity in (
+                    (day, "daily"),
+                    (month, "monthly"),
+                    (year, "yearly"),
+                ):
+                    if start >= now:
+                        values.append(None)
+                        continue
+                    usage = await client.async_get_energy_usage(
+                        device.serial_number, start, now, str(now.tzinfo), granularity
+                    )
+                    values.append(usage.total_consumption)
+                result[device.serial_number] = SmartMeterData(device, *values)
+            except NexBlueStatisticsNotSupportedError:
+                continue
+            except NexBlueAuthError as err:
+                raise ConfigEntryAuthFailed from err
+            except NexBlueError:
+                LOGGER.warning(
+                    "Unable to update NexBlue Smart Meter %s", device.serial_number
+                )
+                result[device.serial_number] = None
+        return result
