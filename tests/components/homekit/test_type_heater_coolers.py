@@ -39,8 +39,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -110,7 +110,7 @@ async def test_heatercooler_basic(hass: HomeAssistant, hk_driver: HomeDriver) ->
     """Test basic HeaterCooler functionality."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
         ATTR_MIN_TEMP: 10.0,
@@ -166,7 +166,7 @@ async def test_heatercooler_with_fan_and_swing(
     """Test HeaterCooler with fan and swing mode support."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
@@ -234,7 +234,7 @@ async def test_heatercooler_auto_target_backing_mode(
     """Test which range mode backs the HomeKit Auto target."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: hvac_modes,
     }
@@ -257,7 +257,7 @@ async def test_heatercooler_off_with_bundled_target_mode(
     """Test a target bundled with off is remembered for the next power on."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     }
@@ -297,7 +297,7 @@ async def test_heatercooler_off_with_unsupported_bundled_target(
     """Test an unsupported target bundled with off is put back on the tile."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
     }
@@ -327,7 +327,7 @@ async def test_heatercooler_rejected_mode_is_not_remembered(
     """Test a rejected mode write does not become the restore mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     }
@@ -369,7 +369,7 @@ async def test_heatercooler_modes_heat_cool_only_no_auto(
     """Test that Auto is not offered for entities without a range mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     }
@@ -397,7 +397,7 @@ async def test_heatercooler_cooling_only_no_heat_target(
     """Test a cooling-only entity does not expose the Heat target."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -428,7 +428,7 @@ async def test_heatercooler_temperature_step(
     """Test HeaterCooler relies on the HomeKit default temperature step."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     }
@@ -453,7 +453,7 @@ async def test_heatercooler_fahrenheit(
     """Test HeaterCooler with Fahrenheit units."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_MIN_TEMP: 45.0,  # Fahrenheit
@@ -483,7 +483,7 @@ async def test_heatercooler_fahrenheit_default_temp_range(
     """Test the Celsius default range is not reconverted in Fahrenheit."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         # No min/max temp, so the Celsius defaults (7/35) are used as-is
@@ -510,7 +510,7 @@ async def test_heatercooler_state_updates(
     """Test state updates from Home Assistant to HomeKit."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
         ATTR_TEMPERATURE: 20.0,
@@ -588,7 +588,7 @@ async def test_heatercooler_dual_temperature_support(
     """Test HeaterCooler with dual temperature support (TARGET_TEMP_HIGH/LOW)."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.HEAT,
@@ -635,7 +635,7 @@ async def test_heatercooler_fan_speed_updates(
     """Test fan speed updates."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -677,7 +677,7 @@ async def test_heatercooler_no_swing_toggle_without_off_mode(
     # Routed through the fan speeds; the swing list has no off mode, so
     # the toggle's off write would be rejected by the entity
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
@@ -710,7 +710,7 @@ async def test_heatercooler_swing_mode_updates(
     """Test swing mode updates."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.SWING_MODE
         ),
@@ -750,7 +750,7 @@ async def test_heatercooler_unavailable_states(
     """Test handling of unavailable and unknown states."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     }
@@ -790,7 +790,7 @@ async def test_heatercooler_action_derivation(
     """Test action derivation when hvac_action is not provided."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.HEAT,
@@ -847,7 +847,7 @@ async def test_heatercooler_set_active_off(
     """Test setting active to off via HomeKit."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
     }
@@ -883,7 +883,7 @@ async def test_heatercooler_set_active_off_no_off_mode(
     """Test turning off an entity without an OFF mode issues no service call."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -917,7 +917,7 @@ async def test_heatercooler_unsupported_target_mode_write_restored(
     """Test an unsupported target mode write restores the characteristic."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
     }
@@ -948,7 +948,7 @@ async def test_heatercooler_unsupported_target_write_dry_only_entity(
     """Test the restore falls back to the default target for dry only entities."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.DRY, HVACMode.OFF],
     }
@@ -979,7 +979,7 @@ async def test_heatercooler_set_active_on(
     """Test setting active to on via HomeKit."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
     }
@@ -1014,7 +1014,7 @@ async def test_heatercooler_set_active_on_heat_only(
     """Test turning a heat-only entity on uses a supported mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -1048,7 +1048,7 @@ async def test_heatercooler_power_on_with_thresholds_uses_activated_mode(
     """Test thresholds batched with Active on resolve against the new mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -1107,7 +1107,7 @@ async def test_heatercooler_double_off_does_not_corrupt_mode_memory(
     """Test repeated off writes never make off the restore mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     }
@@ -1143,7 +1143,7 @@ async def test_heatercooler_no_off_entity_applies_rest_of_batch(
     """Test a rejected off write does not drop the bundled writes."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL],  # no off
         ATTR_TEMPERATURE: 20.0,
@@ -1187,7 +1187,7 @@ async def test_heatercooler_pending_mode_does_not_mask_target_reject(
     """Test an unsupported target is rejected while a mode is pending."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
     }
@@ -1219,7 +1219,7 @@ async def test_heatercooler_range_only_one_sided_entity(
     """Test a range only entity with one sided modes gets range writes."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
         ATTR_TARGET_TEMP_HIGH: 22.0,
@@ -1257,7 +1257,7 @@ async def test_heatercooler_state_callback_during_write_wins(
     """Test a state reported during the call beats the queued mode values."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.HEAT,
@@ -1295,7 +1295,7 @@ async def test_heatercooler_pending_mode_bridges_slow_state_updates(
     """Test an accepted mode stays effective until the entity reports it."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 20.0,
@@ -1350,7 +1350,7 @@ async def test_heatercooler_batch_resolves_after_prior_batch(
     """Test a batch sees the mode applied by the batch before it."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 20.0,
@@ -1394,7 +1394,7 @@ async def test_heatercooler_failed_write_aborts_batch(
     """Test a rejected mode write aborts the rest of the batch."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -1445,7 +1445,7 @@ async def test_heatercooler_write_batches_are_serialized(
     """Test a second batch waits for the first to finish."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 20.0,
@@ -1497,7 +1497,7 @@ async def test_heatercooler_set_chars_dispatch_order(
     """Test fan writes are dispatched after the mode and temperature writes."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -1550,7 +1550,7 @@ async def test_heatercooler_set_target_mode(
     """Test setting target heater cooler state via HomeKit."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
     }
@@ -1589,7 +1589,7 @@ async def test_heatercooler_set_temperature_single(
     """Test setting temperature for single-temperature entities."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 20.0,
@@ -1633,7 +1633,7 @@ async def test_heatercooler_set_temperature_dual(
     """Test setting temperature for dual-temperature entities."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.HEAT,
@@ -1683,7 +1683,7 @@ async def test_heatercooler_dual_capable_entity_in_single_mode(
     # Entities like ecobee publish the range keys even in heat or cool
     # mode, where only the single setpoint carries a value
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -1751,7 +1751,7 @@ async def test_heatercooler_range_keys_without_range_capability(
     entity_id = "climate.test"
     # A contradictory device config: range keys without any range mode
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
         ATTR_TARGET_TEMP_HIGH: 24.0,
@@ -1787,7 +1787,7 @@ async def test_heatercooler_set_fan_speed(
     """Test setting fan speed via HomeKit."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -1832,7 +1832,7 @@ async def test_heatercooler_set_swing_mode(
     """Test setting swing mode via HomeKit."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.SWING_MODE
         ),
@@ -1875,7 +1875,7 @@ async def test_heatercooler_capitalized_fan_modes(
     """Test capitalized fan modes are sent back to the service unchanged."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -1912,7 +1912,7 @@ async def test_heatercooler_capitalized_swing_modes(
     """Test capitalized swing modes are detected and preserved."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.SWING_MODE
         ),
@@ -1960,7 +1960,7 @@ async def test_heatercooler_swing_mode_fallback(
     """Test swing mode fallback when no swing modes are available."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_SWING_MODES: [],  # Empty swing modes
@@ -1994,7 +1994,7 @@ async def test_heatercooler_fan_speed_no_fan_modes(
     """Test fan speed handling when no fan modes are available."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         # No fan modes
@@ -2025,7 +2025,7 @@ async def test_heatercooler_swing_mode_no_swing_attribute(
     """Test swing mode handling when swing_on_mode attribute is not available."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         # No swing mode support
@@ -2058,7 +2058,7 @@ async def test_heatercooler_single_temp_no_entity_state(
     """Test single temperature handling when entity state is not available."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 21.0,
@@ -2190,7 +2190,7 @@ async def test_heatercooler_complex_temperature_selection(
     """Test single set point selection driven by threshold characteristic writes."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.HEAT,
@@ -2235,7 +2235,7 @@ async def test_heatercooler_target_state_unchanged_for_unusable_states(
     """Test the target state is left unchanged for states with no mapping."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     }
@@ -2272,7 +2272,7 @@ async def test_heatercooler_derive_action_edge_case(
         HVACMode.OFF,
     ]
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: features,
         ATTR_HVAC_MODES: hvac_modes,
         ATTR_TEMPERATURE: 21.0,
@@ -2301,7 +2301,7 @@ async def test_heatercooler_derive_action_edge_case(
         entity_id,
         HVACMode.COOL,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: features,
             ATTR_HVAC_MODES: hvac_modes,
             ATTR_CURRENT_TEMPERATURE: 20.0,
@@ -2326,7 +2326,7 @@ async def test_heatercooler_heat_cool_no_current_temp_diff(
     """Test HEAT_COOL mode temperature selection when no current temperature available."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.HEAT,
@@ -2371,7 +2371,7 @@ async def test_heatercooler_derive_action_auto_without_thresholds(
     """Test auto mode action derivation without a target temperature range."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.AUTO, HVACMode.OFF],
     }
@@ -2423,7 +2423,7 @@ async def test_heatercooler_off_at_startup_activates_displayed_mode(
     """Test turning on an off-at-startup entity activates the displayed mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
     }
@@ -2459,7 +2459,7 @@ async def test_heatercooler_unrepresentable_mode_not_restored(
     """Test a mode without a HomeKit target is not restored by Active."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.COOL,
@@ -2494,7 +2494,7 @@ async def test_heatercooler_power_on_restores_last_active_mode(
     """Test going off keeps the last mode on the tile and power-on restores it."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
     }
@@ -2527,7 +2527,7 @@ async def test_heatercooler_cool_mode_ignores_heating_threshold(
     """Test a heating-threshold write is ignored for a single-setpoint cool entity."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 22.0,
@@ -2556,7 +2556,7 @@ async def test_heatercooler_batched_mode_decides_setpoint_side(
     """Test a mode written in the same batch decides the setpoint side."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 22.0,
@@ -2599,7 +2599,7 @@ async def test_heatercooler_fan_only_target_falls_back(
     """Test a fan-only entity maps Auto to its mode and hides the thresholds."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
         ATTR_HVAC_MODES: [HVACMode.FAN_ONLY, HVACMode.OFF],
         ATTR_FAN_MODES: ["low", "high"],
@@ -2630,7 +2630,7 @@ async def test_heatercooler_off_only_target_falls_back_to_off(
     """Test a degenerate off-only entity maps Auto to off, not an unsupported mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
         ATTR_HVAC_MODES: [HVACMode.OFF],
         ATTR_FAN_MODES: ["low", "high"],
@@ -2661,7 +2661,7 @@ async def test_heatercooler_derive_action_cooling_triggered(
         entity_id,
         HVACMode.AUTO,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.AUTO, HVACMode.OFF],
             ATTR_CURRENT_TEMPERATURE: 22.0,  # 2°C higher than target
             ATTR_TARGET_TEMP_HIGH: 20.0,  # Target (becomes the target in _derive_action)
@@ -2686,7 +2686,7 @@ async def test_heatercooler_zero_min_temp_preserved(
     """Test a reported min temperature of 0 is used, not the default floor."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         ATTR_MIN_TEMP: 0.0,
@@ -2710,7 +2710,7 @@ async def test_heatercooler_reports_humidity_via_linked_sensor(
     """Test a reported current humidity is exposed via a linked sensor."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -2750,7 +2750,7 @@ async def test_heatercooler_custom_fan_modes_no_rotation_speed(
     """Test entities with only custom fan modes skip the rotation speed char."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -2780,7 +2780,7 @@ async def test_heatercooler_custom_swing_modes_no_swing_char(
     """Test entities with only custom swing modes skip the swing char."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.SWING_MODE
         ),
@@ -2808,7 +2808,7 @@ async def test_heatercooler_derive_action_fahrenheit(
     """Test derived action uses a unit independent hysteresis band."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         # hvac_action intentionally omitted so the action is derived
@@ -2844,7 +2844,7 @@ async def test_heatercooler_derive_action_auto_with_thresholds(
     """Test derived action in auto mode using the target temperature range."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO, HVACMode.OFF],
         # hvac_action intentionally omitted so the action is derived, and no
@@ -2891,7 +2891,7 @@ async def test_heatercooler_auto_fan_mode_linked_fan_service(
     """Test an auto fan mode exposes the fan through a linked fan service."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -2986,7 +2986,7 @@ async def test_heatercooler_category(
     """Test the advertised category matches the device capabilities."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: hvac_modes,
     }
@@ -3004,7 +3004,7 @@ async def test_heatercooler_auto_fan_service_without_speeds(
     """Test auto plus on fan modes get a fan service without a speed slider."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -3039,7 +3039,7 @@ async def test_heatercooler_fan_active_resets_without_off_mode(
     """Test a fan off write resets to on when the fan has no off mode."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -3069,7 +3069,7 @@ async def test_heatercooler_fan_active_toggles_with_off_mode(
     """Test the fan active toggle maps to the fan off and on modes."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         ),
@@ -3102,7 +3102,7 @@ async def test_heatercooler_cool_only_single_threshold(
     """Test a cool-only entity exposes only the cooling threshold."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
         ATTR_TEMPERATURE: 22.0,
@@ -3135,7 +3135,7 @@ async def test_heatercooler_heat_only_single_threshold(
     """Test a heat-only entity exposes only the heating threshold."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
         ATTR_TEMPERATURE: 21.0,
@@ -3168,7 +3168,7 @@ async def test_heatercooler_dry_only_keeps_both_thresholds(
     """Test a dry-only entity with a setpoint keeps both thresholds."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.SWING_MODE
         ),

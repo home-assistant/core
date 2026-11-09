@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.climate import ClimateEntityStateAttribute
+from homeassistant.components.climate import ClimateEntityCapabilityAttribute
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     CONF_FILTER,
@@ -1805,7 +1805,7 @@ async def test_options_flow_climate_step_shows_current_accessory(
     hass.states.async_set(
         "climate.new",
         "off",
-        {ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+        {ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 

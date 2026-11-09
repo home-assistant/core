@@ -11,8 +11,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.homekit import HomeKit
@@ -61,7 +61,7 @@ CAPABLE_ATTRS = {
     ),
     ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     ATTR_FAN_MODES: ["low", "high"],
-    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
 
 

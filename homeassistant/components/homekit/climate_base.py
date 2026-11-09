@@ -101,7 +101,7 @@ class HomeKitClimateAccessory(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         attributes = state.attributes
-        self._unit = attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+        self._unit = attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         # ``fan_modes`` maps lowercased names to their original casing;
@@ -136,7 +136,7 @@ class HomeKitClimateAccessory(HomeAccessory):
                 ClimateEntityCapabilityAttribute.FAN_MODES,
                 ClimateEntityCapabilityAttribute.SWING_MODES,
                 ClimateEntityCapabilityAttribute.HVAC_MODES,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT,
             )
         )
 

@@ -40,8 +40,8 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -75,8 +75,8 @@ from homeassistant.components.homekit.type_thermostats import (
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_LIST,
     DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterEntityFeature,
-    WaterHeaterStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -96,7 +96,7 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events: list[Event]) -
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_HVAC_MODES: [
             HVACMode.HEAT,
@@ -428,7 +428,7 @@ async def test_thermostat_auto(
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [
@@ -564,7 +564,7 @@ async def test_thermostat_mode_and_temp_change(
     """Test if accessory where the mode and temp change in the same call."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [
@@ -674,7 +674,7 @@ async def test_thermostat_humidity(
     """Test if accessory and HA are updated accordingly with humidity."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: 4,
     }
     # support_auto = True
@@ -751,7 +751,7 @@ async def test_thermostat_humidity_with_target_humidity(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_CURRENT_HUMIDITY: 40,
         },
     )
@@ -767,7 +767,7 @@ async def test_thermostat_humidity_with_target_humidity(
         entity_id,
         HVACMode.HEAT_COOL,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_CURRENT_HUMIDITY: 65,
         },
     )
@@ -781,7 +781,7 @@ async def test_thermostat_power_state(
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: 4096,
         ATTR_TEMPERATURE: 23.0,
         ATTR_CURRENT_TEMPERATURE: 18.0,
@@ -897,7 +897,7 @@ async def test_thermostat_fahrenheit(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         },
@@ -912,7 +912,7 @@ async def test_thermostat_fahrenheit(
         entity_id,
         HVACMode.HEAT_COOL,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
             ATTR_TARGET_TEMP_HIGH: 75.2,
             ATTR_TARGET_TEMP_LOW: 68.1,
             ATTR_TEMPERATURE: 71.6,
@@ -1007,7 +1007,7 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
-        {ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+        {ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
@@ -1016,7 +1016,7 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_MIN_TEMP: 20,
             ATTR_MAX_TEMP: 25,
         },
@@ -1031,7 +1031,7 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_MIN_TEMP: 60,
             ATTR_MAX_TEMP: 70,
         },
@@ -1050,7 +1050,7 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_MIN_TEMP: 20.11,
             ATTR_MAX_TEMP: 20.14,
         },
@@ -1071,7 +1071,7 @@ async def test_thermostat_temperature_step_whole(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_TARGET_TEMP_STEP: 1,
         },
     )
@@ -1103,7 +1103,7 @@ async def test_thermostat_restore(
             ATTR_MIN_TEMP: 60,
             ATTR_MAX_TEMP: 70,
             ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.OFF],
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
         supported_features=0,
         original_device_class="mock-device-class",
@@ -1116,7 +1116,7 @@ async def test_thermostat_restore(
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,
-        {ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+        {ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
     )
 
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
@@ -1152,7 +1152,7 @@ async def test_thermostat_hvac_modes(hass: HomeAssistant, hk_driver) -> None:
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
         },
     )
@@ -1192,7 +1192,7 @@ async def test_thermostat_hvac_modes_with_auto_heat_cool(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [
                 HVACMode.HEAT_COOL,
                 HVACMode.AUTO,
@@ -1258,7 +1258,7 @@ async def test_thermostat_hvac_modes_with_auto_no_heat_cool(
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF],
         },
     )
@@ -1320,7 +1320,7 @@ async def test_thermostat_hvac_modes_with_auto_only(
         entity_id,
         HVACMode.AUTO,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.AUTO, HVACMode.OFF],
         },
     )
@@ -1381,7 +1381,7 @@ async def test_thermostat_hvac_modes_with_heat_only(
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
         },
     )
@@ -1439,7 +1439,7 @@ async def test_thermostat_hvac_modes_with_heat_only(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
         },
     )
@@ -1471,7 +1471,7 @@ async def test_thermostat_hvac_modes_with_cool_only(
         entity_id,
         HVACMode.COOL,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
         },
     )
@@ -1531,7 +1531,7 @@ async def test_thermostat_hvac_modes_with_heat_cool_only(
         entity_id,
         HVACMode.COOL,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_CURRENT_TEMPERATURE: 30,
             ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
         },
@@ -1622,7 +1622,7 @@ async def test_thermostat_hvac_modes_without_off(
         entity_id,
         HVACMode.AUTO,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODES: [HVACMode.AUTO, HVACMode.HEAT],
         },
     )
@@ -1662,7 +1662,7 @@ async def test_thermostat_without_target_temp_only_range(
     """Test a thermostat that only supports a range."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
     }
 
@@ -1777,7 +1777,7 @@ async def test_thermostat_without_target_temp_only_range(
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_TARGET_TEMP_HIGH: 23.0,
             ATTR_TARGET_TEMP_LOW: 19.0,
             ATTR_CURRENT_TEMPERATURE: 21.0,
@@ -1830,7 +1830,7 @@ async def test_water_heater(
     hass.states.async_set(
         entity_id,
         HVACMode.HEAT,
-        {WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+        {WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
@@ -1858,7 +1858,7 @@ async def test_water_heater(
         entity_id,
         HVACMode.HEAT,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODE: HVACMode.HEAT,
             ATTR_TEMPERATURE: 56.0,
             ATTR_CURRENT_TEMPERATURE: 35.0,
@@ -1875,7 +1875,7 @@ async def test_water_heater(
         entity_id,
         HVACMode.HEAT_COOL,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
         },
     )
@@ -1917,7 +1917,7 @@ async def test_water_heater_off_mode_on_off(
         entity_id,
         HVACMode.HEAT,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.ON_OFF,
         },
     )
@@ -1955,7 +1955,7 @@ async def test_water_heater_off_mode_on_off(
         entity_id,
         "off",
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.ON_OFF,
         },
     )
@@ -1968,7 +1968,7 @@ async def test_water_heater_off_mode_on_off(
         entity_id,
         HVACMode.HEAT,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.ON_OFF,
         },
     )
@@ -1987,7 +1987,7 @@ async def test_water_heater_off_mode_operation_mode(
         entity_id,
         HVACMode.HEAT,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.OPERATION_MODE,
             ATTR_OPERATION_LIST: ["off", "electric", "gas"],
         },
@@ -2033,7 +2033,7 @@ async def test_water_heater_no_off_mode(
     hass.states.async_set(
         entity_id,
         HVACMode.HEAT,
-        {WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+        {WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
@@ -2054,7 +2054,7 @@ async def test_water_heater_fahrenheit(
     hass.states.async_set(
         entity_id,
         HVACMode.HEAT,
-        {WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT},
+        {WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
     acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
@@ -2065,7 +2065,7 @@ async def test_water_heater_fahrenheit(
         entity_id,
         HVACMode.HEAT,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
             ATTR_TEMPERATURE: 131,
         },
     )
@@ -2098,7 +2098,7 @@ async def test_water_heater_get_temperature_range(
     hass.states.async_set(
         entity_id,
         HVACMode.HEAT,
-        {WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+        {WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
     acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
@@ -2107,7 +2107,7 @@ async def test_water_heater_get_temperature_range(
         entity_id,
         HVACMode.HEAT,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_MIN_TEMP: 20,
             ATTR_MAX_TEMP: 25,
         },
@@ -2122,7 +2122,7 @@ async def test_water_heater_get_temperature_range(
         entity_id,
         HVACMode.OFF,
         {
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_MIN_TEMP: 60,
             ATTR_MAX_TEMP: 70,
         },
@@ -2152,7 +2152,7 @@ async def test_water_heater_restore(
         capabilities={
             ATTR_MIN_TEMP: 60,
             ATTR_MAX_TEMP: 70,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         },
         supported_features=0,
         original_device_class="mock-device-class",
@@ -2165,7 +2165,7 @@ async def test_water_heater_restore(
     hass.states.async_set(
         entity_id,
         "off",
-        {WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+        {WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
     )
     state = hass.states.get(entity_id)
     assert state
@@ -2199,7 +2199,7 @@ async def test_thermostat_with_no_modes_when_we_first_see(
     """Test if a thermostat that is not ready when we first see it."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [],
@@ -2255,7 +2255,7 @@ async def test_thermostat_with_no_off_after_recheck(
     entity_id = "climate.test"
 
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [],
@@ -2307,7 +2307,7 @@ async def test_thermostat_with_temp_clamps(hass: HomeAssistant, hk_driver) -> No
     """Test that temperatures are clamped to valid values to prevent homekit crash."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.AUTO],
@@ -2367,7 +2367,7 @@ async def test_thermostat_with_fan_modes_with_auto(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.FAN_MODE
@@ -2407,7 +2407,7 @@ async def test_thermostat_with_fan_modes_with_auto(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.FAN_MODE
@@ -2575,7 +2575,7 @@ async def test_thermostat_with_fan_modes_with_off(
         entity_id,
         HVACMode.COOL,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.FAN_MODE
@@ -2615,7 +2615,7 @@ async def test_thermostat_with_fan_modes_with_off(
         entity_id,
         HVACMode.COOL,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.FAN_MODE
@@ -2686,7 +2686,7 @@ async def test_thermostat_with_fan_modes_set_to_none(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.FAN_MODE
@@ -2731,7 +2731,7 @@ async def test_thermostat_with_fan_modes_set_to_none_not_supported(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.SWING_MODE,
@@ -2775,7 +2775,7 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
             ATTR_MIN_TEMP: 44.6,
             ATTR_MAX_TEMP: 95,
@@ -2814,7 +2814,7 @@ async def test_thermostat_fan_state_with_preheating_and_defrosting(
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
@@ -2839,7 +2839,7 @@ async def test_thermostat_fan_state_with_preheating_and_defrosting(
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
@@ -2856,7 +2856,7 @@ async def test_thermostat_fan_state_with_preheating_and_defrosting(
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
@@ -2873,7 +2873,7 @@ async def test_thermostat_fan_state_with_preheating_and_defrosting(
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
@@ -2889,7 +2889,7 @@ async def test_thermostat_fan_state_with_preheating_and_defrosting(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE,
             ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
@@ -2906,7 +2906,7 @@ async def test_thermostat_handles_unknown_state(hass: HomeAssistant, hk_driver) 
     """Test a thermostat can handle unknown state."""
     entity_id = "climate.test"
     attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
         ATTR_MIN_TEMP: 44.6,
         ATTR_MAX_TEMP: 95,
@@ -3046,7 +3046,7 @@ async def test_thermostat_reversed_min_max(hass: HomeAssistant, hk_driver) -> No
     """Test reversed min/max temperatures."""
     entity_id = "climate.test"
     base_attrs = {
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
         ATTR_HVAC_MODES: [
@@ -3093,7 +3093,7 @@ async def test_thermostat_with_capitalized_fan_modes(
         entity_id,
         HVACMode.OFF,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.FAN_MODE,
@@ -3164,7 +3164,7 @@ async def test_climate_base_fan_swing_guards(hass: HomeAssistant, hk_driver) -> 
         entity_id,
         HVACMode.HEAT,
         {
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
             ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
             ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
         },
@@ -3191,7 +3191,7 @@ async def test_climate_base_fan_swing_guards(hass: HomeAssistant, hk_driver) -> 
 
 
 _RELOAD_TEST_ATTRS = {
-    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
     ATTR_MIN_TEMP: 50,
     ATTR_MAX_TEMP: 90,
 }
@@ -3233,7 +3233,7 @@ async def test_reload_on_temperature_unit_change(
             HVACMode.HEAT,
             {
                 **_RELOAD_TEST_ATTRS,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
                 ATTR_CURRENT_TEMPERATURE: 20,
