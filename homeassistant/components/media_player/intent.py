@@ -367,7 +367,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             not search_response
             or not (
                 entity_response := cast(
-                    SearchMedia, search_response.get(target_entity_id)
+                    SearchMedia | None, search_response.get(target_entity_id)
                 )
             )
             or not (results := entity_response.result)
