@@ -64,7 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> Non
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    async_schedule_api_key_reminder(hass, entry)
+    if reminder_unsub := async_schedule_api_key_reminder(hass, entry):
+        weather_coordinator.reminder_unsub = reminder_unsub
+        entry.async_on_unload(reminder_unsub)
 
 
 async def async_update_options(hass: HomeAssistant, entry: AemetConfigEntry) -> None:

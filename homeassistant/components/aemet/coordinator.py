@@ -1,6 +1,7 @@
 """Weather data coordinator for the AEMET OpenData service."""
 
 from asyncio import timeout
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -24,6 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONDITIONS_MAP, DOMAIN, FORECAST_MAP
+from .reminder import async_dismiss_api_key_reminder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +54,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize coordinator."""
         self.aemet = aemet
+        self.reminder_unsub: Callable[[], None] | None = None
 
         super().__init__(
             hass,
@@ -68,6 +71,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 await self.aemet.update()
             except AuthError as error:
+                if self.reminder_unsub is not None:
+                    self.reminder_unsub()
+                    self.reminder_unsub = None
+                if self.config_entry is not None:
+                    async_dismiss_api_key_reminder(self.hass, self.config_entry)
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_api_key",

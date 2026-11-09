@@ -1,5 +1,6 @@
 """API key expiry reminders for the AEMET OpenData component."""
 
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 from functools import partial
 
@@ -65,41 +66,53 @@ def _async_handle_api_key_expired(
 
 
 @callback
-def async_schedule_api_key_reminder(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Schedule a reminder before the API key expires."""
+def _async_cancel_reminders(unsubs: list[Callable[[], None]]) -> None:
+    """Cancel scheduled reminder callbacks."""
+    while unsubs:
+        unsubs.pop()()
+
+
+@callback
+def async_schedule_api_key_reminder(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> Callable[[], None] | None:
+    """Schedule a reminder before the API key expires.
+
+    Return a callback that cancels the scheduled callbacks, if any.
+    """
     issue_date = parse_issue_date(entry.data.get(CONF_API_KEY_DATE))
     if issue_date is None:
         async_dismiss_api_key_reminder(hass, entry)
-        return
+        return None
 
     expiry_date = issue_date + relativedelta(months=API_KEY_VALIDITY_MONTHS)
     now = dt_util.now()
 
     if now.date() >= expiry_date:
         _async_handle_api_key_expired(hass, entry)
-        return
+        return None
 
     async_dismiss_api_key_reminder(hass, entry)
 
-    entry.async_on_unload(
+    unsubs: list[Callable[[], None]] = [
         async_track_point_in_utc_time(
             hass,
             partial(_async_handle_api_key_expired, hass, entry),
             dt_util.as_utc(dt_util.start_of_local_day(expiry_date)),
         )
-    )
+    ]
 
     if not entry.options.get(CONF_API_KEY_REMINDER, False):
-        return
+        return partial(_async_cancel_reminders, unsubs)
 
     reminder_date = expiry_date - timedelta(days=API_KEY_REMINDER_DAYS)
     reminder_dt = dt_util.start_of_local_day(reminder_date) + timedelta(hours=9)
 
     if now >= reminder_dt:
         _async_create_api_key_expiry_notification(hass, entry, expiry_date)
-        return
+        return partial(_async_cancel_reminders, unsubs)
 
-    entry.async_on_unload(
+    unsubs.append(
         async_track_point_in_utc_time(
             hass,
             partial(
@@ -108,3 +121,4 @@ def async_schedule_api_key_reminder(hass: HomeAssistant, entry: ConfigEntry) -> 
             dt_util.as_utc(reminder_dt),
         )
     )
+    return partial(_async_cancel_reminders, unsubs)
