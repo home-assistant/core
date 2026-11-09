@@ -725,7 +725,7 @@ async def test_a1_anion_services(
     )
     await hass.async_block_till_done()
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_a1_pump_not_created_without_capability(
