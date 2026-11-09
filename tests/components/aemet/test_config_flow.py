@@ -38,19 +38,23 @@ CONFIG = {
 }
 
 
-def _create_options_entry() -> MockConfigEntry:
+def _create_options_entry(
+    issue_date: str | None = "2021-01-01", reminder: bool = True
+) -> MockConfigEntry:
     """Create a config entry with an API key date and options."""
+    data = {
+        CONF_API_KEY: "foo",
+        CONF_LATITUDE: 40.30403754,
+        CONF_LONGITUDE: -3.72935236,
+    }
+    if issue_date is not None:
+        data[CONF_API_KEY_DATE] = issue_date
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id="40.30403754--3.72935236",
-        data={
-            CONF_API_KEY: "foo",
-            CONF_API_KEY_DATE: "2021-01-01",
-            CONF_LATITUDE: 40.30403754,
-            CONF_LONGITUDE: -3.72935236,
-        },
+        data=data,
         options={
-            CONF_API_KEY_REMINDER: True,
+            CONF_API_KEY_REMINDER: reminder,
             CONF_RADAR_UPDATES: False,
             CONF_STATION_UPDATES: True,
         },
@@ -140,7 +144,9 @@ async def test_form_options(
         side_effect=mock_api_call,
     ):
         entry = MockConfigEntry(
-            domain=DOMAIN, unique_id="40.30403754--3.72935236", data=CONFIG
+            domain=DOMAIN,
+            unique_id="40.30403754--3.72935236",
+            data={**CONFIG, CONF_API_KEY_DATE: "2021-01-01"},
         )
         entry.add_to_hass(hass)
 
@@ -335,6 +341,48 @@ async def test_options_invalid_future_date(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data[CONF_API_KEY] == "foo"
     assert entry.data[CONF_API_KEY_DATE] == "2021-01-15"
+
+
+async def test_options_reminder_requires_date(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test enabling reminders requires a date for an undated key."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-02-01 12:00:00+00:00")
+    entry = _create_options_entry(issue_date=None, reminder=False)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY_DATE: "",
+            CONF_API_KEY_REMINDER: True,
+            CONF_RADAR_UPDATES: False,
+            CONF_STATION_UPDATES: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_API_KEY_DATE: "date_required"}
+    assert CONF_API_KEY_DATE not in entry.data
+    assert entry.options[CONF_API_KEY_REMINDER] is False
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY_DATE: "2021-01-15",
+            CONF_API_KEY_REMINDER: True,
+            CONF_RADAR_UPDATES: False,
+            CONF_STATION_UPDATES: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_API_KEY_DATE] == "2021-01-15"
+    assert entry.options[CONF_API_KEY_REMINDER] is True
 
 
 async def test_form_duplicated_id(

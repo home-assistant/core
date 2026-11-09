@@ -46,6 +46,7 @@
   "options": {
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "date_required": "Enter the API key generation date to enable reminders",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_date": "The API key generation date cannot be in the future"
     },

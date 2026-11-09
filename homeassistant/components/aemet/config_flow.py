@@ -106,32 +106,30 @@ class AemetOptionsFlow(OptionsFlow):
                 if error is not None:
                     errors["base"] = error
 
+            existing_issue_date = parse_issue_date(entry.data.get(CONF_API_KEY_DATE))
+            existing_issue_date_iso = (
+                existing_issue_date.isoformat() if existing_issue_date else None
+            )
+            issue_date_iso: str | None
+
+            if new_api_key and new_api_key != entry.data[CONF_API_KEY]:
+                # A new key starts a new validity period. Use the supplied
+                # date, defaulting to today when it was omitted or cleared.
+                issue_date_iso = (
+                    issue_date.isoformat() if issue_date else today.isoformat()
+                )
+            elif issue_date is not None:
+                issue_date_iso = issue_date.isoformat()
+            else:
+                issue_date_iso = existing_issue_date_iso
+
+            if not errors and reminder_enabled and not issue_date_iso:
+                errors[CONF_API_KEY_DATE] = "date_required"
+
             if not errors:
                 data_updates: dict[str, Any] = {}
                 if new_api_key and new_api_key != entry.data[CONF_API_KEY]:
                     data_updates[CONF_API_KEY] = new_api_key
-
-                existing_issue_date = parse_issue_date(
-                    entry.data.get(CONF_API_KEY_DATE)
-                )
-                existing_issue_date_iso = (
-                    existing_issue_date.isoformat() if existing_issue_date else None
-                )
-                issue_date_iso: str | None
-
-                if new_api_key and new_api_key != entry.data[CONF_API_KEY]:
-                    # A new key starts a new validity period. Use the supplied
-                    # date, defaulting to today when it was omitted or cleared.
-                    issue_date_iso = (
-                        issue_date.isoformat() if issue_date else today.isoformat()
-                    )
-                elif issue_date is not None:
-                    issue_date_iso = issue_date.isoformat()
-                else:
-                    issue_date_iso = existing_issue_date_iso
-
-                if reminder_enabled and not issue_date_iso:
-                    issue_date_iso = today.isoformat()
 
                 if issue_date_iso and issue_date_iso != existing_issue_date_iso:
                     data_updates[CONF_API_KEY_DATE] = issue_date_iso
