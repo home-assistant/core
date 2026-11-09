@@ -66,7 +66,7 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_fn=lambda data: data.battery.is_charging,
+        value_fn=lambda data: data.battery.is_charging if data.battery else None,
     ),
 )
 
@@ -74,7 +74,7 @@ AC_CONNECTED_BINARY_SENSOR_TYPE = SystemBridgeBinarySensorEntityDescription(
     key="ac_connected",
     translation_key="ac_connected",
     device_class=BinarySensorDeviceClass.PLUG,
-    value_fn=lambda data: data.battery.ac_connected,
+    value_fn=lambda data: data.battery.ac_connected if data.battery else None,
 )
 
 

@@ -146,6 +146,58 @@ async def test_sensor_load_average_missing(
 
 
 @pytest.mark.usefixtures("mock_version")
+async def test_sensor_battery_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup of the sensor platform without battery data."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value, battery=None
+    )
+    mock_websocket_client.listen.side_effect = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.hostname_memory_free")
+    assert hass.states.get("sensor.hostname_battery") is None
+    assert hass.states.get("sensor.hostname_mouse_battery") is None
+    # Entities are added before the battery sensors, so check the setup didn't fail
+    assert "Error while setting up system_bridge platform for sensor" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "sensor.hostname_battery",
+        "sensor.hostname_battery_power",
+        "sensor.hostname_battery_state",
+        "sensor.hostname_battery_time_remaining",
+        "sensor.hostname_battery_voltage",
+        "sensor.hostname_mouse_battery",
+        "sensor.hostname_mouse_battery_state",
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_sensor_battery_removed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test battery sensors are unknown when the battery data goes missing."""
+    await mock_config_entry.runtime_data.async_handle_module(Module.BATTERY, None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_version")
 async def test_sensor_battery_empty(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

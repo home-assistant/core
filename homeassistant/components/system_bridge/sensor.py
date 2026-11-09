@@ -827,7 +827,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=2,
-        value=lambda data: data.battery.percentage,
+        value=lambda data: data.battery.percentage if data.battery else None,
     ),
     SystemBridgeSensorEntityDescription(
         key="battery_time_remaining",
@@ -840,7 +840,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         translation_key="battery_state",
         device_class=SensorDeviceClass.ENUM,
         options=BATTERY_STATE_OPTIONS,
-        value=lambda data: battery_state(data.battery.state),
+        value=lambda data: battery_state(data.battery.state if data.battery else None),
     ),
     SystemBridgeSensorEntityDescription(
         key="battery_power",
@@ -850,7 +850,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=2,
-        value=lambda data: data.battery.power,
+        value=lambda data: data.battery.power if data.battery else None,
     ),
     SystemBridgeSensorEntityDescription(
         key="battery_voltage",
@@ -860,7 +860,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
-        value=lambda data: data.battery.voltage,
+        value=lambda data: data.battery.voltage if data.battery else None,
     ),
 )
 
