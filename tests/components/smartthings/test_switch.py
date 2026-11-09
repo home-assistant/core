@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings import Attribute, Capability, Command
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Command,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
+)
 from pysmartthings.models import HealthStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -11,8 +17,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.components.smartthings.const import DOMAIN, MAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN, MANAGE_PLANS_URL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -23,7 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -76,6 +83,58 @@ async def test_switch_turn_on_off(
     devices.execute_device_command.assert_called_once_with(
         "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", Capability.SWITCH, command, MAIN
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_command_quota_exceeded(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a quota exceeded error is reported with a link to manage plans."""
+    await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.side_effect = SmartThingsQuotaExceededError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.theater_2nd_floor_hallway"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "quota_exceeded"
+    assert exc_info.value.translation_placeholders == {
+        "manage_plans_url": MANAGE_PLANS_URL
+    }
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_command_forbidden(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a forbidden command reports the entitlement error and starts reauth."""
+    await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.side_effect = SmartThingsForbiddenError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.theater_2nd_floor_hallway"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "entitlement_required"
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])
