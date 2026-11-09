@@ -42,7 +42,8 @@ async def async_setup_single_entry(
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: zone,
             CONF_TRACKED_ENTITIES: tracked_entites,
             CONF_IGNORED_ZONES: ignored_zones,
@@ -78,7 +79,8 @@ async def test_proximities(hass: HomeAssistant, config: dict) -> None:
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         title=title,
-        data=config,
+        version=2,
+        options=config,
     )
     mock_config.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config.entry_id)
@@ -417,7 +419,8 @@ async def test_overlapping_zones_in_zones_reports_arrived(
     home_config = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: [],
@@ -427,7 +430,8 @@ async def test_overlapping_zones_in_zones_reports_arrived(
     backyard_config = MockConfigEntry(
         domain=DOMAIN,
         title="Backyard",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.backyard",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: [],
@@ -996,7 +1000,8 @@ def _mock_proximity_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=title,
-        data={
+        version=2,
+        options={
             CONF_ZONE: zone,
             CONF_TRACKED_ENTITIES: tracked_entities,
             CONF_IGNORED_ZONES: [],
@@ -1208,7 +1213,7 @@ async def test_track_renamed_tracked_entity(
 
     entry = hass.config_entries.async_get_entry(mock_config.entry_id)
     assert entry
-    assert entry.data[CONF_TRACKED_ENTITIES] == [f"{t1.entity_id}_renamed"]
+    assert entry.options[CONF_TRACKED_ENTITIES] == [f"{t1.entity_id}_renamed"]
 
 
 async def test_sensor_unique_ids(
@@ -1372,3 +1377,24 @@ async def test_tracked_zone_location_is_changed(hass: HomeAssistant) -> None:
     assert state.state == "1244478"
     state = hass.states.get(f"{entity_base_name}_direction_of_travel")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_migrate_data_to_options(hass: HomeAssistant) -> None:
+    """Test a version 1 entry moves its settings from data to options."""
+    config = {
+        CONF_ZONE: "zone.home",
+        CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+        CONF_IGNORED_ZONES: ["zone.work"],
+        CONF_TOLERANCE: 1,
+    }
+    mock_config = MockConfigEntry(domain=DOMAIN, title="Home", version=1, data=config)
+    mock_config.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config.state is ConfigEntryState.LOADED
+    assert mock_config.version == 2
+    assert mock_config.data == {}
+    assert mock_config.options == config
+    assert hass.states.get("sensor.home_nearest_device") is not None
