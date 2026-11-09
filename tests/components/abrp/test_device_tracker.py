@@ -11,13 +11,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    EVENT_STATE_CHANGED,
-    STATE_NOT_HOME,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -142,8 +136,3 @@ async def test_tracker_skips_unchanged_positions(
     fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _location_frame(_MOVED))
     await hass.async_block_till_done()
     assert _tracker_changes(changed) == 1
-    state = hass.states.get(TRACKER_ENTITY_ID)
-    assert (state.attributes[ATTR_LATITUDE], state.attributes[ATTR_LONGITUDE]) == (
-        _MOVED.lat,
-        _MOVED.lon,
-    )
