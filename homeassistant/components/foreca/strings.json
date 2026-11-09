@@ -66,7 +66,7 @@
   },
   "services": {
     "get_forecasts_extra": {
-      "description": "Retrieves the forecast values that weather.get_forecasts has no place for, such as precipitation type, snow, solar radiation, sunshine and sunrise. They come from the forecast already fetched, so the action makes no API requests.",
+      "description": "Retrieves the forecast values that weather.get_forecasts has no place for, such as precipitation type, snow, solar radiation, sunshine, sunrise and the ensemble range of the daily forecast. They come from the forecast already fetched, so the action makes no API requests.",
       "fields": {
         "type": {
           "description": "The forecast to return the values for.",
