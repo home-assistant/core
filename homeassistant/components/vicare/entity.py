@@ -10,6 +10,7 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
+from PyViCare.PyViCareRoomControl import Room as PyViCareRoom
 from PyViCare.PyViCareUtils import (
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
@@ -19,12 +20,13 @@ from PyViCare.PyViCareUtils import (
 from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, VIESSMANN_DEVELOPER_PORTAL
 from .coordinator import ViCareCoordinator
+from .utils import get_device_identifier
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,14 +47,8 @@ class ViCareEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         gateway_serial = device_config.getConfig().serial
-        device_id = device_config.getId()
         model = device_config.getModel().replace("_", " ")
-
-        identifier = (
-            f"{gateway_serial}_{device_serial.replace('-', '_')}"
-            if device_serial is not None
-            else f"{gateway_serial}_{device_id}"
-        )
+        identifier = get_device_identifier(device_config, device_serial)
 
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = component or device
         self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
@@ -63,6 +59,7 @@ class ViCareEntity(Entity):
         self._device_serial = device_serial
         self._device_identifier = identifier
         self._model = model
+        self._room_id = component.id if isinstance(component, PyViCareRoom) else None
 
     @contextmanager
     def vicare_api_handler(self) -> Generator[None]:
@@ -99,8 +96,25 @@ class ViCareEntity(Entity):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return device info, resolving the zigbee gateway link at add time."""
+        if self._room_id is not None:
+            config_entry = self.platform.config_entry
+            assert config_entry is not None
+            # registered by async_setup_entry before the platforms
+            room_control = dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, self._device_identifier), config_entry.entry_id
+            )
+            assert room_control is not None
+            return ChildDeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{self._device_identifier}_room_{self._room_id}")
+                },
+                parent_device_id=room_control.id,
+                translation_key="room",
+                translation_placeholders={"room": self._room_id},
+            )
+
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_identifier)},
             name=self._model,

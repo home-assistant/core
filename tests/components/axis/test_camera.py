@@ -8,14 +8,26 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
-from homeassistant.components.axis.const import CONF_STREAM_PROFILE, CONF_VIDEO_SOURCE
+from homeassistant.components.axis.const import (
+    CONF_COMPANION,
+    CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
+)
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType
-from .const import MAC, NAME
+from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
 
 @pytest.fixture(autouse=True)
@@ -80,6 +92,44 @@ async def test_camera_disabled(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    "config_entry_data",
+    [
+        {
+            CONF_HOST: DEFAULT_HOST,
+            CONF_USERNAME: "root",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+            CONF_MODEL: MODEL,
+            CONF_NAME: NAME,
+            CONF_COMPANION: True,
+        }
+    ],
+)
+async def test_camera_companion(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Test Companion devices request media with the Axis-Orig-Sw parameter."""
+    assert config_entry_setup.runtime_data.api.config.is_companion
+
+    camera_entity = camera.helper.get_camera_from_entity_id(
+        hass, f"{CAMERA_DOMAIN}.{NAME}"
+    )
+    assert (
+        camera_entity.image_source
+        == "http://1.2.3.4:80/axis-cgi/jpg/image.cgi?Axis-Orig-Sw=true"
+    )
+    assert (
+        camera_entity.mjpeg_source
+        == "http://1.2.3.4:80/axis-cgi/mjpg/video.cgi?Axis-Orig-Sw=true"
+    )
+    assert (
+        await camera_entity.stream_source()
+        == "rtsp://root:pass@1.2.3.4/axis-media/media.amp"
+        "?videocodec=h264&Axis-Orig-Sw=true"
+    )
+
+
+@pytest.mark.parametrize(
     ("username", "password", "userinfo"),
     [
         pytest.param("root", "pass", "root:pass", id="alphanumeric"),
@@ -91,9 +141,10 @@ async def test_camera_disabled(hass: HomeAssistant) -> None:
         pytest.param("root", "pass?word", "root:pass%3Fword", id="query"),
         pytest.param("root", "pass word", "root:pass%20word", id="space"),
         pytest.param(
-            "user@:/?#%",
+            # aiohttp digest auth rejects ":" in the username
+            "user@/?#%",
             "pass@:/?#%",
-            "user%40%3A%2F%3F%23%25:pass%40%3A%2F%3F%23%25",
+            "user%40%2F%3F%23%25:pass%40%3A%2F%3F%23%25",
             id="both-components",
         ),
     ],

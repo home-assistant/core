@@ -24,7 +24,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('lg_tv_rs232', '01KPBBPM6WCQ8148EFR0TCG1WW')]>,
     'disabled_by': None,

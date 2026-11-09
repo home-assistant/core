@@ -4,10 +4,11 @@
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@corrreia"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/cloudflare_r2",
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["aiobotocore"],
   "quality_scale": "bronze",
-  "requirements": ["aiobotocore==3.7.0"]
+  "requirements": ["aiobotocore==3.10.0"]
 }

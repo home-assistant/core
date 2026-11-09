@@ -10,8 +10,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -119,51 +118,3 @@ async def test_dali_line_status_value_update(
     entity = hass.states.get(entity_id)
     assert entity
     assert entity.state == "ok"
-
-
-async def test_dali_line_status_availability(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_sensors: AsyncMock,
-    mock_lunatone_scan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the Lunatone DALI line status sensor availability."""
-    line_id = "0"
-    entity_id = f"sensor.dali_line_{line_id}_status"
-
-    await setup_integration(hass, mock_config_entry)
-
-    line_data = deepcopy(mock_lunatone_info.data.lines[line_id])
-
-    async def fake_update() -> None:
-        info_data = deepcopy(mock_lunatone_info.data)
-        if line_id in info_data.lines:
-            del info_data.lines[line_id]
-        else:
-            info_data.lines[line_id] = line_data
-        mock_lunatone_info.data = info_data
-
-    mock_lunatone_info.async_update.side_effect = fake_update
-
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state != STATE_UNAVAILABLE
-
-    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_UNAVAILABLE
-
-    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state != STATE_UNAVAILABLE

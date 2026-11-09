@@ -4,6 +4,7 @@
   "categories": ["news_social_media"],
   "codeowners": ["@fabaff", "@andrew-codechimp"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/mastodon",
   "integration_type": "service",
   "iot_class": "cloud_polling",

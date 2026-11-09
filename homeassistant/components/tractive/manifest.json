@@ -4,6 +4,7 @@
   "categories": ["pets"],
   "codeowners": ["@Danielhiversen", "@zhulik", "@bieniu"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/tractive",
   "integration_type": "device",
   "iot_class": "cloud_push",

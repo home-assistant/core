@@ -4,8 +4,8 @@ from importlib.metadata import PackageNotFoundError, version
 from importlib.resources import files
 import json
 
-from .model import Config, Integration
-from .serializer import format_python_namespace
+from hassfest.model import Config, Integration
+from hassfest.serializer import format_python_namespace
 
 _TARGET = "packages/pylint-home-assistant/pylint_home_assistant/generated/mdi_icons.py"
 _REQUIREMENT_PREFIX = "home-assistant-frontend=="

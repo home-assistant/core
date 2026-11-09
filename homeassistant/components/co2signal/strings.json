@@ -21,6 +21,11 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
+      "reconfigure": {
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]"
+        }
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -48,6 +53,11 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while retrieving data from Electricity Maps: {error}"
     }
   },
   "selector": {

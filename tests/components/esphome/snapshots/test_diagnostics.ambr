@@ -92,6 +92,9 @@
         }),
         'serial_proxies': list([
         ]),
+        'store_yaml': dict({
+          'supported': False,
+        }),
         'voice_assistant': dict({
           'feature_flags': 0,
         }),

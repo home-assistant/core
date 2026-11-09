@@ -7,13 +7,14 @@ from axis.errors import Unauthorized
 from axis.models.mqtt import ClientState, mqtt_json_to_event
 from axis.stream_manager import Signal, State
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_when_setup
 
 if TYPE_CHECKING:
     from homeassistant.components.mqtt import ReceiveMessage
+
+    from .. import AxisConfigEntry
 
 # MQTT is only imported once it is set up, as it is heavy to load
 MQTT_DOMAIN = "mqtt"
@@ -23,7 +24,7 @@ class AxisEventSource:
     """Manage connection to event sources from an Axis device."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: axis.AxisDevice
+        self, hass: HomeAssistant, config_entry: AxisConfigEntry, api: axis.AxisDevice
     ) -> None:
         """Initialize the device."""
         self.hass = hass

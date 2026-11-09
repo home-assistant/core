@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
+from enum import StrEnum
 import logging
 from typing import Any, Literal, TypeGuard, override
 
@@ -41,9 +42,14 @@ type SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AFTER = "after"
-ATTR_BEFORE = "before"
-ATTR_NEXT_UPDATE = "next_update"
+
+class TodEntityStateAttribute(StrEnum):
+    """State attributes for times of the day entities."""
+
+    AFTER = "after"
+    BEFORE = "before"
+    NEXT_UPDATE = "next_update"
+
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -150,9 +156,15 @@ class TodSensor(BinarySensorEntity):
         """Return the state attributes of the sensor."""
         if time_zone := dt_util.get_default_time_zone():
             return {
-                ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
-                ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
-                ATTR_NEXT_UPDATE: self._next_update.astimezone(time_zone).isoformat(),
+                TodEntityStateAttribute.AFTER: self._time_after.astimezone(
+                    time_zone
+                ).isoformat(),
+                TodEntityStateAttribute.BEFORE: self._time_before.astimezone(
+                    time_zone
+                ).isoformat(),
+                TodEntityStateAttribute.NEXT_UPDATE: self._next_update.astimezone(
+                    time_zone
+                ).isoformat(),
             }
         return None
 
@@ -228,9 +240,8 @@ class TodSensor(BinarySensorEntity):
         self._time_before += self._before_offset
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
-        """Add 24 hours (1 day) but account for DST."""
-        tentative_new_date = a_date + timedelta(days=1)
-        tentative_new_date = dt_util.as_local(tentative_new_date)
+        """Advance to the next local calendar day, accounting for DST."""
+        tentative_new_date = dt_util.as_local(a_date) + timedelta(days=1)
         tentative_new_date = tentative_new_date.replace(
             hour=target_time.hour, minute=target_time.minute
         )

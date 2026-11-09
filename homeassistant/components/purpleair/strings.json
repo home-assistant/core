@@ -11,16 +11,12 @@
     "step": {
       "by_coordinates": {
         "data": {
-          "distance": "Search radius",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "Location and search radius"
         },
         "data_description": {
-          "distance": "The radius (in kilometers) of the circle to search within",
-          "latitude": "The latitude around which to search for sensors",
-          "longitude": "The longitude around which to search for sensors"
+          "location": "The location and radius within to search for sensors"
         },
-        "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude."
+        "description": "Search for a PurpleAir sensor within a certain distance of a location."
       },
       "choose_sensor": {
         "data": {
@@ -92,14 +88,10 @@
     "step": {
       "add_sensor": {
         "data": {
-          "distance": "[%key:component::purpleair::config::step::by_coordinates::data::distance%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:component::purpleair::config::step::by_coordinates::data::location%]"
         },
         "data_description": {
-          "distance": "[%key:component::purpleair::config::step::by_coordinates::data_description::distance%]",
-          "latitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::latitude%]",
-          "longitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::longitude%]"
+          "location": "[%key:component::purpleair::config::step::by_coordinates::data_description::location%]"
         },
         "description": "[%key:component::purpleair::config::step::by_coordinates::description%]",
         "title": "Add sensor"

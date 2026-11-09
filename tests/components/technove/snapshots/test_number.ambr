@@ -12,7 +12,7 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('technove', 'AA:AA:AA:AA:AA:BB')]>,
     'disabled_by': None,
