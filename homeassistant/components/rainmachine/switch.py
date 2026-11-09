@@ -9,7 +9,6 @@ from typing import Any, Concatenate, override
 from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
