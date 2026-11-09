@@ -47,11 +47,12 @@ async def _async_get_electricity_prices(call: ServiceCall) -> ServiceResponse:
     entry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ZonneplanServiceArgument.CONFIG_ENTRY]
     )
-    data = entry.runtime_data.coordinator.data
+
+    coordinator = entry.runtime_data.coordinator
     prices = (
-        data.electricity_prices
+        coordinator.data.electricity_prices
         if call.data[ZonneplanServiceArgument.INTERVAL] == "hour"
-        else data.electricity_quarter_prices
+        else coordinator.data.electricity_quarter_prices
     )
     if prices is None:
         raise ServiceValidationError(
