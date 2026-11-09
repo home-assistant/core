@@ -22,7 +22,7 @@ from homeassistant.components.tts import (
     Voice,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -144,6 +144,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             else "en"
         )
 
+    @callback
     @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
