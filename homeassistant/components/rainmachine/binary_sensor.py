@@ -109,11 +109,7 @@ async def async_setup_entry(
         DATA_RESTRICTIONS_CURRENT: CurrentRestrictionsBinarySensor,
     }
 
-    entities: list[
-        ProvisionSettingsBinarySensor
-        | CurrentRestrictionsBinarySensor
-        | ZoneRestrictionBinarySensor
-    ] = [
+    entities: list[RainMachineEntity] = [
         api_category_sensor_map[description.api_category](entry, data, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
         if (
