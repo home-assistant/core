@@ -332,6 +332,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
                 return self.data
             raise
 
+        await self._restore_map_if_missing()
+
         # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
         # since the last map update, you can update the map.
         new_status = self.properties_api.status
@@ -363,6 +365,25 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         self._last_update_success_time = dt_util.utcnow()
         _LOGGER.debug("Data update successful %s", self._last_update_success_time)
         return self._device_state
+
+    async def _restore_map_if_missing(self) -> None:
+        """Restore the selected map when the vacuum reports no map present."""
+        status = self.properties_api.status
+        if status.map_present != 0 or status.in_cleaning:
+            return
+
+        map_id = self.properties_api.maps.current_map
+        if map_id is None:
+            map_info = self.properties_api.home.home_map_info or {}
+            if len(map_info) != 1:
+                return
+            map_id = next(iter(map_info))
+
+        try:
+            await self.properties_api.maps.set_current_map(map_id)
+            await self.properties_api.home.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to restore map: %s", err)
 
     def _should_suppress_update_failure(self) -> bool:
         """Determine if we should suppress update failure reporting.
