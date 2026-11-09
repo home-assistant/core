@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 import time
-from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -11,6 +10,7 @@ from pysmartthings import (
     LocationResponse,
     RoomResponse,
     SceneResponse,
+    SmartApp,
     Subscription,
 )
 from pysmartthings.models import HealthStatus, InstalledApp
@@ -77,21 +77,6 @@ def mock_smartthings() -> Generator[AsyncMock]:
             "homeassistant.components.smartthings.config_flow.SmartThings",
             new=mock_client,
         ),
-        # pysmartthings doesn't have create_app/delete_app yet, so autospec
-        # doesn't know about them -- create=True adds them as plain AsyncMocks
-        # until the real methods exist and this can go through autospec too.
-        patch.object(
-            mock_client.return_value,
-            "create_app",
-            create=True,
-            new_callable=AsyncMock,
-        ),
-        patch.object(
-            mock_client.return_value,
-            "delete_app",
-            create=True,
-            new_callable=AsyncMock,
-        ),
     ):
         client = mock_client.return_value
         client.get_scenes.return_value = SceneResponse.from_json(
@@ -112,13 +97,11 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.get_installed_app.return_value = InstalledApp.from_json(
             load_fixture("installed_app.json", DOMAIN)
         )
-        # Stand-in for pysmartthings' not-yet-existing AppRegistration model.
-        client.create_app.return_value = SimpleNamespace(
+        client.create_app.return_value = SmartApp(
             app_id="mock-app-id",
             client_id="mock-client-id",
             client_secret="mock-client-secret",
         )
-        client.delete_app.return_value = None
         yield client
 
 
