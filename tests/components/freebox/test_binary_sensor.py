@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from freebox_api.exceptions import HttpRequestError
+from freebox_api.exceptions import AuthorizationError, HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
@@ -115,13 +115,14 @@ async def test_motion_fast_poll(
     assert hass.states.get("binary_sensor.detecteur_cover").state == "off"
 
     # A failed read keeps the last known state
-    router().home.get_home_endpoint_value.side_effect = HttpRequestError("failed")
+    for error in (HttpRequestError("failed"), AuthorizationError("failed")):
+        router().home.get_home_endpoint_value.side_effect = error
 
-    freezer.tick(PIR_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+        freezer.tick(PIR_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.detecteur").state == "off"
+        assert hass.states.get("binary_sensor.detecteur").state == "off"
 
 
 @pytest.mark.usefixtures("router")

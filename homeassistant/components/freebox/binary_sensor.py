@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from aiohttp import ClientError
-from freebox_api.exceptions import HttpRequestError
+from freebox_api.exceptions import AuthorizationError, HttpRequestError
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -130,7 +130,13 @@ class FreeboxPirSensor(FreeboxHomeBinarySensor):
         """Read the detector and write the state only when it changed."""
         try:
             value = await self.get_home_endpoint_value(self._command_id)
-        except HttpRequestError, ClientError, TimeoutError, RuntimeError:
+        except (
+            AuthorizationError,
+            HttpRequestError,
+            ClientError,
+            TimeoutError,
+            RuntimeError,
+        ):
             return  # The regular router update still applies
         state = self._edit_state(value)
         if state != self._attr_is_on:
