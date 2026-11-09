@@ -9,7 +9,7 @@ from zha.application.platforms import PlatformEntity
 from zha.quirks import DEVICE_REGISTRY
 from zha.zigbee.device import DeviceEntityAddedEvent, DeviceEntityRemovedEvent
 from zhaquirks.builder import QuirkBuilder
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -40,7 +40,7 @@ def platforms_only() -> Generator[None]:
 async def _create_device(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> ZHADeviceProxy:
     """Create a device exposing a switch and a binary_sensor that share a unique_id.
 
@@ -94,7 +94,7 @@ async def test_dynamic_entity_lifecycle(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test the full hard-remove -> re-add -> soft-remove cycle.
 
@@ -193,7 +193,7 @@ async def test_unknown_unique_id_is_noop(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test that add/remove events with an unknown unique_id are no-ops."""
     zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
@@ -239,7 +239,7 @@ async def test_remove_entity_reference_when_ieee_already_cleared(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test entity teardown when _ha_entity_refs already lost the ieee.
 
@@ -262,12 +262,52 @@ async def test_remove_entity_reference_when_ieee_already_cleared(
     assert ieee not in gateway_proxy._ha_entity_refs
 
 
+async def test_entity_reference_follows_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
+) -> None:
+    """Test the gateway entity reference is moved when the entity_id changes."""
+    zha_device_proxy = await _create_device(hass, setup_zha, zigpy_device_mock)
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    ieee = zha_device_proxy.device.ieee
+
+    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
+    assert entity_id is not None
+    new_entity_id = "switch.renamed"
+    ref = gateway_proxy.get_entity_reference(entity_id)
+    assert ref is not None
+    refs_before = len(gateway_proxy.ha_entity_refs[ieee])
+
+    entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    assert gateway_proxy.get_entity_reference(entity_id) is None
+    assert gateway_proxy.get_entity_reference(new_entity_id) == ref._replace(
+        ha_entity_id=new_entity_id
+    )
+    assert len(gateway_proxy.ha_entity_refs[ieee]) == refs_before
+    device_entity_ids = [
+        entity["entity_id"] for entity in zha_device_proxy.zha_device_info["entities"]
+    ]
+    assert new_entity_id in device_entity_ids
+    assert entity_id not in device_entity_ids
+
+    # Removing the renamed entity drops its reference
+    entity_registry.async_remove(new_entity_id)
+    await hass.async_block_till_done()
+
+    assert gateway_proxy.get_entity_reference(new_entity_id) is None
+    assert len(gateway_proxy.ha_entity_refs[ieee]) == refs_before - 1
+
+
 async def test_reinterview_quirk_class_swap_rebinds_proxy(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
-    """A re-interview that changes the ZHA `Device` class re-binds the proxy."""
+    """A re-interview that changes the ZHA `ZigbeeDevice` class re-binds the proxy."""
     await setup_zha()
     gateway = get_zha_gateway(hass)
     gateway_proxy = get_zha_gateway_proxy(hass)
@@ -281,7 +321,7 @@ async def test_reinterview_quirk_class_swap_rebinds_proxy(
         }
     }
 
-    # Join with no matching quirk: resolves to the base `Device` class.
+    # Join with no matching quirk: resolves to the base `ZigbeeDevice` class.
     zigpy_device = zigpy_device_mock(
         endpoints,
         ieee="01:2d:6f:00:0a:90:69:e8",
@@ -318,7 +358,7 @@ async def test_reinterview_quirk_class_swap_rebinds_proxy(
         gateway.device_reinterviewed(reinterviewed)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # The `Device` object was replaced by a quirked one
+    # The `ZigbeeDevice` object was replaced by a quirked one
     new_device = gateway.get_device(zigpy_device.ieee)
     assert new_device is not original_device
     assert new_device.quirk_applied

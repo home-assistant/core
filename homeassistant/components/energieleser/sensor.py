@@ -216,7 +216,6 @@ WASSERLESER_SENSORS: tuple[WasserleserSensorEntityDescription, ...] = (
     ),
     WasserleserSensorEntityDescription(
         key="current_flow_rate_m3",
-        translation_key="water_flow_rate_m3",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,

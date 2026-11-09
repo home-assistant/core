@@ -74,7 +74,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_name = None
     _attr_preset_modes = []
@@ -139,9 +139,9 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         else:
             self._attr_hvac_action = HVACAction.IDLE
 
-        self._attr_current_temperature = status[OpenThermDataSource.THERMOSTAT].get(
-            gw_vars.DATA_ROOM_TEMP
-        )
+        self._attr_native_current_temperature = status[
+            OpenThermDataSource.THERMOSTAT
+        ].get(gw_vars.DATA_ROOM_TEMP)
         temp_upd = status[OpenThermDataSource.THERMOSTAT].get(
             gw_vars.DATA_ROOM_SETPOINT
         )
@@ -176,7 +176,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._new_target_temperature or self._target_temperature
 
@@ -206,7 +206,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             temp = float(kwargs[ATTR_TEMPERATURE])
-            if temp == self.target_temperature:
+            if temp == self.native_target_temperature:
                 return
             self._new_target_temperature = await self._gateway.set_room_setpoint(temp)
             self.async_write_ha_state()

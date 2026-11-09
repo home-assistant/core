@@ -149,6 +149,7 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     @override
     def unique_id(self) -> str:
         """Device Uniqueid."""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"{self.base_unique_id}_powerwall_charging"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property

@@ -6,17 +6,13 @@ from typing import Any, override
 from omnilogic import LoginException, OmniLogic, OmniLogicException
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_SCAN_INTERVAL, DEFAULT_PH_OFFSET, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_PH_OFFSET, DOMAIN
+from .coordinator import OmniLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +26,7 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OmniLogicConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -68,7 +64,7 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -90,14 +86,6 @@ class OptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=probatio.Schema(
                 {
-                    # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=home-assistant-config-flow-polling-field
-                    probatio.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
-                    ): int,
                     probatio.Optional(
                         "ph_offset",
                         default=self.config_entry.options.get(

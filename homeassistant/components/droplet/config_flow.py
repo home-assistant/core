@@ -57,7 +57,11 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             # Test if we can connect before returning
             session = async_get_clientsession(self.hass)
             code = normalize_pairing_code(user_input[CONF_CODE])
-            if await self._droplet_discovery.try_connect(session, code):
+            try:
+                connected = await self._droplet_discovery.try_connect(session, code)
+            finally:
+                await self._droplet_discovery.close()
+            if connected:
                 device_data = {
                     CONF_IP_ADDRESS: self._droplet_discovery.host,
                     CONF_PORT: self._droplet_discovery.port,
@@ -95,9 +99,13 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             session = async_get_clientsession(self.hass)
             code = normalize_pairing_code(user_input[CONF_CODE])
-            if await self._droplet_discovery.try_connect(session, code) and (
-                device_id := await self._droplet_discovery.get_device_id()
-            ):
+            device_id = ""
+            try:
+                if await self._droplet_discovery.try_connect(session, code):
+                    device_id = await self._droplet_discovery.get_device_id()
+            finally:
+                await self._droplet_discovery.close()
+            if device_id:
                 device_data = {
                     CONF_IP_ADDRESS: self._droplet_discovery.host,
                     CONF_PORT: self._droplet_discovery.port,
@@ -106,7 +114,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
-                    description_placeholders={CONF_DEVICE_ID: device_id},
+                    description_placeholders={"device_id": device_id},
                 )
 
                 return self.async_create_entry(

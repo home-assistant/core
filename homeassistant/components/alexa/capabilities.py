@@ -9,10 +9,7 @@ from homeassistant.components import (
     cover,
     fan,
     humidifier,
-    input_number,
     media_player,
-    number,
-    remote,
     vacuum,
     valve,
     water_heater,
@@ -33,20 +30,26 @@ from homeassistant.components.climate import (
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverEntityStateAttribute,
+    CoverServiceArgument,
 )
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntityCapabilityAttribute,
     FanEntityStateAttribute,
+    FanServiceArgument,
 )
 from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
     HumidifierEntityCapabilityAttribute,
     HumidifierEntityStateAttribute,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.image_processing import DOMAIN as IMAGE_PROCESSING_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_number import (
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    InputNumberServiceArgument,
+)
 from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import (
@@ -56,24 +59,29 @@ from homeassistant.components.media_player import (
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     NumberEntityCapabilityAttribute,
+    NumberServiceArgument,
 )
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityStateAttribute,
+    RemoteServiceArgument,
 )
 from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     VacuumEntityCapabilityAttribute,
     VacuumEntityStateAttribute,
+    VacuumServiceArgument,
 )
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     ValveEntityStateAttribute,
+    ValveServiceArgument,
 )
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterCapabilityAttribute,
+    WaterHeaterServiceArgument,
     WaterHeaterStateAttribute,
 )
 from homeassistant.const import (
@@ -92,7 +100,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.util import color as color_util, dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
@@ -785,9 +793,7 @@ class AlexaColorTemperatureController(AlexaCapability):
         """Read and return a property."""
         if name != "colorTemperatureInKelvin":
             raise UnsupportedProperty(name)
-        if color_temp := self.entity.attributes.get("color_temp"):
-            return color_util.color_temperature_mired_to_kelvin(color_temp)
-        return None
+        return self.entity.attributes.get(LightEntityStateAttribute.COLOR_TEMP_KELVIN)
 
 
 class AlexaSpeaker(AlexaCapability):
@@ -1593,21 +1599,21 @@ class AlexaModeController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         # Fan Direction
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_DIRECTION}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.DIRECTION}":
             mode = self.entity.attributes.get(FanEntityStateAttribute.DIRECTION, None)
             if mode in (fan.DIRECTION_FORWARD, fan.DIRECTION_REVERSE, STATE_UNKNOWN):
-                return f"{fan.ATTR_DIRECTION}.{mode}"
+                return f"{FanServiceArgument.DIRECTION}.{mode}"
 
         # Fan preset_mode
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.PRESET_MODE}":
             mode = self.entity.attributes.get(FanEntityStateAttribute.PRESET_MODE, None)
             if mode in self.entity.attributes.get(
                 FanEntityCapabilityAttribute.PRESET_MODES, ()
             ):
-                return f"{fan.ATTR_PRESET_MODE}.{mode}"
+                return f"{FanServiceArgument.PRESET_MODE}.{mode}"
 
         # Humidifier mode
-        if self.instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_MODE}":
+        if self.instance == f"{HUMIDIFIER_DOMAIN}.{HumidifierServiceArgument.MODE}":
             mode = self.entity.attributes.get(HumidifierEntityStateAttribute.MODE)
             modes: list[str] = (
                 self.entity.attributes.get(
@@ -1616,20 +1622,23 @@ class AlexaModeController(AlexaCapability):
                 or []
             )
             if mode in modes:
-                return f"{humidifier.ATTR_MODE}.{mode}"
+                return f"{HumidifierServiceArgument.MODE}.{mode}"
 
         # Remote Activity
-        if self.instance == f"{REMOTE_DOMAIN}.{remote.ATTR_ACTIVITY}":
+        if self.instance == f"{REMOTE_DOMAIN}.{RemoteServiceArgument.ACTIVITY}":
             activity = self.entity.attributes.get(
                 RemoteEntityStateAttribute.CURRENT_ACTIVITY, None
             )
             if activity in self.entity.attributes.get(
                 RemoteEntityStateAttribute.ACTIVITY_LIST, []
             ):
-                return f"{remote.ATTR_ACTIVITY}.{activity}"
+                return f"{RemoteServiceArgument.ACTIVITY}.{activity}"
 
         # Water heater operation mode
-        if self.instance == f"{WATER_HEATER_DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
+        if (
+            self.instance
+            == f"{WATER_HEATER_DOMAIN}.{WaterHeaterServiceArgument.OPERATION_MODE}"
+        ):
             operation_mode = self.entity.attributes.get(
                 WaterHeaterStateAttribute.OPERATION_MODE
             )
@@ -1640,10 +1649,10 @@ class AlexaModeController(AlexaCapability):
                 or []
             )
             if operation_mode in operation_modes:
-                return f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}"
+                return f"{WaterHeaterServiceArgument.OPERATION_MODE}.{operation_mode}"
 
         # Cover Position
-        if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
             # Return state instead of position when using ModeController.
             mode = self.entity.state
             if mode in (
@@ -1653,7 +1662,7 @@ class AlexaModeController(AlexaCapability):
                 cover.CoverState.CLOSING,
                 STATE_UNKNOWN,
             ):
-                return f"{cover.ATTR_POSITION}.{mode}"
+                return f"{CoverServiceArgument.POSITION}.{mode}"
 
         # Valve position state
         if self.instance == f"{VALVE_DOMAIN}.state":
@@ -1683,20 +1692,22 @@ class AlexaModeController(AlexaCapability):
         """Return capabilityResources object."""
 
         # Fan Direction Resource
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_DIRECTION}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.DIRECTION}":
             self._resource = AlexaModeResource(
                 [AlexaGlobalCatalog.SETTING_DIRECTION], False
             )
             self._resource.add_mode(
-                f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_FORWARD}", [fan.DIRECTION_FORWARD]
+                f"{FanServiceArgument.DIRECTION}.{fan.DIRECTION_FORWARD}",
+                [fan.DIRECTION_FORWARD],
             )
             self._resource.add_mode(
-                f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}", [fan.DIRECTION_REVERSE]
+                f"{FanServiceArgument.DIRECTION}.{fan.DIRECTION_REVERSE}",
+                [fan.DIRECTION_REVERSE],
             )
             return self._resource.serialize_capability_resources()
 
         # Fan preset_mode
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.PRESET_MODE}":
             self._resource = AlexaModeResource(
                 [AlexaGlobalCatalog.SETTING_PRESET], False
             )
@@ -1706,18 +1717,19 @@ class AlexaModeController(AlexaCapability):
             )
             for preset_mode in preset_modes:
                 self._resource.add_mode(
-                    f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [preset_mode]
+                    f"{FanServiceArgument.PRESET_MODE}.{preset_mode}", [preset_mode]
                 )
             # Fans with a single preset_mode completely break Alexa discovery, add a
             # fake preset (see issue #53832).
             if len(preset_modes) == 1:
                 self._resource.add_mode(
-                    f"{fan.ATTR_PRESET_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
+                    f"{FanServiceArgument.PRESET_MODE}.{PRESET_MODE_NA}",
+                    [PRESET_MODE_NA],
                 )
             return self._resource.serialize_capability_resources()
 
         # Humidifier modes
-        if self.instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_MODE}":
+        if self.instance == f"{HUMIDIFIER_DOMAIN}.{HumidifierServiceArgument.MODE}":
             self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
             modes = (
                 self.entity.attributes.get(
@@ -1726,17 +1738,23 @@ class AlexaModeController(AlexaCapability):
                 or []
             )
             for mode in modes:
-                self._resource.add_mode(f"{humidifier.ATTR_MODE}.{mode}", [mode])
+                self._resource.add_mode(
+                    f"{HumidifierServiceArgument.MODE}.{mode}", [mode]
+                )
             # Humidifiers or Fans with a single mode completely break Alexa discovery,
             # add a fake preset (see issue #53832).
             if len(modes) == 1:
                 self._resource.add_mode(
-                    f"{humidifier.ATTR_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
+                    f"{HumidifierServiceArgument.MODE}.{PRESET_MODE_NA}",
+                    [PRESET_MODE_NA],
                 )
             return self._resource.serialize_capability_resources()
 
         # Water heater operation modes
-        if self.instance == f"{WATER_HEATER_DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
+        if (
+            self.instance
+            == f"{WATER_HEATER_DOMAIN}.{WaterHeaterServiceArgument.OPERATION_MODE}"
+        ):
             self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
             operation_modes = (
                 self.entity.attributes.get(
@@ -1746,20 +1764,20 @@ class AlexaModeController(AlexaCapability):
             )
             for operation_mode in operation_modes:
                 self._resource.add_mode(
-                    f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}",
+                    f"{WaterHeaterServiceArgument.OPERATION_MODE}.{operation_mode}",
                     [operation_mode],
                 )
             # Devices with a single mode completely break Alexa discovery,
             # add a fake preset (see issue #53832).
             if len(operation_modes) == 1:
                 self._resource.add_mode(
-                    f"{water_heater.ATTR_OPERATION_MODE}.{PRESET_MODE_NA}",
+                    f"{WaterHeaterServiceArgument.OPERATION_MODE}.{PRESET_MODE_NA}",
                     [PRESET_MODE_NA],
                 )
             return self._resource.serialize_capability_resources()
 
         # Remote Resource
-        if self.instance == f"{REMOTE_DOMAIN}.{remote.ATTR_ACTIVITY}":
+        if self.instance == f"{REMOTE_DOMAIN}.{RemoteServiceArgument.ACTIVITY}":
             # Use the mode controller for a remote because the input controller
             # only allows a preset of names as an input.
             self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
@@ -1769,31 +1787,32 @@ class AlexaModeController(AlexaCapability):
             )
             for activity in activities:
                 self._resource.add_mode(
-                    f"{remote.ATTR_ACTIVITY}.{activity}", [activity]
+                    f"{RemoteServiceArgument.ACTIVITY}.{activity}", [activity]
                 )
             # Remotes with a single activity completely break Alexa discovery, add a
             # fake activity to the mode controller (see issue #53832).
             if len(activities) == 1:
                 self._resource.add_mode(
-                    f"{remote.ATTR_ACTIVITY}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
+                    f"{RemoteServiceArgument.ACTIVITY}.{PRESET_MODE_NA}",
+                    [PRESET_MODE_NA],
                 )
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
-        if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
             self._resource = AlexaModeResource(
                 ["Position", AlexaGlobalCatalog.SETTING_OPENING], False
             )
             self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.{cover.CoverState.OPEN}",
+                f"{CoverServiceArgument.POSITION}.{cover.CoverState.OPEN}",
                 [AlexaGlobalCatalog.VALUE_OPEN],
             )
             self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.{cover.CoverState.CLOSED}",
+                f"{CoverServiceArgument.POSITION}.{cover.CoverState.CLOSED}",
                 [AlexaGlobalCatalog.VALUE_CLOSE],
             )
             self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.custom",
+                f"{CoverServiceArgument.POSITION}.custom",
                 ["Custom", AlexaGlobalCatalog.SETTING_PRESET],
             )
             return self._resource.serialize_capability_resources()
@@ -1836,7 +1855,7 @@ class AlexaModeController(AlexaCapability):
         )
 
         # Cover Position
-        if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
             lower_labels = [AlexaSemantics.ACTION_LOWER]
             raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
@@ -1847,22 +1866,22 @@ class AlexaModeController(AlexaCapability):
                 raise_labels.append(AlexaSemantics.ACTION_OPEN)
                 self._semantics.add_states_to_value(
                     [AlexaSemantics.STATES_CLOSED],
-                    f"{cover.ATTR_POSITION}.{cover.CoverState.CLOSED}",
+                    f"{CoverServiceArgument.POSITION}.{cover.CoverState.CLOSED}",
                 )
                 self._semantics.add_states_to_value(
                     [AlexaSemantics.STATES_OPEN],
-                    f"{cover.ATTR_POSITION}.{cover.CoverState.OPEN}",
+                    f"{CoverServiceArgument.POSITION}.{cover.CoverState.OPEN}",
                 )
 
             self._semantics.add_action_to_directive(
                 lower_labels,
                 "SetMode",
-                {"mode": f"{cover.ATTR_POSITION}.{cover.CoverState.CLOSED}"},
+                {"mode": f"{CoverServiceArgument.POSITION}.{cover.CoverState.CLOSED}"},
             )
             self._semantics.add_action_to_directive(
                 raise_labels,
                 "SetMode",
-                {"mode": f"{cover.ATTR_POSITION}.{cover.CoverState.OPEN}"},
+                {"mode": f"{CoverServiceArgument.POSITION}.{cover.CoverState.OPEN}"},
             )
 
             return self._semantics.serialize_semantics()
@@ -1976,7 +1995,7 @@ class AlexaRangeController(AlexaCapability):
             return None
 
         # Cover Position
-        if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
             return self.entity.attributes.get(
                 CoverEntityStateAttribute.CURRENT_POSITION
             )
@@ -1988,7 +2007,7 @@ class AlexaRangeController(AlexaCapability):
             )
 
         # Fan speed percentage
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.PERCENTAGE}":
             supported = self.entity.attributes.get(
                 EntityStateAttribute.SUPPORTED_FEATURES, 0
             )
@@ -1997,7 +2016,7 @@ class AlexaRangeController(AlexaCapability):
             return 100 if self.entity.state == fan.STATE_ON else 0
 
         # Humidifier target humidity
-        if self.instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        if self.instance == f"{HUMIDIFIER_DOMAIN}.{HumidifierServiceArgument.HUMIDITY}":
             # If the humidifier is turned off the target humidity attribute is not set.
             # We return 0 to make clear we do not know the current value.
             return self.entity.attributes.get(
@@ -2005,15 +2024,15 @@ class AlexaRangeController(AlexaCapability):
             )
 
         # Input Number Value
-        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
             return float(self.entity.state)
 
         # Number Value
-        if self.instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
+        if self.instance == f"{NUMBER_DOMAIN}.{NumberServiceArgument.VALUE}":
             return float(self.entity.state)
 
         # Vacuum Fan Speed
-        if self.instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+        if self.instance == f"{VACUUM_DOMAIN}.{VacuumServiceArgument.FAN_SPEED}":
             speed_list = self.entity.attributes.get(
                 VacuumEntityCapabilityAttribute.FAN_SPEED_LIST
             )
@@ -2022,7 +2041,7 @@ class AlexaRangeController(AlexaCapability):
                 return next((i for i, v in enumerate(speed_list) if v == speed), None)
 
         # Valve Position
-        if self.instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
+        if self.instance == f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}":
             return self.entity.attributes.get(
                 ValveEntityStateAttribute.CURRENT_POSITION
             )
@@ -2042,7 +2061,7 @@ class AlexaRangeController(AlexaCapability):
         """Return capabilityResources object."""
 
         # Fan Speed Percentage Resources
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.PERCENTAGE}":
             percentage_step = self.entity.attributes.get(
                 FanEntityStateAttribute.PERCENTAGE_STEP
             )
@@ -2058,7 +2077,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Humidifier Target Humidity Resources
-        if self.instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        if self.instance == f"{HUMIDIFIER_DOMAIN}.{HumidifierServiceArgument.HUMIDITY}":
             self._resource = AlexaPresetResource(
                 labels=["Humidity", "Percentage", "Target humidity"],
                 min_value=self.entity.attributes.get(
@@ -2073,7 +2092,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
-        if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
             self._resource = AlexaPresetResource(
                 ["Position", AlexaGlobalCatalog.SETTING_OPENING],
                 min_value=0,
@@ -2095,10 +2114,16 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Input Number Value
-        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
-            min_value = float(self.entity.attributes[input_number.ATTR_MIN])
-            max_value = float(self.entity.attributes[input_number.ATTR_MAX])
-            precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
+        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
+            min_value = float(
+                self.entity.attributes[NumberEntityCapabilityAttribute.MIN]
+            )
+            max_value = float(
+                self.entity.attributes[NumberEntityCapabilityAttribute.MAX]
+            )
+            precision = float(
+                self.entity.attributes.get(NumberEntityCapabilityAttribute.STEP, 1)
+            )
             unit = self.entity.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
@@ -2117,7 +2142,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Number Value
-        if self.instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
+        if self.instance == f"{NUMBER_DOMAIN}.{NumberServiceArgument.VALUE}":
             min_value = float(
                 self.entity.attributes[NumberEntityCapabilityAttribute.MIN]
             )
@@ -2145,7 +2170,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Vacuum Fan Speed Resources
-        if self.instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+        if self.instance == f"{VACUUM_DOMAIN}.{VacuumServiceArgument.FAN_SPEED}":
             speed_list = self.entity.attributes[
                 VacuumEntityCapabilityAttribute.FAN_SPEED_LIST
             ]
@@ -2167,7 +2192,7 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Valve Position Resources
-        if self.instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
+        if self.instance == f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}":
             self._resource = AlexaPresetResource(
                 ["Opening", AlexaGlobalCatalog.SETTING_OPENING],
                 min_value=0,
@@ -2187,7 +2212,7 @@ class AlexaRangeController(AlexaCapability):
         )
 
         # Cover Position
-        if self.instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
+        if self.instance == f"{COVER_DOMAIN}.{CoverServiceArgument.POSITION}":
             lower_labels = [AlexaSemantics.ACTION_LOWER]
             raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
@@ -2227,7 +2252,7 @@ class AlexaRangeController(AlexaCapability):
             return self._semantics.serialize_semantics()
 
         # Fan Speed Percentage
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.PERCENTAGE}":
             lower_labels = [AlexaSemantics.ACTION_LOWER]
             raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
@@ -2241,7 +2266,7 @@ class AlexaRangeController(AlexaCapability):
             return self._semantics.serialize_semantics()
 
         # Target Humidity Percentage
-        if self.instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        if self.instance == f"{HUMIDIFIER_DOMAIN}.{HumidifierServiceArgument.HUMIDITY}":
             lower_labels = [AlexaSemantics.ACTION_LOWER]
             raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
@@ -2261,7 +2286,7 @@ class AlexaRangeController(AlexaCapability):
             return self._semantics.serialize_semantics()
 
         # Valve Position
-        if self.instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
+        if self.instance == f"{VALVE_DOMAIN}.{ValveServiceArgument.POSITION}":
             close_labels = [AlexaSemantics.ACTION_CLOSE]
             open_labels = [AlexaSemantics.ACTION_OPEN]
             self._semantics = AlexaSemantics()
@@ -2354,7 +2379,7 @@ class AlexaToggleController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         # Fan Oscillating
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_OSCILLATING}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.OSCILLATING}":
             is_on = bool(
                 self.entity.attributes.get(FanEntityStateAttribute.OSCILLATING)
             )
@@ -2371,7 +2396,7 @@ class AlexaToggleController(AlexaCapability):
         """Return capabilityResources object."""
 
         # Fan Oscillating Resource
-        if self.instance == f"{FAN_DOMAIN}.{fan.ATTR_OSCILLATING}":
+        if self.instance == f"{FAN_DOMAIN}.{FanServiceArgument.OSCILLATING}":
             self._resource = AlexaCapabilityResource(
                 [AlexaGlobalCatalog.SETTING_OSCILLATE, "Rotate", "Rotation"]
             )
@@ -2778,3 +2803,44 @@ class AlexaCameraStreamController(AlexaCapability):
                 "audioCodecs": ["AAC"],
             }
         ]
+
+
+class AlexaRTCSessionController(AlexaCapability):
+    """Implements Alexa.RTCSessionController.
+
+    Alexa sends a WebRTC SDP offer and expects a complete SDP answer in return.
+    This is what Echo Show devices use for the live view of a camera.
+
+    https://developer.amazon.com/docs/device-apis/alexa-rtcsessioncontroller.html
+    """
+
+    supported_locales = {
+        "ar-SA",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-US",
+        "es-ES",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "nl-NL",
+        "pt-BR",
+    }
+
+    @override
+    def name(self) -> str:
+        """Return the Alexa API name of this interface."""
+        return "Alexa.RTCSessionController"
+
+    @override
+    def configuration(self) -> dict[str, Any] | None:
+        """Return configuration object.
+
+        Two-way audio is not supported, so the session is half duplex.
+        """
+        return {"isFullDuplexAudioSupported": False}

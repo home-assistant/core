@@ -10,7 +10,6 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -41,6 +40,7 @@ from homeassistant.util.network import is_link_local
 
 from . import AxisConfigEntry
 from .const import (
+    CONF_COMPANION,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
@@ -48,7 +48,7 @@ from .const import (
     DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import AxisHub, get_axis_api
+from .hub import AxisHub, get_axis_api, is_companion_device
 
 if TYPE_CHECKING:
     import axis
@@ -68,7 +68,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AxisConfigEntry,
     ) -> AxisOptionsFlowHandler:
         """Get the options flow for this handler."""
         return AxisOptionsFlowHandler()
@@ -110,6 +110,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_COMPANION: is_companion_device(api),
                 }
 
                 if self.source == SOURCE_REAUTH:
@@ -132,7 +133,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             probatio.Required(CONF_PROTOCOL): probatio.In(PROTOCOL_CHOICES),
             probatio.Required(CONF_HOST): str,
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
@@ -169,8 +170,8 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
         self.context["title_placeholders"] = {
-            CONF_NAME: entry_data[CONF_NAME],
-            CONF_HOST: entry_data[CONF_HOST],
+            "name": entry_data[CONF_NAME],
+            "host": entry_data[CONF_HOST],
         }
         return await self._redo_configuration(entry_data, keep_password=False)
 
@@ -186,7 +187,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             probatio.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
             probatio.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
-            probatio.Required(CONF_PASSWORD, default=password): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD), default=password): str,
             probatio.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 
@@ -254,8 +255,8 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: discovery_info[CONF_NAME],
-                    CONF_HOST: discovery_info[CONF_HOST],
+                    "name": discovery_info[CONF_NAME],
+                    "host": discovery_info[CONF_HOST],
                 },
                 "configuration_url": f"http://{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}",
             }
@@ -267,7 +268,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST, default=discovery_info[CONF_HOST]
             ): TextSelector(TextSelectorConfig(read_only=True)),
             probatio.Required(CONF_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 

@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KnockiConfigEntry
 from .const import DOMAIN
+from .coordinator import KnockiConfigEntry
 
 
 async def async_setup_entry(

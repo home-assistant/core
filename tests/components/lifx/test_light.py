@@ -12,16 +12,19 @@ from lifx import (
     EffectPulse,
     FirmwareEffect,
     LifxError,
+    Light,
     MultiZoneEffect,
     ThemeLibrary,
     TileEffectSkyType,
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import (
+    ATTR_CHANGE,
     ATTR_CLOUD_SATURATION_MAX,
     ATTR_CLOUD_SATURATION_MIN,
     ATTR_CYCLES,
@@ -36,7 +39,9 @@ from homeassistant.components.lifx.const import (
     ATTR_SKY_TYPE,
     ATTR_SPEED,
     ATTR_THEME,
+    DATA_LIFX_MANAGER,
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_COLORSWEEP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
@@ -98,16 +103,17 @@ from .helpers import (
     LABEL,
     MockDevice,
     assert_color_written,
+    create_mock_brightness_light,
     create_mock_ceiling_light,
+    create_mock_color_temperature_light,
     create_mock_hev_light,
     create_mock_infrared_light,
     create_mock_light,
+    create_mock_luna_light,
     create_mock_matrix_light,
+    create_mock_mirror_light,
     create_mock_multizone_light,
-    create_reference_matrix_light,
 )
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "light.my_group_my_bulb"
 OTHER_IP_ADDRESS = "127.0.0.2"
@@ -115,6 +121,7 @@ OTHER_SERIAL = "d073d5aabbcc"
 OTHER_MAC_ADDRESS = "d0:73:d5:aa:bb:cc"
 OTHER_LABEL = "Other Bulb"
 OTHER_ENTITY_ID = "light.my_group_other_bulb"
+RENAMED_ENTITY_ID = "light.renamed_bulb"
 
 pytestmark = pytest.mark.usefixtures("mock_effect_conductor")
 
@@ -151,7 +158,6 @@ async def test_light_identity_is_unchanged(
 async def test_color_light_state_and_modes(hass: HomeAssistant) -> None:
     """Test public color state renders with unchanged Home Assistant modes."""
     device = create_mock_light()
-    device.state.power = 65535
     device.state.color = HSBK(20.0, 0.25, 0.75, 4000)
     await async_setup_lifx_entry(hass, device)
 
@@ -169,25 +175,23 @@ async def test_color_light_state_and_modes(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("kelvin_range", "expected_mode"),
+    ("factory", "expected_mode"),
     [
-        pytest.param((2500, 9000), ColorMode.COLOR_TEMP, id="color_temp"),
-        pytest.param((2700, 2700), ColorMode.BRIGHTNESS, id="brightness"),
+        pytest.param(
+            create_mock_color_temperature_light, ColorMode.COLOR_TEMP, id="color_temp"
+        ),
+        pytest.param(
+            create_mock_brightness_light, ColorMode.BRIGHTNESS, id="brightness"
+        ),
     ],
 )
 async def test_white_light_modes(
     hass: HomeAssistant,
-    kelvin_range: tuple[int, int],
+    factory: Callable[[], Light],
     expected_mode: ColorMode,
 ) -> None:
     """Test white and brightness-only capability presentation."""
-    device = create_mock_light()
-    capabilities = device.state.capabilities
-    capabilities.has_color = False
-    capabilities.kelvin_min, capabilities.kelvin_max = kelvin_range
-    device.state.power = 65535
-    device.state.color = HSBK(0.0, 0.0, 0.5, 4000)
-    await async_setup_lifx_entry(hass, device)
+    await async_setup_lifx_entry(hass, factory())
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -200,7 +204,7 @@ async def test_white_light_modes(
 
 
 @pytest.mark.parametrize(
-    ("factory", "effect_list"),
+    ("factory", "effect_list", "component_keys"),
     [
         (
             create_mock_multizone_light,
@@ -210,6 +214,19 @@ async def test_white_light_modes(
                 SERVICE_EFFECT_MOVE,
                 SERVICE_EFFECT_STOP,
             ],
+            (),
+        ),
+        (
+            create_mock_luna_light,
+            [
+                SERVICE_EFFECT_COLORLOOP,
+                SERVICE_EFFECT_FLAME,
+                SERVICE_EFFECT_PULSE,
+                SERVICE_EFFECT_MORPH,
+                SERVICE_EFFECT_SKY,
+                SERVICE_EFFECT_STOP,
+            ],
+            (),
         ),
         (
             create_mock_matrix_light,
@@ -220,6 +237,7 @@ async def test_white_light_modes(
                 SERVICE_EFFECT_MORPH,
                 SERVICE_EFFECT_STOP,
             ],
+            (),
         ),
         (
             create_mock_ceiling_light,
@@ -231,6 +249,20 @@ async def test_white_light_modes(
                 SERVICE_EFFECT_SKY,
                 SERVICE_EFFECT_STOP,
             ],
+            ("uplight", "downlight"),
+        ),
+        (
+            create_mock_mirror_light,
+            [
+                SERVICE_EFFECT_COLORLOOP,
+                SERVICE_EFFECT_FLAME,
+                SERVICE_EFFECT_PULSE,
+                SERVICE_EFFECT_MORPH,
+                SERVICE_EFFECT_SKY,
+                SERVICE_EFFECT_COLORSWEEP,
+                SERVICE_EFFECT_STOP,
+            ],
+            ("front", "back"),
         ),
     ],
 )
@@ -239,10 +271,10 @@ async def test_zoned_effect_names_and_firmware_state(
     entity_registry: er.EntityRegistry,
     factory: Callable[[], MockDevice],
     effect_list: list[str],
+    component_keys: tuple[str, ...],
 ) -> None:
-    """Test existing zoned effect names without exposing ceiling subentities."""
+    """Test existing zoned effect names, alongside any disabled component entities."""
     device = factory()
-    device.state.power = 65535
     device.state.effect = FirmwareEffect.MOVE
     await async_setup_lifx_entry(hass, device)
 
@@ -250,11 +282,14 @@ async def test_zoned_effect_names_and_firmware_state(
     assert state
     assert state.attributes[ATTR_EFFECT_LIST] == effect_list
     assert state.attributes[ATTR_EFFECT] == "effect_move"
+    expected_entries = [entity_registry.async_get(ENTITY_ID)] + [
+        entity_registry.async_get(f"{ENTITY_ID}_{key}") for key in component_keys
+    ]
     assert [
         entry
         for entry in entity_registry.entities.values()
         if entry.platform == DOMAIN and entry.domain == LIGHT_DOMAIN
-    ] == [entity_registry.async_get(ENTITY_ID)]
+    ] == expected_entries
 
 
 @pytest.mark.parametrize(
@@ -273,7 +308,6 @@ async def test_running_software_effect_is_reported(
 ) -> None:
     """Test a running software effect is reported by the light entity."""
     device = create_mock_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     mock_effect_conductor.effect.return_value = running_effect
 
@@ -319,6 +353,42 @@ async def test_effect_pulse_uses_public_effect(
     assert effect.cycles == 4
     assert effect.color == HSBK(120.0, 0.5, 128 / 255, 3500)
     assert participants == [device]
+
+
+async def test_effect_service_follows_renamed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_effect_conductor: MagicMock,
+) -> None:
+    """Test effect services target a light by its new entity_id after a rename."""
+    device = create_mock_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    manager = hass.data[DATA_LIFX_MANAGER]
+
+    entity_registry.async_update_entity(ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID)
+    await hass.async_block_till_done()
+
+    assert set(manager.entity_id_to_coordinator) == {RENAMED_ENTITY_ID}
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_PULSE,
+        {ATTR_ENTITY_ID: RENAMED_ENTITY_ID},
+        blocking=True,
+    )
+    _, participants = mock_effect_conductor.start.await_args.args
+    assert participants == [device]
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_PULSE,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    # Unloading must unregister the new entity_id, not the old one
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert manager.entity_id_to_coordinator == {}
 
 
 async def test_effect_pulse_reads_color_before_merging(
@@ -435,6 +505,34 @@ async def test_effect_colorloop_clamps_saturation_above_zero(
     assert effect.saturation_max == 0.01
 
 
+@pytest.mark.parametrize(
+    ("change", "expected"),
+    [
+        pytest.param(0, 1.0, id="zero"),
+        pytest.param(180, 179.0, id="half-circle"),
+        pytest.param(360, 179.0, id="full-circle"),
+    ],
+)
+async def test_effect_colorloop_change_is_clamped_to_what_the_library_accepts(
+    hass: HomeAssistant,
+    mock_effect_conductor: MagicMock,
+    change: int,
+    expected: float,
+) -> None:
+    """Test a change of 0 or of 180 degrees and more is clamped, not refused."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CHANGE: change},
+        blocking=True,
+    )
+
+    effect = mock_effect_conductor.start.await_args.args[0]
+    assert effect.change == expected
+
+
 async def test_effect_colorloop_accepts_absolute_brightness(
     hass: HomeAssistant, mock_effect_conductor: MagicMock
 ) -> None:
@@ -484,6 +582,33 @@ async def test_stopping_an_effect_to_set_state_can_fail(
         )
 
 
+async def test_running_color_sweep_is_reported_by_its_action_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test a running Color Sweep shows the effect name the Mirror offers."""
+    device = create_mock_mirror_light()
+    device.state.effect = FirmwareEffect.COLOR_SWEEP
+    await async_setup_lifx_entry(hass, device)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_EFFECT] == "effect_colorsweep"
+    assert "effect_colorsweep" in state.attributes[ATTR_EFFECT_LIST]
+
+
+async def test_undocumented_firmware_effect_is_not_reported(
+    hass: HomeAssistant,
+) -> None:
+    """Test an effect type the protocol does not document shows no effect."""
+    device = create_mock_mirror_light()
+    device.state.effect = FirmwareEffect(99)
+    await async_setup_lifx_entry(hass, device)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_EFFECT] is None
+
+
 @pytest.mark.parametrize(
     ("service", "service_data", "effect_type", "expected_kwargs"),
     [
@@ -512,6 +637,7 @@ async def test_matrix_effects_use_public_firmware_api(
 ) -> None:
     """Test matrix effects delegate public firmware operations."""
     device = create_mock_matrix_light()
+    device.state.power = 0
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -530,7 +656,6 @@ async def test_firmware_effect_errors_become_home_assistant_errors(
 ) -> None:
     """Test firmware effect failures surface as Home Assistant errors."""
     device = create_mock_matrix_light()
-    device.state.power = 65535
     device.set_effect.side_effect = LifxError("firmware boom")
     await async_setup_lifx_entry(hass, device)
 
@@ -586,6 +711,7 @@ async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
     device.set_effect.assert_awaited_once_with(
         FirmwareEffect.SKY,
         speed=50,
+        duration=0,
         palette=[HSBK(200, 1.0, 0.01, 3500), HSBK(40, 0.5, 1.0, 3500)],
         sky_type=TileEffectSkyType.CLOUDS,
         cloud_saturation_min=50,
@@ -593,12 +719,54 @@ async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
     )
 
 
+async def test_sky_effect_plays_once_across_a_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test speed 0 plays a sunrise once across the duration, in nanoseconds."""
+    device = create_mock_ceiling_light()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_SKY,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_SKY_TYPE: "Sunrise",
+            ATTR_SPEED: 0,
+            ATTR_DURATION: 1800,
+        },
+        blocking=True,
+    )
+
+    assert device.set_effect.await_args.kwargs["speed"] == 0
+    assert device.set_effect.await_args.kwargs["duration"] == 1_800_000_000_000
+    assert device.set_effect.await_args.kwargs["sky_type"] is TileEffectSkyType.SUNRISE
+
+
+async def test_sky_effect_speed_zero_needs_a_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test speed 0 without a duration is refused instead of quietly changed."""
+    device = create_mock_ceiling_light()
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_SKY,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SPEED: 0},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "sky_speed_needs_duration"
+    device.set_effect.assert_not_awaited()
+
+
 async def test_sky_effect_without_a_palette_omits_it(
     hass: HomeAssistant,
 ) -> None:
     """Test omitting the palette sends no palette and skips the power on."""
     device = create_mock_ceiling_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -611,6 +779,100 @@ async def test_sky_effect_without_a_palette_omits_it(
     # The library rejects an empty palette, so it is not given one at all
     assert device.set_effect.await_args.kwargs["palette"] is None
     device.set_power.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_kwargs"),
+    [
+        pytest.param(
+            {
+                ATTR_SPEED: 5,
+                ATTR_DURATION: 0,
+                ATTR_PALETTE: [(0, 100, 100, 3500), (240, 50, 80, 3500)],
+            },
+            {
+                "speed": 5,
+                "duration": 0,
+                "palette": [HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.8, 3500)],
+            },
+            id="palette",
+        ),
+        # By default one sweep runs across the color temperature range
+        pytest.param(
+            {},
+            {
+                "speed": 0,
+                "duration": 30_000_000_000,
+                "palette": [HSBK(0, 0.0, 1.0, 1500), HSBK(0, 0.0, 1.0, 6500)],
+            },
+            id="defaults",
+        ),
+    ],
+)
+async def test_color_sweep_effect_uses_public_firmware_api(
+    hass: HomeAssistant,
+    service_data: dict[str, Any],
+    expected_kwargs: dict[str, Any],
+) -> None:
+    """Test Color Sweep delegates to the firmware effect on a Mirror."""
+    device = create_mock_mirror_light()
+    device.state.power = 0
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORSWEEP,
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    device.set_power.assert_awaited_once_with(True, duration=0.0)
+    device.set_effect.assert_awaited_once_with(
+        FirmwareEffect.COLOR_SWEEP, **expected_kwargs
+    )
+
+
+async def test_color_sweep_speed_zero_needs_a_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test speed 0 without a duration is refused instead of quietly changed."""
+    device = create_mock_mirror_light()
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EFFECT_COLORSWEEP,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DURATION: 0},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "colorsweep_speed_needs_duration"
+    device.set_effect.assert_not_awaited()
+
+
+async def test_color_sweep_effect_skips_other_matrix_lights(
+    hass: HomeAssistant,
+) -> None:
+    """Test Color Sweep only reaches the Mirror when another matrix light is named."""
+    mirror = create_mock_mirror_light()
+    matrix = create_mock_matrix_light()
+    matrix.ip = OTHER_IP_ADDRESS
+    matrix.serial = matrix.state.serial = OTHER_SERIAL
+    matrix.state.mac_address = OTHER_MAC_ADDRESS
+    matrix.state.label = OTHER_LABEL
+    await async_setup_lifx_entries(hass, [mirror, matrix])
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORSWEEP,
+        {ATTR_ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID]},
+        blocking=True,
+    )
+
+    mirror.set_effect.assert_awaited_once()
+    matrix.set_power.assert_not_awaited()
+    matrix.set_effect.assert_not_awaited()
 
 
 async def test_move_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
@@ -724,7 +986,6 @@ async def test_paint_theme_uses_public_device_api(
 async def test_typed_light_sets_public_hsbk(hass: HomeAssistant) -> None:
     """Test Home Assistant color values are sent in public library units."""
     device = create_mock_light()
-    device.state.power = 65535
     device.state.color = HSBK(20.0, 0.25, 0.75, 4000)
     await async_setup_lifx_entry(hass, device)
 
@@ -787,7 +1048,6 @@ async def test_public_color_inputs(
 ) -> None:
     """Test retained color input forms use public HSBK units."""
     device = create_mock_light()
-    device.state.power = 65535
     device.state.color = HSBK(20.0, 0.25, 0.75, 4000)
     await async_setup_lifx_entry(hass, device)
 
@@ -806,14 +1066,13 @@ async def test_kelvin_outside_the_protocol_range_is_rejected(
 ) -> None:
     """Test a kelvin the protocol cannot carry surfaces as a Home Assistant error."""
     device = create_mock_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
 
     with pytest.raises(ServiceValidationError, match="not valid"):
         await hass.services.async_call(
             DOMAIN,
             "set_state",
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COLOR_TEMP_KELVIN: 1200},
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COLOR_TEMP_KELVIN: 500},
             blocking=True,
         )
 
@@ -825,7 +1084,6 @@ async def test_unknown_color_name_falls_back_to_neutral_white(
 ) -> None:
     """Test an unrecognised color name warns and leaves the light white."""
     device = create_mock_light()
-    device.state.power = 65535
     device.state.color = HSBK(20.0, 0.25, 0.75, 4000)
     await async_setup_lifx_entry(hass, device)
 
@@ -854,7 +1112,6 @@ async def test_brightness_steps(
 ) -> None:
     """Test retained brightness-step automation behavior."""
     device = create_mock_light()
-    device.state.power = 65535
     device.state.color = HSBK(0.0, 0.0, 0.5, 4000)
     await async_setup_lifx_entry(hass, device)
 
@@ -934,7 +1191,6 @@ async def test_transition_requests_one_postponed_refresh(
 ) -> None:
     """Test a transition refreshes immediately and once when it finishes."""
     device = create_mock_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.reset_mock()
 
@@ -956,7 +1212,6 @@ async def test_superseding_transition_cancels_old_refresh(
 ) -> None:
     """Test a new operation cancels the previous transition-end refresh."""
     device = create_mock_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.reset_mock()
 
@@ -986,7 +1241,6 @@ async def test_superseding_transition_cancels_old_refresh(
 async def test_multizone_selection(hass: HomeAssistant, extended: bool) -> None:
     """Test selected zones send the full span whatever the wire protocol is."""
     device = create_mock_multizone_light(extended=extended)
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1001,8 +1255,9 @@ async def test_multizone_selection(hass: HomeAssistant, extended: bool) -> None:
         blocking=True,
     )
 
+    first, *rest = device.state.zones
     device.set_all_color_zones.assert_awaited_once_with(
-        [HSBK(300.0, 1.0, 128 / 255, 3500), HSBK(255.0, 1.0, 1.0, 3500)],
+        [HSBK(first.hue, first.saturation, 128 / 255, first.kelvin), *rest],
         start=0,
         end=0,
         duration=2.0,
@@ -1014,7 +1269,6 @@ async def test_multizone_brightness_preserves_zone_colors(
 ) -> None:
     """Test whole-strip brightness retains each public zone color."""
     device = create_mock_multizone_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1024,13 +1278,11 @@ async def test_multizone_brightness_preserves_zone_colors(
         blocking=True,
     )
 
+    zones = device.state.zones
     device.set_all_color_zones.assert_awaited_once_with(
-        [
-            HSBK(300.0, 1.0, 128 / 255, 3500),
-            HSBK(255.0, 1.0, 128 / 255, 3500),
-        ],
+        [HSBK(zone.hue, zone.saturation, 128 / 255, zone.kelvin) for zone in zones],
         start=0,
-        end=1,
+        end=len(zones) - 1,
         duration=LIFX_MIN_COLOR_RAMP,
     )
     device.set_waveform_optional.assert_not_awaited()
@@ -1056,8 +1308,7 @@ async def test_multizone_full_overwrite_skips_reading_the_strip(
 ) -> None:
     """Test a change that leaves nothing of a zone showing writes without a read."""
     device = create_mock_multizone_light()
-    device.state.power = 65535
-    device.state.zones = [HSBK(300.0, 1.0, 1.0, 3500), HSBK(255.0, 1.0, 0.25, 3500)]
+    device.state.color = HSBK(0.0, 1.0, 0.5, 3500)
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.reset_mock()
 
@@ -1076,10 +1327,11 @@ async def test_multizone_full_overwrite_skips_reading_the_strip(
         blocking=True,
     )
 
+    zone_count = device.state.zone_count
     device.set_all_color_zones.assert_awaited_once_with(
-        [expected, expected],
+        [expected] * zone_count,
         start=0,
-        end=1,
+        end=zone_count - 1,
         duration=LIFX_MIN_COLOR_RAMP,
     )
     assert reads_before_write == 0
@@ -1090,7 +1342,6 @@ async def test_multizone_selection_writes_only_the_requested_window(
 ) -> None:
     """Test a non-zero zone selection leaves the zones outside it untouched."""
     device = create_mock_multizone_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1100,8 +1351,9 @@ async def test_multizone_selection_writes_only_the_requested_window(
         blocking=True,
     )
 
+    first, second, *rest = device.state.zones
     device.set_all_color_zones.assert_awaited_once_with(
-        [HSBK(300.0, 1.0, 1.0, 3500), HSBK(120.0, 0.5, 1.0, 3500)],
+        [first, HSBK(120.0, 0.5, second.brightness, second.kelvin), *rest],
         start=1,
         end=1,
         duration=LIFX_MIN_COLOR_RAMP,
@@ -1113,7 +1365,6 @@ async def test_multizone_selection_outside_the_strip_writes_nothing(
 ) -> None:
     """Test zone numbers past the end of the strip are dropped."""
     device = create_mock_multizone_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1143,7 +1394,6 @@ async def test_matrix_reads_the_tiles_before_merging_over_them(
 ) -> None:
     """Test tiles are only merged over after the device has been read."""
     device = create_mock_matrix_light()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.reset_mock()
 
@@ -1170,7 +1420,6 @@ async def test_matrix_without_tile_colors_sets_the_whole_device(
 ) -> None:
     """Test a matrix device with no cached tile colors writes the device color."""
     device = create_mock_matrix_light()
-    device.state.power = 65535
     device.state.tile_colors = []
     await async_setup_lifx_entry(hass, device)
 
@@ -1181,7 +1430,7 @@ async def test_matrix_without_tile_colors_sets_the_whole_device(
         blocking=True,
     )
 
-    assert_color_written(device, HSBK(120.0, 0.5, 1.0, 3500), brightness=False)
+    assert_color_written(device, HSBK(120.0, 0.5, 0.5, 3500), brightness=False)
     device.set_matrix_colors.assert_not_awaited()
 
 
@@ -1210,7 +1459,6 @@ async def test_turn_on_with_effect_delegates_to_the_effect_service(
 async def test_multizone_color_preserves_zone_brightness(hass: HomeAssistant) -> None:
     """Test a whole-strip color change keeps each zone at its own brightness."""
     device = create_mock_multizone_light()
-    device.state.power = 65535
     device.state.zones = [HSBK(300.0, 1.0, 1.0, 3500), HSBK(255.0, 1.0, 0.25, 3500)]
     await async_setup_lifx_entry(hass, device)
 
@@ -1235,6 +1483,7 @@ async def test_multizone_color_keeps_the_brightness_of_a_dark_strip(
 ) -> None:
     """Test a color-only change on a dark strip reads its zones where they are."""
     device = create_mock_multizone_light()
+    device.state.power = 0
     device.state.zones = [HSBK(300.0, 1.0, 1.0, 3500), HSBK(255.0, 1.0, 0.25, 3500)]
     await async_setup_lifx_entry(hass, device)
 
@@ -1256,14 +1505,14 @@ async def test_multizone_color_keeps_the_brightness_of_a_dark_strip(
 
 
 @pytest.mark.parametrize(
-    "factory", [create_mock_matrix_light, create_mock_ceiling_light]
+    "factory",
+    [create_mock_matrix_light, create_mock_luna_light, create_mock_ceiling_light],
 )
 async def test_matrix_color_uses_public_convenience_api(
     hass: HomeAssistant, factory: Callable[[], MockDevice]
 ) -> None:
     """Test matrix and ceiling color changes delegate tile mechanics."""
     device = factory()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1277,22 +1526,36 @@ async def test_matrix_color_uses_public_convenience_api(
         blocking=True,
     )
 
-    expected = HSBK(120.0, 0.5, 1.0, 3500)
-    device.set_matrix_colors.assert_awaited_once_with(0, [expected] * 64, duration=1500)
+    expected = HSBK(120.0, 0.5, 0.5, 3500)
+    assert device.set_matrix_colors.await_args_list == [
+        call(tile.tile_index, [expected] * (tile.width * tile.height), duration=1500)
+        for tile in device.state.chain
+    ]
 
 
 @pytest.mark.parametrize(
-    "factory", [create_mock_matrix_light, create_mock_ceiling_light]
+    "factory",
+    [create_mock_matrix_light, create_mock_luna_light, create_mock_ceiling_light],
 )
 async def test_matrix_color_preserves_tile_brightness(
     hass: HomeAssistant, factory: Callable[[], MockDevice]
 ) -> None:
     """Test a whole-device color change keeps each tile at its own brightness."""
     device = factory()
-    device.state.power = 65535
-    device.state.tile_colors = [HSBK(0.0, 0.0, 1.0, 3500)] * 32 + [
-        HSBK(0.0, 0.0, 0.25, 3500)
-    ] * 32
+    # Each tile is lit brightly across its first half and dimly across the rest
+    halves = [
+        (
+            tile.width * tile.height // 2,
+            tile.width * tile.height - tile.width * tile.height // 2,
+        )
+        for tile in device.state.chain
+    ]
+    device.state.tile_colors = [
+        color
+        for bright, dim in halves
+        for color in [HSBK(0.0, 0.0, 1.0, 3500)] * bright
+        + [HSBK(0.0, 0.0, 0.25, 3500)] * dim
+    ]
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1302,13 +1565,24 @@ async def test_matrix_color_preserves_tile_brightness(
         blocking=True,
     )
 
-    device.set_matrix_colors.assert_awaited_once_with(
-        0,
-        [HSBK(120.0, 0.5, 1.0, 3500)] * 32 + [HSBK(120.0, 0.5, 0.25, 3500)] * 32,
-        duration=round(LIFX_MIN_COLOR_RAMP * 1000),
-    )
+    assert device.set_matrix_colors.await_args_list == [
+        call(
+            tile.tile_index,
+            [HSBK(120.0, 0.5, 1.0, 3500)] * bright
+            + [HSBK(120.0, 0.5, 0.25, 3500)] * dim,
+            duration=round(LIFX_MIN_COLOR_RAMP * 1000),
+        )
+        for tile, (bright, dim) in zip(device.state.chain, halves, strict=True)
+    ]
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(LifxError("device unreachable"), id="library-error"),
+        pytest.param(OSError("network down"), id="unexpected-error"),
+    ],
+)
 @pytest.mark.parametrize(
     ("factory", "method"),
     [
@@ -1319,13 +1593,15 @@ async def test_matrix_color_preserves_tile_brightness(
     ],
 )
 async def test_partial_write_is_refused_when_the_state_cannot_be_read(
-    hass: HomeAssistant, factory: Callable[[], MockDevice], method: str
+    hass: HomeAssistant,
+    factory: Callable[[], MockDevice],
+    method: str,
+    error: Exception,
 ) -> None:
     """Test a partial write is not merged over the state of a failed read."""
     device = factory()
-    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
-    device.refresh_state.side_effect = LifxError("device unreachable")
+    device.refresh_state.side_effect = error
 
     with pytest.raises(HomeAssistantError, match="could not be read"):
         await hass.services.async_call(
@@ -1342,7 +1618,7 @@ async def test_matrix_color_writes_each_tile_in_the_chain(
     hass: HomeAssistant,
 ) -> None:
     """Test a chained matrix device is written one tile at a time."""
-    device = create_reference_matrix_light()
+    device = create_mock_matrix_light()
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
@@ -1361,7 +1637,7 @@ async def test_matrix_color_writes_each_tile_in_the_chain(
 
 async def test_matrix_color_stops_at_a_short_color_list(hass: HomeAssistant) -> None:
     """Test a chain reporting fewer colors than zones writes only whole tiles."""
-    device = create_reference_matrix_light()
+    device = create_mock_matrix_light()
     device.state.tile_colors = device.state.tile_colors[:100]
     await async_setup_lifx_entry(hass, device)
 
@@ -1380,14 +1656,14 @@ async def test_matrix_color_stops_at_a_short_color_list(hass: HomeAssistant) -> 
 
 
 @pytest.mark.parametrize(
-    "factory", [create_mock_matrix_light, create_mock_ceiling_light]
+    "factory",
+    [create_mock_matrix_light, create_mock_luna_light, create_mock_ceiling_light],
 )
 async def test_matrix_brightness_preserves_tile_colors(
     hass: HomeAssistant, factory: Callable[[], MockDevice]
 ) -> None:
     """Test matrix brightness retains each public tile color."""
     device = factory()
-    device.state.power = 65535
     device.state.chain[0].width = 2
     device.state.chain[0].height = 1
     device.state.tile_colors = [
@@ -1466,9 +1742,7 @@ async def test_hev_cycle_library_error_becomes_home_assistant_error(
 
 async def test_hev_cycle_rejected_for_regular_light(hass: HomeAssistant) -> None:
     """Test the action a LIFX Clean bulb registers is turned down by other lights."""
-    regular = create_mock_light(
-        ip=OTHER_IP_ADDRESS, serial=OTHER_SERIAL, mac_address=OTHER_MAC_ADDRESS
-    )
+    regular = create_mock_light(ip=OTHER_IP_ADDRESS, serial=OTHER_SERIAL)
     regular.state.label = OTHER_LABEL
     await async_setup_lifx_entries(hass, [create_mock_hev_light(), regular])
 
@@ -1533,9 +1807,10 @@ async def test_effect_without_a_lifx_target_is_rejected(hass: HomeAssistant) -> 
             SERVICE_EFFECT_FLAME, "no LIFX matrix light", id="flame-needs-matrix"
         ),
         pytest.param(
-            SERVICE_EFFECT_MORPH, "no LIFX matrix light", id="morph-needs-matrix"
+            SERVICE_EFFECT_COLORSWEEP,
+            "no LIFX Mirror",
+            id="color-sweep-needs-mirror",
         ),
-        pytest.param(SERVICE_EFFECT_SKY, "no LIFX matrix light", id="sky-needs-matrix"),
         pytest.param(
             SERVICE_EFFECT_MOVE, "no LIFX multizone light", id="move-needs-multizone"
         ),
@@ -1645,7 +1920,6 @@ async def test_library_errors_become_home_assistant_errors(
 ) -> None:
     """Test LifxError is translated around each public library operation."""
     device = factory()
-    device.state.power = 65535
     setattr(device, method, AsyncMock(side_effect=LifxError("boom")))
     await async_setup_lifx_entry(hass, device)
 
@@ -1658,17 +1932,91 @@ async def test_library_errors_become_home_assistant_errors(
         )
 
 
-async def test_failed_refresh_marks_light_unavailable(hass: HomeAssistant) -> None:
-    """Test coordinator availability remains visible on the light entity."""
+@pytest.mark.parametrize(
+    ("missed_polls", "expected_state"),
+    [
+        pytest.param(1, STATE_ON, id="one_missed_poll"),
+        pytest.param(2, STATE_ON, id="two_missed_polls"),
+        pytest.param(3, STATE_UNAVAILABLE, id="three_missed_polls"),
+    ],
+)
+async def test_light_is_unavailable_after_three_missed_polls(
+    hass: HomeAssistant, missed_polls: int, expected_state: str
+) -> None:
+    """Test a light keeps its last state until it misses three polls in a row."""
     device = create_mock_light()
+    device.state.power = 65535
     await async_setup_lifx_entry(hass, device)
     device.refresh_state.side_effect = LifxError("offline")
 
+    for _ in range(missed_polls):
+        await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == expected_state
+
+
+async def test_answered_poll_resets_missed_polls(hass: HomeAssistant) -> None:
+    """Test the missed polls are counted again after the light answers."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
+    await async_trigger_update(hass)
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_light_recovers_after_being_unavailable(hass: HomeAssistant) -> None:
+    """Test a light is available again as soon as it answers a poll."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+    device.refresh_state.side_effect = LifxError("offline")
+    for _ in range(3):
+        await async_trigger_update(hass)
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_unavailable_light_only_recovers_by_answering(
+    hass: HomeAssistant,
+) -> None:
+    """Test a missed poll does not bring back a light that went unavailable."""
+    device = create_mock_light()
+    device.state.power = 65535
+    await async_setup_lifx_entry(hass, device)
+
+    device.refresh_state.side_effect = OSError("network down")
+    await async_trigger_update(hass)
+    device.refresh_state.side_effect = LifxError("offline")
     await async_trigger_update(hass)
 
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+    device.refresh_state.side_effect = None
+    await async_trigger_update(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
@@ -1692,7 +2040,9 @@ async def test_set_state_schema_rejects_invalid_values(
 
 async def test_light_starts_off(hass: HomeAssistant) -> None:
     """Test public power state zero is exposed as off."""
-    await async_setup_lifx_entry(hass, create_mock_light())
+    device = create_mock_light()
+    device.state.power = 0
+    await async_setup_lifx_entry(hass, device)
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -1755,6 +2105,18 @@ def test_theme_field_default_matches_the_action(
             create_mock_matrix_light,
             [(0, 100, 100, 3500)] * 7,
             id="sky-above-maximum",
+        ),
+        pytest.param(
+            SERVICE_EFFECT_COLORSWEEP,
+            create_mock_mirror_light,
+            [(0, 100, 100, 3500)],
+            id="color-sweep-below-minimum",
+        ),
+        pytest.param(
+            SERVICE_EFFECT_COLORSWEEP,
+            create_mock_mirror_light,
+            [(0, 100, 100, 3500)] * 17,
+            id="color-sweep-above-maximum",
         ),
         pytest.param(
             SERVICE_PAINT_THEME,

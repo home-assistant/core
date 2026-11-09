@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
@@ -38,8 +39,6 @@ from .test_common import (
     get_new_request,
     reported_properties,
 )
-
-from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(
@@ -496,7 +495,7 @@ async def test_report_colored_temp_light_state(hass: HomeAssistant) -> None:
         "on",
         {
             "friendly_name": "Test light On",
-            "color_temp": 240,
+            "color_temp_kelvin": 4166,
             "supported_color_modes": ["color_temp"],
         },
     )

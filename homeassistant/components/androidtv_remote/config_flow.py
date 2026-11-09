@@ -99,6 +99,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         default_host = user_input.get(CONF_HOST, probatio.UNDEFINED)
         if self.source == SOURCE_RECONFIGURE:
             default_host = self._get_reconfigure_entry().data[CONF_HOST]
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
             data_schema=probatio.Schema(
@@ -161,7 +162,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pair",
             data_schema=STEP_PAIR_DATA_SCHEMA,
-            description_placeholders={CONF_NAME: self.name},
+            description_placeholders={"name": self.name},
             errors=errors,
         )
 
@@ -197,7 +198,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
         _LOGGER.debug("New Android TV device found via zeroconf: %s", self.name)
-        self.context.update({"title_placeholders": {CONF_NAME: self.name}})
+        self.context.update({"title_placeholders": {"name": self.name}})
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -213,7 +214,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={CONF_NAME: self.name},
+            description_placeholders={"name": self.name},
         )
 
     async def async_step_reauth(
@@ -238,7 +239,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_NAME: self.name},
+            description_placeholders={"name": self.name},
             errors=errors,
         )
 

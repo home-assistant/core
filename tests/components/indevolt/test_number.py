@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from indevolt_api import IndevoltConfig
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
@@ -16,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -50,19 +53,40 @@ async def test_number(
             "number.cms_sf2000_max_ac_output_power",
             IndevoltConfig.READ_MAX_AC_OUTPUT_POWER,
             IndevoltConfig.WRITE_MAX_AC_OUTPUT_POWER,
-            1500,
+            3000,
         ),
         (
             "number.cms_sf2000_inverter_input_limit",
             IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
             IndevoltConfig.WRITE_INVERTER_INPUT_LIMIT,
-            800,
+            3000,
         ),
         (
             "number.cms_sf2000_feed_in_power_limit",
             IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
             IndevoltConfig.WRITE_FEEDIN_POWER_LIMIT,
-            1200,
+            3000,
+        ),
+        pytest.param(
+            "number.cms_sf2000_max_ac_output_power",
+            IndevoltConfig.READ_MAX_AC_OUTPUT_POWER,
+            IndevoltConfig.WRITE_MAX_AC_OUTPUT_POWER,
+            10800,
+            id="max_ac_output_power_maximum",
+        ),
+        pytest.param(
+            "number.cms_sf2000_inverter_input_limit",
+            IndevoltConfig.READ_INVERTER_INPUT_LIMIT,
+            IndevoltConfig.WRITE_INVERTER_INPUT_LIMIT,
+            10800,
+            id="inverter_input_limit_maximum",
+        ),
+        pytest.param(
+            "number.cms_sf2000_feed_in_power_limit",
+            IndevoltConfig.READ_FEEDIN_POWER_LIMIT,
+            IndevoltConfig.WRITE_FEEDIN_POWER_LIMIT,
+            10800,
+            id="feedin_power_limit_maximum",
         ),
     ],
 )

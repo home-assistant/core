@@ -67,7 +67,7 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="dhcp_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PIN): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PIN)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -104,7 +104,7 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
                         probatio.Required(CONF_MAC): TextSelector(
                             TextSelectorConfig(autocomplete="off")
                         ),
-                        probatio.Required(CONF_PIN): TextSelector(
+                        probatio.Required(probatio.Secret(CONF_PIN)): TextSelector(
                             TextSelectorConfig(type=TextSelectorType.PASSWORD)
                         ),
                     }
@@ -135,7 +135,7 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PIN): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PIN)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -170,7 +170,7 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PIN): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PIN)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> None:
     """Set up Spotify from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -47,7 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="token_refresh_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     spotify = SpotifyClient(async_get_clientsession(hass))
 
@@ -72,12 +76,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     entry.runtime_data = SpotifyData(coordinator, session, device_coordinator)
 
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_scopes",
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> None:
     """Unload Spotify config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

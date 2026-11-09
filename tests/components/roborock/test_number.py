@@ -1,6 +1,7 @@
 """Test Roborock Number platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock.exceptions import RoborockTimeout
 
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
@@ -10,8 +11,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

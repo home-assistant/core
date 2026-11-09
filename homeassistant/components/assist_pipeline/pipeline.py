@@ -16,7 +16,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType, VolDictType
+from homeassistant.helpers.typing import Undefined, VolDictType
 from homeassistant.util import language as language_util, ulid as ulid_util
 
 from . import error as _error, models as _models, run as _run, runtime as _runtime
@@ -81,18 +81,7 @@ PIPELINE_FIELDS: VolDictType = {
     probatio.Required("wake_word_id"): probatio.Any(str, None),
     probatio.Optional("prefer_local_intents"): bool,
     probatio.Optional("acknowledge_media_id"): str,
-    probatio.Optional("user_id"): probatio.Any(str, None),
 }
-
-
-async def _async_validate_user(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate that the user a pipeline acts as exists and can act."""
-    user_id: str | None = data.get("user_id")
-    if user_id is None:
-        return
-    user = await hass.auth.async_get_user(user_id)
-    if user is None or not user.is_active:
-        raise probatio.Invalid(f"Unknown user {user_id}")
 
 
 @callback
@@ -290,19 +279,18 @@ async def async_update_pipeline(
     hass: HomeAssistant,
     pipeline: Pipeline,
     *,
-    conversation_engine: str | UndefinedType = UNDEFINED,
-    conversation_language: str | UndefinedType = UNDEFINED,
-    language: str | UndefinedType = UNDEFINED,
-    name: str | UndefinedType = UNDEFINED,
-    stt_engine: str | UndefinedType | None = UNDEFINED,
-    stt_language: str | UndefinedType | None = UNDEFINED,
-    tts_engine: str | UndefinedType | None = UNDEFINED,
-    tts_language: str | UndefinedType | None = UNDEFINED,
-    tts_voice: str | UndefinedType | None = UNDEFINED,
-    wake_word_entity: str | UndefinedType | None = UNDEFINED,
-    wake_word_id: str | UndefinedType | None = UNDEFINED,
-    prefer_local_intents: bool | UndefinedType = UNDEFINED,
-    user_id: str | UndefinedType | None = UNDEFINED,
+    conversation_engine: str | Undefined = Undefined,
+    conversation_language: str | Undefined = Undefined,
+    language: str | Undefined = Undefined,
+    name: str | Undefined = Undefined,
+    stt_engine: str | Undefined | None = Undefined,
+    stt_language: str | Undefined | None = Undefined,
+    tts_engine: str | Undefined | None = Undefined,
+    tts_language: str | Undefined | None = Undefined,
+    tts_voice: str | Undefined | None = Undefined,
+    wake_word_entity: str | Undefined | None = Undefined,
+    wake_word_id: str | Undefined | None = Undefined,
+    prefer_local_intents: bool | Undefined = Undefined,
 ) -> None:
     """Update a pipeline."""
     pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
@@ -327,9 +315,8 @@ async def async_update_pipeline(
                 ("wake_word_entity", wake_word_entity),
                 ("wake_word_id", wake_word_id),
                 ("prefer_local_intents", prefer_local_intents),
-                ("user_id", user_id),
             )
-            if val is not UNDEFINED
+            if val is not Undefined
         }
     )
 
@@ -374,7 +361,6 @@ class PipelineStorageCollection(
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         validated_data: dict = validate_language(data)
-        await _async_validate_user(self.hass, validated_data)
         return validated_data
 
     @callback
@@ -387,7 +373,6 @@ class PipelineStorageCollection(
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
         update_data = validate_language(update_data)
-        await _async_validate_user(self.hass, update_data)
         return Pipeline(id=item.id, **update_data)
 
     @override

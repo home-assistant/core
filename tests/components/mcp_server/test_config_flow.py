@@ -3,10 +3,12 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mcp_server.const import (
     CONF_ALL_LLM_APIS,
+    CONF_READ_ONLY,
     CONF_REQUIRE_ADMIN,
     DOMAIN,
 )
@@ -17,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import llm
 
 from .conftest import TEST_LLM_API_ID, MockLLMAPI
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -35,11 +35,12 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "All LLM APIs"
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result["minor_version"] == 3
+    assert result["minor_version"] == 4
     assert result["data"] == {
         CONF_ALL_LLM_APIS: True,
         CONF_LLM_HASS_API: [],
         CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: False,
     }
 
 
@@ -47,7 +48,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
     """Test changing the LLM APIs in the options flow."""
     llm.async_register_api(hass, MockLLMAPI(hass=hass, id=TEST_LLM_API_ID, name="Test"))
     # The title generated for the APIs the entry was created with
-    hass.config_entries.async_update_entry(config_entry, title="Assist")
+    hass.config_entries.async_update_entry(config_entry, title="Device control")
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -58,6 +59,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -66,6 +68,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
             CONF_ALL_LLM_APIS: False,
             CONF_LLM_HASS_API: [llm.LLM_API_ASSIST, TEST_LLM_API_ID],
             CONF_REQUIRE_ADMIN: True,
+            CONF_READ_ONLY: True,
         },
     )
     await hass.async_block_till_done()
@@ -75,8 +78,9 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST, TEST_LLM_API_ID],
         CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: True,
     }
-    assert config_entry.title == "Assist, Test"
+    assert config_entry.title == "Device control, Test"
 
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST])
@@ -93,6 +97,7 @@ async def test_options_flow_legacy_single_api(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -106,6 +111,7 @@ async def test_options_flow_legacy_single_api(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
 
@@ -129,6 +135,7 @@ async def test_options_flow_keeps_custom_title(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [TEST_LLM_API_ID],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
     assert config_entry.title == "My MCP server"
 
@@ -161,6 +168,7 @@ async def test_options_flow_errors(
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
 
@@ -180,6 +188,7 @@ async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
         CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
+        CONF_READ_ONLY: False,
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -193,13 +202,38 @@ async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("all_llm_apis", "llm_hass_api", "title", "user_input", "expected_title"),
+    (
+        "all_llm_apis",
+        "llm_hass_api",
+        "title",
+        "initial_form",
+        "user_input",
+        "expected_data",
+        "expected_title",
+    ),
     [
         pytest.param(
             False,
             [llm.LLM_API_ASSIST],
-            "Assist",
-            {CONF_ALL_LLM_APIS: True, CONF_LLM_HASS_API: []},
+            "Device control",
+            {
+                CONF_ALL_LLM_APIS: False,
+                CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+                CONF_REQUIRE_ADMIN: False,
+                CONF_READ_ONLY: False,
+            },
+            {
+                CONF_ALL_LLM_APIS: True,
+                # The hidden LLM API picker is ignored
+                CONF_LLM_HASS_API: [TEST_LLM_API_ID],
+                CONF_REQUIRE_ADMIN: True,
+            },
+            {
+                CONF_ALL_LLM_APIS: True,
+                CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+                CONF_REQUIRE_ADMIN: True,
+                CONF_READ_ONLY: False,
+            },
             "All LLM APIs",
             id="select_all",
         ),
@@ -207,7 +241,23 @@ async def test_options_flow_unmigrated_entry(hass: HomeAssistant) -> None:
             True,
             [],
             "All LLM APIs",
-            {CONF_ALL_LLM_APIS: False, CONF_LLM_HASS_API: [TEST_LLM_API_ID]},
+            {
+                CONF_ALL_LLM_APIS: True,
+                CONF_LLM_HASS_API: [],
+                CONF_REQUIRE_ADMIN: False,
+                CONF_READ_ONLY: False,
+            },
+            {
+                CONF_ALL_LLM_APIS: False,
+                CONF_LLM_HASS_API: [TEST_LLM_API_ID],
+                CONF_REQUIRE_ADMIN: True,
+            },
+            {
+                CONF_ALL_LLM_APIS: False,
+                CONF_LLM_HASS_API: [TEST_LLM_API_ID],
+                CONF_REQUIRE_ADMIN: True,
+                CONF_READ_ONLY: False,
+            },
             "Test",
             id="select_individual",
         ),
@@ -217,7 +267,9 @@ async def test_options_flow_all_llm_apis(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     title: str,
+    initial_form: dict[str, bool | list[str]],
     user_input: dict[str, bool | list[str]],
+    expected_data: dict[str, bool | list[str]],
     expected_title: str,
 ) -> None:
     """Test switching between all LLM APIs and individual LLM APIs."""
@@ -226,11 +278,57 @@ async def test_options_flow_all_llm_apis(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["data_schema"]({}) == initial_form
+
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {**user_input, CONF_REQUIRE_ADMIN: True}
+        result["flow_id"], user_input
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.data == {**user_input, CONF_REQUIRE_ADMIN: True}
+    assert config_entry.data == expected_data
     assert config_entry.title == expected_title
+
+
+@pytest.mark.parametrize("all_llm_apis", [True])
+async def test_options_flow_error_keeps_input(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the form shows the submitted values after an error."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ALL_LLM_APIS: False, CONF_LLM_HASS_API: [], CONF_REQUIRE_ADMIN: True},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_LLM_HASS_API: "llm_api_required"}
+    assert {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    } == {
+        CONF_ALL_LLM_APIS: False,
+        CONF_LLM_HASS_API: [],
+        CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: False,
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_ALL_LLM_APIS: False,
+            CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+            CONF_REQUIRE_ADMIN: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.data == {
+        CONF_ALL_LLM_APIS: False,
+        CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+        CONF_REQUIRE_ADMIN: True,
+        CONF_READ_ONLY: False,
+    }

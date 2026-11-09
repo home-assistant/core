@@ -6,6 +6,12 @@ from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import probatio
 
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityFeature,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -16,7 +22,11 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_get_device_and_config_entry
+from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
+    async_register_platform_entity_service,
+)
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.json import JsonValueType
 
 from .const import ATTR_KEY, ATTR_VALUE, CONF_SLEEP_PERIOD, DOMAIN
@@ -25,6 +35,7 @@ from .utils import get_device_entry_gen
 
 SERVICE_GET_KVS_VALUE = "get_kvs_value"
 SERVICE_SET_KVS_VALUE = "set_kvs_value"
+SERVICE_SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
 SERVICE_GET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): cv.string,
@@ -40,6 +51,14 @@ SERVICE_SET_KVS_VALUE_SCHEMA = probatio.Schema(
         ),
     }
 )
+SERVICE_SET_COVER_POSITION_AND_TILT_SCHEMA: VolDictType = {
+    probatio.Required(ATTR_POSITION): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
+    ),
+    probatio.Required(ATTR_TILT_POSITION): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
+    ),
+}
 
 
 @callback
@@ -143,3 +162,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
             schema=schema,
             supports_response=response,
         )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_COVER_POSITION_AND_TILT,
+        entity_domain=COVER_DOMAIN,
+        schema=SERVICE_SET_COVER_POSITION_AND_TILT_SCHEMA,
+        func="async_set_cover_position_and_tilt",
+        required_features=[
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.SET_TILT_POSITION
+        ],
+    )

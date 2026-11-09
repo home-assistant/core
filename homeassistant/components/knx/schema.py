@@ -194,14 +194,16 @@ class EventSchema:
 
     KNX_EVENT_FILTER_SCHEMA = probatio.Schema(
         {
-            probatio.Required(KNX_ADDRESS): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Required(KNX_ADDRESS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(CONF_TYPE): dpt_base_type_validator,
         }
     )
 
     SCHEMA = {
         probatio.Optional(CONF_EVENT, default=[]): probatio.All(
-            cv.ensure_list, [KNX_EVENT_FILTER_SCHEMA]
+            probatio.EnsureList(), [KNX_EVENT_FILTER_SCHEMA]
         )
     }
 
@@ -238,7 +240,9 @@ class KNXPlatformSchema(ABC):
         """Return a schema node for the platform."""
         return {
             probatio.Optional(str(cls.PLATFORM)): probatio.All(
-                cv.ensure_list, [cls.ENTITY_SCHEMA], _unique_id_duplicate_validator
+                probatio.EnsureList(),
+                [cls.ENTITY_SCHEMA],
+                _unique_id_duplicate_validator,
             )
         }
 
@@ -266,7 +270,7 @@ def _entity_base_schema(platform: Platform) -> probatio.Schema:
             probatio.Optional(CONF_DEVICE): probatio.Schema(
                 {
                     probatio.Required(CONF_ID): probatio.All(
-                        cv.string, _device_id, probatio.Length(min=1)
+                        cv.string, _device_id, probatio.NonEmpty()
                     ),
                     probatio.Optional(CONF_NAME): cv.string,
                 }
@@ -278,7 +282,7 @@ def _entity_base_schema(platform: Platform) -> probatio.Schema:
                 platform
             ),
             probatio.Optional(CONF_UNIQUE_ID): probatio.All(
-                cv.string, probatio.Length(min=1)
+                cv.string, probatio.NonEmpty()
             ),
         }
     )
@@ -476,11 +480,11 @@ class ClimateSchema(KNXPlatformSchema):
                     ClimateConf.ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 probatio.Optional(ClimateConf.OPERATION_MODES): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [backwards_compatible_xknx_climate_enum_member(HVACOperationMode)],
                 ),
                 probatio.Optional(ClimateConf.CONTROLLER_MODES): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [backwards_compatible_xknx_climate_enum_member(HVACControllerMode)],
                 ),
                 probatio.Optional(

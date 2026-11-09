@@ -1,0 +1,62 @@
+{
+  "config": {
+    "abort": {
+      "all_devices_configured": "All available input devices are already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices": "No input devices found. Ensure input devices are connected and accessible."
+    },
+    "error": {
+      "cannot_connect": "Could not open the selected input device. Check permissions and that the device is connected.",
+      "device_changed": "The selected input device was replaced by another device. Select it again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_path": "Input device"
+        },
+        "data_description": {
+          "device_path": "Select the input device from the list of detected devices."
+        },
+        "description": "Choose an input device to use as a keyboard remote. Devices without a stable ID, such as Bluetooth devices, are identified by their address and name.",
+        "title": "Select input device"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_watch_input": {
+      "message": "Unable to watch for input devices: {error}"
+    }
+  },
+  "options": {
+    "error": {
+      "no_key_types": "Select at least one key event type."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "emulate_key_hold": "Emulate key hold",
+          "emulate_key_hold_delay": "Key hold delay",
+          "emulate_key_hold_repeat": "Key hold repeat interval",
+          "key_types": "Key event types"
+        },
+        "data_description": {
+          "emulate_key_hold": "Enable software emulation of key hold events.",
+          "emulate_key_hold_delay": "Delay before key hold emulation starts.",
+          "emulate_key_hold_repeat": "Repeat interval for emulated key hold events.",
+          "key_types": "Select which key events to listen for."
+        },
+        "description": "Device: `{device}`",
+        "title": "Keyboard Remote options"
+      }
+    }
+  },
+  "selector": {
+    "key_types": {
+      "options": {
+        "key_down": "Key down",
+        "key_hold": "Key hold",
+        "key_up": "Key up"
+      }
+    }
+  }
+}

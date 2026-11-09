@@ -4,6 +4,7 @@ import asyncio
 from pathlib import Path
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests_mock import Mocker
 
 from homeassistant.components.downloader.const import (
@@ -13,8 +14,6 @@ from homeassistant.components.downloader.const import (
     DOWNLOAD_FAILED_EVENT,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

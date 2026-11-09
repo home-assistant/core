@@ -16,7 +16,7 @@
         "data": {
           "auth_code": "Authorization Code"
         },
-        "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({documentation_url}) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. If you've already logged into SimpliSafe in your browser, you may want to open a new tab, then copy/paste the above URL into that tab.\n\nWhen the process is complete, return here and input the authorization code from the `com.simplisafe.mobile` URL."
+        "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({documentation_url}) before starting.\n\nWhen you are ready, open the [SimpliSafe web app]({url}) and input your credentials. If you've already logged into SimpliSafe in your browser, you may want to open a new tab, then copy/paste the above URL into that tab.\n\nWhen the process is complete, return here and input the authorization code from the `com.simplisafe.mobile` URL."
       }
     }
   },

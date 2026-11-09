@@ -4,7 +4,6 @@ from typing import Any, override
 
 from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON
 from aiomodernforms.models import Light
-import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,7 +13,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -22,16 +20,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import modernforms_exception_handler
-from .const import (
-    ATTR_SLEEP_TIME,
-    CLEAR_TIMER,
-    DOMAIN,
-    OPT_BRIGHTNESS,
-    OPT_COLOR_TEMP_KELVIN,
-    OPT_ON,
-    SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-    SERVICE_SET_LIGHT_SLEEP_TIMER,
-)
+from .const import CLEAR_TIMER, DOMAIN, OPT_BRIGHTNESS, OPT_COLOR_TEMP_KELVIN, OPT_ON
 from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity, strip_device_name_prefix
 
@@ -50,24 +39,6 @@ async def async_setup_entry(
     # if no light unit installed no light entity
     if not coordinator.data.info.light_type:
         return
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_SLEEP_TIMER,
-        {
-            probatio.Required(ATTR_SLEEP_TIME): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=1, max=1440)
-            ),
-        },
-        "async_set_light_sleep_timer",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-        None,
-        "async_clear_light_sleep_timer",
-    )
 
     async_add_entities(
         ModernFormsLightEntity(

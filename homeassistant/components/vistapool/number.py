@@ -22,7 +22,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
-from .const import DOMAIN, PATH_HASHIDRO, PATH_HASPH, PATH_HASRX, SIGNAL_NEW_POOL
+from .const import (
+    DOMAIN,
+    GRAMS_PER_HOUR,
+    PATH_HASHIDRO,
+    PATH_HASPH,
+    PATH_HASRX,
+    SIGNAL_NEW_POOL,
+)
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
@@ -171,7 +178,7 @@ def _build_number_entities(
                     native_min_value=0,
                     native_max_value=50.0,
                     native_step=0.1,
-                    native_unit_of_measurement="g/h",
+                    native_unit_of_measurement=GRAMS_PER_HOUR,
                     value_path="hidro.level",
                     scale=10,
                     max_value_fn=_max_electrolysis,
@@ -253,4 +260,3 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic(self.entity_description.value_path, raw)

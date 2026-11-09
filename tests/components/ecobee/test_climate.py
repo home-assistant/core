@@ -6,25 +6,26 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import const
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.ecobee.climate import (
-    ATTR_PRESET_MODE,
-    ATTR_SENSOR_LIST,
-    PRESET_AWAY_INDEFINITELY,
-    Thermostat,
-)
+from homeassistant.components.ecobee.climate import PRESET_AWAY_INDEFINITELY, Thermostat
 from homeassistant.components.ecobee.const import DOMAIN
-from homeassistant.components.ecobee.services import _async_get_thermostats
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
+from homeassistant.components.ecobee.services import (
+    EcobeeServiceArgument,
+    _async_get_thermostats,
+)
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.ecobee"
 
@@ -607,9 +608,9 @@ async def test_set_sensors_used_in_climate(
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -622,8 +623,8 @@ async def test_set_sensors_used_in_climate(
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -638,9 +639,9 @@ async def test_set_sensors_used_in_climate(
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [ecobee_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [ecobee_id],
             },
             blocking=True,
         )
@@ -652,9 +653,9 @@ async def test_set_sensors_used_in_climate(
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "InvalidClimate",
-                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "InvalidClimate",
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -667,9 +668,9 @@ async def test_set_sensors_used_in_climate(
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: ["abcd"],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: ["abcd"],
             },
             blocking=True,
         )
@@ -682,9 +683,9 @@ async def test_set_sensors_used_in_climate(
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [remote_sensor_2_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_2_id],
             },
             blocking=True,
         )
@@ -694,9 +695,9 @@ async def test_set_sensors_used_in_climate(
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [
                     remote_sensor_1_id,
                     device_from_other_integration.id,
                 ],

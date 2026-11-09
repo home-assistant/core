@@ -23,7 +23,6 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -77,7 +76,7 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize Airzone water heater entity."""
         super().__init__(coordinator, entry)
@@ -87,7 +86,7 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
             OPERATION_LIB_TO_HASS[operation]
             for operation in self.get_airzone_value(AZD_OPERATIONS)
         ]
-        self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
+        self._attr_native_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
         ]
 
@@ -127,10 +126,10 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update water heater attributes."""
-        self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
+        self._attr_native_current_temperature = self.get_airzone_value(AZD_TEMP)
         self._attr_current_operation = OPERATION_LIB_TO_HASS[
             self.get_airzone_value(AZD_OPERATION)
         ]
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
-        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
+        self._attr_native_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

@@ -1,13 +1,13 @@
 """Tests for Prana integration entry points (async_setup_entry / async_unload_entry)."""
 
+from pytest_homeassistant.common import SnapshotAssertion
+
 from homeassistant.components.prana.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import async_init_integration
-
-from tests.common import SnapshotAssertion
 
 
 async def test_async_setup_entry_and_unload_entry(

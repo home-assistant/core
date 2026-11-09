@@ -59,7 +59,7 @@ TRIGGER_SCHEMA = probatio.All(
             CONF_SECONDS: TimePattern(maximum=59),
         }
     ),
-    cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS),
+    probatio.AtLeastOne(CONF_HOURS, CONF_MINUTES, CONF_SECONDS),
 )
 
 

@@ -368,9 +368,6 @@
       "signal_noise": {
         "name": "Signal noise (channel {channel})"
       },
-      "signal_strength": {
-        "name": "Signal strength"
-      },
       "successful_commands": {
         "name": "Successful commands ({direction})"
       },
@@ -391,6 +388,9 @@
   "exceptions": {
     "access_control_not_supported": {
       "message": "Access control is not supported on this device"
+    },
+    "addon_stop_failed": {
+      "message": "Failed to stop the Z-Wave JS app"
     },
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
@@ -440,6 +440,9 @@
     "delete_user_failed": {
       "message": "Failed to delete user {user_id}: {error}"
     },
+    "driver_not_ready": {
+      "message": "The Z-Wave JS driver is not ready."
+    },
     "get_credential_capabilities_failed": {
       "message": "Failed to get credential capabilities: {error}"
     },
@@ -449,11 +452,23 @@
     "get_users_failed": {
       "message": "Failed to get users: {error}"
     },
+    "multicast_broadcast_requires_target": {
+      "message": "Include at least one device or entity when broadcasting with more than one Z-Wave network."
+    },
+    "multicast_different_networks": {
+      "message": "Multicast only works for devices in the same Z-Wave network."
+    },
     "no_available_credential_slots": {
       "message": "No available {credential_type} credential slots on this device"
     },
     "no_available_user_slots": {
       "message": "No available user slots on this device"
+    },
+    "no_entities_found": {
+      "message": "None of the given entities are Z-Wave entities."
+    },
+    "no_nodes_found": {
+      "message": "No Z-Wave devices found for the given targets."
     },
     "set_credential_failed": {
       "message": "Failed to set credential: {error}"

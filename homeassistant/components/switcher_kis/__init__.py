@@ -8,10 +8,12 @@ from aioswitcher.device import SwitcherBase
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -28,7 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 type SwitcherConfigEntry = ConfigEntry[dict[str, SwitcherDataUpdateCoordinator]]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Switcher integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> None:
     """Set up Switcher from a config entry."""
 
     token = entry.data.get(CONF_TOKEN)
@@ -87,12 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

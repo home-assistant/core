@@ -7,6 +7,7 @@ import zoneinfo
 from electrickiwi_api.model import AccountSummary
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.electric_kiwi.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.electric_kiwi.sensor import _check_and_move_time
@@ -22,8 +23,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 TEST_TZ_NAME = "Pacific/Auckland"

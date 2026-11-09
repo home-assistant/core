@@ -1,8 +1,10 @@
 {
   "domain": "nasweb",
   "name": "NASweb",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@nasWebio"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/nasweb",
   "integration_type": "hub",

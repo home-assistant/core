@@ -86,7 +86,7 @@ class _PipelineProcessor(Protocol):
         """Invalidate active processing."""
 
     def cleanup(self) -> None:
-        """Clean up resources after a pipeline error."""
+        """Clean up resources when a run stops early."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -97,6 +97,7 @@ class _PipelineProcessorRequest:
     stt_metadata: stt.SpeechMetadata | None = None
     stt_stream: AsyncIterable[bytes] | None = None
     wake_word_phrase: str | None = None
+    wake_word_audio_ms: int | None = None
     intent_input: str | None = None
     tts_input: str | None = None
     conversation_extra_system_prompt: str | None = None
@@ -237,43 +238,10 @@ class PipelineRun:
             self._unregister()
             raise
 
-    async def _async_apply_pipeline_user(self) -> None:
-        """Give the run the identity its pipeline acts as.
-
-        A run started by a satellite has no user of its own, so anything acting on
-        behalf of the caller cannot tell whose request it is: the pipeline lends it
-        one.
-        A run started by a user keeps their own identity, unless that user is an
-        administrator: they may act as anyone anyway, which also makes the setting
-        testable from the pipeline debug page.
-        """
-        user_id: str | None = self.pipeline.user_id
-        if user_id is None or user_id == self.context.user_id:
-            return
-
-        if (caller_id := self.context.user_id) is not None:
-            caller = await self.hass.auth.async_get_user(caller_id)
-            if caller is None or not caller.is_admin:
-                return
-
-        # the stored user can have been deactivated or removed since, and this path
-        # builds a context outside the authentication boundary, so a stale identity is
-        # not handed the policies it no longer has
-        user = await self.hass.auth.async_get_user(user_id)
-        if user is None or not user.is_active:
-            return
-
-        self.context = Context(
-            user_id=user_id,
-            parent_id=self.context.parent_id,
-            id=self.context.id,
-        )
-
     async def async_execute(
         self, pipeline_input: PipelineInput, *, validate: bool = False
     ) -> None:
         """Run the pipeline processor with the Home Assistant lifecycle."""
-        await self._async_apply_pipeline_user()
         request = pipeline_input.create_processor_request()
         validation_error: PipelineError | None = None
         self._set_request_identity(request)
@@ -420,6 +388,11 @@ class PipelineInput:
     stt_metadata: stt.SpeechMetadata | None = None
     stt_stream: AsyncIterable[bytes] | None = None
     wake_word_phrase: str | None = None
+    wake_word_audio_ms: int | None = None
+    """Length of the audio of wake_word_phrase at the start of the stream.
+
+    It is removed before speech-to-text. Requires wake_word_phrase.
+    """
     intent_input: str | None = None
     tts_input: str | None = None
     conversation_extra_system_prompt: str | None = None
@@ -441,6 +414,7 @@ class PipelineInput:
             stt_metadata=self.stt_metadata,
             stt_stream=self.stt_stream,
             wake_word_phrase=self.wake_word_phrase,
+            wake_word_audio_ms=self.wake_word_audio_ms,
             intent_input=self.intent_input,
             tts_input=self.tts_input,
             conversation_extra_system_prompt=self.conversation_extra_system_prompt,

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -15,8 +16,6 @@ from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_current_device,
     async_remove_stale_devices_links_keep_entity_device,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_entity_id_to_device_device_id(

@@ -3,6 +3,8 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.baf.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -11,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MOCK_NAME, MOCK_UUID, MockBAFDevice
-
-from tests.common import MockConfigEntry
 
 
 def _patch_device_config_flow(side_effect=None):
@@ -37,7 +37,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         _patch_device_config_flow(),
         patch(
             "homeassistant.components.baf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -49,6 +49,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -67,6 +68,21 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "127.0.0.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
@@ -82,6 +98,21 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "127.0.0.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
@@ -105,7 +136,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.baf.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -116,6 +147,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Fan"
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -189,7 +221,7 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
         _patch_device_config_flow(),
         patch(
             "homeassistant.components.baf.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -201,4 +233,5 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1

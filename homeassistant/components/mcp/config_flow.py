@@ -6,13 +6,18 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
 
-import httpx
+import httpx2
+from mcp import MCPError
 import probatio
 from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
 from homeassistant.helpers import config_validation as cv
@@ -26,7 +31,12 @@ from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import TokenManager, mcp_client
+from .coordinator import (
+    TokenManager,
+    create_mcp_httpx_client,
+    mcp_client,
+    static_token_manager,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,17 +136,17 @@ async def validate_input(
                 raise MissingCapabilities(
                     f"MCP Server {url} does not support 'Tools' capability"
                 )
-            return {"title": response.serverInfo.name}
-    except httpx.TimeoutException as error:
+            return {"title": response.server_info.name}
+    except httpx2.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
-    except httpx.HTTPStatusError as error:
+    except httpx2.HTTPStatusError as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         if error.response.status_code == 401:
             auth_header = AuthenticateHeader.from_header(url, error.response)
             raise InvalidAuth(auth_header) from error
         raise CannotConnect from error
-    except httpx.HTTPError as error:
+    except (httpx2.HTTPError, MCPError) as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         raise CannotConnect from error
 
@@ -208,12 +218,29 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_discovery_info")
 
-        await self.async_set_unique_id(discovery_info.uuid)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        updates = {CONF_URL: url}
+        # Stored apart from the OAuth token dict, which uses CONF_TOKEN
+        if token := discovery_info.config.get(CONF_TOKEN):
+            updates[CONF_API_TOKEN] = token
+
+        entry = await self.async_set_unique_id(discovery_info.uuid)
+        # The unique ID check below only reloads loaded entries or ones waiting
+        # to retry, so a setup that fails on the old token would never retry
+        if (
+            entry is not None
+            and entry.state
+            in (ConfigEntryState.SETUP_ERROR, ConfigEntryState.SETUP_IN_PROGRESS)
+            and self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, **updates}
+            )
+        ):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        self._abort_if_unique_id_configured(updates=updates)
         self._async_abort_entries_match({CONF_URL: url})
-        self.data[CONF_URL] = url
+        self.data.update(updates)
         self.data[CONF_SLUG] = discovery_info.slug
         self.addon_name = discovery_info.name
+        self.context["title_placeholders"] = {"name": self.addon_name}
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(
@@ -221,14 +248,16 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the MCP server provided by an app."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="hassio_confirm",
                 description_placeholders={"addon": self.addon_name},
             )
 
+        token_manager = None
+        if CONF_API_TOKEN in self.data:
+            token_manager = static_token_manager(self.data[CONF_API_TOKEN])
         try:
-            info = await validate_input(self.hass, self.data)
+            info = await validate_input(self.hass, self.data, token_manager)
         except TimeoutConnectError:
             return self.async_abort(reason="timeout_connect")
         except CannotConnect:
@@ -389,11 +418,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
-        if self.unique_id is None:
-            # Unique id based on the application credentials OAuth Client ID. A
-            # discovered server keeps the Supervisor uuid instead, so that the
-            # entry is removed together with the app.
-            await self.async_set_unique_id(config_entry_data["auth_implementation"])
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
@@ -435,25 +459,25 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 async def _async_fetch_any(
     hass: HomeAssistant,
     urls: Iterable[str],
-) -> httpx.Response:
+) -> httpx2.Response:
     """Fetch all URLs concurrently and return the first successful response."""
 
-    async def fetch(url: str) -> httpx.Response:
+    async def fetch(url: str) -> httpx2.Response:
         _LOGGER.debug("Fetching URL %s", url)
         try:
-            async with httpx.AsyncClient() as client:
+            async with create_mcp_httpx_client() as client:
                 response = await client.get(url)
                 response.raise_for_status()
                 return response
-        except httpx.TimeoutException as error:
+        except httpx2.TimeoutException as error:
             _LOGGER.debug("Timeout fetching URL %s: %s", url, error)
             raise TimeoutConnectError from error
-        except httpx.HTTPStatusError as error:
+        except httpx2.HTTPStatusError as error:
             _LOGGER.debug("Server error for URL %s: %s", url, error)
             if error.response.status_code == 404:
                 raise NotFoundError from error
             raise CannotConnect from error
-        except httpx.HTTPError as error:
+        except httpx2.HTTPError as error:
             _LOGGER.debug("Cannot fetch URL %s: %s", url, error)
             raise CannotConnect from error
 

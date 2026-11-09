@@ -98,9 +98,9 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         self._attr_device_info = coordinator.device_info
         self._attr_hvac_action = HVACAction.IDLE
         self._attr_hvac_mode = HVACMode.AUTO
-        self._attr_target_temperature_high = None
-        self._attr_target_temperature_low = None
-        self._attr_target_temperature = None
+        self._attr_native_target_temperature_high = None
+        self._attr_native_target_temperature_low = None
+        self._attr_native_target_temperature = None
         self._attr_entity_registry_enabled_default = climate.active_accessory is None
 
         def _get(address: int) -> Coil:
@@ -124,7 +124,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         self._coil_cooling_with_room_sensor = _get(unit.cooling_with_room_sensor)
 
         if self._coil_current:
-            self._attr_temperature_unit = self._coil_current.unit
+            self._attr_native_temperature_unit = self._coil_current.unit
 
     @callback
     @override
@@ -135,7 +135,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         def _get_float(coil: Coil) -> float | None:
             return self.coordinator.get_coil_float(coil)
 
-        self._attr_current_temperature = _get_float(self._coil_current)
+        self._attr_native_current_temperature = _get_float(self._coil_current)
 
         mode = HVACMode.AUTO
         if _get_value(self._coil_use_room_sensor) == "ON":
@@ -154,17 +154,17 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         else:
             setpoint_cool = None
         if mode == HVACMode.HEAT_COOL:
-            self._attr_target_temperature = None
-            self._attr_target_temperature_low = setpoint_heat
-            self._attr_target_temperature_high = setpoint_cool
+            self._attr_native_target_temperature = None
+            self._attr_native_target_temperature_low = setpoint_heat
+            self._attr_native_target_temperature_high = setpoint_cool
         elif mode == HVACMode.HEAT:
-            self._attr_target_temperature = setpoint_heat
-            self._attr_target_temperature_low = None
-            self._attr_target_temperature_high = None
+            self._attr_native_target_temperature = setpoint_heat
+            self._attr_native_target_temperature_low = None
+            self._attr_native_target_temperature_high = None
         else:
-            self._attr_target_temperature = None
-            self._attr_target_temperature_low = None
-            self._attr_target_temperature_high = None
+            self._attr_native_target_temperature = None
+            self._attr_native_target_temperature_low = None
+            self._attr_native_target_temperature_high = None
 
         if prio := _get_value(self._coil_prio):
             if (

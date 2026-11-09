@@ -43,10 +43,8 @@ rules:
   log-when-unavailable:
     status: exempt
     comment: Notify entities are stateless send-only.
-  parallel-updates:
-    status: exempt
-    comment: No polling or data updates.
-  reauthentication-flow: todo
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold

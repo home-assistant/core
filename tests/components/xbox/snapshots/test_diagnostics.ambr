@@ -1,6 +1,9 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'achievement_totals': dict({
+      '1739947436': 121,
+    }),
     'consoles_list': list([
       dict({
         'console_streaming_enabled': False,
@@ -9847,7 +9850,7 @@
           'current_gamerscore': 1105,
           'progress_percentage': 44.0,
           'source_version': 2,
-          'total_achievements': 121,
+          'total_achievements': 0,
           'total_gamerscore': 2500,
         }),
         'alternate_title_ids': list([

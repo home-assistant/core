@@ -1,6 +1,6 @@
 """Support for exposing Concord232 elements as sensors."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -30,7 +30,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Alarm"
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
+SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 ZONE_TYPES_SCHEMA = probatio.Schema(
     {cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA}
@@ -39,10 +39,10 @@ ZONE_TYPES_SCHEMA = probatio.Schema(
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_EXCLUDE_ZONES, default=[]): probatio.All(
-            cv.ensure_list, [cv.positive_int]
+            probatio.EnsureList(), [cv.positive_int]
         ),
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
     }
 )
@@ -138,7 +138,7 @@ class Concord232ZoneSensor(BinarySensorEntity):
         """Get updated stats from API."""
         last_update = dt_util.utcnow() - self._client.last_zone_update
         _LOGGER.debug("Zone: %s ", self._zone)
-        if last_update > datetime.timedelta(seconds=1):
+        if last_update > dt.timedelta(seconds=1):
             self._client.zones = self._client.list_zones()
             self._client.last_zone_update = dt_util.utcnow()
             _LOGGER.debug("Updated from zone: %s", self._zone["name"])

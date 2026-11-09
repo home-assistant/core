@@ -5,7 +5,6 @@ from typing import Any, override
 
 from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData
-import probatio
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -15,9 +14,8 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
@@ -25,9 +23,6 @@ from homeassistant.util.json import JsonValueType
 from . import OSOEnergyConfigEntry
 from .entity import OSOEnergyEntity
 
-ATTR_DURATION_DAYS = "duration_days"
-ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
-ATTR_V40MIN = "v40_min"
 CURRENT_OPERATION_MAP: dict[str, Any] = {
     "default": {
         "off": STATE_OFF,
@@ -41,10 +36,6 @@ CURRENT_OPERATION_MAP: dict[str, Any] = {
         "extraenergy": STATE_HIGH_DEMAND,
     },
 }
-SERVICE_GET_PROFILE = "get_profile"
-SERVICE_SET_PROFILE = "set_profile"
-SERVICE_SET_V40MIN = "set_v40_min"
-SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
 
 
 async def async_setup_entry(
@@ -58,62 +49,6 @@ async def async_setup_entry(
     if not devices:
         return
     async_add_entities((OSOEnergyWaterHeater(osoenergy, dev) for dev in devices), True)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_GET_PROFILE,
-        {},
-        OSOEnergyWaterHeater.async_get_profile.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_AWAY_MODE_ON,
-        {
-            probatio.Required(ATTR_DURATION_DAYS): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=1, max=365)
-            ),
-        },
-        OSOEnergyWaterHeater.async_oso_turn_away_mode_on.__name__,
-    )
-
-    service_set_profile_schema = cv.make_entity_service_schema(
-        {
-            probatio.Optional(f"hour_{hour:02d}"): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=10, max=75)
-            )
-            for hour in range(24)
-        }
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_PROFILE,
-        service_set_profile_schema,
-        OSOEnergyWaterHeater.async_set_profile.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_V40MIN,
-        {
-            probatio.Required(ATTR_V40MIN): probatio.All(
-                probatio.Coerce(float), probatio.Range(min=200, max=550)
-            ),
-        },
-        OSOEnergyWaterHeater.async_set_v40_min.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_OFF,
-        {probatio.Required(ATTR_UNTIL_TEMP_LIMIT): probatio.All(cv.boolean)},
-        OSOEnergyWaterHeater.async_oso_turn_off.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {probatio.Required(ATTR_UNTIL_TEMP_LIMIT): probatio.All(cv.boolean)},
-        OSOEnergyWaterHeater.async_oso_turn_on.__name__,
-    )
 
 
 def _get_utc_hour(local_hour: int) -> dt.datetime:
@@ -179,7 +114,7 @@ class OSOEnergyWaterHeater(
         | WaterHeaterEntityFeature.AWAY_MODE
         | WaterHeaterEntityFeature.ON_OFF
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -215,7 +150,7 @@ class OSOEnergyWaterHeater(
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature of the heater."""
         return self.entity_data.current_temperature
 
@@ -227,19 +162,19 @@ class OSOEnergyWaterHeater(
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature
 
     @property
     @override
-    def target_temperature_high(self) -> float:
+    def native_target_temperature_high(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature_high
 
     @property
     @override
-    def target_temperature_low(self) -> float:
+    def native_target_temperature_low(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature_low
 
@@ -278,7 +213,9 @@ class OSOEnergyWaterHeater(
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temperature = int(kwargs.get("temperature", self.target_temperature))
+        target_temperature = int(
+            kwargs.get("temperature", self.native_target_temperature)
+        )
         profile = [target_temperature] * 24
 
         await self.osoenergy.hotwater.set_profile(self.entity_data, profile)

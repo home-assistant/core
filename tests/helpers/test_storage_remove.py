@@ -5,11 +5,13 @@ import os
 from unittest.mock import patch
 
 import py
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_test_home_assistant,
+)
 
 from homeassistant.helpers import storage
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, async_test_home_assistant
 
 
 async def test_removing_while_delay_in_progress(tmpdir: py.path.local) -> None:

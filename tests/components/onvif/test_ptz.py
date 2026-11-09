@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -13,8 +15,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import HOST, MAC, NAME, PASSWORD, PORT, USERNAME, setup_mock_onvif_camera
-
-from tests.common import MockConfigEntry
 
 
 def _setup_ptz_camera_mocks(mock_onvif_camera_cls: MagicMock) -> MagicMock:

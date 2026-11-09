@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from flux_led.const import COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led import number as flux_number
@@ -37,8 +38,6 @@ from . import (
     async_mock_device_turn_on,
     async_mock_effect_speed,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_effects_speed_unique_id(

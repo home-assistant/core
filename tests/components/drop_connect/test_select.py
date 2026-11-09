@@ -1,5 +1,8 @@
 """Test DROP select entities."""
 
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -15,9 +18,6 @@ from .common import (
     TEST_DATA_HUB_TOPIC,
     config_entry_hub,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 async def test_selects_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:

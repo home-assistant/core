@@ -1,7 +1,7 @@
 """Support for alarm control panels that can be controlled through IFTTT."""
 
 import logging
-from typing import override
+from typing import Any, override
 
 import probatio
 
@@ -12,19 +12,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_STATE,
-    CONF_CODE,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-)
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_CODE, CONF_NAME, CONF_OPTIMISTIC
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_EVENT, DOMAIN, SERVICE_PUSH_ALARM_STATE, SERVICE_TRIGGER
+from .const import DATA_IFTTT_ALARM, DOMAIN, IftttService, IftttServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +29,6 @@ ALLOWED_STATES = [
     AlarmControlPanelState.ARMED_HOME,
 ]
 
-DATA_IFTTT_ALARM = "ifttt_alarm"
 DEFAULT_NAME = "Home"
 
 CONF_EVENT_AWAY = "event_arm_away"
@@ -60,13 +53,6 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_EVENT_NIGHT, default=DEFAULT_EVENT_NIGHT): cv.string,
         probatio.Optional(CONF_EVENT_DISARM, default=DEFAULT_EVENT_DISARM): cv.string,
         probatio.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
-    }
-)
-
-PUSH_ALARM_STATE_SERVICE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        probatio.Required(ATTR_STATE): cv.string,
     }
 )
 
@@ -102,25 +88,6 @@ def setup_platform(
     )
     hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
     add_entities([alarmpanel])
-
-    async def push_state_update(service: ServiceCall) -> None:
-        """Set the service state as device state attribute."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        state = service.data.get(ATTR_STATE)
-        devices = hass.data[DATA_IFTTT_ALARM]
-        if entity_ids:
-            devices = [d for d in devices if d.entity_id in entity_ids]
-
-        for device in devices:
-            device.push_alarm_state(state)
-            device.async_schedule_update_ha_state()
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_PUSH_ALARM_STATE,
-        push_state_update,
-        schema=PUSH_ALARM_STATE_SERVICE_SCHEMA,
-    )
 
 
 class IFTTTAlarmPanel(AlarmControlPanelEntity):
@@ -194,9 +161,9 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
 
     def set_alarm_state(self, event: str, state: AlarmControlPanelState) -> None:
         """Call the IFTTT trigger service to change the alarm state."""
-        data = {ATTR_EVENT: event}
+        data: dict[str, Any] = {IftttServiceArgument.EVENT: event}
 
-        self.hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
+        self.hass.services.call(DOMAIN, IftttService.TRIGGER, data)
         _LOGGER.debug("Called IFTTT integration to trigger event %s", event)
         if self._optimistic:
             self._attr_alarm_state = state

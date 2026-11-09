@@ -28,13 +28,13 @@ DATA_SCHEMA = probatio.Schema(
             {key: brand.name for key, brand in SUPPORTED_BRANDS.items()}
         ),
         probatio.Required(CONF_EMAIL): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
 STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 

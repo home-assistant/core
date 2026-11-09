@@ -23,7 +23,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN
-from .helpers import handle_command, handle_vehicle_command
+from .helpers import handle_command, handle_energy_site_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 if TYPE_CHECKING:
@@ -53,6 +53,8 @@ ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
 ATTR_ONE_TIME = "one_time"
 ATTR_PRECONDITION_TIME = "precondition_time"
+ATTR_POWER = "power"
+ATTR_DURATION = "duration"
 
 # Services
 SERVICE_NAVIGATE_ATTR_GPS_REQUEST = "navigation_gps_request"
@@ -65,6 +67,11 @@ SERVICE_ADD_CHARGE_SCHEDULE = "add_charge_schedule"
 SERVICE_REMOVE_CHARGE_SCHEDULE = "remove_charge_schedule"
 SERVICE_ADD_PRECONDITION_SCHEDULE = "add_precondition_schedule"
 SERVICE_REMOVE_PRECONDITION_SCHEDULE = "remove_precondition_schedule"
+SERVICE_DISPATCH_BATTERY_POWER = "dispatch_battery_power"
+SERVICE_RESUME_BATTERY_OPERATION = "resume_battery_operation"
+
+MAX_DISPATCH_POWER = 100000
+MAX_DISPATCH_DURATION = 86400
 
 
 def async_get_device_and_config_for_service_call(
@@ -107,6 +114,24 @@ def async_get_energy_site_for_entry(
         translation_key="no_energy_site_data_for_device",
         translation_placeholders={"device_id": device.id},
     )
+
+
+async def async_dispatch_battery_power(call: ServiceCall) -> None:
+    """Charge or discharge the battery at a set power for a set time."""
+    device, config = async_get_device_and_config_for_service_call(call.hass, call)
+    site = async_get_energy_site_for_entry(call.hass, device, config)
+
+    await handle_energy_site_command(
+        site.api.dispatch_battery_power(call.data[ATTR_POWER], call.data[ATTR_DURATION])
+    )
+
+
+async def async_resume_battery_operation(call: ServiceCall) -> None:
+    """Return the battery to its configured operating mode."""
+    device, config = async_get_device_and_config_for_service_call(call.hass, call)
+    site = async_get_energy_site_for_entry(call.hass, device, config)
+
+    await handle_energy_site_command(site.api.resume_battery_operation())
 
 
 @callback
@@ -393,7 +418,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=probatio.Schema(
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_DAYS_OF_WEEK): probatio.EnsureList(),
                 probatio.Required(ATTR_ENABLE): cv.boolean,
                 probatio.Optional(ATTR_LOCATION): {
                     probatio.Required(CONF_LATITUDE): cv.latitude,
@@ -485,7 +510,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=probatio.Schema(
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                probatio.Required(ATTR_DAYS_OF_WEEK): probatio.EnsureList(),
                 probatio.Required(ATTR_ENABLE): cv.boolean,
                 probatio.Optional(ATTR_LOCATION): {
                     probatio.Required(CONF_LATITUDE): cv.latitude,
@@ -521,6 +546,35 @@ def async_setup_services(hass: HomeAssistant) -> None:
             {
                 probatio.Required(CONF_DEVICE_ID): cv.string,
                 probatio.Required(ATTR_ID): cv.positive_int,
+            }
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DISPATCH_BATTERY_POWER,
+        async_dispatch_battery_power,
+        schema=probatio.Schema(
+            {
+                probatio.Required(CONF_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_POWER): probatio.All(
+                    probatio.Coerce(int),
+                    probatio.Range(min=-MAX_DISPATCH_POWER, max=MAX_DISPATCH_POWER),
+                ),
+                probatio.Required(ATTR_DURATION): probatio.All(
+                    cv.positive_int, probatio.Range(min=1, max=MAX_DISPATCH_DURATION)
+                ),
+            }
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESUME_BATTERY_OPERATION,
+        async_resume_battery_operation,
+        schema=probatio.Schema(
+            {
+                probatio.Required(CONF_DEVICE_ID): cv.string,
             }
         ),
     )

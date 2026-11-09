@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .const import BRIDGE1_INTERFACE, INTERFACE_DATA
-
-from tests.common import snapshot_platform
 
 
 async def test_binary_sensor_entities_created(

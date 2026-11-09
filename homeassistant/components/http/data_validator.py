@@ -9,9 +9,8 @@ from typing import Any, Concatenate
 from aiohttp import web
 import probatio
 
+from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.helpers.typing import VolDictType
-
-from .view import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 

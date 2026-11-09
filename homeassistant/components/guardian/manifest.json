@@ -1,8 +1,10 @@
 {
   "domain": "guardian",
   "name": "Elexa Guardian",
+  "categories": ["water.meters_leak_detection"],
   "codeowners": ["@bachya"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "gvc*",

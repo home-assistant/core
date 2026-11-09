@@ -1,8 +1,13 @@
 {
   "domain": "mikrotik",
   "name": "MikroTik",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@engrbm87", "@chemelli74"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/mikrotik",
   "integration_type": "device",
   "iot_class": "local_polling",

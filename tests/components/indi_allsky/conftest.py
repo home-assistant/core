@@ -4,13 +4,12 @@ from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioindiallsky import ExposureData
+from aioindiallsky import ExposureData, SensorData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +23,7 @@ def mock_system_random() -> Generator[None]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.indi_allsky.async_setup_entry", return_value=True
+        "homeassistant.components.indi_allsky.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -68,6 +67,34 @@ def mock_exposure_data() -> ExposureData:
     """Fixture to provide sample ExposureData from fixture JSON."""
     raw_data = load_json_object_fixture("exposure_complete.json", DOMAIN)
     return ExposureData.from_dict(raw_data)
+
+
+@pytest.fixture
+def mock_sensor_data() -> SensorData:
+    """Fixture to provide sample SensorData."""
+    return SensorData.from_dict(
+        {
+            "last_update": "2026-08-13 22:53:41",
+            "sensors": {
+                "ambient_temperature": 21.5,
+                "humidity": 65.0,
+                "pressure": 1013.25,
+            },
+            "sensor_user": [
+                0,
+                50.0,
+                14.8,
+                10.2,
+                75.0,
+                22.1,
+                180.0,
+                21.4,
+                20.8,
+                15000.0,
+            ],
+            "sensor_temp": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45.2],
+        }
+    )
 
 
 @pytest.fixture

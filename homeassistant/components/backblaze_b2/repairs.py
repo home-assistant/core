@@ -1,6 +1,7 @@
 """Repair issues for the Backblaze B2 integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from b2sdk.v2.exception import (
     B2Error,
@@ -10,11 +11,13 @@ from b2sdk.v2.exception import (
 )
 
 from homeassistant.components.repairs import ConfirmRepairFlow
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_BUCKET, DOMAIN
+
+if TYPE_CHECKING:
+    from . import BackblazeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +27,7 @@ ISSUE_BUCKET_NOT_FOUND = "bucket_not_found"
 
 def _create_issue(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: BackblazeConfigEntry,
     issue_type: str,
     bucket_name: str,
 ) -> None:
@@ -43,25 +46,26 @@ def _create_issue(
             "bucket_name": bucket_name,
             "entry_id": entry.entry_id,
         },
+        config_entry_id=entry.entry_id,
     )
 
 
 def create_bucket_access_restricted_issue(
-    hass: HomeAssistant, entry: ConfigEntry, bucket_name: str
+    hass: HomeAssistant, entry: BackblazeConfigEntry, bucket_name: str
 ) -> None:
     """Create a repair issue for restricted bucket access."""
     _create_issue(hass, entry, ISSUE_BUCKET_ACCESS_RESTRICTED, bucket_name)
 
 
 def create_bucket_not_found_issue(
-    hass: HomeAssistant, entry: ConfigEntry, bucket_name: str
+    hass: HomeAssistant, entry: BackblazeConfigEntry, bucket_name: str
 ) -> None:
     """Create a repair issue for non-existent bucket."""
     _create_issue(hass, entry, ISSUE_BUCKET_NOT_FOUND, bucket_name)
 
 
 async def async_check_for_repair_issues(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: BackblazeConfigEntry
 ) -> None:
     """Check for common issues that require user action."""
     bucket = entry.runtime_data

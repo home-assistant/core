@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
+from functools import partial
 import ssl
 from typing import Any, Literal
 
@@ -18,9 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.util import ssl as ssl_util
 
 from ..const import CONF_SITE_ID, LOGGER
-from ..errors import AuthenticationRequired, CannotConnect
+from ..errors import AuthenticationRequired, CannotConnect, MfaRequired
 
 
 async def get_unifi_api(
@@ -33,7 +35,11 @@ async def get_unifi_api(
     if verify_ssl := config.get(CONF_VERIFY_SSL):
         session = aiohttp_client.async_get_clientsession(hass)
         if isinstance(verify_ssl, str):
-            ssl_context = ssl.create_default_context(cafile=verify_ssl)
+            ssl_context = await hass.async_add_executor_job(
+                partial(ssl.create_default_context, cafile=verify_ssl)
+            )
+        else:
+            ssl_context = ssl_util.get_default_context()
     else:
         session = aiohttp_client.async_create_clientsession(
             hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
@@ -55,6 +61,15 @@ async def get_unifi_api(
         async with asyncio.timeout(10):
             await api.login()
 
+    except aiounifi.TwoFaTokenRequired as err:
+        LOGGER.warning(
+            "UniFi Network at %s requires multi-factor authentication, which is"
+            " not supported. Use a local account without multi-factor"
+            " authentication",
+            config[CONF_HOST],
+        )
+        raise MfaRequired from err
+
     except aiounifi.Unauthorized as err:
         LOGGER.warning(
             "Connected to UniFi Network at %s but not registered: %s",
@@ -65,6 +80,7 @@ async def get_unifi_api(
 
     except (
         TimeoutError,
+        aiounifi.AuthenticationRateLimitError,
         aiounifi.BadGateway,
         aiounifi.Forbidden,
         aiounifi.ServiceUnavailable,

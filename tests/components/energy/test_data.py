@@ -1,5 +1,7 @@
 """Test energy data storage and migration."""
 
+from typing import Any
+
 import probatio
 import pytest
 
@@ -13,7 +15,7 @@ from homeassistant.components.energy.data import (
     EnergyManager,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import storage
+from homeassistant.helpers import entity_registry as er, storage
 
 
 async def test_energy_preferences_no_migration_needed(hass: HomeAssistant) -> None:
@@ -42,6 +44,44 @@ async def test_energy_preferences_no_migration_needed(hass: HomeAssistant) -> No
     ]
 
 
+async def test_energy_preferences_load_resolves_renamed_power_sensor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a stale stat_rate is pointed at the renamed power sensor on load."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        "energy",
+        "energy_power_battery_inverted_sensor_battery_power",
+        suggested_object_id="renamed_power",
+    )
+    hass_storage["energy"] = {
+        "version": 1,
+        "minor_version": 3,
+        "key": "energy",
+        "data": {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                    "stat_rate": "sensor.battery_power_inverted",
+                }
+            ],
+            "device_consumption": [],
+            "device_consumption_water": [],
+        },
+    }
+
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0]["stat_rate"] == "sensor.renamed_power"
+
+
 async def test_energy_preferences_default(hass: HomeAssistant) -> None:
     """Test default preferences include device_consumption_water."""
     defaults = EnergyManager.default_preferences()
@@ -61,7 +101,7 @@ async def test_energy_preferences_empty_store(hass: HomeAssistant) -> None:
     assert manager.data is None
 
 
-async def test_energy_preferences_migration_from_old_version(
+async def test_energy_preferences_migration_from_version_1_1(
     hass: HomeAssistant,
 ) -> None:
     """Test that device_consumption_water is added when migrating from v1.1 to v1.2."""
@@ -83,6 +123,31 @@ async def test_energy_preferences_migration_from_old_version(
     assert manager.data is not None
     assert "device_consumption_water" in manager.data
     assert manager.data["device_consumption_water"] == []
+
+
+async def test_energy_preferences_migration_from_version_1_3(
+    hass: HomeAssistant,
+) -> None:
+    """Test that device_consumption_gas is added when migrating from v1.3 to v1.4."""
+    # Create version 1.3 data without device_consumption_gas (old version)
+    old_data = {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+    # Save with old version (1.3) - migration will run to upgrade to 1.4
+    old_store = storage.Store(hass, 1, "energy", minor_version=3)
+    await old_store.async_save(old_data)
+
+    # Load with manager - should trigger migration
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    # Verify the field was added by migration
+    assert manager.data is not None
+    assert "device_consumption_gas" in manager.data
+    assert manager.data["device_consumption_gas"] == []
 
 
 async def test_battery_power_config_inverted_sets_stat_rate(
@@ -727,11 +792,10 @@ async def test_grid_migration_more_imports_than_exports(hass: HomeAssistant) -> 
 
 
 async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
-    """Test migration preserves power config and stat_rate from first grid.
+    """Test migration preserves power config from first grid.
 
-    Note: Migration preserves the original stat_rate value from the legacy power array.
-    The stat_rate regeneration from power_config only happens during async_update()
-    for new data submissions, not during storage migration.
+    Note: stat_rate is regenerated from power_config when the preferences are
+    loaded, so a stale stat_rate from the legacy power array is replaced.
     """
     old_data = {
         "energy_sources": [
@@ -768,9 +832,7 @@ async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
     # Verify power_config is preserved
     assert grid["power_config"] == {"stat_rate_inverted": "sensor.grid_power"}
 
-    # Migration preserves the original stat_rate value from the legacy power array
-    # (stat_rate regeneration from power_config only happens in async_update)
-    assert grid["stat_rate"] == "sensor.grid_power"
+    assert grid["stat_rate"] == "sensor.grid_power_inverted"
 
 
 async def test_grid_migration_import_only(hass: HomeAssistant) -> None:

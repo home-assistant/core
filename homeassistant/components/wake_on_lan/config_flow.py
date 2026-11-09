@@ -6,6 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -48,7 +49,7 @@ async def validate_options(
 
 DATA_SCHEMA = {probatio.Required(CONF_MAC): TextSelector()}
 OPTIONS_SCHEMA = {
-    probatio.Optional(CONF_SECUREON_PASSWORD): TextSelector(),
+    probatio.Optional(probatio.Secret(CONF_SECUREON_PASSWORD)): TextSelector(),
     probatio.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
     probatio.Optional(CONF_BROADCAST_PORT): NumberSelector(
         NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
@@ -76,6 +77,7 @@ class WakeonLanConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import WizConfigEntry, WizData
-from .entity import WizToggleEntity
+from .entity import WizToggleEntity, wiz_exception_handler
 
 RGB_WHITE_CHANNELS_COLOR_MODE = {1: ColorMode.RGBW, 2: ColorMode.RGBWW}
 
@@ -134,6 +134,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         super()._async_update_attrs()
 
     @override
+    @wiz_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self._device.turn_on(_async_pilot_builder(**kwargs))

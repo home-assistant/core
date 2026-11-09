@@ -8,10 +8,17 @@ from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
-from .const import DOMAIN
-from .models import RepairsFlow, RepairsFlowContext, RepairsFlowResult, RepairsProtocol
+from .const import DATA_REPAIRS, DOMAIN
+from .models import (
+    RepairsData,
+    RepairsFlow,
+    RepairsFlowContext,
+    RepairsFlowResult,
+    RepairsProtocol,
+)
 
 
 class ConfirmRepairFlow(RepairsFlow):
@@ -60,6 +67,12 @@ class RepairsFlowManager(
         if "issue_id" not in _context and data is not None and "issue_id" in data:
             # fallback for custom integrations
             _context |= {"issue_id": data["issue_id"]}
+            report_usage(
+                "initiates a repair flow by passing `issue_id` via `data` rather than `context`",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2027.12.0",
+                integration_domain=handler,
+            )
         if "issue_id" in _context:
             # interim compatibility fallback for custom integrations that may expect
             # "issue_id" in user_input of async_step_init
@@ -86,9 +99,7 @@ class RepairsFlowManager(
                 f"issue id {issue_id} is {'not found' if issue is None else 'not fixable'}"
             )
 
-        platforms: LazyIntegrationPlatforms[RepairsProtocol] = self.hass.data[DOMAIN][
-            "platforms"
-        ]
+        platforms = self.hass.data[DATA_REPAIRS].platforms
         if (platform := await platforms.async_get_platform(handler_key)) is None:
             flow: RepairsFlow = ConfirmRepairFlow()
         else:
@@ -116,9 +127,9 @@ class RepairsFlowManager(
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize repairs."""
-    hass.data[DOMAIN]["flow_manager"] = RepairsFlowManager(hass)
-    hass.data[DOMAIN]["platforms"] = LazyIntegrationPlatforms(
-        hass, DOMAIN, _process_repairs_platform
+    hass.data[DATA_REPAIRS] = RepairsData(
+        RepairsFlowManager(hass),
+        LazyIntegrationPlatforms(hass, DOMAIN, _process_repairs_platform),
     )
 
 

@@ -27,7 +27,10 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
 )
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_source import async_resolve_media
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -128,6 +131,23 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
     return await hass.async_add_executor_job(_load_image_from_bytes, data)
 
 
+async def _async_get_pil_image(
+    hass: HomeAssistant, image_data: dict[str, Any]
+) -> PILImage.Image:
+    """Return a PIL Image for the selected media."""
+    media_content_id: str = image_data["media_content_id"]
+
+    if (media_image := await async_get_media_image(hass, media_content_id)) is not None:
+        return await hass.async_add_executor_job(
+            _load_image_from_bytes, media_image.content
+        )
+
+    media = await async_resolve_media(hass, media_content_id, None)
+    if media.path is not None:
+        return await hass.async_add_executor_job(_load_image, str(media.path))
+    return await _async_download_image(hass, media.url)
+
+
 async def _async_upload_image(call: ServiceCall) -> None:
     """Handle the upload_image service call."""
     entry = _get_entry_for_device(call)
@@ -166,16 +186,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     entry.runtime_data.upload_task = current
 
     try:
-        media = await async_resolve_media(
-            call.hass, image_data["media_content_id"], None
-        )
-
-        if media.path is not None:
-            pil_image = await call.hass.async_add_executor_job(
-                _load_image, str(media.path)
-            )
-        else:
-            pil_image = await _async_download_image(call.hass, media.url)
+        pil_image = await _async_get_pil_image(call.hass, image_data)
 
         raw_key = entry.data.get(CONF_ENCRYPTION_KEY)
         if raw_key is not None and len(raw_key) != 32:

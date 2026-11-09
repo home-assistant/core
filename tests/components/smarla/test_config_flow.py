@@ -7,6 +7,7 @@ from pysmarlaapi.connection.exceptions import (
     ConnectionException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -19,8 +20,6 @@ from .const import (
     MOCK_USER_INPUT_MISMATCH,
     MOCK_USER_INPUT_RECONFIGURE,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_connection")

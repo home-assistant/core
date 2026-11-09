@@ -4,14 +4,13 @@ from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 MEDIA_PLAYER_ENTITY = "media_player.my_android_tv"
 

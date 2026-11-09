@@ -24,7 +24,6 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -383,11 +382,6 @@ class AddonFlowManager:
 class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
-    @cached_property
-    def _addon_setup(self) -> AddonFlowManager:
-        """Return the add-on flow manager."""
-        return AddonFlowManager(self.hass)
-
     VERSION = 1
     MINOR_VERSION = 2
 
@@ -417,6 +411,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # Set if the flow unique id is a placeholder that must be replaced
         # with the home ID before a config entry is created.
         self._unique_id_is_placeholder = False
+
+    @cached_property
+    def _addon_setup(self) -> AddonFlowManager:
+        """Return the add-on flow manager."""
+        return AddonFlowManager(self.hass)
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -589,7 +588,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: (
+                    "name": (
                         f"Network {home_id_display} at "
                         f"{discovery_info.host}:{discovery_info.port}"
                     )
@@ -617,7 +616,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={
                 "home_id": home_id_display,
-                CONF_URL: self.ws_address[5:],
+                "url": self.ws_address[5:],
             },
         )
 
@@ -705,7 +704,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 pid,
             )
             title = human_name.split(" - ")[0].strip()
-        self.context["title_placeholders"] = {CONF_NAME: title}
+        self.context["title_placeholders"] = {"name": title}
 
         self._adapter_discovered = True
         if current_config_entries:
@@ -1702,7 +1701,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # deduplicated against a pending prompt or an ignored entry.
         placeholder_unique_id = f"esphome_{discovery_info.name}"
         if discovery_info.zwave_home_id:
-            existing_entry: ConfigEntry | None = None
+            existing_entry: ZwaveJSConfigEntry | None = None
             if (
                 (
                     current_config_entries := self._async_current_entries(
@@ -1785,7 +1784,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.socket_path = discovery_info.socket_path
         home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
+            "name": f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
         }
         self._adapter_discovered = True
 

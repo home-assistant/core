@@ -17,7 +17,7 @@ type LiteJetConfigEntry = ConfigEntry[pylitejet.LiteJet]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> None:
     """Set up LiteJet via a config entry."""
     port = entry.data[CONF_PORT]
 
@@ -53,14 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> None:
     """Unload a LiteJet config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.close()
-
-    return unload_ok
+    await entry.runtime_data.close()

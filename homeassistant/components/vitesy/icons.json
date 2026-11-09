@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "button": {
+      "filter_changed": {
+        "default": "mdi:air-filter"
+      },
+      "fridge_cleaned": {
+        "default": "mdi:fridge"
+      }
+    },
+    "select": {
+      "mode": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "boost": "mdi:rocket-launch",
+          "eco": "mdi:leaf",
+          "shelf": "mdi:fridge-outline"
+        }
+      }
+    },
+    "sensor": {
+      "air_quality_score": {
+        "default": "mdi:air-filter"
+      },
+      "door_openings": {
+        "default": "mdi:door-open"
+      },
+      "fan_speed": {
+        "default": "mdi:fan"
+      },
+      "power_level": {
+        "default": "mdi:lightning-bolt"
+      }
+    }
+  }
+}

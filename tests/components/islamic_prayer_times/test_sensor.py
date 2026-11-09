@@ -5,13 +5,12 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.islamic_prayer_times.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import NOW, PRAYER_TIMES, PRAYER_TIMES_TOMORROW, PRAYER_TIMES_YESTERDAY
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

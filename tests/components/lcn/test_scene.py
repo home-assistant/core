@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pypck.lcn_defs import OutputPort, RelayPort
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
-
-from tests.common import snapshot_platform
 
 
 async def test_setup_lcn_scene(

@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,6 +43,7 @@ class CometBlueBatterySensorEntity(CometBlueBluetoothEntity, SensorEntity):
         self.entity_description = SensorEntityDescription(
             key="battery",
             device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=PERCENTAGE,
         )
         self._attr_unique_id = f"{coordinator.address}-{self.entity_description.key}"

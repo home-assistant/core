@@ -1,12 +1,11 @@
 """Fixtures for the tests for the feedreader component."""
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, load_fixture_bytes
 
 from homeassistant.components.feedreader.const import DOMAIN
 from homeassistant.components.feedreader.coordinator import EVENT_FEEDREADER
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_capture_events, load_fixture_bytes
 
 
 @pytest.fixture(name="feed_one_event")

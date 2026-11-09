@@ -3,6 +3,8 @@
 from typing import Any
 from uuid import UUID
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+
 from homeassistant.components.homekit.const import DOMAIN
 from homeassistant.components.homekit.iidmanager import (
     AccessoryIIDStorage,
@@ -10,8 +12,6 @@ from homeassistant.components.homekit.iidmanager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util.uuid import random_uuid_hex
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_iid_generation_and_restore(

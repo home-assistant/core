@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_water_supply_valve[valve.wasserstopp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('homematicip_cloud', '3014F7110000000000000WSS')]>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.wasserstopp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homematicip_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '3014F7110000000000000WSS_1_water_supply',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_supply_valve[valve.wasserstopp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': <ConnectionType.HMIP_RF: 'HMIP_RF'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wasserstopp',
+      'id': '3014F7110000000000000WSS',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      'is_group': False,
+      'model_type': 'HmIP-WSS-GB',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.wasserstopp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

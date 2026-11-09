@@ -66,7 +66,7 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME, DEFAULT_USERNAME),
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Required(CONF_USE_LEGACY_PROTOCOL): bool,
                 }
             ),
@@ -105,7 +105,7 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME, DEFAULT_USERNAME),
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Required(CONF_USE_LEGACY_PROTOCOL): bool,
                 }
             ),

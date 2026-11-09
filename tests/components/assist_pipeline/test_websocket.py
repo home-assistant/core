@@ -7,6 +7,8 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -23,7 +25,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_get_pipelines,
     async_update_pipeline,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, device_registry as dr
 
@@ -34,9 +36,6 @@ from .conftest import (
     MockWakeWordEntity2,
     make_10ms_chunk,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -580,6 +579,81 @@ async def test_text_pipeline_timeout(
     assert msg["result"] == {"events": events}
 
 
+async def test_intent_busy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test text-only pipeline run while another turn of the conversation runs."""
+    client = await hass_ws_client(hass)
+
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        conversation.async_get_chat_log(hass, session),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "intent",
+                "end_stage": "intent",
+                "input": {"text": "Are the lights on?"},
+                "conversation_id": "koala",
+            }
+        )
+
+        msg = await client.receive_json()
+        assert msg["success"]
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-start"
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"]["code"] == "intent-busy"
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_unauthorized(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test continuing a conversation of another user ends with a clean error."""
+    await conversation.async_converse(
+        hass,
+        "Are the lights on?",
+        "koala",
+        Context(user_id="other-user-id"),
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "intent",
+            "end_stage": "intent",
+            "input": {"text": "Are the lights on?"},
+            "conversation_id": "koala",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    for event_type in ("run-start", "intent-start"):
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == event_type
+
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "error"
+    assert msg["event"]["data"]["code"] == "intent-unauthorized"
+
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "run-end"
+
+    assert "Unexpected error during intent recognition" not in caplog.text
+
+
 async def test_intent_failed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -953,7 +1027,6 @@ async def test_add_pipeline(
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
         "prefer_local_intents": True,
-        "user_id": None,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1160,7 +1233,6 @@ async def test_get_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
-        "user_id": None,
     }
 
     # Get conversation agent as pipeline
@@ -1187,7 +1259,6 @@ async def test_get_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
-        "user_id": None,
     }
 
     await client.send_json_auto_id(
@@ -1218,7 +1289,6 @@ async def test_get_pipeline(
             "wake_word_entity": "wakeword_entity_1",
             "wake_word_id": "wakeword_id_1",
             "prefer_local_intents": False,
-            "user_id": None,
         }
     )
     msg = await client.receive_json()
@@ -1248,7 +1318,6 @@ async def test_get_pipeline(
         "wake_word_entity": "wakeword_entity_1",
         "wake_word_id": "wakeword_id_1",
         "prefer_local_intents": False,
-        "user_id": None,
     }
 
 
@@ -1277,7 +1346,6 @@ async def test_list_pipelines(
                 "wake_word_entity": None,
                 "wake_word_id": None,
                 "prefer_local_intents": False,
-                "user_id": None,
             }
         ],
         "preferred_pipeline": ANY,
@@ -1370,7 +1438,6 @@ async def test_update_pipeline(
         "wake_word_entity": "new_wakeword_entity",
         "wake_word_id": "new_wakeword_id",
         "prefer_local_intents": False,
-        "user_id": None,
     }
 
     assert len(pipeline_store.data) == 2
@@ -1423,7 +1490,6 @@ async def test_update_pipeline(
         "wake_word_entity": None,
         "wake_word_id": None,
         "prefer_local_intents": False,
-        "user_id": None,
     }
 
     pipeline = pipeline_store.data[pipeline_id]
@@ -2702,7 +2768,7 @@ async def test_intent_progress_event(
         """Mock converse method."""
         with (
             chat_session.async_get_chat_session(
-                kwargs["hass"], kwargs["conversation_id"]
+                kwargs["hass"], kwargs["conversation_id"], context=None
             ) as session,
             conversation.async_get_chat_log(hass, session) as chat_log,
         ):

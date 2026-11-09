@@ -17,7 +17,6 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -26,7 +25,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -63,7 +61,7 @@ from .coordinator import HabiticaConfigEntry
 STEP_ADVANCED_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_API_USER): str,
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(CONF_URL, default=DEFAULT_URL): str,
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -77,7 +75,7 @@ STEP_LOGIN_DATA_SCHEMA = probatio.Schema(
                 autocomplete="email",
             )
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -97,7 +95,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
                             autocomplete="email",
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -110,7 +108,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
         probatio.Required(SECTION_REAUTH_API_KEY): data_entry_flow.section(
             probatio.Schema(
                 {
-                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
                 },
             ),
             {"collapsed": True},
@@ -120,7 +118,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
 
 STEP_RECONF_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
             probatio.Schema(
                 {
@@ -281,7 +279,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             description_placeholders={
-                CONF_NAME: reauth_entry.title,
+                "name": reauth_entry.title,
                 "habiticans": HABITICANS_URL,
             },
             errors=errors,
@@ -392,7 +390,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: HabiticaConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"party_member": PartyMembersSubentryFlowHandler}
