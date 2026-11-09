@@ -746,6 +746,7 @@ class _RestoreStoreManager:
         try:
             data = registration.data_func()
             _check_json_types(data)
+            encoded = cached_json_bytes(data)
         except Exception:
             _LOGGER.exception(
                 "Error serializing restore coordinator data for %s in %s",
@@ -753,7 +754,7 @@ class _RestoreStoreManager:
                 scope_id,
             )
             return
-        stored = _StoredData(registration.version, cached_json_bytes(data))
+        stored = _StoredData(registration.version, encoded)
         scope_data = self._data[bucket].setdefault(scope_id, {})
         if scope_data.get(storage_key) != stored:
             scope_data[storage_key] = stored

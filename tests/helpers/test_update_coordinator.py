@@ -2463,6 +2463,8 @@ ZONES = {
         pytest.param({"value": math.nan}, id="nan"),
         pytest.param({"value": {1, 2}}, id="set"),
         pytest.param({"value": object()}, id="object"),
+        pytest.param({"value": 2**64}, id="int_out_of_range"),
+        pytest.param({"value": "\ud800"}, id="lone_surrogate"),
     ],
 )
 async def test_non_json_data_not_saved(
