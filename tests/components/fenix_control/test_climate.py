@@ -425,18 +425,18 @@ async def test_running_poll_keeps_command(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a poll that started before a command doesn't revert it."""
+    polling = asyncio.Event()
     release = asyncio.Event()
 
     async def slow_get_devices(*args: object) -> list[Device]:
+        polling.set()
         await release.wait()
         return [DEVICE]
 
     mock_fenix_client.get_devices.side_effect = slow_get_devices
-    polls = mock_fenix_client.get_devices.await_count
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_fenix_client.get_devices.await_count == polls + 1
+    await asyncio.wait_for(polling.wait(), 1)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
