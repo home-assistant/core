@@ -566,6 +566,13 @@ class E3dcSensor(E3dcEntity, SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        return super().available and self.entity_description.exists_fn(
+            self.coordinator.device
+        )
+
+    @property
+    @override
     def native_value(self) -> StateType:
         return _state(self.entity_description.value_fn(self.coordinator.device))
 

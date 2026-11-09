@@ -372,10 +372,16 @@ async def test_added_when_reported(
             "sensor.inverter_2_active_power_l1",
             id="inverter",
         ),
+        pytest.param(
+            {},
+            {40105: 0},  # Power meter slot 0 not installed
+            GRID_POWER_L1,
+            id="grid_meter",
+        ),
     ],
 )
-@pytest.mark.usefixtures("mock_get_unit")
-async def test_part_unavailable_when_gone(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_get_unit")
+async def test_unavailable_when_hardware_gone(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_unit: MockModbusUnit,
@@ -384,7 +390,7 @@ async def test_part_unavailable_when_gone(
     holding: dict[int, int | list[int]],
     entity_id: str,
 ) -> None:
-    """Test a part's sensors become unavailable once the part is gone."""
+    """Test sensors become unavailable once their hardware is gone."""
     seed(mock_unit, setup_holding)
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
