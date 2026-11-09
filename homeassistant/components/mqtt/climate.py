@@ -10,9 +10,6 @@ import probatio
 
 from homeassistant.components import climate
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     FAN_AUTO,
@@ -26,12 +23,12 @@ from homeassistant.components.climate import (
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
@@ -818,12 +815,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         operation_mode: HVACMode | None
-        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+        if (operation_mode := kwargs.get(ClimateServiceArgument.HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(operation_mode)
 
         optimistic_update = False
         temperature: float | None
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+        if (temperature := kwargs.get(ClimateServiceArgument.TEMPERATURE)) is not None:
             if self._optimistic or self._topic[CONF_TEMP_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_native_target_temperature = temperature
@@ -835,7 +832,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self._publish(CONF_TEMP_COMMAND_TOPIC, mqtt_payload)
 
         target_temp_low: float | None
-        if (target_temp_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
+        if (
+            target_temp_low := kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        ) is not None:
             if self._optimistic or self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_native_target_temperature_low = target_temp_low
@@ -847,7 +846,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self._publish(CONF_TEMP_LOW_COMMAND_TOPIC, mqtt_payload)
 
         target_temp_high: float | None
-        if (target_temp_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
+        if (
+            target_temp_high := kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
+        ) is not None:
             if self._optimistic or self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_native_target_temperature_high = target_temp_high
