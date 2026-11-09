@@ -176,7 +176,7 @@ Every check has a code following the
 | `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
-| `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a Home Assistant `@callback` method should be decorated with `@callback` |
+| `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
 
 ## `home_assistant_logger` checker
 
@@ -335,11 +335,11 @@ or lower.
 
 ### `W7463`: `home-assistant-callback-override-missing-decorator`
 
-A sync method that overrides a Home Assistant method decorated with
-`@callback`, such as `_handle_coordinator_update` of a coordinator entity,
-should be decorated with `@callback` as well. The decorator isn't inherited,
-and it marks the override as running in the event loop, where it must not do
-blocking I/O:
+A sync method that overrides a method decorated with `@callback`, such as
+`_handle_coordinator_update` of a coordinator entity or a method of an
+integration's own base class, should be decorated with `@callback` as well.
+The decorator isn't inherited, and it marks the override as running in the
+event loop, where it must not do blocking I/O:
 
 ```python
 class MyEntity(CoordinatorEntity[MyCoordinator]):

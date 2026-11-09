@@ -8,22 +8,6 @@ from pylint_home_assistant.helpers.ast_utils import extended_ancestors
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
 _CALLBACK = "homeassistant.core.callback"
-_COORDINATOR_WEATHER_ENTITY = (
-    "homeassistant.components.weather.entity.CoordinatorWeatherEntity"
-)
-_CALLBACK_HOOKS: dict[str, str] = {
-    "_handle_coordinator_update": (
-        "homeassistant.helpers.update_coordinator.BaseCoordinatorEntity"
-    ),
-    "_async_write_ha_state": "homeassistant.helpers.entity.Entity",
-    "_handle_processor_update": (
-        "homeassistant.components.bluetooth.passive_update_processor"
-        ".PassiveBluetoothProcessorEntity"
-    ),
-    "_async_forecast_daily": _COORDINATOR_WEATHER_ENTITY,
-    "_async_forecast_hourly": _COORDINATOR_WEATHER_ENTITY,
-    "_async_forecast_twice_daily": _COORDINATOR_WEATHER_ENTITY,
-}
 
 
 class HassDecoratorChecker(BaseChecker):
@@ -46,8 +30,8 @@ class HassDecoratorChecker(BaseChecker):
             "%s overrides a @callback method of %s and should be decorated with "
             "@callback",
             "home-assistant-callback-override-missing-decorator",
-            "Used when a sync method overrides a Home Assistant @callback method "
-            "without the @callback decorator",
+            "Used when a sync method overrides a @callback method without the "
+            "@callback decorator",
         ),
     }
     options = ()
@@ -133,20 +117,23 @@ class HassDecoratorChecker(BaseChecker):
     ) -> None:
         if (
             not isinstance(class_node := node.parent, nodes.ClassDef)
-            or (base_qname := _CALLBACK_HOOKS.get(node.name)) is None
             or _CALLBACK in decoratornames
+            or (node.name.startswith("__") and not node.name.endswith("__"))
             or not is_integration_module(node.root().name)
-            or not any(
-                ancestor.qname() == base_qname
-                for ancestor in extended_ancestors(class_node)
-            )
         ):
             return
-        self.add_message(
-            "home-assistant-callback-override-missing-decorator",
-            node=node,
-            args=(node.name, base_qname.rpartition(".")[2]),
-        )
+        for ancestor in extended_ancestors(class_node):
+            base_method = ancestor.locals.get(node.name, [None])[-1]
+            if (
+                type(base_method) is nodes.FunctionDef
+                and _CALLBACK in base_method.decoratornames()
+            ):
+                self.add_message(
+                    "home-assistant-callback-override-missing-decorator",
+                    node=node,
+                    args=(node.name, ancestor.name),
+                )
+                return
 
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         """Apply checks on an AsyncFunctionDef node."""

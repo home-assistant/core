@@ -331,6 +331,35 @@ class MyEntity(CoordinatorEntity):
             "homeassistant.helpers.pylint_test",
             id="outside_integration",
         ),
+        pytest.param(
+            """
+from homeassistant.core import callback
+
+class MyBaseEntity:
+    @callback
+    def __update(self) -> None:
+        pass
+
+class MyEntity(MyBaseEntity):
+    def __update(self) -> None:
+        pass
+""",
+            _INTEGRATION_MODULE,
+            id="name_mangled",
+        ),
+        pytest.param(
+            """
+class MyBaseEntity:
+    def _update(self) -> None:
+        pass
+
+class MyEntity(MyBaseEntity):
+    def _update(self) -> None:
+        pass
+""",
+            _INTEGRATION_MODULE,
+            id="base_not_callback",
+        ),
     ],
 )
 def test_good_callback_override(
@@ -414,6 +443,63 @@ class MyWeather(CoordinatorWeatherEntity):
             "_async_forecast_daily",
             "CoordinatorWeatherEntity",
             id="weather_forecast",
+        ),
+        pytest.param(
+            """
+from homeassistant.core import callback
+
+class MyBaseEntity:
+    @callback
+    def _update(self) -> None:
+        pass
+
+class MyEntity(MyBaseEntity):
+    def _update(self) -> None:
+        pass
+""",
+            "_update",
+            "MyBaseEntity",
+            id="integration_base_class",
+        ),
+        pytest.param(
+            """
+from homeassistant.core import callback
+
+class MyBaseEntity:
+    @callback
+    def _update(self) -> None:
+        pass
+
+class MyMiddleEntity(MyBaseEntity):
+    async def _update(self) -> None:
+        pass
+
+class MyEntity(MyMiddleEntity):
+    def _update(self) -> None:
+        pass
+""",
+            "_update",
+            "MyBaseEntity",
+            id="intermediate_without_callback",
+        ),
+        pytest.param(
+            """
+from homeassistant.core import callback
+
+class MyBaseFlow:
+    @staticmethod
+    @callback
+    def async_get_options_flow() -> None:
+        pass
+
+class MyFlow(MyBaseFlow):
+    @staticmethod
+    def async_get_options_flow() -> None:
+        pass
+""",
+            "async_get_options_flow",
+            "MyBaseFlow",
+            id="staticmethod",
         ),
     ],
 )
