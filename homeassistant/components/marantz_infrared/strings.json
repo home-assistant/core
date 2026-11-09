@@ -29,6 +29,12 @@
       },
       "speaker_ab": {
         "name": "Speaker A/B"
+      },
+      "power_amp_direct_on": {
+        "name": "Power Amp Direct On"
+      },
+      "power_amp_direct_off": {
+        "name": "Power Amp Direct Off"
       }
     },
     "media_player": {

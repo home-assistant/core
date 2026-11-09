@@ -21,6 +21,12 @@ BUTTON_ENTITY_ID_SOURCE_DIRECT = (
     "button.marantz_pm6006_integrated_amplifier_source_direct"
 )
 BUTTON_ENTITY_ID_LOUDNESS = "button.marantz_pm6006_integrated_amplifier_loudness"
+BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON = (
+    "button.marantz_pm8006_integrated_amplifier_power_amp_direct_on"
+)
+BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF = (
+    "button.marantz_pm8006_integrated_amplifier_power_amp_direct_off"
+    )
 
 
 @pytest.fixture
@@ -57,6 +63,8 @@ async def test_entities(
         (BUTTON_ENTITY_ID_SPEAKER_AB, MarantzAudioCode.SPEAKER_AB),
         (BUTTON_ENTITY_ID_SOURCE_DIRECT, MarantzAudioCode.SOURCE_DIRECT),
         (BUTTON_ENTITY_ID_LOUDNESS, MarantzAudioCode.LOUDNESS),
+        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON, MarantzAudioCode.POWER_AMP_DIRECT_ON),
+        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF, MarantzAudioCode.POWER_AMP_DIRECT_OFF),
     ],
 )
 @pytest.mark.usefixtures("init_integration")

@@ -44,6 +44,16 @@ BUTTON_DESCRIPTIONS: tuple[MarantzIrButtonEntityDescription, ...] = (
         translation_key="loudness",
         command_code=MarantzAudioCode.LOUDNESS,
     ),
+        MarantzIrButtonEntityDescription(
+        key="power_amp_direct_on",
+        translation_key="power_amp_direct_on",
+        command_code=MarantzAudioCode.POWER_AMP_DIRECT_ON,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="power_amp_direct_off",
+        translation_key="power_amp_direct_off",
+        command_code=MarantzAudioCode.POWER_AMP_DIRECT_OFF,
+    ),
 )
 
 
