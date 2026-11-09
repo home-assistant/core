@@ -393,7 +393,7 @@ async def _async_resolve_vehicle_api(
         bluetooth_vehicle.set_device(device)
         return True
 
-    issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{vin}"
+    issue_id = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{entry.entry_id}_{vin}"
 
     @callback
     def _on_result(err: BaseException | None, backend: Any, method: str) -> bool:
@@ -1273,7 +1273,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
                 )
             # Only the running router can observe the key, so its repair ends with it.
             ir.async_delete_issue(
-                hass, DOMAIN, f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{vehicle.vin}"
+                hass,
+                DOMAIN,
+                f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{entry.entry_id}_{vehicle.vin}",
             )
 
 

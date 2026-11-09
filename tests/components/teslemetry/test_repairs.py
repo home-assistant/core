@@ -85,7 +85,6 @@ VEHICLE_VIN = "LRW3F7EK4NC700000"
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 OTHER_VIN = "LRW3F7EK4NC799999"
 OTHER_ADDRESS = "11:22:33:44:55:66"
-BLE_KEY_ISSUE_ID = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{VEHICLE_VIN}"
 FLASH_LIGHTS_ENTITY_ID = "button.test_flash_lights"
 UNNAMED_FLASH_LIGHTS_ENTITY_ID = "button.flash_lights"
 SITE_ID = 123456
@@ -94,6 +93,7 @@ NEW_HOST = "192.168.91.2"
 PASSWORD = "abcde"
 ENTRY_ID = "01JTESLEMETRYENTRY00000000"
 GATEWAY_ISSUE_ID = f"gateway_not_found_{ENTRY_ID}_{SITE_ID}"
+BLE_KEY_ISSUE_ID = f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{ENTRY_ID}_{VEHICLE_VIN}"
 FIND_GATEWAY_ADDRESS = (
     "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address"
 )
@@ -429,14 +429,17 @@ async def test_repair_invalid_data_returns_confirm_flow(
     assert isinstance(flow, ConfirmRepairFlow)
 
 
-def _entry_with_ble_vehicles() -> MockConfigEntry:
+def _entry_with_ble_vehicles(
+    entry_id: str = ENTRY_ID, unique_id: str | None = None
+) -> MockConfigEntry:
     """Return an entry with Bluetooth subentries for another vehicle and the account vehicle."""
     entry = mock_config_entry()
     return MockConfigEntry(
         domain=entry.domain,
         version=entry.version,
         minor_version=entry.minor_version,
-        unique_id=entry.unique_id,
+        entry_id=entry_id,
+        unique_id=unique_id or entry.unique_id,
         data=dict(entry.data),
         subentries_data=[
             # Listed first so the repair cannot find the right vehicle by position.
@@ -685,6 +688,22 @@ async def test_ble_key_rejected_repair_clears_on_unload(
         assert await hass.config_entries.async_unload(entry.entry_id)
 
     assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is None
+
+
+async def test_ble_key_rejected_repair_per_entry_for_shared_vehicle(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Unloading another account sharing the vehicle keeps this account's repair."""
+    await _raise_ble_key_issue(hass)
+    other_entry = _entry_with_ble_vehicles(
+        entry_id="01JTESLEMETRYENTRY99999999", unique_id="other-account"
+    )
+    await _setup_ble_vehicles(hass, other_entry)
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.BUTTON]):
+        assert await hass.config_entries.async_unload(other_entry.entry_id)
+
+    assert issue_registry.async_get_issue(DOMAIN, BLE_KEY_ISSUE_ID) is not None
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

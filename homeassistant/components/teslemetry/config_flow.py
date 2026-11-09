@@ -450,7 +450,9 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             # The key was just verified, so a reconfigure with an unchanged address
             # schedules no reload to clear the repair.
             ir.async_delete_issue(
-                self.hass, DOMAIN, f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{self._vin}"
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_TYPE_BLE_KEY_REJECTED}_{entry.entry_id}_{self._vin}",
             )
             return self.async_update_and_abort(
                 entry,
