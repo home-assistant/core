@@ -8,12 +8,12 @@ from pygeosphere_warnings import GeoSphereConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
+from homeassistant.components.geosphere_austria_warnings.const import (
+    DOMAIN,
+    GeoSphereService,
+)
 from homeassistant.components.geosphere_austria_warnings.coordinator import (
     UPDATE_INTERVAL,
-)
-from homeassistant.components.geosphere_austria_warnings.services import (
-    SERVICE_GET_WARNINGS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, STATE_UNAVAILABLE
@@ -37,7 +37,7 @@ async def test_get_warnings_returns_both_cached_warning_buckets(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_WARNINGS,
+        GeoSphereService.GET_WARNINGS,
         {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
@@ -99,7 +99,7 @@ async def test_get_warnings_after_update_failure_and_recovery(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_WARNINGS,
+            GeoSphereService.GET_WARNINGS,
             {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
@@ -120,7 +120,7 @@ async def test_get_warnings_after_update_failure_and_recovery(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_WARNINGS,
+        GeoSphereService.GET_WARNINGS,
         {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
@@ -144,7 +144,7 @@ async def test_get_warnings_with_unloaded_entry(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_WARNINGS,
+            GeoSphereService.GET_WARNINGS,
             {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
