@@ -17,6 +17,7 @@ from homeassistant.components.sony_projector.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_ENTITY_NAMESPACE,
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
@@ -200,15 +201,30 @@ async def test_unavailable_and_recovery(
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("extra_config", "expected_entity_id"),
+    [
+        pytest.param({}, "switch.living_room_projector", id="name"),
+        pytest.param(
+            {CONF_ENTITY_NAMESPACE: "upstairs"},
+            "switch.upstairs_living_room_projector",
+            id="namespace",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_projector")
 async def test_yaml_import_keeps_entity_id(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    extra_config: dict[str, str],
+    expected_entity_id: str,
 ) -> None:
     """Test an imported YAML platform keeps its entity ID and raises one issue."""
-    assert await async_setup_component(hass, SWITCH_DOMAIN, YAML_CONFIG)
+    config = {SWITCH_DOMAIN: [YAML_CONFIG[SWITCH_DOMAIN][0] | extra_config]}
+    assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.living_room_projector").state == STATE_ON
+    assert hass.states.get(expected_entity_id).state == STATE_ON
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
