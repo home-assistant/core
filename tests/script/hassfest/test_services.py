@@ -12,15 +12,15 @@ from script.hassfest import services
     [
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
-                end_of_track:
+                snapshot:
                   selector:
                     constant:
                       value: true
                 duration:
                   visible:
-                    field: end_of_track
+                    field: snapshot
                     operator: not_exists
                   selector:
                     duration:
@@ -29,18 +29,18 @@ from script.hassfest import services
         ),
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
                 mode:
                   selector:
                     select:
                       options:
-                        - duration
-                        - end_of_track
+                        - clip
+                        - snapshot
                 advanced:
                   visible:
                     - field: mode
-                      value: duration
+                      value: clip
                   fields:
                     duration:
                       selector:
@@ -56,7 +56,7 @@ from script.hassfest import services
         ),
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
                 mode:
                   visible: false
@@ -77,12 +77,12 @@ def test_valid_visible(services_yaml: str) -> None:
     [
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
                 duration:
                   visible:
                     field: mode
-                    value: duration
+                    value: clip
                   selector:
                     duration:
             """,
@@ -90,7 +90,7 @@ def test_valid_visible(services_yaml: str) -> None:
         ),
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
                 duration:
                   visible:
@@ -103,7 +103,7 @@ def test_valid_visible(services_yaml: str) -> None:
         ),
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
                 advanced:
                   visible:
@@ -118,7 +118,7 @@ def test_valid_visible(services_yaml: str) -> None:
         ),
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
                 options:
                   visible:
@@ -133,7 +133,7 @@ def test_valid_visible(services_yaml: str) -> None:
         ),
         pytest.param(
             """
-            set_timer:
+            record:
               fields:
                 duration:
                   visible:
