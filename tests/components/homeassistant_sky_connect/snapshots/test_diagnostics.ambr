@@ -1,0 +1,41 @@
+# serializer version: 1
+# name: test_diagnostics_for_config_entry
+  dict({
+    'firmware': dict({
+      'type': 'ezsp',
+      'update_in_progress': False,
+      'version': '7.4.4.0 build 0',
+    }),
+    'firmware_owners': list([
+      dict({
+        'firmware_type': 'ezsp',
+        'firmware_version': '7.4.4.0 build 0',
+        'owners': list([
+          dict({
+            'integration': 'zha',
+          }),
+        ]),
+        'source': 'zha',
+      }),
+      dict({
+        'firmware_type': 'ezsp',
+        'firmware_version': None,
+        'owners': list([
+          dict({
+            'addon': 'core_zigbee2mqtt',
+          }),
+        ]),
+        'source': 'zigbee2mqtt (core_zigbee2mqtt)',
+      }),
+    ]),
+    'firmware_update_coordinator': dict({
+      'last_update_success': True,
+    }),
+    'hardware': dict({
+      'manufacturer': 'Nabu Casa',
+      'pid': 'EA60',
+      'product': 'Home Assistant Connect ZBT-1',
+      'vid': '10C4',
+    }),
+  })
+# ---

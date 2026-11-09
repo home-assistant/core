@@ -31,6 +31,42 @@
         "name": "Unpair remotes"
       }
     },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "blue_fade": "Blue fade",
+              "blue_strobe": "Blue strobe",
+              "colorjump": "Color jump",
+              "colorloop": "Color loop",
+              "colorstrobe": "Color strobe",
+              "custom": "Custom",
+              "cyan_fade": "Cyan fade",
+              "cyan_strobe": "Cyan strobe",
+              "cycle_rgb": "Cycle RGB",
+              "cycle_seven_colors": "Cycle seven colors",
+              "gb_cross_fade": "Green/blue cross fade",
+              "green_fade": "Green fade",
+              "green_strobe": "Green strobe",
+              "music": "Music",
+              "purple_fade": "Purple fade",
+              "purple_strobe": "Purple strobe",
+              "random": "Random",
+              "rb_cross_fade": "Red/blue cross fade",
+              "red_fade": "Red fade",
+              "red_strobe": "Red strobe",
+              "rg_cross_fade": "Red/green cross fade",
+              "rgb_cross_fade": "RGB cross fade",
+              "white_fade": "White fade",
+              "white_strobe": "White strobe",
+              "yellow_fade": "Yellow fade",
+              "yellow_strobe": "Yellow strobe"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "effect_speed": {
         "name": "Effect speed"

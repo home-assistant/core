@@ -28,7 +28,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    ChildDeviceInfo,
+    DeviceInfo,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, DOMAIN
@@ -76,13 +80,13 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self._packet_listeners: list[Callable[[Packet], None]] = []
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        self.device_id = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             connections={(CONNECTION_BLUETOOTH, self.address)},
             identifiers={(DOMAIN, self.address)},
             name=config_entry.data[CONF_MODEL],
             model_id=config_entry.data[CONF_MODEL],
-        )
+        ).id
 
         config_entry.async_on_unload(
             async_register_callback(
@@ -93,7 +97,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             )
         )
 
-    def get_device_info(self, probe_number: int | None) -> DeviceInfo:
+    def get_device_info(self, probe_number: int | None) -> DeviceInfo | ChildDeviceInfo:
         """Return device info."""
 
         if probe_number is None:
@@ -101,17 +105,13 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
                 identifiers={(DOMAIN, self.address)},
             )
 
-        return DeviceInfo(
+        return ChildDeviceInfo(
             translation_key="probe",
             translation_placeholders={
                 "probe_number": str(probe_number),
             },
             identifiers={(DOMAIN, f"{self.address}_{probe_number}")},
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass,
-                (DOMAIN, self.address),
-                config_entry_id=self.config_entry.entry_id,
-            ),
+            parent_device_id=self.device_id,
         )
 
     @callback

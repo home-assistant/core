@@ -126,7 +126,7 @@ class HuaweiSensorGroup:
 class HuaweiSensorEntityDescription(SensorEntityDescription):
     """Class describing Huawei LTE sensor entities."""
 
-    # HuaweiLteSensor does not support UNDEFINED or None,
+    # HuaweiLteSensor does not support Undefined or None,
     # restrict the type to str.
     name: str = ""
 

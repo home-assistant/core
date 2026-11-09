@@ -35,6 +35,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 from .util import attribute_equal, most_frequent_attribute, reduce_attribute
 
@@ -115,7 +116,9 @@ class FanGroup(GroupEntity, FanEntity):
         self._speed_count = 100
         self._is_on: bool | None = False
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entities
+        }
         self._attr_unique_id = unique_id
 
     @property

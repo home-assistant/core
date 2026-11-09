@@ -167,6 +167,9 @@ class EnergyPreferencesValidation:
     device_consumption_water: list[ValidationIssues] = dataclasses.field(
         default_factory=list
     )
+    device_consumption_gas: list[ValidationIssues] = dataclasses.field(
+        default_factory=list
+    )
 
     def as_dict(self) -> dict:
         """Return dictionary version."""
@@ -182,6 +185,10 @@ class EnergyPreferencesValidation:
             "device_consumption_water": [
                 [dataclasses.asdict(issue) for issue in issues.issues.values()]
                 for issues in self.device_consumption_water
+            ],
+            "device_consumption_gas": [
+                [dataclasses.asdict(issue) for issue in issues.issues.values()]
+                for issues in self.device_consumption_gas
             ],
         }
 
@@ -287,7 +294,7 @@ def _async_validate_usage_stat(
 
     if (
         state_class == sensor.SensorStateClass.MEASUREMENT
-        and sensor.ATTR_LAST_RESET not in state.attributes
+        and sensor.SensorEntityStateAttribute.LAST_RESET not in state.attributes
     ):
         issues.add_issue(
             hass, "entity_state_class_measurement_no_last_reset", entity_id
@@ -421,7 +428,7 @@ def _async_validate_cost_stat(
 
     if (
         state_class == sensor.SensorStateClass.MEASUREMENT
-        and sensor.ATTR_LAST_RESET not in state.attributes
+        and sensor.SensorEntityStateAttribute.LAST_RESET not in state.attributes
     ):
         issues.add_issue(hass, "entity_state_class_measurement_no_last_reset", stat_id)
 
@@ -799,6 +806,35 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 )
             )
 
+        elif source["type"] == "home":
+            wanted_statistics_metadata.add(source["stat_energy_to"])
+            validate_calls.append(
+                functools.partial(
+                    _async_validate_usage_stat,
+                    hass,
+                    statistics_metadata,
+                    source["stat_energy_to"],
+                    ENERGY_USAGE_DEVICE_CLASSES,
+                    ENERGY_USAGE_UNITS,
+                    ENERGY_UNIT_ERROR,
+                    source_result,
+                )
+            )
+            if stat_rate := source.get("stat_rate"):
+                wanted_statistics_metadata.add(stat_rate)
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_power_stat,
+                        hass,
+                        statistics_metadata,
+                        stat_rate,
+                        POWER_USAGE_DEVICE_CLASSES,
+                        POWER_USAGE_UNITS,
+                        POWER_UNIT_ERROR,
+                        source_result,
+                    )
+                )
+
         elif source["type"] == "battery":
             wanted_statistics_metadata.add(source["stat_energy_from"])
             validate_calls.append(
@@ -857,6 +893,23 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 WATER_USAGE_DEVICE_CLASSES,
                 WATER_USAGE_UNITS,
                 WATER_UNIT_ERROR,
+                device_result,
+            )
+        )
+
+    for device in manager.data.get("device_consumption_gas", []):
+        device_result = ValidationIssues()
+        result.device_consumption_gas.append(device_result)
+        wanted_statistics_metadata.add(device["stat_consumption"])
+        validate_calls.append(
+            functools.partial(
+                _async_validate_usage_stat,
+                hass,
+                statistics_metadata,
+                device["stat_consumption"],
+                GAS_USAGE_DEVICE_CLASSES,
+                GAS_USAGE_UNITS,
+                GAS_UNIT_ERROR,
                 device_result,
             )
         )

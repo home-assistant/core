@@ -3,9 +3,10 @@
   "name": "AWS Route53",
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/route53",
   "iot_class": "cloud_push",
   "loggers": ["boto3", "botocore", "s3transfer"],
   "quality_scale": "legacy",
-  "requirements": ["boto3==1.42.97"]
+  "requirements": ["boto3==1.43.117"]
 }

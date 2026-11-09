@@ -17,7 +17,6 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -36,6 +35,7 @@ from .const import (
     CONF_USER_ID,
     DOMAIN,
 )
+from .coordinator import FressnapfTrackerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None,
         step_id: str,
-        entry: ConfigEntry | None = None,
+        entry: FressnapfTrackerConfigEntry | None = None,
         errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Request a magic link for a new or existing config entry."""
@@ -322,7 +322,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_reauth_or_reconfigure_sms(
         self,
         user_input: dict[str, Any] | None,
-        entry: ConfigEntry,
+        entry: FressnapfTrackerConfigEntry,
         step_id: str,
     ) -> ConfigFlowResult:
         """Request an SMS code for an existing config entry."""
@@ -352,7 +352,7 @@ class FressnapfTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_confirm_sms_code(
         self,
         user_input: dict[str, Any] | None,
-        entry: ConfigEntry,
+        entry: FressnapfTrackerConfigEntry,
         step_id: str,
     ) -> ConfigFlowResult:
         """Confirm an SMS code for an existing config entry."""

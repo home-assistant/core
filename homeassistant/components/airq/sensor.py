@@ -493,7 +493,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirQSensor(CoordinatorEntity, SensorEntity):
+class AirQSensor(CoordinatorEntity[AirQCoordinator], SensorEntity):
     """Representation of a Sensor."""
 
     _attr_has_entity_name = True

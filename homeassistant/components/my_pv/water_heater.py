@@ -31,7 +31,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     if (
-        coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER)
+        coordinator.device.primary_mode == MyPVDeviceMainMode.HOT_WATER
         and coordinator.device.current_temperature is not None
         and (configuration := coordinator.device.get_setup_configuration("ww1target"))
     ):

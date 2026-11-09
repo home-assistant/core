@@ -152,7 +152,7 @@
   },
   "issues": {
     "legacy_pubsub_topic": {
-      "description": "The Nest integration entry **{entry_title}** receives device events from a Google-hosted Pub/Sub topic. Google stops publishing events to Google-hosted topics on November 30, 2026. After that date, Home Assistant no longer receives realtime updates, camera events, or doorbell presses for this entry.\n\nTo fix this, go to **Settings > Devices & services > Nest**, open the entry menu, and select **Reconfigure**. Home Assistant will create a Pub/Sub topic in your Google Cloud project and guide you through updating the Device Access Console.",
+      "description": "Your Nest integration (**\"{entry_title}\"**) needs to be reconfigured before **November 30, 2026** to continue receiving realtime updates, camera events, and doorbell presses. It currently uses a legacy Google-hosted Cloud Pub/Sub topic that Google is retiring in favor of a Pub/Sub topic in your own Google Cloud project.\n\nTo update it, go to **Settings > Devices & services > Nest**, open the menu next to **\"{entry_title}\"**, and select **Reconfigure**. Home Assistant will create the new Pub/Sub topic in your Google Cloud project and guide you through updating the Nest Device Access Console.",
       "title": "Nest Pub/Sub topic must be migrated"
     },
     "pubsub_subscription_not_found": {

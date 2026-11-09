@@ -18,6 +18,7 @@ from homeassistant.components.http import (
     KEY_HASS_REFRESH_TOKEN_ID,
     HomeAssistantView,
 )
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar, integration_platform
@@ -178,6 +179,7 @@ class UserOnboardingView(_BaseOnboardingStepView):
     url = "/api/onboarding/users"
     name = "api:onboarding:users"
     requires_auth = False
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
     step = STEP_USER
 
     @RequestDataValidator(
@@ -354,6 +356,7 @@ class WaitIntegrationOnboardingView(NoAuthBaseOnboardingView):
 
     url = "/api/onboarding/integration/wait"
     name = "api:onboarding:integration:wait"
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     @RequestDataValidator(
         probatio.Schema(

@@ -19,6 +19,19 @@
         "description": "The password for {username} is invalid.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "password": "Enter the password for {username} again. Leave it empty only if the server needs no password.",
+          "url": "The address of the CalDAV server.",
+          "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
+        },
+        "description": "Update the CalDAV server connection for {username}."
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",

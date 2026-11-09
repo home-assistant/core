@@ -59,11 +59,10 @@ from .const import (
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
     DOMAIN,
+    DerivativeEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_SOURCE_ID = "source"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {
@@ -218,7 +217,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._last_valid_state_time: tuple[str, datetime] | None = None
 
         self._attr_name = name if name is not None else f"{source_entity} derivative"
-        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
+        self._attr_extra_state_attributes = {
+            DerivativeEntityStateAttribute.SOURCE: source_entity
+        }
         self._string_unit_prefix: str | None = None
         self._string_unit_time: str | None = None
         if unit_of_measurement is None:

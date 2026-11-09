@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'allowed_nameless_uuid_count': 1,
+    'fixed_mac_beacon_count': 1,
+    'fixed_mac_beacons': list([
+      dict({
+        'distance': 2,
+        'power': -59,
+        'rssi': -63,
+        'transient': False,
+        'vendor': None,
+      }),
+    ]),
+    'ignored_address_count': 1,
+    'ignored_nameless_address_count': 1,
+    'ignored_uuid_count': 2,
+    'pending_transient_count': 0,
+    'random_mac_group_count': 1,
+    'random_mac_groups_seen': list([
+      dict({
+        'rssi': -63,
+      }),
+    ]),
+    'source_count': 1,
+    'unavailable_random_mac_group_count': 0,
+  })
+# ---

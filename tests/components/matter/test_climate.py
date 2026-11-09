@@ -32,6 +32,12 @@ THERMOSTAT_ENTITY_ID = "climate.longan_link_hvac"
 ROOM_AC_ENTITY_ID = "climate.room_airconditioner"
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.CLIMATE
+
+
 @pytest.mark.usefixtures("matter_devices")
 async def test_climates(
     hass: HomeAssistant,
