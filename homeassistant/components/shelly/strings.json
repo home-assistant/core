@@ -791,6 +791,9 @@
       }
     },
     "switch": {
+      "boost": {
+        "name": "Boost"
+      },
       "camera_privacy": {
         "name": "Privacy"
       },

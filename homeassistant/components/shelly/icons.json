@@ -114,6 +114,9 @@
       }
     },
     "switch": {
+      "boost": {
+        "default": "mdi:rocket-launch"
+      },
       "camera_privacy": {
         "default": "mdi:eye-outline",
         "state": {
