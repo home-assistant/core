@@ -31,7 +31,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.typing import UNDEFINED, VolDictType
+from homeassistant.helpers.typing import Undefined, VolDictType
 
 from .const import (
     CONF_KNX_AUTOMATIC,
@@ -207,7 +207,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
                 data_updates=self.new_entry_data,
-                title=self.new_title or UNDEFINED,
+                title=self.new_title or Undefined,
             )
 
         title = self.new_title or f"KNX {self.new_entry_data[CONF_KNX_CONNECTION_TYPE]}"
@@ -803,7 +803,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             if not self._tunnel_endpoints:
                 errors["base"] = "keyfile_no_tunnel_for_host"
-                description_placeholders = {CONF_HOST: str(host_ia)}
+                description_placeholders = {"host": str(host_ia)}
         else:
             self._tunnel_endpoints = self._keyring.interfaces
 

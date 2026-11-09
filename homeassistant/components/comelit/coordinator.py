@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import TypeVar, cast, override
+from typing import cast, override
 
 from aiocomelit import ComeliteSerialBridgeApi, ComelitVedoApi
 from aiocomelit.api import ComelitHttpApi
@@ -35,19 +35,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, ObjectClassType
 
+type _ComelitDataType = dict[str, Mapping[int, ObjectClassType]]
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
 
-T = TypeVar(
-    "T",
-    bound=dict[
-        str,
-        Mapping[int, ObjectClassType],
-    ],
-)
-
-
-class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
+class ComelitBaseCoordinator[T: _ComelitDataType](DataUpdateCoordinator[T]):
     """Base coordinator for Comelit Devices."""
 
     _hw_version: str
@@ -157,7 +149,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
                     device_registry.async_remove_device(device.id)
 
 
-class ComelitSerialBridge(ComelitBaseCoordinator[T]):
+class ComelitSerialBridge[T: _ComelitDataType](ComelitBaseCoordinator[T]):
     """Queries Comelit Serial Bridge."""
 
     _hw_version = "20003101"
@@ -202,7 +194,7 @@ class ComelitSerialBridge(ComelitBaseCoordinator[T]):
         return cast(T, data)
 
 
-class ComelitVedoSystem(ComelitBaseCoordinator[T]):
+class ComelitVedoSystem[T: _ComelitDataType](ComelitBaseCoordinator[T]):
     """Queries Comelit VEDO system."""
 
     _hw_version = "VEDO IP"

@@ -40,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
+type WazeTravelTimeConfigEntry = ConfigEntry[WazeTravelTimeCoordinator]
+
 SECONDS_BETWEEN_API_CALLS = 0.5
 
 
@@ -177,12 +179,12 @@ class WazeTravelTimeData:
 class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
     """Waze Travel Time DataUpdateCoordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: WazeTravelTimeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WazeTravelTimeConfigEntry,
         client: WazeRouteCalculator,
     ) -> None:
         """Initialize."""

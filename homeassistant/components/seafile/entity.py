@@ -4,6 +4,7 @@ from typing import override
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_LIBRARY_ID, DOMAIN
@@ -19,12 +20,13 @@ class SeafileEntity(CoordinatorEntity[SeafileDataUpdateCoordinator]):
         self,
         coordinator: SeafileDataUpdateCoordinator,
         subentry: ConfigSubentry,
-        key: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize the entity on the library device."""
         super().__init__(coordinator)
+        self.entity_description = description
         self.library_id: str = subentry.data[CONF_LIBRARY_ID]
-        self._attr_unique_id = f"{subentry.subentry_id}_{key}"
+        self._attr_unique_id = f"{subentry.subentry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             entry_type=DeviceEntryType.SERVICE,

@@ -349,6 +349,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""

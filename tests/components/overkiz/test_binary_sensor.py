@@ -42,11 +42,17 @@ TILT_SENSOR = FixtureDevice(
     "io://1234-1234-6233/8059108#1",
     "binary_sensor.living_room_balcony_window_tilt",
 )
+OVEN_DOOR = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "binary_sensor.oven_door",
+)
 
 SNAPSHOT_FIXTURES = [
     SMOKE_SENSOR,
     HEATING_STATUS,
     CONTACT_SENSOR,
+    OVEN_DOOR,
 ]
 
 

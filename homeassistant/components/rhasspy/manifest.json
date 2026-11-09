@@ -4,6 +4,7 @@
   "categories": ["ai_voice.voice_assistants"],
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["intent"],
   "documentation": "https://www.home-assistant.io/integrations/rhasspy",
   "iot_class": "local_push",

@@ -143,6 +143,6 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
                 REAUTH_SCHEMA,
                 {CONF_SERVICE_CODE: reauth_entry.data.get(CONF_SERVICE_CODE)},
             ),
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )

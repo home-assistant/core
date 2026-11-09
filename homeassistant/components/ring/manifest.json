@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@sdb9696"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["ffmpeg"],
   "dhcp": [
     {

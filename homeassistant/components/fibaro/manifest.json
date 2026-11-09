@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@rappenze"],
   "config_flow": true,
+  "connectivity": ["zwave"],
   "documentation": "https://www.home-assistant.io/integrations/fibaro",
   "integration_type": "hub",
   "iot_class": "local_push",

@@ -2509,6 +2509,7 @@ async def test_ignore_flow(
         assert response["success"]
 
     assert len(hass.config_entries.flow.async_progress()) == 0
+    assert "test" not in hass.config.components
 
     entry = hass.config_entries.async_entries("test")[0]
     assert entry.source == "ignore"

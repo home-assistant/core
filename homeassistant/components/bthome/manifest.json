@@ -18,6 +18,7 @@
   "categories": ["sensors", "diy_makers"],
   "codeowners": ["@Ernst79", "@thecode"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/bthome",
   "iot_class": "local_push",

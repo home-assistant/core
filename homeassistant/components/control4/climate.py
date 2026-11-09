@@ -4,7 +4,6 @@ import logging
 from typing import Any, override
 
 from pyControl4.climate import C4Climate
-from pyControl4.error_handling import C4Exception
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -17,50 +16,28 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE, SCAN_INTERVAL
-from .director_utils import update_variables_for_config_entry
+from .const import (
+    CONTROL4_COOL_SETPOINT_C,
+    CONTROL4_COOL_SETPOINT_F,
+    CONTROL4_CURRENT_TEMPERATURE_C,
+    CONTROL4_CURRENT_TEMPERATURE_F,
+    CONTROL4_ENTITY_TYPE,
+    CONTROL4_FAN_MODE,
+    CONTROL4_FAN_MODES_LIST,
+    CONTROL4_HEAT_SETPOINT_C,
+    CONTROL4_HEAT_SETPOINT_F,
+    CONTROL4_HUMIDITY,
+    CONTROL4_HVAC_MODE,
+    CONTROL4_HVAC_STATE,
+    CONTROL4_SCALE,
+)
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONTROL4_CATEGORY = "comfort"
-
-# Control4 variable names
-CONTROL4_HVAC_STATE = "HVAC_STATE"
-CONTROL4_HVAC_MODE = "HVAC_MODE"
-CONTROL4_HUMIDITY = "HUMIDITY"
-CONTROL4_SCALE = "SCALE"  # "FAHRENHEIT" or "CELSIUS"
-
-# Temperature variables - Fahrenheit
-CONTROL4_CURRENT_TEMPERATURE_F = "TEMPERATURE_F"
-CONTROL4_COOL_SETPOINT_F = "COOL_SETPOINT_F"
-CONTROL4_HEAT_SETPOINT_F = "HEAT_SETPOINT_F"
-
-# Temperature variables - Celsius
-CONTROL4_CURRENT_TEMPERATURE_C = "TEMPERATURE_C"
-CONTROL4_COOL_SETPOINT_C = "COOL_SETPOINT_C"
-CONTROL4_HEAT_SETPOINT_C = "HEAT_SETPOINT_C"
-
-CONTROL4_FAN_MODE = "FAN_MODE"
-CONTROL4_FAN_MODES_LIST = "FAN_MODES_LIST"
-
-VARIABLES_OF_INTEREST = {
-    CONTROL4_HVAC_STATE,
-    CONTROL4_HVAC_MODE,
-    CONTROL4_HUMIDITY,
-    CONTROL4_CURRENT_TEMPERATURE_F,
-    CONTROL4_CURRENT_TEMPERATURE_C,
-    CONTROL4_COOL_SETPOINT_F,
-    CONTROL4_HEAT_SETPOINT_F,
-    CONTROL4_COOL_SETPOINT_C,
-    CONTROL4_HEAT_SETPOINT_C,
-    CONTROL4_SCALE,
-    CONTROL4_FAN_MODE,
-    CONTROL4_FAN_MODES_LIST,
-}
 
 # Map Control4 HVAC modes to Home Assistant
 C4_TO_HA_HVAC_MODE = {
@@ -91,26 +68,7 @@ async def async_setup_entry(
     """Set up Control4 thermostats from a config entry."""
     runtime_data = entry.runtime_data
 
-    async def async_update_data() -> dict[int, dict[str, Any]]:
-        """Fetch data from Control4 director for thermostats."""
-        try:
-            return await update_variables_for_config_entry(
-                hass, entry, VARIABLES_OF_INTEREST
-            )
-        except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
-        hass,
-        _LOGGER,
-        name="climate",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-        config_entry=entry,
-    )
-
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    coordinator = runtime_data.climate_coordinator
 
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
     entity_list = []

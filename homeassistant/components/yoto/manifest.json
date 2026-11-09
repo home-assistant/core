@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@cdnninja", "@piitaya"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "dhcp": [{ "hostname": "yoto-*" }],
   "documentation": "https://www.home-assistant.io/integrations/yoto",

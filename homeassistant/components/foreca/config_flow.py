@@ -13,7 +13,6 @@ from pyforeca import (
 )
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryData,
@@ -31,6 +30,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
 from .const import DOMAIN, SUBENTRY_TYPE_LOCATION
+from .coordinator import ForecaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: ForecaConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentry types this integration supports."""
         return {SUBENTRY_TYPE_LOCATION: LocationSubentryFlowHandler}

@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -36,6 +37,7 @@ BINARY_SENSORS: tuple[SpinEvBinarySensorEntityDescription, ...] = (
     SpinEvBinarySensorEntityDescription(
         key="problem",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: status.has_alarms,
     ),
 )

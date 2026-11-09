@@ -82,6 +82,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -
     await hass.async_add_executor_job(_cleanup, entry.runtime_data.client)
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _update_listener(hass: HomeAssistant, entry: MonopriceConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

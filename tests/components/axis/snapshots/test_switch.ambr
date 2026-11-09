@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_doorbell-entry]
+# name: test_switches_with_port_cgi[param_ports_payload0][switch.home_doorbell-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_doorbell-state]
+# name: test_switches_with_port_cgi[param_ports_payload0][switch.home_doorbell-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
@@ -50,7 +50,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_relay_1-entry]
+# name: test_switches_with_port_cgi[param_ports_payload0][switch.home_relay_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -87,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches_with_port_cgi[root.IOPort.I0.Configurable=yes\nroot.IOPort.I0.Direction=output\nroot.IOPort.I0.Output.Name=Doorbell\nroot.IOPort.I0.Output.Active=closed\nroot.IOPort.I1.Configurable=yes\nroot.IOPort.I1.Direction=output\nroot.IOPort.I1.Output.Name=\nroot.IOPort.I1.Output.Active=open\n][switch.home_relay_1-state]
+# name: test_switches_with_port_cgi[param_ports_payload0][switch.home_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',

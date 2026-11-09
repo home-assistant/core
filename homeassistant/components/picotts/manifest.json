@@ -6,5 +6,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/picotts",
   "integration_type": "service",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "requirements": ["py-nanotts==0.1.2"]
 }

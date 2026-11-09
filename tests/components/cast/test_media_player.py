@@ -20,6 +20,7 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
+from typing_extensions import Sentinel as sentinel
 import yarl
 
 from homeassistant.components import media_player, tts
@@ -67,7 +68,7 @@ FakeGroupUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e3")
 FAKE_HOST_SERVICE = pychromecast.discovery.HostServiceInfo("127.0.0.1", 8009)
 FAKE_MDNS_SERVICE = pychromecast.discovery.MDNSServiceInfo("the-service")
 
-UNDEFINED = object()
+UNDEFINED = sentinel("UNDEFINED")
 
 
 def get_fake_chromecast(info: ChromecastInfo):
