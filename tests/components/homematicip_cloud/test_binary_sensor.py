@@ -954,6 +954,38 @@ async def test_hmip_multi_contact_interface(
     assert ha_state.state == STATE_UNKNOWN
 
 
+async def test_hmip_door_lock_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the lock state of a door lock sensor."""
+    entity_id = "binary_sensor.turschloss_lock"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Türschloss"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", LockState.UNLOCKED, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", None, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
 async def test_hmip_binary_sensor_unknown_device_type(
     hass: HomeAssistant,
     default_mock_hap_factory: HomeFactory,
@@ -1144,6 +1176,8 @@ async def test_hmip_binary_sensor_unique_ids(
         "binary_sensor.temperatur_und_luftfeuchtigkeitssensor_aussen_battery": "3014F711AAAA000000000002_0_battery",
         "binary_sensor.thermostat_evo_battery": "3014F7110000000000000E70_0_battery",
         "binary_sensor.thermostat_schlafen_tal_battery": "3014F711000000000000AAA5_0_battery",
+        "binary_sensor.turschloss_battery": "3014F7110000000000000DLS_0_battery",
+        "binary_sensor.turschloss_lock": "3014F7110000000000000DLS_1_lock",
         "binary_sensor.vorzimmer_battery": "3014F7110000000000000007_0_battery",
         "binary_sensor.vorzimmer_door": "3014F7110000000000000007_1_shutter_contact",
         "binary_sensor.vorzimmer_sensors": "00000000-0000-0000-0000-000000000015_security",

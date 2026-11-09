@@ -3,20 +3,25 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_lutron_device": "Discovered device is not a Lutron device"
+      "not_lutron_device": "Discovered device is not a Lutron device",
+      "unique_id_mismatch": "The bridge at this address is not the bridge that was originally set up."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "flow_title": "{name} ({host})",
     "step": {
-      "import_failed": {
-        "description": "Couldn’t set up bridge (host: {host}) imported from configuration.yaml.",
-        "title": "Failed to import Caséta bridge configuration."
-      },
       "link": {
         "description": "To pair with {name} ({host}), after submitting this form, press the pairing button on your bridge or processor.",
         "title": "Pair with the bridge"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::lutron_caseta::config::step::user::data_description::host%]"
+        }
       },
       "user": {
         "data": {
@@ -90,6 +95,12 @@
     },
     "setup_timeout": {
       "message": "Timed out on {step} for {host}"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed, but Home Assistant couldn’t connect to a bridge while importing your YAML configuration. Make sure the bridge is reachable and the certificate files are valid, then restart Home Assistant to try the import again, or remove the `{domain}` configuration from your `configuration.yaml` file and set up the integration from the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
     }
   }
 }

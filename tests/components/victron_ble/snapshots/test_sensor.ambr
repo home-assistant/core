@@ -57,7 +57,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_charge_state-entry]
+# name: test_sensors[ac_charger][sensor.smart_charger_charge_stage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -91,7 +91,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_charger_charge_state',
+    'entity_id': 'sensor.smart_charger_charge_stage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,12 +99,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Charge state',
+    'object_id_base': 'Charge stage',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Charge state',
+    'original_name': 'Charge stage',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -114,11 +114,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_charge_state-state]
+# name: test_sensors[ac_charger][sensor.smart_charger_charge_stage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Charger Charge state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Charger Charge stage',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low_power',
@@ -140,7 +140,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_charge_state',
+    'entity_id': 'sensor.smart_charger_charge_stage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1523,7 +1523,7 @@
     'state': '12.22',
   })
 # ---
-# name: test_sensors[dc_dc_converter][sensor.dc_dc_converter_charge_state-entry]
+# name: test_sensors[dc_dc_converter][sensor.dc_dc_converter_charge_stage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1557,7 +1557,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dc_dc_converter_charge_state',
+    'entity_id': 'sensor.dc_dc_converter_charge_stage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1565,12 +1565,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Charge state',
+    'object_id_base': 'Charge stage',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Charge state',
+    'original_name': 'Charge stage',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1580,11 +1580,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[dc_dc_converter][sensor.dc_dc_converter_charge_state-state]
+# name: test_sensors[dc_dc_converter][sensor.dc_dc_converter_charge_stage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DC/DC Converter Charge state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DC/DC Converter Charge stage',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low_power',
@@ -1606,7 +1606,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dc_dc_converter_charge_state',
+    'entity_id': 'sensor.dc_dc_converter_charge_stage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2934,7 +2934,7 @@
     'state': '-60',
   })
 # ---
-# name: test_sensors[orion_xs][sensor.orion_xs_charge_state-entry]
+# name: test_sensors[orion_xs][sensor.orion_xs_charge_stage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2968,7 +2968,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.orion_xs_charge_state',
+    'entity_id': 'sensor.orion_xs_charge_stage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2976,12 +2976,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Charge state',
+    'object_id_base': 'Charge stage',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Charge state',
+    'original_name': 'Charge stage',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2991,11 +2991,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[orion_xs][sensor.orion_xs_charge_state-state]
+# name: test_sensors[orion_xs][sensor.orion_xs_charge_stage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Orion XS Charge state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Orion XS Charge stage',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low_power',
@@ -3017,7 +3017,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.orion_xs_charge_state',
+    'entity_id': 'sensor.orion_xs_charge_stage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5005,7 +5005,7 @@
     'state': '13.88',
   })
 # ---
-# name: test_sensors[solar_charger][sensor.solar_charger_charge_state-entry]
+# name: test_sensors[solar_charger][sensor.solar_charger_charge_stage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -5039,7 +5039,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.solar_charger_charge_state',
+    'entity_id': 'sensor.solar_charger_charge_stage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5047,12 +5047,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Charge state',
+    'object_id_base': 'Charge stage',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Charge state',
+    'original_name': 'Charge stage',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5062,11 +5062,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[solar_charger][sensor.solar_charger_charge_state-state]
+# name: test_sensors[solar_charger][sensor.solar_charger_charge_stage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Solar Charger Charge state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Solar Charger Charge stage',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low_power',
@@ -5088,7 +5088,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solar_charger_charge_state',
+    'entity_id': 'sensor.solar_charger_charge_stage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -184,6 +184,18 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
             value_fn=lambda channel: channel.waterAlarmActive,
         ),
     ),
+    FunctionalChannelType.DOOR_LOCK_SENSOR_CHANNEL: (
+        HmipBinarySensorDescription(
+            key="lock",
+            device_class=BinarySensorDeviceClass.LOCK,
+            value_fn=lambda channel: (
+                None
+                if channel.lockState is None
+                else channel.lockState != LockState.LOCKED
+            ),
+            unique_id_channel=1,
+        ),
+    ),
 }
 
 

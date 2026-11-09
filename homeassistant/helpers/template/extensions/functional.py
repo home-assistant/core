@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import jinja2
 from jinja2 import pass_context
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import ServiceResponse
@@ -17,7 +18,7 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class FunctionalExtension(BaseTemplateExtension):

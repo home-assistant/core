@@ -170,7 +170,7 @@ async def async_create_fix_flow(
         and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
     ):
         api = _async_get_or_create_api_client(hass, entry)
-        if issue_id == "cloud_user":
+        if issue_id == f"cloud_user_{entry.entry_id}":
             return CloudAccountRepair(api=api, entry=entry)
         if issue_id.startswith("rtsp_disabled_"):
             return RTSPRepair(

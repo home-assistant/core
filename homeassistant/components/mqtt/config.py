@@ -17,11 +17,16 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_RETAIN,
 )
-from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
+from .util import (
+    valid_encoding,
+    valid_publish_topic,
+    valid_qos_schema,
+    valid_subscribe_topic,
+)
 
 SCHEMA_BASE = {
     probatio.Optional(CONF_QOS, default=DEFAULT_QOS): valid_qos_schema,
-    probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+    probatio.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): valid_encoding,
     probatio.Optional(CONF_GROUP): probatio.All(probatio.EnsureList(), [cv.string]),
 }
 

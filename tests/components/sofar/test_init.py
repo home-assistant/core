@@ -13,6 +13,7 @@ from modbus_connection import (
     ModbusSerialParams,
     ModbusTcpParams,
     ModbusTimeoutError,
+    ServerDeviceBusyError,
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
@@ -23,15 +24,19 @@ from pytest_homeassistant.common import (
     mock_restore_cache_with_extra_data,
 )
 from pytest_homeassistant.typing import WebSocketGenerator
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
     DOMAIN,
-    HAS_FAULT_LOG,
-    LAST_HANDLED_FAULT,
+    FAULT_LOG,
+    PACKS_SCAN_INTERVAL,
     SCAN_INTERVAL,
+    SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
 )
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
@@ -53,8 +58,10 @@ from . import (
     MOCK_SW_VERSION,
     MOCK_TCP_INPUT,
     MOCK_UNRECOGNIZED_SERIAL,
+    ONLINE_GROUPS_REGISTER,
     declare_pv_in_masks,
     deny_meter_energy,
+    seed_battery_tower,
     seed_hybrid_inverter,
     seed_pv_inverter,
     serve_meter_energy,
@@ -295,35 +302,154 @@ async def test_setup_keeps_meter_sensors_a_model_serves(
     assert hass.states.get(entity_id).state == "1000.0"
 
 
-async def test_setup_removes_meter_sensors_a_model_denies(
+@pytest.mark.parametrize(
+    ("platform", "key"),
+    [
+        pytest.param(SENSOR_DOMAIN, "load_consumption_total", id="denied_meter"),
+        pytest.param(SENSOR_DOMAIN, "offgrid_frequency", id="offgrid_sensor"),
+        pytest.param(SELECT_DOMAIN, "charger_use_mode", id="charger_select"),
+        pytest.param(SELECT_DOMAIN, "eps_control", id="eps_select"),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_removes_entities_the_inverter_does_not_serve(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    platform: str,
+    key: str,
 ) -> None:
-    """Test an upgrade drops meter sensors the model turns out to deny."""
+    """Test an upgrade drops entities the PV model turns out not to serve."""
     mock_config_entry.add_to_hass(hass)
     deny_meter_energy(mock_connection.for_unit(1))
-    stale = [
-        entity_registry.async_get_or_create(
-            SENSOR_DOMAIN,
-            DOMAIN,
-            f"{MOCK_SERIAL}_{key}",
-            config_entry=mock_config_entry,
-        ).entity_id
-        for key in METER_ENERGY_KEYS
-    ]
+    entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{MOCK_SERIAL}_{key}", config_entry=mock_config_entry
+    )
 
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert all(entity_registry.async_get(entity_id) is None for entity_id in stale)
+    assert (
+        entity_registry.async_get_entity_id(platform, DOMAIN, f"{MOCK_SERIAL}_{key}")
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_grid_frequency"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_keeps_what_only_setup_finds(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a silent restart without a stored set keeps the EPS select."""
+    seed_hybrid_inverter(mock_connection.for_unit(1))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    # The serial's type has no EPS; only the setup probe adds it.
+    entity_registry.async_get_or_create(
+        SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_eps_control", config_entry=entry
+    )
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        entity_registry.async_get_entity_id(
+            SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_eps_control"
+        )
+        is not None
+    )
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        pytest.param({}, id="first_setup"),
+        pytest.param({SERVED_COMPONENTS: ["energy"]}, id="stored_without_log"),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_fault_log_timing_out_at_setup_keeps_its_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    stored: dict[str, Any],
+) -> None:
+    """Test a fault log probe timing out at setup deletes nothing."""
+    mock_connection.for_unit(1).fail_read(
+        FAULT_LOG_REGISTER, ModbusTimeoutError("stuck")
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_ENTRY_DATA, **stored},
+        title=MOCK_MODEL,
+    )
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault", config_entry=entry
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert FAULT_LOG not in entry.data[SERVED_COMPONENTS]
+    assert (
+        entity_registry.async_get_entity_id(
+            EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_busy_charge_cutoff_mask_keeps_its_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a busy answer on the battery config mask retries setup."""
+    unit = mock_connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    unit.fail_read(0x1040, ServerDeviceBusyError())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_HYBRID_SERIAL}_bat_config_charge_cutoff_soc",
+        config_entry=entry,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_bat_config_charge_cutoff_soc"
+        )
+        is not None
+    )
 
 
 async def test_setup_keeps_meter_sensors_when_no_mask_is_published(
@@ -400,7 +526,7 @@ async def test_setup_fails_when_the_masks_decline(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_setup_while_asleep_reloads_once_the_inverter_answers(
+async def test_setup_while_asleep_fills_in_without_a_reload(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
@@ -408,8 +534,9 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a silent inverter loads unavailable, then sets up in full."""
+    """Test a silent inverter loads unavailable and fills in without a reload."""
     mock_config_entry.add_to_hass(hass)
     mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -422,10 +549,13 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     assert "inverter is not answering" in caplog.text
 
     mock_connection.for_unit(1).fail_requests(None)
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
+    mock_reload.assert_not_called()
+    assert mock_config_entry.data[SERVED_COMPONENTS] == snapshot
     assert mock_config_entry.state is ConfigEntryState.LOADED
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
@@ -437,6 +567,88 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     )
     assert device is not None
     assert device.sw_version == MOCK_SW_VERSION
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_reloads_once_for_what_the_inverter_serves(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a dawn that times out the reload's setup reloads only once."""
+    mock_config_entry.add_to_hass(hass)
+    unit = mock_connection.for_unit(1)
+    deny_meter_energy(unit)
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    schedule_reload = hass.config_entries.async_schedule_reload
+
+    def _fall_silent_and_reload(entry_id: str) -> None:
+        unit.fail_requests(ModbusTimeoutError("waking"))
+        schedule_reload(entry_id)
+
+    unit.fail_requests(None)
+    with patch.object(
+        hass.config_entries,
+        "async_schedule_reload",
+        side_effect=_fall_silent_and_reload,
+    ) as mock_reload:
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        unit.fail_requests(None)
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_reload.call_count == 1
+    assert mock_config_entry.data[SERVED_COMPONENTS] == snapshot
+    assert not any(
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}"
+        )
+        for key in METER_ENERGY_KEYS
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_builds_from_the_stored_components(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a silent restart keeps no sensors an earlier setup ruled out."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_ENTRY_DATA, SERVED_COMPONENTS: ["energy"]},
+        title=MOCK_MODEL,
+    )
+    entry.add_to_hass(hass)
+    for key in METER_ENERGY_KEYS:
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}", config_entry=entry
+        )
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all()) == 2
+    assert not any(
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}"
+        )
+        for key in METER_ENERGY_KEYS
+    )
 
 
 @pytest.mark.usefixtures("mock_get_unit")
@@ -465,6 +677,56 @@ async def test_setup_takes_the_type_once_the_masks_answer(
 
     assert entry.state is ConfigEntryState.LOADED
     assert len(hass.states.async_all()) == 38
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "interval", "state"),
+    [
+        pytest.param(
+            SENSOR_DOMAIN, "grid_frequency", SCAN_INTERVAL, "50.0", id="reading"
+        ),
+        pytest.param(
+            BUTTON_DOMAIN,
+            "rtc_sync",
+            SETTINGS_SCAN_INTERVAL,
+            STATE_UNKNOWN,
+            id="button",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_fills_in_a_mask_typed_inverter(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    key: str,
+    interval: int,
+    state: str,
+) -> None:
+    """Test a silent restart fills in what only the masks' type allows."""
+    entry = _unrecognized_entry(mock_connection)
+    unit = mock_connection.for_unit(1)
+    declare_pv_in_masks(unit)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    unit.fail_requests(None)
+    freezer.tick(timedelta(seconds=interval))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        platform, DOMAIN, f"{MOCK_UNRECOGNIZED_SERIAL}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == state
 
 
 @pytest.mark.usefixtures("mock_get_unit")
@@ -809,12 +1071,12 @@ async def test_pv_aggregate_stays_on_the_inverter(
     assert entity_registry.async_get(entity_id).device_id == inverter.id
 
 
-async def test_only_wired_battery_packs_become_devices(
+async def test_only_wired_battery_strings_become_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test packs are counted by what answers, not by the register map."""
+    """Test strings are counted by what answers, not by the register map."""
     connection = MockModbusConnection()
     seed_hybrid_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
@@ -841,7 +1103,7 @@ async def test_only_wired_battery_packs_become_devices(
         if device.via_device_id == inverter.id and device.name.startswith("Battery")
     }
 
-    # The seed wires packs 1 and 3; the map allows 8, so the rest must not.
+    # The seed wires strings 1 and 3; the map allows 8, the rest must not.
     assert battery_names == {"Battery 1", "Battery 3"}
     assert (
         entity_registry.async_get_entity_id(
@@ -854,7 +1116,7 @@ async def test_only_wired_battery_packs_become_devices(
         (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
     )
     assert inverter is not None
-    # A combined total is the inverter's, not any one pack's.
+    # A combined total is the inverter's, not any one string's.
     total_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_capacity_total"
     )
@@ -901,16 +1163,16 @@ async def test_total_survives_a_torn_first_poll_after_reload(
     assert hass.states.get(entity_id).state == "1000.0"
 
 
-async def test_battery_pack_appears_once_its_block_answers(
+async def test_battery_string_appears_once_its_block_answers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a pack whose block failed at setup is added when it recovers."""
+    """Test a string whose block failed at setup is added when it recovers."""
     connection = MockModbusConnection()
     unit = connection.for_unit(1)
     seed_hybrid_inverter(unit)
-    # Inside the battery_3_8 block, so pack 3 cannot be seen at setup.
+    # Inside the battery_3_8 block, so string 3 cannot be seen at setup.
     unit.fail_read(BATTERY_3_VOLTAGE_REGISTER, ModbusError("block busy"))
 
     entry = MockConfigEntry(
@@ -935,7 +1197,7 @@ async def test_battery_pack_appears_once_its_block_answers(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # No reload: the coordinator's own listener notices the pack answering.
+    # No reload: the coordinator's own listener sees the string answering.
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "51.5"
@@ -966,13 +1228,13 @@ async def _setup_hybrid(
     [
         pytest.param({(DOMAIN, MOCK_HYBRID_SERIAL)}, False, id="inverter"),
         pytest.param(
-            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_1")}, False, id="wired_pack"
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_1")}, False, id="wired_string"
         ),
         pytest.param(
             {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_pv_string_2")}, False, id="pv_string"
         ),
         pytest.param(
-            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_9")}, True, id="pack_off_the_map"
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_9")}, True, id="string_off_the_map"
         ),
         pytest.param(
             {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_x")}, True, id="unparseable_part"
@@ -988,7 +1250,7 @@ async def _setup_hybrid(
         pytest.param({("other", MOCK_HYBRID_SERIAL)}, True, id="foreign_identifier"),
     ],
 )
-async def test_only_absent_battery_packs_can_be_removed(
+async def test_only_absent_battery_strings_can_be_removed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
@@ -1011,12 +1273,126 @@ async def test_only_absent_battery_packs_can_be_removed(
     assert (device_registry.async_get(device.id) is None) is removable
 
 
-async def test_an_absent_pack_is_removable_while_the_entry_is_unloaded(
+async def test_bts_packs_become_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test each pack of a BTS tower gets its own device on the inverter."""
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    seed_battery_tower(connection.for_unit(1), groups=3)
+    entry = await _setup_hybrid(hass, connection)
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
+    )
+    assert inverter is not None
+    assert {
+        (device.name, device.serial_number, device.model, device.sw_version)
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        if device.via_device_id == inverter.id
+        and device.name.startswith("Battery pack")
+    } == {
+        ("Battery pack 1.1", "PACK0", "BTS 5K", "10033"),
+        ("Battery pack 2.1", "PACK1", "BTS 5K", "10033"),
+        ("Battery pack 3.1", "PACK2", "BTS 5K", "10033"),
+    }
+    assert "battery_packs" in entry.data[SERVED_COMPONENTS]
+
+
+async def test_hybrid_without_a_tower_gets_no_packs(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a tower-typed hybrid running another battery gets no packs."""
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    entry = await _setup_hybrid(hass, connection)
+
+    assert not any(
+        device.name.startswith("Battery pack")
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    )
+    assert "battery_packs" not in entry.data[SERVED_COMPONENTS]
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_a_known_tower_survives_a_silent_probe(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a tower an earlier setup saw is kept when its probe times out."""
+    unit = mock_connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    seed_battery_tower(unit, groups=3)
+    unit.fail_read(0x9007, ModbusTimeoutError("tower silent"))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data={**MOCK_ENTRY_DATA, SERVED_COMPONENTS: ["battery_packs", "grid"]},
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "battery_packs" in entry.data[SERVED_COMPONENTS]
+    # The silent packs must not read as a readings failure.
+    assert f"Error fetching {MOCK_HYBRID_MODEL} battery packs data" in caplog.text
+
+
+async def test_only_silent_bts_packs_can_be_removed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test only a silent pack's device can go, and it returns on answering."""
+    assert await async_setup_component(hass, "config", {})
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    seed_battery_tower(unit, groups=3)
+    entry = await _setup_hybrid(hass, connection)
+    pack = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"), entry.entry_id
+    )
+    assert pack is not None
+    client = await hass_ws_client(hass)
+
+    assert (await client.remove_device(pack.id))["success"] is False
+
+    # Group 0 drops out of the tower's online bitmap.
+    unit.holding[ONLINE_GROUPS_REGISTER] = 0b110
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (await client.remove_device(pack.id))["success"] is True
+    assert device_registry.async_get(pack.id) is None
+
+    unit.holding[ONLINE_GROUPS_REGISTER] = 0b111
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"), entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_an_absent_string_is_removable_while_the_entry_is_unloaded(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a pack whose liveness cannot be checked is taken on trust."""
+    """Test a string whose liveness cannot be checked is taken on trust."""
     assert await async_setup_component(hass, "config", {})
     connection = MockModbusConnection()
     seed_hybrid_inverter(connection.for_unit(1))
@@ -1035,14 +1411,14 @@ async def test_an_absent_pack_is_removable_while_the_entry_is_unloaded(
     assert device_registry.async_get(device.id) is None
 
 
-async def test_a_removed_pack_comes_back_without_a_restart(
+async def test_a_removed_string_comes_back_without_a_restart(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test removing a pack does not bar it from being added again."""
+    """Test removing a string does not bar it from being added again."""
     assert await async_setup_component(hass, "config", {})
     connection = MockModbusConnection()
     unit = connection.for_unit(1)
@@ -1075,23 +1451,15 @@ async def test_a_removed_pack_comes_back_without_a_restart(
 
 
 @pytest.mark.parametrize(
-    ("data", "expected"),
+    "data",
     [
-        pytest.param(
-            MOCK_TCP_INPUT,
-            {**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
-            id="legacy_tcp",
-        ),
-        pytest.param(
-            MOCK_SERIAL_ENTRY_DATA,
-            {**MOCK_SERIAL_ENTRY_DATA, HAS_FAULT_LOG: True, LAST_HANDLED_FAULT: None},
-            id="reconfigured_while_disabled",
-        ),
+        pytest.param(MOCK_TCP_INPUT, id="legacy_tcp"),
+        pytest.param(MOCK_SERIAL_ENTRY_DATA, id="reconfigured_while_disabled"),
     ],
 )
 @pytest.mark.usefixtures("mock_get_unit")
 async def test_migrate_entry_adds_the_connection_type(
-    hass: HomeAssistant, data: dict[str, Any], expected: dict[str, Any]
+    hass: HomeAssistant, snapshot: SnapshotAssertion, data: dict[str, Any]
 ) -> None:
     """Test migration marks legacy entries as TCP and keeps a set type."""
     entry = MockConfigEntry(
@@ -1107,15 +1475,15 @@ async def test_migrate_entry_adds_the_connection_type(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.minor_version == 2
-    assert entry.data == expected
+    assert entry.data == snapshot
 
 
 @pytest.mark.parametrize(
-    ("stored", "log_error", "expected_stored", "has_event"),
+    ("stored", "log_error", "log_stored", "has_event"),
     [
         pytest.param({}, None, True, True, id="first_good_setup_stores_it"),
         pytest.param(
-            {HAS_FAULT_LOG: True},
+            {SERVED_COMPONENTS: [FAULT_LOG]},
             ModbusTimeoutError("stuck"),
             True,
             True,
@@ -1124,9 +1492,16 @@ async def test_migrate_entry_adds_the_connection_type(
         pytest.param(
             {},
             ModbusTimeoutError("stuck"),
-            None,
+            False,
             False,
             id="unknown_log_timing_out_is_not_stored",
+        ),
+        pytest.param(
+            {"has_fault_log": True},
+            ModbusTimeoutError("stuck"),
+            False,
+            False,
+            id="beta_flag_alone_probes_again",
         ),
     ],
 )
@@ -1137,7 +1512,7 @@ async def test_setup_remembers_the_fault_log(
     mock_connection: MockModbusConnection,
     stored: dict[str, Any],
     log_error: ModbusError | None,
-    expected_stored: bool | None,
+    log_stored: bool,
     has_event: bool,
 ) -> None:
     """Test a fault log once seen keeps its event through a failed read."""
@@ -1153,7 +1528,7 @@ async def test_setup_remembers_the_fault_log(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data.get(HAS_FAULT_LOG) is expected_stored
+    assert (FAULT_LOG in entry.data[SERVED_COMPONENTS]) is log_stored
     assert (
         entity_registry.async_get_entity_id(
             EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault"

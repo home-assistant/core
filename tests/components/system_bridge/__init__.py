@@ -5,6 +5,7 @@ from ipaddress import ip_address
 from typing import Any
 
 from pytest_homeassistant.common import MockConfigEntry
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
@@ -95,10 +96,12 @@ async def setup_integration(
 async def mock_data_listener(
     callback: Callable[[str, Any], Awaitable[None]] | None = None,
     _: bool = False,
+    power_state_callback: Callable[[Any], Awaitable[None]] | None = None,
 ):
     """Mock websocket data listener."""
     if callback is not None:
         # Simulate data received from the websocket
+        await callback(Module.AUDIO, FIXTURE_AUDIO)
         await callback(Module.BATTERY, FIXTURE_BATTERY)
         await callback(Module.CPU, FIXTURE_CPU)
         await callback(Module.DISKS, FIXTURE_DISKS)

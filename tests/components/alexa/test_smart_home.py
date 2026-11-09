@@ -5677,8 +5677,8 @@ async def test_camera_discovery(hass: HomeAssistant, mock_stream: None) -> None:
 
     hass.config.components.add("cloud")
     with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://example.nabu.casa",
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://example.nabu.casa"],
     ):
         appliance = await discovery_test(device, hass)
 
@@ -5707,8 +5707,8 @@ async def test_camera_discovery_without_stream(hass: HomeAssistant) -> None:
 
     hass.config.components.add("cloud")
     with patch(
-        "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://example.nabu.casa",
+        "homeassistant.components.cloud.async_remote_ui_urls",
+        return_value=["https://example.nabu.casa"],
     ):
         appliance = await discovery_test(device, hass)
         # assert Alexa.CameraStreamController is not yielded.

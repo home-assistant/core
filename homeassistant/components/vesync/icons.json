@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "water_lacks": {
+        "default": "mdi:water-alert"
+      },
+      "water_tank_lifted": {
+        "default": "mdi:cup-water"
+      }
+    },
     "button": {
       "reset_filter": {
         "default": "mdi:air-filter"
@@ -19,6 +27,28 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "mist_level": {
+        "default": "mdi:water-percent"
+      },
+      "warm_mist_level": {
+        "default": "mdi:heat-wave"
+      }
+    },
+    "switch": {
+      "auto_off_config": {
+        "default": "mdi:timer-off"
+      },
+      "child_lock": {
+        "default": "mdi:lock"
+      },
+      "display": {
+        "default": "mdi:monitor"
+      },
+      "drying_mode_power_off": {
+        "default": "mdi:weather-windy"
       }
     }
   },

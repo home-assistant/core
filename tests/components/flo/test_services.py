@@ -7,15 +7,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.flo.const import DOMAIN
-from homeassistant.components.flo.services import (
-    ATTR_REVERT_TO_MODE,
-    ATTR_SLEEP_MINUTES,
-    SERVICE_RUN_HEALTH_TEST,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_HOME_MODE,
-    SERVICE_SET_SLEEP_MODE,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.flo.services import FloService, FloServiceArgument
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 SWITCH_ENTITY_ID = "switch.smart_water_shutoff_shutoff_valve"
@@ -36,8 +29,8 @@ async def test_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RUN_HEALTH_TEST,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        FloService.RUN_HEALTH_TEST,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -45,8 +38,8 @@ async def test_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_AWAY_MODE,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        FloService.SET_AWAY_MODE,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -54,8 +47,8 @@ async def test_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HOME_MODE,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        FloService.SET_HOME_MODE,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -63,11 +56,11 @@ async def test_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SLEEP_MODE,
+        FloService.SET_SLEEP_MODE,
         {
-            ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
-            ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
-            ATTR_SLEEP_MINUTES: 120,
+            CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID,
+            FloServiceArgument.REVERT_TO_MODE: SYSTEM_MODE_HOME,
+            FloServiceArgument.SLEEP_MINUTES: 120,
         },
         blocking=True,
     )
@@ -77,11 +70,11 @@ async def test_services(
     # test calling with a string value to ensure it is converted to int
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SLEEP_MODE,
+        FloService.SET_SLEEP_MODE,
         {
-            ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
-            ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
-            ATTR_SLEEP_MINUTES: "120",
+            CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID,
+            FloServiceArgument.REVERT_TO_MODE: SYSTEM_MODE_HOME,
+            FloServiceArgument.SLEEP_MINUTES: "120",
         },
         blocking=True,
     )
@@ -92,11 +85,11 @@ async def test_services(
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SLEEP_MODE,
+            FloService.SET_SLEEP_MODE,
             {
-                ATTR_ENTITY_ID: SWITCH_ENTITY_ID,
-                ATTR_REVERT_TO_MODE: SYSTEM_MODE_HOME,
-                ATTR_SLEEP_MINUTES: "test",
+                CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID,
+                FloServiceArgument.REVERT_TO_MODE: SYSTEM_MODE_HOME,
+                FloServiceArgument.SLEEP_MINUTES: "test",
             },
             blocking=True,
         )

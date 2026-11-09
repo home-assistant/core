@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = {
     "helper": [
+        "compensation",
         "derivative",
         "filter",
         "generic_hygrostat",
@@ -155,7 +156,7 @@ FLOWS = {
         "cookidoo",
         "coolmaster",
         "cpuspeed",
-        "crownstone",
+        "croma_infrared",
         "cync",
         "daikin",
         "data_grand_lyon",
@@ -195,6 +196,7 @@ FLOWS = {
         "dwd_weather_warnings",
         "dynalite",
         "dyson_infrared",
+        "e3dc",
         "eafm",
         "earn_e_p1",
         "easyenergy",
@@ -252,7 +254,6 @@ FLOWS = {
         "firefly_iii",
         "fireservicerota",
         "fish_audio",
-        "fitbit",
         "fivem",
         "fjaraskupan",
         "flexit",

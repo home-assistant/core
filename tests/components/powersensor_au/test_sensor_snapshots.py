@@ -29,7 +29,7 @@ UNASSIGNED_MAC = "0f0e0d0c0b0a"
 STARTTIME = 1700000000
 RESETTIME = 1690000000
 
-Fire = Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
+type Fire = Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
 
 
 async def _discover_sensor(fire: Fire, mac: str, role: str) -> None:

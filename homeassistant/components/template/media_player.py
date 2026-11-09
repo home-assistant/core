@@ -43,6 +43,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
@@ -55,7 +56,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -96,7 +97,7 @@ CONF_SOURCE_LIST = "source_list"
 CONF_VOLUME_LEVEL = "volume_level"
 CONF_VOLUME_UP_AND_DOWN = "volume_up_and_down"
 
-DEFAULT_NAME = "Template Media Player"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.MEDIA_PLAYER]
 
 SCRIPT_FIELDS = (
     SERVICE_CLEAR_PLAYLIST,
@@ -143,9 +144,6 @@ RESTORED_MEDIA_TEMPLATES = (
     (CONF_MEDIA_POSITION, "_attr_media_position"),
     (CONF_MEDIA_TRACK, "_attr_media_track"),
 )
-
-# Deprecated states must not be produced by new entities.
-DEPRECATED_STATES = (MediaPlayerState("standby"),)
 
 MEDIA_PLAYER_COMMON_SCHEMA = probatio.Schema(
     {
@@ -338,7 +336,6 @@ class AbstractTemplateMediaPlayer(
                 MediaPlayerState,
                 MediaPlayerState.ON,
                 MediaPlayerState.OFF,
-                deprecated_enums=DEPRECATED_STATES,
             ),
             self._update_player_state,
         )
@@ -640,10 +637,7 @@ class AbstractTemplateMediaPlayer(
     @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
-        if (
-            last_state.state in MediaPlayerState
-            and last_state.state not in DEPRECATED_STATES
-        ):
+        if last_state.state in MediaPlayerState:
             self._attr_state = MediaPlayerState(last_state.state)
             return True
 

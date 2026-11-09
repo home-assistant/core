@@ -1,5 +1,6 @@
 """Constants for the ntfy integration."""
 
+from enum import StrEnum
 from typing import Final
 
 DOMAIN = "ntfy"
@@ -15,3 +16,31 @@ SECTION_FILTER = "filter"
 NTFY_EVENT = "ntfy_event"
 
 SUBENTRY_TYPE_TOPIC = "topic"
+
+
+class NtfyService(StrEnum):
+    """Store keys for ntfy services."""
+
+    PUBLISH = "publish"
+    CLEAR = "clear"
+    DELETE = "delete"
+
+
+class NtfyServiceArgument(StrEnum):
+    """Store keys for ntfy service arguments."""
+
+    TITLE = "title"
+    MESSAGE = "message"
+    MARKDOWN = "markdown"
+    TAGS = "tags"
+    PRIORITY = "priority"
+    CLICK = "click"
+    DELAY = "delay"
+    ATTACH = "attach"
+    ATTACH_FILE = "attach_file"
+    FILENAME = "filename"
+    EMAIL = "email"
+    CALL = "call"
+    ICON = "icon"
+    ACTIONS = "actions"
+    SEQUENCE_ID = "sequence_id"

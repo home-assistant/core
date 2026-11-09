@@ -4,6 +4,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@marciogranzotto"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/nightscout",
   "integration_type": "service",
   "iot_class": "cloud_polling",

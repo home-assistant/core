@@ -98,7 +98,10 @@ class LIFXEntity(CoordinatorEntity[LIFXUpdateCoordinator]):
     async def async_refresh_before_merge(self) -> None:
         """Read what a partial write is merged over, or refuse to write it."""
         await self.coordinator.async_refresh()
-        if not self.coordinator.last_update_success:
+        if not (
+            self.coordinator.last_update_success
+            and self.coordinator.last_read_succeeded
+        ):
             # The coordinator keeps the state it last read, which is what the
             # write would be merged over and would then be written back
             raise HomeAssistantError(
