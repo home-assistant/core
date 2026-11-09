@@ -3,20 +3,23 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import replace
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
 from systembridgeconnector.models.modules import ModulesData
+from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 
 from homeassistant import config_entries
 from homeassistant.components.system_bridge.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -724,13 +727,20 @@ async def test_zeroconf_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("10.0.0.2", id="host_changed"),
+        pytest.param(FIXTURE_USER_INPUT[CONF_HOST], id="host_unchanged"),
+    ],
+)
 async def test_zeroconf_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, host: str
 ) -> None:
     """Test zeroconf aborts and updates the host of a configured device."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_HOST: "10.0.0.2"}
+        mock_config_entry, data={**mock_config_entry.data, CONF_HOST: host}
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -742,6 +752,97 @@ async def test_zeroconf_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == FIXTURE_USER_INPUT[CONF_HOST]
+
+
+async def test_zeroconf_reconnects_loaded_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test zeroconf reconnects a loaded entry once its host is back."""
+    power_state_callback = mock_websocket_client.listen.call_args.kwargs[
+        "power_state_callback"
+    ]
+    await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_zeroconf_resets_reconnect_backoff(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test zeroconf reconnects at once and restarts the backoff."""
+    register = mock_websocket_client.register_data_listener
+    register.side_effect = ConnectionErrorException
+    mock_websocket_client.connect.side_effect = ConnectionErrorException
+
+    for wait in (30, 60, 120):
+        freezer.tick(timedelta(seconds=wait))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    calls = register.await_count
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF,
+    )
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 1
+
+    # The failed reconnect waits 60 seconds rather than the 2 minute cap
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 2
+
+
+async def test_zeroconf_host_changed_reloads_loaded_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test a changed host reloads a loaded entry rather than refreshing it."""
+    register = mock_websocket_client.register_data_listener
+    calls = register.await_count
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=replace(
+                FIXTURE_ZEROCONF,
+                properties={**FIXTURE_ZEROCONF.properties, "ip": "192.168.1.20"},
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert init_integration.data[CONF_HOST] == "192.168.1.20"
+    mock_schedule_reload.assert_called_once_with(init_integration.entry_id)
+    assert register.await_count == calls
 
 
 async def test_zeroconf_bad_zeroconf_info(hass: HomeAssistant) -> None:

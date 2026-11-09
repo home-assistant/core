@@ -23,7 +23,6 @@ from pytest_unordered import unordered
 
 from homeassistant import core as ha
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     EVENT_STATE_REPORTED,
     MATCH_ALL,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CoreState,
@@ -1603,7 +1603,9 @@ def test_state_name_if_no_friendly_name_attr() -> None:
 def test_state_name_if_friendly_name_attr() -> None:
     """Test if there is a friendly name."""
     name = "Some Unique Name"
-    state = ha.State("domain.hello_world", "world", {ATTR_FRIENDLY_NAME: name})
+    state = ha.State(
+        "domain.hello_world", "world", {EntityStateAttribute.FRIENDLY_NAME: name}
+    )
     assert state.name == name
 
 

@@ -1,4 +1,40 @@
 # serializer version: 1
+# name: test_forecast_service[daily]
+  dict({
+    'weather.la_clusaz': dict({
+      'forecast': list([
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-01-27T00:00:00+00:00',
+          'humidity': 90,
+          'precipitation': 1.3,
+          'temperature': 10.4,
+          'templow': 6.9,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[hourly]
+  dict({
+    'weather.la_clusaz': dict({
+      'forecast': list([
+        dict({
+          'apparent_temperature': 5.4,
+          'condition': 'partlycloudy',
+          'datetime': '2025-01-27T15:00:00+00:00',
+          'humidity': 75,
+          'precipitation': 0.0,
+          'temperature': 9.1,
+          'uv_index': 1,
+          'wind_bearing': 200,
+          'wind_gust_speed': 64.8,
+          'wind_speed': 28.8,
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_weather[weather.la_clusaz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
