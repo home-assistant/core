@@ -858,7 +858,7 @@ class PrometheusMetrics:
         ).set(value)
 
     def _handle_climate(self, state: State) -> None:
-        unit = state.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT]
+        unit = state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         self._temperature_metric(
             state,
             ClimateEntityStateAttribute.TARGET_TEMPERATURE,
@@ -944,7 +944,7 @@ class PrometheusMetrics:
         )
 
     def _handle_water_heater(self, state: State) -> None:
-        unit = state.attributes[WaterHeaterStateAttribute.TEMPERATURE_UNIT]
+        unit = state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
         # Temperatures
         self._temperature_metric(
             state,

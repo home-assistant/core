@@ -2183,7 +2183,7 @@ async def climate_fixture(
         ATTR_TEMPERATURE: 20,
         ATTR_CURRENT_TEMPERATURE: 25,
         ATTR_HVAC_ACTION: climate.HVACAction.HEATING,
-        climate.ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
     }
     set_state_with_entry(
         hass, climate_1, climate.HVACAction.HEATING, climate_1_attributes
@@ -2210,7 +2210,7 @@ async def climate_fixture(
         ATTR_PRESET_MODES: ["away", "home", "sleep"],
         ATTR_FAN_MODE: "auto",
         ATTR_FAN_MODES: ["auto", "on"],
-        climate.ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
     }
     set_state_with_entry(
         hass, climate_2, climate.HVACAction.HEATING, climate_2_attributes
@@ -2230,7 +2230,7 @@ async def climate_fixture(
         ATTR_TEMPERATURE: 32,
         ATTR_CURRENT_TEMPERATURE: 77,
         ATTR_HVAC_ACTION: climate.HVACAction.OFF,
-        climate.ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
             UnitOfTemperature.FAHRENHEIT
         ),
     }
@@ -2321,7 +2321,7 @@ async def water_heater_fixture(
         WATER_HEATER_ATTR_OPERATION_MODE: "eco",
         WATER_HEATER_ATTR_OPERATION_LIST: ["eco", "performance"],
         WATER_HEATER_ATTR_AWAY_MODE: "on",
-        water_heater.WaterHeaterStateAttribute.TEMPERATURE_UNIT: (
+        water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: (
             UnitOfTemperature.CELSIUS
         ),
     }
@@ -2339,7 +2339,7 @@ async def water_heater_fixture(
     wh_2_attributes = {
         WATER_HEATER_ATTR_CURRENT_TEMPERATURE: 131,
         ATTR_TEMPERATURE: 140,
-        water_heater.WaterHeaterStateAttribute.TEMPERATURE_UNIT: (
+        water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: (
             UnitOfTemperature.FAHRENHEIT
         ),
     }
