@@ -24,7 +24,7 @@ from homeassistant.components.climate.condition import CONDITIONS
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
-    ClimateEntityStateAttribute,
+    ClimateEntityCapabilityAttribute,
     HVACAction,
     HVACMode,
 )
@@ -43,7 +43,7 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 _CLIMATE_UNIT_ATTRIBUTES = {
-    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
 }
 _HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _TEMPERATURE_THRESHOLD = {
@@ -440,7 +440,7 @@ async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) 
                 "state": HVACMode.AUTO,
                 "attributes": {
                     ATTR_TEMPERATURE: 80,
-                    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 },
             },
         ],
@@ -453,7 +453,7 @@ async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) 
                 "state": HVACMode.AUTO,
                 "attributes": {
                     ATTR_TEMPERATURE: 68,
-                    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 },
             },
         ],

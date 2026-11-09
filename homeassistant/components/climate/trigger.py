@@ -23,7 +23,13 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, ClimateEntityStateAttribute, HVACAction, HVACMode
+from .const import (
+    DOMAIN,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+    HVACAction,
+    HVACMode,
+)
 
 CONF_HVAC_MODE = "hvac_mode"
 
@@ -73,7 +79,7 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
     @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
-        return state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE_UNIT)
+        return state.attributes.get(ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT)
 
 
 class ClimateTargetTemperatureChangedTrigger(

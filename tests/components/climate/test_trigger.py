@@ -25,7 +25,7 @@ from pytest_homeassistant.components.common import (
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
-    ClimateEntityStateAttribute,
+    ClimateEntityCapabilityAttribute,
     HVACAction,
     HVACMode,
 )
@@ -48,7 +48,7 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 _CLIMATE_UNIT_ATTRIBUTES = {
-    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
 }
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _HUMIDITY_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
@@ -557,7 +557,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         HVACMode.AUTO,
         {
             ATTR_TEMPERATURE: 70,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -581,7 +581,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         HVACMode.AUTO,
         {
             ATTR_TEMPERATURE: 72,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -593,7 +593,7 @@ async def test_climate_target_temperature_trigger_temperature_unit(
         HVACMode.AUTO,
         {
             ATTR_TEMPERATURE: 80,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
