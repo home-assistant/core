@@ -53,6 +53,23 @@ class RainMachineSensorCompletionTimerDescription(
     uid: int
 
 
+@dataclass(frozen=True, kw_only=True)
+class RainMachineZoneWaterSenseSensorDescription(
+    SensorEntityDescription, RainMachineEntityDescription
+):
+    """Describe a zone water-sense measurement."""
+
+    uid: int
+    data_key: str
+
+
+ZONE_WATER_SENSE_MEASUREMENTS = (
+    ("area", "Area", "area"),
+    ("field_capacity", "Field capacity", "fieldCapacity"),
+    ("precipitation_rate", "Precipitation rate", "precipitationRate"),
+)
+
+
 SENSOR_DESCRIPTIONS = (
     RainMachineSensorDataDescription(
         key=TYPE_FLOW_SENSOR_CLICK_M3,
@@ -152,7 +169,9 @@ async def async_setup_entry(
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
     }
 
-    sensors: list[ProvisionSettingsSensor | TimeRemainingSensor] = [
+    sensors: list[
+        ProvisionSettingsSensor | TimeRemainingSensor | ZoneWaterSenseSensor
+    ] = [
         api_category_sensor_map[description.api_category](entry, data, description)
         for description in SENSOR_DESCRIPTIONS
         if (
@@ -196,6 +215,28 @@ async def async_setup_entry(
                 ),
             )
         )
+
+    for uid, zone in zone_coordinator.data.items():
+        water_sense = zone.get("waterSense", {})
+        for key, name, data_key in ZONE_WATER_SENSE_MEASUREMENTS:
+            if data_key not in water_sense:
+                continue
+            sensors.append(
+                ZoneWaterSenseSensor(
+                    entry,
+                    data,
+                    RainMachineZoneWaterSenseSensorDescription(
+                        key=f"zone_{uid}_{key}",
+                        name=f"{zone['name']} {name}",
+                        api_category=DATA_ZONES,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                        entity_registry_enabled_default=False,
+                        state_class=SensorStateClass.MEASUREMENT,
+                        uid=uid,
+                        data_key=data_key,
+                    ),
+                )
+            )
 
     async_add_entities(sensors)
 
@@ -338,3 +379,19 @@ class ZoneTimeRemainingSensor(TimeRemainingSensor):
         return cast(
             int, self.coordinator.data[self.entity_description.uid]["remaining"]
         )
+
+
+class ZoneWaterSenseSensor(RainMachineEntity, SensorEntity):
+    """Represent a RainMachine zone water-sense measurement."""
+
+    entity_description: RainMachineZoneWaterSenseSensorDescription
+
+    @callback
+    @override
+    def update_from_latest_data(self) -> None:
+        """Update the sensor from its zone coordinator."""
+        water_sense = self.coordinator.data[self.entity_description.uid].get(
+            "waterSense", {}
+        )
+        value = water_sense.get(self.entity_description.data_key)
+        self._attr_native_value = round(value, 2) if value is not None else None

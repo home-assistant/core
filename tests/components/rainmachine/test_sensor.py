@@ -33,6 +33,16 @@ async def test_sensors(
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
+    expected = {
+        "sensor.12345_landscaping_area": "92.9",
+        "sensor.12345_landscaping_field_capacity": "0.17",
+        "sensor.12345_landscaping_precipitation_rate": "25.4",
+    }
+    for entity_id, value in expected.items():
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == value
+
 
 async def test_device_info_hw_version_is_string(
     hass: HomeAssistant,
