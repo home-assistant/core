@@ -101,11 +101,14 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_pat_implementation(self) -> ConfigFlowResult:
         """Use a stored credential, or fall back to a personal access token."""
+        ledger = await async_get_app_ledger(self.hass)
+        redirect_uri = async_get_redirect_uri(self.hass)
         implementations = {
             key: impl
             for key, impl in self._implementations.items()
             if key != "cloud"
             and getattr(impl, "client_id", None) != HOME_ASSISTANT_CLOUD_CLIENT_ID
+            and not ledger.is_stale(key, redirect_uri)
         }
         if not implementations:
             return await self.async_step_pat()
@@ -296,6 +299,12 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             if (
                 getattr(self.flow_impl, "client_id", None)
                 == HOME_ASSISTANT_CLOUD_CLIENT_ID
+            ):
+                return await self.async_step_user()
+            ledger = await async_get_app_ledger(self.hass)
+            # The app's registered callback no longer matches after a URL change.
+            if ledger.is_stale(
+                self.flow_impl.domain, async_get_redirect_uri(self.hass)
             ):
                 return await self.async_step_user()
             return await self.async_step_auth()

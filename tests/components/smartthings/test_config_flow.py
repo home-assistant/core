@@ -44,6 +44,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 REDIRECT_URI = "https://example.com/auth/external/callback"
+OTHER_REDIRECT_URI = "https://other.example.com/auth/external/callback"
 
 
 @pytest.fixture
@@ -58,6 +59,28 @@ async def without_stored_credentials(hass: HomeAssistant) -> None:
     credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
     for item in list(credentials.async_items()):
         await credentials.async_delete_item(item[CONF_ID])
+
+
+@pytest.fixture
+async def with_provisioned_credential(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    without_stored_credentials: None,
+    ledger_redirect_uri: str,
+) -> None:
+    """Store the credential of an app provisioned for the given redirect URI."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "key": STORAGE_KEY,
+        "data": {"apps": {"existing-app-id": ledger_redirect_uri}},
+    }
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("PROVISIONED_CLIENT_ID", "PROVISIONED_CLIENT_SECRET"),
+        f"{DOMAIN}_existing-app-id",
+    )
 
 
 @pytest.fixture
@@ -383,6 +406,60 @@ async def test_pat_provisioning_error_and_retry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["app_id"] == "mock-app-id"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "with_provisioned_credential")
+@pytest.mark.parametrize(
+    ("ledger_redirect_uri", "result_type", "step_id"),
+    [
+        pytest.param(
+            REDIRECT_URI, FlowResultType.EXTERNAL_STEP, "auth", id="same_redirect_uri"
+        ),
+        pytest.param(
+            OTHER_REDIRECT_URI, FlowResultType.FORM, "pat", id="redirect_uri_changed"
+        ),
+    ],
+)
+async def test_stale_provisioned_credential_not_reused(
+    hass: HomeAssistant,
+    result_type: FlowResultType,
+    step_id: str,
+) -> None:
+    """Check a provisioned app is only reused for the redirect URI it was created with."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is result_type
+    assert result["step_id"] == step_id
+
+
+@pytest.mark.usefixtures("current_request_with_host", "with_provisioned_credential")
+@pytest.mark.parametrize(
+    ("ledger_redirect_uri", "result_type", "step_id"),
+    [
+        pytest.param(
+            REDIRECT_URI, FlowResultType.EXTERNAL_STEP, "auth", id="same_redirect_uri"
+        ),
+        pytest.param(
+            OTHER_REDIRECT_URI, FlowResultType.FORM, "pat", id="redirect_uri_changed"
+        ),
+    ],
+)
+async def test_reauthentication_stale_provisioned_credential(
+    hass: HomeAssistant,
+    mock_config_entry_with_app_id: MockConfigEntry,
+    result_type: FlowResultType,
+    step_id: str,
+) -> None:
+    """Check reauth only reuses a provisioned app for its original redirect URI."""
+    mock_config_entry_with_app_id.add_to_hass(hass)
+
+    result = await mock_config_entry_with_app_id.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is result_type
+    assert result["step_id"] == step_id
 
 
 @pytest.mark.usefixtures("current_request_with_host", "with_generic_credential")

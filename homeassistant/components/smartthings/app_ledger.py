@@ -80,6 +80,14 @@ class SmartThingsAppLedger:
             app_auth_domain(app_id) == auth_domain for app_id in self._data["apps"]
         )
 
+    def is_stale(self, auth_domain: str, redirect_uri: str) -> bool:
+        """Return if the auth_domain's app was provisioned for another redirect URI."""
+        assert self._data is not None
+        return any(
+            app_auth_domain(app_id) == auth_domain and app_redirect_uri != redirect_uri
+            for app_id, app_redirect_uri in self._data["apps"].items()
+        )
+
     async def async_record(self, app_id: str, redirect_uri: str) -> None:
         """Record a provisioned app id and the redirect URI it was created with."""
         await self.async_load()

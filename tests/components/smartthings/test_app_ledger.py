@@ -53,6 +53,29 @@ async def test_is_reusable(
     assert ledger.is_reusable(app_id, redirect_uri) is expected
 
 
+@pytest.mark.parametrize(
+    ("auth_domain", "redirect_uri", "expected"),
+    [
+        pytest.param(f"{DOMAIN}_app-1", REDIRECT_URI, False, id="same_redirect_uri"),
+        pytest.param(
+            f"{DOMAIN}_app-1", OTHER_REDIRECT_URI, True, id="redirect_uri_changed"
+        ),
+        pytest.param(
+            f"{DOMAIN}_app-2", OTHER_REDIRECT_URI, False, id="not_provisioned"
+        ),
+        pytest.param(DOMAIN, OTHER_REDIRECT_URI, False, id="user_credential"),
+    ],
+)
+async def test_is_stale(
+    hass: HomeAssistant, auth_domain: str, redirect_uri: str, expected: bool
+) -> None:
+    """Test only provisioned apps recorded for another redirect URI are stale."""
+    ledger = await async_get_app_ledger(hass)
+    await ledger.async_record("app-1", REDIRECT_URI)
+
+    assert ledger.is_stale(auth_domain, redirect_uri) is expected
+
+
 async def test_migrate_app_ids(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
