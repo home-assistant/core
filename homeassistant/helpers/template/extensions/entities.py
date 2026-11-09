@@ -1,6 +1,7 @@
 """Entity functions for Home Assistant templates."""
 
-from typing import TYPE_CHECKING
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.registry import NextNamePart
@@ -32,6 +33,14 @@ class EntityExtension(BaseTemplateExtension):
                     self.is_hidden_entity,
                     as_global=True,
                     as_test=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
+                    "resolve_target",
+                    self.resolve_target,
+                    as_global=True,
+                    as_filter=True,
                     requires_hass=True,
                     limited_ok=False,
                 ),
@@ -67,3 +76,28 @@ class EntityExtension(BaseTemplateExtension):
         entity_reg = er.async_get(self.hass)
         entry = entity_reg.async_get(entity_id)
         return entry is not None and entry.hidden
+
+    def resolve_target(
+        self,
+        target_dict: Any,
+        expand_group: bool = True,
+        primary_entities_only: bool = True,
+    ) -> Iterable[str]:
+        """Resolve a target mapping into entity IDs."""
+        if not isinstance(target_dict, Mapping):
+            return []
+
+        from homeassistant.helpers import target  # noqa: PLC0415
+
+        target_selection = target.TargetSelection(dict(target_dict))
+        if not target_selection.has_any_target:
+            return []
+
+        selected = target.async_extract_referenced_entity_ids(
+            self.hass,
+            target_selection,
+            expand_group=expand_group,
+            primary_entities_only=primary_entities_only,
+        )
+
+        return list(selected.referenced | selected.indirectly_referenced)

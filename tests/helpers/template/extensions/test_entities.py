@@ -1,9 +1,16 @@
 """Test entity functions for Home Assistant templates."""
 
-from pytest_homeassistant.common import MockConfigEntry
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockEntity, MockEntityPlatform
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.group import GenericGroup
 
 from tests.helpers.template.helpers import render
 
@@ -119,3 +126,103 @@ def test_is_hidden_entity(
         f"{{{{ ['{visible_entity.entity_id}']"
         f" | select('is_hidden_entity') | first }}}}",
     )
+
+
+async def test_resolve_target(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test resolving direct and indirect entity targets."""
+    area = area_registry.async_get_or_create("Test area")
+    direct_entity = entity_registry.async_get_or_create(
+        "sensor", "test", "direct"
+    ).entity_id
+    indirect_entity = entity_registry.async_get_or_create(
+        "sensor", "test", "indirect"
+    ).entity_id
+    entity_registry.async_update_entity(indirect_entity, area_id=area.id)
+    target = {"entity_id": direct_entity, "area_id": area.id}
+
+    assert set(render(hass, "{{ resolve_target(target) }}", {"target": target})) == {
+        direct_entity,
+        indirect_entity,
+    }
+    assert set(render(hass, "{{ target | resolve_target }}", {"target": target})) == {
+        direct_entity,
+        indirect_entity,
+    }
+
+
+@pytest.mark.parametrize("target", [None, [], "sensor.test", 123, {}])
+def test_resolve_target_empty_or_invalid(hass: HomeAssistant, target: object) -> None:
+    """Test resolving an empty or invalid target."""
+    assert render(hass, "{{ resolve_target(target) }}", {"target": target}) == []
+
+
+@pytest.mark.parametrize(
+    ("expand_group", "expected"),
+    [
+        (True, {"light.group_member"}),
+        (False, {"light.test_group"}),
+    ],
+)
+async def test_resolve_target_expand_group(
+    hass: HomeAssistant, expand_group: bool, expected: set[str]
+) -> None:
+    """Test expanding groups can be controlled."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    group = MockEntity(entity_id="light.test_group", unique_id="group")
+    group.group = GenericGroup(group, ["light.group_member"])
+    await platform.async_add_entities([group])
+    await hass.async_block_till_done()
+
+    assert (
+        set(
+            render(
+                hass,
+                "{{ resolve_target(target, expand_group=expand_group) }}",
+                {
+                    "target": {"entity_id": group.entity_id},
+                    "expand_group": expand_group,
+                },
+            )
+        )
+        == expected
+    )
+
+
+async def test_resolve_target_primary_entities_only(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test primary_entities_only controls config entity inclusion."""
+    area = area_registry.async_get_or_create("Test area")
+    primary_entity = entity_registry.async_get_or_create(
+        "sensor", "test", "primary"
+    ).entity_id
+    config_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "config",
+        entity_category=EntityCategory.CONFIG,
+    ).entity_id
+    entity_registry.async_update_entity(primary_entity, area_id=area.id)
+    entity_registry.async_update_entity(config_entity, area_id=area.id)
+    target = {"area_id": area.id}
+
+    assert set(
+        render(
+            hass,
+            "{{ resolve_target(target, primary_entities_only=True) }}",
+            {"target": target},
+        )
+    ) == {primary_entity}
+    assert set(
+        render(
+            hass,
+            "{{ resolve_target(target, primary_entities_only=False) }}",
+            {"target": target},
+        )
+    ) == {primary_entity, config_entity}
