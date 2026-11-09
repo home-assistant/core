@@ -9,12 +9,12 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.json import JsonValueType
 
 from . import setup_integration
 
@@ -39,6 +39,7 @@ async def test_weather(
 
 async def test_forecast_subscription_survives_a_missing_station(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     mock_rest_api: AsyncMock,
     mock_get_stations: AsyncMock,
@@ -51,13 +52,21 @@ async def test_forecast_subscription_survives_a_missing_station(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    weather = hass.data["entity_components"]["weather"].get_entity(
-        "weather.my_home_station"
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": "daily",
+            "entity_id": "weather.my_home_station",
+        }
     )
-    assert weather is not None
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
 
-    forecasts: list[list[JsonValueType] | None] = []
-    weather.async_subscribe_forecast("daily", forecasts.append)
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"]["forecast"]
 
     mock_rest_api.get_all_data.return_value = {}
 
@@ -65,6 +74,6 @@ async def test_forecast_subscription_survives_a_missing_station(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    await weather.async_update_listeners(["daily"])
-    assert forecasts
-    assert all(forecast is None for forecast in forecasts)
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["event"]["forecast"] is None
