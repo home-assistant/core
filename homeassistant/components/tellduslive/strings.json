@@ -29,6 +29,18 @@
       "dew_point": {
         "name": "Dew point"
       },
+      "requests_per_hour": {
+        "name": "Requests per hour"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "error": "Error",
+          "ok": "OK",
+          "retrying": "Retrying",
+          "starting": "Starting"
+        }
+      },
       "uv": {
         "name": "UV"
       },
@@ -46,6 +58,32 @@
   "exceptions": {
     "authentication_error": {
       "message": "Authentication with Telldus Live failed"
+    },
+    "command_failed": {
+      "message": "Telldus Live did not accept the command"
+    }
+  },
+  "options": {
+    "error": {
+      "retry_delay_order": "The initial retry delay must not be longer than the maximum retry delay."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "request_delay": "Delay between device requests",
+          "retry_initial_delay": "Initial retry delay",
+          "retry_max_delay": "Maximum retry delay",
+          "scan_interval": "Update interval"
+        },
+        "data_description": {
+          "request_delay": "Seconds to wait between the per-device requests made when a device is first seen.",
+          "retry_initial_delay": "Seconds to wait before the first retry. The delay doubles on each failure.",
+          "retry_max_delay": "Longest wait in seconds between retries.",
+          "scan_interval": "Seconds between refreshes."
+        },
+        "description": "Telldus Live limits how many requests are accepted. When a request fails, it is retried with an increasing delay. Changes apply immediately.",
+        "title": "Telldus Live options"
+      }
     }
   }
 }

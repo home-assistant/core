@@ -1,18 +1,19 @@
 """Base Entity for all TelldusLive entities."""
 
-from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
-
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
+from . import TelldusLiveClient
+from .api import Device
+from .const import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +26,9 @@ class TelldusLiveEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, client, device_id):
+    def __init__(self, client: TelldusLiveClient, device_id: Any) -> None:
         """Initialize the entity."""
-        self._id = device_id
+        self._id: Any = device_id
         self._client = client
 
     @override
@@ -36,22 +37,29 @@ class TelldusLiveEntity(Entity):
         _LOGGER.debug("Created device %s", self)
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_ENTITY, self.async_write_ha_state
+                self.hass, self._client.signal_update, self.async_write_ha_state
             )
         )
 
+    def _command(self, success: bool) -> None:
+        """Raise if a command was not accepted by Telldus Live."""
+        if not success:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_failed"
+            )
+
     @property
-    def device_id(self):
+    def device_id(self) -> str:
         """Return the id of the device."""
         return self._id
 
     @property
-    def device(self):
+    def device(self) -> Device:
         """Return the representation of the device."""
         return self._client.device(self.device_id)
 
     @property
-    def _state(self):
+    def _state(self) -> int:
         """Return the state of the device."""
         return self.device.state
 
@@ -71,7 +79,7 @@ class TelldusLiveEntity(Entity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
         if self._battery_level:
             attrs[ATTR_BATTERY_LEVEL] = self._battery_level
         if self._last_updated:
@@ -79,7 +87,7 @@ class TelldusLiveEntity(Entity):
         return attrs
 
     @property
-    def _battery_level(self):
+    def _battery_level(self) -> int | None:
         """Return the battery level of a device."""
         if self.device.battery == BATTERY_LOW:
             return 1
@@ -90,10 +98,10 @@ class TelldusLiveEntity(Entity):
         return self.device.battery  # Percentage
 
     @property
-    def _last_updated(self):
+    def _last_updated(self) -> str | None:
         """Return the last update of a device."""
         return (
-            str(datetime.fromtimestamp(self.device.lastUpdated))
+            dt_util.utc_from_timestamp(self.device.lastUpdated).isoformat()
             if self.device.lastUpdated
             else None
         )
@@ -108,7 +116,7 @@ class TelldusLiveEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        device = self._client.device_info(self.device.device_id)
+        device = self._client.device_info(self.device.device_id) or {}
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.device_id)},
             name=self.device.name,

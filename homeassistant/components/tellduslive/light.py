@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TelldusLiveConfigEntry
-from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from . import TelldusLiveClient, TelldusLiveConfigEntry
+from .const import TELLDUS_DISCOVERY_NEW
 from .entity import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up tellduslive sensors dynamically."""
 
-    async def async_discover_light(device_id):
+    async def async_discover_light(device_id: str) -> None:
         """Discover and add a discovered sensor."""
         client = config_entry.runtime_data.client
         async_add_entities([TelldusLiveLight(client, device_id)])
@@ -31,7 +31,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, DOMAIN),
+            TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, config_entry.entry_id),
             async_discover_light,
         )
     )
@@ -44,19 +44,19 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, client, device_id):
+    def __init__(self, client: TelldusLiveClient, device_id: str) -> None:
         """Initialize the  Tellstick Net light."""
         super().__init__(client, device_id)
-        self._last_brightness = self.brightness
+        self._last_brightness: int | None = self.brightness
 
-    def changed(self):
+    def changed(self) -> None:
         """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
         self.schedule_update_ha_state()
 
     @property
     @override
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return self.device.dim_level
 
@@ -70,17 +70,17 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
-        if brightness == 0:
+        if not brightness:
             fallback_brightness = 100
             _LOGGER.debug(
                 "Setting brightness to %d%%, because it was 0", fallback_brightness
             )
             brightness = int(fallback_brightness * 255 / 100)
-        self.device.dim(level=brightness)
+        self._command(self.device.dim(level=brightness))
         self.changed()
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        self.device.turn_off()
+        self._command(self.device.turn_off())
         self.changed()
