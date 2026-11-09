@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pyforeca import ForecaAuthError, ForecaConnectionError
+from pyforeca import (
+    ForecaAuthError,
+    ForecaConnectionError,
+    ForecaProductUnavailableError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -48,6 +52,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     ("exception", "error"),
     [
         (ForecaAuthError, "invalid_auth"),
+        (ForecaProductUnavailableError, "invalid_auth"),
         (ForecaConnectionError, "cannot_connect"),
         (RuntimeError, "unknown"),
     ],
@@ -121,6 +126,7 @@ async def test_duplicate_location_aborts(
     ("exception", "error"),
     [
         (ForecaAuthError, "invalid_auth"),
+        (ForecaProductUnavailableError, "invalid_auth"),
         (ForecaConnectionError, "cannot_connect"),
         (RuntimeError, "unknown"),
     ],

@@ -5,7 +5,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from boschshcpy import SHCRoomThermostat2, TerminalConfiguration
-from boschshcpy.services_impl import ValveTappetService
+from boschshcpy.services_impl import OutdoorSirenPowerSupplyService, ValveTappetService
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    outdoor_siren_device,
     setup_integration,
     thermostat_device,
     thermostat_gen2_device,
@@ -262,6 +263,19 @@ def _twinguard_with_readings() -> MagicMock:
     return device
 
 
+def _siren_power_supply() -> MagicMock:
+    """Build an outdoor siren power-supply service double."""
+    power_supply = MagicMock(spec=OutdoorSirenPowerSupplyService)
+    power_supply.battery_percentage_remaining = 80
+    power_supply.main_power_supply = (
+        OutdoorSirenPowerSupplyService.MainPowerSupply.SOLAR
+    )
+    power_supply.solar_charging_score = (
+        OutdoorSirenPowerSupplyService.SolarChargingScore.GOOD
+    )
+    return power_supply
+
+
 @pytest.mark.parametrize(
     "device_buckets",
     [{"twinguards": [_twinguard_with_readings()]}],
@@ -279,3 +293,37 @@ async def test_twinguard_humidity_is_measurement(
     assert humidity is not None
     assert humidity.state == "48.0"
     assert humidity.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"outdoor_sirens": [outdoor_siren_device(power_supply=_siren_power_supply())]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_power_supply_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The siren reports battery level, power source and solar charging."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.outdoor_siren_siren_battery").state == "80"
+    assert hass.states.get("sensor.outdoor_siren_siren_power_source").state == "solar"
+    assert hass.states.get("sensor.outdoor_siren_siren_solar_charging").state == "good"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"outdoor_sirens": [outdoor_siren_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_without_power_supply(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No power-supply sensors are created without power-supply support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.outdoor_siren_siren_battery") is None

@@ -10,8 +10,11 @@ from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import ModelContextProtocolCoordinator, TokenManager
-from .types import ModelContextProtocolConfigEntry
+from .coordinator import (
+    ModelContextProtocolConfigEntry,
+    ModelContextProtocolCoordinator,
+    TokenManager,
+)
 
 __all__ = [
     "DOMAIN",

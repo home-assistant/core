@@ -38,7 +38,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a1b2c3d4e5f6-2',
-    'unit_of_measurement': 'W',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
 # name: test_entities[sensor.input_buttoncounter-state]
@@ -47,7 +47,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Input ButtonCounter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.input_buttoncounter',
@@ -96,7 +96,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a1b2c3d4e5f6-2-counter',
-    'unit_of_measurement': 'kWh',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_entities[sensor.input_buttoncounter_counter-state]
@@ -106,7 +106,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Input ButtonCounter-counter',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.input_buttoncounter_counter',

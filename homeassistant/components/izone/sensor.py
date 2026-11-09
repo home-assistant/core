@@ -68,6 +68,46 @@ DAMPER_POSITION_DESCRIPTION = IZoneSensorEntityDescription[Zone](
     value_fn=attrgetter("damper_position"),
 )
 
+RF_SIGNAL_PERCENT = {
+    Zone.RfSignal.FULL: 100,
+    Zone.RfSignal.HALF: 50,
+    Zone.RfSignal.QUARTER: 25,
+    Zone.RfSignal.NONE: 0,
+}
+BATTERY_LEVEL_PERCENT = {
+    Zone.BatteryLevel.FULL: 100,
+    Zone.BatteryLevel.HALF: 50,
+    Zone.BatteryLevel.EMPTY: 0,
+}
+
+# Wired sensors misleadingly report RF signal and battery as 0 (full).
+WIRELESS_SENSOR_TYPES = (Zone.SensorType.WIRELESS, Zone.SensorType.CSM)
+
+WIRELESS_ZONE_SENSOR_DESCRIPTIONS: tuple[IZoneSensorEntityDescription[Zone], ...] = (
+    IZoneSensorEntityDescription[Zone](
+        key="rf_signal",
+        translation_key="rf_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda zone: (
+            None if zone.rf_signal is None else RF_SIGNAL_PERCENT[zone.rf_signal]
+        ),
+    ),
+    IZoneSensorEntityDescription[Zone](
+        key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda zone: (
+            None
+            if zone.battery_level is None
+            else BATTERY_LEVEL_PERCENT[zone.battery_level]
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,22 +117,6 @@ async def async_setup_entry(
     """Set up iZone sensor entities from the entry coordinator."""
     coordinator = entry.runtime_data
     controller = coordinator.controller
-    async_add_entities(
-        IZoneSensor(
-            coordinator,
-            description,
-            controller,
-            unique_id=f"{controller.device_uid}_{description.key}",
-            device_info=DeviceInfo(
-                identifiers={(DOMAIN, controller.device_uid)},
-                manufacturer="IZone",
-                model=controller.sys_type,
-                name=f"iZone Controller {controller.device_uid}",
-            ),
-        )
-        for description in CONTROLLER_SENSOR_DESCRIPTIONS
-    )
-
     # Bridges without damper position feedback report a constant 50.
     damper_position = replace(
         DAMPER_POSITION_DESCRIPTION,
@@ -101,15 +125,47 @@ async def async_setup_entry(
         ),
     )
     async_add_entities(
-        IZoneSensor(
-            coordinator,
-            damper_position,
-            zone,
-            unique_id=f"{controller.device_uid}_z{zone.index + 1}_damper_position",
-            device_info=zone_device_info(coordinator, zone),
-        )
-        for zone in controller.zones
-        if zone.damper_position is not None
+        [
+            *(
+                IZoneSensor(
+                    coordinator,
+                    description,
+                    controller,
+                    unique_id=f"{controller.device_uid}_{description.key}",
+                    device_info=DeviceInfo(
+                        identifiers={(DOMAIN, controller.device_uid)},
+                        manufacturer="IZone",
+                        model=controller.sys_type,
+                        name=f"iZone Controller {controller.device_uid}",
+                    ),
+                )
+                for description in CONTROLLER_SENSOR_DESCRIPTIONS
+            ),
+            *(
+                IZoneSensor(
+                    coordinator,
+                    damper_position,
+                    zone,
+                    unique_id=f"{controller.device_uid}_z{zone.index + 1}_damper_position",
+                    device_info=zone_device_info(coordinator, zone),
+                )
+                for zone in controller.zones
+                if zone.damper_position is not None
+            ),
+            *(
+                IZoneSensor(
+                    coordinator,
+                    description,
+                    zone,
+                    unique_id=f"{controller.device_uid}_z{zone.index + 1}_{description.key}",
+                    device_info=zone_device_info(coordinator, zone),
+                )
+                for zone in controller.zones
+                if zone.sensor_type in WIRELESS_SENSOR_TYPES
+                for description in WIRELESS_ZONE_SENSOR_DESCRIPTIONS
+                if description.value_fn(zone) is not None
+            ),
+        ]
     )
 
 

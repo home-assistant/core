@@ -49,7 +49,7 @@ PRESSED_EVENT_TYPES: tuple[ButtonEventType, ...] = (
     ButtonEventType.PRESS_START,
 )
 # Ordered by preference: only the first type an entity declares fires the
-# trigger. Repeating while held needs both, to know when the hold ends.
+# trigger.
 HELD_EVENT_TYPES: tuple[ButtonEventType, ...] = (
     ButtonEventType.LONG_PRESS_START,
     ButtonEventType.LONG_PRESS_END,
@@ -167,9 +167,13 @@ class ButtonHeldTrigger(StatelessEntityTriggerBase):
         """Check if the trigger repeats while the entity stays held."""
         if self._interval is None:
             return False
-        return _declares_all_event_types(
-            state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES),
-            HELD_EVENT_TYPES,
+        event_types = (
+            state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES) or ()
+        )
+        # Needs both, to know when the hold ends.
+        return (
+            ButtonEventType.LONG_PRESS_START in event_types
+            and ButtonEventType.LONG_PRESS_END in event_types
         )
 
     @override

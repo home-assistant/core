@@ -112,7 +112,7 @@ class SofarRuntimeData:
     settings: SofarDataUpdateCoordinator
     inverter_device_id: str
     served_components: frozenset[str]
-    wired_packs: set[int] = field(default_factory=set)
+    added_battery_strings: set[int] = field(default_factory=set)
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""

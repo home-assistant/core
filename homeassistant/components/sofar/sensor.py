@@ -31,6 +31,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -45,9 +46,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import METER_ENERGY
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 0
 
@@ -58,13 +58,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sofar sensor platform."""
+    async_remove_unserved_entities(
+        hass,
+        entry,
+        Platform.SENSOR,
+        SENSOR_DESCRIPTIONS + TOTAL_SENSOR_DESCRIPTIONS,
+    )
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
 
     entities: list[SofarSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and not _is_battery_pack(description)
+        if description.component in served and not _is_battery_string(description)
     ]
     entities.extend(
         SofarTotalSensor(runtime_data, description)
@@ -74,13 +80,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     @callback
-    def _async_add_wired_packs() -> None:
-        """Add a pack's sensors the first time it reports a voltage."""
-        wired = runtime_data.wired_packs
-        new = runtime_data.readings.device.wired_battery_strings - wired
+    def _async_add_wired_battery_strings() -> None:
+        """Add a battery string's sensors the first time it reports a voltage."""
+        new = (
+            runtime_data.readings.device.wired_battery_strings
+            - runtime_data.added_battery_strings
+        )
         if not new:
             return
-        wired.update(new)
+        runtime_data.added_battery_strings.update(new)
         async_add_entities(
             SofarSensor(runtime_data, description)
             for description in SENSOR_DESCRIPTIONS
@@ -89,14 +97,14 @@ async def async_setup_entry(
             and part[1] in new
         )
 
-    _async_add_wired_packs()
+    _async_add_wired_battery_strings()
     entry.async_on_unload(
-        runtime_data.readings.async_add_listener(_async_add_wired_packs)
+        runtime_data.readings.async_add_listener(_async_add_wired_battery_strings)
     )
 
 
-def _is_battery_pack(description: SofarSensorDescription) -> bool:
-    """Whether a description belongs to one numbered battery pack."""
+def _is_battery_string(description: SofarSensorDescription) -> bool:
+    """Whether a description belongs to one numbered battery string."""
     return description.part is not None and description.part[0] == "battery"
 
 
@@ -153,7 +161,7 @@ class SofarTotalSensorDescription(SensorEntityDescription, SofarEntityDescriptio
 
 @dataclass(frozen=True, kw_only=True)
 class _PartMeasurement:
-    """One measurement every string or pack repeats, before it gets a number."""
+    """One measurement every string repeats, before it gets a number."""
 
     key: str
     translation_key: str
@@ -259,7 +267,7 @@ def _part_sensors(
     components: Mapping[int, str],
     measurements: tuple[_PartMeasurement, ...],
 ) -> tuple[SofarSensorDescription, ...]:
-    """Repeat a part's measurements across every string or pack it has."""
+    """Repeat a part's measurements across every string it has."""
     return tuple(
         SofarSensorDescription(
             key=f"{measurement.key}_{number}",
@@ -284,7 +292,7 @@ def _part_sensors(
 def _part_value_fn(
     value_fn: Callable[[SofarInverter, int], StateType], number: int
 ) -> Callable[[SofarInverter], StateType]:
-    """Bind a measurement to one numbered string or pack."""
+    """Bind a measurement to one numbered string."""
     return lambda device: value_fn(device, number)
 
 
@@ -1588,7 +1596,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="load_consumption_today",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="load_consumption_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1599,7 +1607,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="load_consumption_total",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="load_consumption_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1609,7 +1617,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="import_energy_today",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="import_energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1620,7 +1628,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="import_energy_total",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="import_energy_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1630,7 +1638,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="export_energy_today",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="export_energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1641,7 +1649,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="export_energy_total",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="export_energy_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
