@@ -249,6 +249,19 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
                 translation_key="unsupported_hvac_mode",
                 translation_placeholders={"hvac_mode": hvac_mode},
             )
+        # Home Assistant only checks the range; an odd value would be written
+        # and shown as a target the thermostat itself can't select
+        if not math.isclose(
+            temperature / TEMPERATURE_STEP, round(temperature / TEMPERATURE_STEP)
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_step_invalid",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "step": str(TEMPERATURE_STEP),
+                },
+            )
         mode = self.device.preset_mode
         if hvac_mode is not None or mode not in OWN_SETPOINT_FIELDS:
             mode = int(PresetMode.MANUAL)

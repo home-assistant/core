@@ -530,6 +530,27 @@ async def test_set_temperature_with_unsupported_hvac_mode(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_invalid_step(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test a target off the 0.5 °C step is rejected before any command is sent."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.25},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "temperature_step_invalid"
+    assert exc_info.value.translation_placeholders == {
+        "temperature": "21.25",
+        "step": "0.5",
+    }
+    mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("hvac_mode", "preset_mode"),
     [
