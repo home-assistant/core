@@ -1,6 +1,8 @@
 """Tests for the Freebox binary sensors."""
 
+import asyncio
 from copy import deepcopy
+from typing import Any
 from unittest.mock import Mock
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
@@ -123,6 +125,54 @@ async def test_motion_fast_poll(
         await hass.async_block_till_done()
 
         assert hass.states.get("binary_sensor.detecteur").state == "off"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_motion_reads_do_not_overlap(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
+    """Test a slow motion read blocks the timer and the router update."""
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+
+    data_home_get_values_changed = deepcopy(DATA_HOME_PIR_GET_VALUE)
+    data_home_get_values_changed["value"] = True
+    release = asyncio.Event()
+    running = set()
+    overlapped = False
+
+    async def slow_read(*endpoint: int) -> dict[str, Any]:
+        nonlocal overlapped
+        overlapped |= endpoint in running
+        running.add(endpoint)
+        await release.wait()
+        running.discard(endpoint)
+        return data_home_get_values_changed
+
+    read = router().home.get_home_endpoint_value
+    read.reset_mock()
+    read.side_effect = slow_read
+
+    # The second tick is skipped while the first read is running
+    for _ in range(2):
+        freezer.tick(PIR_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await asyncio.sleep(0)
+    assert read.call_count == 1
+    motion_endpoint = read.call_args.args
+
+    # The router update waits for the running read
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    for _ in range(10):
+        await asyncio.sleep(0)
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not overlapped
+    # The first poll and the router update, skipped polls are not queued
+    assert [call.args for call in read.call_args_list].count(motion_endpoint) == 2
+    assert hass.states.get("binary_sensor.detecteur").state == "off"
 
 
 @pytest.mark.usefixtures("router")
