@@ -153,6 +153,7 @@ async def test_restore_map_if_missing_without_known_map(
     assert fake_vacuum.v1_properties
     coordinator = setup_entry.runtime_data.v1[0]
     fake_vacuum.v1_properties.status.map_present = 0
+    coordinator._last_map_flag = None
     fake_vacuum.v1_properties.maps.current_map = None
     fake_vacuum.v1_properties.home.home_map_info = {}
 
@@ -162,6 +163,7 @@ async def test_restore_map_if_missing_without_known_map(
     fake_vacuum.v1_properties.home.refresh.assert_not_awaited()
 
 
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
 async def test_restore_map_if_missing_uses_single_map_fallback(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -171,6 +173,7 @@ async def test_restore_map_if_missing_uses_single_map_fallback(
     assert fake_vacuum.v1_properties
     coordinator = setup_entry.runtime_data.v1[0]
     fake_vacuum.v1_properties.status.map_present = 0
+    coordinator._last_map_flag = None
     fake_vacuum.v1_properties.maps.current_map = None
     map_id = next(iter(fake_vacuum.v1_properties.home.home_map_info))
     fake_vacuum.v1_properties.home.home_map_info = {
@@ -183,6 +186,7 @@ async def test_restore_map_if_missing_uses_single_map_fallback(
     fake_vacuum.v1_properties.home.refresh.assert_awaited_once()
 
 
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
 @pytest.mark.parametrize(
     ("trait_name", "method_name"),
     [("maps", "set_current_map"), ("home", "refresh")],

@@ -300,19 +300,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         )
         _LOGGER.debug("Updated device properties")
 
-    async def _restore_map(self) -> None:
-        """Restore the last known map if the device reports no map."""
-        if self._last_map_flag is None:
-            return
-        try:
-            await self.properties_api.maps.set_current_map(self._last_map_flag)
-            await asyncio.sleep(MAP_SLEEP)
-            await self.properties_api.home.refresh()
-        except RoborockException as ex:
-            _LOGGER.debug("Failed to restore map: %s", ex)
-        else:
-            self.last_home_update = dt_util.utcnow()
-
     @override
     async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
@@ -339,8 +326,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         new_status = self.properties_api.status
         if (current_map := self.properties_api.maps.current_map) is not None:
             self._last_map_flag = current_map
-        if not new_status.map_present and not new_status.in_cleaning:
-            await self._restore_map()
         if (
             new_status.in_cleaning
             and (dt_util.utcnow() - self._last_home_update_attempt)
@@ -372,7 +357,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         if status.map_present != 0 or status.in_cleaning:
             return
 
-        map_id = self.properties_api.maps.current_map
+        map_id = self._last_map_flag
         if map_id is None:
             map_info = self.properties_api.home.home_map_info or {}
             if len(map_info) != 1:
@@ -381,9 +366,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
 
         try:
             await self.properties_api.maps.set_current_map(map_id)
+            await asyncio.sleep(MAP_SLEEP)
             await self.properties_api.home.refresh()
-        except RoborockException as err:
-            _LOGGER.debug("Failed to restore map: %s", err)
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to restore map: %s", ex)
+        else:
+            self.last_home_update = dt_util.utcnow()
 
     def _should_suppress_update_failure(self) -> bool:
         """Determine if we should suppress update failure reporting.
