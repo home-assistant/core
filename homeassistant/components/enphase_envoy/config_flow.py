@@ -184,7 +184,6 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         # option to switch between automatic and manual token entry modes
         schema[probatio.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
 
-        # option to switch NO_SOLAR mode on/off
         schema[probatio.Optional(CONF_NO_SOLAR, default=self.no_solar)] = bool
 
         return probatio.Schema(schema)
