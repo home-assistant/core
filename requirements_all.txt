@@ -187,10 +187,10 @@ aioacaia==0.2.2
 aioairq==0.4.8
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.7.3
+aioairzone-cloud==0.7.4
 
 # homeassistant.components.airzone
-aioairzone==1.0.5
+aioairzone==1.0.6
 
 # homeassistant.components.alexa_devices
 aioamazondevices==17.2.7
@@ -457,7 +457,7 @@ aiosaj==0.2.2
 aioseafile==0.1.3
 
 # homeassistant.components.shelly
-aioshelly==14.1.0
+aioshelly==14.2.0
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
@@ -478,7 +478,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.4.0
+aioswitcher==6.5.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
@@ -568,7 +568,7 @@ amcrest==1.9.9
 androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.3.2
+androidtvremote2==0.3.3
 
 # homeassistant.components.anel_pwrctrl
 anel-pwrctrl-homeassistant==0.0.1.dev2
@@ -1169,7 +1169,6 @@ georss-qld-bushfire-alert-client==0.8
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
 # homeassistant.components.nmap_tracker
-# homeassistant.components.samsungtv
 # homeassistant.components.upnp
 getmac==0.9.6
 
@@ -1601,7 +1600,7 @@ loqedAPI==2.1.16
 # homeassistant.components.chirpstack
 # homeassistant.components.lorawan
 # homeassistant.components.thethingsnetwork_lorawan
-lorawan-connection[chirpstack,tts]==1.3.0
+lorawan-connection[chirpstack,tts]==1.3.2
 
 # homeassistant.components.luftdaten
 luftdaten==0.8.0
@@ -1689,7 +1688,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.6.1
+mitsubishi-comfort==0.6.2
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -1905,7 +1904,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.23.0
+opower==0.23.1
 
 # homeassistant.components.oralb
 oralb-ble==1.1.3
@@ -1966,7 +1965,7 @@ pigpio==1.78
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.14
+plexwebsocket==0.1.0
 
 # homeassistant.components.plugwise
 plugwise==1.16.0
@@ -2343,7 +2342,7 @@ pygatt[GATTTOOL]==4.0.5
 pygbl==1.2.0
 
 # homeassistant.components.geosphere_austria_warnings
-pygeosphere-warnings==0.1.1
+pygeosphere-warnings==0.2.1
 
 # homeassistant.components.gtfs
 pygtfs==0.1.11
@@ -2801,13 +2800,13 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.google_drive
-python-google-drive-api==0.2.0
+python-google-drive-api==0.2.1
 
 # homeassistant.components.google_travel_time
-python-google-maps-routing-api==0.0.3
+python-google-maps-routing-api==0.0.4
 
 # homeassistant.components.google_weather
-python-google-weather-api==0.0.9
+python-google-weather-api==0.0.10
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
@@ -2880,7 +2879,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==7.12.0
+python-roborock==7.17.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2953,7 +2952,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.5.0
+pyvesync==3.5.1
 
 # homeassistant.components.velux
 pyvlx==0.2.36
@@ -3043,7 +3042,7 @@ refoss-ha==1.2.6
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.6.2
+renault-api==0.6.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2

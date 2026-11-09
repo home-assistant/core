@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import DEVICE_ID
+from .conftest import DEVICE_ID, NATEDE_DEVICE_ID
 
 AIR_QUALITY_SCORE = "sensor.kitchen_shelfy_air_quality_score"
 FAN_SPEED = "sensor.kitchen_shelfy_fan_speed"
@@ -27,8 +27,10 @@ FILTER_CHANGE_DUE = "sensor.kitchen_shelfy_filter_change_due"
 FRIDGE_TEMPERATURE = "sensor.kitchen_shelfy_fridge_temperature"
 LAST_UPDATE = "sensor.kitchen_shelfy_last_update"
 POWER_LEVEL = "sensor.kitchen_shelfy_power_level"
+NATEDE_TEMPERATURE = "sensor.living_room_natede_temperature"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -124,6 +126,7 @@ async def test_air_quality_score_without_value(
         ),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_unknown_on_invalid_value(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,
@@ -208,3 +211,37 @@ async def test_sensors_absent_from_measurement_are_not_created(
         "last_update",
     ):
         assert hass.states.get(f"sensor.kitchen_shelfy_{absent}") is None
+
+
+async def test_reading_sensor_follows_reported_value(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_devices: dict[str, VitesyDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a reading sensor follows its value and reports unknown without one."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(NATEDE_TEMPERATURE).state == "21.25"
+
+    mock_devices[NATEDE_DEVICE_ID].readings["tmp"].value = None
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(NATEDE_TEMPERATURE).state == STATE_UNKNOWN
+
+
+async def test_last_update_disabled_by_default(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the last update sensor is disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(LAST_UPDATE) is None
+    entry = entity_registry.async_get(LAST_UPDATE)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
