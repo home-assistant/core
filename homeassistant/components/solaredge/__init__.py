@@ -74,3 +74,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -
         return  # Nothing to unload
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SolarEdgeConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    return CONF_API_KEY not in config_entry.data
