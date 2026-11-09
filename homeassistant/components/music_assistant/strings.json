@@ -507,7 +507,7 @@
           "name": "Enable radio mode"
         },
         "shuffle": {
-          "description": "Whether to play the content in randomized order. Only applies when the content starts playing right away (enqueue `play` or `replace`). If omitted, the current shuffle setting of the queue is kept.",
+          "description": "Whether to play the content in randomized order. Only applies when the content starts playing right away. If omitted, the queue's shuffle setting and the type of content decide.",
           "name": "Shuffle"
         },
         "start_item": {
