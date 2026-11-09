@@ -134,6 +134,8 @@ async def test_restore_map_if_missing_skips_when_map_present_or_cleaning(
 ) -> None:
     """Test map recovery skips when a map is present or the vacuum is cleaning."""
     assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
     coordinator = setup_entry.runtime_data.v1[0]
     fake_vacuum.v1_properties.status.map_present = map_present
     fake_vacuum.v1_properties.status.in_cleaning = int(map_present == 0)
@@ -151,6 +153,8 @@ async def test_restore_map_if_missing_without_known_map(
 ) -> None:
     """Test map recovery skips without a known map or single-map fallback."""
     assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
     coordinator = setup_entry.runtime_data.v1[0]
     fake_vacuum.v1_properties.status.map_present = 0
     coordinator._last_map_flag = None
@@ -171,6 +175,8 @@ async def test_restore_map_if_missing_uses_single_map_fallback(
 ) -> None:
     """Test map recovery uses the only known map as a fallback."""
     assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
     coordinator = setup_entry.runtime_data.v1[0]
     fake_vacuum.v1_properties.status.map_present = 0
     coordinator._last_map_flag = None
@@ -200,6 +206,8 @@ async def test_restore_map_if_missing_handles_exception(
 ) -> None:
     """Test map recovery handles Roborock exceptions."""
     assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.maps.set_current_map.reset_mock()
+    fake_vacuum.v1_properties.home.refresh.reset_mock()
     coordinator = setup_entry.runtime_data.v1[0]
     fake_vacuum.v1_properties.status.map_present = 0
     getattr(getattr(fake_vacuum.v1_properties, trait_name), method_name).side_effect = (
