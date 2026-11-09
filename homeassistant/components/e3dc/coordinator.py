@@ -29,7 +29,7 @@ POLLED_COMPONENTS = (
     "inverters",
 )
 # The components that tell which optional hardware is installed, read once
-HARDWARE_COMPONENTS = ("wallboxes", "power_meters")
+HARDWARE_COMPONENTS = ("wallboxes",)
 
 type E3dcConfigEntry = ConfigEntry[E3dcDataUpdateCoordinator]
 

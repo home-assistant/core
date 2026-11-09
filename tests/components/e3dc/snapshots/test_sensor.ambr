@@ -642,7 +642,7 @@
     'state': '870',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_active_power_l1-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_active_power_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -658,7 +658,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_active_power_l1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_active_power_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -684,23 +684,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_active_power_l1-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_active_power_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Active power L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Active power L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_active_power_l1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_active_power_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1750',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_active_power_l2-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_active_power_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -716,7 +716,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_active_power_l2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_active_power_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -742,23 +742,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_active_power_l2-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_active_power_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Active power L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Active power L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_active_power_l2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_active_power_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_active_power_l3-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_active_power_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -774,7 +774,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_active_power_l3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_active_power_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -800,23 +800,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_active_power_l3-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_active_power_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Active power L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Active power L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_active_power_l3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_active_power_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_apparent_power_l1-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_apparent_power_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -832,7 +832,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_apparent_power_l1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_apparent_power_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -858,23 +858,23 @@
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_apparent_power_l1-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_apparent_power_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Apparent power L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Apparent power L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_apparent_power_l1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_apparent_power_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_apparent_power_l2-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_apparent_power_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -890,7 +890,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_apparent_power_l2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_apparent_power_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -916,23 +916,23 @@
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_apparent_power_l2-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_apparent_power_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Apparent power L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Apparent power L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_apparent_power_l2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_apparent_power_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_apparent_power_l3-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_apparent_power_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -948,7 +948,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_apparent_power_l3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_apparent_power_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -974,23 +974,23 @@
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_apparent_power_l3-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_apparent_power_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Apparent power L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Apparent power L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_apparent_power_l3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_apparent_power_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_current_l1-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_current_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1006,7 +1006,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_current_l1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_current_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1032,23 +1032,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_current_l1-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_current_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Current L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Current L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_current_l1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_current_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_current_l2-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_current_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1064,7 +1064,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_current_l2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_current_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1090,23 +1090,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_current_l2-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_current_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Current L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Current L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_current_l2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_current_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_current_l3-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_current_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1122,7 +1122,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_current_l3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_current_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1148,23 +1148,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_current_l3-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_current_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Current L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Current L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_current_l3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_current_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_current_1-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_current_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1180,7 +1180,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_current_1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_current_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1206,23 +1206,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_current_1-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_current_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC current 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC current 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_current_1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_current_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_current_2-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_current_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1238,7 +1238,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_current_2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_current_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1264,23 +1264,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_current_2-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_current_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC current 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC current 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_current_2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_current_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_current_3-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_current_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1296,7 +1296,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_current_3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_current_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1322,23 +1322,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_current_3-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_current_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC current 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC current 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_current_3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_current_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_power_1-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_power_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1354,7 +1354,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_power_1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_power_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1380,23 +1380,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_power_1-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_power_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC power 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC power 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_power_1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_power_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2754',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_power_2-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_power_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1412,7 +1412,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_power_2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_power_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1438,23 +1438,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_power_2-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC power 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC power 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_power_2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_power_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_power_3-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_power_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1470,7 +1470,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_power_3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_power_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1496,23 +1496,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_power_3-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_power_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC power 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC power 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_power_3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_power_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1210',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_voltage_1-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_voltage_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1528,7 +1528,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_voltage_1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_voltage_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1554,23 +1554,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_voltage_1-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_voltage_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC voltage 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC voltage 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_voltage_1',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_voltage_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_voltage_2-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_voltage_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1586,7 +1586,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_voltage_2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_voltage_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1612,23 +1612,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_voltage_2-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC voltage 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC voltage 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_voltage_2',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_voltage_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_voltage_3-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_voltage_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1644,7 +1644,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_voltage_3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_voltage_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1670,23 +1670,23 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_dc_voltage_3-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_dc_voltage_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter DC voltage 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 DC voltage 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_dc_voltage_3',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_dc_voltage_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_frequency-entry]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1702,7 +1702,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_frequency',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_frequency',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1728,20 +1728,368 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_frequency-state]
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_frequency',
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.01',
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_reactive_power_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_reactive_power_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power L1',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power L1',
+    'platform': 'e3dc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power_phase',
+    'unique_id': 'S10-12345678912_inverter_1_reactive_power_l1',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_reactive_power_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Reactive power L1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_reactive_power_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_reactive_power_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_reactive_power_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power L2',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power L2',
+    'platform': 'e3dc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power_phase',
+    'unique_id': 'S10-12345678912_inverter_1_reactive_power_l2',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_reactive_power_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Reactive power L2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_reactive_power_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_reactive_power_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_reactive_power_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reactive power L3',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
+    'original_icon': None,
+    'original_name': 'Reactive power L3',
+    'platform': 'e3dc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reactive_power_phase',
+    'unique_id': 'S10-12345678912_inverter_1_reactive_power_l3',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_reactive_power_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Reactive power L3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_reactive_power_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_voltage_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_voltage_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage L1',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage L1',
+    'platform': 'e3dc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage_phase',
+    'unique_id': 'S10-12345678912_inverter_1_voltage_l1',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_voltage_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Voltage L1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_voltage_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '230.1',
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_voltage_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_voltage_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage L2',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage L2',
+    'platform': 'e3dc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage_phase',
+    'unique_id': 'S10-12345678912_inverter_1_voltage_l2',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_voltage_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Voltage L2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_voltage_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '229.9',
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_voltage_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_voltage_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage L3',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage L3',
+    'platform': 'e3dc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage_phase',
+    'unique_id': 'S10-12345678912_inverter_1_voltage_l3',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_all_entities[sensor.e3_dc_s10_x_inverter_1_voltage_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1 Voltage L3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e3_dc_s10_x_inverter_1_voltage_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '231.0',
   })
 # ---
 # name: test_all_entities[sensor.e3_dc_s10_x_inverter_mode-entry]
@@ -1802,354 +2150,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal',
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_reactive_power_l1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_reactive_power_l1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power L1',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power L1',
-    'platform': 'e3dc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reactive_power_phase',
-    'unique_id': 'S10-12345678912_inverter_1_reactive_power_l1',
-    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_reactive_power_l1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Reactive power L1',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_reactive_power_l1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_reactive_power_l2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_reactive_power_l2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power L2',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power L2',
-    'platform': 'e3dc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reactive_power_phase',
-    'unique_id': 'S10-12345678912_inverter_1_reactive_power_l2',
-    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_reactive_power_l2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Reactive power L2',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_reactive_power_l2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_reactive_power_l3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_reactive_power_l3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reactive power L3',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
-    'original_icon': None,
-    'original_name': 'Reactive power L3',
-    'platform': 'e3dc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reactive_power_phase',
-    'unique_id': 'S10-12345678912_inverter_1_reactive_power_l3',
-    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_reactive_power_l3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Reactive power L3',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_reactive_power_l3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_voltage_l1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_voltage_l1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage L1',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage L1',
-    'platform': 'e3dc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'voltage_phase',
-    'unique_id': 'S10-12345678912_inverter_1_voltage_l1',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_voltage_l1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Voltage L1',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_voltage_l1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '230.1',
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_voltage_l2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_voltage_l2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage L2',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage L2',
-    'platform': 'e3dc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'voltage_phase',
-    'unique_id': 'S10-12345678912_inverter_1_voltage_l2',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_voltage_l2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Voltage L2',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_voltage_l2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '229.9',
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_voltage_l3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('e3dc', 'S10-12345678912_inverter_1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_voltage_l3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage L3',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage L3',
-    'platform': 'e3dc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'voltage_phase',
-    'unique_id': 'S10-12345678912_inverter_1_voltage_l3',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_all_entities[sensor.e3_dc_s10_x_inverter_voltage_l3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter Voltage L3',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.e3_dc_s10_x_inverter_voltage_l3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '231.0',
   })
 # ---
 # name: test_all_entities[sensor.e3_dc_s10_x_maximum_charge_power-entry]
@@ -2730,7 +2730,7 @@
     'state': '2951',
   })
 # ---
-# name: test_all_entities[sensor.power_meter_meter_type-entry]
+# name: test_all_entities[sensor.power_meter_2_meter_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2757,7 +2757,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.power_meter_meter_type',
+    'entity_id': 'sensor.power_meter_2_meter_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2780,11 +2780,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.power_meter_meter_type-state]
+# name: test_all_entities[sensor.power_meter_2_meter_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter Meter type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter 2 Meter type',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'root',
         'external_production',
@@ -2799,14 +2799,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_meter_meter_type',
+    'entity_id': 'sensor.power_meter_2_meter_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'external_production',
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power-entry]
+# name: test_all_entities[sensor.power_meter_2_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2822,7 +2822,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_meter_power',
+    'entity_id': 'sensor.power_meter_2_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2848,23 +2848,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power-state]
+# name: test_all_entities[sensor.power_meter_2_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter Power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter 2 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_meter_power',
+    'entity_id': 'sensor.power_meter_2_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '300',
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power_l1-entry]
+# name: test_all_entities[sensor.power_meter_2_power_l1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2880,7 +2880,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_meter_power_l1',
+    'entity_id': 'sensor.power_meter_2_power_l1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2906,23 +2906,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power_l1-state]
+# name: test_all_entities[sensor.power_meter_2_power_l1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter Power L1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter 2 Power L1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_meter_power_l1',
+    'entity_id': 'sensor.power_meter_2_power_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power_l2-entry]
+# name: test_all_entities[sensor.power_meter_2_power_l2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2938,7 +2938,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_meter_power_l2',
+    'entity_id': 'sensor.power_meter_2_power_l2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2964,23 +2964,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power_l2-state]
+# name: test_all_entities[sensor.power_meter_2_power_l2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter Power L2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter 2 Power L2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_meter_power_l2',
+    'entity_id': 'sensor.power_meter_2_power_l2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power_l3-entry]
+# name: test_all_entities[sensor.power_meter_2_power_l3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2996,7 +2996,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_meter_power_l3',
+    'entity_id': 'sensor.power_meter_2_power_l3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3022,16 +3022,16 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[sensor.power_meter_power_l3-state]
+# name: test_all_entities[sensor.power_meter_2_power_l3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter Power L3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power meter 2 Power L3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_meter_power_l3',
+    'entity_id': 'sensor.power_meter_2_power_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

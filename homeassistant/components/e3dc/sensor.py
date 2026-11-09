@@ -1,7 +1,7 @@
 """Support for E3/DC sensors."""
 
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from enum import IntEnum
 from operator import attrgetter
 from typing import TYPE_CHECKING, override
@@ -35,14 +35,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, PartKind
+from .const import PartKind
 from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
-from .entity import E3dcEntity, E3dcPart, part_device_info
+from .entity import E3dcEntity, E3dcPart
 
 PARALLEL_UPDATES = 0
 
@@ -313,25 +311,17 @@ class E3dcPartSensorDescription(SensorEntityDescription):
     value_fn: Callable[[E3dcPowerStation, int], StateType | IntEnum]
 
 
-def _meter_phase_powers(
-    device: E3dcPowerStation, number: int
-) -> tuple[int | None, int | None, int | None]:
-    """The phase powers of power meter slot ``number``."""
-    meter = device.power_meter_readings[number]
-    return meter.power_l1, meter.power_l2, meter.power_l3
-
-
 def _meter_phase_power(phase: str) -> Callable[[E3dcPowerStation, int], StateType]:
     """Read the power on ``phase`` of a power meter slot."""
     get = attrgetter(f"power_{phase}")
     return lambda device, number: get(device.power_meter_readings[number])
 
 
-def _total(values: Iterable[int | None]) -> int | None:
-    """The sum of the phase values, or ``None`` if any is unknown."""
-    values = tuple(values)
-    known = [value for value in values if value is not None]
-    return sum(known) if len(known) == len(values) else None
+def _total(meter: PowerMeterReading) -> int | None:
+    """The sum of the meter's phase powers, or ``None`` if any is unknown."""
+    powers = (meter.power_l1, meter.power_l2, meter.power_l3)
+    known = [power for power in powers if power is not None]
+    return sum(known) if len(known) == len(powers) else None
 
 
 POWER_METER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
@@ -348,7 +338,7 @@ POWER_METER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device, number: _total(_meter_phase_powers(device, number)),
+        value_fn=lambda device, number: _total(device.power_meter_readings[number]),
     ),
     *(
         E3dcPartSensorDescription(
@@ -373,15 +363,65 @@ def _inverter(device: E3dcPowerStation, number: int) -> Inverter:
     return device.inverters[number]
 
 
+@dataclass(frozen=True, kw_only=True)
+class _InverterQuantity:
+    """A quantity an inverter reports, e.g. once per phase."""
+
+    device_class: SensorDeviceClass
+    unit: str
+    suggested_display_precision: int | None = None
+    enabled_default: bool = False
+
+
+PHASE_QUANTITIES = {
+    "active_power": _InverterQuantity(
+        device_class=SensorDeviceClass.POWER,
+        unit=UnitOfPower.WATT,
+        enabled_default=True,
+    ),
+    "apparent_power": _InverterQuantity(
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        unit=UnitOfApparentPower.VOLT_AMPERE,
+    ),
+    "reactive_power": _InverterQuantity(
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        unit=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    ),
+    "voltage": _InverterQuantity(
+        device_class=SensorDeviceClass.VOLTAGE,
+        unit=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=1,
+    ),
+    "current": _InverterQuantity(
+        device_class=SensorDeviceClass.CURRENT,
+        unit=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+    ),
+}
+DC_QUANTITIES = {
+    "dc_power": _InverterQuantity(
+        device_class=SensorDeviceClass.POWER,
+        unit=UnitOfPower.WATT,
+        enabled_default=True,
+    ),
+    "dc_voltage": _InverterQuantity(
+        device_class=SensorDeviceClass.VOLTAGE,
+        unit=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=1,
+    ),
+    "dc_current": _InverterQuantity(
+        device_class=SensorDeviceClass.CURRENT,
+        unit=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+    ),
+}
+
+
 def _inverter_sensor(
     key: str,
-    device_class: SensorDeviceClass,
-    unit: str,
-    *,
+    quantity: _InverterQuantity,
     translation_key: str | None = None,
     translation_placeholders: Mapping[str, str] | None = None,
-    suggested_display_precision: int | None = None,
-    enabled_default: bool = False,
 ) -> E3dcPartSensorDescription:
     """A sensor for the inverter attribute named ``key``."""
     get = attrgetter(key)
@@ -389,11 +429,11 @@ def _inverter_sensor(
         key=key,
         translation_key=translation_key,
         translation_placeholders=translation_placeholders,
-        device_class=device_class,
-        native_unit_of_measurement=unit,
+        device_class=quantity.device_class,
+        native_unit_of_measurement=quantity.unit,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=suggested_display_precision,
-        entity_registry_enabled_default=enabled_default,
+        suggested_display_precision=quantity.suggested_display_precision,
+        entity_registry_enabled_default=quantity.enabled_default,
         value_fn=lambda device, number: get(_inverter(device, number)),
     )
 
@@ -401,94 +441,25 @@ def _inverter_sensor(
 INVERTER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
     *(
         _inverter_sensor(
-            f"active_power_{phase}",
-            SensorDeviceClass.POWER,
-            UnitOfPower.WATT,
-            translation_key="active_power_phase",
-            translation_placeholders={"phase": phase.upper()},
-            enabled_default=True,
+            f"{name}_{phase}",
+            quantity,
+            f"{name}_phase",
+            {"phase": phase.upper()},
         )
-        for phase in PHASES
-    ),
-    *(
-        _inverter_sensor(
-            f"apparent_power_{phase}",
-            SensorDeviceClass.APPARENT_POWER,
-            UnitOfApparentPower.VOLT_AMPERE,
-            translation_key="apparent_power_phase",
-            translation_placeholders={"phase": phase.upper()},
-        )
-        for phase in PHASES
-    ),
-    *(
-        _inverter_sensor(
-            f"reactive_power_{phase}",
-            SensorDeviceClass.REACTIVE_POWER,
-            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
-            translation_key="reactive_power_phase",
-            translation_placeholders={"phase": phase.upper()},
-        )
-        for phase in PHASES
-    ),
-    *(
-        _inverter_sensor(
-            f"voltage_{phase}",
-            SensorDeviceClass.VOLTAGE,
-            UnitOfElectricPotential.VOLT,
-            translation_key="voltage_phase",
-            translation_placeholders={"phase": phase.upper()},
-            suggested_display_precision=1,
-        )
-        for phase in PHASES
-    ),
-    *(
-        _inverter_sensor(
-            f"current_{phase}",
-            SensorDeviceClass.CURRENT,
-            UnitOfElectricCurrent.AMPERE,
-            translation_key="current_phase",
-            translation_placeholders={"phase": phase.upper()},
-            suggested_display_precision=2,
-        )
+        for name, quantity in PHASE_QUANTITIES.items()
         for phase in PHASES
     ),
     _inverter_sensor(
         "frequency",
-        SensorDeviceClass.FREQUENCY,
-        UnitOfFrequency.HERTZ,
-        suggested_display_precision=2,
-    ),
-    *(
-        _inverter_sensor(
-            f"dc_power_{tracker}",
-            SensorDeviceClass.POWER,
-            UnitOfPower.WATT,
-            translation_key="dc_power",
-            translation_placeholders={"tracker": str(tracker)},
-            enabled_default=True,
-        )
-        for tracker in DC_TRACKERS
-    ),
-    *(
-        _inverter_sensor(
-            f"dc_voltage_{tracker}",
-            SensorDeviceClass.VOLTAGE,
-            UnitOfElectricPotential.VOLT,
-            translation_key="dc_voltage",
-            translation_placeholders={"tracker": str(tracker)},
-            suggested_display_precision=1,
-        )
-        for tracker in DC_TRACKERS
-    ),
-    *(
-        _inverter_sensor(
-            f"dc_current_{tracker}",
-            SensorDeviceClass.CURRENT,
-            UnitOfElectricCurrent.AMPERE,
-            translation_key="dc_current",
-            translation_placeholders={"tracker": str(tracker)},
+        _InverterQuantity(
+            device_class=SensorDeviceClass.FREQUENCY,
+            unit=UnitOfFrequency.HERTZ,
             suggested_display_precision=2,
-        )
+        ),
+    ),
+    *(
+        _inverter_sensor(f"{name}_{tracker}", quantity, name, {"tracker": str(tracker)})
+        for name, quantity in DC_QUANTITIES.items()
         for tracker in DC_TRACKERS
     ),
 )
@@ -538,34 +509,6 @@ PARTS = (
 )
 
 
-def _registered_slots(
-    device_registry: dr.DeviceRegistry,
-    entry: E3dcConfigEntry,
-    coordinator: E3dcDataUpdateCoordinator,
-) -> dict[PartKind, set[int]]:
-    """The slots of the parts that already have a device, by kind."""
-    identifiers = {
-        identifier
-        for device in (
-            *dr.async_entries_for_config_entry(device_registry, entry.entry_id),
-            *dr.async_entries_for_parent_device(
-                device_registry, coordinator.station_device_id
-            ),
-        )
-        for domain, identifier in device.identifiers
-        if domain == DOMAIN
-    }
-    slots: dict[PartKind, set[int]] = {}
-    for part_kind in PARTS:
-        prefix = f"{entry.unique_id}_{part_kind.kind}_"
-        slots[part_kind.kind] = {
-            int(number) - 1
-            for identifier in identifiers
-            if (number := identifier.removeprefix(prefix)) != identifier
-        }
-    return slots
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: E3dcConfigEntry,
@@ -575,13 +518,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     device = coordinator.device
     served = {*device.readings_components, *device.settings_components}
-    device_registry = dr.async_get(hass)
     # The keys of the station sensors that are already added
     added_sensors: set[str] = set()
     # The parts whose sensors are already added, by kind and slot
-    added_parts: dict[tuple[PartKind, int], E3dcPart] = {}
-    # Parts from earlier runs keep the numbering while they are absent
-    seen_slots = _registered_slots(device_registry, entry, coordinator)
+    added_parts: set[tuple[PartKind, int]] = set()
 
     @callback
     def _async_add_new() -> None:
@@ -596,41 +536,17 @@ async def async_setup_entry(
                 added_sensors.add(description.key)
                 entities.append(E3dcSensor(coordinator, description))
         for part_kind in PARTS:
-            slots = list(part_kind.present_fn(device))
-            seen = seen_slots[part_kind.kind]
-            seen.update(slots)
-            # Number the parts once the power station has had several of a kind
-            numbered = len(seen) > 1
-            for slot in slots:
+            for slot in part_kind.present_fn(device):
                 if (part_kind.kind, slot) in added_parts:
                     continue
-                part = E3dcPart(kind=part_kind.kind, slot=slot, numbered=numbered)
-                added_parts[part_kind.kind, slot] = part
+                added_parts.add((part_kind.kind, slot))
+                part = E3dcPart(kind=part_kind.kind, slot=slot)
                 entities.extend(
                     E3dcPartSensor(coordinator, description, part, part_kind)
                     for description in part_kind.sensors
                 )
-            if numbered:
-                _async_number_parts(part_kind.kind)
         if entities:
             async_add_entities(entities)
-
-    @callback
-    def _async_number_parts(kind: PartKind) -> None:
-        """Rename the devices of the parts added while they were the only one."""
-        for key, part in added_parts.items():
-            if part.kind != kind or part.numbered:
-                continue
-            part = added_parts[key] = replace(part, numbered=True)
-            device_info = part_device_info(coordinator, part)
-            if isinstance(device_info, ChildDeviceInfo):
-                device_registry.async_get_or_create_child_from_info(
-                    config_entry_id=entry.entry_id, device_info=device_info
-                )
-            else:
-                device_registry.async_get_or_create_from_info(
-                    config_entry_id=entry.entry_id, device_info=device_info
-                )
 
     _async_add_new()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new))

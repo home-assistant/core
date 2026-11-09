@@ -42,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None
         )
 
     # Register the power station before its parts, which link to it
-    station = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **coordinator.device_info
+    station = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=coordinator.device_info
     )
     coordinator.station_device_id = station.id
 

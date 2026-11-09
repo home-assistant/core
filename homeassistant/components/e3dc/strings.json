@@ -46,16 +46,10 @@
   },
   "device": {
     "inverter": {
-      "name": "Inverter"
-    },
-    "numbered_inverter": {
       "name": "Inverter {number}"
     },
-    "numbered_power_meter": {
-      "name": "Power meter {number}"
-    },
     "power_meter": {
-      "name": "Power meter"
+      "name": "Power meter {number}"
     }
   },
   "entity": {

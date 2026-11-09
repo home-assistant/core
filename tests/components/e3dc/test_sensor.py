@@ -89,13 +89,13 @@ async def test_all_entities(
         ),
         pytest.param(
             {40144: int32_words(200)},  # Power meter slot 1 power L1, 32 bit
-            "sensor.power_meter_power",
+            "sensor.power_meter_2_power",
             "400",
             id="power_meters",
         ),
         pytest.param(
             {41006: int32_words(2000)},  # Inverter slot 0 active power L1, in W
-            "sensor.e3_dc_s10_x_inverter_active_power_l1",
+            "sensor.e3_dc_s10_x_inverter_1_active_power_l1",
             "2000",
             id="inverters",
         ),
@@ -205,8 +205,8 @@ async def test_optional_hardware_missing(
         pytest.param(
             41000,  # Start of the inverter slot 0 block
             [
-                "sensor.e3_dc_s10_x_inverter_active_power_l1",
-                "sensor.e3_dc_s10_x_inverter_dc_power_1",
+                "sensor.e3_dc_s10_x_inverter_1_active_power_l1",
+                "sensor.e3_dc_s10_x_inverter_1_dc_power_1",
             ],
             id="no_inverters",
         ),
@@ -232,14 +232,38 @@ async def test_block_missing_from_firmware(
         assert entity_registry.async_get(entity_id) is None
 
 
+def _part_devices(
+    device_registry: dr.DeviceRegistry, entry: MockConfigEntry
+) -> dict[str, tuple[str | None, str]]:
+    """The part devices' names and how they link to the power station.
+
+    The devices are keyed by their identifier without the serial number.
+    """
+    station = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), entry.entry_id
+    )
+    connected = [
+        device
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        if device.via_device_id == station.id
+    ]
+    children = dr.async_entries_for_parent_device(device_registry, station.id)
+    return {
+        identifier.removeprefix(f"{MOCK_SERIAL}_"): (device.name, relation)
+        for relation, devices in (("via", connected), ("child", children))
+        for device in devices
+        for _, identifier in device.identifiers
+    }
+
+
 @pytest.mark.parametrize(
     ("holding", "devices"),
     [
         pytest.param(
             {},
             {
-                "power_meter_2": ("Power meter", "via"),
-                "inverter_1": ("Inverter", "child"),
+                "power_meter_2": ("Power meter 2", "via"),
+                "inverter_1": ("Inverter 1", "child"),
             },
             id="one_of_each",
         ),
@@ -267,153 +291,70 @@ async def test_part_devices(
     holding: dict[int, int | list[int]],
     devices: dict[str, tuple[str, str]],
 ) -> None:
-    """Test the power meters and inverters get devices, numbered if there are several."""
+    """Test the power meters and inverters get a device named after their slot."""
     seed(mock_unit, holding)
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    station = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
-    )
-    connected = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-    children = dr.async_entries_for_parent_device(device_registry, station.id)
-    parts = {
-        identifier.removeprefix(f"{MOCK_SERIAL}_"): (device.name, relation)
-        for relation, entries in (
-            ("via", [d for d in connected if d.via_device_id == station.id]),
-            ("child", children),
-        )
-        for device in entries
-        for _, identifier in device.identifiers
-    }
-
     # The power station's own inverter is a child device, the other parts are
     # connected through it. The meter at the grid connection point has no device.
-    assert parts == devices
-
-
-def _part_names(
-    device_registry: dr.DeviceRegistry, entry: MockConfigEntry
-) -> dict[str, str | None]:
-    """The names of the part devices, by identifier without the serial number."""
-    station = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), entry.entry_id
-    )
-    return {
-        identifier.removeprefix(f"{MOCK_SERIAL}_"): device.name
-        for device in (
-            *dr.async_entries_for_config_entry(device_registry, entry.entry_id),
-            *dr.async_entries_for_parent_device(device_registry, station.id),
-        )
-        if device.id != station.id
-        for _, identifier in device.identifiers
-    }
+    assert _part_devices(device_registry, mock_config_entry) == devices
 
 
 @pytest.mark.parametrize(
-    ("holding", "entity_id", "names"),
+    ("setup_holding", "holding", "entity_id"),
     [
         pytest.param(
+            {},
             {
                 40113: 2,  # Power meter slot 2 measures external production
                 40150: int32_words(300),  # Power meter slot 2 power L1, 32 bit
             },
             "sensor.power_meter_3_power",
-            {
-                "power_meter_2": "Power meter 2",
-                "power_meter_3": "Power meter 3",
-                "inverter_1": "Inverter",
-            },
             id="power_meter",
         ),
         pytest.param(
+            {},
             {
                 41052: 2302,  # Inverter slot 1 voltage L1, in 0.1 V
                 41040: int32_words(1200),  # Inverter slot 1 active power L1, in W
             },
             "sensor.inverter_2_active_power_l1",
-            {
-                "power_meter_2": "Power meter",
-                "inverter_1": "Inverter 1",
-                "inverter_2": "Inverter 2",
-            },
             id="inverter",
+        ),
+        pytest.param(
+            {40105: 0},  # Power meter slot 0 not installed
+            {40105: 1},  # Power meter slot 0 at the grid connection point
+            GRID_POWER_L1,
+            id="grid_meter",
         ),
     ],
 )
-@pytest.mark.usefixtures("init_integration")
-async def test_part_added_when_reported(
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_added_when_reported(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_unit: MockModbusUnit,
     mock_config_entry: MockConfigEntry,
+    setup_holding: dict[int, int | list[int]],
     holding: dict[int, int | list[int]],
     entity_id: str,
-    names: dict[str, str],
 ) -> None:
-    """Test a meter configured or an inverter connected after setup gets its sensors."""
-    assert hass.states.get(entity_id) is None
+    """Test hardware the power station reports after setup gets its sensors."""
+    seed(mock_unit, setup_holding)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entity_id) is None
 
     seed(mock_unit, holding)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id) is not None
-    # The part that was the only one of its kind gets numbered too
-    assert _part_names(device_registry, mock_config_entry) == names
-
-
-@pytest.mark.parametrize(
-    ("setup_holding", "holding", "names"),
-    [
-        pytest.param(
-            {40113: 2},  # Power meter slot 2 measures external production
-            {40113: 0},  # Power meter slot 2 not installed
-            {
-                "power_meter_2": "Power meter 2",
-                "power_meter_3": "Power meter 3",
-                "inverter_1": "Inverter",
-            },
-            id="power_meter",
-        ),
-        pytest.param(
-            {41052: 2302},  # Inverter slot 1 voltage L1, connected
-            {41052: 0},  # Inverter slot 1 voltage L1, disconnected
-            {
-                "power_meter_2": "Power meter",
-                "inverter_1": "Inverter 1",
-                "inverter_2": "Inverter 2",
-            },
-            id="inverter",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_get_unit")
-async def test_numbering_kept_after_reload(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_unit: MockModbusUnit,
-    mock_config_entry: MockConfigEntry,
-    setup_holding: dict[int, int | list[int]],
-    holding: dict[int, int | list[int]],
-    names: dict[str, str],
-) -> None:
-    """Test the parts stay numbered after a reload while one of them is absent."""
-    seed(mock_unit, setup_holding)
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    seed(mock_unit, holding)
-    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert _part_names(device_registry, mock_config_entry) == names
+    assert entity_registry.async_get(entity_id) is not None
 
 
 @pytest.mark.parametrize(
@@ -422,7 +363,7 @@ async def test_numbering_kept_after_reload(
         pytest.param(
             {},
             {40109: 0},  # Power meter slot 1 not installed
-            "sensor.power_meter_power",
+            "sensor.power_meter_2_power",
             id="power_meter",
         ),
         pytest.param(
@@ -456,26 +397,3 @@ async def test_part_unavailable_when_gone(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-
-@pytest.mark.usefixtures("mock_get_unit")
-async def test_grid_meter_added_when_reported(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_unit: MockModbusUnit,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the grid phase sensors are added once a grid meter is configured."""
-    seed(mock_unit, {40105: 0})  # Power meter slot 0 not installed
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert entity_registry.async_get(GRID_POWER_L1) is None
-
-    seed(mock_unit, {40105: 1})  # Power meter slot 0 at the grid connection point
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert entity_registry.async_get(GRID_POWER_L1) is not None

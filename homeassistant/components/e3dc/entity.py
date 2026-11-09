@@ -17,7 +17,6 @@ class E3dcPart:
 
     kind: PartKind
     slot: int  # E3/DC counts the slots from 0
-    numbered: bool  # False while the power station has only one part of this kind
 
     @property
     def number(self) -> int:
@@ -52,35 +51,29 @@ class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
             self._attr_device_info = coordinator.device_info
         else:
             prefix = f"{serial}_{part.kind}_{part.number}"
-            self._attr_device_info = part_device_info(coordinator, part)
+            self._attr_device_info = _part_device_info(coordinator, part, prefix)
         self._attr_unique_id = f"{prefix}_{entity_description.key}"
 
 
-def part_device_info(
-    coordinator: E3dcDataUpdateCoordinator, part: E3dcPart
+def _part_device_info(
+    coordinator: E3dcDataUpdateCoordinator, part: E3dcPart, identifier: str
 ) -> DeviceInfo | ChildDeviceInfo:
     """Describe the device of a part.
 
     The power station's own inverter is a child of the power station device, every
     other part is a device connected through it.
     """
-    identifier = f"{coordinator.config_entry.unique_id}_{part.kind}_{part.number}"
-    if part.numbered:
-        translation_key = f"numbered_{part.kind}"
-        placeholders: dict[str, str] | None = {"number": str(part.number)}
-    else:
-        translation_key = part.kind
-        placeholders = None
+    placeholders = {"number": str(part.number)}
     if part.built_in:
         return ChildDeviceInfo(
             identifiers={(DOMAIN, identifier)},
             parent_device_id=coordinator.station_device_id,
-            translation_key=translation_key,
+            translation_key=part.kind,
             translation_placeholders=placeholders,
         )
     return DeviceInfo(
         identifiers={(DOMAIN, identifier)},
-        translation_key=translation_key,
+        translation_key=part.kind,
         translation_placeholders=placeholders,
         via_device_id=coordinator.station_device_id,
     )
