@@ -1,8 +1,9 @@
 """Tests for the A Better Routeplanner device tracker platform."""
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
-from aioabrp import ConnectionEvent, ConnectionState, Location, Telemetry
+from aioabrp import ConnectionEvent, ConnectionState, Location, MetricValue, Telemetry
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -30,10 +31,11 @@ TRACKER_ENTITY_ID_2 = "device_tracker.rivian_r1s_2024_quad_max_location"
 _ABSENT_VEHICLE_ID = 999999999999
 _AWAY = Location(lat=59.3293, lon=18.0686)
 _MOVED = Location(lat=57.7089, lon=11.9746)
+_REPORTED = datetime(2026, 11, 9, 7, 0, tzinfo=UTC)
 
 
-def _location_frame(location: Location) -> Telemetry:
-    return Telemetry(location=build_metric_value(location))
+def _location_frame(location: Location, time: datetime = _REPORTED) -> Telemetry:
+    return Telemetry(location=MetricValue(value=location, time=time, provider=None))
 
 
 def _soc_frame() -> Telemetry:
@@ -115,24 +117,29 @@ async def test_tracker_unavailable_after_auth_failure(
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
-async def test_tracker_skips_unchanged_positions(
+async def test_tracker_writes_only_new_position_reports(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     mock_telemetry_stream: MagicMock,
 ) -> None:
-    """Frames without a new position change no state; a new position does."""
+    """Each new position report is written; other frames and replays are not."""
     await setup_integration(hass, config_entry_with_vehicles)
     fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _location_frame(_AWAY))
     await hass.async_block_till_done()
-
-    # A forced write of an unchanged state would still fire state_changed.
     changed = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     for vehicle_id in (MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2):
         fire_frame(mock_telemetry_stream, vehicle_id, _soc_frame())
+    # A reconnect replays the last report with its original timestamp.
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _location_frame(_AWAY))
     await hass.async_block_till_done()
     assert _tracker_changes(changed) == 0
 
-    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _location_frame(_MOVED))
+    later = _REPORTED + timedelta(minutes=1)
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _location_frame(_AWAY, later))
     await hass.async_block_till_done()
     assert _tracker_changes(changed) == 1
+
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _location_frame(_MOVED, later))
+    await hass.async_block_till_done()
+    assert _tracker_changes(changed) == 2

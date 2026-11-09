@@ -2,7 +2,7 @@
 
 from typing import override
 
-from aioabrp import Location
+from aioabrp import Location, MetricValue
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
@@ -49,12 +49,35 @@ class AbrpDeviceTracker(AbrpVehicleEntity, TrackerEntity):
     """GPS position of one vehicle."""
 
     _attr_translation_key = "location"
+    _last_report: tuple[MetricValue[Location] | None, bool] | None = None
 
-    @property
+    def _report(self) -> tuple[MetricValue[Location] | None, bool]:
+        tlm = self.telemetry
+        return (
+            tlm.location if tlm is not None else None,
+            self.coordinator.stream_auth_failed,
+        )
+
     @override
-    def force_update(self) -> bool:
-        """Skip unchanged positions; last_reported records repeated reports."""
-        return False
+    async def async_added_to_hass(self) -> None:
+        """Remember the report written when the entity is added."""
+        await super().async_added_to_hass()
+        self._last_report = self._report()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Write only on a new position report or an availability change.
+
+        TrackerEntity forces every write, but the shared coordinator notifies
+        on every frame of every metric for every vehicle, so writing each one
+        would bump last_updated without a new position. A new report carries
+        a new timestamp; a reconnect replays the last one with its original
+        timestamp and is skipped.
+        """
+        if (report := self._report()) != self._last_report:
+            self._last_report = report
+            super()._handle_coordinator_update()
 
     @property
     def _location(self) -> Location | None:
