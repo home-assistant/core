@@ -1638,6 +1638,55 @@ async def test_get_history_service_max_records_with_duplicate_states(
         }
 
 
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_truncated_identical_states(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test truncation when all fetched states collapse into a single state."""
+    monkeypatch.setattr(
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS_PER_ENTITY",
+        3,
+    )
+
+    for hour in range(6, 11):
+        hass.states.async_set(
+            entity_id="sensor.sensor",
+            new_state="1.0",
+            timestamp=dt_util.parse_datetime(
+                f"2023-05-08 {hour:02}:00:00Z"
+            ).timestamp(),
+            force_update=True,
+        )
+    await async_recorder_block_till_done(hass)
+
+    now = dt_util.parse_datetime("2023-05-08 12:00:00Z")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_history",
+            {
+                "start_time": "2023-05-08 05:00:00Z",
+                "entity_id": ["sensor.sensor"],
+                "allow_truncation": True,
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+    assert result == {
+        "history": {
+            "sensor.sensor": [
+                {
+                    "start": "2023-05-08T06:00:00+00:00",
+                    "end": "2023-05-08T09:00:00+00:00",
+                    "state": "1.0",
+                },
+            ]
+        }
+    }
+
+
 @pytest.mark.parametrize(
     ("service_args", "expected_result"),
     [
@@ -1667,10 +1716,50 @@ async def test_get_history_service_max_records_with_duplicate_states(
                             "start": "2023-05-08T08:00:00+00:00",
                             "state": "1.0",
                         },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
                     ],
                 }
             },
             id="with_start_time_state_truncated",
+        ),
+        pytest.param(
+            {
+                "start_time": "2023-05-08 07:30:00Z",
+                "entity_id": [
+                    "sensor.sensor",
+                ],
+            },
+            {
+                "history": {
+                    "sensor.sensor": [
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:30:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                }
+            },
+            id="max_in_window_records_with_start_time_state",
         ),
         pytest.param(
             {
