@@ -178,6 +178,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
         self._refresh()  # Set initial state
 
     @override
+    @callback
     def _refresh(self) -> None:
         """Refresh the device."""
         self._attr_native_value = self.entity_description.value(self.coordinator.data)

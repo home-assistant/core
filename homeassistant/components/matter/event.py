@@ -106,6 +106,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
         )
 
     @override
+    @callback
     def _update_from_device(self) -> None:
         """Call when Node attribute(s) changed."""
 

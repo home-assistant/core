@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_GATEWAY_ID
@@ -57,6 +57,7 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
         self._device_data = self._device_control.sockets[0]
 
     @override
+    @callback
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self._device_control.sockets[0]

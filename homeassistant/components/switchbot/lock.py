@@ -6,7 +6,7 @@ import switchbot
 from switchbot.const import LockStatus
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
@@ -44,6 +44,7 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
             self._attr_supported_features = LockEntityFeature.OPEN
 
     @override
+    @callback
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         status = self._device.get_lock_status()

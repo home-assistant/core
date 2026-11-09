@@ -275,6 +275,7 @@ class TemplateEntity(AbstractTemplateEntity):
         return TemplateStateFromEntityId(self.hass, entity_id)
 
     @override
+    @callback
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
