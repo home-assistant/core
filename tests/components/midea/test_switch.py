@@ -703,7 +703,7 @@ async def test_a1_anion_services(
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_anion"]
 
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
     await _assert_service_call(
         hass,
