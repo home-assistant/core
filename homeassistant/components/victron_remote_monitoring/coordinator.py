@@ -32,6 +32,13 @@ class VRMForecastStore:
     consumption: ForecastAggregations | None
 
 
+def _forecast_aggregation(value: object) -> ForecastAggregations | None:
+    """Return an aggregation, treating a missing or false series as absent."""
+    if isinstance(value, ForecastAggregations):
+        return value
+    return None
+
+
 async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastStore:
     """Get the forecast data."""
     time_zone = dt_util.DEFAULT_TIME_ZONE
@@ -58,8 +65,8 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
         time_zone=time_zone,
     )
     return VRMForecastStore(
-        solar=stats["solar_yield"],
-        consumption=stats["consumption"],
+        solar=_forecast_aggregation(stats.get("solar_yield")),
+        consumption=_forecast_aggregation(stats.get("consumption")),
         site_id=site_id,
     )
 
