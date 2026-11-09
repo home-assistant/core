@@ -41,6 +41,8 @@ from .const import (
 )
 from .coordinator import MeteoFranceAlertUpdateCoordinator, MeteoFranceConfigEntry
 
+PARALLEL_UPDATES = 0
+
 ALERT_LEVELS = {1: "green", 2: "yellow", 3: "orange", 4: "red"}
 
 
