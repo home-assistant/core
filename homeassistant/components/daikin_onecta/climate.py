@@ -173,6 +173,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         # Successful writes update the typed model optimistically so Home
         # Assistant reflects the new state without waiting for the next poll.
         self._attr_supported_features = self._get_supported_features()
+        self._attr_native_temperature_unit = self._get_native_temperature_unit()
         self._attr_native_current_temperature = self._get_current_temperature()
         self._attr_max_temp = self._get_max_temp()
         self._attr_min_temp = self._get_min_temp()
@@ -275,6 +276,23 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         """Return the current temperature for this setpoint."""
         cc = self._climate_control()
         return cc.current_temperature(self._setpoint) if cc is not None else None
+
+    def _get_native_temperature_unit(self) -> UnitOfTemperature:
+        """Return the Daikin temperature unit, defaulting to Celsius."""
+        setpoint = self._get_setpoint()
+        unit = setpoint.unit if setpoint is not None else None
+        if unit is None:
+            cc = self._climate_control()
+            sensory_target = (
+                "leavingWaterTemperature"
+                if self._setpoint == "leavingWaterOffset"
+                else self._setpoint
+            )
+            sensory_data = cc.sensory_data(sensory_target) if cc is not None else None
+            unit = sensory_data.unit if sensory_data is not None else None
+        return (
+            UnitOfTemperature(unit) if unit is not None else UnitOfTemperature.CELSIUS
+        )
 
     def _get_max_temp(self) -> float:
         """Return the maximum configurable temperature."""

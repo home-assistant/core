@@ -1317,7 +1317,7 @@ async def test_climate_service_updates_entity_state(
 ) -> None:
     """Test climate services through the Home Assistant integration API."""
     setpoint = SimpleNamespace(
-        value=20, min_value=7, max_value=30, step_value=1, settable=True
+        value=20, min_value=7, max_value=30, step_value=1, settable=True, unit=None
     )
     operation_mode = SimpleNamespace(value="heating", values=["heating"], settable=True)
     climate_control = MagicMock(
@@ -1334,7 +1334,7 @@ async def test_climate_service_updates_entity_state(
     climate_control.on_off_mode = SimpleNamespace(value="on", settable=True)
     climate_control.fan_control = None
     climate_control.holiday_mode = None
-    climate_control.sensory_data = None
+    climate_control.sensory_data = MagicMock(return_value=None)
     climate_control.characteristic.return_value = None
     climate_control.climate_control = climate_control
     climate_control.setpoint_types = ["roomTemperature"]
@@ -1493,6 +1493,58 @@ async def test_climate_service_rejects_unavailable_power(
     assert coordinator.last_patch_call is None
 
 
+@pytest.mark.parametrize(
+    ("fixture", "setpoint_unit", "sensory_unit", "expected_unit"),
+    [
+        (
+            "climate_fixedfanmode",
+            "°F",
+            "°F",
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+        ("altherma", None, "°F", UnitOfTemperature.FAHRENHEIT),
+        ("altherma", None, None, UnitOfTemperature.CELSIUS),
+    ],
+)
+async def test_native_temperature_unit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fixture: str,
+    setpoint_unit: str | None,
+    sensory_unit: str | None,
+    expected_unit: UnitOfTemperature,
+) -> None:
+    """Use the Daikin temperature unit when present, otherwise default to Celsius."""
+    await _async_setup_fixture(hass, config_entry, fixture)
+    climate_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == CLIMATE_DOMAIN
+    )
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(climate_entry.entity_id)
+    assert isinstance(entity, DaikinClimate)
+
+    setpoint = entity._get_setpoint()
+    cc = entity._climate_control()
+    assert setpoint is not None
+    assert cc is not None
+    setpoint.unit = setpoint_unit
+    sensory_target = (
+        "leavingWaterTemperature"
+        if entity._setpoint == "leavingWaterOffset"
+        else entity._setpoint
+    )
+    sensory_data = cc.sensory_data(sensory_target)
+    if sensory_data is not None:
+        sensory_data.unit = sensory_unit
+    config_entry.runtime_data.async_update_listeners()
+
+    assert entity.native_temperature_unit == expected_unit
+
+
 @pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
 async def test_climate_turn_rejects_unknown_power_state(method: str) -> None:
     """Reject turn actions when Daikin omits the current power value."""
@@ -1530,6 +1582,7 @@ async def test_climate_platform_services_and_management_points(
             max_value=30,
             step_value=1,
             settable=True,
+            unit=None,
         )
         fan_operation = SimpleNamespace(
             fan_speed=SimpleNamespace(
@@ -1567,6 +1620,7 @@ async def test_climate_platform_services_and_management_points(
         control.fan_operation = lambda _mode=None: fan_operation
         control.mode_characteristic = presets.get
         control.current_temperature = lambda _target: None
+        control.sensory_data = lambda _target: None
         return control
 
     climate_controls = {
