@@ -8,7 +8,12 @@ import aiohttp
 import probatio
 from wmspro.webcontrol import WebControlPro
 
-from homeassistant.config_entries import SOURCE_DHCP, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_IGNORE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -42,6 +47,8 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
             DOMAIN, unique_id
         )
         if entry:
+            if entry.source == SOURCE_IGNORE:
+                return self.async_abort(reason="already_configured")
             try:  # Check if current host is a valid IP address
                 ipaddress.ip_address(entry.data[CONF_HOST])
             except ValueError:  # Do not touch name-based host
