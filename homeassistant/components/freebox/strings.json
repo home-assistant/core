@@ -40,6 +40,33 @@
       }
     },
     "sensor": {
+      "bandwidth_down": {
+        "name": "Download bandwidth"
+      },
+      "bandwidth_up": {
+        "name": "Upload bandwidth"
+      },
+      "connection_media": {
+        "name": "Connection media"
+      },
+      "connection_state": {
+        "name": "Connection state",
+        "state": {
+          "down": "Down",
+          "going_down": "Going down",
+          "going_up": "Going up",
+          "up": "Up"
+        }
+      },
+      "connection_type": {
+        "name": "Connection type"
+      },
+      "ipv4": {
+        "name": "IPv4 address"
+      },
+      "ipv6": {
+        "name": "IPv6 address"
+      },
       "missed": {
         "name": "Missed calls"
       },

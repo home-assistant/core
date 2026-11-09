@@ -32,7 +32,17 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-CONNECTION_SENSORS_KEYS = {"rate_down", "rate_up"}
+CONNECTION_SENSORS_KEYS = {
+    "bandwidth_down",
+    "bandwidth_up",
+    "media",
+    "rate_down",
+    "rate_up",
+    "state",
+    "type",
+}
+# Only returned by the API while the connection is up
+CONNECTION_IP_SENSORS_KEYS = {"ipv4", "ipv6"}
 
 # Icons
 DEVICE_ICONS = {

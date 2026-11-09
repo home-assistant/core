@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -54,6 +55,34 @@ async def test_network_speed(
     await hass.async_block_till_done()
     assert hass.states.get("sensor.freebox_server_r2_download_speed").state == "123.4"
     assert hass.states.get("sensor.freebox_server_r2_upload_speed").state == "432.1"
+
+
+async def test_connection_down(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
+    """Test IP sensors become unknown when the API stops returning them."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_server_r2_connection_state").state == "up"
+
+    data_connection_down = deepcopy(DATA_CONNECTION_GET_STATUS)
+    data_connection_down["state"] = "down"
+    del data_connection_down["ipv4"]
+    del data_connection_down["ipv6"]
+    router().connection.get_status.return_value = data_connection_down
+    # Simulate an update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    # To execute the save
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.freebox_server_r2_connection_state").state == "down"
+    assert (
+        hass.states.get("sensor.freebox_server_r2_ipv4_address").state == STATE_UNKNOWN
+    )
+    assert (
+        hass.states.get("sensor.freebox_server_r2_ipv6_address").state == STATE_UNKNOWN
+    )
 
 
 async def test_call(
