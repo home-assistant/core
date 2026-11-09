@@ -1,6 +1,5 @@
 """Tests for RYSE init setup."""
 
-import asyncio
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -10,7 +9,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ryse.const import SERVICE_UUID
-from homeassistant.components.ryse.helpers import pin_ble_connection
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +20,6 @@ from . import (
     make_ble_device,
     register_local_scanner,
     register_remote_scanner,
-    selected_ble_backend,
 )
 
 
@@ -197,25 +194,16 @@ async def test_setup_reports_pairing_outcome_when_unpair_fails(
 async def test_setup_uses_local_adapter_not_proxy(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_device: MagicMock,
     mock_ryse_ble_device: MagicMock,
 ) -> None:
-    """Test setup pairs through the local adapter, not a stronger proxy backend."""
+    """Test setup resolves the BLEDevice from a local adapter, not a proxy."""
     local_device = make_ble_device()
-    advertisement = make_advertisement(rssi=-80)
+    advertisement = make_advertisement()
     proxy_device = make_ble_device()
-    remote, cancel_remote = register_remote_scanner(hass, can_connect=True)
+    remote, cancel_remote = register_remote_scanner(hass)
     cancel_local = register_local_scanner(hass, local_device, advertisement)
-    backends_during_pair: list[BLEDevice] = []
-
-    async def _pair() -> bool:
-        backends_during_pair.append(selected_ble_backend(hass, local_device))
-        mock_device.client = MagicMock(is_connected=True)
-        return True
-
-    mock_device.pair.side_effect = _pair
     try:
-        remote.inject_advertisement(proxy_device, make_advertisement(rssi=-20))
+        remote.inject_advertisement(proxy_device, advertisement)
 
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -223,8 +211,6 @@ async def test_setup_uses_local_adapter_not_proxy(
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
         mock_ryse_ble_device.assert_called_once_with(local_device)
-        assert backends_during_pair == [local_device]
-        assert selected_ble_backend(hass, local_device) is not local_device
     finally:
         cancel_local()
         cancel_remote()
@@ -263,7 +249,6 @@ async def test_setup_uses_strongest_local_adapter(
 async def test_setup_prefers_bonded_local_adapter(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_device: MagicMock,
     mock_ryse_ble_device: MagicMock,
 ) -> None:
     """Test setup prefers the adapter that already holds the BlueZ bond."""
@@ -279,14 +264,6 @@ async def test_setup_prefers_bonded_local_adapter(
         source=LOCAL_SOURCE_HCI1,
         adapter="hci1",
     )
-    backends_during_pair: list[BLEDevice] = []
-
-    async def _pair() -> bool:
-        backends_during_pair.append(selected_ble_backend(hass, bonded))
-        mock_device.client = MagicMock(is_connected=True)
-        return True
-
-    mock_device.pair.side_effect = _pair
     try:
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -294,49 +271,9 @@ async def test_setup_prefers_bonded_local_adapter(
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
         mock_ryse_ble_device.assert_called_once_with(bonded)
-        assert backends_during_pair == [bonded]
-        assert selected_ble_backend(hass, bonded) is strong_unpaired
     finally:
         cancel_unpaired()
         cancel_bonded()
-
-
-async def test_overlapping_pins_do_not_restore_stale_wrapper(
-    hass: HomeAssistant,
-) -> None:
-    """Test exiting one pairing pin does not drop another task's adapter restriction."""
-    weak = make_ble_device()
-    strong = make_ble_device()
-    cancel_weak = register_local_scanner(hass, weak, make_advertisement(rssi=-80))
-    cancel_strong = register_local_scanner(
-        hass,
-        strong,
-        make_advertisement(rssi=-20),
-        source=LOCAL_SOURCE_HCI1,
-        adapter="hci1",
-    )
-    started_b = asyncio.Event()
-    a_exited = asyncio.Event()
-    result_b: list[BLEDevice] = []
-
-    async def _pin_a() -> None:
-        with pin_ble_connection(weak):
-            await started_b.wait()
-        a_exited.set()
-
-    async def _pin_b() -> None:
-        with pin_ble_connection(weak):
-            started_b.set()
-            await a_exited.wait()
-            result_b.append(selected_ble_backend(hass, weak))
-
-    try:
-        await asyncio.gather(_pin_a(), _pin_b())
-        assert result_b == [weak]
-        assert selected_ble_backend(hass, weak) is strong
-    finally:
-        cancel_weak()
-        cancel_strong()
 
 
 async def test_ble_device_callback_keeps_local_route(

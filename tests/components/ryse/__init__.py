@@ -4,7 +4,6 @@ from collections.abc import Callable
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from habluetooth.wrappers import HaBleakClientWrapper
 from pytest_homeassistant.components.bluetooth import (
     HCI0_SOURCE_ADDRESS,
     HCI1_SOURCE_ADDRESS,
@@ -18,7 +17,6 @@ from pytest_homeassistant.components.bluetooth import (
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import HaBluetoothConnector
-from homeassistant.components.bluetooth.api import _get_manager
 from homeassistant.components.ryse.const import MANUFACTURER_ID, SERVICE_UUID
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -118,16 +116,6 @@ def register_remote_scanner(
         cancel()
 
     return scanner, _unregister
-
-
-def selected_ble_backend(hass: HomeAssistant, ble_device: BLEDevice) -> BLEDevice:
-    """Return the BLEDevice HA's Bleak wrapper would connect through."""
-    manager = _get_manager(hass)
-    wrapper = HaBleakClientWrapper(ble_device)
-    backend = wrapper._async_get_best_available_backend_and_device(manager)
-    if backend.source is None:
-        manager.async_release_connection_slot(backend.device)
-    return backend.device
 
 
 def inject_ryse(

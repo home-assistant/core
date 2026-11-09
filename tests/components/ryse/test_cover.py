@@ -41,7 +41,6 @@ from . import (
     make_ble_device,
     register_local_scanner,
     register_remote_scanner,
-    selected_ble_backend,
 )
 
 DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
@@ -413,7 +412,7 @@ async def test_cover_command_raises_when_reconnect_fails(
     mock_device.send_close.assert_not_awaited()
     mock_device.send_set_position.assert_not_awaited()
     mock_device.unpair.assert_awaited_once()
-    assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert not list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_command_without_local_adapter_does_not_start_reauth(
@@ -487,7 +486,7 @@ async def test_pairing_failure_marks_unavailable(
     unavailable = f"{ENTITY_ID} became unavailable: failed to pair"
     assert caplog.text.count(unavailable) == 1
     mock_device.unpair.assert_awaited_once()
-    assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    assert not list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     caplog.clear()
     mock_device.pair.reset_mock()
@@ -604,26 +603,18 @@ async def test_ble_error_while_polling_resets_connection(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_cover_reconnect_pins_pair_to_local_adapter(
+async def test_cover_reconnects_when_proxy_also_sees_shade(
     hass: HomeAssistant,
     mock_device: MagicMock,
     local_ryse_scanner: BLEDevice,
     polled_cover: MockConfigEntry,
 ) -> None:
-    """Test a reconnect pairs through the local adapter, not a proxy backend."""
-    remote, cancel_remote = register_remote_scanner(hass, can_connect=True)
-    backends_during_pair: list[BLEDevice] = []
-
-    async def _pair() -> bool:
-        backends_during_pair.append(selected_ble_backend(hass, local_ryse_scanner))
-        mock_device.client = MagicMock(is_connected=True)
-        return True
-
+    """Test a reconnect still pairs when a Bluetooth proxy also sees the shade."""
+    remote, cancel_remote = register_remote_scanner(hass)
     try:
         remote.inject_advertisement(
             make_ble_device(), make_advertisement(pairing=False, rssi=-20)
         )
-        mock_device.pair.side_effect = _pair
         mock_device.pair.reset_mock()
         client = mock_device.client
         _disconnect_callback(client)(client)
@@ -632,10 +623,33 @@ async def test_cover_reconnect_pins_pair_to_local_adapter(
         await async_see_shade(hass, local_ryse_scanner)
 
         mock_device.pair.assert_awaited_once()
-        assert backends_during_pair == [local_ryse_scanner]
-        assert selected_ble_backend(hass, local_ryse_scanner) is not local_ryse_scanner
     finally:
         cancel_remote()
+
+
+async def test_reconnect_transport_error_releases_client(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a transport error from pair() during reconnect releases the client."""
+    client = mock_device.client
+    mock_device.unpair.reset_mock()
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+
+    mock_device.pair.reset_mock()
+    mock_device.pair.side_effect = BleakError("link dropped")
+
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.unpair.assert_awaited()
+    assert not list(setup_integration.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("local_ryse_scanner")

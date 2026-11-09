@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RyseConfigEntry, _async_unpair
 from .const import MANUFACTURER_NAME
-from .helpers import async_best_local_scanner_device, pin_ble_connection
+from .helpers import async_best_local_scanner_device
 
 PARALLEL_UPDATES = 1  # one BLE connection at a time
 _RECONNECT_COOLDOWN = 5.0
@@ -218,13 +218,13 @@ class RyseCoverEntity(CoverEntity):
             return
         if any(self._config_entry.async_get_active_flows(self.hass, {SOURCE_REAUTH})):
             return
-        if not await self._async_ensure_connected():
-            if not self._expected_disconnect:
-                self.async_write_ha_state()
-            return
-        if self._expected_disconnect:
-            return
         try:
+            if not await self._async_ensure_connected():
+                if not self._expected_disconnect:
+                    self.async_write_ha_state()
+                return
+            if self._expected_disconnect:
+                return
             await self._device.send_get_position()
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             if self._expected_disconnect:
@@ -273,11 +273,15 @@ class RyseCoverEntity(CoverEntity):
             self._clear_cached_position()
         self.async_write_ha_state()
 
-    async def _async_ensure_connected(self, *, start_reauth: bool = False) -> bool:
+    async def _async_ensure_connected(self) -> bool:
         """Reconnect when the BLE client is missing or dropped.
 
         ryseble's writes are no-ops when ``client`` is None, so a command that
         runs after a failed poll would otherwise appear to succeed.
+
+        ``pair()`` returns False for both a rejected bond and a transport
+        error it already swallowed, so a failure stays retryable instead of
+        starting reauthentication.
         """
         async with self._connect_lock:
             if self._expected_disconnect:
@@ -285,8 +289,7 @@ class RyseCoverEntity(CoverEntity):
             if self._is_connected():
                 self._async_attach_disconnect_callback()
                 return True
-            paired = await self._async_pair_on_local_adapter()
-            if paired:
+            if await self._async_pair_on_local_adapter():
                 if self._expected_disconnect:
                     await self._async_release_client()
                     return False
@@ -297,8 +300,6 @@ class RyseCoverEntity(CoverEntity):
                 return False
             self._reconnect_when_seen = True
             self._set_available(False, "failed to pair")
-            if start_reauth and paired is False:
-                self._config_entry.async_start_reauth(self.hass)
             return False
 
     async def _async_pair_on_local_adapter(self) -> bool | None:
@@ -312,15 +313,14 @@ class RyseCoverEntity(CoverEntity):
         )
         if scanner_device is None:
             return None
-        with pin_ble_connection(scanner_device.ble_device):
-            return await self._device.pair()
+        return await self._device.pair()
 
     async def _async_send_command(
         self, description: str, send: Callable[[], Coroutine[Any, Any, None]]
     ) -> None:
         """Send a cover command, reconnecting first if needed."""
         try:
-            if not await self._async_ensure_connected(start_reauth=True):
+            if not await self._async_ensure_connected():
                 self.async_write_ha_state()
                 raise HomeAssistantError(f"Failed to {description}: failed to pair")
             await send()
