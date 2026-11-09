@@ -12,7 +12,7 @@ from beatbot_cloud import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestBaseError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -69,11 +69,32 @@ class BeatbotEventClient:
 
     async def _run(self) -> None:
         """Run the library event client."""
+        while True:
+            try:
+                await self._client.async_run()
+            except BeatbotAuthenticationError:
+                _LOGGER.warning("Beatbot event stream authorization failed")
+                await self._coordinator.async_request_refresh()
+            else:
+                return
+
+            await self._async_wait_for_recovery()
+
+    async def _async_wait_for_recovery(self) -> None:
+        """Wait for a later successful refresh before retrying stream authentication."""
+        recovered = asyncio.Event()
+
+        @callback
+        def async_handle_update() -> None:
+            if self._coordinator.last_update_success:
+                recovered.set()
+
+        # A later refresh paces retries when only WebSocket authentication fails.
+        unsub = self._coordinator.async_add_listener(async_handle_update)
         try:
-            await self._client.async_run()
-        except BeatbotAuthenticationError:
-            _LOGGER.warning("Beatbot event stream authorization failed")
-            await self._coordinator.async_request_refresh()
+            await recovered.wait()
+        finally:
+            unsub()
 
     async def _async_refresh_token(self, rejected_access_token: str) -> str:
         """Refresh a rejected token through the session's shared rotation lock."""

@@ -26,6 +26,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.setup import async_setup_component
 
 from . import (
     BATTERY_ENTITY_ID,
@@ -708,3 +709,95 @@ async def test_empty_discovery_stops_polling_on_unload(
     mock_client.get_devices.reset_mock()
     await poll(hass, freezer)
     mock_client.get_devices.assert_not_awaited()
+
+
+async def test_event_stream_restarts_after_rest_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Resume push updates after a later successful authenticated refresh."""
+    mock_client.get_devices.side_effect = [
+        [create_device()],
+        BeatbotConnectionError(),
+        BeatbotConnectionError(),
+        [create_device()],
+    ]
+    mock_event_client.return_value.async_run.side_effect = [
+        BeatbotAuthenticationError(),
+        None,
+    ]
+    await setup_integration(hass, mock_config_entry)
+    assert mock_event_client.return_value.async_run.await_count == 1
+
+    await poll(hass, freezer)
+    assert mock_event_client.return_value.async_run.await_count == 1
+    await poll(hass, freezer)
+    assert mock_event_client.return_value.async_run.await_count == 2
+
+    library_callback(mock_event_client, "state_callback")(
+        property_change(INTERFACE_BATTERY, 42)
+    )
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "42"
+
+
+async def test_event_stream_repeated_rejection_waits_for_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Pace stream retries when REST works but WebSocket authentication fails."""
+    mock_event_client.return_value.async_run.side_effect = BeatbotAuthenticationError()
+    await setup_integration(hass, mock_config_entry)
+    assert mock_event_client.return_value.async_run.await_count == 1
+
+    await poll(hass, freezer)
+    assert mock_event_client.return_value.async_run.await_count == 2
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_client.get_devices.reset_mock()
+    await poll(hass, freezer)
+    mock_client.get_devices.assert_not_awaited()
+    assert mock_event_client.return_value.async_run.await_count == 2
+
+
+async def test_event_stream_restarts_after_auth_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Resume the stream when an explicit refresh confirms auth has recovered."""
+    mock_client.get_devices.side_effect = [
+        [create_device()],
+        BeatbotAuthenticationError(),
+        [create_device()],
+    ]
+    mock_event_client.return_value.async_run.side_effect = [
+        BeatbotAuthenticationError(),
+        None,
+    ]
+    await setup_integration(hass, mock_config_entry)
+    assert mock_event_client.return_value.async_run.await_count == 1
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(seconds=60))
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": BATTERY_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert mock_event_client.return_value.async_run.await_count == 2
+    library_callback(mock_event_client, "state_callback")(
+        property_change(INTERFACE_BATTERY, 42)
+    )
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "42"
