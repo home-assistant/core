@@ -20,7 +20,12 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import Unauthorized, UnknownUser
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
@@ -169,3 +174,50 @@ async def test_service_with_serial(
     )
 
     assert getattr(mock_dsm.system, service).call_count == 1
+
+
+@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+async def test_service_with_serial_of_unloaded_entry(
+    hass: HomeAssistant,
+    mock_dsm: MagicMock,
+    setup_dsm: MockConfigEntry,
+    hass_admin_user: MockUser,
+    service: str,
+) -> None:
+    """Test the action rejects a serial whose entry is not loaded."""
+    await hass.config_entries.async_unload(setup_dsm.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CONF_SERIAL: SERIAL},
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    assert err.value.translation_key == "entry_not_loaded"
+    assert getattr(mock_dsm.system, service).call_count == 0
+
+
+@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+@pytest.mark.usefixtures("setup_dsm")
+async def test_service_with_unknown_serial(
+    hass: HomeAssistant,
+    mock_dsm: MagicMock,
+    hass_admin_user: MockUser,
+    service: str,
+) -> None:
+    """Test the action rejects a serial that is not configured."""
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {CONF_SERIAL: "unknown"},
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    assert err.value.translation_key == "serial_not_found"
+    assert getattr(mock_dsm.system, service).call_count == 0

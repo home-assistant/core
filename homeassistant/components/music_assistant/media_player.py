@@ -543,6 +543,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         media_type: str | None = None,
         username: str | None = None,
         start_item: str | None = None,
+        shuffle: bool | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
         # An explicit username impersonates that Music Assistant user (the server rejects an
@@ -627,6 +628,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 option=self._convert_queueoption_to_media_player_enqueue(enqueue),
                 radio_mode=radio_mode or False,
                 start_item=start_item,
+                shuffle=shuffle,
                 user=user,
             )
 
