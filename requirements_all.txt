@@ -187,10 +187,10 @@ aioacaia==0.2.2
 aioairq==0.4.8
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.7.3
+aioairzone-cloud==0.7.4
 
 # homeassistant.components.airzone
-aioairzone==1.0.5
+aioairzone==1.0.6
 
 # homeassistant.components.alexa_devices
 aioamazondevices==17.2.7
@@ -478,7 +478,7 @@ aiosteamist==1.0.1
 aiostreammagic==2.13.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==6.4.0
+aioswitcher==6.5.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.7.1
