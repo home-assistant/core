@@ -600,7 +600,7 @@ class Stream:
 
         # Take advantage of lookback
         hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
-        if hls:  # type: ignore[truthy-bool]
+        if hls:
             num_segments = min(int(lookback / hls.target_duration) + 1, MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()

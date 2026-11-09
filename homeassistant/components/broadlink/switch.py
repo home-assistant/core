@@ -91,7 +91,7 @@ async def async_setup_platform(
         async_add_entities_config_entry, device = platform_data.get(
             mac_addr, (None, None)
         )
-        if not async_add_entities_config_entry:  # type: ignore[truthy-bool]
+        if not async_add_entities_config_entry:
             raise PlatformNotReady
 
         async_add_entities_config_entry(

@@ -64,7 +64,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             assert response is not None
             assert isinstance(response.data, UptimeRobotAccount)
 
-        account: UptimeRobotAccount | None = response.data if response else None  # type: ignore[truthy-bool]
+        account: UptimeRobotAccount | None = response.data if response else None
 
         return errors, account
 
