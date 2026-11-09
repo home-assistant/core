@@ -2121,24 +2121,24 @@ async def test_sensor_generator_data(
 
     for entity, item in GENERATOR_ITEMS:
         assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
-        assert (
-            entity_state.state == STATE_UNAVAILABLE
+        assert entity_state.state == (
+            STATE_UNAVAILABLE
             if target == "generator"
             else str(getattr(mock_envoy.data.generator, item))
         )
 
     for entity, item in GENERATOR_CONFIG_ITEMS:
         assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
-        assert (
-            entity_state.state == STATE_UNAVAILABLE
+        assert entity_state.state == (
+            STATE_UNAVAILABLE
             if target == "generator_config"
             else str(getattr(mock_envoy.data.generator_config, item))
         )
 
     for entity, item in GENERATOR_MODE_ITEMS:
         assert (entity_state := hass.states.get(f"{entity_base}_{entity}"))
-        assert (
-            entity_state.state == STATE_UNAVAILABLE
+        assert entity_state.state == (
+            STATE_UNAVAILABLE
             if target == "generator_mode"
             else str(getattr(mock_envoy.data.generator_mode, item))
         )
