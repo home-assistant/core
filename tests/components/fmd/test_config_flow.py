@@ -48,6 +48,7 @@ async def test_form(
     [
         (AuthenticationError("nope"), "invalid_auth"),
         (FmdApiException("boom"), "cannot_connect"),
+        (TimeoutError("server timed out"), "cannot_connect"),
         (Exception("surprise"), "unknown"),
     ],
 )

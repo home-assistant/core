@@ -89,7 +89,9 @@ class FMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     artifacts = await validate_input(user_input)
                 except AuthenticationError:
                     errors["base"] = "invalid_auth"
-                except FmdApiException:
+                # The client lets request timeouts escape as TimeoutError
+                # rather than wrapping them in FmdApiException.
+                except FmdApiException, TimeoutError:
                     errors["base"] = "cannot_connect"
                 except Exception:
                     _LOGGER.exception("Unexpected error connecting to FMD server")

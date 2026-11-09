@@ -52,7 +52,9 @@ class FmdCoordinator(DataUpdateCoordinator[Location]):
                 translation_key="update_auth_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        except FmdApiException as err:
+        # The client lets request timeouts escape as TimeoutError
+        # rather than wrapping them in FmdApiException.
+        except (FmdApiException, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

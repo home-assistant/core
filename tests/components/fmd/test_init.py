@@ -72,6 +72,23 @@ async def test_first_refresh_failure_retries(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_first_refresh_timeout_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_fmd_client: MagicMock,
+) -> None:
+    """Test setup retries when the initial location fetch times out.
+
+    The client raises TimeoutError directly instead of wrapping it in
+    FmdApiException.
+    """
+    mock_fmd_client.get_latest_location.side_effect = TimeoutError("timed out")
+
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_coordinator_name_is_server_scoped(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
