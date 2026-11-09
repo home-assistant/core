@@ -10,6 +10,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PREREQUISITES_URL
 from .utils import async_discover_devices
@@ -70,7 +71,9 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             self.token = user_input.get(CONF_TOKEN)
 
             token_is_valid = await validate_token(
-                user_input[CONF_USERNAME], user_input[CONF_TOKEN]
+                user_input[CONF_USERNAME],
+                user_input[CONF_TOKEN],
+                async_get_clientsession(self.hass),
             )
             if token_is_valid:
                 return await self._create_entry()
@@ -97,7 +100,9 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             token_is_valid = await validate_token(
-                user_input[CONF_USERNAME], user_input[CONF_TOKEN]
+                user_input[CONF_USERNAME],
+                user_input[CONF_TOKEN],
+                async_get_clientsession(self.hass),
             )
             if token_is_valid:
                 return self.async_update_reload_and_abort(
