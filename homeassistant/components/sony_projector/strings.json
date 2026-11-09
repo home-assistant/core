@@ -20,10 +20,10 @@
   },
   "exceptions": {
     "power_command_failed": {
-      "message": "Failed to send the power command to the projector: {error}"
+      "message": "Failed to send the power command to the projector"
     },
     "update_failed": {
-      "message": "Failed to read the power state of the projector: {error}"
+      "message": "Failed to read the power state of the projector"
     }
   },
   "issues": {

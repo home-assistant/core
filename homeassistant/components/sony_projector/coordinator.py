@@ -47,7 +47,6 @@ class SonyProjectorCoordinator(DataUpdateCoordinator[bool]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     async def async_set_power(self, on: bool) -> None:
@@ -59,7 +58,6 @@ class SonyProjectorCoordinator(DataUpdateCoordinator[bool]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="power_command_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         # The projector can still report its old state right after a command,
         # so keep the requested state until the next scheduled poll.
