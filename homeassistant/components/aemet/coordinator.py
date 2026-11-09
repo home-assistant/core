@@ -20,7 +20,7 @@ from aemet_opendata.interface import AEMET
 
 from homeassistant.components.weather import Forecast
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -64,6 +64,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=WEATHER_UPDATE_INTERVAL,
         )
 
+    @callback
+    def async_cancel_api_key_reminder(self) -> None:
+        """Cancel the scheduled API key reminder."""
+        if self.reminder_unsub is not None:
+            self.reminder_unsub()
+            self.reminder_unsub = None
+
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update coordinator data."""
@@ -71,9 +78,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 await self.aemet.update()
             except AuthError as error:
-                if self.reminder_unsub is not None:
-                    self.reminder_unsub()
-                    self.reminder_unsub = None
+                self.async_cancel_api_key_reminder()
                 if self.config_entry is not None:
                     async_dismiss_api_key_reminder(self.hass, self.config_entry)
                 raise ConfigEntryAuthFailed(

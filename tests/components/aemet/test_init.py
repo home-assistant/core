@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .util import mock_api_call
+from .util import async_init_integration, mock_api_call
 
 CONFIG = {
     CONF_NAME: "aemet",
@@ -90,6 +90,73 @@ async def test_update_options_reloads_entry(
 
         assert config_entry.state is ConfigEntryState.LOADED
         assert config_entry.options[CONF_RADAR_UPDATES] is True
+
+
+async def test_update_options_failed_reload_dismisses_reminder(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed reload after disabling reminders dismisses the reminder."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-03-30 12:00:00+00:00")
+    entry = await async_init_integration(
+        hass,
+        data={CONF_API_KEY_DATE: "2021-01-01"},
+        options={CONF_API_KEY_REMINDER: True},
+    )
+    notification_id = f"{DOMAIN}_api_key_expiry_{entry.entry_id}"
+    assert notification_id in pn._async_get_or_create_notifications(hass)
+
+    with patch.object(
+        hass.config_entries, "async_reload", return_value=False
+    ) as async_reload:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                CONF_API_KEY_REMINDER: False,
+                CONF_RADAR_UPDATES: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    async_reload.assert_awaited_once_with(entry.entry_id)
+    assert notification_id not in pn._async_get_or_create_notifications(hass)
+
+
+async def test_update_options_failed_reload_cancels_pending_reminder(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed reload after disabling reminders cancels the timer."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    entry = await async_init_integration(
+        hass,
+        data={CONF_API_KEY_DATE: "2021-01-01"},
+        options={CONF_API_KEY_REMINDER: True},
+    )
+    notification_id = f"{DOMAIN}_api_key_expiry_{entry.entry_id}"
+    assert notification_id not in pn._async_get_or_create_notifications(hass)
+
+    with patch.object(
+        hass.config_entries, "async_reload", return_value=False
+    ) as async_reload:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                CONF_API_KEY_REMINDER: False,
+                CONF_RADAR_UPDATES: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    async_reload.assert_awaited_once_with(entry.entry_id)
+
+    freezer.move_to("2021-03-29 09:00:01+00:00")
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert notification_id not in pn._async_get_or_create_notifications(hass)
 
 
 @pytest.mark.parametrize("reminder_enabled", [False, True])

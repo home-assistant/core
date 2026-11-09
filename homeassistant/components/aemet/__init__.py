@@ -71,6 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> Non
 
 async def async_update_options(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Update options."""
+    entry.runtime_data.coordinator.async_cancel_api_key_reminder()
+    async_dismiss_api_key_reminder(hass, entry)
     await hass.config_entries.async_reload(entry.entry_id)
 
 
