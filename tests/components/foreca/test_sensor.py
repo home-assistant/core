@@ -178,14 +178,30 @@ async def test_rejected_key_on_the_station_request_keeps_the_entry_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a key rejected only by the station request leaves the forecast running."""
-    mock_foreca_client.observation_latest.side_effect = ForecaAuthError
+    """Test a key rejected only by the station request leaves the rest running.
+
+    The station keeps being polled, so its sensors recover once the API
+    accepts the request again.
+    """
     await init_integration(hass, mock_config_entry)
+
+    mock_foreca_client.observation_latest.side_effect = ForecaAuthError
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
     assert hass.states.get("weather.helsinki").state == "partlycloudy"
+
+    mock_foreca_client.observation_latest.side_effect = None
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(OBSERVED_TEMPERATURE).state == "8"
 
 
 async def test_observations_missing_from_plan_keep_the_entry_loaded(

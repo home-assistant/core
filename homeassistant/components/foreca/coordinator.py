@@ -129,10 +129,6 @@ class ForecaObservationCoordinator(ForecaCoordinator[Observation | None]):
         """Fetch the latest observation, or None where no station reports nearby."""
         try:
             return await self.client.observation_latest(self.location)
-        except ForecaAuthError as err:
-            raise ConfigEntryAuthFailed(
-                f"The Foreca API rejected the API key: {err}"
-            ) from err
         except ForecaError as err:
             raise UpdateFailed(
                 f"Error communicating with the Foreca API: {err}"
