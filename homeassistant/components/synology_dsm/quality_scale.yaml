@@ -15,7 +15,11 @@ rules:
       `test_user_2sa` directly initialized the flow with form data
       Flows should end in CREATE_ENTRY or ABORT
   dependency-transparency: done
-  docs-actions: todo
+  docs-actions:
+    status: exempt
+    comment: |
+      The reboot and shutdown actions are deprecated in favor of the button
+      entities, and deprecated features are not documented.
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
