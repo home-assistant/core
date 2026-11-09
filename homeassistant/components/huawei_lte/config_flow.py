@@ -323,7 +323,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: (
+                    "name": (
                         discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME)
                         or discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
                         or "Huawei LTE"

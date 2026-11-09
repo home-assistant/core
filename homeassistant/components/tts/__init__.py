@@ -67,6 +67,7 @@ from .const import (
     DOMAIN,
     MEDIA_SOURCE_STREAM_PATH,
     SERVICE_CLEAR_CACHE,
+    TextToSpeechCommonOption,
     TextToSpeechService,
     TextToSpeechServiceArgument,
     TtsAudioType,
@@ -98,6 +99,7 @@ __all__ = [
     "SampleFormat",
     "TTSAudioRequest",
     "TTSAudioResponse",
+    "TextToSpeechCommonOption",
     "TextToSpeechEntity",
     "TextToSpeechService",
     "TextToSpeechServiceArgument",
@@ -112,21 +114,23 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_PLATFORM = "platform"
-ATTR_AUDIO_OUTPUT = "audio_output"
-ATTR_PREFERRED_FORMAT = "preferred_format"
-ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
-ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
-ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
-ATTR_PREFERRED_BITRATE = "preferred_bitrate"
-ATTR_VOICE = "voice"
+
+# Former names of the common options, kept for the integrations still using them
+ATTR_AUDIO_OUTPUT = TextToSpeechCommonOption.AUDIO_OUTPUT
+ATTR_PREFERRED_BITRATE = TextToSpeechCommonOption.PREFERRED_BITRATE
+ATTR_PREFERRED_FORMAT = TextToSpeechCommonOption.PREFERRED_FORMAT
+ATTR_PREFERRED_SAMPLE_BYTES = TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES
+ATTR_PREFERRED_SAMPLE_CHANNELS = TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+ATTR_PREFERRED_SAMPLE_RATE = TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE
+ATTR_VOICE = TextToSpeechCommonOption.VOICE
 
 _DEFAULT_FORMAT = "mp3"
 _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
-    ATTR_PREFERRED_FORMAT,
-    ATTR_PREFERRED_SAMPLE_RATE,
-    ATTR_PREFERRED_SAMPLE_CHANNELS,
-    ATTR_PREFERRED_SAMPLE_BYTES,
-    ATTR_PREFERRED_BITRATE,
+    TextToSpeechCommonOption.PREFERRED_FORMAT,
+    TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+    TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+    TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
+    TextToSpeechCommonOption.PREFERRED_BITRATE,
 }
 
 # Streaming WAV sources write a header before the sample rate and length of the
@@ -862,11 +866,11 @@ class ResultStream:
         return any(
             self.options.get(option) is not None
             for option in (
-                ATTR_PREFERRED_FORMAT,
-                ATTR_PREFERRED_SAMPLE_RATE,
-                ATTR_PREFERRED_SAMPLE_CHANNELS,
-                ATTR_PREFERRED_SAMPLE_BYTES,
-                ATTR_PREFERRED_BITRATE,
+                TextToSpeechCommonOption.PREFERRED_FORMAT,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
+                TextToSpeechCommonOption.PREFERRED_BITRATE,
             )
         )
 
@@ -891,7 +895,7 @@ class ResultStream:
         """Get the stream of the overridden result."""
         assert self._override_media_path is not None
 
-        preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
+        preferred_format = self.options.get(TextToSpeechCommonOption.PREFERRED_FORMAT)
 
         if not self._needs_conversion:
             # Read file directly (no conversion)
@@ -925,10 +929,16 @@ class ResultStream:
             from_extension=None,
             audio_input=self._override_media_path,
             to_extension=preferred_format,
-            to_sample_rate=self.options.get(ATTR_PREFERRED_SAMPLE_RATE),
-            to_sample_channels=self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
-            to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
-            to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
+            to_sample_rate=self.options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE
+            ),
+            to_sample_channels=self.options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+            ),
+            to_sample_bytes=self.options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES
+            ),
+            to_bitrate=self.options.get(TextToSpeechCommonOption.PREFERRED_BITRATE),
         )
         chunks: list[bytes] = []
         async for chunk in converted_audio:
@@ -1227,7 +1237,9 @@ class SpeechManager:
         supports_streaming_input: bool,
     ) -> ResultStream:
         """Create a result stream and register its token."""
-        extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        extension = options.get(
+            TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+        )
         token = f"{secrets.token_urlsafe(16)}.{extension}"
         content, _ = mimetypes.guess_type(token)
         result_stream = ResultStream(
@@ -1266,7 +1278,9 @@ class SpeechManager:
             )
 
         cache_key = ulid_util.ulid_now()
-        extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        extension = options.get(
+            TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+        )
         data_gen = self._async_generate_tts_audio(
             engine_instance, message_stream, language, options
         )
@@ -1327,7 +1341,9 @@ class SpeechManager:
         else:
             _LOGGER.debug("Generating audio for %s", message[0:32])
 
-            extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+            extension = options.get(
+                TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+            )
             data_gen = self._async_generate_tts_audio(
                 engine_instance, message, language, options
             )
@@ -1359,16 +1375,22 @@ class SpeechManager:
         The audio is converted to the preferred format in options. Returns the
         cache object.
         """
-        final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        final_extension = options.get(
+            TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+        )
         data_gen = _async_convert_audio(
             self.hass,
             None,
             audio_stream,
             to_extension=final_extension,
-            to_sample_rate=options.get(ATTR_PREFERRED_SAMPLE_RATE),
-            to_sample_channels=options.get(ATTR_PREFERRED_SAMPLE_CHANNELS),
-            to_sample_bytes=options.get(ATTR_PREFERRED_SAMPLE_BYTES),
-            to_bitrate=options.get(ATTR_PREFERRED_BITRATE),
+            to_sample_rate=options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE),
+            to_sample_channels=options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+            ),
+            to_sample_bytes=options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES
+            ),
+            to_bitrate=options.get(TextToSpeechCommonOption.PREFERRED_BITRATE),
             from_pcm_format=pcm_format,
         )
 
@@ -1462,10 +1484,10 @@ class SpeechManager:
         convert_options = {
             option
             for option in (
-                ATTR_PREFERRED_SAMPLE_RATE,
-                ATTR_PREFERRED_SAMPLE_CHANNELS,
-                ATTR_PREFERRED_SAMPLE_BYTES,
-                ATTR_PREFERRED_BITRATE,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES,
+                TextToSpeechCommonOption.PREFERRED_BITRATE,
             )
             if options.get(option) is not None and option not in supported_options
         }
@@ -1478,39 +1500,51 @@ class SpeechManager:
         # The TTS system ideally supports options directly so we won't have
         # to convert with ffmpeg later. If not, we pop the options here and
         # perform the conversation after receiving the audio.
-        if ATTR_PREFERRED_FORMAT in supported_options:
-            final_extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+        if TextToSpeechCommonOption.PREFERRED_FORMAT in supported_options:
+            final_extension = options.get(
+                TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+            )
         else:
-            final_extension = options.pop(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
+            final_extension = options.pop(
+                TextToSpeechCommonOption.PREFERRED_FORMAT, _DEFAULT_FORMAT
+            )
 
-        if ATTR_PREFERRED_SAMPLE_RATE in supported_options:
-            sample_rate = options.get(ATTR_PREFERRED_SAMPLE_RATE)
+        if TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE in supported_options:
+            sample_rate = options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE)
         else:
-            sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
+            sample_rate = options.pop(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE, None
+            )
 
         if sample_rate is not None:
             sample_rate = int(sample_rate)
 
-        if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
-            sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
+        if TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS in supported_options:
+            sample_channels = options.get(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS
+            )
         else:
-            sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
+            sample_channels = options.pop(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS, None
+            )
 
         if sample_channels is not None:
             sample_channels = int(sample_channels)
 
-        if ATTR_PREFERRED_SAMPLE_BYTES in supported_options:
-            sample_bytes = options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+        if TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES in supported_options:
+            sample_bytes = options.get(TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES)
         else:
-            sample_bytes = options.pop(ATTR_PREFERRED_SAMPLE_BYTES, None)
+            sample_bytes = options.pop(
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES, None
+            )
 
         if sample_bytes is not None:
             sample_bytes = int(sample_bytes)
 
-        if ATTR_PREFERRED_BITRATE in supported_options:
-            bitrate = options.get(ATTR_PREFERRED_BITRATE)
+        if TextToSpeechCommonOption.PREFERRED_BITRATE in supported_options:
+            bitrate = options.get(TextToSpeechCommonOption.PREFERRED_BITRATE)
         else:
-            bitrate = options.pop(ATTR_PREFERRED_BITRATE, None)
+            bitrate = options.pop(TextToSpeechCommonOption.PREFERRED_BITRATE, None)
 
         if bitrate is not None:
             bitrate = int(bitrate)

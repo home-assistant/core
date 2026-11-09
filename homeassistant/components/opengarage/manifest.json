@@ -4,6 +4,7 @@
   "categories": ["blinds_curtains"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/opengarage",
   "integration_type": "device",
   "iot_class": "local_polling",

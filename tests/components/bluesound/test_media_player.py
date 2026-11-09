@@ -13,7 +13,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.bluesound.const import ATTR_MASTER
+from homeassistant.components.bluesound.const import ATTR_MASTER, DOMAIN
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -586,7 +586,9 @@ async def test_join_player_cannot_join_to_self(
     hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
 ) -> None:
     """Test that joining to self is not allowed."""
-    with pytest.raises(ServiceValidationError, match="Cannot join player to itself"):
+    with pytest.raises(
+        ServiceValidationError, match="Cannot join player to itself"
+    ) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_JOIN,
@@ -596,6 +598,9 @@ async def test_join_player_cannot_join_to_self(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "cannot_join_self"
 
 
 async def test_unjoin_player(
@@ -829,7 +834,9 @@ async def test_select_unknown_source(
     hass: HomeAssistant, setup_config_entry: None
 ) -> None:
     """Test selecting an unknown source raises an error."""
-    with pytest.raises(ServiceValidationError, match="Source unknown not found"):
+    with pytest.raises(
+        ServiceValidationError, match="Source unknown not found"
+    ) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -839,6 +846,10 @@ async def test_select_unknown_source(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "source_not_found"
+    assert exc_info.value.translation_placeholders == {"source": "unknown"}
 
 
 async def test_media_seek(

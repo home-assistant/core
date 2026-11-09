@@ -3,6 +3,7 @@
   "name": "eQ-3 MAX!",
   "categories": ["climate.thermostats_heating"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/maxcube",
   "iot_class": "local_polling",
   "loggers": ["maxcube"],

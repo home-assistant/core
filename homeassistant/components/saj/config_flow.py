@@ -285,8 +285,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
                 {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
             ),
             description_placeholders={
-                CONF_HOST: reauth_entry.data[CONF_HOST],
-                CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME) or "",
+                "host": reauth_entry.data[CONF_HOST],
+                "username": reauth_entry.data.get(CONF_USERNAME) or "",
             },
             errors=errors,
         )

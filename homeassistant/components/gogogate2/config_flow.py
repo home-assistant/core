@@ -128,8 +128,8 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self._ip_address and self._device_type:
             self.context["title_placeholders"] = {
-                CONF_DEVICE: DEVICE_NAMES[self._device_type],
-                CONF_IP_ADDRESS: self._ip_address,
+                "device": DEVICE_NAMES[self._device_type],
+                "ip_address": self._ip_address,
             }
         return self.async_show_form(
             step_id="user",

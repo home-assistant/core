@@ -186,22 +186,26 @@ async def test_binary_sensor_suspended_server_transition_runtime(
 
 
 @pytest.mark.parametrize(
-    "api_error",
+    ("api_error", "expected_flow_sources"),
     [
         pytest.param(
             PterodactylApiError,
+            [],
             id="pterodactyl_api_error",
         ),
         pytest.param(
             BadRequestError,
+            [],
             id="bad_request_error",
         ),
         pytest.param(
             ClientError,
+            [],
             id="client_error",
         ),
         pytest.param(
             TimeoutError,
+            [],
             id="timeout",
         ),
         pytest.param(
@@ -210,7 +214,17 @@ async def test_binary_sensor_suspended_server_transition_runtime(
                 history=[],
                 status=500,
             ),
+            [],
             id="connection_error",
+        ),
+        pytest.param(
+            ClientResponseError(
+                request_info=Mock(real_url=URL(TEST_URL)),
+                history=[],
+                status=401,
+            ),
+            [SOURCE_REAUTH],
+            id="authorization_error",
         ),
     ],
 )
@@ -220,6 +234,7 @@ async def test_binary_sensor_update_error(
     mock_pterodactyl: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
     api_error: Exception | type[Exception],
+    expected_flow_sources: list[str],
 ) -> None:
     """Test failed binary sensor updates."""
     await setup_integration(hass, mock_config_entry)
@@ -247,34 +262,8 @@ async def test_binary_sensor_update_error(
         hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_2_suspended").state
         == STATE_UNAVAILABLE
     )
-    assert hass.config_entries.flow.async_progress() == []
-
-
-async def test_binary_sensor_update_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pterodactyl: Generator[AsyncMock],
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test an authorization error during updates starts reauthentication."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_pterodactyl.client.servers.get_server.side_effect = ClientResponseError(
-        request_info=Mock(real_url=URL(TEST_URL)),
-        history=[],
-        status=401,
-    )
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (
-        hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state
-        == STATE_UNAVAILABLE
-    )
     flows = hass.config_entries.flow.async_progress()
-    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+    assert [flow["context"]["source"] for flow in flows] == expected_flow_sources
 
 
 async def test_binary_sensor_recovery_after_update_error(

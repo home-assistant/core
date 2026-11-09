@@ -19,7 +19,7 @@ from homeassistant.components.panasonic_viera.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.const import ATTR_MANUFACTURER, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import Undefined
 
@@ -50,7 +50,7 @@ MOCK_UDN = "uuid:4D454930-0100-1000-8001-D8AFF1123456"
 
 MOCK_DEVICE_INFO = {
     ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-    ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+    "manufacturer": DEFAULT_MANUFACTURER,
     ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
     ATTR_UDN: "mock-unique-id",
 }
@@ -92,6 +92,7 @@ def get_mock_remote(
 
     mock_remote.send_key = Mock()
 
+    mock_remote.get_mute = Mock(return_value=False)
     mock_remote.get_volume = Mock(return_value=100)
 
     mock_remote.list_inputs = Mock(return_value=list(MOCK_INPUTS))

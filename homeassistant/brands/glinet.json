@@ -1,0 +1,5 @@
+{
+  "domain": "glinet",
+  "name": "GL.iNet",
+  "iot_standards": ["matter"]
+}
