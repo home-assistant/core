@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Any
 
 from bleak.backends.device import BLEDevice
@@ -15,6 +16,9 @@ from homeassistant.components.bluetooth import (
 from homeassistant.core import HomeAssistant
 
 _GET_BEST_BACKEND = "_async_get_best_available_backend_and_device"
+_PINNED_BLE_DEVICE: ContextVar[BLEDevice | None] = ContextVar(
+    "ryse_pinned_ble_device", default=None
+)
 
 
 def async_local_scanner_devices(
@@ -104,26 +108,49 @@ class _PinnedBluetoothManager:
         return getattr(self._manager, name)
 
 
+class _BleakBackendPin:
+    """Installed HaBleakClientWrapper backend selector."""
+
+    original: Any | None = None
+
+
+def _pinned_get_backend(self: Any, manager: Any) -> Any:
+    """Select a backend, honoring a task-local adapter pin if set."""
+    original = _BleakBackendPin.original
+    if original is None:
+        raise RuntimeError("RYSE BLE backend pin is not installed")
+    ble_device = _PINNED_BLE_DEVICE.get()
+    if ble_device is None:
+        return original(self, manager)
+    return original(self, _PinnedBluetoothManager(manager, ble_device))
+
+
+def _install_backend_pin() -> None:
+    """Wrap HA's Bleak backend selection once for task-local adapter pins."""
+    if _BleakBackendPin.original is not None:
+        return
+    _BleakBackendPin.original = getattr(HaBleakClientWrapper, _GET_BEST_BACKEND)
+    setattr(HaBleakClientWrapper, _GET_BEST_BACKEND, _pinned_get_backend)
+
+
 @contextmanager
 def pin_ble_connection(ble_device: BLEDevice) -> Iterator[None]:
     """Restrict HA's Bleak wrapper to *ble_device*'s adapter for this address.
 
     HaBleakClientWrapper reselects a backend by address and can connect through
     a proxy even when the client was constructed with a local BLEDevice. RYSE
-    pairing needs the host BlueZ adapter that holds the bond. The Bluetooth
-    manager itself is a Cython type whose methods cannot be assigned, so the
-    wrapper's backend selection is wrapped instead.
+    pairing needs the host BlueZ adapter that holds the bond.
+
+    The pin is stored in a ContextVar so overlapping ``pair()`` awaits cannot
+    restore a stale class wrapper. The Bluetooth manager is a Cython type, so
+    backend selection is wrapped on HaBleakClientWrapper instead.
     """
-    original = getattr(HaBleakClientWrapper, _GET_BEST_BACKEND)
-
-    def _pinned(self: Any, manager: Any) -> Any:
-        return original(self, _PinnedBluetoothManager(manager, ble_device))
-
-    setattr(HaBleakClientWrapper, _GET_BEST_BACKEND, _pinned)
+    _install_backend_pin()
+    token = _PINNED_BLE_DEVICE.set(ble_device)
     try:
         yield
     finally:
-        setattr(HaBleakClientWrapper, _GET_BEST_BACKEND, original)
+        _PINNED_BLE_DEVICE.reset(token)
 
 
 def _ble_device_is_paired(device: BLEDevice) -> bool:

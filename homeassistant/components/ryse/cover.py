@@ -285,7 +285,8 @@ class RyseCoverEntity(CoverEntity):
             if self._is_connected():
                 self._async_attach_disconnect_callback()
                 return True
-            if await self._async_pair_on_local_adapter():
+            paired = await self._async_pair_on_local_adapter()
+            if paired:
                 if self._expected_disconnect:
                     await self._async_release_client()
                     return False
@@ -296,17 +297,21 @@ class RyseCoverEntity(CoverEntity):
                 return False
             self._reconnect_when_seen = True
             self._set_available(False, "failed to pair")
-            if start_reauth:
+            if start_reauth and paired is False:
                 self._config_entry.async_start_reauth(self.hass)
             return False
 
-    async def _async_pair_on_local_adapter(self) -> bool:
-        """Bond on the selected local adapter, not a proxy-selected backend."""
+    async def _async_pair_on_local_adapter(self) -> bool | None:
+        """Bond on the selected local adapter, not a proxy-selected backend.
+
+        Returns True on success, False when pairing was rejected, and None
+        when no local adapter currently sees the shade.
+        """
         scanner_device = async_best_local_scanner_device(
             self.hass, self._device.address
         )
         if scanner_device is None:
-            return False
+            return None
         with pin_ble_connection(scanner_device.ble_device):
             return await self._device.pair()
 

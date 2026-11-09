@@ -1,5 +1,6 @@
 """Tests for RYSE init setup."""
 
+import asyncio
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,6 +10,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ryse.const import SERVICE_UUID
+from homeassistant.components.ryse.helpers import pin_ble_connection
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -297,6 +299,44 @@ async def test_setup_prefers_bonded_local_adapter(
     finally:
         cancel_unpaired()
         cancel_bonded()
+
+
+async def test_overlapping_pins_do_not_restore_stale_wrapper(
+    hass: HomeAssistant,
+) -> None:
+    """Test exiting one pairing pin does not drop another task's adapter restriction."""
+    weak = make_ble_device()
+    strong = make_ble_device()
+    cancel_weak = register_local_scanner(hass, weak, make_advertisement(rssi=-80))
+    cancel_strong = register_local_scanner(
+        hass,
+        strong,
+        make_advertisement(rssi=-20),
+        source=LOCAL_SOURCE_HCI1,
+        adapter="hci1",
+    )
+    started_b = asyncio.Event()
+    a_exited = asyncio.Event()
+    result_b: list[BLEDevice] = []
+
+    async def _pin_a() -> None:
+        with pin_ble_connection(weak):
+            await started_b.wait()
+        a_exited.set()
+
+    async def _pin_b() -> None:
+        with pin_ble_connection(weak):
+            started_b.set()
+            await a_exited.wait()
+            result_b.append(selected_ble_backend(hass, weak))
+
+    try:
+        await asyncio.gather(_pin_a(), _pin_b())
+        assert result_b == [weak]
+        assert selected_ble_backend(hass, weak) is strong
+    finally:
+        cancel_weak()
+        cancel_strong()
 
 
 async def test_ble_device_callback_keeps_local_route(

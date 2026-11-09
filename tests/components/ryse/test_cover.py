@@ -39,6 +39,7 @@ from . import (
     inject_ryse,
     make_advertisement,
     make_ble_device,
+    register_local_scanner,
     register_remote_scanner,
     selected_ble_backend,
 )
@@ -413,6 +414,48 @@ async def test_cover_command_raises_when_reconnect_fails(
     mock_device.send_set_position.assert_not_awaited()
     mock_device.unpair.assert_awaited_once()
     assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_command_without_local_adapter_does_not_start_reauth(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a command during a local-adapter outage does not start reauthentication."""
+    local_device = make_ble_device()
+    cancel_local = register_local_scanner(hass, local_device, make_advertisement())
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_device.client = None
+    mock_device.pair.reset_mock()
+    mock_device.unpair.reset_mock()
+    cancel_local()
+
+    with pytest.raises(
+        HomeAssistantError, match="Failed to open cover: failed to pair"
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    mock_device.pair.assert_not_awaited()
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+    cancel_local = register_local_scanner(hass, local_device, make_advertisement())
+    try:
+        await async_see_shade(hass, local_device)
+        mock_device.pair.assert_awaited_once()
+        assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        state = hass.states.get(ENTITY_ID)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+    finally:
+        cancel_local()
 
 
 async def test_pairing_failure_marks_unavailable(
