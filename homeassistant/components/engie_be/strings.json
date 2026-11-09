@@ -52,6 +52,21 @@
       }
     },
     "sensor": {
+      "capacity_tariff_daily_power_peak": {
+        "name": "Capacity tariff daily power peak"
+      },
+      "capacity_tariff_monthly_energy_peak": {
+        "name": "Capacity tariff monthly energy peak"
+      },
+      "capacity_tariff_monthly_peak_end": {
+        "name": "Capacity tariff monthly peak end"
+      },
+      "capacity_tariff_monthly_peak_start": {
+        "name": "Capacity tariff monthly peak start"
+      },
+      "capacity_tariff_monthly_power_peak": {
+        "name": "Capacity tariff monthly power peak"
+      },
       "electricity_price_injection": {
         "name": "Electricity injection price"
       },

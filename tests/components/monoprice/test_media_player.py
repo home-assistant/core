@@ -19,9 +19,8 @@ from homeassistant.components.monoprice.const import (
     CONF_NOT_FIRST_RUN,
     CONF_SOURCES,
     DOMAIN,
-    SERVICE_RESTORE,
-    SERVICE_SNAPSHOT,
 )
+from homeassistant.components.monoprice.services import MonopriceService
 from homeassistant.const import (
     CONF_PORT,
     SERVICE_TURN_OFF,
@@ -172,7 +171,9 @@ async def test_service_calls_with_entity_id(hass: HomeAssistant) -> None:
     )
 
     # Saving existing values
-    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": ZONE_1_ID})
+    await _call_monoprice_service(
+        hass, MonopriceService.SNAPSHOT, {"entity_id": ZONE_1_ID}
+    )
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -184,7 +185,9 @@ async def test_service_calls_with_entity_id(hass: HomeAssistant) -> None:
 
     # Restoring other media player to its previous state
     # The zone should not be restored
-    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_2_ID})
+    await _call_monoprice_service(
+        hass, MonopriceService.RESTORE, {"entity_id": ZONE_2_ID}
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Checking that values were not (!) restored
@@ -194,7 +197,9 @@ async def test_service_calls_with_entity_id(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
     # Restoring media player to its previous state
-    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
+    await _call_monoprice_service(
+        hass, MonopriceService.RESTORE, {"entity_id": ZONE_1_ID}
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
@@ -216,7 +221,7 @@ async def test_service_calls_with_all_entities(hass: HomeAssistant) -> None:
     )
 
     # Saving existing values
-    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
+    await _call_monoprice_service(hass, MonopriceService.SNAPSHOT, {"entity_id": "all"})
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -227,7 +232,7 @@ async def test_service_calls_with_all_entities(hass: HomeAssistant) -> None:
     )
 
     # Restoring media player to its previous state
-    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "all"})
+    await _call_monoprice_service(hass, MonopriceService.RESTORE, {"entity_id": "all"})
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
@@ -249,7 +254,7 @@ async def test_service_calls_without_relevant_entities(hass: HomeAssistant) -> N
     )
 
     # Saving existing values
-    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
+    await _call_monoprice_service(hass, MonopriceService.SNAPSHOT, {"entity_id": "all"})
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -260,7 +265,9 @@ async def test_service_calls_without_relevant_entities(hass: HomeAssistant) -> N
     )
 
     # Restoring media player to its previous state
-    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "light.demo"})
+    await _call_monoprice_service(
+        hass, MonopriceService.RESTORE, {"entity_id": "light.demo"}
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ZONE_1_ID)
@@ -274,7 +281,9 @@ async def test_restore_without_snapshort(hass: HomeAssistant) -> None:
     await _setup_monoprice(hass, MockMonoprice())
 
     with patch.object(MockMonoprice, "restore_zone") as method_call:
-        await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
+        await _call_monoprice_service(
+            hass, MonopriceService.RESTORE, {"entity_id": ZONE_1_ID}
+        )
         await hass.async_block_till_done(wait_background_tasks=True)
 
         assert not method_call.called

@@ -126,7 +126,9 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
 
-        self._bridge.register_app_list_callback(self._app_list_callback)
+        self.async_on_remove(
+            self._bridge.register_app_list_callback(self._app_list_callback)
+        )
         await self._async_extra_update()
         self.coordinator.async_extra_update = self._async_extra_update
 

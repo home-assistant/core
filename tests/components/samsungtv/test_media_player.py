@@ -19,14 +19,18 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     async_load_json_object_fixture,
 )
-from samsungctl import exceptions
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVSleepCommand
 from samsungtvws.encrypted.remote import (
     SamsungTVEncryptedCommand,
     SamsungTVEncryptedWSAsyncRemote,
 )
-from samsungtvws.exceptions import ConnectionFailure, HttpApiError, UnauthorizedError
+from samsungtvws.exceptions import (
+    ConnectionFailure,
+    HttpApiError,
+    ResponseError,
+    UnauthorizedError,
+)
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
@@ -224,14 +228,14 @@ async def test_update_on(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote_legacy")
-async def test_update_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_update_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, remote_legacy: Mock
+) -> None:
     """Testing update tv off."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), DEFAULT_MOCK],
+    with patch.object(
+        remote_legacy, "open", side_effect=[ConnectionFailure("Boom"), DEFAULT_MOCK]
     ):
         freezer.tick(timedelta(minutes=5))
         async_fire_time_changed(hass)
@@ -396,17 +400,13 @@ async def test_update_off_encryptedws(
     rest_api.rest_device_info.assert_called_once()
 
 
-@pytest.mark.usefixtures("remote_legacy")
 async def test_update_access_denied(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, remote_legacy: Mock
 ) -> None:
     """Testing update tv access denied exception."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=exceptions.AccessDenied("Boom"),
-    ):
+    with patch.object(remote_legacy, "open", side_effect=UnauthorizedError("Boom")):
         freezer.tick(timedelta(minutes=5))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -536,16 +536,14 @@ async def test_update_ws_unauthorized_error(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("remote_legacy")
 async def test_update_unhandled_response(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, remote_legacy: Mock
 ) -> None:
     """Testing update tv unhandled response exception."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[exceptions.UnhandledResponse("Boom"), DEFAULT_MOCK],
+    with patch.object(
+        remote_legacy, "open", side_effect=[ResponseError("Boom"), DEFAULT_MOCK]
     ):
         freezer.tick(timedelta(minutes=5))
         async_fire_time_changed(hass)
@@ -555,16 +553,14 @@ async def test_update_unhandled_response(
         assert state.state == STATE_ON
 
 
-@pytest.mark.usefixtures("remote_legacy")
 async def test_connection_closed_during_update_can_recover(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, remote_legacy: Mock
 ) -> None:
     """Testing update tv connection closed exception can recover."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[exceptions.ConnectionClosed(), DEFAULT_MOCK],
+    with patch.object(
+        remote_legacy, "open", side_effect=[ConnectionFailure(), DEFAULT_MOCK]
     ):
         freezer.tick(timedelta(minutes=5))
         async_fire_time_changed(hass)
@@ -594,10 +590,12 @@ async def test_send_key(hass: HomeAssistant, remote_legacy: Mock) -> None:
     assert state.state == STATE_ON
 
 
-async def test_send_key_broken_pipe(hass: HomeAssistant, remote_legacy: Mock) -> None:
-    """Testing broken pipe Exception."""
+async def test_send_key_connection_failure(
+    hass: HomeAssistant, remote_legacy: Mock
+) -> None:
+    """Testing connection failure exception."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
-    remote_legacy.control = Mock(side_effect=BrokenPipeError("Boom"))
+    remote_legacy.control.side_effect = ConnectionFailure("Boom")
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -610,9 +608,11 @@ async def test_send_key_connection_closed_retry_succeed(
 ) -> None:
     """Test retry on connection closed."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
-    remote_legacy.control = Mock(
-        side_effect=[exceptions.ConnectionClosed("Boom"), DEFAULT_MOCK, DEFAULT_MOCK]
-    )
+    remote_legacy.control.side_effect = [
+        ConnectionFailure("Boom"),
+        DEFAULT_MOCK,
+        DEFAULT_MOCK,
+    ]
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -626,12 +626,19 @@ async def test_send_key_connection_closed_retry_succeed(
     assert state.state == STATE_ON
 
 
-async def test_send_key_unhandled_response(
-    hass: HomeAssistant, remote_legacy: Mock
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ResponseError("Boom"), id="unhandled_response"),
+        pytest.param(UnauthorizedError("Boom"), id="access_denied"),
+    ],
+)
+async def test_send_key_error_response(
+    hass: HomeAssistant, remote_legacy: Mock, error: Exception
 ) -> None:
-    """Testing unhandled response exception."""
+    """Testing error responses to a key are raised."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
-    remote_legacy.control = Mock(side_effect=exceptions.UnhandledResponse("Boom"))
+    remote_legacy.control.side_effect = error
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -699,17 +706,6 @@ async def test_send_key_os_error_ws_encrypted(
     assert state.state == STATE_ON
 
 
-async def test_send_key_os_error(hass: HomeAssistant, remote_legacy: Mock) -> None:
-    """Testing broken pipe Exception."""
-    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
-    remote_legacy.control = Mock(side_effect=OSError("Boom"))
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_ON
-
-
 @pytest.mark.usefixtures("remote_legacy")
 async def test_name(hass: HomeAssistant) -> None:
     """Test for name property."""
@@ -718,8 +714,9 @@ async def test_name(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Mock Title"
 
 
-@pytest.mark.usefixtures("remote_legacy")
-async def test_state(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_state(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, remote_legacy: Mock
+) -> None:
     """Test for state property."""
     await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
     await hass.services.async_call(
@@ -734,10 +731,7 @@ async def test_state(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     # Should be STATE_UNAVAILABLE after the timer expires
     assert state.state == STATE_OFF
 
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=OSError,
-    ):
+    with patch.object(remote_legacy, "open", side_effect=ConnectionFailure):
         freezer.tick(timedelta(seconds=20))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -772,8 +766,8 @@ async def test_turn_off_websocket(
         hass, "ws_installed_app_event.json", DOMAIN
     )
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), DEFAULT_MOCK],
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=[ConnectionFailure("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
@@ -813,8 +807,8 @@ async def test_turn_off_websocket_frame(
         hass, "device_info_UE43LS003.json", DOMAIN
     )
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), DEFAULT_MOCK],
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote.open",
+        side_effect=[ConnectionFailure("Boom"), DEFAULT_MOCK],
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
@@ -912,19 +906,6 @@ async def test_turn_off_legacy(hass: HomeAssistant, remote_legacy: Mock) -> None
     # key called
     assert remote_legacy.control.call_count == 1
     assert remote_legacy.control.call_args_list == [call("KEY_POWEROFF")]
-
-
-async def test_turn_off_os_error(
-    hass: HomeAssistant, remote_legacy: Mock, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test for turn_off with OSError."""
-    caplog.set_level(logging.DEBUG)
-    await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
-    remote_legacy.close = Mock(side_effect=OSError("BOOM"))
-    await hass.services.async_call(
-        MP_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    assert "Could not establish connection" in caplog.text
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -1108,7 +1089,10 @@ async def test_play_media(hass: HomeAssistant, remote_legacy: Mock) -> None:
 
 async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
     """Test for play_media with invalid media type."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+        autospec=True,
+    ) as remote:
         url = "https://example.com"
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
@@ -1123,7 +1107,7 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
             True,
         )
         # control not called
-        assert remote.control.call_count == 0
+        assert remote.return_value.control.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -1137,7 +1121,10 @@ async def test_play_media_content_invalid_id(
     hass: HomeAssistant, content_id: str
 ) -> None:
     """Test for play_media with invalid channel as string."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+        autospec=True,
+    ) as remote:
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         with pytest.raises(HomeAssistantError) as err:
@@ -1152,7 +1139,7 @@ async def test_play_media_content_invalid_id(
                 True,
             )
         # control not called
-        assert remote.control.call_count == 0
+        assert remote.return_value.control.call_count == 0
         assert err.value.translation_domain == DOMAIN
         assert err.value.translation_key == "media_id_invalid"
 
@@ -1176,7 +1163,10 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
 
     source = "INVALID"
 
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+        autospec=True,
+    ) as remote:
         await setup_samsungtv_entry(hass, ENTRYDATA_LEGACY)
         remote.reset_mock()
         with pytest.raises(HomeAssistantError) as exc_info:
@@ -1187,7 +1177,7 @@ async def test_select_source_invalid_source(hass: HomeAssistant) -> None:
                 True,
             )
         # control not called
-        assert remote.control.call_count == 0
+        assert remote.return_value.control.call_count == 0
         assert exc_info.value.translation_domain == DOMAIN
         assert exc_info.value.translation_key == "source_unsupported"
         assert exc_info.value.translation_placeholders == {

@@ -158,6 +158,51 @@ async def test_sensor_update(
                 assert state.state == expected_sensor_values[sensor_key]
 
 
+@pytest.mark.usefixtures("mock_pterodactyl")
+@pytest.mark.freeze_time("2026-01-01T12:00:00+00:00")
+@pytest.mark.parametrize(
+    ("deviation_ms", "expected_deviation_ms"),
+    [
+        pytest.param(-4_999, 0, id="earlier-below-threshold"),
+        pytest.param(4_999, 0, id="later-below-threshold"),
+        pytest.param(-5_000, -5_000, id="earlier-at-threshold"),
+        pytest.param(5_000, 5_000, id="later-at-threshold"),
+    ],
+)
+async def test_uptime_sensor_stability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pterodactyl: Generator[AsyncMock],
+    freezer: FrozenDateTimeFactory,
+    deviation_ms: int,
+    expected_deviation_ms: int,
+) -> None:
+    """Test uptime stability around the 5 second drift tolerance."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = f"sensor.test_server_{SERVER_1_IDENTIFIER}_{KEY_UPTIME}"
+    initial_state = hass.states.get(entity_id)
+    assert initial_state is not None
+    initial_last_reported = initial_state.last_reported
+    initial_start_time = dt_util.utcnow() - timedelta(milliseconds=6_666)
+    assert initial_state.state == initial_start_time.isoformat(timespec="seconds")
+    expected_start_time = initial_start_time + timedelta(
+        milliseconds=expected_deviation_ms
+    )
+
+    utilization = mock_pterodactyl.client.servers.get_server_utilization.return_value
+    utilization["resources"]["uptime"] = 6_666 + 60_000 - deviation_ms
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_start_time.isoformat(timespec="seconds")
+    assert state.last_reported > initial_last_reported
+
+
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "suspended_game_servers", "mock_pterodactyl"
 )

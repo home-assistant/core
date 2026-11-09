@@ -6,6 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -95,6 +96,7 @@ class SystemMonitorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 3
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
