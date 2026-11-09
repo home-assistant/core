@@ -4,14 +4,7 @@ from collections.abc import Callable
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-
-from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import HaBluetoothConnector
-from homeassistant.components.ryse.const import MANUFACTURER_ID, SERVICE_UUID
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant
-
-from tests.components.bluetooth import (
+from pytest_homeassistant.components.bluetooth import (
     HCI0_SOURCE_ADDRESS,
     HCI1_SOURCE_ADDRESS,
     FakeRemoteScanner,
@@ -21,6 +14,12 @@ from tests.components.bluetooth import (
     generate_ble_device,
     inject_advertisement_with_source,
 )
+
+from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import HaBluetoothConnector
+from homeassistant.components.ryse.const import MANUFACTURER_ID, SERVICE_UUID
+from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import HomeAssistant
 
 DOMAIN = "ryse"
 DEVICE_NAME = "RYSE Shade"

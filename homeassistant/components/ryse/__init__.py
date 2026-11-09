@@ -48,7 +48,7 @@ def _async_local_ble_device(
     return scanner_device.ble_device if scanner_device else None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None:
     """Set up RYSE."""
     address = entry.unique_id
     assert address is not None
@@ -125,9 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None:
     """Unload a RYSE config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

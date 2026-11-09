@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.ryse.const import DOMAIN, MANUFACTURER_ID
@@ -29,9 +34,6 @@ from . import (
     register_remote_scanner,
 )
 
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
-
 PAIRING_ERRORS = [
     (Exception("boom"), "unexpected_error"),
     (TimeoutError("timeout"), "cannot_connect"),
@@ -47,7 +49,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config-flow tests from loading the cover platform."""
     with patch(
         "homeassistant.components.ryse.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 
@@ -136,6 +138,7 @@ async def test_async_step_user_pairs_on_strongest_local_adapter(
                 result["flow_id"], USER_INPUT
             )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == DEVICE_ADDRESS
         mock_cls.assert_called_once_with(strong_device)
         mock_device.pair.assert_awaited_once()
     finally:
@@ -183,7 +186,7 @@ async def test_async_step_user_cannot_connect_when_unpair_fails(
     hass: HomeAssistant, mock_device: MagicMock, unpair_error: Exception
 ) -> None:
     """Test a failed unpair after a pairing error still reports cannot_connect."""
-    mock_device.pair.side_effect = BleakError("bleak error")
+    mock_device.pair.side_effect = [BleakError("bleak error"), True]
     mock_device.unpair.side_effect = unpair_error
     cancel, _ = _see_on_local(hass)
     await _abort_bluetooth_flows(hass)
@@ -198,6 +201,12 @@ async def test_async_step_user_cannot_connect_when_unpair_fails(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     mock_device.unpair.assert_awaited_once()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
     cancel()
 
 
@@ -413,6 +422,7 @@ async def test_async_step_user_keeps_proxy_selected_when_also_local(
         result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once()
     cancel_local()
     cancel_remote()
@@ -437,6 +447,7 @@ async def test_async_step_user_uses_local_pair_when_proxy_is_idle(
         result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once()
     cancel_local()
     cancel_remote()
@@ -584,6 +595,16 @@ async def test_async_step_bluetooth_not_in_pairing_mode(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "not_in_pairing_mode"}
     mock_device.pair.assert_not_called()
+
+    cancel()
+    cancel = register_local_scanner(hass, device, make_advertisement())
+    inject_ryse(hass, device, make_advertisement(), LOCAL_SOURCE)
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
     cancel()
 
 
@@ -605,6 +626,15 @@ async def test_async_step_bluetooth_rejects_proxy_source(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "not_local_source"}
     mock_device.pair.assert_not_called()
+
+    cancel_local = register_local_scanner(hass, device, advertisement)
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
+    mock_device.pair.assert_awaited_once()
+    cancel_local()
     cancel()
 
 
@@ -658,6 +688,7 @@ async def test_async_step_bluetooth_proxy_selected_when_also_local(
             flows[0]["flow_id"], user_input={}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == DEVICE_ADDRESS
         mock_device.pair.assert_awaited_once()
     finally:
         cancel_local()
@@ -681,6 +712,7 @@ async def test_async_step_bluetooth_uses_local_pair_when_proxy_is_idle(
             flows[0]["flow_id"], user_input={}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == DEVICE_ADDRESS
         mock_device.pair.assert_awaited_once()
     finally:
         cancel_local()
@@ -708,6 +740,15 @@ async def test_async_step_bluetooth_rejects_idle_local_when_proxy_is_pairing(
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "not_in_pairing_mode"}
         mock_device.pair.assert_not_called()
+
+        cancel_local()
+        cancel_local = register_local_scanner(hass, device, make_advertisement())
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == DEVICE_ADDRESS
+        mock_device.pair.assert_awaited_once()
     finally:
         cancel_local()
         cancel_remote()
@@ -802,6 +843,7 @@ async def test_async_step_bluetooth_left_pairing_mode(
 
     result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once()
     cancel()
 
@@ -827,6 +869,7 @@ async def test_async_step_bluetooth_idle_then_pair(
     cancel = register_local_scanner(hass, device, make_advertisement())
     result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once()
     cancel()
 
@@ -900,6 +943,7 @@ async def test_async_step_bluetooth_fallback_name(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RYSE device"
+    assert result["result"].unique_id == DEVICE_ADDRESS
     mock_device.pair.assert_awaited_once()
     cancel()
 
@@ -946,6 +990,16 @@ async def test_reauth_not_in_pairing_mode(
     mock_device.pair.assert_not_called()
     cancel()
 
+    cancel, _ = _see_on_local(hass)
+    await _abort_bluetooth_flows(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_device.pair.assert_awaited_once()
+    cancel()
+
 
 async def test_reauth_not_local_source(
     hass: HomeAssistant,
@@ -961,3 +1015,13 @@ async def test_reauth_not_local_source(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "not_local_source"}
     mock_device.pair.assert_not_called()
+
+    cancel, _ = _see_on_local(hass)
+    await _abort_bluetooth_flows(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_device.pair.assert_awaited_once()
+    cancel()

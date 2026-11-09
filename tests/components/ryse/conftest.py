@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ryse.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -15,8 +16,6 @@ from . import (
     make_ble_device,
     register_local_scanner,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

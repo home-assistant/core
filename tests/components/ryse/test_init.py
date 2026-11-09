@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ryse.const import SERVICE_UUID
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -20,8 +21,6 @@ from . import (
     register_local_scanner,
     register_remote_scanner,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(

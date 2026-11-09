@@ -9,6 +9,7 @@ from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -34,8 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import inject_ryse, make_advertisement
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 ENTITY_ID = "cover.test_device"
