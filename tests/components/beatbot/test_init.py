@@ -671,3 +671,40 @@ async def test_event_stream_keeps_transient_refresh_failure_retryable(
 
     with pytest.raises(BeatbotConnectionError):
         await refresh_token("access-token")
+
+
+@pytest.mark.usefixtures("mock_event_client")
+async def test_empty_discovery_keeps_polling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Discover a cleaner through polling even when setup created no entities."""
+    mock_client.get_devices.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(BATTERY_ENTITY_ID) is None
+
+    mock_client.get_devices.return_value = [create_device()]
+    await poll(hass, freezer)
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
+
+
+@pytest.mark.usefixtures("mock_event_client")
+async def test_empty_discovery_stops_polling_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Remove the entry-scoped polling listener on unload."""
+    mock_client.get_devices.return_value = []
+    await setup_integration(hass, mock_config_entry)
+    await poll(hass, freezer)
+    assert mock_client.get_devices.await_count == 2
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_client.get_devices.reset_mock()
+    await poll(hass, freezer)
+    mock_client.get_devices.assert_not_awaited()

@@ -82,6 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> N
     coordinator = BeatbotCoordinator(hass, api, entry)
 
     await coordinator.async_config_entry_first_refresh()
+    if not coordinator.data:
+        # Keep discovery polling active until devices create entity listeners.
+        entry.async_on_unload(coordinator.async_add_listener(lambda: None))
 
     event_client = BeatbotEventClient(hass, entry, session, api, coordinator)
     entry.runtime_data = BeatbotRuntimeData(
