@@ -78,7 +78,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: validate_token method does not allow to pass websession
+  inject-websession: done
   strict-typing: done

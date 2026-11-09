@@ -6,6 +6,7 @@ from aioairzone.const import API_MAC, API_SYSTEMS
 from aioairzone.exceptions import (
     AirzoneError,
     HotWaterNotAvailable,
+    IaqSensorNotAvailable,
     InvalidMethod,
     InvalidSystem,
     SystemOutOfRange,
@@ -64,6 +65,10 @@ async def test_form(hass: HomeAssistant) -> None:
             side_effect=SystemOutOfRange,
         ),
         patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
+        ),
+        patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
             return_value=HVAC_VERSION_MOCK,
         ),
@@ -118,6 +123,10 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -273,6 +282,10 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             side_effect=SystemOutOfRange,
         ),
         patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
+        ),
+        patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
             return_value=HVAC_VERSION_MOCK,
         ),
@@ -361,6 +374,10 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
             side_effect=SystemOutOfRange,
         ),
         patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
+        ),
+        patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
             return_value=HVAC_VERSION_MOCK,
         ),
@@ -422,6 +439,10 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
