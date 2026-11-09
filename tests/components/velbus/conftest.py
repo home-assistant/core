@@ -190,7 +190,7 @@ def mock_select() -> AsyncMock:
     channel.get_full_name.return_value = "Kitchen"
     channel.get_module_sw_version.return_value = "1.1.1"
     channel.get_module_serial.return_value = "qwerty1234567"
-    channel.is_sub_device.return_value = True
+    channel.is_sub_device.return_value = False
     channel.get_options.return_value = ["none", "summer", "winter", "holiday"]
     channel.get_selected_program.return_value = "winter"
     return channel

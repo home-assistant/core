@@ -59,7 +59,7 @@ async def test_switch_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.living_room_relayname"},
+        {ATTR_ENTITY_ID: "switch.kitchen_relayname_relayname"},
         blocking=True,
     )
     mock_relay.turn_off.assert_called_once_with()
@@ -67,7 +67,7 @@ async def test_switch_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.living_room_relayname"},
+        {ATTR_ENTITY_ID: "switch.kitchen_relayname_relayname"},
         blocking=True,
     )
     mock_relay.turn_on.assert_called_once_with()

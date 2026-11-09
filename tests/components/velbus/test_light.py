@@ -51,7 +51,7 @@ async def test_dimmer_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer"},
+        {ATTR_ENTITY_ID: "light.kitchen_vmb2ble_dimmer_dimmer"},
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_once_with(0, 0)
@@ -59,7 +59,7 @@ async def test_dimmer_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer", ATTR_TRANSITION: 1},
+        {ATTR_ENTITY_ID: "light.kitchen_vmb2ble_dimmer_dimmer", ATTR_TRANSITION: 1},
         blocking=True,
     )
     mock_dimmer.restore_dimmer_state.assert_called_once_with(1)
@@ -68,7 +68,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer",
+            ATTR_ENTITY_ID: "light.kitchen_vmb2ble_dimmer_dimmer",
             ATTR_BRIGHTNESS: 0,
             ATTR_TRANSITION: 1,
         },
@@ -80,7 +80,7 @@ async def test_dimmer_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer", ATTR_BRIGHTNESS: 33},
+        {ATTR_ENTITY_ID: "light.kitchen_vmb2ble_dimmer_dimmer", ATTR_BRIGHTNESS: 33},
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_with(12, 0)

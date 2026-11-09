@@ -37,8 +37,8 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "entity_num"),
     [
-        ("cover.basement_covername", 0),
-        ("cover.basement_covernamenopos", 1),
+        ("cover.kitchen_vmb2ble_covername_covername", 0),
+        ("cover.kitchen_vmb2ble_covernamenopos_covernamenopos", 1),
     ],
 )
 async def test_actions(
@@ -83,7 +83,10 @@ async def test_position(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.basement_covername", ATTR_POSITION: 25},
+        {
+            ATTR_ENTITY_ID: "cover.kitchen_vmb2ble_covername_covername",
+            ATTR_POSITION: 25,
+        },
         blocking=True,
     )
     mock_cover.set_position.assert_called_once_with(75)

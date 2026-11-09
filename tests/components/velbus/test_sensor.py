@@ -46,7 +46,7 @@ async def test_vmb8in_counter_energy_unavailable_when_no_energy(
     type(mock_buttoncounter).energy = PropertyMock(return_value=None)
     await init_integration(hass, config_entry)
 
-    state = hass.states.get("sensor.input_buttoncounter_counter")
+    state = hass.states.get("sensor.kitchen_buttoncounter_buttoncounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -58,14 +58,14 @@ async def test_vmb7in_gas_counter(
     """Test a VMB7IN gas counter reports a m³ total (regression for #179361)."""
     await init_integration(hass, config_entry)
 
-    total = hass.states.get("sensor.input_gascounter_counter")
+    total = hass.states.get("sensor.kitchen_gascounter_gascounter_counter")
     assert total is not None
     assert total.state == "1234.0"
     assert total.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.GAS
     assert total.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
     assert total.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfVolume.CUBIC_METERS
 
-    flow = hass.states.get("sensor.input_gascounter")
+    flow = hass.states.get("sensor.kitchen_gascounter_gascounter")
     assert flow is not None
     assert flow.state == "5.0"
     assert flow.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLUME_FLOW_RATE
@@ -84,7 +84,7 @@ async def test_vmb7in_gas_counter_unavailable_when_no_total(
     mock_gascounter.get_counter_total.return_value = None
     await init_integration(hass, config_entry)
 
-    state = hass.states.get("sensor.input_gascounter_counter")
+    state = hass.states.get("sensor.kitchen_gascounter_gascounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -96,14 +96,14 @@ async def test_vmb7in_water_counter(
     """Test a VMB7IN water counter reports a litre total (regression for #179361)."""
     await init_integration(hass, config_entry)
 
-    total = hass.states.get("sensor.input_watercounter_counter")
+    total = hass.states.get("sensor.kitchen_watercounter_watercounter_counter")
     assert total is not None
     assert total.state == "5678.0"
     assert total.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.WATER
     assert total.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
     assert total.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfVolume.LITERS
 
-    flow = hass.states.get("sensor.input_watercounter")
+    flow = hass.states.get("sensor.kitchen_watercounter_watercounter")
     assert flow is not None
     assert flow.state == "2.5"
     assert flow.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLUME_FLOW_RATE
@@ -122,6 +122,6 @@ async def test_vmb7in_water_counter_unavailable_when_no_total(
     mock_watercounter.get_counter_total.return_value = None
     await init_integration(hass, config_entry)
 
-    state = hass.states.get("sensor.input_watercounter_counter")
+    state = hass.states.get("sensor.kitchen_watercounter_watercounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN

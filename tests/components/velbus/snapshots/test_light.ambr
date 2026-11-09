@@ -58,7 +58,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[light.dimmer_full_name_dimmer-entry]
+# name: test_entities[light.kitchen_vmb2ble_dimmer_dimmer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -72,11 +72,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('velbus', '88-10')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('velbus', '88-10')]>,
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.dimmer_full_name_dimmer',
+    'entity_id': 'light.kitchen_vmb2ble_dimmer_dimmer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,19 +99,19 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.dimmer_full_name_dimmer-state]
+# name: test_entities[light.kitchen_vmb2ble_dimmer_dimmer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer full name Dimmer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer Dimmer',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.dimmer_full_name_dimmer',
+    'entity_id': 'light.kitchen_vmb2ble_dimmer_dimmer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
