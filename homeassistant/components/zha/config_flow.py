@@ -1161,6 +1161,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         return self.async_abort(reason="reconfigure_successful")
 
+    @callback
     @override
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""

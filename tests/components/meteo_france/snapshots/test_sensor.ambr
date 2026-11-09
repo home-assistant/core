@@ -661,7 +661,14 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'green',
+        'yellow',
+        'orange',
+        'red',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -680,7 +687,7 @@
     'object_id_base': 'Weather alert',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Weather alert',
     'platform': 'meteo_france',
@@ -702,14 +709,21 @@
       'Pluie-inondation': 'Vert',
       'Vent violent': 'Vert',
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'La Clusaz Weather alert',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'green',
+        'yellow',
+        'orange',
+        'red',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.la_clusaz_weather_alert',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Orange',
+    'state': 'orange',
   })
 # ---
 # name: test_sensor[sensor.la_clusaz_wind_gust-entry]

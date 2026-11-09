@@ -13,7 +13,7 @@ from pytest_homeassistant.common import (
 from python_qube_heatpump import StatusCode
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -103,3 +103,32 @@ async def test_status_sensor(
     state = hass.states.get("sensor.qube_heat_pump_heat_pump_status")
     assert state is not None
     assert state.state == expected
+
+
+async def test_room_temperature_without_room_sensor(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the room temperature sensor is not created without a room sensor."""
+    mock_qube_client.get_all_data.return_value.roomprb_en = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.qube_heat_pump_room_temperature") is None
+    assert hass.states.get("sensor.qube_heat_pump_outside_temperature") is not None
+
+
+async def test_room_temperature_missing_value(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the room temperature is unknown when the controller reports -999.9."""
+    mock_qube_client.get_all_data.return_value.temp_room = -999.9
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.qube_heat_pump_room_temperature")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
