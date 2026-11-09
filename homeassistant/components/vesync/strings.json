@@ -80,6 +80,9 @@
     "number": {
       "mist_level": {
         "name": "Mist level"
+      },
+      "warm_mist_level": {
+        "name": "Warm mist level"
       }
     },
     "select": {
@@ -96,6 +99,9 @@
     "sensor": {
       "air_quality": {
         "name": "Air quality"
+      },
+      "co2": {
+        "name": "Carbon dioxide"
       },
       "cook_set_temp": {
         "name": "Cooking set temperature"

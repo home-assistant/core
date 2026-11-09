@@ -177,6 +177,7 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7461` | [`home-assistant-entity-sets-entity-id`](#w7461-home-assistant-entity-sets-entity-id) | Entity should not set its own `entity_id` |
+| `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
 
 ## `home_assistant_logger` checker
 
@@ -332,6 +333,21 @@ called from the event loop without scheduling.
 Pytest fixture has invalid scope or autouse configuration. For example,
 `session`-scoped fixtures in component tests should use `package` scope
 or lower.
+
+### `W7463`: `home-assistant-callback-override-missing-decorator`
+
+A sync method that overrides a method decorated with `@callback`, such as
+`_handle_coordinator_update` of a coordinator entity or a method of an
+integration's own base class, should be decorated with `@callback` as well.
+The decorator isn't inherited, and it marks the override as running in the
+event loop, where it must not do blocking I/O:
+
+```python
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        ...
+```
 
 
 ## `home_assistant_inheritance` checker
