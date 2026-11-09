@@ -101,23 +101,6 @@ class NetatmoBaseCamera(NetatmoModuleEntity, Camera):
         )
         self._light_state = None
 
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": self.home.entity_id,
-                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
-                    "update_callback": self.async_home_update_callback,
-                },
-                {
-                    "name": EVENT,
-                    "home_id": self.home.entity_id,
-                    SIGNAL_NAME: f"{EVENT}-{self.home.entity_id}",
-                    "update_callback": self.async_event_update_callback,
-                },
-            ]
-        )
-
     @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -186,37 +169,7 @@ class NetatmoBaseCamera(NetatmoModuleEntity, Camera):
         if home_publisher.last_error is None:
             self._override_connection = None
 
-        self.data_handler.events[self.device.entity_id] = self.process_events(
-            self.device.events
-        )
-
         self.async_write_ha_state()
-
-    @callback
-    def async_event_update_callback(self) -> None:
-        """Update entity state from an EVENT poll (/getevents)."""
-
-        self.data_handler.events[self.device.entity_id] = self.process_events(
-            self.device.events
-        )
-
-        self.async_write_ha_state()
-
-    def process_events(self, event_list: list[NaEvent]) -> dict:
-        """Add meta data to events."""
-        events = {}
-        for event in event_list:
-            if not (video_id := event.video_id):
-                continue
-            event_data = event.__dict__
-            event_data["subevents"] = [
-                event.__dict__
-                for event in event_data.get("subevents", [])
-                if not isinstance(event, dict)
-            ]
-            event_data["media_url"] = self.get_video_url(video_id)
-            events[event.event_time] = event_data
-        return events
 
     @override
     async def stream_source(self) -> str:
@@ -242,6 +195,30 @@ class NetatmoCamera(NetatmoBaseCamera):
     """Representation of a Netatmo camera."""
 
     _override_on: bool | None = None
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+    ) -> None:
+        """Set up for access to the Netatmo camera images."""
+        super().__init__(netatmo_device)
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
+                    "update_callback": self.async_home_update_callback,
+                },
+                {
+                    "name": EVENT,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: f"{EVENT}-{self.home.entity_id}",
+                    "update_callback": self.async_event_update_callback,
+                },
+            ]
+        )
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -346,6 +323,32 @@ class NetatmoCamera(NetatmoBaseCamera):
         )
 
         self.async_write_ha_state()
+
+    @callback
+    def async_event_update_callback(self) -> None:
+        """Update entity state from an EVENT poll (/getevents)."""
+
+        self.data_handler.events[self.device.entity_id] = self.process_events(
+            self.device.events
+        )
+
+        self.async_write_ha_state()
+
+    def process_events(self, event_list: list[NaEvent]) -> dict:
+        """Add meta data to events."""
+        events = {}
+        for event in event_list:
+            if not (video_id := event.video_id):
+                continue
+            event_data = event.__dict__
+            event_data["subevents"] = [
+                event.__dict__
+                for event in event_data.get("subevents", [])
+                if not isinstance(event, dict)
+            ]
+            event_data["media_url"] = self.get_video_url(video_id)
+            events[event.event_time] = event_data
+        return events
 
     @property
     @override
@@ -462,6 +465,24 @@ class NetatmoCamera(NetatmoBaseCamera):
 
 class NetatmoDoorbell(NetatmoBaseCamera):
     """Representation of a Netatmo doorbell."""
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+    ) -> None:
+        """Set up for access to the Netatmo camera images."""
+        super().__init__(netatmo_device)
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
+                    "update_callback": self.async_home_update_callback,
+                },
+            ]
+        )
 
     @override
     async def async_added_to_hass(self) -> None:
