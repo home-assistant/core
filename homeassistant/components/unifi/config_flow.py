@@ -21,7 +21,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -322,7 +321,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         return hub.sites
 
     @callback
-    def _get_reauth_or_reconfigure_entry(self) -> ConfigEntry:
+    def _get_reauth_or_reconfigure_entry(self) -> UnifiConfigEntry:
         """Return the config entry the current flow is modifying."""
         if self.source == SOURCE_REAUTH:
             return self._get_reauth_entry()

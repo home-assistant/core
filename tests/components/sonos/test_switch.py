@@ -13,6 +13,7 @@ from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
+    DOMAIN,
     MODEL_SONOS_ARC_ULTRA,
 )
 from homeassistant.components.sonos.switch import (
@@ -54,13 +55,16 @@ from .conftest import (
     create_rendering_control_event,
 )
 
+ALARM_14_UNIQUE_ID = "alarm-test_household_id:14"
+ALARM_15_UNIQUE_ID = "alarm-test_household_id:15"
+
 
 async def test_entity_registry(
     hass: HomeAssistant, async_autosetup_sonos, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with alarm registered in the device registry."""
     assert "media_player.zone_a" in entity_registry.entities
-    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.zone_a_daily_alarm_07_00" in entity_registry.entities
     assert "switch.zone_a_status_light" in entity_registry.entities
     assert "switch.zone_a_loudness" in entity_registry.entities
     assert "switch.zone_a_night_sound" in entity_registry.entities
@@ -78,7 +82,7 @@ async def test_switch_attributes(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for correct Sonos switch states."""
-    alarm = entity_registry.entities["switch.sonos_alarm_14"]
+    alarm = entity_registry.entities["switch.zone_a_daily_alarm_07_00"]
     alarm_state = hass.states.get(alarm.entity_id)
     assert alarm_state.state == STATE_ON
     assert alarm_state.attributes.get(ATTR_TIME) == "07:00:00"
@@ -224,7 +228,10 @@ async def test_switch_alarm_turn_on(
     await async_setup_sonos()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: "switch.sonos_alarm_14"}, blocking=True
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.zone_a_daily_alarm_07_00"},
+        blocking=True,
     )
 
     assert soco.alarmClock.UpdateAlarm.call_count == 1
@@ -248,8 +255,12 @@ async def test_alarm_create_delete(
 
     await async_setup_sonos()
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
-    assert "switch.sonos_alarm_15" not in entity_registry.entities
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert not entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_15_UNIQUE_ID
+    )
 
     subscription = alarm_clock.subscribe.return_value
     sub_callback = subscription.callback
@@ -261,8 +272,12 @@ async def test_alarm_create_delete(
     sub_callback(event=alarm_event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
-    assert "switch.sonos_alarm_15" in entity_registry.entities
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_15_UNIQUE_ID
+    )
 
     one_alarm["CurrentAlarmListVersion"] = alarm_event.increment_variable(
         "alarm_list_version"
@@ -273,8 +288,12 @@ async def test_alarm_create_delete(
     sub_callback(event=alarm_event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
-    assert "switch.sonos_alarm_15" not in entity_registry.entities
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_14_UNIQUE_ID
+    )
+    assert not entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, ALARM_15_UNIQUE_ID
+    )
 
 
 async def test_alarm_change_device(
@@ -297,7 +316,7 @@ async def test_alarm_change_device(
 
     await async_setup_sonos()
 
-    entity_id = "switch.sonos_alarm_14"
+    entity_id = "switch.zone_a_daily_alarm_07_00"
 
     # Verify the alarm starts on the initially discovered speaker.
     assert entity_id in entity_registry.entities
@@ -705,7 +724,7 @@ async def test_alarm_update_exception_logs_warning(
         await hass.async_block_till_done()
 
     # Alarm should not be set up due to household mismatch
-    assert "switch.sonos_alarm_14" not in entity_registry.entities
+    assert "switch.zone_a_daily_alarm_07_00" not in entity_registry.entities
     assert "cannot be updated due to a household mismatch" in caplog.text
 
 
@@ -728,7 +747,7 @@ async def test_alarm_setup_for_undiscovered_speaker(
     await async_setup_sonos()
 
     # Switch should not be created since the speaker isn't discovered yet
-    assert "switch.sonos_alarm_14" not in entity_registry.entities
+    assert "switch.bedroom_daily_alarm_07_00" not in entity_registry.entities
 
     # Simulate discovery of the bedroom speaker
     discover.call_args.args[1](
@@ -742,4 +761,4 @@ async def test_alarm_setup_for_undiscovered_speaker(
     )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.bedroom_daily_alarm_07_00" in entity_registry.entities

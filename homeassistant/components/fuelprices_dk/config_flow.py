@@ -207,15 +207,12 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = _get_api_error_key(exc)
 
             if not errors:
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                entry = self._get_reauth_entry()
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
-                if entry is not None:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={CONF_API_KEY: user_input[CONF_API_KEY]},
-                    )
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(

@@ -54,7 +54,7 @@ async def test_entity_tariff(hass: HomeAssistant) -> None:
     async_fire_mqtt_message(hass, "dsmr/meter-stats/electricity_tariff", "")
     await hass.async_block_till_done()
 
-    electricity_tariff = "sensor.dsmr_meter_stats_electricity_tariff"
+    electricity_tariff = "sensor.electricity_tariff"
     assert hass.states.get(electricity_tariff).state == STATE_UNKNOWN
 
     # Test high tariff
@@ -86,7 +86,7 @@ async def test_entity_dsmr_transform(hass: HomeAssistant) -> None:
     async_fire_mqtt_message(hass, "dsmr/meter-stats/dsmr_version", "42")
     await hass.async_block_till_done()
 
-    dsmr_version = "sensor.dsmr_meter_stats_dsmr_version"
+    dsmr_version = "sensor.dsmr_version"
     assert hass.states.get(dsmr_version).state == "4.2"
 
     # Test dsmr version, if it's not a digit
