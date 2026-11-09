@@ -95,8 +95,11 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
                 translation_key="device_unavailable",
             ) from exc
         if TYPE_CHECKING:
-            # Every supported Sonic firmware reports auto shut-off; the client
-            # raises rather than returning None when the read genuinely fails.
+            # The client raises rather than returning None when a read genuinely
+            # fails, so these asserts only narrow the types for mypy.
+            assert state is not None
+            assert telemetry is not None
+            assert networking is not None
             assert auto_shut_off is not None
         return WatergateAgregatedRequests(state, telemetry, networking, auto_shut_off)
 
