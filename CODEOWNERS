@@ -693,6 +693,8 @@ AGENTS.md @home-assistant/core
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
 /tests/components/geonetnz_volcano/ @exxamalte
+/homeassistant/components/geosphere_austria_forecast/ @Ziykuna
+/tests/components/geosphere_austria_forecast/ @Ziykuna
 /homeassistant/components/geosphere_austria_warnings/ @tklecka
 /tests/components/geosphere_austria_warnings/ @tklecka
 /homeassistant/components/ghost/ @johnonolan

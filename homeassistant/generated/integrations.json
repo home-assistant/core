@@ -5210,6 +5210,18 @@
             "cloud"
           ],
           "name": "GeoSphere Austria Warnings"
+        },
+        "geosphere_austria_forecast": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "weather_alerts.forecasts"
+          ],
+          "connectivity": [
+            "cloud"
+          ],
+          "name": "GeoSphere Austria Forecast"
         }
       }
     },
