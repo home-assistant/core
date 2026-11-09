@@ -26,6 +26,7 @@ from homeassistant.components.weather import (
     SERVICE_GET_FORECASTS,
     Forecast,
     WeatherEntity,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityFeature,
 )
 from homeassistant.components.weather.const import (
@@ -39,6 +40,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    STATE_UNAVAILABLE,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -756,3 +758,31 @@ async def test_get_forecast_unsupported(
 
 
 ISSUE_TRACKER = "https://blablabla.com"
+
+
+async def test_units_when_unavailable(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, config_flow_fixture: None
+) -> None:
+    """Test the units, including custom units, are kept when unavailable."""
+    set_options = {
+        WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: UnitOfSpeed.MILES_PER_HOUR,
+        WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: UnitOfLength.INCHES,
+        WeatherEntityCapabilityAttribute.PRESSURE_UNIT: UnitOfPressure.INHG,
+        WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.FAHRENHEIT
+        ),
+        WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: UnitOfLength.MILES,
+    }
+    entry = entity_registry.async_get_or_create("weather", "test", "very_unique")
+    entity_registry.async_update_entity_options(entry.entity_id, "weather", set_options)
+    await hass.async_block_till_done()
+
+    entity0 = await create_entity(
+        hass, MockWeatherTest, None, unique_id="very_unique", available=False
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    assert {key: state.attributes[key] for key in set_options} == set_options
+    # The entity registry restores the capabilities before the entity is added
+    assert entity_registry.async_get(entity0.entity_id).capabilities == set_options
