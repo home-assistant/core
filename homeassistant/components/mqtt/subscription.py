@@ -47,7 +47,7 @@ class EntitySubscription:
             return
 
         # Prepare debug data
-        debug_info.add_subscription(self.hass, self.topic, self.entity_id)
+        debug_info.add_subscription(self.hass, self.topic, self.entity_id, self.qos)
 
         self.should_subscribe = True
 

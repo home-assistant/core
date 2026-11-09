@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
-from .models import DATA_MQTT, PublishPayloadType
+from .models import DATA_MQTT, PublishPayloadType, ReceiveMessage
 
 STORED_MESSAGES = 10
 
@@ -61,7 +61,7 @@ def log_message(
 
 
 def add_subscription(
-    hass: HomeAssistant, subscription: str, entity_id: str | None
+    hass: HomeAssistant, subscription: str, entity_id: str | None, qos: int
 ) -> None:
     """Prepare debug data for subscription."""
     if entity_id:
@@ -72,9 +72,11 @@ def add_subscription(
             entity_info["subscriptions"][subscription] = {
                 "count": 1,
                 "messages": deque(maxlen=STORED_MESSAGES),
+                "qos": qos,
             }
         else:
             entity_info["subscriptions"][subscription]["count"] += 1
+            entity_info["subscriptions"][subscription]["qos"] = qos
 
 
 def remove_subscription(
@@ -158,6 +160,56 @@ def remove_trigger_discovery_data(
     hass.data[DATA_MQTT].debug_info_triggers.pop(discovery_hash, None)
 
 
+def _message_as_dict(
+    msg: ReceiveMessage | TimestampedPublishMessage, monotonic_time_diff: float
+) -> dict[str, Any]:
+    return {
+        "payload": str(msg.payload),
+        "qos": msg.qos,
+        "retain": msg.retain,
+        "time": dt_util.utc_from_timestamp(
+            msg.timestamp + monotonic_time_diff,
+            tz=dt.UTC,
+        ),
+        "topic": msg.topic,
+    }
+
+
+def topics_for_entity(
+    hass: HomeAssistant, entity_id: str, include_messages: bool
+) -> list[dict[str, Any]]:
+    """Return the subscribed and published topics of an entity."""
+    if (entity_info := hass.data[DATA_MQTT].debug_info_entities.get(entity_id)) is None:
+        return []
+    monotonic_time_diff = time.time() - time.monotonic()
+    topics: list[dict[str, Any]] = []
+    for topic, subscription in entity_info["subscriptions"].items():
+        item: dict[str, Any] = {
+            "topic": topic,
+            "direction": "subscribe",
+            "qos": subscription["qos"],
+        }
+        if include_messages:
+            item["messages"] = [
+                _message_as_dict(msg, monotonic_time_diff)
+                for msg in subscription["messages"]
+            ]
+        topics.append(item)
+    for topic, transmitted in entity_info["transmitted"].items():
+        messages = transmitted["messages"]
+        item = {
+            "topic": topic,
+            "direction": "publish",
+            "qos": messages[-1].qos,
+        }
+        if include_messages:
+            item["messages"] = [
+                _message_as_dict(msg, monotonic_time_diff) for msg in messages
+            ]
+        topics.append(item)
+    return topics
+
+
 def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
     entity_info = hass.data[DATA_MQTT].debug_info_entities[entity_id]
     monotonic_time_diff = time.time() - time.monotonic()
@@ -165,16 +217,7 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
         {
             "topic": topic,
             "messages": [
-                {
-                    "payload": str(msg.payload),
-                    "qos": msg.qos,
-                    "retain": msg.retain,
-                    "time": dt_util.utc_from_timestamp(
-                        msg.timestamp + monotonic_time_diff,
-                        tz=dt.UTC,
-                    ),
-                    "topic": msg.topic,
-                }
+                _message_as_dict(msg, monotonic_time_diff)
                 for msg in subscription["messages"]
             ],
         }
@@ -184,16 +227,7 @@ def _info_for_entity(hass: HomeAssistant, entity_id: str) -> dict[str, Any]:
         {
             "topic": topic,
             "messages": [
-                {
-                    "payload": str(msg.payload),
-                    "qos": msg.qos,
-                    "retain": msg.retain,
-                    "time": dt_util.utc_from_timestamp(
-                        msg.timestamp + monotonic_time_diff,
-                        tz=dt.UTC,
-                    ),
-                    "topic": msg.topic,
-                }
+                _message_as_dict(msg, monotonic_time_diff)
                 for msg in subscription["messages"]
             ],
         }

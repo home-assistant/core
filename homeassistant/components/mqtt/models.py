@@ -167,6 +167,7 @@ class SubscriptionDebugInfo(TypedDict):
 
     messages: deque[ReceiveMessage]
     count: int
+    qos: int
 
 
 class EntityDebugInfo(TypedDict):
