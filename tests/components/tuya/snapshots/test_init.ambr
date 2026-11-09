@@ -7589,6 +7589,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[qcabsghrsph]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'qcabsghrsph',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Motion Sensor&TH',
+    'model_id': 'rhgsbacq',
+    'name': 'HPS Illuminance Sensor',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[qe8vvtx4nl21wjd3dytkx]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
