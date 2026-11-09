@@ -6,8 +6,9 @@ from typing import cast
 import probatio
 from synology_dsm.exceptions import SynologyDSMException
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import CONF_SERIAL, DOMAIN, SERVICE_REBOOT, SERVICE_SHUTDOWN, SERVICES
@@ -34,6 +35,12 @@ async def _service_handler(call: ServiceCall) -> None:
                 translation_key="serial_not_found",
                 translation_placeholders={"serial": serial},
             )
+        if entry.state is not ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="entry_not_loaded",
+                translation_placeholders={"serial": serial},
+            )
         dsm_device = entry.runtime_data
     elif len(dsm_devices) == 1:
         dsm_device = next(iter(dsm_devices.values()))
@@ -45,20 +52,7 @@ async def _service_handler(call: ServiceCall) -> None:
             translation_placeholders={"serials": ", ".join(sorted(dsm_devices))},
         )
 
-    if not dsm_device:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="serial_not_found",
-            translation_placeholders={"serial": serial},
-        )
-
     if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
-        if serial not in dsm_devices:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="serial_not_found",
-                translation_placeholders={"serial": serial},
-            )
         LOGGER.debug("%s DSM with serial %s", call.service, serial)
         LOGGER.warning(
             (
@@ -67,7 +61,6 @@ async def _service_handler(call: ServiceCall) -> None:
             ),
             call.service,
         )
-        dsm_device = dsm_devices[serial]
         dsm_api = dsm_device.api
         try:
             await getattr(dsm_api, f"async_{call.service}")()
