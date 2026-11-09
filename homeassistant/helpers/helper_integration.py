@@ -1,14 +1,54 @@
 """Helpers for helper integrations."""
 
-from collections.abc import Callable, Collection, Coroutine
-from typing import Any
+from collections.abc import Callable, Collection, Coroutine, Sequence
+from typing import Any, override
 
+from homeassistant.const import EntityCapabilityAttribute
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, valid_entity_id
 
 from . import device_registry as dr, entity_registry as er
 from .deprecation import deprecated_function
+from .entity import Entity
 from .event import async_track_entity_registry_updated_event
 from .frame import ReportBehavior, report_usage
+
+
+class HelperEntity(Entity):
+    """Entity of a helper integration which calculates its state from source entities.
+
+    Must be listed before the entity platform base class, e.g.
+    `class MyHelperSensor(HelperEntity, SensorEntity)`, so the source entities are
+    added to the capability attributes of the platform.
+    """
+
+    _attr_source_entity_ids_or_uuids: Sequence[str] = ()
+
+    @property
+    def source_entity_ids(self) -> list[str]:
+        """Return the entity IDs of the source entities."""
+        entity_registry = er.async_get(self.hass)
+        return [
+            entity_id
+            for entity_id_or_uuid in self._attr_source_entity_ids_or_uuids
+            if entity_id_or_uuid
+            and (
+                entity_id := er.async_resolve_entity_id(
+                    entity_registry, entity_id_or_uuid
+                )
+            )
+        ]
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any] | None:
+        """Return the capability attributes, including the source entities."""
+        capability_attributes = super().capability_attributes
+        if not (source_entity_ids := self.source_entity_ids):
+            return capability_attributes
+        return {
+            **(capability_attributes or {}),
+            EntityCapabilityAttribute.SOURCE_ENTITIES: source_entity_ids,
+        }
 
 
 def async_handle_source_entity_changes(

@@ -7,6 +7,7 @@ import attr
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    MockEntityPlatform,
     MockModule,
     mock_config_flow,
     mock_integration,
@@ -14,11 +15,14 @@ from pytest_homeassistant.common import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCapabilityAttribute
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device_id
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.helper_integration import (
+    HelperEntity,
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
     async_remove_helper_devices,
@@ -1071,3 +1075,71 @@ async def test_async_remove_helper_devices_helper_not_in_device(
 
     # Check we got the expected events
     assert events == []
+
+
+class MockPlatformEntity(Entity):
+    """Mock entity platform base class with its own capability attributes."""
+
+    _attr_capability_attributes = {"platform_capability": "value"}
+
+
+class MockHelperEntity(HelperEntity, MockPlatformEntity):
+    """Mock helper entity."""
+
+    _attr_unique_id = "helper_unique_id"
+
+    def __init__(self, source_entity_ids_or_uuids: list[str]) -> None:
+        """Initialize the mock helper entity."""
+        self._attr_source_entity_ids_or_uuids = source_entity_ids_or_uuids
+
+
+async def test_helper_entity_source_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    source_entity_entry: er.RegistryEntry,
+) -> None:
+    """Test the helper entity adds resolved source entities to its capabilities."""
+    helper_entity = MockHelperEntity(
+        ["sensor.other_source", source_entity_entry.id, "", "unknown_uuid"]
+    )
+    platform = MockEntityPlatform(hass, domain="sensor", platform_name=HELPER_DOMAIN)
+    await platform.async_add_entities([helper_entity])
+
+    expected_capabilities = {
+        "platform_capability": "value",
+        EntityCapabilityAttribute.SOURCE_ENTITIES: [
+            "sensor.other_source",
+            source_entity_entry.entity_id,
+        ],
+    }
+    state = hass.states.get(helper_entity.entity_id)
+    assert state is not None
+    assert state.attributes == expected_capabilities
+    entry = entity_registry.async_get(helper_entity.entity_id)
+    assert entry is not None
+    assert entry.capabilities == expected_capabilities
+
+
+@pytest.mark.parametrize(
+    "source_entity_ids_or_uuids",
+    [
+        pytest.param([], id="no_sources"),
+        pytest.param(["", "unknown_uuid"], id="unresolvable_sources"),
+    ],
+)
+async def test_helper_entity_without_source_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    source_entity_ids_or_uuids: list[str],
+) -> None:
+    """Test the helper entity leaves capabilities untouched without sources."""
+    helper_entity = MockHelperEntity(source_entity_ids_or_uuids)
+    platform = MockEntityPlatform(hass, domain="sensor", platform_name=HELPER_DOMAIN)
+    await platform.async_add_entities([helper_entity])
+
+    state = hass.states.get(helper_entity.entity_id)
+    assert state is not None
+    assert state.attributes == {"platform_capability": "value"}
+    entry = entity_registry.async_get(helper_entity.entity_id)
+    assert entry is not None
+    assert entry.capabilities == {"platform_capability": "value"}

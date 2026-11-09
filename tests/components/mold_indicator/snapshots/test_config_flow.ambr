@@ -4,6 +4,11 @@
     'attributes': dict({
       'device_class': 'humidity',
       'friendly_name': 'Mold Indicator',
+      'source_entities': list([
+        'sensor.indoor_temp',
+        'sensor.outdoor_temp',
+        'sensor.indoor_humidity',
+      ]),
       'state_class': 'measurement',
       'unit_of_measurement': '%',
     }),
@@ -15,6 +20,10 @@
     'attributes': dict({
       'device_class': 'humidity',
       'friendly_name': 'Mold Indicator',
+      'source_entities': list([
+        'sensor.indoor_temp',
+        'sensor.outdoor_temp',
+      ]),
       'state_class': 'measurement',
       'unit_of_measurement': '%',
     }),
@@ -28,6 +37,11 @@
       'dewpoint': 12.01,
       'estimated_critical_temp': 19.5,
       'friendly_name': 'Mold Indicator',
+      'source_entities': list([
+        'sensor.indoor_temp',
+        'sensor.outdoor_temp',
+        'sensor.indoor_humidity',
+      ]),
       'state_class': 'measurement',
       'unit_of_measurement': '%',
     }),
@@ -41,6 +55,11 @@
       'dewpoint': 12.01,
       'estimated_critical_temp': 19.5,
       'friendly_name': 'Mold Indicator',
+      'source_entities': list([
+        'sensor.indoor_temp',
+        'sensor.outdoor_temp',
+        'sensor.indoor_humidity',
+      ]),
       'state_class': 'measurement',
       'unit_of_measurement': '%',
     }),

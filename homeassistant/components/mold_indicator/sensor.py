@@ -40,6 +40,7 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.helper_integration import HelperEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -130,7 +131,7 @@ async def async_setup_entry(
     )
 
 
-class MoldIndicator(SensorEntity):
+class MoldIndicator(HelperEntity, SensorEntity):
     """Represents a MoldIndication sensor."""
 
     _attr_should_poll = False
@@ -158,6 +159,7 @@ class MoldIndicator(SensorEntity):
             CONF_OUTDOOR_TEMP: outdoor_temp_sensor,
             CONF_INDOOR_HUMIDITY: indoor_humidity_sensor,
         }
+        self._attr_source_entity_ids_or_uuids = list(self._entities.values())
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._attr_available = False

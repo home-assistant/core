@@ -474,6 +474,7 @@ class EntityCapabilityAttribute(StrEnum):
     """Capability attributes shared by all entities."""
 
     GROUP_ENTITIES = "group_entities"
+    SOURCE_ENTITIES = "source_entities"
 
 
 class EntityStateAttribute(StrEnum):
