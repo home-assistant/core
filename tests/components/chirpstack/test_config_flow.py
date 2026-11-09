@@ -3,7 +3,11 @@
 from unittest.mock import Mock, patch
 
 from lorawan_connection import ConnectionUnavailable
-from lorawan_connection.backend.chirpstack import AuthenticationError
+from lorawan_connection.backend.chirpstack import (
+    AuthenticationError,
+    HTTP2Error,
+    TLSCertificateError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -162,11 +166,19 @@ async def test_invalid_endpoint(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        (ConnectionUnavailable("offline"), "cannot_connect"),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
+    ],
+)
 async def test_tenant_listing_failure(
-    hass: HomeAssistant, mock_connection: Mock
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
-    """Connection and incomplete-list failures remain in the form."""
-    mock_connection.tenants.side_effect = ConnectionUnavailable("offline")
+    """Connection failures allow a retry in the same form."""
+    mock_connection.tenants.side_effect = error
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
@@ -174,13 +186,14 @@ async def test_tenant_listing_failure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error_key}
     mock_connection.close.assert_awaited_once()
 
     mock_connection.tenants.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "correct"}
+        result["flow_id"], {"endpoint": "https://fixed", "api_key": "correct"}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -208,11 +221,19 @@ async def test_multiple_tenants(hass: HomeAssistant, mock_connection: Mock) -> N
     assert result["step_id"] == "applications"
 
 
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        (ConnectionUnavailable("offline"), "cannot_connect"),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
+    ],
+)
 async def test_application_listing_failure(
-    hass: HomeAssistant, mock_connection: Mock
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
     """Keep the chosen tenant when application enumeration fails."""
-    mock_connection.applications.side_effect = ConnectionUnavailable("offline")
+    mock_connection.applications.side_effect = error
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
@@ -221,7 +242,7 @@ async def test_application_listing_failure(
         result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["step_id"] == "tenant"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
     assert mock_connection.close.await_count == 2
 
     mock_connection.applications.side_effect = None
@@ -277,11 +298,19 @@ async def test_empty_selection(hass: HomeAssistant, mock_connection: Mock) -> No
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        (ConnectionUnavailable("offline"), "cannot_connect"),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
+    ],
+)
 async def test_inventory_access_failure(
-    hass: HomeAssistant, mock_connection: Mock
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
     """Retry inventory connection failures without losing the application selection."""
-    mock_connection.inventory.side_effect = ConnectionUnavailable("Application removed")
+    mock_connection.inventory.side_effect = error
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
@@ -293,7 +322,7 @@ async def test_inventory_access_failure(
         result["flow_id"], {"application_ids": ["application"]}
     )
     assert result["step_id"] == "applications"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
     mock_connection.inventory.assert_awaited_once()
     assert mock_connection.close.await_count == 3
     assert not hass.config_entries.async_entries("chirpstack")
@@ -342,18 +371,28 @@ async def test_inventory_auth_failure(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        (ConnectionUnavailable("Selected application missing"), "cannot_connect"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
+    ],
+)
 async def test_reauth_rejected_inventory(
-    hass: HomeAssistant, connection_entry: MockConfigEntry, mock_connection: Mock
+    hass: HomeAssistant,
+    connection_entry: MockConfigEntry,
+    mock_connection: Mock,
+    error: Exception,
+    error_key: str,
 ) -> None:
-    """An unusable replacement key never overwrites working entry credentials."""
-    mock_connection.inventory.side_effect = ConnectionUnavailable(
-        "Selected application missing"
-    )
+    """Failed reauthentication preserves credentials until a successful retry."""
+    mock_connection.inventory.side_effect = error
     result = await connection_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"api_key": "replacement"}
     )
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error_key}
     assert connection_entry.data["api_key"] == "secret"
 
     mock_connection.inventory.side_effect = None

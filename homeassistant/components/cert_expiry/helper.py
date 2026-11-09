@@ -12,6 +12,7 @@ from homeassistant.util.ssl import get_default_context
 
 from .const import TIMEOUT
 from .errors import (
+    ConnectionFailed,
     ConnectionRefused,
     ConnectionReset,
     ConnectionTimeout,
@@ -65,6 +66,10 @@ async def get_cert_expiry_timestamp(
         raise ValidationFailure(err.verify_message) from err
     except ssl.SSLError as err:
         raise ValidationFailure(err.args[0]) from err
+    except OSError as err:
+        raise ConnectionFailed(
+            f"Connection failed with server: {hostname}:{port}"
+        ) from err
 
     if not cert or "notAfter" not in cert:
         raise ValidationFailure(
