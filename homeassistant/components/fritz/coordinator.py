@@ -196,17 +196,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                configuration_url=f"http://{self.host}",
-                connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
-                identifiers={(DOMAIN, self.unique_id)},
-                manufacturer="FRITZ!",
-                model=self.model,
-                name=self.config_entry.title,
-                sw_version=self.current_firmware,
-            ),
+            configuration_url=f"http://{self.host}",
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="FRITZ!",
+            model=self.model,
+            name=self.config_entry.title,
+            sw_version=self.current_firmware,
         )
         self.connection.clear_cache()
 
@@ -653,18 +651,16 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         # manually register device entry for new connected device
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-                manufacturer="FRITZ!",
-                model="FRITZ!Box Tracked device",
-                name=device.hostname,
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    self.hass,
-                    (DOMAIN, self.unique_id),
-                    config_entry_id=self.config_entry.entry_id,
-                ),
+            connections={(CONNECTION_NETWORK_MAC, dev_mac)},
+            manufacturer="FRITZ!",
+            model="FRITZ!Box Tracked device",
+            name=device.hostname,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.unique_id),
+                config_entry_id=self.config_entry.entry_id,
             ),
         )
         return True
@@ -952,6 +948,23 @@ class AvmWrapper(FritzBoxTools):
 
         return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
 
+    async def async_addon_infos_supported(self) -> bool:
+        """Check if the WAN interface provides transmission rate and traffic data."""
+
+        if not self.device_is_router:
+            return False
+
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self.connection.call_action, "WANCommonIFC1", "GetAddonInfos")
+            )
+        except FritzConnectionException:
+            LOGGER.debug(
+                "Transmission rate and traffic data not supported by the device"
+            )
+            return False
+        return True
+
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
 
@@ -961,6 +974,7 @@ class AvmWrapper(FritzBoxTools):
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
             ipv6_active=await self.async_ipv6_active(),
+            addon_infos_supported=await self.async_addon_infos_supported(),
         )
         LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",

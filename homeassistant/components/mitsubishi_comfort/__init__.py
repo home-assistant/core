@@ -99,19 +99,17 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     owned_macs = {dr.format_mac(info.mac) for info in devices.values() if info.mac}
     for serial, info in devices.items():
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, serial)},
-                # Connections are globally indexed: registering an empty MAC would
-                # merge every MAC-less device into one registry entry.
-                connections=(
-                    {(dr.CONNECTION_NETWORK_MAC, info.mac)} if info.mac else set()
-                ),
-                manufacturer="Mitsubishi",
-                name=info.label,
-                serial_number=serial,
+            identifiers={(DOMAIN, serial)},
+            # Connections are globally indexed: registering an empty MAC would
+            # merge every MAC-less device into one registry entry.
+            connections=(
+                {(dr.CONNECTION_NETWORK_MAC, info.mac)} if info.mac else set()
             ),
+            manufacturer="Mitsubishi",
+            name=info.label,
+            serial_number=serial,
         )
 
     # Cache the freshly discovered credentials (password, cryptoSerial, MAC) so
@@ -189,9 +187,25 @@ async def async_setup_entry(
         len(incomplete),
     )
 
-    await asyncio.gather(
-        *(c.async_config_entry_first_refresh() for c in coordinators.values())
+    results = await asyncio.gather(
+        *(c.async_config_entry_first_refresh() for c in coordinators.values()),
+        return_exceptions=True,
     )
+    failures: list[ConfigEntryNotReady] = []
+    for result in results:
+        if isinstance(result, ConfigEntryNotReady):
+            failures.append(result)
+        elif isinstance(result, BaseException):
+            raise result
+    if failures and len(failures) == len(results):
+        raise failures[0]
+    for coordinator, result in zip(coordinators.values(), results, strict=True):
+        if isinstance(result, ConfigEntryNotReady):
+            _LOGGER.error(
+                "Error fetching initial data for %s: %s",
+                coordinator.device.name,
+                result,
+            )
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

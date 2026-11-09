@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     # can resolve their via_device_id link during platform setup, regardless of
     # which platform loads first.
     if device_info := data.coordinator.device_info:
-        dr.async_get(hass).async_get_or_create_device(
+        dr.async_get(hass).async_get_or_create_from_info(
             config_entry_id=entry.entry_id, device_info=device_info
         )
 

@@ -115,9 +115,10 @@ async def websocket_delete(
             )
             return
 
-        await hass.auth.async_remove_credentials(credentials)
-
-        connection.send_result(msg["id"])
+        # Deleting the password of this session ends it, so that waits for the result.
+        with connection.async_defer_auth_close():
+            await hass.auth.async_remove_credentials(credentials)
+            connection.send_result(msg["id"])
         return
 
     await provider.async_remove_auth(msg["username"])

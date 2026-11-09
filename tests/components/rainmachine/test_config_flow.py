@@ -65,7 +65,7 @@ async def test_invalid_password(hass: HomeAssistant, client: AsyncMock) -> None:
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",
@@ -128,7 +128,7 @@ async def test_migrate_1_2(
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",
@@ -147,7 +147,7 @@ async def test_migrate_1_2(
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
     with patch(
-        "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+        "homeassistant.components.rainmachine.async_setup_entry", return_value=None
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -296,7 +296,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
 
     with (
         patch(
-            "homeassistant.components.rainmachine.async_setup_entry", return_value=True
+            "homeassistant.components.rainmachine.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.rainmachine.config_flow.Client",

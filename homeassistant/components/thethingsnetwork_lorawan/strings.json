@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "One or more of these applications are already configured",
+      "no_applications": "No applications are available with this API key.",
+      "reauth_successful": "Authentication updated"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to The Things Stack",
+      "invalid_auth": "API key rejected or missing required application permissions",
+      "invalid_endpoint": "Enter an HTTP or HTTPS server address with a valid port",
+      "select_application": "Enter at least one application ID.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "applications": {
+        "data": {
+          "application_ids": "Applications"
+        },
+        "data_description": {
+          "application_ids": "Only devices in the selected applications will be discovered."
+        },
+        "description": "Select the applications whose devices you want to use in Home Assistant.",
+        "title": "Select applications"
+      },
+      "connection": {
+        "data": {
+          "api_key": "API key",
+          "endpoint": "Application Server",
+          "identity_server": "Identity Server"
+        },
+        "data_description": {
+          "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic.",
+          "endpoint": "Server address, including the scheme and port. The Things Network uses port 8884.",
+          "identity_server": "Leave empty to use the Application Server address."
+        },
+        "description": "Connect your The Things Network or The Things Stack applications.",
+        "title": "Connect to The Things Network"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "An API key with permission to read devices and application traffic for every selected application. Sending device commands also requires permission to write downlink traffic."
+        },
+        "title": "Update API key"
+      },
+      "user": {
+        "data": {
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "Select the region shown in your The Things Network console URL, or select Custom server for another The Things Stack deployment."
+        },
+        "title": "Select server region"
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "au1": "Australia (AU1)",
+        "custom": "Custom server",
+        "eu1": "Europe (EU1)",
+        "nam1": "North America (NAM1)"
+      }
+    }
+  }
+}

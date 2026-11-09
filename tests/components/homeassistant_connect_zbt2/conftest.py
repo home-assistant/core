@@ -32,7 +32,7 @@ def mock_zha():
         ),
         patch(
             "homeassistant.components.zha.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield

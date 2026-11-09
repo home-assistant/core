@@ -3,6 +3,7 @@
   "name": "NSW Rural Fire Service Incidents",
   "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@exxamalte"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/nsw_rural_fire_service_feed",
   "integration_type": "service",
   "iot_class": "cloud_polling",

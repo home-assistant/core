@@ -84,6 +84,6 @@ rules:
     comment: One config entry per physical device, no hub.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: done
   strict-typing: done

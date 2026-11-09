@@ -3,3 +3,16 @@ pressed:
     entity:
       - domain: button
       - domain: input_button
+      - domain: event
+        device_class: button
+held:
+  target:
+    entity:
+      - domain: event
+        device_class: button
+  fields:
+    interval:
+      required: false
+      selector:
+        duration:
+          enable_millisecond: true

@@ -45,7 +45,7 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 def mock_setup_entry() -> Generator[Any]:
     """Prevent the actual integration from being set up."""
     with (
-        patch("homeassistant.components.vegehub.async_setup_entry", return_value=True),
+        patch("homeassistant.components.vegehub.async_setup_entry", return_value=None),
     ):
         yield
 

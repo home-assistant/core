@@ -2,12 +2,18 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+import inspect
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    get_fixture_path,
+)
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
@@ -38,6 +44,7 @@ from .common import (
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
     mock_backup_agent,
+    mock_download_from_file,
     setup_backup_integration,
     setup_backup_platform,
 )
@@ -269,31 +276,6 @@ async def test_details_with_errors(
             {"type": "backup/details", "backup_id": "abc123"}
         )
         assert await client.receive_json() == snapshot
-
-
-async def test_details_get_backup_returns_none(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test getting backup info when the agent returns None from get_backup."""
-    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
-    mock_agents["test.remote"].async_get_backup.return_value = None
-    mock_agents["test.remote"].async_get_backup.side_effect = None
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    with patch("pathlib.Path.exists", return_value=True):
-        await client.send_json_auto_id(
-            {"type": "backup/details", "backup_id": "abc123"}
-        )
-        assert await client.receive_json() == snapshot
-    assert (
-        "Detected that integration 'test' returns None from"
-        " BackupAgent.async_get_backup." in caplog.text
-    )
 
 
 @pytest.mark.parametrize(
@@ -812,36 +794,6 @@ async def test_restore_remote_agent(
         )
         assert await client.receive_json() == snapshot
     assert len(restart_calls) == snapshot
-
-
-async def test_restore_remote_agent_get_backup_returns_none(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test calling the restore command when the agent returns None from get_backup."""
-    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
-    mock_agents["test.remote"].async_get_backup.return_value = None
-    mock_agents["test.remote"].async_get_backup.side_effect = None
-    restart_calls = async_mock_service(hass, "homeassistant", "restart")
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    await client.send_json_auto_id(
-        {
-            "type": "backup/restore",
-            "backup_id": "abc123",
-            "agent_id": "test.remote",
-        }
-    )
-    assert await client.receive_json() == snapshot
-    assert len(restart_calls) == 0
-    assert (
-        "Detected that integration 'test' returns None from"
-        " BackupAgent.async_get_backup." in caplog.text
-    )
 
 
 async def test_restore_wrong_password(
@@ -2051,6 +2003,103 @@ async def test_config_schedule_logic(
 
     assert create_backup.call_count == backup_calls_2
     assert create_backup.call_args == call_args
+
+
+@pytest.mark.parametrize(
+    (
+        "last_completed_automatic_backup",
+        "now",
+        "before_scheduled_time",
+        "scheduled_backup_time",
+    ),
+    [
+        pytest.param(
+            "2024-10-26T03:45:00+02:00",
+            "2024-10-26T12:00:00+02:00",
+            "2024-10-27T03:44:00+01:00",
+            "2024-10-27T03:45:00+01:00",
+            id="summer_to_winter_time",
+        ),
+        pytest.param(
+            "2024-03-30T03:45:00+01:00",
+            "2024-03-30T12:00:00+01:00",
+            "2024-03-31T03:44:00+02:00",
+            "2024-03-31T03:45:00+02:00",
+            id="winter_to_summer_time",
+        ),
+    ],
+)
+async def test_config_schedule_logic_dst_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    create_backup: AsyncMock,
+    last_completed_automatic_backup: str,
+    now: str,
+    before_scheduled_time: str,
+    scheduled_backup_time: str,
+) -> None:
+    """Test the schedule keeps its local time when DST changes.
+
+    The last completed backup is stored with the UTC offset in effect when it
+    was made, and must not pin later backups to that offset.
+    """
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
+    client = await hass_ws_client(hass)
+    storage_data = {
+        "backups": [],
+        "config": {
+            "agents": {},
+            "automatic_backups_configured": True,
+            "create_backup": {
+                "agent_ids": ["test.test-agent"],
+                "include_addons": [],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": [],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "retention": {"copies": None, "days": None},
+            "last_attempted_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup_size": None,
+            "schedule": {
+                "days": [],
+                "recurrence": "daily",
+                "time": "03:45:00",
+            },
+        },
+    }
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to(now)
+
+    await setup_backup_integration(hass, remote_agents=["test.test-agent"])
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    result = await client.receive_json()
+    assert result["result"]["next_automatic_backup"] == scheduled_backup_time
+
+    freezer.move_to(before_scheduled_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == 0
+
+    freezer.move_to(scheduled_backup_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == BACKUP_CALL
 
 
 @pytest.mark.parametrize(
@@ -4080,6 +4129,73 @@ async def test_configured_agents_unavailable_repair(
     assert result["result"]["config"]["create_backup"]["agent_ids"] == []
 
 
+async def test_configured_agents_unavailable_repair_keeps_ignore(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test an ignored unavailable agent issue is kept while still unavailable."""
+    issue_id = "automatic_backup_agents_unavailable_test.agent"
+    hass_storage["backup"] = {
+        "data": {
+            "backups": [],
+            "config": {
+                "agents": {},
+                "automatic_backups_configured": True,
+                "create_backup": {
+                    "agent_ids": ["test.agent"],
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": False,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "retention": {"copies": None, "days": None},
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
+                "last_completed_automatic_backup_size": None,
+                "schedule": {"days": [], "recurrence": "never", "time": None},
+            },
+        },
+        "key": DOMAIN,
+        "version": store.STORAGE_VERSION,
+        "minor_version": store.STORAGE_VERSION_MINOR,
+    }
+    await setup_backup_integration(hass)
+    get_agents_mock = AsyncMock(return_value=[])
+    register_listener_mock = Mock()
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=get_agents_mock,
+            async_register_backup_agents_listener=register_listener_mock,
+        ),
+    )
+    await hass.async_block_till_done()
+    reload_backup_agents = register_listener_mock.call_args[1]["listener"]
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # Checking again while the agent is still unavailable keeps the issue as is
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    assert get_agents_mock.call_count == 2
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) == issue
+    assert events == []
+
+    get_agents_mock.return_value = [mock_backup_agent("agent")]
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
 async def test_subscribe_event(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -4143,6 +4259,44 @@ async def test_can_decrypt_on_download(
 
 
 @pytest.mark.parametrize(
+    ("password", "success"),
+    [
+        pytest.param("hunter2", True, id="correct_password"),
+        pytest.param("wrong_password", False, id="wrong_password"),
+    ],
+)
+async def test_can_decrypt_on_download_closes_stream(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    password: str,
+    success: bool,
+) -> None:
+    """Test the download stream is closed after checking the password."""
+    backup = replace(TEST_BACKUP_ABC123, protected=True)
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.remote"], backups={"test.remote": [backup]}
+    )
+    streams = mock_download_from_file(
+        mock_agents["test.remote"],
+        get_fixture_path("test_backups/backup_compressed_protected_v3.tar", DOMAIN),
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": backup.backup_id,
+            "agent_id": "test.remote",
+            "password": password,
+        }
+    )
+    assert (await client.receive_json())["success"] is success
+
+    assert len(streams) == 1
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
+
+
+@pytest.mark.parametrize(
     "error",
     [
         BackupAgentError,
@@ -4176,32 +4330,3 @@ async def test_can_decrypt_on_download_with_agent_error(
         }
     )
     assert await client.receive_json() == snapshot
-
-
-@pytest.mark.usefixtures("mock_backups")
-async def test_can_decrypt_on_download_get_backup_returns_none(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test can decrypt on download when the agent returns None from get_backup."""
-
-    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
-    mock_agents["test.remote"].async_get_backup.return_value = None
-    mock_agents["test.remote"].async_get_backup.side_effect = None
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "backup/can_decrypt_on_download",
-            "backup_id": TEST_BACKUP_ABC123.backup_id,
-            "agent_id": "test.remote",
-            "password": "hunter2",
-        }
-    )
-    assert await client.receive_json() == snapshot
-    assert (
-        "Detected that integration 'test' returns None from"
-        " BackupAgent.async_get_backup." in caplog.text
-    )

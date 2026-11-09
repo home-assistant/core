@@ -65,7 +65,7 @@ def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with (
         patch(
-            "homeassistant.components.velbus.async_setup_entry", return_value=True
+            "homeassistant.components.velbus.async_setup_entry", return_value=None
         ) as mock,
     ):
         yield mock
@@ -287,7 +287,7 @@ async def test_vlp_step_no_modules(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "velbusaio.vlp_reader.VlpFile.read",
@@ -350,7 +350,7 @@ async def test_vlp_step_success(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "velbusaio.vlp_reader.VlpFile.read",

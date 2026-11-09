@@ -25,6 +25,8 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE, DOMAIN
 
+type INKBIRDConfigEntry = ConfigEntry[INKBIRDActiveBluetoothProcessorCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 FALLBACK_POLL_INTERVAL = timedelta(seconds=180)
@@ -46,7 +48,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: INKBIRDConfigEntry,
         device_type: str | None,
         device_data: dict[str, Any] | None,
     ) -> None:

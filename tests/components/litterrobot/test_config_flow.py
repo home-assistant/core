@@ -47,7 +47,7 @@ async def test_full_flow(hass: HomeAssistant, mock_account) -> None:
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -124,7 +124,7 @@ async def test_create_entry(
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -175,7 +175,7 @@ async def test_reauth(hass: HomeAssistant, mock_account: Account) -> None:
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -262,7 +262,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -317,7 +317,7 @@ async def test_dhcp_discovery_full_flow(
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(

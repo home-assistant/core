@@ -6,26 +6,16 @@ from typing import TYPE_CHECKING, Any
 
 import probatio
 
-from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service as service_helper
 
 from .const import (
-    ATTR_FAN_SPEED,
-    ATTR_PARAMS,
     DATA_COMPONENT,
     DOMAIN,
-    SERVICE_CLEAN_AREA,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SEND_COMMAND,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
     VacuumEntityFeature,
+    VacuumService,
+    VacuumServiceArgument,
 )
 
 if TYPE_CHECKING:
@@ -42,7 +32,7 @@ async def _async_clean_area(
     Calls async_clean_segments for each entity.
     """
     data = dict(call.data)
-    cleaning_area_id: list[str] = data.pop("cleaning_area_id")
+    cleaning_area_id: list[str] = data.pop(VacuumServiceArgument.CLEANING_AREA_ID)
 
     entity_data: list[tuple[StateVacuumEntity, dict[str, Any]]] = []
     handled_areas: set[str] = set()
@@ -102,33 +92,33 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_START,
+        VacuumService.START,
         None,
         "async_start",
         [VacuumEntityFeature.START],
     )
     component.async_register_entity_service(
-        SERVICE_PAUSE,
+        VacuumService.PAUSE,
         None,
         "async_pause",
         [VacuumEntityFeature.PAUSE],
     )
     component.async_register_entity_service(
-        SERVICE_RETURN_TO_BASE,
+        VacuumService.RETURN_TO_BASE,
         None,
         "async_return_to_base",
         [VacuumEntityFeature.RETURN_HOME],
     )
     component.async_register_entity_service(
-        SERVICE_CLEAN_SPOT,
+        VacuumService.CLEAN_SPOT,
         None,
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
     )
     component.async_register_batched_entity_service(
-        SERVICE_CLEAN_AREA,
+        VacuumService.CLEAN_AREA,
         {
-            probatio.Required("cleaning_area_id"): probatio.All(
+            probatio.Required(VacuumServiceArgument.CLEANING_AREA_ID): probatio.All(
                 probatio.EnsureList(), [str]
             ),
         },
@@ -136,28 +126,30 @@ def async_setup_services(hass: HomeAssistant) -> None:
         [VacuumEntityFeature.CLEAN_AREA],
     )
     component.async_register_entity_service(
-        SERVICE_LOCATE,
+        VacuumService.LOCATE,
         None,
         "async_locate",
         [VacuumEntityFeature.LOCATE],
     )
     component.async_register_entity_service(
-        SERVICE_STOP,
+        VacuumService.STOP,
         None,
         "async_stop",
         [VacuumEntityFeature.STOP],
     )
     component.async_register_entity_service(
-        SERVICE_SET_FAN_SPEED,
-        {probatio.Required(ATTR_FAN_SPEED): cv.string},
+        VacuumService.SET_FAN_SPEED,
+        {probatio.Required(VacuumServiceArgument.FAN_SPEED): cv.string},
         "async_set_fan_speed",
         [VacuumEntityFeature.FAN_SPEED],
     )
     component.async_register_entity_service(
-        SERVICE_SEND_COMMAND,
+        VacuumService.SEND_COMMAND,
         {
-            probatio.Required(ATTR_COMMAND): cv.string,
-            probatio.Optional(ATTR_PARAMS): probatio.Any(dict, probatio.EnsureList()),
+            probatio.Required(VacuumServiceArgument.COMMAND): cv.string,
+            probatio.Optional(VacuumServiceArgument.PARAMS): probatio.Any(
+                dict, probatio.EnsureList()
+            ),
         },
         "async_send_command",
         [VacuumEntityFeature.SEND_COMMAND],

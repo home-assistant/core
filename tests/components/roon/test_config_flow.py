@@ -85,7 +85,7 @@ async def test_successful_discovery_and_auth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -127,7 +127,7 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass: HomeAssistant) ->
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -221,7 +221,7 @@ async def test_successful_discovery_no_auth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -248,7 +248,7 @@ async def test_successful_discovery_no_auth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -273,7 +273,7 @@ async def test_unexpected_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -300,7 +300,7 @@ async def test_unexpected_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

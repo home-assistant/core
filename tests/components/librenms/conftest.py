@@ -17,7 +17,7 @@ from .const import MOCK_CONFIG_ENTRY_DATA, MOCK_DEVICES_DATA, MOCK_SYSTEM_DATA
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.librenms.async_setup_entry", return_value=True
+        "homeassistant.components.librenms.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

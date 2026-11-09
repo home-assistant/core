@@ -151,6 +151,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import log_invalid_auth
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -196,6 +197,8 @@ type RetrieveResultType = Callable[[str, str], AuthCodeEntry | None]
 DATA_STORE: HassKey[StoreResultType] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+AUTH_CODE_EXPIRATION = timedelta(minutes=10)
+
 
 def create_auth_code(
     hass: HomeAssistant, client_id: str, credential: Credentials
@@ -236,6 +239,7 @@ class RevokeTokenView(HomeAssistantView):
     name = "api:auth:revocation"
     requires_auth = False
     cors_allowed = True
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     async def post(self, request: web.Request) -> web.Response:
         """Revoke a token."""
@@ -278,6 +282,7 @@ class TokenView(HomeAssistantView):
     name = "api:auth:token"
     requires_auth = False
     cors_allowed = True
+    max_body_size = MAX_UNAUTHENTICATED_BODY_SIZE
 
     def __init__(self, retrieve_auth: RetrieveResultType) -> None:
         """Initialize the token view."""
@@ -555,9 +560,14 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
         if not isinstance(result, Credentials):
             raise TypeError("result has to be a Credentials instance")
 
+        now = dt_util.utcnow()
+        for key, entry in list(temp_results.items()):
+            if now - entry.created >= AUTH_CODE_EXPIRATION:
+                del temp_results[key]
+
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = AuthCodeEntry(
-            created=dt_util.utcnow(),
+            created=now,
             credentials=result,
             code_challenge=code_challenge,
             code_challenge_method=code_challenge_method,
@@ -578,7 +588,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
         # The authorization code MUST expire shortly after it is issued to
         # mitigate the risk of leaks.  A maximum authorization code lifetime of
         # 10 minutes is RECOMMENDED.
-        if dt_util.utcnow() - entry.created < timedelta(minutes=10):
+        if dt_util.utcnow() - entry.created < AUTH_CODE_EXPIRATION:
             return entry
 
         return None

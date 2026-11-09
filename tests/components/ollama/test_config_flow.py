@@ -31,7 +31,7 @@ def _patch_success() -> Iterator[None]:
         ),
         patch(
             "homeassistant.components.ollama.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -59,7 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.ollama.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -827,6 +827,7 @@ async def test_user_step_async_client_headers(
         host="http://localhost:11434",
         headers=expected_headers,
         verify=ANY,
+        timeout=ANY,
     )
 
 
@@ -937,4 +938,5 @@ async def test_user_step_trim_url(hass: HomeAssistant) -> None:
         host="http://localhost:11434",
         headers=None,
         verify=ANY,
+        timeout=ANY,
     )

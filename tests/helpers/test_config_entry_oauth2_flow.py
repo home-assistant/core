@@ -1694,7 +1694,7 @@ async def test_oauth_with_pkce_adds_code_verifier_to_token_resolve(
         hass,
         MockModule(
             domain=TEST_DOMAIN,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
@@ -1921,11 +1921,10 @@ async def test_token_error_handled_without_integration_mapping(
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Refresh the token without mapping the OAuth errors."""
         session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
         await session.async_ensure_token_valid()
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -1960,14 +1959,13 @@ async def test_token_error_integration_can_handle_it_itself(
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Treat a reauth error as recoverable instead."""
         session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
         try:
             await session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
             raise ConfigEntryNotReady from err
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -2016,12 +2014,11 @@ async def test_implementation_unavailable_retries_setup(hass: HomeAssistant) -> 
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Resolve the implementation without mapping the error."""
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
         )
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -2086,7 +2083,7 @@ async def test_pick_implementation_falls_back_when_removed(
     """
     mock_integration(
         hass,
-        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)),
+        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=None)),
     )
     flow_handler.async_register_implementation(hass, local_impl)
 

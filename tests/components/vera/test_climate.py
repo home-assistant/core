@@ -25,7 +25,7 @@ async def test_climate(
     vera_device.get_current_temperature.return_value = 71
     vera_device.get_hvac_mode.return_value = "Off"
     vera_device.get_current_goal_temperature.return_value = 72
-    entity_id = "climate.dev1_1"
+    entity_id = "climate.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,
@@ -161,7 +161,7 @@ async def test_hvac_action(
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
 
-    state = hass.states.get("climate.dev1_1")
+    state = hass.states.get("climate.dev1")
     assert state is not None
     assert state.attributes.get("hvac_action") == expected_hvac_action
 
@@ -180,7 +180,7 @@ async def test_climate_f(
     vera_device.get_current_temperature.return_value = 71
     vera_device.get_hvac_mode.return_value = "Off"
     vera_device.get_current_goal_temperature.return_value = 72
-    entity_id = "climate.dev1_1"
+    entity_id = "climate.dev1"
 
     def setup_callback(controller: pv.VeraController) -> None:
         controller.temperature_units = "F"

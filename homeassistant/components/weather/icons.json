@@ -21,9 +21,6 @@
     }
   },
   "services": {
-    "get_forecast": {
-      "service": "mdi:weather-cloudy-clock"
-    },
     "get_forecasts": {
       "service": "mdi:weather-cloudy-clock"
     }

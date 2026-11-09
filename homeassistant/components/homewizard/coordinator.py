@@ -58,10 +58,8 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             and data.system.cloud_enabled is False
         )
         issue_id = battery_mode_cloud_issue_id(self.config_entry.entry_id)
-        issue_exists = (
-            ir.async_get(self.hass).async_get_issue(DOMAIN, issue_id) is not None
-        )
-        if battery_mode_cloud_issue_active and not issue_exists:
+        # Always re-create, an issue reloaded after a restart is inactive
+        if battery_mode_cloud_issue_active:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -73,7 +71,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 severity=ir.IssueSeverity.WARNING,
                 data={"entry_id": self.config_entry.entry_id},
             )
-        elif not battery_mode_cloud_issue_active and issue_exists:
+        else:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
     @override

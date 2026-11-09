@@ -485,6 +485,54 @@ async def test_same_entity_included_excluded(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("recorder_mock")
+async def test_same_entity_included_excluded_with_exclude_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test the same entity included and excluded with an excluded domain."""
+    filter_accept = {
+        "media_player.test",
+        "light.kitchen",
+    }
+    filter_reject = {
+        "media_player.test3",
+        "thermostat.test",
+    }
+    conf = {
+        CONF_INCLUDE: {
+            CONF_ENTITIES: ["media_player.test"],
+        },
+        CONF_EXCLUDE: {
+            CONF_DOMAINS: ["thermostat"],
+            CONF_ENTITIES: ["media_player.test", "media_player.test3"],
+        },
+    }
+
+    extracted_filter = extract_include_exclude_filter_conf(conf)
+    entity_filter = convert_include_exclude_filter(extracted_filter)
+    sqlalchemy_filter = sqlalchemy_filter_from_include_exclude_conf(extracted_filter)
+    assert sqlalchemy_filter is not None
+
+    for entity_id in filter_accept:
+        assert entity_filter(entity_id) is True
+
+    for entity_id in filter_reject:
+        assert entity_filter(entity_id) is False
+
+    (
+        filtered_states_entity_ids,
+        filtered_events_entity_ids,
+    ) = await _async_get_states_and_events_with_filter(
+        hass, sqlalchemy_filter, filter_accept | filter_reject
+    )
+
+    assert filtered_states_entity_ids == filter_accept
+    assert not filtered_states_entity_ids.intersection(filter_reject)
+
+    assert filtered_events_entity_ids == filter_accept
+    assert not filtered_events_entity_ids.intersection(filter_reject)
+
+
+@pytest.mark.usefixtures("recorder_mock")
 async def test_same_entity_included_excluded_include_domain_wins(
     hass: HomeAssistant,
 ) -> None:

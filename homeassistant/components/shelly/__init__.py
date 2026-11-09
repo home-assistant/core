@@ -42,15 +42,18 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
+    DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
+    OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     PUSH_UPDATE_ISSUE_ID,
     BLEScannerMode,
 )
@@ -64,6 +67,7 @@ from .coordinator import (
     ShellyRpcPollingCoordinator,
 )
 from .repairs import (
+    async_create_issue_unsupported_firmware,
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_deprecated_firmware_issue,
     async_manage_ir_raw_receive_disabled_issue,
@@ -73,7 +77,6 @@ from .repairs import (
 )
 from .services import async_setup_services
 from .utils import (
-    async_create_issue_unsupported_firmware,
     async_migrate_rpc_sensor_description_unique_ids,
     async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
@@ -119,6 +122,7 @@ RPC_SLEEPING_PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.UPDATE,
 ]
+UNSUPPORTED_FIRMWARE_PLATFORMS: Final = [Platform.UPDATE]
 
 COAP_SCHEMA: Final = probatio.Schema(
     {
@@ -233,14 +237,6 @@ async def _async_setup_block_entry(
         runtime_data.platforms = PLATFORMS
         try:
             await device.initialize()
-            if not device.firmware_supported:
-                async_create_issue_unsupported_firmware(hass, entry)
-                await device.shutdown()
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="firmware_unsupported",
-                    translation_placeholders={"device": entry.title},
-                )
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(
@@ -259,6 +255,20 @@ async def _async_setup_block_entry(
         runtime_data.block = ShellyBlockCoordinator(hass, entry, device)
         runtime_data.block.async_setup()
         runtime_data.rest = ShellyRestCoordinator(hass, device, entry)
+        if not device.firmware_supported:
+            # Keep polling even without enabled entities to detect a firmware update
+            entry.async_on_unload(
+                runtime_data.rest.async_add_listener(
+                    runtime_data.rest.async_reload_on_supported_firmware
+                )
+            )
+            runtime_data.unsupported_firmware = True
+            runtime_data.platforms = UNSUPPORTED_FIRMWARE_PLATFORMS
+            await hass.config_entries.async_forward_entry_setups(
+                entry, runtime_data.platforms
+            )
+            async_create_issue_unsupported_firmware(hass, entry, is_fixable=True)
+            return
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
@@ -334,13 +344,16 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         try:
             await device.initialize()
             if not device.firmware_supported:
-                async_create_issue_unsupported_firmware(hass, entry)
-                await device.shutdown()
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="firmware_unsupported",
-                    translation_placeholders={"device": entry.title},
+                runtime_data.unsupported_firmware = True
+                runtime_data.platforms = UNSUPPORTED_FIRMWARE_PLATFORMS
+                runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
+                runtime_data.rpc.async_setup()
+                runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
+                await hass.config_entries.async_forward_entry_setups(
+                    entry, runtime_data.platforms
                 )
+                async_create_issue_unsupported_firmware(hass, entry, is_fixable=True)
+                return
             runtime_data.rpc_zigbee_firmware = device.zigbee_firmware
             runtime_data.rpc_supports_scripts = await device.supports_scripts()
             if runtime_data.rpc_supports_scripts:
@@ -349,6 +362,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 )
             if get_rpc_key_instances(device.status, "ledstrip"):
                 runtime_data.rpc_ledstrip_effects = await device.ledstrip_list_effects()
+                runtime_data.rpc_ledstrip_palettes = (
+                    await device.ledstrip_list_palettes()
+                )
             remove_stale_blu_trv_devices(hass, device, entry)
         except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
             await device.shutdown()
@@ -474,6 +490,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> N
 
 async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Remove a config entry."""
+    # Issues raised before they were linked to the entry outlive it otherwise
+    for issue_id in (
+        BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+        DEPRECATED_FIRMWARE_ISSUE_ID,
+        OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
+    ):
+        ir.async_delete_issue(hass, DOMAIN, issue_id.format(unique=entry.unique_id))
     if get_device_entry_gen(entry) in RPC_GENERATIONS and (
         mac_address := entry.unique_id
     ):

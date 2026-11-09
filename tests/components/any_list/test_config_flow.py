@@ -39,7 +39,7 @@ PASSWORD = "secret-password"
 def mock_setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock runtime setup during config flow tests."""
     with patch(
-        "homeassistant.components.any_list.async_setup_entry", return_value=True
+        "homeassistant.components.any_list.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

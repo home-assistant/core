@@ -10,25 +10,26 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
 from .const import DATA_COMPONENT
+from .entity import RadioFrequencyTransmitterEntity
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the radio frequency websocket API."""
-    websocket_api.async_register_command(hass, ws_list_transmitters)
+    websocket_api.async_register_command(hass, ws_list_entities)
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({probatio.Required("type"): "radio_frequency/list"})
 @callback
-def ws_list_transmitters(
+def ws_list_entities(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Return the available radio frequency transmitters.
+    """Return the available radio frequency transmitters and receivers.
 
-    Each transmitter is described by its entity id, the device and config
+    Each entity is described by its entity id, the device and config
     entry it belongs to (when registered), the frequency ranges it can
     operate on and the modulation types it supports.
     """
@@ -36,22 +37,27 @@ def ws_list_transmitters(
     ent_reg = er.async_get(hass)
 
     transmitters: list[dict[str, Any]] = []
+    receivers: list[dict[str, Any]] = []
     for entity in component.entities:
         entry = ent_reg.async_get(entity.entity_id)
-        transmitters.append(
-            {
-                "entity_id": entity.entity_id,
-                "device_id": entry.device_id if entry else None,
-                "config_entry_id": entry.config_entry_id if entry else None,
-                "supported_frequency_ranges": [
-                    [low, high] for low, high in entity.supported_frequency_ranges
-                ],
-                "supported_modulations": [
-                    modulation.value
-                    for modulation in ModulationType
-                    if entity.supports_modulation(modulation)
-                ],
-            }
-        )
+        entity_info = {
+            "entity_id": entity.entity_id,
+            "device_id": entry.device_id if entry else None,
+            "config_entry_id": entry.config_entry_id if entry else None,
+            "supported_frequency_ranges": [
+                [low, high] for low, high in entity.supported_frequency_ranges
+            ],
+            "supported_modulations": [
+                modulation.value
+                for modulation in ModulationType
+                if entity.supports_modulation(modulation)
+            ],
+        }
+        if isinstance(entity, RadioFrequencyTransmitterEntity):
+            transmitters.append(entity_info)
+        else:
+            receivers.append(entity_info)
 
-    connection.send_result(msg["id"], {"transmitters": transmitters})
+    connection.send_result(
+        msg["id"], {"transmitters": transmitters, "receivers": receivers}
+    )

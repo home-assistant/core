@@ -39,7 +39,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -128,7 +128,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -183,7 +183,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -249,7 +249,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -309,7 +309,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

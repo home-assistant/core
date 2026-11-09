@@ -1,11 +1,10 @@
 """Helpers for automation integration."""
 
 from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, DomainBlueprints
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, ScriptService
 
 DATA_BLUEPRINTS = "script_blueprints"
 
@@ -19,7 +18,7 @@ def _blueprint_in_use(hass: HomeAssistant, blueprint_path: str) -> bool:
 
 async def _reload_blueprint_scripts(hass: HomeAssistant, blueprint_path: str) -> None:
     """Reload all script that rely on a specific blueprint."""
-    await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+    await hass.services.async_call(DOMAIN, ScriptService.RELOAD)
 
 
 @singleton(DATA_BLUEPRINTS)

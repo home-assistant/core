@@ -25,7 +25,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
     with patch(
         "homeassistant.components.utility_meter.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

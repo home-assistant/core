@@ -17,12 +17,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
+from .const import DOMAIN, SUPPORTED_PLATFORMS
+from .coordinator import (
     PlaystationNetworkConfigEntry,
     PlaystationNetworkTrophyTitlesCoordinator,
     PlaystationNetworkUserDataCoordinator,
 )
-from .const import DOMAIN, SUPPORTED_PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.sofar.async_setup_entry",
         new_callable=AsyncMock,
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

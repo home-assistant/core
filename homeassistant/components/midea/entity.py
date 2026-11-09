@@ -8,6 +8,7 @@ from midealocal.device import MideaDevice
 from midealocal.exceptions import MideaLocalError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -49,12 +50,12 @@ class MideaEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register update callback when entity is added."""
-        self._device.register_update(self.update_state)
+        self._device.register_update(self._async_update_state)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister update callback when entity is removed."""
-        self._device.unregister_update(self.update_state)
+        self._device.unregister_update(self._async_update_state)
 
     @property
     @override
@@ -88,15 +89,16 @@ class MideaEntity(Entity):
         """Return entity availability."""
         return bool(self._device.available)
 
-    def update_state(self, status: Any) -> None:
+    @callback
+    def _async_update_state(self, status: Any) -> None:
         """Update entity state."""
         if self.hass.is_stopping:
             LOGGER.debug(
-                "MideaEntity update_state for %s [%s] with status %s: HASS is stopping",
+                "MideaEntity _async_update_state for %s [%s] with status %s: HASS is stopping",
                 self.name,
                 type(self),
                 status,
             )
             return
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

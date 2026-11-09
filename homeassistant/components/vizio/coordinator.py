@@ -166,15 +166,13 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             assert self.config_entry.unique_id
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, self.config_entry.unique_id)},
-                manufacturer="VIZIO",
-                name=self.config_entry.data[CONF_NAME],
-                model=model,
-                sw_version=version,
-            ),
+            identifiers={(DOMAIN, self.config_entry.unique_id)},
+            manufacturer="VIZIO",
+            name=self.config_entry.data[CONF_NAME],
+            model=model,
+            sw_version=version,
         )
 
     def _update_failed(self) -> UpdateFailed:

@@ -220,14 +220,12 @@ def _add_camera(
             ),
         )
 
-    device = device_registry.async_get_or_create_device(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={device_identifier},
-            manufacturer=MOTIONEYE_MANUFACTURER,
-            model=MOTIONEYE_MANUFACTURER,
-            name=camera[KEY_NAME],
-        ),
+        identifiers={device_identifier},
+        manufacturer=MOTIONEYE_MANUFACTURER,
+        model=MOTIONEYE_MANUFACTURER,
+        name=camera[KEY_NAME],
     )
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
         url = async_generate_motioneye_webhook(hass, entry.data[CONF_WEBHOOK_ID])

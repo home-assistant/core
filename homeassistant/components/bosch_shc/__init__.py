@@ -64,16 +64,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> Non
     entry.runtime_data = session
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, shc_info.unique_id)},
-            identifiers={(DOMAIN, shc_info.unique_id)},
-            manufacturer="Bosch",
-            name=entry.title,
-            model="SmartHomeController",
-            sw_version=shc_info.version,
-        ),
+        connections={(dr.CONNECTION_NETWORK_MAC, shc_info.unique_id)},
+        identifiers={(DOMAIN, shc_info.unique_id)},
+        manufacturer="Bosch",
+        name=entry.title,
+        model="SmartHomeController",
+        sw_version=shc_info.version,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

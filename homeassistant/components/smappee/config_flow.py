@@ -6,13 +6,13 @@ from typing import Any, override
 
 import probatio
 from pysmappee import helper, mqtt
+from pysmappee.api import SmappeeLocalApi
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import api
 from .const import (
     CONF_SERIALNUMBER,
     DOMAIN,
@@ -117,7 +117,7 @@ class SmappeeFlowHandler(
                 return self.async_abort(reason="cannot_connect")
         else:
             # legacy devices, without local mqtt broker, try api access
-            smappee_api = api.api.SmappeeLocalApi(ip=self.ip_address)
+            smappee_api = SmappeeLocalApi(ip=self.ip_address)
             logon = await self.hass.async_add_executor_job(smappee_api.logon)
             if logon is None:
                 return self.async_abort(reason="cannot_connect")
@@ -187,7 +187,7 @@ class SmappeeFlowHandler(
 
         # Attempt 1: try to use the local api (older generation)
         # to resolve host to serialnumber
-        smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
+        smappee_api = SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is not None:
             advanced_config = await self.hass.async_add_executor_job(

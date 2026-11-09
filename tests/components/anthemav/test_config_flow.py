@@ -24,7 +24,7 @@ async def test_form_with_valid_connection(
 
     with patch(
         "homeassistant.components.anthemav.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -74,7 +74,7 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.anthemav.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -114,7 +114,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.anthemav.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

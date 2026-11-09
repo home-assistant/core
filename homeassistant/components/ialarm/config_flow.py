@@ -1,14 +1,14 @@
 """Config flow for Antifurto365 iAlarm integration."""
 
+import asyncio
 import logging
 from typing import Any, override
 
 import probatio
-from pyialarm import IAlarm
+from pyasyncialarm import IAlarm
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -22,9 +22,13 @@ DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def _get_device_mac(hass: HomeAssistant, host, port):
+async def _get_device_mac(host: str, port: int) -> str:
     ialarm = IAlarm(host, port)
-    return await hass.async_add_executor_job(ialarm.get_mac)
+    try:
+        async with asyncio.timeout(10):
+            return await ialarm.get_mac()
+    finally:
+        await ialarm.shutdown()
 
 
 class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,8 +53,8 @@ class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             # If we are able to get the MAC address, we are able to establish
             # a connection to the device.
-            mac = await _get_device_mac(self.hass, host, port)
-        except ConnectionError:
+            mac = await _get_device_mac(host, port)
+        except TimeoutError, ConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

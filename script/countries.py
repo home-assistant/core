@@ -6,9 +6,8 @@ with help of the pycountry package.
 
 from pathlib import Path
 
+from hassfest.serializer import format_python_namespace
 import pycountry
-
-from .hassfest.serializer import format_python_namespace
 
 countries = {x.alpha_2 for x in pycountry.countries}
 

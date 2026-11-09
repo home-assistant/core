@@ -65,6 +65,8 @@ from .utils import (
     setup_public_sensor,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
@@ -144,11 +146,10 @@ async def test_switch_setup_no_perm(
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     light: Light,
-    doorbell: Camera,
 ) -> None:
-    """A read-only local user only gets the light status light switch.
+    """A read-only local user still gets the light status light switch.
 
-    It writes through the API key; the other switches still use private
+    It writes through the API key; the other light switches still use private
     setters and stay behind PermRequired.WRITE.
     """
 
@@ -156,11 +157,88 @@ async def test_switch_setup_no_perm(
         Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
     ]
 
-    await init_entry(hass, ufp, [light, doorbell])
+    await init_entry(hass, ufp, [light])
 
     assert_entity_counts(hass, Platform.SWITCH, 1, 1)
     assert entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, f"{light.mac}_status_light"
+    )
+
+
+_CAMERA_PUBLIC_SWITCHES = (
+    "status_light",
+    "high_fps",
+    "osd_name",
+    "osd_date",
+    "osd_logo",
+    "osd_bitrate",
+    "smart_person",
+    "smart_vehicle",
+    "smart_animal",
+    "smart_package",
+    "smart_licenseplate",
+    "smart_smoke",
+    "smart_cmonx",
+    "smart_siren",
+    "smart_baby_cry",
+    "smart_speak",
+    "smart_bark",
+    "smart_car_alarm",
+    "smart_car_horn",
+    "smart_glass_break",
+)
+
+
+@pytest.mark.parametrize("key", _CAMERA_PUBLIC_SWITCHES)
+async def test_switch_camera_read_only_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+) -> None:
+    """A read-only local user gets the camera switches that write publicly."""
+    doorbell.feature_flags.smart_detect_types = [
+        t for t in SmartDetectObjectType if t.audio_type is None
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = list(SmartDetectAudioType)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{doorbell.mac}_{key}"
+    )
+
+
+@pytest.mark.parametrize("key", ["ssh", "system_sounds", "motion"])
+async def test_switch_camera_read_only_user_private_setters(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+) -> None:
+    """Camera switches with private setters stay behind the write permission."""
+    doorbell.feature_flags.smart_detect_types = [
+        t for t in SmartDetectObjectType if t.audio_type is None
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = list(SmartDetectAudioType)
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "camera:read:*"})
+    ]
+    setup_public_camera(ufp)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, f"{doorbell.mac}_{key}"
+        )
+        is None
     )
 
 

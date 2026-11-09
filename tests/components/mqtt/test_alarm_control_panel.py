@@ -67,6 +67,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 
 from tests.components.alarm_control_panel import common
 
@@ -1370,82 +1371,76 @@ async def test_reload_after_invalid_config(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test reloading yaml config fails."""
-    with patch(
-        "homeassistant.components.mqtt.ir.async_delete_issue"
-    ) as mock_async_remove_issue:
-        assert await mqtt_mock_entry()
-        assert hass.states.get("alarm_control_panel.test") is None
-        assert (
-            "not a valid option at 'invalid_topic' for "
-            "manually configured MQTT alarm_control_panel item, "
-            "in ?, line ? Got {'name': 'test', 'invalid_topic': 'test-topic'}"
-            in caplog.text
+    assert await mqtt_mock_entry()
+    assert hass.states.get("alarm_control_panel.test") is None
+    assert (
+        "not a valid option at 'invalid_topic' for "
+        "manually configured MQTT alarm_control_panel item, "
+        "in ?, line ? Got {'name': 'test', 'invalid_topic': 'test-topic'}"
+        in caplog.text
+    )
+    assert [
+        issue.translation_key
+        for (domain, _), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+    ] == ["invalid_platform_config"]
+
+    # Reload with an valid config
+    valid_config = {
+        "mqtt": [
+            {
+                "alarm_control_panel": {
+                    "name": "test",
+                    "command_topic": "test-topic",
+                    "state_topic": "alarm/state",
+                }
+            },
+        ]
+    }
+    with patch("homeassistant.config.load_yaml_config_file", return_value=valid_config):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # Test the config is loaded now and that the existing issue is removed.
+    assert hass.states.get("alarm_control_panel.test") is not None
+    assert not any(domain == DOMAIN for domain, _ in issue_registry.issues)
+
+    # Reload with an invalid config
+    invalid_config = {
+        "mqtt": [
+            {
+                "alarm_control_panel": {
+                    "name": "test",
+                    "command_topic": "test-topic",
+                    "invalid_option": "should_fail",
+                }
+            },
+        ]
+    }
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            return_value=invalid_config,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "mqtt",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
         )
 
-        # Reload with an valid config
-        valid_config = {
-            "mqtt": [
-                {
-                    "alarm_control_panel": {
-                        "name": "test",
-                        "command_topic": "test-topic",
-                        "state_topic": "alarm/state",
-                    }
-                },
-            ]
-        }
-        with patch(
-            "homeassistant.config.load_yaml_config_file", return_value=valid_config
-        ):
-            await hass.services.async_call(
-                "mqtt",
-                SERVICE_RELOAD,
-                {},
-                blocking=True,
-            )
-            await hass.async_block_till_done()
-
-        # Test the config is loaded now and that the existing issue is removed.
-        # The patch is module wide, so other integrations (e.g. http) may
-        # remove their own issues too; only count the MQTT one.
-        assert hass.states.get("alarm_control_panel.test") is not None
-        mqtt_issue_removals = [
-            mock_call
-            for mock_call in mock_async_remove_issue.mock_calls
-            if mock_call.args[1] == "mqtt"
-        ]
-        assert len(mqtt_issue_removals) == 1
-
-        # Reload with an invalid config
-        invalid_config = {
-            "mqtt": [
-                {
-                    "alarm_control_panel": {
-                        "name": "test",
-                        "command_topic": "test-topic",
-                        "invalid_option": "should_fail",
-                    }
-                },
-            ]
-        }
-        with (
-            patch(
-                "homeassistant.config.load_yaml_config_file",
-                return_value=invalid_config,
-            ),
-            pytest.raises(HomeAssistantError),
-        ):
-            await hass.services.async_call(
-                "mqtt",
-                SERVICE_RELOAD,
-                {},
-                blocking=True,
-            )
-
-        # Make sure the config is loaded now
-        assert hass.states.get("alarm_control_panel.test") is not None
+    # Make sure the config is loaded now
+    assert hass.states.get("alarm_control_panel.test") is not None
 
 
 @pytest.mark.parametrize(

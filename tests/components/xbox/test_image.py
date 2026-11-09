@@ -105,7 +105,7 @@ async def test_load_image_from_url(
 
     xbox_live_client.people.get_friend_by_xuid.return_value = PeopleResponse(
         **await async_load_json_object_fixture(
-            hass, "people_batch gamerpic.json", DOMAIN
+            hass, "people_batch_gamerpic.json", DOMAIN
         )  # pyright: ignore[reportArgumentType]
     )
 

@@ -25,7 +25,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -648,7 +647,7 @@ def device_class_and_uom(
 
 
 def rename_old_gas_to_mbus(
-    hass: HomeAssistant, entry: ConfigEntry, mbus_device_id: str
+    hass: HomeAssistant, entry: DsmrConfigEntry, mbus_device_id: str
 ) -> None:
     """Rename old gas sensor to mbus variant."""
     dev_reg = dr.async_get(hass)
@@ -674,11 +673,9 @@ def rename_old_gas_to_mbus(
                             entity.entity_id,
                         )
                         continue
-                    new_device = dev_reg.async_get_or_create_device(
+                    new_device = dev_reg.async_get_or_create(
                         config_entry_id=entry.entry_id,
-                        device_info=dr.DeviceInfo(
-                            identifiers={(DOMAIN, mbus_device_id)}
-                        ),
+                        identifiers={(DOMAIN, mbus_device_id)},
                     )
                     ent_reg.async_update_entity(
                         entity.entity_id,
@@ -711,7 +708,7 @@ def is_supported_description(
 
 
 def create_mbus_entities(
-    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry, dsmr_version: str
+    hass: HomeAssistant, telegram: Telegram, entry: DsmrConfigEntry, dsmr_version: str
 ) -> Generator[DSMREntity]:
     """Create MBUS Entities."""
     mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
@@ -981,7 +978,7 @@ class DSMREntity(SensorEntity):
     def __init__(
         self,
         entity_description: DSMRSensorEntityDescription,
-        entry: ConfigEntry,
+        entry: DsmrConfigEntry,
         telegram: Telegram,
         device_class: SensorDeviceClass,
         native_unit_of_measurement: str | None,

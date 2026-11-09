@@ -8,10 +8,12 @@ from aiohpprinter import (
     HpConsumable,
     HpCopyUsage,
     HpFaxUsage,
+    HpJob,
     HpPrinterData,
     HpPrinterDevice,
     HpPrinterStatus,
     HpPrinterUsage,
+    HpProductLogs,
     HpScannerUsage,
 )
 import pytest
@@ -29,7 +31,7 @@ TITLE = "HP OfficeJet Pro 9020 series"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.hp_printer.async_setup_entry", return_value=True
+        "homeassistant.components.hp_printer.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -45,6 +47,8 @@ def mock_device() -> HpPrinterDevice:
         product_number="226Y0B",
         manufacturer_name="HP",
         manufactured_at=datetime(2023, 3, 13),
+        uuid="1c852a4d-b800-1f08-abcd-0123456789ab",
+        friendly_name="Office printer",
     )
 
 
@@ -120,6 +124,16 @@ def mock_data(mock_device: HpPrinterDevice) -> HpPrinterData:
             color_impressions=18,
         ),
         fax_usage=HpFaxUsage(total_impressions=0),
+        logs=HpProductLogs(
+            jobs=[
+                HpJob(
+                    application_id="Microsoft Word",
+                    user_id="jane.doe",
+                    name="Quarterly report.docx",
+                    total_impressions=3,
+                )
+            ]
+        ),
     )
 
 

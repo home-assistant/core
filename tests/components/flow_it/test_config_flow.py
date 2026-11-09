@@ -1,4 +1,4 @@
-"""Test the Flow-it config flow."""
+"""Test the AriaQ config flow."""
 
 from ipaddress import ip_address
 from unittest.mock import ANY, AsyncMock
@@ -22,7 +22,7 @@ USER_INPUT = {
 }
 
 
-async def test_user_flow(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_ariaq: AsyncMock) -> None:
     """Test we get the form and create an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -35,7 +35,7 @@ async def test_user_flow(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
+    assert result["title"] == "AriaQ Device"
     assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
     assert result["result"].unique_id == "001122334455"
 
@@ -49,15 +49,15 @@ async def test_user_flow(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
     ],
 )
 async def test_user_flow_exceptions(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, exception: Exception, error: str
+    hass: HomeAssistant, mock_ariaq: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_flow_it.return_value.refresh_state.side_effect = exception
-    mock_flow_it.return_value.get_info.side_effect = exception
+    mock_ariaq.return_value.refresh_state.side_effect = exception
+    mock_ariaq.return_value.get_info.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
@@ -66,20 +66,20 @@ async def test_user_flow_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_flow_it.return_value.refresh_state.side_effect = None
-    mock_flow_it.return_value.get_info.side_effect = None
+    mock_ariaq.return_value.refresh_state.side_effect = None
+    mock_ariaq.return_value.get_info.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
+    assert result["title"] == "AriaQ Device"
     assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
     assert result["result"].unique_id == "001122334455"
 
 
-async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
+async def test_zeroconf(hass: HomeAssistant, mock_ariaq: AsyncMock) -> None:
     """Test zeroconf discovery."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("1.1.1.1"),
@@ -109,7 +109,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
+    assert result["title"] == "AriaQ Device"
     assert result["data"] == {
         "host": "http://mock_hostname.local",
         "username": "api",
@@ -127,7 +127,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
     ],
 )
 async def test_zeroconf_exceptions(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, exception: Exception, error: str
+    hass: HomeAssistant, mock_ariaq: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test zeroconf exceptions."""
     discovery_info = ZeroconfServiceInfo(
@@ -146,8 +146,8 @@ async def test_zeroconf_exceptions(
         data=discovery_info,
     )
 
-    mock_flow_it.return_value.refresh_state.side_effect = exception
-    mock_flow_it.return_value.get_info.side_effect = exception
+    mock_ariaq.return_value.refresh_state.side_effect = exception
+    mock_ariaq.return_value.get_info.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -159,8 +159,8 @@ async def test_zeroconf_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_flow_it.return_value.refresh_state.side_effect = None
-    mock_flow_it.return_value.get_info.side_effect = None
+    mock_ariaq.return_value.refresh_state.side_effect = None
+    mock_ariaq.return_value.get_info.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -170,7 +170,7 @@ async def test_zeroconf_exceptions(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
+    assert result["title"] == "AriaQ Device"
     assert result["data"] == {
         "host": "http://mock_hostname.local",
         "username": "api",
@@ -180,7 +180,7 @@ async def test_zeroconf_exceptions(
 
 
 async def test_user_already_configured(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_ariaq: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user already configured."""
     result = await hass.config_entries.flow.async_init(
@@ -220,9 +220,7 @@ async def test_zeroconf_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_with_http(
-    hass: HomeAssistant, mock_flow_it: AsyncMock
-) -> None:
+async def test_user_flow_with_http(hass: HomeAssistant, mock_ariaq: AsyncMock) -> None:
     """Test form with http:// already in host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -234,20 +232,20 @@ async def test_user_flow_with_http(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
+    assert result["title"] == "AriaQ Device"
     assert result["data"] == {**USER_INPUT, "host": f"http://{USER_INPUT['host']}"}
     assert result["result"].unique_id == "001122334455"
 
 
 async def test_reauth_flow(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_ariaq: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthentication flow."""
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {
-        "name": "Flow-it Device",
+        "name": "AriaQ Device",
         "username": "api",
         "host": "http://1.1.1.1",
     }
@@ -263,9 +261,7 @@ async def test_reauth_flow(
         "username": "api",
         "password": "new-password",
     }
-    mock_flow_it.assert_called_with(
-        "http://1.1.1.1", "new-password", "api", session=ANY
-    )
+    mock_ariaq.assert_called_with("http://1.1.1.1", "new-password", "api", session=ANY)
 
 
 @pytest.mark.parametrize(
@@ -278,7 +274,7 @@ async def test_reauth_flow(
 )
 async def test_reauth_flow_exceptions(
     hass: HomeAssistant,
-    mock_flow_it: AsyncMock,
+    mock_ariaq: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: type[Exception],
     error: str,
@@ -286,7 +282,7 @@ async def test_reauth_flow_exceptions(
     """Test reauthentication flow handles errors and recovers."""
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    mock_flow_it.return_value.get_info.side_effect = exception
+    mock_ariaq.return_value.get_info.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"password": "new-password"}
     )
@@ -294,7 +290,7 @@ async def test_reauth_flow_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_flow_it.return_value.get_info.side_effect = None
+    mock_ariaq.return_value.get_info.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"password": "new-password"}
     )
@@ -305,12 +301,12 @@ async def test_reauth_flow_exceptions(
 
 
 async def test_reauth_flow_unique_id_mismatch(
-    hass: HomeAssistant, mock_flow_it: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_ariaq: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthentication aborts when a different device responds."""
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    mock_flow_it.return_value.state.name = "665544332211"
+    mock_ariaq.return_value.state.name = "665544332211"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"password": "new-password"}
     )

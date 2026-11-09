@@ -1,4 +1,4 @@
-"""Config flow for the WattWächter Plus integration."""
+"""Config flow for the WattWächter integration."""
 
 from collections.abc import Mapping
 import logging
@@ -28,15 +28,29 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_FW_VERSION, DOMAIN
+from .const import CONF_FW_VERSION, DOMAIN, LEGACY_MODEL_IDS, MODEL_ID_PLUS, MODEL_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
 
+def _device_id_from_discovery(properties: Mapping[str, Any]) -> str:
+    """Return the bare device ID (MAC without separators) from mDNS TXT records.
+
+    The id record carries a product prefix, WWP-<MAC> (Plus) or WWGW-<MAC>
+    (gas/water). The unique ID is the bare MAC for all products, matching
+    esp_id from the system info.
+    """
+    device_id = str(properties.get("id", "")).rpartition("-")[2]
+    if not device_id:
+        device_id = str(properties.get("mac", "")).replace(":", "").upper()
+    return device_id
+
+
 class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for WattWächter Plus."""
+    """Handle a config flow for WattWächter."""
 
     VERSION = 1
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -46,6 +60,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._fw_version: str | None = None
         self._mac: str = ""
         self._device_name: str | None = None
+        self._product_name: str | None = None
 
     async def _async_test_connection(
         self, host: str, token: str | None = None
@@ -66,6 +81,23 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             device_name = settings.device_name
         return {}, system_info, device_name
+
+    def _apply_system_info(self, system_info: SystemInfo) -> None:
+        """Take over the device details reported by the system info."""
+        if not self._device_id:
+            self._device_id = system_info.get_value("esp", "esp_id") or ""
+        if not self._mac:
+            self._mac = system_info.get_value("wifi", "mac_address") or ""
+        self._fw_version = (
+            system_info.get_value("esp", "os_version") or self._fw_version
+        )
+        # Firmware without model_id predates the gas/water devices.
+        self._model = system_info.model_id or self._model or MODEL_ID_PLUS
+        self._product_name = system_info.product_name
+
+    def _display_name(self) -> str:
+        """Return a product name for the discovered device."""
+        return self._product_name or MODEL_NAMES.get(self._model or "", "WattWächter")
 
     def _create_entry(self, token: str | None = None) -> ConfigFlowResult:
         """Create a config entry with the collected device info."""
@@ -92,17 +124,26 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._host = str(discovery_info.host)
 
         properties = discovery_info.properties
-        device_id_raw = properties.get("id", "")
-        self._model = properties.get("model")
+        model = properties.get("model")
+        self._model = LEGACY_MODEL_IDS.get(model, model) if model else None
         self._fw_version = properties.get("ver")
         self._mac = properties.get("mac", "")
+        self._device_id = _device_id_from_discovery(properties)
 
-        self._device_id = device_id_raw.removeprefix("WWP-")
+        # Ignored and disabled entries are not set up, so the migration to the
+        # bare MAC never ran for them: match their old WWGW-<MAC> ID as well.
+        legacy_id = str(properties.get("id", ""))
+        if legacy_id != self._device_id and any(
+            entry.unique_id == legacy_id
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            await self.async_set_unique_id(legacy_id)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         await self.async_set_unique_id(self._device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        errors, _, device_name = await self._async_test_connection(self._host)
+        errors, system_info, device_name = await self._async_test_connection(self._host)
         if errors:
             if errors["base"] == "invalid_auth":
                 self.context["title_placeholders"] = {
@@ -111,6 +152,8 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_auth()
             return self.async_abort(reason="cannot_connect")
 
+        assert system_info is not None
+        self._apply_system_info(system_info)
         self._device_name = device_name
         self.context["title_placeholders"] = {
             "name": self._device_name or f"WattWächter {self._device_id[-4:]}"
@@ -122,11 +165,10 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm zeroconf discovery."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 description_placeholders={
-                    "model": self._model or "WattWächter Plus",
+                    "model": self._display_name(),
                     "firmware": self._fw_version or "unknown",
                     "host": self._host,
                     "device_id": self._device_id,
@@ -154,10 +196,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 assert system_info is not None
-                self._device_id = system_info.get_value("esp", "esp_id") or ""
-                self._fw_version = system_info.get_value("esp", "os_version")
-                self._mac = system_info.get_value("wifi", "mac_address") or ""
-                self._model = "WW-Plus"
+                self._apply_system_info(system_info)
                 self._device_name = device_name
 
                 await self.async_set_unique_id(self._device_id, raise_on_progress=False)
@@ -190,13 +229,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 assert system_info is not None
-                # For user flow, populate device info from system_info
-                if not self._device_id:
-                    self._device_id = system_info.get_value("esp", "esp_id") or ""
-                    self._fw_version = system_info.get_value("esp", "os_version")
-                    self._mac = system_info.get_value("wifi", "mac_address") or ""
-                    self._model = "WW-Plus"
-
+                self._apply_system_info(system_info)
                 self._device_name = device_name
 
                 if self.unique_id is None:

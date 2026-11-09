@@ -28,6 +28,7 @@ from .coordinator import (
     SatelIntegraData,
     SatelIntegraOutputsCoordinator,
     SatelIntegraPartitionsCoordinator,
+    SatelIntegraSystemStatusCoordinator,
     SatelIntegraTemperaturesCoordinator,
     SatelIntegraZonesCoordinator,
 )
@@ -52,21 +53,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
     coordinator_zones = SatelIntegraZonesCoordinator(hass, entry, client)
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
+    coordinator_system_status = SatelIntegraSystemStatusCoordinator(hass, entry, client)
     coordinator_temperatures = SatelIntegraTemperaturesCoordinator(hass, entry, client)
 
     for coordinator in (
         coordinator_zones,
         coordinator_outputs,
         coordinator_partitions,
+        coordinator_system_status,
         coordinator_temperatures,
     ):
         coordinator.setup()
 
-    await client.async_connect(
-        coordinator_zones.zones_update_callback,
-        coordinator_outputs.outputs_update_callback,
-        coordinator_partitions.partitions_update_callback,
-    )
+    await client.async_connect()
     await coordinator_temperatures.async_config_entry_first_refresh()
 
     try:
@@ -81,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
+        coordinator_system_status=coordinator_system_status,
         coordinator_temperatures=coordinator_temperatures,
     )
 
@@ -94,14 +94,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
     )
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Satel",
-            model=panel_info.model.name if panel_info and panel_info.model else None,
-            sw_version=str(panel_info.firmware) if panel_info else None,
-        ),
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Satel",
+        model=panel_info.model.name if panel_info and panel_info.model else None,
+        sw_version=str(panel_info.firmware) if panel_info else None,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

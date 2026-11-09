@@ -18,18 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_CREDENTIAL_DATA,
-    ATTR_CREDENTIAL_INDEX,
-    ATTR_CREDENTIAL_RULE,
-    ATTR_CREDENTIAL_TYPE,
-    ATTR_USER_INDEX,
-    ATTR_USER_NAME,
-    ATTR_USER_STATUS,
-    ATTR_USER_TYPE,
-    LOCK_TIMED_REQUEST_TIMEOUT_MS,
-    LOGGER,
-)
+from .const import LOCK_TIMED_REQUEST_TIMEOUT_MS, LOGGER, MatterServiceArgument
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .lock_helpers import (
@@ -290,10 +279,10 @@ class MatterLock(MatterEntity, LockEntity):
             await set_lock_user(
                 self.matter_client,
                 self._endpoint.node,
-                user_index=kwargs.get(ATTR_USER_INDEX),
-                user_name=kwargs.get(ATTR_USER_NAME),
-                user_type=kwargs.get(ATTR_USER_TYPE),
-                credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE),
+                user_index=kwargs.get(MatterServiceArgument.USER_INDEX),
+                user_name=kwargs.get(MatterServiceArgument.USER_NAME),
+                user_type=kwargs.get(MatterServiceArgument.USER_TYPE),
+                credential_rule=kwargs.get(MatterServiceArgument.CREDENTIAL_RULE),
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -306,7 +295,7 @@ class MatterLock(MatterEntity, LockEntity):
             await clear_lock_user(
                 self.matter_client,
                 self._endpoint.node,
-                kwargs[ATTR_USER_INDEX],
+                kwargs[MatterServiceArgument.USER_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -343,12 +332,12 @@ class MatterLock(MatterEntity, LockEntity):
             return await set_lock_credential(
                 self.matter_client,
                 self._endpoint.node,
-                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
-                credential_data=kwargs[ATTR_CREDENTIAL_DATA],
-                credential_index=kwargs.get(ATTR_CREDENTIAL_INDEX),
-                user_index=kwargs.get(ATTR_USER_INDEX),
-                user_status=kwargs.get(ATTR_USER_STATUS),
-                user_type=kwargs.get(ATTR_USER_TYPE),
+                credential_type=kwargs[MatterServiceArgument.CREDENTIAL_TYPE],
+                credential_data=kwargs[MatterServiceArgument.CREDENTIAL_DATA],
+                credential_index=kwargs.get(MatterServiceArgument.CREDENTIAL_INDEX),
+                user_index=kwargs.get(MatterServiceArgument.USER_INDEX),
+                user_status=kwargs.get(MatterServiceArgument.USER_STATUS),
+                user_type=kwargs.get(MatterServiceArgument.USER_TYPE),
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -361,8 +350,8 @@ class MatterLock(MatterEntity, LockEntity):
             await clear_lock_credential(
                 self.matter_client,
                 self._endpoint.node,
-                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
-                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+                credential_type=kwargs[MatterServiceArgument.CREDENTIAL_TYPE],
+                credential_index=kwargs[MatterServiceArgument.CREDENTIAL_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(
@@ -377,8 +366,8 @@ class MatterLock(MatterEntity, LockEntity):
             return await get_lock_credential_status(
                 self.matter_client,
                 self._endpoint.node,
-                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
-                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+                credential_type=kwargs[MatterServiceArgument.CREDENTIAL_TYPE],
+                credential_index=kwargs[MatterServiceArgument.CREDENTIAL_INDEX],
             )
         except MatterError as err:
             raise HomeAssistantError(

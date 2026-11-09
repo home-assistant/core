@@ -6,7 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tractive.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -90,7 +90,7 @@ async def test_sensor_weight_update(
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the weight sensor follows pet status updates."""
+    """Test the weight sensor follows pet status updates and becomes unknown without a value."""
     with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_config_entry)
 
@@ -104,3 +104,38 @@ async def test_sensor_weight_update(
     state = hass.states.get("sensor.test_pet_weight")
     assert state is not None
     assert state.state == "24.1"
+
+    mock_tractive_client.set_pet_status(weight=None)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_pet_weight")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_sensor_without_health_data(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test health sensors are not created for a pet without health data."""
+    mock_tractive_client.async_fetch_trackables.return_value[0].health_available = False
+
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    for entity_id in (
+        "sensor.test_pet_activity_time",
+        "sensor.test_pet_rest_time",
+        "sensor.test_pet_daily_goal",
+        "sensor.test_pet_day_sleep",
+        "sensor.test_pet_night_sleep",
+    ):
+        assert hass.states.get(entity_id) is None
+
+    for entity_id in (
+        "sensor.test_pet_weight",
+        "sensor.tracker_device_id_123_battery",
+        "sensor.tracker_device_id_123_status",
+    ):
+        assert hass.states.get(entity_id) is not None

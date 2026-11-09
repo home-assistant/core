@@ -50,7 +50,7 @@ async def test_flow_wrong_login(hass: HomeAssistant) -> None:
 
     with (
         patch("homeassistant.components.anova.config_flow.AnovaApi.authenticate"),
-        patch("homeassistant.components.anova.async_setup_entry", return_value=True),
+        patch("homeassistant.components.anova.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -78,7 +78,7 @@ async def test_flow_unknown_error(hass: HomeAssistant) -> None:
 
     with (
         patch("homeassistant.components.anova.config_flow.AnovaApi.authenticate"),
-        patch("homeassistant.components.anova.async_setup_entry", return_value=True),
+        patch("homeassistant.components.anova.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

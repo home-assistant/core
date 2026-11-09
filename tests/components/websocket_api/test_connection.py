@@ -1,6 +1,7 @@
 """Test WebSocket Connection class."""
 
 import asyncio
+from collections.abc import Generator
 from contextlib import AbstractContextManager, nullcontext
 import logging
 from typing import Any
@@ -13,6 +14,7 @@ from pytest_homeassistant.common import MockUser
 
 from homeassistant import exceptions
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.connection import current_connection
 from homeassistant.components.websocket_api.const import DOMAIN
 from homeassistant.components.websocket_api.messages import (
     message_to_json_bytes,
@@ -31,7 +33,7 @@ def send_message() -> Mock:
 @pytest.fixture
 def revocable_connection(
     hass: HomeAssistant, send_message: Mock
-) -> tuple[websocket_api.ActiveConnection, Mock]:
+) -> Generator[tuple[websocket_api.ActiveConnection, Mock]]:
     """Return an authenticated connection with an observable close callback."""
     hass.data[DOMAIN] = {}
     cancel_ws = Mock()
@@ -44,7 +46,10 @@ def revocable_connection(
         remote=None,
         cancel_ws=cancel_ws,
     )
-    return connection, cancel_ws
+    yield connection, cancel_ws
+    # Created outside a test task, the connection would stay the current one
+    # for every later test of the worker.
+    current_connection.set(None)
 
 
 @pytest.mark.parametrize(

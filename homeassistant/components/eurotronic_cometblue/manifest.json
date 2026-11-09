@@ -10,11 +10,12 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@rikroe"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/eurotronic_cometblue",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["eurotronic_cometblue_ha"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["eurotronic-cometblue-ha==2.0.0"]
 }

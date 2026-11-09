@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'firmware_version': 'WeMo_WW_2.00.XXXXX.PVT-OWRT',
+        'last_update_success': True,
+        'model': 'LightSwitch',
+        'model_name': 'LightSwitch',
+        'options': dict({
+          'enable_long_press': True,
+          'enable_subscription': True,
+        }),
+        'subscribed': False,
+        'supports_long_press': False,
+      }),
+    ]),
+    'discovery_enabled': False,
+    'static_config_count': 1,
+  })
+# ---

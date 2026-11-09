@@ -39,7 +39,10 @@ from .const import (
 )
 from .data import ProtectData, UFPConfigEntry
 from .migrate import (
+    async_deprecate_camera_setting_mirrors,
     async_deprecate_light_setting_mirrors,
+    async_deprecate_private_only_entities,
+    async_deprecate_ring_and_motion_sensors,
     async_migrate_data,
     async_remove_sense_setting_mirrors,
 )
@@ -91,7 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
+    cloud_user_issue_id = f"cloud_user_{entry.entry_id}"
     if protect.is_public_only:
+        # An entry switched to API-key-only no longer signs in as the cloud user
+        ir.async_delete_issue(hass, DOMAIN, cloud_user_issue_id)
         await _async_setup_public_only_entry(hass, entry, data_service)
         return
 
@@ -135,7 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "cloud_user",
+            cloud_user_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#full-access",
@@ -143,6 +150,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
             translation_key="cloud_user",
             data={"entry_id": entry.entry_id},
         )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, cloud_user_issue_id)
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
         raise ConfigEntryError(
@@ -243,16 +252,14 @@ async def _async_setup_public_only_entry(
     # firmware version, which no public-only entity provides. ``type`` is only
     # present on newer firmware; market name and console URL are private-only.
     device_registry = dr.async_get(hass)
-    nvr_device = device_registry.async_get_or_create_device(
+    nvr_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
-            identifiers={(DOMAIN, unifi_mac)},
-            manufacturer=DEFAULT_BRAND,
-            name=nvr.display_name or None,
-            model=nvr.type,
-            sw_version=str(meta.version),
-        ),
+        connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
+        identifiers={(DOMAIN, unifi_mac)},
+        manufacturer=DEFAULT_BRAND,
+        name=nvr.display_name or None,
+        model=nvr.type,
+        sw_version=str(meta.version),
     )
     data_service.nvr_device_id = nvr_device.id
 
@@ -306,17 +313,15 @@ async def _async_setup_entry(
     # This ensures via_device references work for all device entities
     nvr = bootstrap.nvr
     device_registry = dr.async_get(hass)
-    nvr_device = device_registry.async_get_or_create_device(
+    nvr_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
-            identifiers={(DOMAIN, nvr.mac)},
-            manufacturer="Ubiquiti",
-            name=nvr.display_name or None,
-            model=nvr.type,
-            sw_version=str(nvr.version),
-            configuration_url=nvr.api.base_url,
-        ),
+        connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
+        identifiers={(DOMAIN, nvr.mac)},
+        manufacturer="Ubiquiti",
+        name=nvr.display_name or None,
+        model=nvr.type,
+        sw_version=str(nvr.version),
+        configuration_url=nvr.api.base_url,
     )
     data_service.nvr_device_id = nvr_device.id
 
@@ -327,6 +332,9 @@ async def _async_setup_entry(
         hass, entry, {sensor.mac for sensor in bootstrap.sensors.values()}
     )
     async_deprecate_light_setting_mirrors(hass, entry, bootstrap)
+    async_deprecate_camera_setting_mirrors(hass, entry, bootstrap)
+    async_deprecate_private_only_entities(hass, entry, bootstrap)
+    async_deprecate_ring_and_motion_sensors(hass, entry, bootstrap)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(SnapshotProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))

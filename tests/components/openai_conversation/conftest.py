@@ -49,8 +49,16 @@ def mock_conversation_subentry_data() -> dict[str, Any]:
 
 
 @pytest.fixture
+def mock_stt_subentry_data(request: pytest.FixtureRequest) -> dict[str, Any]:
+    """Mock speech-to-text subentry data."""
+    return getattr(request, "param", RECOMMENDED_STT_OPTIONS)
+
+
+@pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant, mock_conversation_subentry_data: dict[str, Any]
+    hass: HomeAssistant,
+    mock_conversation_subentry_data: dict[str, Any],
+    mock_stt_subentry_data: dict[str, Any],
 ) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
@@ -81,7 +89,7 @@ def mock_config_entry(
                 unique_id=None,
             ),
             ConfigSubentryData(
-                data=RECOMMENDED_STT_OPTIONS,
+                data=mock_stt_subentry_data,
                 subentry_type="stt",
                 title=DEFAULT_STT_NAME,
                 unique_id=None,
@@ -138,6 +146,9 @@ async def mock_init_component(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield
+        # A subentry flow reloads the entry in the background; let the reload
+        # finish while the model list is still mocked.
+        await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)

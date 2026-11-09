@@ -9,6 +9,7 @@ from yarl import URL
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.template import result_as_boolean
 
 from .const import DOMAIN, PLEX_URI_SCHEME, SERVICE_REFRESH_LIBRARY
 from .errors import MediaNotFound
@@ -181,6 +182,15 @@ def process_plex_payload(
         search_query.pop(internal_key, None)
 
     media = plex_server.lookup_media(content_type, **search_query)
+
+    resume = content.get("resume", False)
+    if isinstance(resume, str):
+        resume = result_as_boolean(resume)
+    if resume and getattr(media, "type", None) == "show":
+        if (on_deck := media.onDeck()) is not None:
+            media = on_deck
+        else:
+            content["resume"] = False
 
     if supports_playqueues and (isinstance(media, list) or shuffle or continuous):
         playqueue = plex_server.create_playqueue(

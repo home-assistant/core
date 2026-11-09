@@ -10,6 +10,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "validate_verification_code": "Failed to verify your verification code, try again"
     },
     "initiate_flow": {
@@ -25,8 +26,8 @@
           "password": "[%key:component::icloud::config::step::user::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
         },
-        "description": "Your previously entered password for {username} is no longer working. Update your password to keep using this integration.",
-        "title": "[%key:common::config_flow::title::reauth%]"
+        "description": "Your previously entered password for {username} is no longer working. Update your password to keep using the iCloud integration.",
+        "title": "iCloud authentication expired for {name}"
       },
       "trusted_device": {
         "data": {
@@ -52,6 +53,97 @@
         },
         "description": "Please enter the verification code you just received from Apple",
         "title": "Apple Account code"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "activation_lock": {
+        "name": "Activation lock"
+      },
+      "locating": {
+        "name": "Locating"
+      },
+      "location_accurate": {
+        "name": "Location accurate"
+      },
+      "location_current": {
+        "name": "Location current"
+      },
+      "location_services": {
+        "name": "Location services"
+      },
+      "lost_mode": {
+        "name": "Lost mode"
+      },
+      "low_power_mode": {
+        "name": "Low power mode"
+      },
+      "online": {
+        "name": "Online"
+      },
+      "remote_lock": {
+        "name": "Remote lock"
+      },
+      "wipe_in_progress": {
+        "name": "Wipe in progress"
+      }
+    },
+    "button": {
+      "play_sound": {
+        "name": "Play sound"
+      }
+    },
+    "sensor": {
+      "altitude": {
+        "name": "Altitude"
+      },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charging": "Charging",
+          "full": "Full",
+          "not_charging": "Not charging"
+        }
+      },
+      "device_status": {
+        "name": "Status",
+        "state": {
+          "error": "Error",
+          "offline": "Offline",
+          "online": "Online",
+          "pending": "Pending",
+          "unregistered": "Unregistered"
+        }
+      },
+      "floor_level": {
+        "name": "Floor"
+      },
+      "last_location": {
+        "name": "Last located"
+      },
+      "last_locked": {
+        "name": "Last locked"
+      },
+      "last_lost": {
+        "name": "Last lost"
+      },
+      "last_wiped": {
+        "name": "Last wiped"
+      },
+      "location_accuracy": {
+        "name": "Location accuracy"
+      },
+      "location_type": {
+        "name": "Location type",
+        "state": {
+          "cellular": "Cellular",
+          "gps": "GPS",
+          "wifi": "Wi-Fi"
+        }
+      },
+      "owner": {
+        "name": "Owner"
       }
     }
   },

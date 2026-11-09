@@ -3,6 +3,7 @@
   "name": "Kira",
   "categories": ["buttons_remotes"],
   "codeowners": [],
+  "connectivity": ["infrared"],
   "documentation": "https://www.home-assistant.io/integrations/kira",
   "iot_class": "local_push",
   "loggers": ["pykira"],

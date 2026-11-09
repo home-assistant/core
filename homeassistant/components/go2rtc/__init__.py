@@ -393,10 +393,13 @@ class WebRTCProvider(CameraWebRTCProvider):
         height: int | None = None,
     ) -> bytes | None:
         """Get an image from the camera."""
-        await self._update_stream_source(camera)
-        return await self._rest_client.get_jpeg_snapshot(
-            get_camera_identifier(camera), width, height
-        )
+        try:
+            await self._update_stream_source(camera)
+            return await self._rest_client.get_jpeg_snapshot(
+                get_camera_identifier(camera), width, height
+            )
+        except Go2RtcClientError as err:
+            raise HomeAssistantError("Unable to get image from go2rtc") from err
 
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""

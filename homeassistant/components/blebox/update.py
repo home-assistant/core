@@ -17,9 +17,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import BleBoxConfigEntry
 from .const import DOMAIN
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 
 PARALLEL_UPDATES = 1

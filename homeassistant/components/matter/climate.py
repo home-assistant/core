@@ -27,6 +27,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
@@ -209,7 +210,19 @@ class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescr
     """Describe Matter Climate entities."""
 
 
-class MatterClimate(MatterEntity, ClimateEntity):
+@dataclass
+class MatterClimateExtraStoredData(ExtraStoredData):
+    """Store the last running mode separately from the current device state."""
+
+    last_hvac_mode: HVACMode
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored data."""
+        return {"last_hvac_mode": self.last_hvac_mode}
+
+
+class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
     """Representation of a Matter climate entity."""
 
     _attr_native_temperature_unit: str = UnitOfTemperature.CELSIUS
@@ -218,6 +231,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_preset_mode: str | None = None
     _attr_preset_modes: list[str] | None = None
     _feature_map: int | None = None
+    _last_hvac_mode: HVACMode | None = None
 
     _platform_translation_key = "thermostat"
 
@@ -231,6 +245,43 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._preset_handle_by_name: dict[str, bytes | None] = {}
         self._preset_name_by_handle: dict[bytes | None, str] = {}
         super().__init__(*args, **kwargs)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last running mode without changing the device state."""
+        await super().async_added_to_hass()
+        if self._last_hvac_mode is not None:
+            return
+        if (extra_data := await self.async_get_last_extra_data()) is None:
+            return
+        last_hvac_mode = extra_data.as_dict().get("last_hvac_mode")
+        if last_hvac_mode in self.hvac_modes and last_hvac_mode != HVACMode.OFF:
+            self._last_hvac_mode = HVACMode(last_hvac_mode)
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> MatterClimateExtraStoredData | None:
+        """Return the last running mode for restoration."""
+        if self._last_hvac_mode is None:
+            return None
+        return MatterClimateExtraStoredData(self._last_hvac_mode)
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on using the last supported running mode."""
+        if self.hvac_mode != HVACMode.OFF:
+            return
+        if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
+            # Dead front may reject mode writes until the device is powered on.
+            await self.send_device_command(clusters.OnOff.Commands.On())
+            if (
+                system_hvac_mode := self._get_system_hvac_mode()
+            ) != HVACMode.OFF and system_hvac_mode in self.hvac_modes:
+                return
+        if self._last_hvac_mode is not None and self._last_hvac_mode in self.hvac_modes:
+            await self.async_set_hvac_mode(self._last_hvac_mode)
+        else:
+            await super().async_turn_on()
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -350,6 +401,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._update_presets()
 
         self._update_hvac_mode_and_action()
+        # Dedicated power masks the selected SystemMode as off in the entity state.
+        if (
+            system_hvac_mode := self._get_system_hvac_mode()
+        ) != HVACMode.OFF and system_hvac_mode in self.hvac_modes:
+            self._last_hvac_mode = system_hvac_mode
         self._update_target_temperatures()
         self._update_temperature_limits()
 
@@ -431,29 +487,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = None
         else:
-            # update hvac_mode from SystemMode
-            system_mode_value = int(
-                self.get_matter_attribute_value(
-                    clusters.Thermostat.Attributes.SystemMode
-                )
-            )
-            match system_mode_value:
-                case SystemModeEnum.kAuto:
-                    self._attr_hvac_mode = HVACMode.HEAT_COOL
-                case SystemModeEnum.kDry:
-                    self._attr_hvac_mode = HVACMode.DRY
-                case SystemModeEnum.kFanOnly:
-                    self._attr_hvac_mode = HVACMode.FAN_ONLY
-                case SystemModeEnum.kCool | SystemModeEnum.kPrecooling:
-                    self._attr_hvac_mode = HVACMode.COOL
-                case SystemModeEnum.kHeat | SystemModeEnum.kEmergencyHeat:
-                    self._attr_hvac_mode = HVACMode.HEAT
-                case SystemModeEnum.kFanOnly:
-                    self._attr_hvac_mode = HVACMode.FAN_ONLY
-                case SystemModeEnum.kDry:
-                    self._attr_hvac_mode = HVACMode.DRY
-                case _:
-                    self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_mode = self._get_system_hvac_mode()
             # running state is an optional attribute
             # which we map to hvac_action if it exists (its value is not None);
             # a value of 0 (no relay active) is a valid state and means idle
@@ -483,6 +517,25 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.IDLE
                 else:
                     self._attr_hvac_action = HVACAction.OFF
+
+    @callback
+    def _get_system_hvac_mode(self) -> HVACMode:
+        """Return the selected HVAC mode independently of dedicated power."""
+        match int(
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.SystemMode)
+        ):
+            case SystemModeEnum.kAuto:
+                return HVACMode.HEAT_COOL
+            case SystemModeEnum.kDry:
+                return HVACMode.DRY
+            case SystemModeEnum.kFanOnly:
+                return HVACMode.FAN_ONLY
+            case SystemModeEnum.kCool | SystemModeEnum.kPrecooling:
+                return HVACMode.COOL
+            case SystemModeEnum.kHeat | SystemModeEnum.kEmergencyHeat:
+                return HVACMode.HEAT
+            case _:
+                return HVACMode.OFF
 
     @callback
     def _update_target_temperatures(self) -> None:
@@ -550,8 +603,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if self._feature_map == feature_map:
             return
         self._feature_map = feature_map
-        product_id = self._endpoint.node.device_info.productID
-        vendor_id = self._endpoint.node.device_info.vendorID
+        device_info = self._endpoint.node.device_info
+        product_id = device_info.productID if device_info is not None else None
+        vendor_id = device_info.vendorID if device_info is not None else None
         self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF

@@ -96,8 +96,9 @@ class ValloxFanSpeedSensor(ValloxSensorEntity):
     @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
-        fan_is_on = self.coordinator.data.get(METRIC_KEY_MODE) == MODE_ON
-        return super().native_value if fan_is_on else 0
+        if (mode := self.coordinator.data.get(METRIC_KEY_MODE)) is None:
+            return None
+        return super().native_value if mode == MODE_ON else 0
 
 
 class ValloxFilterRemainingSensor(ValloxSensorEntity):

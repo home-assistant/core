@@ -52,7 +52,7 @@ async def test_import_once(hass: HomeAssistant) -> None:
     """Test that we don't create multiple config entries."""
     with patch(
         "homeassistant.components.kitchen_sink.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

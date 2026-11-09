@@ -3,7 +3,7 @@
 import logging
 from typing import NamedTuple
 
-from uiprotect.data import Bootstrap
+from uiprotect.data import Bootstrap, ModelType
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -367,10 +367,12 @@ def async_remove_sense_setting_mirrors(
 # Release that removes the deprecated light mirrors.
 LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
 
-# Light mirrors keyed by their own (platform, key), pointing at the (platform,
-# key) of the control that replaces them and the repair text. ``None`` is the
-# light entity itself, whose unique_id is the bare MAC.
-_LIGHT_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+# Mirrors keyed by their own (platform, key), pointing at the (platform, key) of
+# the control that replaces them and the repair text. A ``None`` replacement
+# key is the device entity itself, whose unique_id is the bare MAC.
+type _MirrorReplacements = dict[tuple[str, str], tuple[Platform, str | None, str]]
+
+_LIGHT_MIRROR_REPLACEMENTS: _MirrorReplacements = {
     (Platform.BINARY_SENSOR, "light"): (
         Platform.LIGHT,
         None,
@@ -418,12 +420,231 @@ def async_deprecate_light_setting_mirrors(
     )
 
 
+# Release that removes the deprecated camera mirrors.
+CAMERA_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
+
+_CAMERA_MIRROR_REPLACEMENTS: _MirrorReplacements = {
+    **{
+        (Platform.BINARY_SENSOR, key): (
+            Platform.SWITCH,
+            key,
+            "setting_mirror_deprecated",
+        )
+        for key in (
+            "status_light",
+            "high_fps",
+            "osd_name",
+            "osd_date",
+            "osd_logo",
+            "osd_bitrate",
+            "smart_person",
+            "smart_vehicle",
+            "smart_animal",
+            "smart_package",
+            "smart_licenseplate",
+            "smart_smoke",
+            "smart_cmonx",
+            "smart_siren",
+            "smart_baby_cry",
+            "smart_speak",
+            "smart_bark",
+            "smart_car_alarm",
+            "smart_car_horn",
+            "smart_glass_break",
+        )
+    },
+    # The binary sensor is on for both HDR modes the select tells apart.
+    (Platform.BINARY_SENSOR, "hdr_mode"): (
+        Platform.SELECT,
+        "hdr_mode",
+        "setting_mirror_deprecated_hdr_mode",
+    ),
+    # The number is unavailable while the microphone is disabled.
+    (Platform.SENSOR, "mic_level"): (
+        Platform.NUMBER,
+        "mic_level",
+        "setting_mirror_deprecated_mic_level",
+    ),
+    # The text entity falls back to the default message where the sensor is empty.
+    (Platform.SENSOR, "doorbell_text"): (
+        Platform.TEXT,
+        "doorbell",
+        "setting_mirror_deprecated_doorbell_text",
+    ),
+}
+
+
+# Release that removes the deprecated private-only entities.
+PRIVATE_ONLY_BREAKS_IN = "2027.1.0"
+
+# Device setup and device data entities that rely on the private API, keyed by
+# device model and then by (platform, key). Scoped by model because other
+# devices may reuse the keys.
+PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
+    ModelType.CAMERA: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SENSOR, "lens_type"),
+            (Platform.SENSOR, "voltage"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+            (Platform.SENSOR, "oldest_recording"),
+            (Platform.SENSOR, "storage_used"),
+            (Platform.SENSOR, "write_rate"),
+            (Platform.SENSOR, "stats_rx"),
+            (Platform.SENSOR, "stats_tx"),
+        }
+    ),
+    ModelType.LIGHT: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SELECT, "paired_camera"),
+            (Platform.SENSOR, "paired_camera"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.VIEWPORT: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.SENSOR: frozenset(
+        {
+            (Platform.SELECT, "mount_type"),
+            (Platform.SENSOR, "mount_type"),
+            (Platform.SELECT, "paired_camera"),
+            (Platform.SENSOR, "paired_camera"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.CHIME: frozenset(
+        {
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "phy_rate"),
+        }
+    ),
+    ModelType.NVR: frozenset(
+        {
+            (Platform.SWITCH, "analytics_enabled"),
+            (Platform.SWITCH, "insights_enabled"),
+            (Platform.SENSOR, "uptime"),
+            (Platform.SENSOR, "cpu_utilization"),
+            (Platform.SENSOR, "cpu_temperature"),
+            (Platform.SENSOR, "memory_utilization"),
+        }
+    ),
+}
+
+
+@callback
+def async_deprecate_camera_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the read-only mirrors of the public camera controls.
+
+    These controls write through the public API, so every user gets them and
+    the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
+
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {camera.mac for camera in bootstrap.cameras.values()},
+        _CAMERA_MIRROR_REPLACEMENTS,
+        CAMERA_SETTING_MIRROR_BREAKS_IN,
+    )
+
+
+@callback
+def async_is_new_private_only_entity(
+    hass: HomeAssistant, model: ModelType | None, mac: str, key: str
+) -> bool:
+    """Return whether a deprecated private-only entity is not registered yet.
+
+    New installs do not get entities that are about to be removed.
+    """
+    if model is None or model not in PRIVATE_ONLY_ENTITIES:
+        return False
+    platforms = [
+        platform
+        for platform, entity_key in PRIVATE_ONLY_ENTITIES[model]
+        if entity_key == key
+    ]
+    if not platforms:
+        return False
+    registry = er.async_get(hass)
+    return not any(
+        registry.async_get_entity_id(platform, DOMAIN, f"{mac}_{key}")
+        for platform in platforms
+    )
+
+
+@callback
+def async_deprecate_private_only_entities(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the entities that only the private API provides.
+
+    The official API does not provide them, and they are not requested from
+    Ubiquiti.
+
+    Waits for startup to finish: before the automations are loaded, every entity
+    looks unused and the repair would be dropped.
+
+    Added in 2026.11.0
+    """
+
+    @callback
+    def _async_deprecate(_hass: HomeAssistant) -> None:
+        models: dict[str, ModelType] = {bootstrap.nvr.mac: ModelType.NVR}
+        for devices, device_model in (
+            (bootstrap.cameras, ModelType.CAMERA),
+            (bootstrap.lights, ModelType.LIGHT),
+            (bootstrap.viewers, ModelType.VIEWPORT),
+            (bootstrap.sensors, ModelType.SENSOR),
+            (bootstrap.chimes, ModelType.CHIME),
+        ):
+            models.update(
+                dict.fromkeys((d.mac for d in devices.values()), device_model)
+            )
+        registry = er.async_get(hass)
+        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+            mac, _, key = entity.unique_id.partition("_")
+            model = models.get(mac)
+            if (
+                model is None
+                or (entity.domain, key) not in PRIVATE_ONLY_ENTITIES[model]
+            ):
+                continue
+            _async_repair_if_used(
+                hass,
+                entity,
+                # SSH, mount type and paired camera share a unique_id across
+                # two platforms.
+                f"private_only_entity_deprecated_{entity.domain}_{entity.unique_id}",
+                "private_only_entity_deprecated",
+                breaks_in=PRIVATE_ONLY_BREAKS_IN,
+            )
+
+    entry.async_on_unload(async_at_started(hass, _async_deprecate))
+
+
 @callback
 def _async_deprecate_setting_mirrors(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
     macs: set[str],
-    replacements: dict[tuple[str, str], tuple[Platform, str | None, str]],
+    replacements: _MirrorReplacements,
     breaks_in: str,
 ) -> None:
     """Raise a repair for each used mirror, pointing at its replacement.
@@ -461,3 +682,64 @@ def _async_deprecate_setting_mirrors(
             )
 
     entry.async_on_unload(async_at_started(hass, _async_deprecate))
+
+
+# Camera entities on the private API that a public event entity replaces, keyed
+# by their own (platform, key), pointing at the event entity and the repair text.
+_RING_AND_MOTION_SENSOR_REPLACEMENTS: dict[
+    tuple[str, str], tuple[Platform, str | None, str]
+] = {
+    (Platform.BINARY_SENSOR, "doorbell"): (
+        Platform.EVENT,
+        "doorbell",
+        "doorbell_sensor_deprecated",
+    ),
+    (Platform.SENSOR, "doorbell_last_trip_time"): (
+        Platform.EVENT,
+        "doorbell",
+        "last_event_sensor_deprecated",
+    ),
+    (Platform.SENSOR, "motion_last_trip_time"): (
+        Platform.EVENT,
+        "motion_detection",
+        "last_event_sensor_deprecated",
+    ),
+}
+
+
+@callback
+def async_is_new_ring_or_motion_sensor(
+    hass: HomeAssistant, platform: Platform, mac: str, key: str
+) -> bool:
+    """Return whether a deprecated camera ring or motion sensor is not registered yet.
+
+    New installs do not get entities that are about to be removed. Matched per
+    platform: the doorbell text and event entities share the binary sensor's key.
+    """
+    if (platform, key) not in _RING_AND_MOTION_SENSOR_REPLACEMENTS:
+        return False
+    return (
+        er.async_get(hass).async_get_entity_id(platform, DOMAIN, f"{mac}_{key}") is None
+    )
+
+
+@callback
+def async_deprecate_ring_and_motion_sensors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the camera ring and motion sensors on the private API.
+
+    The doorbell and motion detection event entities cover them through the
+    public API.
+
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {camera.mac for camera in bootstrap.cameras.values()},
+        _RING_AND_MOTION_SENSOR_REPLACEMENTS,
+        PRIVATE_ONLY_BREAKS_IN,
+    )

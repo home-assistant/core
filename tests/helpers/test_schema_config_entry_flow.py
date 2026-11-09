@@ -594,8 +594,8 @@ async def test_options_flow_with_automatic_reload(
         options_flow = OPTIONS_FLOW
         options_flow_reloads = True
 
-    load_entry_mock = AsyncMock(return_value=True)
-    unload_entry_mock = AsyncMock(return_value=True)
+    load_entry_mock = AsyncMock(return_value=None)
+    unload_entry_mock = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(

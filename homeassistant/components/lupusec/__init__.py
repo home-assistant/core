@@ -54,14 +54,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LupusecConfigEntry) -> N
 
     alarm = await hass.async_add_executor_job(lupusec_system.get_alarm)
 
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=alarm.name,
-            manufacturer="Lupus Electronics",
-            model=f"Lupusec-XT{lupusec_system.model}",
-        ),
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=alarm.name,
+        manufacturer="Lupus Electronics",
+        model=f"Lupusec-XT{lupusec_system.model}",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

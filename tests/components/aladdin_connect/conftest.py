@@ -61,7 +61,7 @@ def mock_aladdin_connect_api() -> Generator[AsyncMock]:
 def mock_setup_entry() -> AsyncMock:
     """Fixture to mock setup entry."""
     with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=None
     ):
         yield
 

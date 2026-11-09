@@ -29,10 +29,9 @@ from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAI
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -42,6 +41,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -2322,15 +2322,21 @@ async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
     assert len(service_calls) == 0
 
     # Test the trigger works with correct unit on limit entities
-    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
-    hass.states.async_set("sensor.below", "90", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set(
+        "sensor.above", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
+    hass.states.async_set(
+        "sensor.below", "90", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     service_calls.clear()
 
     # Test the trigger does not fire when the above sensor has wrong unit
-    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set(
+        "sensor.above", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "°C"}
+    )
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
@@ -2344,10 +2350,14 @@ async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
     assert len(service_calls) == 0
 
     # Reset the above sensor to correct unit
-    hass.states.async_set("sensor.above", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set(
+        "sensor.above", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
 
     # Test the trigger does not fire when the below sensor has wrong unit
-    hass.states.async_set("sensor.below", "90", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set(
+        "sensor.below", "90", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "°C"}
+    )
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
@@ -2373,7 +2383,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": 68,  # 68°F = 20°C
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -2426,7 +2436,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": 77,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -2446,7 +2456,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": 59,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -2463,7 +2473,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": 95,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -2478,12 +2488,12 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
     hass.states.async_set(
         "sensor.above",
         "68",  # 68°F = 20°C
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     hass.states.async_set(
         "sensor.below",
         "86",  # 86°F = 30°C
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
 
     # 77°F = 25°C, between 20°C and 30°C - should trigger both automations
@@ -2492,7 +2502,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": 77,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -2518,7 +2528,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             "on",
             {
                 "test_attribute": value,
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
             },
         )
         await hass.async_block_till_done()
@@ -2544,7 +2554,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": 50,
-            ATTR_UNIT_OF_MEASUREMENT: "invalid_unit",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: "invalid_unit",
         },
     )
     await hass.async_block_till_done()
@@ -2571,13 +2581,16 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": None,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     hass.states.async_set(
         "test.test_entity",
         "on",
-        {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {
+            "test_attribute": 50,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+        },
     )
     await hass.async_block_till_done()
     assert numeric_calls == entity_calls == []
@@ -2596,14 +2609,14 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         hass.states.async_set(
             "sensor.above",
             invalid_value,
-            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+            {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
         )
         hass.states.async_set(
             "test.test_entity",
             "on",
             {
                 "test_attribute": None,
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
             },
         )
         hass.states.async_set(
@@ -2611,7 +2624,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             "on",
             {
                 "test_attribute": 50,
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
             },
         )
         await hass.async_block_till_done()
@@ -2633,20 +2646,23 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
     hass.states.async_set(
         "sensor.above",
         "68",  # 68°F = 20°C
-        {ATTR_UNIT_OF_MEASUREMENT: "invalid_unit"},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: "invalid_unit"},
     )
     hass.states.async_set(
         "test.test_entity",
         "on",
         {
             "test_attribute": None,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     hass.states.async_set(
         "test.test_entity",
         "on",
-        {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {
+            "test_attribute": 50,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+        },
     )
     await hass.async_block_till_done()
     assert numeric_calls == entity_calls == []
@@ -2665,7 +2681,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
     hass.states.async_set(
         "sensor.above",
         "68",  # 68°F = 20°C
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
 
     # Test the trigger does not fire when the below sensor does not exist
@@ -2675,13 +2691,16 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         "on",
         {
             "test_attribute": None,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     hass.states.async_set(
         "test.test_entity",
         "on",
-        {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {
+            "test_attribute": 50,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+        },
     )
     await hass.async_block_till_done()
     assert numeric_calls == entity_calls == []
@@ -2701,7 +2720,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             "on",
             {
                 "test_attribute": None,
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
             },
         )
         hass.states.async_set(
@@ -2709,7 +2728,7 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             "on",
             {
                 "test_attribute": 50,
-                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+                EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
             },
         )
         await hass.async_block_till_done()
@@ -2731,20 +2750,23 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
     hass.states.async_set(
         "sensor.below",
         "68",  # 68°F = 20°C
-        {ATTR_UNIT_OF_MEASUREMENT: "invalid_unit"},
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: "invalid_unit"},
     )
     hass.states.async_set(
         "test.test_entity",
         "on",
         {
             "test_attribute": None,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     hass.states.async_set(
         "test.test_entity",
         "on",
-        {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {
+            "test_attribute": 50,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+        },
     )
     await hass.async_block_till_done()
     assert numeric_calls == entity_calls == []
@@ -2834,7 +2856,7 @@ async def test_numerical_trigger_reports_invalid_tracked_value(
     calls: list[dict[str, Any]] = []
     did_not_trigger_reports: list[NotTriggeredInfo] = []
     hass.states.async_set(
-        "test.test_entity", "10", {ATTR_UNIT_OF_MEASUREMENT: good_unit}
+        "test.test_entity", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: good_unit}
     )
     await hass.async_block_till_done()
 
@@ -2847,7 +2869,9 @@ async def test_numerical_trigger_reports_invalid_tracked_value(
     )
 
     hass.states.async_set(
-        "test.test_entity", bad_state, {ATTR_UNIT_OF_MEASUREMENT: bad_unit}
+        "test.test_entity",
+        bad_state,
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: bad_unit},
     )
     await hass.async_block_till_done()
 
@@ -2920,10 +2944,12 @@ async def test_numerical_trigger_reports_invalid_threshold_entity(
     calls: list[dict[str, Any]] = []
     did_not_trigger_reports: list[NotTriggeredInfo] = []
     hass.states.async_set(
-        "sensor.limit", threshold_state, {ATTR_UNIT_OF_MEASUREMENT: threshold_unit}
+        "sensor.limit",
+        threshold_state,
+        {EntityStateAttribute.UNIT_OF_MEASUREMENT: threshold_unit},
     )
     hass.states.async_set(
-        "test.test_entity", "10", {ATTR_UNIT_OF_MEASUREMENT: good_unit}
+        "test.test_entity", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: good_unit}
     )
     await hass.async_block_till_done()
 
@@ -2936,7 +2962,7 @@ async def test_numerical_trigger_reports_invalid_threshold_entity(
     )
 
     hass.states.async_set(
-        "test.test_entity", "20", {ATTR_UNIT_OF_MEASUREMENT: good_unit}
+        "test.test_entity", "20", {EntityStateAttribute.UNIT_OF_MEASUREMENT: good_unit}
     )
     await hass.async_block_till_done()
 
@@ -2954,9 +2980,15 @@ async def test_numerical_trigger_reports_single_reason_for_between(
     """Two invalid between-thresholds yield a single diagnostic for the lower one."""
     calls: list[dict[str, Any]] = []
     did_not_trigger_reports: list[NotTriggeredInfo] = []
-    hass.states.async_set("sensor.low", "cat", {ATTR_UNIT_OF_MEASUREMENT: "%"})
-    hass.states.async_set("sensor.high", "dog", {ATTR_UNIT_OF_MEASUREMENT: "%"})
-    hass.states.async_set("test.test_entity", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set(
+        "sensor.low", "cat", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
+    hass.states.async_set(
+        "sensor.high", "dog", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
+    hass.states.async_set(
+        "test.test_entity", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
     await hass.async_block_till_done()
 
     unsub = await _arm_numerical_trigger(
@@ -2973,7 +3005,9 @@ async def test_numerical_trigger_reports_single_reason_for_between(
         did_not_trigger_reports,
     )
 
-    hass.states.async_set("test.test_entity", "20", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set(
+        "test.test_entity", "20", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
     await hass.async_block_till_done()
 
     assert calls == []
@@ -3766,15 +3800,21 @@ async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_val
     assert len(service_calls) == 0
 
     # Test the trigger works with correct unit on limit entities
-    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
-    hass.states.async_set("sensor.upper", "90", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set(
+        "sensor.lower", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
+    hass.states.async_set(
+        "sensor.upper", "90", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     service_calls.clear()
 
     # Test the trigger does not fire when the lower sensor has wrong unit
-    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set(
+        "sensor.lower", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "°C"}
+    )
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
@@ -3788,10 +3828,14 @@ async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_val
     assert len(service_calls) == 0
 
     # Reset the lower sensor to correct unit
-    hass.states.async_set("sensor.lower", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set(
+        "sensor.lower", "10", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"}
+    )
 
     # Test the trigger does not fire when the upper sensor has wrong unit
-    hass.states.async_set("sensor.upper", "90", {ATTR_UNIT_OF_MEASUREMENT: "°C"})
+    hass.states.async_set(
+        "sensor.upper", "90", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "°C"}
+    )
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
@@ -3817,7 +3861,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         "on",
         {
             "test_attribute": 68,  # 68°F = 20°C, below threshold
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -3846,7 +3890,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         "on",
         {
             "test_attribute": 80.6,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -3860,7 +3904,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         "on",
         {
             "test_attribute": 82,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -3873,7 +3917,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         "on",
         {
             "test_attribute": 68,  # 20°C, below 25°C
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -3885,7 +3929,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         "on",
         {
             "test_attribute": 80.6,  # 27°C, above 25°C again
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
     await hass.async_block_till_done()
@@ -3899,7 +3943,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         "on",
         {
             "test_attribute": 50,
-            ATTR_UNIT_OF_MEASUREMENT: "invalid_unit",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: "invalid_unit",
         },
     )
     await hass.async_block_till_done()
@@ -3961,9 +4005,11 @@ async def test_entity_filter_by_device_class(hass: HomeAssistant) -> None:
     trig = _make_trigger(hass, {"sensor": DomainSpec(device_class="humidity")})
 
     # Set states with device_class attributes
-    hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.temperature_1", "22", {ATTR_DEVICE_CLASS: "temperature"}
+        "sensor.humidity_1", "50", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
+    )
+    hass.states.async_set(
+        "sensor.temperature_1", "22", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("sensor.no_class", "10", {})
 
@@ -3978,7 +4024,7 @@ async def test_entity_filter_device_class_unknown_entity(
     """Test entity_filter excludes entities not in state machine or registry."""
     trig = _make_trigger(hass, {"sensor": DomainSpec(device_class="humidity")})
 
-    # Entity not in state machine and not in entity registry -> UNDEFINED
+    # Entity not in state machine and not in entity registry -> Undefined
     entities = {"sensor.nonexistent"}
     result = trig.entity_filter(entities)
     assert result == set()
@@ -3997,9 +4043,11 @@ async def test_entity_filter_multiple_domains_with_device_class(
         },
     )
 
-    hass.states.async_set("sensor.humidity", "60", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.temperature", "20", {ATTR_DEVICE_CLASS: "temperature"}
+        "sensor.humidity", "60", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
+    )
+    hass.states.async_set(
+        "sensor.temperature", "20", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("climate.hvac", "heat", {})
     hass.states.async_set("weather.home", "sunny", {})
@@ -4024,8 +4072,12 @@ async def test_entity_filter_no_device_class_means_match_all_in_domain(
     """Test that DomainSpec without device_class matches all entities in the domain."""
     trig = _make_trigger(hass, {"cover": DomainSpec()})
 
-    hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
-    hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
+    hass.states.async_set(
+        "cover.door", "open", {EntityStateAttribute.DEVICE_CLASS: "door"}
+    )
+    hass.states.async_set(
+        "cover.garage", "closed", {EntityStateAttribute.DEVICE_CLASS: "garage"}
+    )
     hass.states.async_set("cover.plain", "open", {})
 
     entities = {"cover.door", "cover.garage", "cover.plain"}
@@ -5194,6 +5246,186 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
     await hass.async_block_till_done()
 
     # Advance past the original duration — should NOT fire
+    freezer.tick(dt.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_trigger_target_exclude_only_invalid(hass: HomeAssistant) -> None:
+    """Test a trigger target consisting of only an exclude block is rejected."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {"_": MockTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    CONF_PLATFORM: "test",
+                    CONF_TARGET: {CONF_EXCLUDE: {CONF_ENTITY_ID: "test.excluded"}},
+                }
+            ],
+        )
+
+
+_INCLUDED_ENTITY_ID = "test.included"
+_EXCLUDED_ENTITY_ID = "test.excluded"
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_trigger_target_exclude(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+    behavior: str,
+) -> None:
+    """Test entities matched by the exclude block are ignored by the trigger."""
+    label = label_registry.async_create("Targeted")
+    for object_id in ("included", "excluded"):
+        entry = entity_registry.async_get_or_create(
+            "test", "test", object_id, suggested_object_id=object_id
+        )
+        entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+        hass.states.async_set(entry.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        behavior,
+        calls,
+        duration=None,
+        target={
+            ATTR_LABEL_ID: label.label_id,
+            CONF_EXCLUDE: {CONF_ENTITY_ID: _EXCLUDED_ENTITY_ID},
+        },
+    )
+
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # The excluded entity being off doesn't prevent behavior all from firing
+    hass.states.async_set(_EXCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == _INCLUDED_ENTITY_ID
+
+    unsub()
+
+
+async def test_entity_trigger_target_exclude_registry_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test a registry change of the excluded entities is taken into account."""
+    excluded_label = label_registry.async_create("Excluded")
+    entity_registry.async_get_or_create(
+        "test", "test", "included", suggested_object_id="included"
+    )
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration=None,
+        target={
+            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Adding the excluded label removes the entity from the target
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    entity_registry.async_update_entity(
+        _INCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Removing the excluded label adds it back
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    entity_registry.async_update_entity(_INCLUDED_ENTITY_ID, labels=set())
+    await hass.async_block_till_done()
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    unsub()
+
+
+async def test_entity_trigger_duration_each_cancelled_when_entity_excluded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test an each duration timer is cancelled when its entity gets excluded."""
+    excluded_label = label_registry.async_create("Excluded")
+    entity_registry.async_get_or_create(
+        "test", "test", "included", suggested_object_id="included"
+    )
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration={"seconds": 5},
+        target={
+            CONF_ENTITY_ID: _INCLUDED_ENTITY_ID,
+            CONF_EXCLUDE: {ATTR_LABEL_ID: excluded_label.label_id},
+        },
+    )
+
+    hass.states.async_set(_INCLUDED_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    freezer.tick(dt.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(
+        _INCLUDED_ENTITY_ID, labels={excluded_label.label_id}
+    )
+    await hass.async_block_till_done()
+
+    # Advance past the original duration, the timer was cancelled
     freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

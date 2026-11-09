@@ -8,8 +8,8 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import group
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     UnitOfArea,
     UnitOfLength,
     UnitOfMass,
@@ -249,6 +249,38 @@ def test_states_function(hass: HomeAssistant) -> None:
 
     result = render(hass, """{{ ['test.object'] | map("states") | first | default }}""")
     assert result == "available"
+
+
+@pytest.mark.parametrize(
+    "template_string",
+    [
+        pytest.param("{{ states('sensor.test') }}", id="function"),
+        pytest.param("{{ 'sensor.test' | states }}", id="filter"),
+        pytest.param("{{ ['sensor.test'] | map('states') | first }}", id="map"),
+    ],
+)
+def test_states_tracks_changes(hass: HomeAssistant, template_string: str) -> None:
+    """Read current states and collect dependencies on every render."""
+    tmpl = template.Template(template_string, hass)
+    assert_result_info(tmpl.async_render_to_info(), "unknown", entities=["sensor.test"])
+    hass.states.async_set("sensor.test", "first")
+    assert_result_info(tmpl.async_render_to_info(), "first", entities=["sensor.test"])
+    hass.states.async_set("sensor.test", "second")
+    assert_result_info(tmpl.async_render_to_info(), "second", entities=["sensor.test"])
+    hass.states.async_remove("sensor.test")
+    assert_result_info(tmpl.async_render_to_info(), "unknown", entities=["sensor.test"])
+
+
+def test_states_filter_limited(hass: HomeAssistant) -> None:
+    """The states filter must not expose states in limited templates."""
+    hass.states.async_set("sensor.test", "first")
+    assert (
+        template.Template("{{ 'sensor.test' | states }}", hass).async_render()
+        == "first"
+    )
+    tmpl = template.Template("{{ 'sensor.test' | states }}", hass)
+    with pytest.raises(TemplateError, match="not supported in limited templates"):
+        tmpl.async_render(limited=True)
 
 
 async def test_state_translated(
@@ -1194,7 +1226,9 @@ def test_generate_select(hass: HomeAssistant) -> None:
 
 def test_state_with_unit(hass: HomeAssistant) -> None:
     """Test the state_with_unit property helper."""
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
     hass.states.async_set("sensor.test2", "wow")
 
     result = render(hass, "{{ states.sensor.test.state_with_unit }}")
@@ -1228,10 +1262,18 @@ def test_state_with_unit_and_rounding(
     )
     assert entry.entity_id == "sensor.test"
 
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test3", "-0.0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test4", "-0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test3", "-0.0", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test4", "-0", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     # state_with_unit property
     tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
@@ -1262,8 +1304,12 @@ def test_state_with_unit_and_rounding(
     assert tpl9.async_render() == 0.0
     assert tpl10.async_render() == 0
 
-    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     assert tpl.async_render() == "23.02 beers"
     assert tpl2.async_render() == "23.015 beers"

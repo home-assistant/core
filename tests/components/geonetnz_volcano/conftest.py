@@ -8,7 +8,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
 
@@ -23,7 +22,6 @@ def config_entry():
             CONF_LONGITUDE: 174.7,
             CONF_RADIUS: 25,
             CONF_UNIT_SYSTEM: "metric",
-            CONF_SCAN_INTERVAL: 300.0,
         },
         title="-41.2, 174.7",
     )

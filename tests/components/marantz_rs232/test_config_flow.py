@@ -19,7 +19,7 @@ from . import MOCK_DEVICE
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config-entry creation tests from setting up the integration."""
     with patch(
-        "homeassistant.components.marantz_rs232.async_setup_entry", return_value=True
+        "homeassistant.components.marantz_rs232.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

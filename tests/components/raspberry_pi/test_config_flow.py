@@ -15,7 +15,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.raspberry_pi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
@@ -48,7 +48,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.raspberry_pi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}

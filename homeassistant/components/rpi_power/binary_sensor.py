@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import RpiPowerConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ISSUE_UNDER_VOLTAGE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
                 create_issue(
                     self.hass,
                     DOMAIN,
-                    "under_voltage_detected",
+                    ISSUE_UNDER_VOLTAGE,
                     config_entry_id=self._config_entry_id,
                     is_fixable=True,
                     is_persistent=True,

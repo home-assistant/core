@@ -47,8 +47,12 @@ class SwitcherDataUpdateCoordinator(
     async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for"
-            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
+            translation_domain=DOMAIN,
+            translation_key="device_update_timeout",
+            translation_placeholders={
+                "device": self.name,
+                "seconds": str(MAX_UPDATE_INTERVAL_SEC),
+            },
         )
 
     @property
@@ -70,14 +74,12 @@ class SwitcherDataUpdateCoordinator(
     def async_setup(self) -> None:
         """Set up the coordinator."""
         dev_reg = dr.async_get(self.hass)
-        dev_reg.async_get_or_create_device(
+        dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-                identifiers={(DOMAIN, self.device_id)},
-                manufacturer="Switcher",
-                name=self.name,
-                model=self.model,
-            ),
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            identifiers={(DOMAIN, self.device_id)},
+            manufacturer="Switcher",
+            name=self.name,
+            model=self.model,
         )
         async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADD, self)

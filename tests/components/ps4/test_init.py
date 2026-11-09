@@ -119,7 +119,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.ps4.media_player.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
         patch(mock_flow, return_value=MOCK_FLOW_RESULT),
     ):

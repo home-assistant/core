@@ -29,13 +29,11 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: LivisiConfigEntry) 
     entry.runtime_data = coordinator
     entry.async_on_unload(coordinator.async_close)
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Livisi",
-            name=f"SHC {coordinator.controller_type} {coordinator.serial_number}",
-        ),
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Livisi",
+        name=f"SHC {coordinator.controller_type} {coordinator.serial_number}",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

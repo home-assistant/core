@@ -49,10 +49,11 @@ from .const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     KNX_ADDRESS,
+    GroupAddressEntity,
     KNXConfigEntryOptions,
+    KnxEntityIdentifier,
 )
 from .device import KNXInterfaceDevice
-from .entity import KnxEntityIdentifier
 from .expose import KnxExposeEntity, KnxExposeTime
 from .project import KNXProject
 from .repairs import data_secure_group_key_issue_dispatcher
@@ -112,8 +113,13 @@ class KNXModule:
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
         self.group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
+        # entities added to Home Assistant
         self.group_address_entities: dict[
             DeviceGroupAddress, set[KnxEntityIdentifier]
+        ] = {}
+        # configured entities disabled in the entity registry
+        self.disabled_group_address_entities: dict[
+            KnxEntityIdentifier, set[DeviceGroupAddress]
         ] = {}
         self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
 
@@ -121,12 +127,15 @@ class KNXModule:
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         )
+        # A setup that fails after the store started initializing in the
+        # background is not unloaded, so the entry tears the store down itself.
+        self.entry.async_on_unload(self.telegrams.stop)
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.project.load_project(self.xknx)
         await self.config_store.load_data()
-        await self.telegrams.load_history()
+        self.telegrams.async_start()
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:
@@ -240,6 +249,8 @@ class KNXModule:
         identifier: KnxEntityIdentifier,
     ) -> None:
         """Register entity in group_address_entities map."""
+        # the entity may have been enabled without a reload of the config entry yet
+        self.disabled_group_address_entities.pop(identifier, None)
         for ga in group_addresses:
             if ga not in self.group_address_entities:
                 self.group_address_entities[ga] = set()
@@ -256,6 +267,44 @@ class KNXModule:
                 self.group_address_entities[ga].discard(identifier)
                 if not self.group_address_entities[ga]:
                     del self.group_address_entities[ga]
+
+    def add_disabled_entity(
+        self,
+        group_addresses: set[DeviceGroupAddress],
+        identifier: KnxEntityIdentifier,
+    ) -> None:
+        """Register a disabled entity with its group addresses."""
+        self.disabled_group_address_entities[identifier] = group_addresses
+
+    def remove_disabled_entity(self, identifier: KnxEntityIdentifier) -> None:
+        """Unregister a disabled entity."""
+        self.disabled_group_address_entities.pop(identifier, None)
+
+    def get_group_address_entities(self) -> dict[str, list[GroupAddressEntity]]:
+        """Return the entities configured for each group address, disabled ones included."""
+        result: dict[str, list[GroupAddressEntity]] = {}
+
+        def _add(
+            ga: DeviceGroupAddress, identifier: KnxEntityIdentifier, disabled: bool
+        ) -> None:
+            result.setdefault(str(ga), []).append(
+                GroupAddressEntity(
+                    platform=identifier.platform,
+                    unique_id=identifier.unique_id,
+                    ui=identifier.ui,
+                    disabled=disabled,
+                )
+            )
+
+        for ga, identifiers in self.group_address_entities.items():
+            for identifier in identifiers:
+                _add(ga, identifier, disabled=False)
+        for identifier, group_addresses in self.disabled_group_address_entities.items():
+            for ga in group_addresses:
+                _add(ga, identifier, disabled=True)
+        for entities in result.values():
+            entities.sort(key=lambda entity: (entity["platform"], entity["unique_id"]))
+        return result
 
     def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""

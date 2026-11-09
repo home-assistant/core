@@ -2,9 +2,9 @@
 
 import ast
 
-from . import ast_parse_module
-from .model import Config, Integration
-from .serializer import format_python_namespace
+from hassfest import ast_parse_module
+from hassfest.model import Config, Integration
+from hassfest.serializer import format_python_namespace
 
 
 def _uses_serial_port_selector(integration: Integration) -> bool:

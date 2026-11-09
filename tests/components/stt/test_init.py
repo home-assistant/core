@@ -158,19 +158,17 @@ async def mock_config_entry_setup(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.STT]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_forward_entry_unload(config_entry, Platform.STT)
-        return True
 
     mock_integration(
         hass,
@@ -862,6 +860,16 @@ async def test_audio_processing_custom(hass: HomeAssistant, tmp_path: Path) -> N
     assert engine.audio_processing.requires_external_vad is False
     assert engine.audio_processing.prefers_auto_gain_enabled is False
     assert engine.audio_processing.prefers_noise_reduction_enabled is False
+
+
+@pytest.mark.parametrize(
+    "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
+)
+async def test_get_audio_processing_defaults_to_property(
+    setup: MockSTTProvider | MockSTTProviderEntity,
+) -> None:
+    """Test per-request audio processing defaults to the audio_processing property."""
+    assert setup.async_get_audio_processing(_TEST_METADATA) is setup.audio_processing
 
 
 @pytest.mark.parametrize(

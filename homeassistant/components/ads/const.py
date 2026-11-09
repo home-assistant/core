@@ -63,4 +63,3 @@ ADS_TYPEMAP = {
 
 CONF_ADS_FACTOR = "factor"
 CONF_ADS_TYPE = "adstype"
-CONF_ADS_VALUE = "value"

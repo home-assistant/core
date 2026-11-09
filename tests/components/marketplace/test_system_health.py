@@ -37,6 +37,7 @@ async def test_system_health(hass: HomeAssistant) -> None:
     info = await _resolved_info(hass)
 
     assert info == {
+        "download_profile": "default",
         "github_api": "ok",
         "github_api_calls_remaining": 4999,
         "github_connected": True,

@@ -36,3 +36,15 @@ class TextMode(StrEnum):
 
     PASSWORD = "password"
     TEXT = "text"
+
+
+class TextService(StrEnum):
+    """Store keys for text services."""
+
+    SET_VALUE = "set_value"
+
+
+class TextServiceArgument(StrEnum):
+    """Store keys for text service arguments."""
+
+    VALUE = "value"

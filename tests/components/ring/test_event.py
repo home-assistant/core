@@ -7,12 +7,11 @@ from unittest.mock import Mock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import snapshot_platform
-from ring_doorbell import Ring
+from ring_doorbell import Ring, RingEvent
+from ring_doorbell.listen import RingEventListener
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, DoorbellEventType
-from homeassistant.components.ring.binary_sensor import RingEvent
-from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

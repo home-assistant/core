@@ -8,11 +8,12 @@ from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import RemoteSwitchOnOff
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 1
 
@@ -44,6 +45,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sofar switch platform."""
+    async_remove_unserved_entities(hass, entry, Platform.SWITCH, SWITCH_DESCRIPTIONS)
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
     async_add_entities(

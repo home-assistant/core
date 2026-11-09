@@ -33,6 +33,7 @@ class WaterHeaterCapabilityAttribute(StrEnum):
     MAX_TEMP = "max_temp"
     TARGET_TEMP_STEP = "target_temp_step"
     OPERATION_LIST = "operation_list"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 class WaterHeaterStateAttribute(
@@ -40,6 +41,10 @@ class WaterHeaterStateAttribute(
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
         "TEMPERATURE": ("WaterHeaterStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
+        "TEMPERATURE_UNIT": (
+            "WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT",
+            "2027.6.0",
+        ),
     },
 ):
     """State attributes for water heater entities."""
@@ -51,7 +56,7 @@ class WaterHeaterStateAttribute(
     TARGET_TEMP_LOW = "target_temp_low"
     OPERATION_MODE = "operation_mode"
     AWAY_MODE = "away_mode"
-    TEMPERATURE_UNIT = "temperature_unit"
+    TEMPERATURE_UNIT = "temperature_unit"  # Deprecated, moved to capability attributes
 
 
 STATE_ECO = "eco"
@@ -69,3 +74,21 @@ class WaterHeaterEntityFeature(IntFlag):
     OPERATION_MODE = 2
     AWAY_MODE = 4
     ON_OFF = 8
+
+
+class WaterHeaterService(StrEnum):
+    """Store keys for water heater services."""
+
+    SET_AWAY_MODE = "set_away_mode"
+    SET_OPERATION_MODE = "set_operation_mode"
+    SET_TEMPERATURE = "set_temperature"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class WaterHeaterServiceArgument(StrEnum):
+    """Store keys for water heater service arguments."""
+
+    AWAY_MODE = "away_mode"
+    OPERATION_MODE = "operation_mode"
+    TEMPERATURE = "temperature"

@@ -116,6 +116,6 @@ def mock_config_entry_2(hass: HomeAssistant) -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async_setup_entry to avoid real setup in config flow tests."""
     with patch(
-        "homeassistant.components.earn_e_p1.async_setup_entry", return_value=True
+        "homeassistant.components.earn_e_p1.async_setup_entry", return_value=None
     ) as mock:
         yield mock

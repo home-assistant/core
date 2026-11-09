@@ -30,3 +30,20 @@ SERVICE_SELECT_FIRST = "select_first"
 SERVICE_SELECT_LAST = "select_last"
 SERVICE_SELECT_NEXT = "select_next"
 SERVICE_SELECT_PREVIOUS = "select_previous"
+
+
+class SelectService(StrEnum):
+    """Store keys for select services."""
+
+    SELECT_FIRST = "select_first"
+    SELECT_LAST = "select_last"
+    SELECT_NEXT = "select_next"
+    SELECT_OPTION = "select_option"
+    SELECT_PREVIOUS = "select_previous"
+
+
+class SelectServiceArgument(StrEnum):
+    """Store keys for select service arguments."""
+
+    CYCLE = "cycle"
+    OPTION = "option"
