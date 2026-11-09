@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RainMachineConfigEntry
-from .const import DATA_PROVISION_SETTINGS, DATA_RESTRICTIONS_CURRENT
+from .const import DATA_PROVISION_SETTINGS, DATA_RESTRICTIONS_CURRENT, DATA_ZONES
 from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import key_exists
 
@@ -32,6 +32,15 @@ class RainMachineBinarySensorDescription(
     """Describe a RainMachine binary sensor."""
 
     data_key: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class RainMachineZoneRestrictionBinarySensorDescription(
+    BinarySensorEntityDescription, RainMachineEntityDescription
+):
+    """Describe the restriction status for an irrigation zone."""
+
+    uid: int
 
 
 BINARY_SENSOR_DESCRIPTIONS = (
@@ -100,7 +109,11 @@ async def async_setup_entry(
         DATA_RESTRICTIONS_CURRENT: CurrentRestrictionsBinarySensor,
     }
 
-    async_add_entities(
+    entities: list[
+        ProvisionSettingsBinarySensor
+        | CurrentRestrictionsBinarySensor
+        | ZoneRestrictionBinarySensor
+    ] = [
         api_category_sensor_map[description.api_category](entry, data, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
         if (
@@ -108,7 +121,26 @@ async def async_setup_entry(
             and coordinator.data
             and key_exists(coordinator.data, description.data_key)
         )
-    )
+    ]
+
+    for uid, zone in data.coordinators[DATA_ZONES].data.items():
+        if "restriction" not in zone:
+            continue
+        entities.append(
+            ZoneRestrictionBinarySensor(
+                entry,
+                data,
+                RainMachineZoneRestrictionBinarySensorDescription(
+                    key=f"zone_{uid}_restrictions",
+                    name=f"{zone['name']} Restrictions",
+                    api_category=DATA_ZONES,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_enabled_default=False,
+                    uid=uid,
+                ),
+            )
+        )
+    async_add_entities(entities)
 
 
 class CurrentRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
@@ -147,3 +179,17 @@ class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
             self._attr_is_on = self.coordinator.data.get("system", {}).get(
                 "useFlowSensor"
             )
+
+
+class ZoneRestrictionBinarySensor(RainMachineEntity, BinarySensorEntity):
+    """Represent a RainMachine zone restriction flag."""
+
+    entity_description: RainMachineZoneRestrictionBinarySensorDescription
+
+    @callback
+    @override
+    def update_from_latest_data(self) -> None:
+        """Read the restriction flag from zone data."""
+        self._attr_is_on = self.coordinator.data[self.entity_description.uid].get(
+            "restriction"
+        )
