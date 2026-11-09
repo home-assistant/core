@@ -61,11 +61,11 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_apps_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lametric: MagicMock,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test that setup succeeds when the device does not report its apps."""
     mock_lametric.apps.side_effect = LaMetricConnectionError
