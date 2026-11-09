@@ -245,3 +245,10 @@ class FB1016(StrEnum):
     """FB 1016 General Purpose Temperature Sensor."""
 
     TEMP_VALUE = "1016.51"
+
+
+class FB1019(StrEnum):
+    """FB 1019 General Purpose Analog Output."""
+
+    ANALOG_OUT_SETP = "1019.51"
+    STATUS_ANALOG_OUTPUT = "1019.52"
