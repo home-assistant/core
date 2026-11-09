@@ -45,8 +45,14 @@ def _migrate_zigbee_connections(hass: HomeAssistant, entry: HueConfigEntry) -> N
         }
         if not zigbee_connections:
             continue
+        # Multi-channel devices share one zigbee mac, which must be unique
+        # within the config entry, so only the first device keeps it.
         new_connections = (device.connections - zigbee_connections) | {
-            (dr.CONNECTION_ZIGBEE, value) for _, value in zigbee_connections
+            (dr.CONNECTION_ZIGBEE, value)
+            for _, value in zigbee_connections
+            if not dev_reg.async_get_device_by_connection(
+                (dr.CONNECTION_ZIGBEE, value), entry.entry_id
+            )
         }
         dev_reg.async_update_device(device.id, new_connections=new_connections)
 
