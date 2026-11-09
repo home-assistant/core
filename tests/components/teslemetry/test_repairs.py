@@ -187,7 +187,7 @@ async def test_unpaired_streaming_vehicle_does_not_poll(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is not None
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is not None
     mock_vehicle_data.assert_not_called()
     mock_stream_get_config.assert_called()
 
@@ -214,7 +214,9 @@ async def test_vehicle_able_to_stream_reloads_into_streaming(
         return_value=_metadata_with_polling(True, issue_type),
     ):
         entry = await setup_platform(hass)
-    assert issue_registry.async_get_issue(DOMAIN, f"{issue_type}_{VEHICLE_VIN}")
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"{issue_type}_{entry.entry_id}_{VEHICLE_VIN}"
+    )
     mock_stream_get_config.reset_mock()
     mock_stream_update_config.reset_mock()
 
@@ -233,7 +235,12 @@ async def test_vehicle_able_to_stream_reloads_into_streaming(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, f"{issue_type}_{VEHICLE_VIN}") is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"{issue_type}_{entry.entry_id}_{VEHICLE_VIN}"
+        )
+        is None
+    )
     mock_vehicle_data.assert_not_called()
     mock_stream_get_config.assert_called()
     mock_stream_update_config.assert_called()
@@ -267,9 +274,11 @@ async def test_polling_vehicle_stays_polling(
     assert entry.state is ConfigEntryState.LOADED
     mock_vehicle_data.assert_called()
     mock_stream_get_config.assert_not_called()
-    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is None
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is None
     assert (
-        issue_registry.async_get_issue(DOMAIN, f"streaming_toggle_{VEHICLE_VIN}")
+        issue_registry.async_get_issue(
+            DOMAIN, f"streaming_toggle_{entry.entry_id}_{VEHICLE_VIN}"
+        )
         is not None
     ) is issue_registered
 

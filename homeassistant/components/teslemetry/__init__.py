@@ -280,6 +280,7 @@ def _setup_dynamic_discovery(
                 removed_sites or "none",
                 streamable_vins or "none",
             )
+            polling_vins.difference_update(streamable_vins)
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
