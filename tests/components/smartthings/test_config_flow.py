@@ -39,7 +39,11 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntrySt
 from homeassistant.const import CONF_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ImplementationUnavailableError,
+    UnknownImplementationError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -460,6 +464,33 @@ async def test_reauthentication_stale_provisioned_credential(
 
     assert result["type"] is result_type
     assert result["step_id"] == step_id
+
+
+@pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ImplementationUnavailableError(), id="unavailable"),
+        pytest.param(UnknownImplementationError(), id="unknown"),
+    ],
+)
+async def test_reauthentication_implementation_error_restarts_flow(
+    hass: HomeAssistant,
+    mock_config_entry_with_app_id: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Check reauth falls back to the user step when the implementation is gone."""
+    mock_config_entry_with_app_id.add_to_hass(hass)
+
+    result = await mock_config_entry_with_app_id.start_reauth_flow(hass)
+    with patch(
+        "homeassistant.components.smartthings.config_flow.async_get_config_entry_implementation",
+        side_effect=error,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pat"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "with_generic_credential")
