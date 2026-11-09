@@ -1480,22 +1480,19 @@ async def test_camera_initial_setup_and_images(
 
         # State checks after status change
         assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
-        assert (
-            hass.states.get(camera_entity).attributes.get("motion_detection")
-            is expected_motion_detection
-        )
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
         assert hass.states.get(camera_entity).attributes.get("alim_status") == 1
 
         # Validate image fetch raises exception
-        with pytest.raises(HomeAssistantError, match="Unable to get image"):
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
 
 
 @pytest.mark.parametrize(
     ("attributes_payload", "expected_monitoring", "expected_alim_status"),
     [
-        ({"monitoring": "on", "alim_status": 1}, True, 1),
+        ({"monitoring": "on", "alim_status": 1}, False, 1),
         ({"monitoring": "off", "alim_status": 1}, False, 1),
         ({"monitoring": "off", "alim_status": None}, False, None),
         ({"monitoring": None, "alim_status": None}, False, None),

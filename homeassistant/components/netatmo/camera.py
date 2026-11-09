@@ -123,7 +123,7 @@ class NetatmoBaseCamera(NetatmoModuleEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        if self.device.alim_status != NETATMO_ALIM_STATUS_ONLINE:
+        if not self.is_on:
             _LOGGER.debug(
                 "Camera %s is offline, cannot fetch live image", self.device.entity_id
             )
@@ -138,8 +138,8 @@ class NetatmoBaseCamera(NetatmoModuleEntity, Camera):
     @property
     @override
     def is_on(self) -> bool:
-        """Return true if camera is on (monitoring)."""
-        return True
+        """Return true if camera is in monitoring capable status."""
+        return self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
 
     @property
     @override
@@ -348,8 +348,14 @@ class NetatmoCamera(NetatmoBaseCamera):
     def is_on(self) -> bool:
         """Return true if camera is on (monitoring)."""
         if self._override_on is not None:
-            return self._override_on
-        return bool(self.device.monitoring)
+            return (
+                self._override_on
+                and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+            )
+        return (
+            bool(self.device.monitoring)
+            and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+        )
 
     @property
     @override
@@ -380,7 +386,7 @@ class NetatmoCamera(NetatmoBaseCamera):
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        if self.is_on or self.device.alim_status != NETATMO_ALIM_STATUS_ONLINE:
+        if self.is_on:
             return
         try:
             await self.device.async_monitoring_on()
