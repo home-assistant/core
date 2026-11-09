@@ -1,6 +1,7 @@
 """Tests for the Sony Projector switch."""
 
-from unittest.mock import MagicMock
+import threading
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -42,6 +43,33 @@ YAML_CONFIG = {
         }
     ]
 }
+
+
+class BlockingProjector:
+    """Projector reporting off whose polls can be held open.
+
+    The test harness runs Mock targets inline, so overlapping calls need a real class.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the projector."""
+        self.poll_started = threading.Event()
+        self.finish_poll = threading.Event()
+        self.finish_poll.set()
+        self.power_set = threading.Event()
+        self.set_power_calls: list[bool] = []
+
+    def get_power(self) -> bool:
+        """Return the power state once the poll may finish."""
+        self.poll_started.set()
+        self.finish_poll.wait(5)
+        return False
+
+    def set_power(self, on: bool) -> bool:
+        """Record the power command."""
+        self.set_power_calls.append(on)
+        self.power_set.set()
+        return True
 
 
 @pytest.fixture
@@ -97,6 +125,41 @@ async def test_power_commands_keep_state_until_next_poll(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+async def test_power_command_waits_for_running_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that is already running can't overwrite the requested state."""
+    projector = BlockingProjector()
+    mock_config_entry.add_to_hass(hass)
+    with patch("pysdcp.Projector", return_value=projector):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+    projector.poll_started.clear()
+    projector.finish_poll.clear()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    assert await hass.async_add_executor_job(projector.poll_started.wait, 5)
+
+    command = hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    )
+    # Waits in the executor because freezer also freezes the event loop's timers.
+    assert not await hass.async_add_executor_job(projector.power_set.wait, 0.1)
+
+    projector.finish_poll.set()
+    await command
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert projector.set_power_calls == [True]
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 @pytest.mark.parametrize("error", [ConnectionRefusedError, Exception("Failed status")])
