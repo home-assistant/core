@@ -9,9 +9,9 @@ from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+    CONF_LATITUDE,
     CONF_LOCATION,
+    CONF_LONGITUDE,
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant
@@ -30,12 +30,12 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 50.123, CONF_LONGITUDE: 4.456}},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Brussels"
     assert result["data"] == {
-        CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456},
+        CONF_LOCATION: {CONF_LATITUDE: 50.123, CONF_LONGITUDE: 4.456},
         CONF_UNIQUE_ID: "brussels be",
     }
     assert result["result"].unique_id == "brussels be"
@@ -58,7 +58,7 @@ async def test_config_flow_location_out_benelux(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LOCATION: {ATTR_LATITUDE: 0.123, ATTR_LONGITUDE: 0.456}},
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 0.123, CONF_LONGITUDE: 0.456}},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -67,7 +67,7 @@ async def test_config_flow_location_out_benelux(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 50.123, CONF_LONGITUDE: 4.456}},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Brussels"
@@ -85,7 +85,7 @@ async def test_config_flow_with_api_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 50.123, CONF_LONGITUDE: 4.456}},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -105,7 +105,7 @@ async def test_flow_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 50.123, CONF_LONGITUDE: 4.456}},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

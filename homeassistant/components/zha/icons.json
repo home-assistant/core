@@ -122,6 +122,9 @@
       "regulation_setpoint_offset": {
         "default": "mdi:thermostat"
       },
+      "reporting_interval": {
+        "default": "mdi:timer-sync-outline"
+      },
       "serving_size": {
         "default": "mdi:counter"
       },
@@ -235,6 +238,9 @@
       },
       "linkage_alarm": {
         "default": "mdi:shield-link-variant"
+      },
+      "power_outage_memory": {
+        "default": "mdi:restore"
       },
       "prioritize_external_temperature_sensor": {
         "default": "mdi:thermometer"

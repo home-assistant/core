@@ -61,11 +61,11 @@ BATTERY_STATE_OPTIONS: Final = [
 ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
-    value: Callable = round
+    value: Callable
 
 
 def battery_time_remaining(data: SystemBridgeData) -> datetime | None:
@@ -306,25 +306,17 @@ def gpu_usage_percentage(gpu: GPU) -> float | None:
     return gpu.core_load
 
 
-def memory_free(data: SystemBridgeData) -> float | None:
+def memory_free(data: SystemBridgeData) -> int | None:
     """Return the free memory, counting reclaimable cache as free."""
-    if (
-        data.memory is not None
-        and (virtual := data.memory.virtual) is not None
-        and (available := virtual.available) is not None
-    ):
-        return round(available / 1000**3, 2)
+    if data.memory is not None and (virtual := data.memory.virtual) is not None:
+        return virtual.available
     return None
 
 
-def memory_used(data: SystemBridgeData) -> float | None:
+def memory_used(data: SystemBridgeData) -> int | None:
     """Return the used memory."""
-    if (
-        data.memory is not None
-        and (virtual := data.memory.virtual) is not None
-        and (used := virtual.used) is not None
-    ):
-        return round(used / 1000**3, 2)
+    if data.memory is not None and (virtual := data.memory.virtual) is not None:
+        return virtual.used
     return None
 
 
@@ -693,7 +685,8 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="memory_free",
         translation_key="memory_free",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         value=memory_free,
@@ -711,7 +704,8 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         translation_key="memory_used",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         value=memory_used,

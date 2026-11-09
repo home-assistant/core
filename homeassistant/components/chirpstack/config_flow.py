@@ -6,9 +6,11 @@ import logging
 from typing import Any, override
 from urllib.parse import urlsplit
 
-import grpc
 from lorawan_connection import ConnectionUnavailable
-from lorawan_connection.backend.chirpstack import ChirpStackConnection
+from lorawan_connection.backend.chirpstack import (
+    AuthenticationError,
+    ChirpStackConnection,
+)
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -49,16 +51,8 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             yield connection
-        except grpc.aio.AioRpcError as error:
-            errors["base"] = (
-                "invalid_auth"
-                if error.code()
-                in (
-                    grpc.StatusCode.UNAUTHENTICATED,
-                    grpc.StatusCode.PERMISSION_DENIED,
-                )
-                else "cannot_connect"
-            )
+        except AuthenticationError:
+            errors["base"] = "invalid_auth"
         except ConnectionUnavailable:
             errors["base"] = "cannot_connect"
         except Exception:
