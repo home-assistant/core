@@ -99,10 +99,7 @@ rules:
   test-coverage:
     status: todo
     comment: >-
-      Missing for 100%:
-      (1) sensor.py lines 60 and 67 cannot be reached with data from a real
-      unit and need an integration cleanup.
-      (2) services.py line 55 goes away with action-setup.
+      Missing for 100%: services.py line 55, which goes away with action-setup.
 
   # Gold
   devices:
