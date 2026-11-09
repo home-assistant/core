@@ -11,9 +11,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_PRESET_MODE,
-    ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -31,6 +28,8 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.daikin_onecta.climate import (
@@ -45,7 +44,6 @@ from homeassistant.components.daikin_onecta.coordinator import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
@@ -1400,12 +1398,17 @@ async def test_climate_service_updates_entity_state(
     service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21},
+        {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 21},
         blocking=True,
     )
     if patch_result:
         await service_call
-        assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 21
+        assert (
+            hass.states.get(entity_id).attributes[
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            ]
+            == 21
+        )
     else:
         with pytest.raises(HomeAssistantError, match="Failed to set the temperature"):
             await service_call
@@ -1633,12 +1636,22 @@ async def test_climate_platform_services_and_management_points(
     assert living_room_state is not None
     assert bedroom_state is not None
     assert living_room_state.state == HVACMode.COOL
-    assert living_room_state.attributes[ATTR_TEMPERATURE] == 21
-    assert living_room_state.attributes[ATTR_FAN_MODE] == "quiet"
-    assert living_room_state.attributes[ATTR_SWING_MODE] == SWING_ON
-    assert living_room_state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+    assert (
+        living_room_state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
+        == 21
+    )
+    assert living_room_state.attributes[ClimateEntityStateAttribute.FAN_MODE] == "quiet"
+    assert (
+        living_room_state.attributes[ClimateEntityStateAttribute.SWING_MODE] == SWING_ON
+    )
+    assert (
+        living_room_state.attributes[ClimateEntityStateAttribute.PRESET_MODE]
+        == PRESET_ECO
+    )
     assert bedroom_state.state == HVACMode.HEAT
-    assert bedroom_state.attributes[ATTR_TEMPERATURE] == 18
+    assert (
+        bedroom_state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 18
+    )
 
 
 async def test_setup_creates_entities_per_management_point(

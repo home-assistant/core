@@ -13,7 +13,6 @@ from daikin_onecta.models import (
 )
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -24,9 +23,10 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -317,11 +317,13 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the HVAC mode and/or target temperature."""
-        if ATTR_HVAC_MODE in kwargs:
-            await self.async_handle_set_hvac_mode_service(kwargs[ATTR_HVAC_MODE])
+        if ClimateServiceArgument.HVAC_MODE in kwargs:
+            await self.async_handle_set_hvac_mode_service(
+                kwargs[ClimateServiceArgument.HVAC_MODE]
+            )
 
-        if ATTR_TEMPERATURE in kwargs:
-            value = kwargs[ATTR_TEMPERATURE]
+        if ClimateServiceArgument.TEMPERATURE in kwargs:
+            value = kwargs[ClimateServiceArgument.TEMPERATURE]
             if self._attr_native_target_temperature != value:
                 operationmode = self._operation_mode()
                 if operationmode is None:
