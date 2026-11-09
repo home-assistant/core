@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
+from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
@@ -12,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.freebox import SCAN_INTERVAL
+from homeassistant.components.freebox.binary_sensor import PIR_SCAN_INTERVAL
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
@@ -90,6 +92,36 @@ async def test_home(
     assert hass.states.get("binary_sensor.detecteur_cover").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte").state == "off"
     assert hass.states.get("binary_sensor.ouverture_porte_cover").state == "on"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_motion_fast_poll(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
+    """Test the motion sensor updates between two router updates."""
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+    assert hass.states.get("binary_sensor.detecteur").state == "on"
+
+    data_home_get_values_changed = deepcopy(DATA_HOME_PIR_GET_VALUE)
+    data_home_get_values_changed["value"] = True
+    router().home.get_home_endpoint_value.return_value = data_home_get_values_changed
+
+    freezer.tick(PIR_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Only the motion sensor is read on this timer
+    assert hass.states.get("binary_sensor.detecteur").state == "off"
+    assert hass.states.get("binary_sensor.detecteur_cover").state == "off"
+
+    # A failed read keeps the last known state
+    router().home.get_home_endpoint_value.side_effect = HttpRequestError("failed")
+
+    freezer.tick(PIR_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.detecteur").state == "off"
 
 
 @pytest.mark.usefixtures("router")
