@@ -123,6 +123,141 @@ async def test_migrate_notify_entity_unique_id(
     assert registry_entry.config_subentry_id == subentry_id
 
 
+def _setup_migration_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> tuple[MockConfigEntry, str]:
+    """Return an added minor version 3 config entry and its subentry ID."""
+    mock_config_entry = MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
+            CONF_API_KEY: "mock api key",
+        },
+        options={ATTR_PARSER: PARSER_MD},
+        subentries_data=[
+            ConfigSubentryData(
+                unique_id="123456",
+                data={CONF_CHAT_ID: 123456},
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat",
+            )
+        ],
+        minor_version=3,
+    )
+    mock_config_entry.add_to_hass(hass)
+    # The v1.4 migration needs the shared bot device to derive the bot ID
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "123456")},
+    )
+    return mock_config_entry, next(iter(mock_config_entry.subentries))
+
+
+async def test_migrate_entry_to_subentry_device_identifiers(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test 1.3 to 1.4 migration re-keys the per-chat device in place."""
+    mock_config_entry, subentry_id = _setup_migration_entry(hass, device_registry)
+    bot_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), mock_config_entry.entry_id
+    )
+    assert bot_device is not None
+    chat_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        config_subentry_id=subentry_id,
+        identifiers={(DOMAIN, "123456_123456")},
+        via_device_id=bot_device.id,
+    )
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        "123456_123456",
+        config_entry=mock_config_entry,
+        config_subentry_id=subentry_id,
+        device_id=chat_device.id,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The existing device is re-keyed in place, keeping its id and the entity
+    rekeyed_device = device_registry.async_get(chat_device.id)
+    assert rekeyed_device is not None
+    assert rekeyed_device.identifiers == {(DOMAIN, f"123456_{subentry_id}")}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456_123456"), mock_config_entry.entry_id
+    )
+    notify_entity_id = entity_registry.async_get_entity_id(
+        "notify", DOMAIN, f"123456_{subentry_id}"
+    )
+    assert notify_entity_id is not None
+    assert entity_registry.async_get(notify_entity_id).device_id == chat_device.id
+
+
+async def test_migrate_notify_entity_unique_id_unknown(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test notify entity with an unmatched unique ID is left alone."""
+    mock_config_entry, _ = _setup_migration_entry(hass, device_registry)
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        "999999_999999",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry_entry = entity_registry.async_get_entity_id(
+        "notify", DOMAIN, "999999_999999"
+    )
+    assert registry_entry is not None
+
+
+async def test_migrate_notify_entity_unique_id_already_migrated(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test legacy notify entity is kept when the new unique ID is taken."""
+    mock_config_entry, subentry_id = _setup_migration_entry(hass, device_registry)
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        "123456_123456",
+        suggested_object_id="legacy_telegram_notify",
+        config_entry=mock_config_entry,
+    )
+    entity_registry.async_get_or_create(
+        "notify",
+        DOMAIN,
+        f"123456_{subentry_id}",
+        suggested_object_id="migrated_telegram_notify",
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The legacy entity is not migrated onto the taken unique ID
+    legacy_entry = entity_registry.async_get("notify.legacy_telegram_notify")
+    assert legacy_entry is not None
+    assert legacy_entry.unique_id == "123456_123456"
+    migrated_entry = entity_registry.async_get("notify.migrated_telegram_notify")
+    assert migrated_entry is not None
+    assert migrated_entry.unique_id == f"123456_{subentry_id}"
+
+
 @pytest.mark.parametrize("collapsed_chat_index", [0, 1])
 @pytest.mark.parametrize(
     "chats_without_notify_entity",

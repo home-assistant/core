@@ -159,7 +159,8 @@ async def async_migrate_entry(
             )
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
-    # version 1.3 -> 1.4: migrate notify entity unique IDs to stable subentry IDs.
+    # version 1.3 -> 1.4: migrate notify entity unique IDs and per-chat device
+    # identifiers to stable subentry IDs.
     if version == 1 and config_entry.minor_version < 4:
         if bot_id is not None and bot_device is not None:
             old_to_new_unique_ids = {
@@ -168,6 +169,21 @@ async def async_migrate_entry(
                 )
                 for subentry in config_entry.subentries.values()
             }
+
+            for subentry in config_entry.subentries.values():
+                old_device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{bot_id}_{subentry.data[CONF_CHAT_ID]}"),
+                    config_entry.entry_id,
+                )
+                if old_device is None or old_device.config_subentry_id != (
+                    subentry_id := subentry.subentry_id
+                ):
+                    continue
+                # Re-key the device in place so its settings and automations survive
+                device_registry.async_update_device(
+                    old_device.id,
+                    new_identifiers={(DOMAIN, f"{bot_id}_{subentry_id}")},
+                )
 
             @callback
             def update_unique_id(

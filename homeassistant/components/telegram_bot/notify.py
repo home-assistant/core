@@ -54,7 +54,6 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
         )
         self.chat_id = subentry.data[CONF_CHAT_ID]
         self.message_thread_id = subentry.data.get(CONF_MESSAGE_THREAD_ID)
-        self._attr_name = subentry.title
 
         # Subentries may share a chat ID when they target distinct message threads.
         device_info = self._attr_device_info

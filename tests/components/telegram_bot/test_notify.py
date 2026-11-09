@@ -42,7 +42,7 @@ async def test_send_message(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.mock_chat_mock_chat",
+                ATTR_ENTITY_ID: "notify.mock_chat",
                 ATTR_MESSAGE: "mock message",
                 ATTR_TITLE: "mock title",
             },
@@ -62,7 +62,7 @@ async def test_send_message(
             message_thread_id=None,
         )
 
-    state = hass.states.get("notify.mock_chat_mock_chat")
+    state = hass.states.get("notify.mock_chat")
     assert state
     assert state.state == "2025-01-09T12:00:00+00:00"
 
@@ -93,7 +93,7 @@ async def test_send_message_with_message_thread(
             NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.mock_chat_thread_987_mock_chat_thread_987",
+                ATTR_ENTITY_ID: "notify.mock_chat_thread_987",
                 ATTR_MESSAGE: "mock message",
                 ATTR_TITLE: "mock title",
             },
@@ -113,7 +113,7 @@ async def test_send_message_with_message_thread(
             message_thread_id=987,
         )
 
-    state = hass.states.get("notify.mock_chat_thread_987_mock_chat_thread_987")
+    state = hass.states.get("notify.mock_chat_thread_987")
     assert state
     assert state.state == "2025-01-09T12:00:00+00:00"
 
