@@ -7,7 +7,6 @@ from holidays import PUBLIC, HolidayBase, country_holidays, list_supported_count
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -31,6 +30,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import dt as dt_util
 
+from . import WorkdayConfigEntry
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
@@ -220,7 +220,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: WorkdayConfigEntry,
     ) -> WorkdayOptionsFlowHandler:
         """Get the options flow for this handler."""
         return WorkdayOptionsFlowHandler()

@@ -77,6 +77,9 @@ async def test_sensors_added_when_data_appears(
     "status",
     [
         pytest.param(HpPrinterStatus(device_status="somethingnew"), id="unknown"),
+        pytest.param(
+            HpPrinterStatus(device_status="unknown"), id="reported_as_unknown"
+        ),
         pytest.param(HpPrinterStatus(device_status=None), id="missing"),
         pytest.param(None, id="no_status"),
     ],

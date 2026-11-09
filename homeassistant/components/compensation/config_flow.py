@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     Platform,
 )
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -207,6 +208,7 @@ class CompensationConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

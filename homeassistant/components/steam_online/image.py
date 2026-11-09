@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -166,6 +166,7 @@ class SteamImageEntity(SteamEntity, ImageEntity):
         )
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
