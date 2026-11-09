@@ -170,3 +170,29 @@ async def test_gateway_port_disappears_from_port_status_becomes_unavailable(
     assert entity.state == "unavailable"
     errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
     assert not any("Omada API Data - Gateway" in msg for msg in errors)
+
+
+async def test_gateway_disappearing_from_coordinator_is_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test the gateway vanishing from coordinator data makes its sensors unavailable."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "binary_sensor.test_router_port_1_lan_status"
+    assert hass.states.get(entity_id) is not None
+
+    # The controller stops reporting the gateway at all, so the sensor must
+    # become unavailable instead of raising KeyError on the coordinator data.
+    gateway_coordinator = mock_config_entry.runtime_data.gateway_coordinator
+    assert gateway_coordinator is not None
+    gateway_coordinator.async_set_updated_data({})
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "unavailable"
