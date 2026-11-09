@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_weather[weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz-entry]
+# name: test_weather[weather.la_clusaz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,20 +13,20 @@
     'disabled_by': None,
     'domain': 'weather',
     'entity_category': None,
-    'entity_id': 'weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz',
-    'has_entity_name': False,
+    'entity_id': 'weather.la_clusaz',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'La Clusaz',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'La Clusaz',
+    'original_name': None,
     'platform': 'meteo_france',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,12 +36,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_weather[weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz-state]
+# name: test_weather[weather.la_clusaz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 5.4,
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Météo-France',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Météo-France forecast for city La Clusaz La Clusaz',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'La Clusaz',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 75,
       <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 988.7,
@@ -57,7 +57,7 @@
       <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'weather.meteo_france_forecast_for_city_la_clusaz_la_clusaz',
+    'entity_id': 'weather.la_clusaz',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -265,6 +265,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if endpoint is not None:
                     endpoints = {**endpoints, endpoint.uid: endpoint}
+        except pizone.EndpointVerifyError as err:
+            _LOGGER.debug("iZone controller did not verify: %s", err)
+            return self.async_abort(reason="cannot_connect")
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
@@ -402,6 +405,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             endpoint = await izone_discovery.async_discover_by_host(self.hass, host)
+        except pizone.EndpointVerifyError as err:
+            _LOGGER.debug("iZone controller did not verify: %s", err)
+            return self._async_show_manual_host_form(
+                errors={"base": "cannot_connect"},
+                suggested_values={CONF_HOST: host},
+            )
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")

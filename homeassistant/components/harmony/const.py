@@ -3,8 +3,6 @@
 from homeassistant.const import Platform
 
 DOMAIN = "harmony"
-SERVICE_SYNC = "sync"
-SERVICE_CHANGE_CHANNEL = "change_channel"
 PLATFORMS = [Platform.REMOTE, Platform.SELECT]
 UNIQUE_ID = "unique_id"
 ACTIVITY_POWER_OFF = "PowerOff"

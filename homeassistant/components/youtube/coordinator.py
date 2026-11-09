@@ -8,7 +8,7 @@ from typing import Any, Final, override
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, ATTR_ID
+from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import AsyncConfigEntryAuth
 from .const import (
     ATTR_DESCRIPTION,
+    ATTR_ICON,
     ATTR_IS_SHORT,
     ATTR_LATEST_SHORT,
     ATTR_LATEST_VIDEO,

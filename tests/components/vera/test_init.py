@@ -31,7 +31,7 @@ async def test_init(
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
-    entity1_id = "binary_sensor.first_dev_1"
+    entity1_id = "binary_sensor.first_dev"
 
     await vera_component_factory.configure_component(
         hass=hass,
@@ -59,14 +59,14 @@ async def test_multiple_controllers(
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
-    entity1_id = "binary_sensor.first_dev_1"
+    entity1_id = "binary_sensor.first_dev"
 
     vera_device2: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device2.device_id = 2
     vera_device2.vera_device_id = vera_device2.device_id
     vera_device2.name = "second_dev"
     vera_device2.is_tripped = False
-    entity2_id = "binary_sensor.second_dev_2"
+    entity2_id = "binary_sensor.second_dev"
 
     # Add existing entity registry entry from previous setup.
     entity_registry.async_get_or_create(
@@ -165,14 +165,14 @@ async def test_exclude_and_light_ids(
     vera_device1.vera_device_id = 1
     vera_device1.name = "dev1"
     vera_device1.is_tripped = False
-    entity_id1 = "binary_sensor.dev1_1"
+    entity_id1 = "binary_sensor.dev1"
 
     vera_device2: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device2.device_id = 2
     vera_device2.vera_device_id = 2
     vera_device2.name = "dev2"
     vera_device2.is_tripped = False
-    entity_id2 = "binary_sensor.dev2_2"
+    entity_id2 = "binary_sensor.dev2"
 
     vera_device3: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
     vera_device3.device_id = 3
@@ -181,7 +181,7 @@ async def test_exclude_and_light_ids(
     vera_device3.category = pv.CATEGORY_SWITCH
     vera_device3.is_switched_on = MagicMock(return_value=False)
 
-    entity_id3 = "switch.dev3_3"
+    entity_id3 = "switch.dev3"
 
     vera_device4: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
     vera_device4.device_id = 4
@@ -193,7 +193,7 @@ async def test_exclude_and_light_ids(
     vera_device4.get_color = MagicMock(return_value=[0, 0, 0])
     vera_device4.is_dimmable = True
 
-    entity_id4 = "light.dev4_4"
+    entity_id4 = "light.dev4"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,

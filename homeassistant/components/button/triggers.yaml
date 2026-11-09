@@ -3,3 +3,5 @@ pressed:
     entity:
       - domain: button
       - domain: input_button
+      - domain: event
+        device_class: button

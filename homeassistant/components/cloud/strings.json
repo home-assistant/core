@@ -2,13 +2,13 @@
   "entity": {
     "ai_task": {
       "cloud_ai": {
-        "name": "Home Assistant Cloud AI"
+        "name": "Home Assistant Link AI"
       }
     }
   },
   "exceptions": {
     "auto_login_failed_cloud_error": {
-      "message": "Could not reach Home Assistant Cloud to finish signing you in. Please try signing in again."
+      "message": "Could not reach Home Assistant Link to finish signing you in. Please try signing in again."
     },
     "auto_login_failed_timeout": {
       "message": "Your email was not confirmed in time, so we stopped waiting. Your account was created, so please confirm your email and sign in."
@@ -17,7 +17,7 @@
       "message": "An unexpected error stopped us from signing you in. Please try signing in again."
     },
     "backup_size_too_large": {
-      "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
+      "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Link."
     },
     "no_pending_auto_login": {
       "message": "There is no registration waiting for an email confirmation."
@@ -25,7 +25,7 @@
   },
   "issues": {
     "connection_error": {
-      "description": "You do not have a connection to Home Assistant Cloud. Check your network.",
+      "description": "You do not have a connection to Home Assistant Link. Check your network.",
       "title": "No connection"
     },
     "legacy_subscription": {
@@ -35,22 +35,22 @@
         },
         "step": {
           "confirm_change_plan": {
-            "description": "We've recently updated our subscription system. To continue using Home Assistant Cloud you need to one-time approve the change in PayPal.\n\nThis takes 1 minute and will not increase the price."
+            "description": "We've recently updated our subscription system. To continue using Home Assistant Link you need to one-time approve the change in PayPal.\n\nThis takes 1 minute and will not increase the price."
           }
         }
       },
       "title": "Legacy subscription detected"
     },
     "no_subscription": {
-      "description": "You do not have a Home Assistant Cloud subscription. Subscribe at {account_url}.",
+      "description": "You do not have a Home Assistant Link subscription. Subscribe at {account_url}.",
       "title": "No subscription detected"
     },
     "reset_bad_custom_domain_configuration": {
-      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Cloud. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page.",
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Link. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page.",
       "title": "Custom domain ignored"
     },
     "subscription_expired": {
-      "description": "Your Home Assistant Cloud subscription has expired. Resubscribe at {account_url}.",
+      "description": "Your Home Assistant Link subscription has expired. Resubscribe at {account_url}.",
       "title": "Subscription has expired"
     },
     "warn_bad_custom_domain_configuration": {
@@ -60,7 +60,7 @@
   },
   "preview_features": {
     "stt_v2": {
-      "description": "We're testing a new speech-to-text engine for Home Assistant Cloud, the part of voice control that turns what you say into words. In our testing it copes better with accents, background noise, and languages other than English.\n\nWhile this is enabled, any audio from your voice commands is processed by [Soniox](https://soniox.com/) rather than our current provider. This is relevant only to Assistants configured to use Home Assistant Cloud as an STT engine. It travels through a Nabu Casa proxy, which handles authentication and forwards it to the processing region closest to you. Nabu Casa doesn't process, store or log your audio at any point. Everything else about your voice pipeline stays the same, and you can turn this off again at any time.",
+      "description": "We're testing a new speech-to-text engine for Home Assistant Link, the part of voice control that turns what you say into words. In our testing it copes better with accents, background noise, and languages other than English.\n\nWhile this is enabled, any audio from your voice commands is processed by [Soniox](https://soniox.com/) rather than our current provider. This is relevant only to Assistants configured to use Home Assistant Link as an STT engine. It travels through a Nabu Casa proxy, which handles authentication and forwards it to the processing region closest to you. Nabu Casa doesn't process, store or log your audio at any point. Everything else about your voice pipeline stays the same, and you can turn this off again at any time.",
       "disable_confirmation": "Any Assistant currently using the new engine will go back to being transcribed by our current speech-to-text provider.",
       "enable_confirmation": "This feature is still in development and may change. While it's enabled, audio from your voice commands in supported languages is transcribed by Soniox instead of our current provider.",
       "name": "New speech-to-text engine"
@@ -68,19 +68,19 @@
   },
   "services": {
     "remote_connect": {
-      "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Cloud connection.",
-      "name": "Enable Home Assistant Cloud remote access"
+      "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Link connection.",
+      "name": "Enable Home Assistant Link remote access"
     },
     "remote_disconnect": {
-      "description": "Disconnects the instance UI from Home Assistant Cloud. This disables access to it from outside your local network.",
-      "name": "Disable Home Assistant Cloud remote access"
+      "description": "Disconnects the instance UI from Home Assistant Link. This disables access to it from outside your local network.",
+      "name": "Disable Home Assistant Link remote access"
     }
   },
   "system_health": {
     "info": {
       "alexa_enabled": "Alexa enabled",
       "can_reach_cert_server": "Reach certificate server",
-      "can_reach_cloud": "Reach Home Assistant Cloud",
+      "can_reach_cloud": "Reach Home Assistant Link",
       "can_reach_cloud_auth": "Reach authentication server",
       "certificate_status": "Certificate status",
       "google_enabled": "Google enabled",

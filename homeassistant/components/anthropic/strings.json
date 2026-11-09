@@ -255,7 +255,7 @@
           }
         }
       },
-      "title": "Model deprecated"
+      "title": "Model deprecated in {entry_name}"
     }
   },
   "selector": {

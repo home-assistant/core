@@ -14,11 +14,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bot import TelegramBotConfigEntry
 from .const import (
-    ATTR_MESSAGE_THREAD_ID,
-    ATTR_TITLE,
     CONF_CHAT_ID,
     CONF_MESSAGE_THREAD_ID,
     DOMAIN,
+    TelegramBotServiceArgument,
 )
 from .entity import TelegramBotEntity
 
@@ -72,7 +71,7 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         kwargs: dict[str, Any] = {
-            ATTR_MESSAGE_THREAD_ID: self.message_thread_id,
-            ATTR_TITLE: title,
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID: self.message_thread_id,
+            TelegramBotServiceArgument.TITLE: title,
         }
         await self.service.send_message(message, self.chat_id, self._context, **kwargs)

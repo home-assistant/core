@@ -18,7 +18,6 @@ _SCHEMA_STEP_USER = probatio.Schema(
     {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
 )
 
-CONF_PORTAL_URL = "portal_url"
 OSOENERGY_PORTAL_URL = "https://portal.osoenergy.no/"
 
 

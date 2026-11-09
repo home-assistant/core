@@ -91,9 +91,46 @@ async def test_entry_migration_failure(
         mock_v1_config_entry.reason
         == "Failed to migrate the location to the new format"
     )
-    assert issue_registry.async_get_issue(DOMAIN, "location_migration_failed")
+    issue = issue_registry.async_get_issue(DOMAIN, "location_migration_failed_12345")
+    assert issue is not None
+    assert issue.config_entry_id == mock_v1_config_entry.entry_id
 
     assert len(mock_stookwijzer.async_transform_coordinates.mock_calls) == 1
+
+
+async def test_entry_migration_failure_issue_per_entry(
+    hass: HomeAssistant,
+    mock_v1_config_entry: MockConfigEntry,
+    mock_stookwijzer: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test each entry failing migration gets its own linked issue."""
+    mock_stookwijzer.async_transform_coordinates.return_value = None
+    other_entry = MockConfigEntry(
+        title="Stookwijzer 2",
+        domain=DOMAIN,
+        data=mock_v1_config_entry.data,
+        version=1,
+        entry_id="67890",
+    )
+
+    for entry in (mock_v1_config_entry, other_entry):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue_1 = issue_registry.async_get_issue(DOMAIN, "location_migration_failed_12345")
+    issue_2 = issue_registry.async_get_issue(DOMAIN, "location_migration_failed_67890")
+    assert issue_1 is not None
+    assert issue_1.config_entry_id == mock_v1_config_entry.entry_id
+    assert issue_2 is not None
+    assert issue_2.config_entry_id == other_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_v1_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, "location_migration_failed_12345")
+    assert issue_registry.async_get_issue(DOMAIN, "location_migration_failed_67890")
 
 
 @pytest.mark.usefixtures("mock_stookwijzer")

@@ -314,12 +314,12 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The topic **{topic}** is protected and requires authentication to subscribe.\n\nTo resolve this issue, you have two options:\n\n1. **Reconfigure the ntfy integration**\nAdd a username and password that has permission to access this topic.\n\n2. **Deactivate the event entity**\nThis will stop Home Assistant from subscribing to the topic.\nSelect **Submit** to deactivate the entity.",
-            "title": "Topic {topic} is protected"
+            "description": "The topic **{topic}** on **{name}** is protected and requires authentication to subscribe.\n\nTo resolve this issue, you have two options:\n\n1. **Reconfigure the ntfy integration**\nAdd a username and password that has permission to access this topic.\n\n2. **Deactivate the event entity**\nThis will stop Home Assistant from subscribing to the topic.\nSelect **Submit** to deactivate the entity.",
+            "title": "Topic {topic} on {name} is protected"
           }
         }
       },
-      "title": "Subscription failed: Topic {topic} is protected"
+      "title": "Subscription failed: Topic {topic} on {name} is protected"
     }
   },
   "selector": {

@@ -203,20 +203,6 @@
     }
   },
   "services": {
-    "set_alarm_detection_sensibility": {
-      "description": "Changes the sensibility level of the motion detection.",
-      "fields": {
-        "level": {
-          "description": "Sensibility level. 1-6 for type 0 (normal camera), or 1-100 for type 3 (PIR sensor camera).",
-          "name": "Level"
-        },
-        "type_value": {
-          "description": "Detection type. 0 for normal camera, or 3 for PIR sensor camera.",
-          "name": "Type"
-        }
-      },
-      "name": "Set detection sensibility"
-    },
     "wake_device": {
       "description": "Wakes a camera from sleep mode. Especially useful for battery cameras.",
       "name": "Wake camera"

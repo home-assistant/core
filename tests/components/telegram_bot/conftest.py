@@ -19,7 +19,6 @@ from telegram import (
 from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot.const import (
-    ATTR_MEDIA,
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
     CONF_API_ENDPOINT,
@@ -133,7 +132,7 @@ def mock_external_calls() -> Generator[None]:
                 date=dt_util.utcnow(),
                 chat=Chat(id=chat_id, type=ChatType.PRIVATE),
             )
-            for idx, _ in enumerate(kwargs[ATTR_MEDIA])
+            for idx, _ in enumerate(kwargs["media"])
         ]
 
     with (

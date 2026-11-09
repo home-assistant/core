@@ -20,11 +20,11 @@ from .entity import SystemBridgeEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
 
-    value_fn: Callable = round
+    value_fn: Callable
 
 
 def camera_in_use(data: SystemBridgeData) -> bool | None:
@@ -43,7 +43,11 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
     SystemBridgeBinarySensorEntityDescription(
         key="locked",
         translation_key="locked",
-        value_fn=lambda data: data.system.locked,
+        device_class=BinarySensorDeviceClass.LOCK,
+        # The lock device class is on when unlocked
+        value_fn=lambda data: (
+            None if data.system.locked is None else not data.system.locked
+        ),
     ),
     SystemBridgeBinarySensorEntityDescription(
         key="pending_reboot",

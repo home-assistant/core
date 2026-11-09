@@ -16,7 +16,6 @@ CONF_UNIT_ID = "unit_id"
 LAST_HANDLED_FAULT = "last_handled_fault"
 
 FAULT_LOG = "fault_log"
-METER_ENERGY = "meter_energy"
 SERVED_COMPONENTS = "served_components"
 
 TYPE_SERIAL = "serial"

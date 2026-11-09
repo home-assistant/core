@@ -344,6 +344,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 hass,
                 DOMAIN,
                 "protocol_5_migration",
+                config_entry_id=entry.entry_id,
                 issue_domain=DOMAIN,
                 is_fixable=False,
                 breaks_in_ha_version="2027.1.0",
@@ -525,9 +526,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Stop the discovery
     await discovery.async_stop(hass)
     try:
-        # Unload the platforms
+        # Unload the entity platforms
+        loaded_entity_platforms = mqtt_data.platforms_loaded - {
+            "device_automation",
+            "tag",
+        }
         await hass.config_entries.async_unload_platforms_or_raise(
-            entry, mqtt_data.platforms_loaded
+            entry, loaded_entity_platforms
         )
     finally:
         mqtt_data.platforms_loaded = set()

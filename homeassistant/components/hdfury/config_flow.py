@@ -33,7 +33,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
             self.context["title_placeholders"] = {
-                CONF_HOST: self.data[CONF_HOST],
+                "host": self.data[CONF_HOST],
             }
 
             return await self.async_step_discovery_confirm()

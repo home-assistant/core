@@ -39,6 +39,7 @@ from homeassistant.const import (
     CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, template
@@ -56,7 +57,12 @@ from homeassistant.util.unit_conversion import (
 )
 
 from . import validators as tcv
-from .const import CONF_AVAILABILITY, CONF_AVAILABILITY_TEMPLATE, CONF_PICTURE
+from .const import (
+    CONF_AVAILABILITY,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_PICTURE,
+    DEFAULT_NAMES,
+)
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -139,7 +145,7 @@ CONF_WIND_SPEED = "wind_speed"
 CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
 CONF_WIND_SPEED_UNIT = "wind_speed_unit"
 
-DEFAULT_NAME = "Template Weather"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.WEATHER]
 
 LEGACY_OPTIONS = {
     CONF_ICON_TEMPLATE: CONF_ICON,

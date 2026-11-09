@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -208,7 +207,7 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineSensorCompletionTimerDescription,
     ) -> None:

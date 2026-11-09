@@ -280,6 +280,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000463*",
     },
     {
+        "domain": "braviatv",
+        "registered_devices": True,
+    },
+    {
         "domain": "broadlink",
         "registered_devices": True,
     },

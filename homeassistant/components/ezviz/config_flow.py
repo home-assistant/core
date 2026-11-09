@@ -270,7 +270,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             # A unique ID is passed in via the discovery info
             assert self.unique_id is not None
-        self.context["title_placeholders"] = {ATTR_SERIAL: self.unique_id}
+        self.context["title_placeholders"] = {"serial": self.unique_id}
         self.ip_address = discovery_info[CONF_IP_ADDRESS]
 
         return await self.async_step_confirm()
@@ -334,7 +334,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                self.context["title_placeholders"] = {ATTR_SERIAL: item.title}
+                self.context["title_placeholders"] = {"serial": item.title}
                 entry = await self.async_set_unique_id(item.title)
 
         if not entry:
