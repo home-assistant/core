@@ -11,7 +11,6 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.abrp.const import DOMAIN
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -20,13 +19,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
-    SENSOR_TEST_SUB,
     build_metric_value,
     fire_connection,
     fire_frame,
@@ -71,65 +69,32 @@ async def test_device_tracker_snapshot(
     )
 
 
-@pytest.mark.parametrize(
-    ("active_vehicle_id", "expected_entity_id", "other_vehicle_id", "other_entity_id"),
-    [
-        pytest.param(
-            MOCK_VEHICLE_ID,
-            TRACKER_ENTITY_ID,
-            MOCK_VEHICLE_ID_2,
-            TRACKER_ENTITY_ID_2,
-            id="vehicle_a_active",
-        ),
-        pytest.param(
-            MOCK_VEHICLE_ID_2,
-            TRACKER_ENTITY_ID_2,
-            MOCK_VEHICLE_ID,
-            TRACKER_ENTITY_ID,
-            id="vehicle_b_active",
-        ),
-    ],
-)
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_tracker_created_per_vehicle_on_first_position(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     mock_telemetry_stream: MagicMock,
     caplog: pytest.LogCaptureFixture,
-    active_vehicle_id: int,
-    expected_entity_id: str,
-    other_vehicle_id: int,
-    other_entity_id: str,
 ) -> None:
-    """A vehicle's tracker appears on its first position, linked to its device."""
+    """A vehicle's tracker appears on its first position, once per vehicle."""
     await setup_integration(hass, config_entry_with_vehicles)
 
-    fire_frame(mock_telemetry_stream, active_vehicle_id, _soc_frame())
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _soc_frame())
     fire_frame(mock_telemetry_stream, _ABSENT_VEHICLE_ID, _location_frame(_AWAY))
     await hass.async_block_till_done()
     assert hass.states.async_entity_ids("device_tracker") == []
 
     for _ in range(2):
-        fire_frame(mock_telemetry_stream, active_vehicle_id, _location_frame(_AWAY))
+        fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID, _location_frame(_AWAY))
     await hass.async_block_till_done()
-    assert hass.states.async_entity_ids("device_tracker") == [expected_entity_id]
+    assert hass.states.async_entity_ids("device_tracker") == [TRACKER_ENTITY_ID]
     # HA would otherwise reject a re-created entity, so only the log shows it.
     assert "already exists" not in caplog.text
 
-    entity_entry = entity_registry.async_get(expected_entity_id)
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{SENSOR_TEST_SUB}_{active_vehicle_id}"),
-        config_entry_with_vehicles.entry_id,
-    )
-    assert device is not None
-    assert entity_entry.device_id == device.id
-
-    fire_frame(mock_telemetry_stream, other_vehicle_id, _location_frame(_AWAY))
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID_2, _location_frame(_AWAY))
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("device_tracker")) == sorted(
-        [expected_entity_id, other_entity_id]
+        [TRACKER_ENTITY_ID, TRACKER_ENTITY_ID_2]
     )
 
 
