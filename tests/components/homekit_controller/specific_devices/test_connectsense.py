@@ -6,11 +6,98 @@ from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
+    ChildDeviceTestInfo,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
+)
+
+EXPECTED_DEVICE = DeviceTestInfo(
+    unique_id=HUB_TEST_ACCESSORY_ID,
+    name="InWall Outlet-0394DE",
+    model="CS-IWO",
+    manufacturer="ConnectSense",
+    sw_version="1.0.0",
+    hw_version="",
+    serial_number="1020301376",
+    devices=[],
+    entities=[],
+    child_devices=[
+        ChildDeviceTestInfo(
+            unique_id="00:00:00:00:00:00:aid:1:iid:13",
+            name="Outlet A",
+            entities=[
+                EntityTestInfo(
+                    entity_id="sensor.inwall_outlet_0394de_outlet_a_current",
+                    friendly_name="Outlet A Current",
+                    unique_id="00:00:00:00:00:00_1_13_18",
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+                    state="0.03",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.inwall_outlet_0394de_outlet_a_power",
+                    friendly_name="Outlet A Power",
+                    unique_id="00:00:00:00:00:00_1_13_19",
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    unit_of_measurement=UnitOfPower.WATT,
+                    state="0.8",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.inwall_outlet_0394de_outlet_a_energy_kwh",
+                    friendly_name="Outlet A Energy kWh",
+                    unique_id="00:00:00:00:00:00_1_13_20",
+                    capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
+                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                    state="379.69299",
+                ),
+                EntityTestInfo(
+                    entity_id="switch.inwall_outlet_0394de_outlet_a",
+                    friendly_name="Outlet A",
+                    unique_id="00:00:00:00:00:00_1_13",
+                    state="on",
+                ),
+            ],
+        ),
+        ChildDeviceTestInfo(
+            unique_id="00:00:00:00:00:00:aid:1:iid:25",
+            name="Outlet B",
+            entities=[
+                EntityTestInfo(
+                    entity_id="sensor.inwall_outlet_0394de_outlet_b_current",
+                    friendly_name="Outlet B Current",
+                    unique_id="00:00:00:00:00:00_1_25_30",
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+                    state="0.05",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.inwall_outlet_0394de_outlet_b_power",
+                    friendly_name="Outlet B Power",
+                    unique_id="00:00:00:00:00:00_1_25_31",
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    unit_of_measurement=UnitOfPower.WATT,
+                    state="0.8",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.inwall_outlet_0394de_outlet_b_energy_kwh",
+                    friendly_name="Outlet B Energy kWh",
+                    unique_id="00:00:00:00:00:00_1_25_32",
+                    capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
+                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                    state="175.85001",
+                ),
+                EntityTestInfo(
+                    entity_id="switch.inwall_outlet_0394de_outlet_b",
+                    friendly_name="Outlet B",
+                    unique_id="00:00:00:00:00:00_1_25",
+                    state="on",
+                ),
+            ],
+        ),
+    ],
 )
 
 
@@ -20,158 +107,12 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
     config_entry, _pairing = await setup_test_accessories(hass, accessories)
 
     await assert_devices_and_entities_created(
-        hass,
-        config_entry.entry_id,
-        DeviceTestInfo(
-            unique_id=HUB_TEST_ACCESSORY_ID,
-            name="InWall Outlet-0394DE",
-            model="CS-IWO",
-            manufacturer="ConnectSense",
-            sw_version="1.0.0",
-            hw_version="",
-            serial_number="1020301376",
-            devices=[],
-            entities=[
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_current",
-                    friendly_name="InWall Outlet-0394DE Current",
-                    unique_id="00:00:00:00:00:00_1_13_18",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-                    state="0.03",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_power",
-                    friendly_name="InWall Outlet-0394DE Power",
-                    unique_id="00:00:00:00:00:00_1_13_19",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfPower.WATT,
-                    state="0.8",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_energy_kwh",
-                    friendly_name="InWall Outlet-0394DE Energy kWh",
-                    unique_id="00:00:00:00:00:00_1_13_20",
-                    capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
-                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                    state="379.69299",
-                ),
-                EntityTestInfo(
-                    entity_id="switch.inwall_outlet_0394de_outlet_a",
-                    friendly_name="InWall Outlet-0394DE Outlet A",
-                    unique_id="00:00:00:00:00:00_1_13",
-                    state="on",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_current_2",
-                    friendly_name="InWall Outlet-0394DE Current",
-                    unique_id="00:00:00:00:00:00_1_25_30",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-                    state="0.05",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_power_2",
-                    friendly_name="InWall Outlet-0394DE Power",
-                    unique_id="00:00:00:00:00:00_1_25_31",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfPower.WATT,
-                    state="0.8",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_energy_kwh_2",
-                    friendly_name="InWall Outlet-0394DE Energy kWh",
-                    unique_id="00:00:00:00:00:00_1_25_32",
-                    capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
-                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                    state="175.85001",
-                ),
-                EntityTestInfo(
-                    entity_id="switch.inwall_outlet_0394de_outlet_b",
-                    friendly_name="InWall Outlet-0394DE Outlet B",
-                    unique_id="00:00:00:00:00:00_1_25",
-                    state="on",
-                ),
-            ],
-        ),
+        hass, config_entry.entry_id, EXPECTED_DEVICE
     )
 
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     await assert_devices_and_entities_created(
-        hass,
-        config_entry.entry_id,
-        DeviceTestInfo(
-            unique_id=HUB_TEST_ACCESSORY_ID,
-            name="InWall Outlet-0394DE",
-            model="CS-IWO",
-            manufacturer="ConnectSense",
-            sw_version="1.0.0",
-            hw_version="",
-            serial_number="1020301376",
-            devices=[],
-            entities=[
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_current",
-                    friendly_name="InWall Outlet-0394DE Current",
-                    unique_id="00:00:00:00:00:00_1_13_18",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-                    state="0.03",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_power",
-                    friendly_name="InWall Outlet-0394DE Power",
-                    unique_id="00:00:00:00:00:00_1_13_19",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfPower.WATT,
-                    state="0.8",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_energy_kwh",
-                    friendly_name="InWall Outlet-0394DE Energy kWh",
-                    unique_id="00:00:00:00:00:00_1_13_20",
-                    capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
-                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                    state="379.69299",
-                ),
-                EntityTestInfo(
-                    entity_id="switch.inwall_outlet_0394de_outlet_a",
-                    friendly_name="InWall Outlet-0394DE Outlet A",
-                    unique_id="00:00:00:00:00:00_1_13",
-                    state="on",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_current_2",
-                    friendly_name="InWall Outlet-0394DE Current",
-                    unique_id="00:00:00:00:00:00_1_25_30",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-                    state="0.05",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_power_2",
-                    friendly_name="InWall Outlet-0394DE Power",
-                    unique_id="00:00:00:00:00:00_1_25_31",
-                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=UnitOfPower.WATT,
-                    state="0.8",
-                ),
-                EntityTestInfo(
-                    entity_id="sensor.inwall_outlet_0394de_energy_kwh_2",
-                    friendly_name="InWall Outlet-0394DE Energy kWh",
-                    unique_id="00:00:00:00:00:00_1_25_32",
-                    capabilities={"state_class": SensorStateClass.TOTAL_INCREASING},
-                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                    state="175.85001",
-                ),
-                EntityTestInfo(
-                    entity_id="switch.inwall_outlet_0394de_outlet_b",
-                    friendly_name="InWall Outlet-0394DE Outlet B",
-                    unique_id="00:00:00:00:00:00_1_25",
-                    state="on",
-                ),
-            ],
-        ),
+        hass, config_entry.entry_id, EXPECTED_DEVICE
     )

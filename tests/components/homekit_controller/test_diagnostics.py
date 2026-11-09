@@ -61,3 +61,29 @@ async def test_device(
     assert diag == snapshot(
         exclude=props("last_changed", "last_reported", "last_updated")
     )
+
+
+async def test_child_device(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a child device returns the diagnostics of its parent device."""
+    accessories = await setup_accessories_from_file(hass, "eve_energy_strip.json")
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+
+    connection = hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"]
+    parent_device = device_registry.async_get(connection.devices[1])
+    child_device = device_registry.async_get(connection.child_devices[(1, 13)])
+
+    parent_diag = await get_diagnostics_for_device(
+        hass, hass_client, config_entry, parent_device
+    )
+    child_diag = await get_diagnostics_for_device(
+        hass, hass_client, config_entry, child_device
+    )
+
+    assert child_diag == parent_diag
+    assert [
+        child_device["name"] for child_device in parent_diag["device"]["child_devices"]
+    ] == ["Eve Energy Strip 1", "Eve Energy Strip 2", "Eve Energy Strip 3"]

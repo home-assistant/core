@@ -8,7 +8,11 @@ from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
+from homeassistant.helpers.device_registry import (
+    AnyDeviceEntry,
+    ChildDeviceEntry,
+    DeviceEntry,
+)
 
 from .connection import HKDevice
 from .const import KNOWN_DEVICES
@@ -37,30 +41,27 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    if TYPE_CHECKING:
-        # homekit_controller does not create child devices
-        assert isinstance(device, DeviceEntry)
+    if isinstance(device, ChildDeviceEntry):
+        # A child device is covered by the diagnostics of its parent device
+        parent_device = dr.async_get(hass).async_get(
+            device.parent_device_id, include_child_devices=False
+        )
+        if TYPE_CHECKING:
+            assert parent_device is not None
+        device = parent_device
 
     return _async_get_diagnostics(hass, entry, device)
 
 
 @callback
-def _async_get_diagnostics_for_device(
-    hass: HomeAssistant, device: DeviceEntry
-) -> dict[str, Any]:
-    data: dict[str, Any] = {}
-
-    data["name"] = device.name
-    data["model"] = device.model
-    data["manfacturer"] = device.manufacturer
-    data["sw_version"] = device.sw_version
-    data["hw_version"] = device.hw_version
-
-    entities = data["entities"] = []
+def _async_get_entity_diagnostics(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
+    entities = []
 
     hass_entities = er.async_entries_for_device(
         er.async_get(hass),
-        device_id=device.id,
+        device_id=device_id,
         include_disabled_entities=True,
     )
 
@@ -87,6 +88,31 @@ def _async_get_diagnostics_for_device(
                 "state": state_dict,
             }
         )
+
+    return entities
+
+
+@callback
+def _async_get_diagnostics_for_device(
+    hass: HomeAssistant, device: DeviceEntry
+) -> dict[str, Any]:
+    data: dict[str, Any] = {}
+
+    data["name"] = device.name
+    data["model"] = device.model
+    data["manfacturer"] = device.manufacturer
+    data["sw_version"] = device.sw_version
+    data["hw_version"] = device.hw_version
+    data["entities"] = _async_get_entity_diagnostics(hass, device.id)
+    data["child_devices"] = [
+        {
+            "name": child_device.name,
+            "entities": _async_get_entity_diagnostics(hass, child_device.id),
+        }
+        for child_device in dr.async_entries_for_parent_device(
+            dr.async_get(hass), device.id
+        )
+    ]
 
     return data
 
