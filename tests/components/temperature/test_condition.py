@@ -19,18 +19,18 @@ from pytest_homeassistant.components.common import (
     target_entities,
 )
 
-from homeassistant.components.climate import ClimateEntityStateAttribute, HVACMode
+from homeassistant.components.climate import ClimateEntityCapabilityAttribute, HVACMode
 from homeassistant.components.temperature.condition import CONDITIONS
-from homeassistant.components.water_heater import WaterHeaterStateAttribute
+from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
 from homeassistant.components.weather import ATTR_WEATHER_TEMPERATURE_UNIT
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 _CLIMATE_UNIT_ATTRIBUTES = {
-    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
 }
 _WATER_HEATER_UNIT_ATTRIBUTES = {
-    WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
 }
 _WEATHER_UNIT_ATTRIBUTES = {ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS}
 
@@ -510,7 +510,7 @@ async def test_temperature_condition_unit_conversion_climate(
                 "state": HVACMode.AUTO,
                 "attributes": {
                     "current_temperature": 80,
-                    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 },
             },
         ],
@@ -523,7 +523,7 @@ async def test_temperature_condition_unit_conversion_climate(
                 "state": HVACMode.AUTO,
                 "attributes": {
                     "current_temperature": 68,
-                    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 },
             },
         ],

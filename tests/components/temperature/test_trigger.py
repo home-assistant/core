@@ -22,14 +22,14 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
-    ClimateEntityStateAttribute,
+    ClimateEntityCapabilityAttribute,
     HVACMode,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.temperature.trigger import TRIGGERS
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
-    WaterHeaterStateAttribute,
+    WaterHeaterCapabilityAttribute,
 )
 from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE,
@@ -47,10 +47,10 @@ _SENSOR_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 _CLIMATE_UNIT_ATTRIBUTES = {
-    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
 _WATER_HEATER_UNIT_ATTRIBUTES = {
-    WaterHeaterStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
 _WEATHER_UNIT_ATTRIBUTES = {
     ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
@@ -895,14 +895,14 @@ async def test_temperature_trigger_unit_conversion_weather(
             "climate.test",
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
-            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT,
             id="climate",
         ),
         pytest.param(
             "water_heater.test",
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
-            WaterHeaterStateAttribute.TEMPERATURE_UNIT,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT,
             id="water_heater",
         ),
     ],
