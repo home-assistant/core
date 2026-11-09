@@ -142,7 +142,7 @@ SENSOR_DESCRIPTIONS = [
                 else None
             )
         ),
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
     ),
 ]
 
@@ -164,6 +164,8 @@ async def async_setup_entry(
 
 class PterodactylSensorEntity(PterodactylEntity, SensorEntity):
     """Representation of a Pterodactyl sensor base entity."""
+
+    _attr_uptime_drift_tolerance = 5
 
     entity_description: PterodactylSensorEntityDescription
 
