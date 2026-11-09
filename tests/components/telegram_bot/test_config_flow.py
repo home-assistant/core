@@ -759,6 +759,35 @@ async def test_subentry_flow_reconfigure_chat_error(
     assert result["reason"] == "reconfigure_successful"
 
 
+async def test_subentry_flow_reconfigure_duplicate(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test subentry reconfigure flow aborts on a duplicate chat ID."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = list(mock_broadcast_config_entry.subentries)[0]
+    result = await hass.config_entries.subentries.async_init(
+        (mock_broadcast_config_entry.entry_id, SUBENTRY_TYPE_ALLOWED_CHAT_IDS),
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_CHAT_ID: 654321},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_subentry_flow_reconfigure_updates_notify_entity(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
