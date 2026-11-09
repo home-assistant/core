@@ -60,7 +60,9 @@ async def velbus_scan_task(
         await controller.start()
     except ConnectionError as ex:
         raise PlatformNotReady(
-            f"Connection error while connecting to Velbus {entry_id}: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="scan_start_failed",
+            translation_placeholders={"error": str(ex)},
         ) from ex
     # create all modules
     dev_reg = dr.async_get(hass)
