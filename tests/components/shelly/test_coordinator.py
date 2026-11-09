@@ -1,6 +1,7 @@
 """Tests for Shelly coordinator."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
@@ -447,31 +448,10 @@ async def test_rpc_reload_on_cfg_change(
     assert hass.states.get(entity_id) is None
 
 
-@pytest.mark.parametrize(
-    ("component", "update_method"),
-    [
-        ("plugs_ui", "update_plugs_ui_config"),
-        ("powerstrip_ui", "update_powerstrip_ui_config"),
-    ],
-)
-async def test_rpc_no_reload_on_ui_cfg_change(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_rpc_device: Mock,
-    monkeypatch: pytest.MonkeyPatch,
-    component: str,
-    update_method: str,
+def _inject_config_changed(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock, component: str
 ) -> None:
-    """Test RPC UI config change fetches the config without reloading the entry."""
-    entity_id = "switch.test_name_test_switch_0"
-    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
-    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
-    await init_integration(hass, 2)
-
-    # A reload would turn the switch into a light
-    monkeypatch.setitem(
-        mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
-    )
+    """Inject a config_changed event for a component."""
     inject_rpc_device_event(
         monkeypatch,
         mock_rpc_device,
@@ -488,15 +468,92 @@ async def test_rpc_no_reload_on_ui_cfg_change(
             "ts": 1668522399.2,
         },
     )
+
+
+@pytest.mark.parametrize(
+    ("component", "changed", "reload_count"),
+    [
+        pytest.param("plugs_ui", {"leds"}, 0, id="plugs_ui"),
+        pytest.param("powerstrip_ui", {"leds"}, 0, id="powerstrip_ui"),
+        pytest.param("switch:0", {"in_locked"}, 0, id="switch_state_key"),
+        pytest.param("switch:0", set(), 0, id="switch_no_change"),
+        pytest.param("switch:0", {"name"}, 1, id="switch_other_key"),
+        pytest.param("switch:0", {"in_locked", "name"}, 1, id="switch_mixed_keys"),
+        pytest.param("cover:0", {"in_locked"}, 0, id="cover_state_key"),
+        pytest.param("cover:0", {"name"}, 1, id="cover_other_key"),
+    ],
+)
+async def test_rpc_cfg_change_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    component: str,
+    changed: set[str],
+    reload_count: int,
+) -> None:
+    """Test RPC config change refreshes the component config, reloads if needed."""
+    mock_rpc_device.update_component_config.return_value = changed
+    await init_integration(hass, 2)
+    assert mock_rpc_device.initialize.call_count == 1
+
+    _inject_config_changed(monkeypatch, mock_rpc_device, component)
     await hass.async_block_till_done()
 
-    getattr(mock_rpc_device, update_method).assert_awaited_once()
+    mock_rpc_device.update_component_config.assert_awaited_once_with(component)
 
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id)
+    assert mock_rpc_device.initialize.call_count == 1 + reload_count
+
+
+@pytest.mark.parametrize(
+    "event",
+    [
+        pytest.param(
+            {"event": "config_changed", "ts": 1668522399.2}, id="no_component"
+        ),
+        pytest.param(
+            {"component": "sys", "event": "config_changed", "ts": 1668522399.2},
+            id="unsupported_component",
+        ),
+        pytest.param(
+            {"component": "switch:1", "event": "component_added", "ts": 1668522399.2},
+            id="component_added",
+        ),
+        pytest.param(
+            {
+                "component": "switch:0",
+                "event": "component_removed",
+                "ts": 1668522399.2,
+            },
+            id="component_removed",
+        ),
+    ],
+)
+async def test_rpc_reload_without_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    event: dict[str, Any],
+) -> None:
+    """Test RPC config or component change reloads the entry without a refresh."""
+    await init_integration(hass, 2)
+
+    inject_rpc_device_event(
+        monkeypatch, mock_rpc_device, {"events": [event], "ts": 1668522399.2}
+    )
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_rpc_device.update_component_config.assert_not_awaited()
+    assert mock_rpc_device.initialize.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -507,38 +564,27 @@ async def test_rpc_no_reload_on_ui_cfg_change(
         (InvalidAuthError, 1),
     ],
 )
-async def test_rpc_ui_cfg_change_update_error(
+async def test_rpc_cfg_change_refresh_error(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     exception: Exception,
     reauth_flows: int,
 ) -> None:
-    """Test RPC UI config change when fetching the updated config fails."""
-    monkeypatch.setattr(
-        mock_rpc_device, "update_powerstrip_ui_config", AsyncMock(side_effect=exception)
-    )
-    entry = await init_integration(hass, 2)
+    """Test RPC config change when refreshing the component config fails."""
+    mock_rpc_device.update_component_config.side_effect = exception
+    await init_integration(hass, 2)
 
-    inject_rpc_device_event(
-        monkeypatch,
-        mock_rpc_device,
-        {
-            "events": [
-                {
-                    "component": "powerstrip_ui",
-                    "event": "config_changed",
-                    "restart_required": False,
-                    "ts": 1668522399.2,
-                    "cfg_rev": 16,
-                },
-            ],
-            "ts": 1668522399.2,
-        },
-    )
+    _inject_config_changed(monkeypatch, mock_rpc_device, "powerstrip_ui")
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # No reload, a reconnect fetches the full config
+    assert mock_rpc_device.initialize.call_count == 1
     assert len(hass.config_entries.flow.async_progress()) == reauth_flows
 
 

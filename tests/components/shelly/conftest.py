@@ -680,6 +680,7 @@ def _mock_rpc_device(version: str | None = None):
         wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
         ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
+        update_component_config=AsyncMock(return_value=set()),
         shutdown=AsyncMock(),
         ledstrip_list_effects=AsyncMock(return_value=MOCK_LEDSTRIP_EFFECTS),
         ledstrip_list_palettes=AsyncMock(return_value=MOCK_LEDSTRIP_PALETTES),
