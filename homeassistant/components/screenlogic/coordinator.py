@@ -22,8 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
-if TYPE_CHECKING:
-    from .types import ScreenLogicConfigEntry
+type ScreenLogicConfigEntry = ConfigEntry[ScreenlogicDataUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ HEATER_COOLDOWN_DELAY = 6
 
 
 async def async_get_connect_info(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ScreenLogicConfigEntry
 ) -> dict[str, str | int]:
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id

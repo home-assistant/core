@@ -7,11 +7,7 @@ import probatio
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ZONE, UnitOfLength
 from homeassistant.core import State, callback
 from homeassistant.helpers.selector import (
@@ -122,7 +118,7 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ProximityOptionsFlow(OptionsFlowWithReload):
+class ProximityOptionsFlow(OptionsFlow):
     """Handle a option flow."""
 
     def _user_form_schema(self, user_input: dict[str, Any]) -> probatio.Schema:
@@ -133,9 +129,13 @@ class ProximityOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            self.hass.config_entries.async_update_entry(
+            # Settings are stored in data, so OptionsFlowWithReload would not reload
+            if self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, **user_input}
-            )
+            ):
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
             return self.async_create_entry(title=self.config_entry.title, data={})
 
         return self.async_show_form(

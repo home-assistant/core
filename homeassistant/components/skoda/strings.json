@@ -59,6 +59,11 @@
         "name": "Windows"
       }
     },
+    "number": {
+      "charge_limit": {
+        "name": "Charge limit"
+      }
+    },
     "sensor": {
       "aux_heating_duration": {
         "name": "Auxiliary heating remaining duration"
@@ -136,6 +141,9 @@
     },
     "command_not_supported": {
       "message": "The vehicle does not support this command."
+    },
+    "invalid_step": {
+      "message": "The value {value} does not match the supported increment of {step}."
     },
     "rate_limit_exceeded": {
       "message": "The Škoda API rejected the command because the rate limit was reached or the vehicle's 12 V battery is low. Try again later."

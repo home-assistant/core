@@ -206,6 +206,7 @@ class HistoryStatsSensorBase(
         await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_setup_state_listener())
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Set attrs from value and count."""

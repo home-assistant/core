@@ -342,6 +342,7 @@
     "download_profile": {
       "fix_flow": {
         "abort": {
+          "entry_removed": "The Marketplace has been removed.",
           "issue_ignored": "The Marketplace keeps using GitHub and stops suggesting the mirrors. You can switch at any time from the menu in the Marketplace."
         },
         "step": {

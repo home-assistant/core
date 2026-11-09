@@ -12,7 +12,7 @@ from fronius_modbus import (
 from modbus_connection import ModbusError, ModbusTcpParams
 
 from homeassistant.components.modbus import async_get_unit
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -32,7 +32,7 @@ from .coordinator import (
 )
 
 if TYPE_CHECKING:
-    from .solar_net import FroniusSolarNet
+    from .solar_net import FroniusConfigEntry, FroniusSolarNet
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class FroniusModbus:
     """
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, solar_net: FroniusSolarNet
+        self, hass: HomeAssistant, entry: FroniusConfigEntry, solar_net: FroniusSolarNet
     ) -> None:
         """Initialize the Modbus side of a SolarNet."""
         self._hass = hass

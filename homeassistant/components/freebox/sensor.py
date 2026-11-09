@@ -44,6 +44,42 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
     ),
+    SensorEntityDescription(
+        key="state",
+        translation_key="connection_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=["going_up", "up", "going_down", "down"],
+    ),
+    SensorEntityDescription(
+        key="ipv4",
+        translation_key="ipv4",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="ipv6",
+        translation_key="ipv6",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bandwidth_down",
+        translation_key="bandwidth_down",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bandwidth_up",
+        translation_key="bandwidth_up",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 CALL_SENSORS: tuple[SensorEntityDescription, ...] = (
