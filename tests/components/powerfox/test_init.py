@@ -283,8 +283,43 @@ async def test_manual_device_removal(
     mock_powerfox_client.all_devices.configure_mock(**device_list)
     client = await hass_ws_client(hass)
     response = await client.remove_device(device.id)
+    await hass.async_block_till_done()
 
     assert response["success"] is removable
     assert (
         _get_device(device_registry, mock_config_entry, WATER_METER_ID) is None
     ) is removable
+
+
+async def test_manually_removed_device_returns_to_account(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a manually removed device is set up again when it returns."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    device = _get_device(device_registry, mock_config_entry, WATER_METER_ID)
+    assert device
+
+    mock_powerfox_client.all_devices.side_effect = PowerfoxNoDataError
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id)
+    await hass.async_block_till_done()
+
+    assert response["success"]
+    assert not _get_device(device_registry, mock_config_entry, WATER_METER_ID)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_powerfox_client.all_devices.side_effect = None
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert _get_device(device_registry, mock_config_entry, WATER_METER_ID)
+    assert hass.states.get("sensor.wateropti_cold_water")
