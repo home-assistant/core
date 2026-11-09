@@ -129,13 +129,12 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        update_needed = await self._async_set_preset_mode_internal(preset_mode)
+        await self._async_set_preset_mode_internal(preset_mode)
 
-        if update_needed:
-            # This state change affects other entities like
-            # sensors. Force an immediate update that can be
-            # observed by all parties involved.
-            await self.coordinator.async_request_refresh()
+        # This state change affects other entities like
+        # sensors. Force an immediate update that can be
+        # observed by all parties involved.
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_on(
@@ -157,32 +156,25 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             # the call fails without changing the unit. And a unit goes straight
             # to the new speed when the preset switches below.
             if percentage is not None:
-                update_needed |= await self._async_set_percentage_internal(
-                    percentage, preset_mode
-                )
+                await self._async_set_percentage_internal(percentage, preset_mode)
+                update_needed = True
 
             if preset_mode:
-                update_needed |= await self._async_set_preset_mode_internal(preset_mode)
+                await self._async_set_preset_mode_internal(preset_mode)
+                update_needed = True
 
             # Last, so the unit starts in its final profile and speed.
-            if not self.is_on:
-                update_needed |= await self._async_set_power(True)
+            await self._async_set_power(True)
+            update_needed = True
         finally:
-            # This state change affects other entities like sensors. After a
-            # failure, the commands sent before it are still applied.
             if update_needed:
                 await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self.is_on is False:
-            return
-
-        update_needed = await self._async_set_power(False)
-
-        if update_needed:
-            await self.coordinator.async_request_refresh()
+        await self._async_set_power(False)
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_set_percentage(self, percentage: int) -> None:
@@ -191,12 +183,10 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             await self.async_turn_off()
             return
 
-        update_needed = await self._async_set_percentage_internal(percentage)
+        await self._async_set_percentage_internal(percentage)
+        await self.coordinator.async_request_refresh()
 
-        if update_needed:
-            await self.coordinator.async_request_refresh()
-
-    async def _async_set_power(self, mode: bool) -> bool:
+    async def _async_set_power(self, mode: bool) -> None:
         try:
             await self.coordinator.client.set_values(
                 {METRIC_KEY_MODE: MODE_ON if mode else MODE_OFF}
@@ -204,16 +194,8 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         except ValloxApiException as err:
             raise HomeAssistantError("Failed to set power mode") from err
 
-        return True
-
-    async def _async_set_preset_mode_internal(self, preset_mode: str) -> bool:
-        """Set new preset mode.
-
-        Returns true if the mode has been changed, false otherwise.
-        """
-        if preset_mode == self.preset_mode:
-            return False
-
+    async def _async_set_preset_mode_internal(self, preset_mode: str) -> None:
+        """Set new preset mode."""
         try:
             profile = PRESET_MODE_TO_VALLOX_PROFILE[preset_mode]
             await self.coordinator.client.set_profile(profile)
@@ -221,15 +203,10 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         except ValloxApiException as err:
             raise HomeAssistantError(f"Failed to set profile: {preset_mode}") from err
 
-        return True
-
     async def _async_set_percentage_internal(
         self, percentage: int, preset_mode: str | None = None
-    ) -> bool:
-        """Set fan speed percentage for current profile.
-
-        Returns true if speed has been changed, false otherwise.
-        """
+    ) -> None:
+        """Set the fan speed of the given preset, or of the current profile."""
         vallox_profile = (
             PRESET_MODE_TO_VALLOX_PROFILE[preset_mode]
             if preset_mode is not None
@@ -252,5 +229,3 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
             ) from err
         except ValloxApiException as err:
             raise HomeAssistantError("Failed to set fan speed") from err
-
-        return True
