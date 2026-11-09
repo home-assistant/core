@@ -8,6 +8,7 @@ from pyforeca import (
     ForecaApiClient,
     ForecaAuthError,
     ForecaError,
+    ForecaProductUnavailableError,
     Location,
     format_location,
 )
@@ -34,6 +35,8 @@ from .coordinator import ForecaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+SIGNUP_URL = "https://business.foreca.com/weather-api/free-weather-api"
+
 
 async def _async_check_location(
     hass: HomeAssistant, api_key: str, latitude: float, longitude: float
@@ -44,7 +47,7 @@ async def _async_check_location(
     try:
         info = await client.location_info(location)
         await client.current(location)
-    except ForecaAuthError:
+    except ForecaAuthError, ForecaProductUnavailableError:
         return {"base": "invalid_auth"}, None
     except ForecaError:
         return {"base": "cannot_connect"}, None
@@ -95,6 +98,7 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
+            description_placeholders={"signup_url": SIGNUP_URL},
         )
 
     @classmethod

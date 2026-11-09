@@ -3,7 +3,6 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable, Sequence
-import errno
 import io
 import logging
 import os
@@ -50,7 +49,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.os_error import os_write_error
+from homeassistant.helpers.os_error import os_read_error, os_write_error
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
@@ -1291,14 +1290,6 @@ def _validate_credentials_input(
         )
 
 
-# OS errors are not translatable, so the common causes get their own message
-READ_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
-    errno.ENOENT: "file_not_found",
-    errno.EACCES: "file_permission_denied",
-    errno.EPERM: "file_permission_denied",
-}
-
-
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
     try:
@@ -1307,10 +1298,4 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
             data.name = file_path
             return data
     except OSError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key=READ_ERROR_TRANSLATION_KEYS.get(
-                err.errno, "failed_to_load_file"
-            ),
-            translation_placeholders={"file_path": file_path},
-        ) from err
+        raise os_read_error(err, file_path) from err

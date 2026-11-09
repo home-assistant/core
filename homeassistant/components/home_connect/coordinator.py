@@ -209,6 +209,14 @@ class HomeConnectRuntimeData:
                 )
                 await asyncio_sleep(retry_time)
                 retry_time = min(retry_time * 2, 3600)
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error while listening for events,"
+                    " continuing in %s seconds",
+                    retry_time,
+                )
+                await asyncio_sleep(retry_time)
+                retry_time = min(retry_time * 2, 3600)
 
     @callback
     def async_add_global_listener(
