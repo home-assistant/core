@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': dict({
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
-      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'performance',
@@ -50,7 +50,7 @@
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 48.5,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water heater',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
-      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
         'off',
         'performance',
