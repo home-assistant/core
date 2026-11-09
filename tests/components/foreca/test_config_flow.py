@@ -30,6 +30,9 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["description_placeholders"] == {
+        "signup_url": "https://business.foreca.com/weather-api/free-weather-api"
+    }
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
