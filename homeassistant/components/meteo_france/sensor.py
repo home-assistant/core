@@ -3,10 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, override
 
-from meteofrance_api.helpers import (
-    get_warning_text_status_from_indice_color,
-    readable_phenomenons_dict,
-)
+from meteofrance_api.helpers import readable_phenomenons_dict
 from meteofrance_api.model.forecast import Forecast
 from meteofrance_api.model.rain import Rain
 from meteofrance_api.model.warning import CurrentPhenomenons
@@ -45,6 +42,8 @@ from .const import (
 from .coordinator import MeteoFranceAlertUpdateCoordinator, MeteoFranceConfigEntry
 
 PARALLEL_UPDATES = 0
+
+ALERT_LEVELS = {1: "green", 2: "yellow", 3: "orange", 4: "red"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -141,6 +140,8 @@ SENSOR_TYPES_ALERT: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="weather_alert",
         translation_key="weather_alert",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(ALERT_LEVELS.values()),
         data_path="",
     ),
 )
@@ -318,9 +319,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
     @override
     def native_value(self) -> str | None:
         """Return the state."""
-        return get_warning_text_status_from_indice_color(
-            self.coordinator.data.get_domain_max_color()
-        )
+        return ALERT_LEVELS.get(self.coordinator.data.get_domain_max_color())
 
     @property
     @override

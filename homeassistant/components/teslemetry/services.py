@@ -3,9 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from aiopowerwall import PowerwallClient, PowerwallEnergySite
 import probatio
-from tesla_fleet_api.tesla import EnergySiteRouter
 
 from homeassistant.const import (
     ATTR_ID,
@@ -25,7 +23,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN
-from .helpers import handle_command, handle_local_command, handle_vehicle_command
+from .helpers import handle_command, handle_energy_site_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 if TYPE_CHECKING:
@@ -118,32 +116,13 @@ def async_get_energy_site_for_entry(
     )
 
 
-def async_get_local_powerwall_for_site(
-    device: dr.DeviceEntry, site: TeslemetryEnergyData
-) -> PowerwallClient:
-    """Get the local Powerwall gateway client of a paired energy site."""
-    if not isinstance(site.api, EnergySiteRouter):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="no_local_powerwall",
-            translation_placeholders={
-                "name": device.name_by_user or device.name or str(site.id)
-            },
-        )
-    local: PowerwallEnergySite = site.api.primary
-    return local.powerwall
-
-
 async def async_dispatch_battery_power(call: ServiceCall) -> None:
     """Charge or discharge the battery at a set power for a set time."""
     device, config = async_get_device_and_config_for_service_call(call.hass, call)
     site = async_get_energy_site_for_entry(call.hass, device, config)
-    powerwall = async_get_local_powerwall_for_site(device, site)
 
-    await handle_local_command(
-        powerwall.dispatch_battery_power(
-            call.data[ATTR_POWER], call.data[ATTR_DURATION]
-        )
+    await handle_energy_site_command(
+        site.api.dispatch_battery_power(call.data[ATTR_POWER], call.data[ATTR_DURATION])
     )
 
 
@@ -151,9 +130,8 @@ async def async_resume_battery_operation(call: ServiceCall) -> None:
     """Return the battery to its configured operating mode."""
     device, config = async_get_device_and_config_for_service_call(call.hass, call)
     site = async_get_energy_site_for_entry(call.hass, device, config)
-    powerwall = async_get_local_powerwall_for_site(device, site)
 
-    await handle_local_command(powerwall.resume_battery_operation())
+    await handle_energy_site_command(site.api.resume_battery_operation())
 
 
 @callback

@@ -1,0 +1,14 @@
+get_forecasts_extra:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
+  fields:
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "daily"
+            - "hourly"
+          translation_key: forecast_type

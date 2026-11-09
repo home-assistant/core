@@ -6,7 +6,6 @@ from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import METEO_FRANCE_DATA, PLATFORMS
 from .coordinator import (
@@ -31,11 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
     coordinator_rain = None
     coordinator_alert = None
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator_forecast.async_refresh()
-
-    if not coordinator_forecast.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator_forecast.async_config_entry_first_refresh()
 
     # Check rain forecast.
     coordinator_rain = MeteoFranceRainUpdateCoordinator(hass, entry, client)
