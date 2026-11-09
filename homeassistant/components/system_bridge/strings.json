@@ -356,6 +356,9 @@
     "no_data_received": {
       "message": "No data received from {host}"
     },
+    "notification_failed": {
+      "message": "Failed to send the notification: {error}"
+    },
     "power_command_failed": {
       "message": "Failed to send the power command: {error}"
     },
