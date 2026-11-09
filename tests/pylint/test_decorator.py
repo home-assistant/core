@@ -422,6 +422,24 @@ class MyEntity(MyBaseEntity):
         ),
         pytest.param(
             """
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    pass
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            "_handle_coordinator_update",
+            "BaseCoordinatorEntity",
+            id="subscript_base",
+        ),
+        pytest.param(
+            """
 from homeassistant.helpers.entity import Entity
 
 class MyEntity(Entity):
