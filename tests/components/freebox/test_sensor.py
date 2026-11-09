@@ -78,10 +78,12 @@ async def test_connection_down(
 
     assert hass.states.get("sensor.freebox_server_r2_connection_state").state == "down"
     assert (
-        hass.states.get("sensor.freebox_server_r2_ipv4_address").state == STATE_UNKNOWN
+        hass.states.get("sensor.freebox_server_r2_wan_ipv4_address").state
+        == STATE_UNKNOWN
     )
     assert (
-        hass.states.get("sensor.freebox_server_r2_ipv6_address").state == STATE_UNKNOWN
+        hass.states.get("sensor.freebox_server_r2_wan_ipv6_address").state
+        == STATE_UNKNOWN
     )
 
 

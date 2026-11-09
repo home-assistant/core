@@ -603,106 +603,6 @@
     'state': '198.9',
   })
 # ---
-# name: test_sensors[sensor.freebox_server_r2_ipv4_address-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.freebox_server_r2_ipv4_address',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'IPv4 address',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'IPv4 address',
-    'platform': 'freebox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ipv4',
-    'unique_id': '68:A3:78:00:00:00 ipv4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.freebox_server_r2_ipv4_address-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) IPv4 address',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.freebox_server_r2_ipv4_address',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '82.67.00.00',
-  })
-# ---
-# name: test_sensors[sensor.freebox_server_r2_ipv6_address-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.freebox_server_r2_ipv6_address',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'IPv6 address',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'IPv6 address',
-    'platform': 'freebox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ipv6',
-    'unique_id': '68:A3:78:00:00:00 ipv6',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.freebox_server_r2_ipv6_address-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) IPv6 address',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.freebox_server_r2_ipv6_address',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2a01:e35:ffff:ffff::1',
-  })
-# ---
 # name: test_sensors[sensor.freebox_server_r2_missed_calls-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1106,6 +1006,106 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2130',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv4_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv4_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN IPv4 address',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN IPv4 address',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv4',
+    'unique_id': '68:A3:78:00:00:00 ipv4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv4_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) WAN IPv4 address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv4_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '82.67.00.00',
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv6_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('freebox', '68:A3:78:00:00:00')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv6_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WAN IPv6 address',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WAN IPv6 address',
+    'platform': 'freebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ipv6',
+    'unique_id': '68:A3:78:00:00:00 ipv6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.freebox_server_r2_wan_ipv6_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Freebox Server (r2) WAN IPv6 address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.freebox_server_r2_wan_ipv6_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2a01:e35:ffff:ffff::1',
   })
 # ---
 # name: test_sensors[sensor.ouverture_porte_battery-entry]

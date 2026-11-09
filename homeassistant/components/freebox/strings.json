@@ -62,10 +62,10 @@
         "name": "Connection type"
       },
       "ipv4": {
-        "name": "IPv4 address"
+        "name": "WAN IPv4 address"
       },
       "ipv6": {
-        "name": "IPv6 address"
+        "name": "WAN IPv6 address"
       },
       "missed": {
         "name": "Missed calls"
