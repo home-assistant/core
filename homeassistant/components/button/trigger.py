@@ -82,16 +82,6 @@ def _get_first_declared_event_type(
     return next((t for t in candidates if t in event_types), None)
 
 
-def _declares_all_event_types(
-    event_types: Collection[str] | None,
-    required: tuple[ButtonEventType, ...],
-) -> bool:
-    """Return whether the entity declares all of the required event types."""
-    if not event_types:
-        return False
-    return all(t in event_types for t in required)
-
-
 class ButtonPressedTrigger(StatelessEntityTriggerBase):
     """Trigger for button presses."""
 
@@ -325,7 +315,11 @@ class ButtonHoldEndedTrigger(StatelessEntityTriggerBase):
         event_types = state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES)
         # Requires both, as the held trigger fires on long_press_end for entities
         # that don't declare long_press_start.
-        if not _declares_all_event_types(event_types, HELD_EVENT_TYPES):
+        if (
+            not event_types
+            or ButtonEventType.LONG_PRESS_START not in event_types
+            or ButtonEventType.LONG_PRESS_END not in event_types
+        ):
             report_not_triggered(
                 "entity_event_types_not_supported",
                 entity_id=state.entity_id,
