@@ -29,6 +29,7 @@ DPT_PERCENT = {"main": 5, "sub": 1}
 DPT_COLOR_TEMP_ABS = {"main": 7, "sub": 600}
 DPT_COLOR_RGB = {"main": 232, "sub": 600}
 DPT_COLOR_RGBW = {"main": 251, "sub": 600}
+DPT_TEMPERATURE = {"main": 9, "sub": 1}
 
 
 def _channel(
@@ -87,6 +88,11 @@ TEST_PROJECT: dict[str, Any] = {
         "6/1/4": _group_address("6/1/4", DPT_PERCENT),
         "6/1/5": _group_address("6/1/5", DPT_PERCENT),
         "6/1/6": _group_address("6/1/6", DPT_PERCENT),
+        "7/4/1": _group_address("7/4/1", DPT_TEMPERATURE),
+        "7/4/2": _group_address("7/4/2", DPT_TEMPERATURE),
+        "7/4/3": _group_address("7/4/3", DPT_PERCENT),
+        "7/4/4": _group_address("7/4/4", None),
+        "7/4/5": _group_address("7/4/5", {"main": 255, "sub": 1}),
     },
     "devices": {
         "1.1.1": {
@@ -152,6 +158,12 @@ TEST_PROJECT: dict[str, Any] = {
                 ),
             },
         },
+        "1.3.5": {
+            "name": "Temperatursensor",
+            "channels": {
+                "CH-1": _channel("Raumtemperatur", ["321"], ["co-140"]),
+            },
+        },
     },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
@@ -183,6 +195,7 @@ TEST_PROJECT: dict[str, Any] = {
         "co-73": _com_object(["423.84"], ["6/1/4"]),
         "co-74": _com_object(["423.64"], ["6/1/5"]),
         "co-75": _com_object(["423.85"], ["6/1/6"]),
+        "co-140": _com_object(["321.51"], ["7/4/1", "7/4/3", "7/4/2"]),
     },
 }
 
@@ -256,6 +269,32 @@ def test_functional_block_platforms() -> None:
         "423": [Platform.LIGHT],
         "427": [Platform.LIGHT],
         "800": [Platform.COVER],
+        "180": [Platform.SENSOR],
+        "187": [Platform.SENSOR],
+        "320": [Platform.SENSOR],
+        "321": [Platform.SENSOR],
+        "322": [Platform.SENSOR],
+        "323": [Platform.SENSOR],
+        "324": [Platform.SENSOR],
+        "325": [Platform.SENSOR],
+        "326": [Platform.SENSOR],
+        "327": [Platform.SENSOR],
+        "328": [Platform.SENSOR],
+        "329": [Platform.SENSOR],
+        "330": [Platform.SENSOR],
+        "331": [Platform.SENSOR],
+        "332": [Platform.SENSOR],
+        "333": [Platform.SENSOR],
+        "336": [Platform.SENSOR],
+        "337": [Platform.SENSOR],
+        "338": [Platform.SENSOR],
+        "339": [Platform.SENSOR],
+        "348": [Platform.SENSOR],
+        "409": [Platform.SENSOR],
+        "410": [Platform.SENSOR],
+        "1013": [Platform.SENSOR],
+        "1015": [Platform.SENSOR],
+        "1016": [Platform.SENSOR],
     }
 
 
@@ -445,6 +484,37 @@ def test_incomplete_config_dropped() -> None:
     assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
 
 
+def test_sensor_suggestion() -> None:
+    """Test FB 321 suggestion setting the DPT of a dpt-class selector."""
+    channel = _test_channel("1.3.5", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.SENSOR)
+    assert suggestion is not None
+    # passive addresses are decoded with the DPT of the state address
+    assert suggestion["knx"] == {
+        "ga_sensor": {"state": "7/4/1", "dpt": "9.001", "passive": ["7/4/2"]}
+    }
+    assert suggestion["unmatched"] == []
+    assert suggestion["matched_group_addresses"] == [
+        {"address": "7/4/1", "name": "GA 7/4/1"},
+        {"address": "7/4/2", "name": "GA 7/4/2"},
+    ]
+
+
+@pytest.mark.parametrize(
+    "group_address",
+    [
+        "7/4/4",  # no DPT set in the project
+        "7/4/5",  # DPT 255.001 is not supported
+        "1/0/1",  # DPT 1.001 is not a numeric or string DPT
+    ],
+)
+def test_sensor_unsupported_dpt_dropped(group_address: str) -> None:
+    """Test that a dpt-class selector requires a supported DPT of its classes."""
+    project = _with_com_objects(**{"co-90": _com_object(["321.51"], [group_address])})
+    channel = _channel("Temperatur", ["321"], ["co-90"])
+    assert _build_platform_suggestion(project, channel, Platform.SENSOR) is None
+
+
 async def test_ws_get_entity_suggestions(
     knx: KNXTestKit,
     get_entity_suggestions: KnxSuggestionGetter,
@@ -457,7 +527,7 @@ async def test_ws_get_entity_suggestions(
 
     assert result["providers"]["fb"] == {
         "state": "ok",
-        "functional_blocks_found": ["417", "423", "427", "800", "999"],
+        "functional_blocks_found": ["321", "417", "423", "427", "800", "999"],
     }
     suggestions = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
     assert sorted(suggestions) == [
@@ -467,6 +537,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.1.3_CH-1",
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
+        "fb_1.3.5_CH-1",
     ]
 
     switch_actuator = suggestions["fb_1.1.1_CH-1"]
@@ -488,6 +559,9 @@ async def test_ws_get_entity_suggestions(
     assert suggestions["fb_1.1.1_CH-2"]["suggested_name"] == "Ausgang 2"
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
+    assert suggestions["fb_1.3.5_CH-1"]["suggestions"]["sensor"]["knx"] == {
+        "ga_sensor": {"state": "7/4/1", "dpt": "9.001", "passive": ["7/4/2"]}
+    }
 
 
 async def test_ws_get_entity_suggestions_duplicates(
