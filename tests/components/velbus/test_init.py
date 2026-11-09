@@ -204,13 +204,14 @@ async def test_api_call(
     entity_id = get_entity_id(entity_registry, SWITCH_DOMAIN, "qwerty123-55")
 
     mock_relay.turn_on.side_effect = OSError()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+    assert exc_info.value.translation_placeholders == {"entity": entity_id}
 
 
 def register_legacy_channel_sub_device(
