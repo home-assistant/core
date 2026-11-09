@@ -511,7 +511,7 @@ def test_sensor_suggestion() -> None:
 def test_sensor_unsupported_dpt_dropped(group_address: str) -> None:
     """Test that a dpt-class selector requires a supported DPT of its classes."""
     project = _with_com_objects(**{"co-90": _com_object(["321.51"], [group_address])})
-    channel = _channel("Temperatur", ["321"], ["co-90"])
+    channel = _channel("Temperatursensor", ["321"], ["co-90"])
     assert _build_platform_suggestion(project, channel, Platform.SENSOR) is None
 
 
