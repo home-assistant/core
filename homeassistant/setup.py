@@ -203,7 +203,7 @@ async def _async_process_dependencies(
     setup_futures = hass.data.setdefault(_DATA_SETUP, {})
 
     dependencies_tasks: dict[str, Awaitable[bool]] = {}
-    after_dependencies: set[str] = set()
+    awaited_after_dependencies: set[str] = set()
 
     def _dependency_awaitable(dep: str, kind: str) -> Awaitable[bool] | None:
         """Return an awaitable for the setup of dep, or None if already set up."""
@@ -231,7 +231,7 @@ async def _async_process_dependencies(
             continue
         if (fut := _dependency_awaitable(dep, "after dependency")) is not None:
             dependencies_tasks[dep] = fut
-            after_dependencies.add(dep)
+            awaited_after_dependencies.add(dep)
 
     if not dependencies_tasks:
         return []
@@ -250,7 +250,7 @@ async def _async_process_dependencies(
     for domain, result in zip(dependencies_tasks, results, strict=True):
         if result:
             continue
-        if domain not in after_dependencies:
+        if domain not in awaited_after_dependencies:
             failed.append(domain)
             continue
         _LOGGER.debug(
