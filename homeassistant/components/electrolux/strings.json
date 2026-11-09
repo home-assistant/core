@@ -65,6 +65,13 @@
       "bottomoven_door_state": {
         "name": "Lower door state"
       },
+      "bottomoven_food_probe_state": {
+        "name": "Lower food probe state",
+        "state": {
+          "off": "[%key:component::electrolux::entity::binary_sensor::food_probe_state::state::off%]",
+          "on": "[%key:component::electrolux::entity::binary_sensor::food_probe_state::state::on%]"
+        }
+      },
       "connection_state": {
         "name": "Connection state"
       },
@@ -76,6 +83,13 @@
       },
       "extracavity_door_state": {
         "name": "Extra cavity door"
+      },
+      "food_probe_state": {
+        "name": "Food probe state",
+        "state": {
+          "off": "Not inserted",
+          "on": "Inserted"
+        }
       },
       "freezer_door_state": {
         "name": "Freezer door"
@@ -118,6 +132,13 @@
       },
       "upperoven_door_state": {
         "name": "Upper door state"
+      },
+      "upperoven_food_probe_state": {
+        "name": "Upper food probe state",
+        "state": {
+          "off": "[%key:component::electrolux::entity::binary_sensor::food_probe_state::state::off%]",
+          "on": "[%key:component::electrolux::entity::binary_sensor::food_probe_state::state::on%]"
+        }
       }
     },
     "button": {
@@ -635,9 +656,6 @@
           "running": "[%key:component::electrolux::common::running%]"
         }
       },
-      "battery_percentage": {
-        "name": "Battery"
-      },
       "bottomoven_appliance_state": {
         "name": "Lower cavity appliance state",
         "state": {
@@ -654,15 +672,17 @@
       "bottomoven_display_temperature": {
         "name": "Lower cavity current temperature"
       },
-      "bottomoven_food_probe_state": {
-        "name": "Lower food probe state",
-        "state": {
-          "inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::inserted%]",
-          "not_inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::not_inserted%]"
-        }
-      },
       "bottomoven_food_probe_temperature": {
         "name": "Lower food probe temperature"
+      },
+      "bottomoven_running_time": {
+        "name": "Lower cavity running time"
+      },
+      "bottomoven_start_at": {
+        "name": "Lower cavity start at"
+      },
+      "bottomoven_time_left": {
+        "name": "Lower cavity time left"
       },
       "cycle_phase": {
         "name": "Cycle phase",
@@ -684,15 +704,6 @@
           "unavailable": "Unavailable",
           "wash": "Wash"
         }
-      },
-      "bottomoven_running_time": {
-        "name": "Lower cavity running time"
-      },
-      "bottomoven_start_at": {
-        "name": "Lower cavity start at"
-      },
-      "bottomoven_time_left": {
-        "name": "Lower cavity time left"
       },
       "display_temperature": {
         "name": "Current temperature"
@@ -732,13 +743,6 @@
           "change": "Needs changing",
           "clean": "Needs cleaning",
           "good": "Good"
-        }
-      },
-      "food_probe_state": {
-        "name": "Food probe state",
-        "state": {
-          "inserted": "Inserted",
-          "not_inserted": "Not inserted"
         }
       },
       "food_probe_temperature": {
@@ -829,15 +833,6 @@
       "icemaker_target_temperature": {
         "name": "Ice maker target temperature"
       },
-      "pm_1": {
-        "name": "PM1"
-      },
-      "pm_10": {
-        "name": "PM10"
-      },
-      "pm_2_5": {
-        "name": "PM2.5"
-      },
       "remote_control": {
         "name": "Remote control",
         "state": {
@@ -850,26 +845,14 @@
       "running_time": {
         "name": "Running time"
       },
+      "sound_volume": {
+        "name": "Sound volume"
+      },
       "start_at": {
         "name": "Start at"
       },
       "time_left": {
         "name": "Time left"
-      },
-      "upperoven_running_time": {
-        "name": "Upper cavity running time"
-      },
-      "upperoven_start_at": {
-        "name": "Upper cavity start at"
-      },
-      "upperoven_time_left": {
-        "name": "Upper cavity time left"
-      },
-      "sound_volume": {
-        "name": "Sound volume"
-      },
-      "tvoc": {
-        "name": "TVOC"
       },
       "upperoven_appliance_state": {
         "name": "Upper cavity appliance state",
@@ -887,15 +870,17 @@
       "upperoven_display_temperature": {
         "name": "Upper cavity current temperature"
       },
-      "upperoven_food_probe_state": {
-        "name": "Upper food probe state",
-        "state": {
-          "inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::inserted%]",
-          "not_inserted": "[%key:component::electrolux::entity::sensor::food_probe_state::state::not_inserted%]"
-        }
-      },
       "upperoven_food_probe_temperature": {
         "name": "Upper food probe temperature"
+      },
+      "upperoven_running_time": {
+        "name": "Upper cavity running time"
+      },
+      "upperoven_start_at": {
+        "name": "Upper cavity start at"
+      },
+      "upperoven_time_left": {
+        "name": "Upper cavity time left"
       }
     },
     "switch": {

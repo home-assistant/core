@@ -33,7 +33,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_percentage',
+    'translation_key': None,
     'unique_id': '900402068224000950000000_battery_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
@@ -86,7 +86,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm_2_5',
+    'translation_key': None,
     'unique_id': '956006956242000015087076_pm_2_5',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
@@ -460,7 +460,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_percentage',
+    'translation_key': None,
     'unique_id': '900402423524000511139298_battery_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
@@ -479,6 +479,212 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensor[sensor.dish_washer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hard',
+        'medium',
+        'soft',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dish_washer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_hardness',
+    'unique_id': '911438421_03:33109002-443E07338CF5_water_hardness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dish_washer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dish Washer',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hard',
+        'medium',
+        'soft',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dish_washer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.dish_washer_appliance_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dish_washer_appliance_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Appliance state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Appliance state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'appliance_state',
+    'unique_id': '911438421_03:33109002-443E07338CF5_appliance_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dish_washer_appliance_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dish Washer Appliance state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dish_washer_appliance_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensor[sensor.dish_washer_cycle_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ado_drying',
+        'coldrinse',
+        'drying',
+        'extrarinse',
+        'hotrinse',
+        'mainwash',
+        'prewash',
+        'unavailable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dish_washer_cycle_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cycle phase',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cycle phase',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cycle_phase',
+    'unique_id': '911438421_03:33109002-443E07338CF5_cycle_phase',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dish_washer_cycle_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dish Washer Cycle phase',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ado_drying',
+        'coldrinse',
+        'drying',
+        'extrarinse',
+        'hotrinse',
+        'mainwash',
+        'prewash',
+        'unavailable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dish_washer_cycle_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor[sensor.dish_washer_end_at-entry]
@@ -530,6 +736,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.dish_washer_remote_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dish_washer_remote_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote control',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Remote control',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_control',
+    'unique_id': '911438421_03:33109002-443E07338CF5_remote_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dish_washer_remote_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dish Washer Remote control',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dish_washer_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'temporary_locked',
   })
 # ---
 # name: test_sensor[sensor.dish_washer_start_at-entry]
@@ -641,6 +911,204 @@
     'state': '2.31666666666667',
   })
 # ---
+# name: test_sensor[sensor.dryer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hard',
+        'medium',
+        'soft',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_hardness',
+    'unique_id': '999120000_00:74852244-443E0704101F_water_hardness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dryer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hard',
+        'medium',
+        'soft',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'medium',
+  })
+# ---
+# name: test_sensor[sensor.dryer_appliance_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_appliance_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Appliance state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Appliance state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'appliance_state',
+    'unique_id': '999120000_00:74852244-443E0704101F_appliance_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dryer_appliance_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Appliance state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_appliance_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready_to_start',
+  })
+# ---
+# name: test_sensor[sensor.dryer_cycle_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'anticrease',
+        'cool',
+        'dry',
+        'unavailable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_cycle_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cycle phase',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cycle phase',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cycle_phase',
+    'unique_id': '999120000_00:74852244-443E0704101F_cycle_phase',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dryer_cycle_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Cycle phase',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'anticrease',
+        'cool',
+        'dry',
+        'unavailable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_cycle_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_sensor[sensor.dryer_end_at-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -690,6 +1158,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.dryer_remote_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dryer_remote_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote control',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Remote control',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_control',
+    'unique_id': '999120000_00:74852244-443E0704101F_remote_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.dryer_remote_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Remote control',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dryer_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'enabled',
   })
 # ---
 # name: test_sensor[sensor.dryer_start_at-entry]
@@ -929,66 +1461,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
-  })
-# ---
-# name: test_sensor[sensor.fenix_food_probe_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'inserted',
-        'not_inserted',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.fenix_food_probe_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Food probe state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Food probe state',
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'food_probe_state',
-    'unique_id': '900412569_00:43319382-443E0748CCD4_food_probe_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.fenix_food_probe_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenix Food probe state',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'inserted',
-        'not_inserted',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.fenix_food_probe_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'inserted',
   })
 # ---
 # name: test_sensor[sensor.fenix_food_probe_temperature-entry]
@@ -1314,7 +1786,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_percentage',
+    'translation_key': None,
     'unique_id': '900402278332000201139298_battery_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
@@ -1806,7 +2278,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_percentage',
+    'translation_key': None,
     'unique_id': '900277470043000491100106_battery_percentage',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
@@ -2619,6 +3091,78 @@
     'state': 'enabled',
   })
 # ---
+# name: test_sensor[sensor.supex_oven_upper_cavity_appliance_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.supex_oven_upper_cavity_appliance_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Upper cavity appliance state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Upper cavity appliance state',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'upperoven_appliance_state',
+    'unique_id': '944035064_00:27032025-443E073D97B2_upperoven_appliance_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.supex_oven_upper_cavity_appliance_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Supex oven Upper cavity appliance state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.supex_oven_upper_cavity_appliance_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ready_to_start',
+  })
+# ---
 # name: test_sensor[sensor.supex_oven_upper_cavity_current_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2886,13 +3430,24 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.washer_dryer-entry]
+# name: test_sensor[sensor.washer_dryer_appliance_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2900,7 +3455,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_dryer',
+    'entity_id': 'sensor.washer_dryer_appliance_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2908,41 +3463,65 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Appliance state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Appliance state',
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wm_water_usage',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_water_usage',
+    'translation_key': 'appliance_state',
+    'unique_id': '999007132_50:23300001-443E0733A070_appliance_state',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.washer_dryer-state]
+# name: test_sensor[sensor.washer_dryer_appliance_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer Appliance state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer',
+    'entity_id': 'sensor.washer_dryer_appliance_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'delayed_start',
   })
 # ---
-# name: test_sensor[sensor.washer_dryer_2-entry]
+# name: test_sensor[sensor.washer_dryer_cycle_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'anticrease',
+        'cool',
+        'drain',
+        'dry',
+        'prewash',
+        'rinse',
+        'spin',
+        'steam',
+        'unavailable',
+        'wash',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2950,7 +3529,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_dryer_2',
+    'entity_id': 'sensor.washer_dryer_cycle_phase',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2958,332 +3537,45 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Cycle phase',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Cycle phase',
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wm_eco_level',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_eco_level',
+    'translation_key': 'cycle_phase',
+    'unique_id': '999007132_50:23300001-443E0733A070_cycle_phase',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.washer_dryer_2-state]
+# name: test_sensor[sensor.washer_dryer_cycle_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer Cycle phase',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'anticrease',
+        'cool',
+        'drain',
+        'dry',
+        'prewash',
+        'rinse',
+        'spin',
+        'steam',
+        'unavailable',
+        'wash',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer_2',
+    'entity_id': 'sensor.washer_dryer_cycle_phase',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washer_dryer_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_a_det_load_for_nominal_weight',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_tank_a_det_load_for_nominal_weight',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washer_dryer_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_a_reserve',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_tank_a_reserve',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washer_dryer_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_b_det_load_for_nominal_weight',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_tank_b_det_load_for_nominal_weight',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '78',
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washer_dryer_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_b_reserve',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_tank_b_reserve',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washer_dryer_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_ad_tank_a_det_loaded',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_ad_tank_a_det_loaded',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washer_dryer_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_ad_tank_b_soft_loaded',
-    'unique_id': '999007132_50:23300001-443E0733A070_wm_ad_tank_b_soft_loaded',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washer_dryer_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washer_dryer_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor[sensor.washer_dryer_end_at-entry]
@@ -3335,6 +3627,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2026-09-29T14:30:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.washer_dryer_remote_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washer_dryer_remote_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote control',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Remote control',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_control',
+    'unique_id': '999007132_50:23300001-443E0733A070_remote_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.washer_dryer_remote_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Dryer Remote control',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washer_dryer_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_safety_relevant_enabled',
   })
 # ---
 # name: test_sensor[sensor.washer_dryer_start_at-entry]
@@ -3446,13 +3802,24 @@
     'state': '1.5',
   })
 # ---
-# name: test_sensor[sensor.washing_machine-entry]
+# name: test_sensor[sensor.washing_machine_appliance_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3460,7 +3827,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washing_machine',
+    'entity_id': 'sensor.washing_machine_appliance_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3468,41 +3835,64 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Appliance state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Appliance state',
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wm_water_usage',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_water_usage',
+    'translation_key': 'appliance_state',
+    'unique_id': '999007091_50:22002306-443E071A93FA_appliance_state',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.washing_machine-state]
+# name: test_sensor[sensor.washing_machine_appliance_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Appliance state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'alarm',
+        'delayed_start',
+        'end_of_cycle',
+        'idle',
+        'off',
+        'paused',
+        'ready_to_start',
+        'running',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine',
+    'entity_id': 'sensor.washing_machine_appliance_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'delayed_start',
   })
 # ---
-# name: test_sensor[sensor.washing_machine_2-entry]
+# name: test_sensor[sensor.washing_machine_cycle_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'anticrease',
+        'drain',
+        'dry',
+        'prewash',
+        'rinse',
+        'spin',
+        'steam',
+        'unavailable',
+        'wash',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3510,7 +3900,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washing_machine_2',
+    'entity_id': 'sensor.washing_machine_cycle_phase',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3518,382 +3908,44 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Cycle phase',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Cycle phase',
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wm_eco_level',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_eco_level',
+    'translation_key': 'cycle_phase',
+    'unique_id': '999007091_50:22002306-443E071A93FA_cycle_phase',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.washing_machine_2-state]
+# name: test_sensor[sensor.washing_machine_cycle_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Cycle phase',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'anticrease',
+        'drain',
+        'dry',
+        'prewash',
+        'rinse',
+        'spin',
+        'steam',
+        'unavailable',
+        'wash',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_2',
+    'entity_id': 'sensor.washing_machine_cycle_phase',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '255',
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washing_machine_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_a_det_load_for_nominal_weight',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_tank_a_det_load_for_nominal_weight',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washing_machine_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_a_reserve',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_tank_a_reserve',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washing_machine_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_b_det_load_for_nominal_weight',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_tank_b_det_load_for_nominal_weight',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washing_machine_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_tank_b_reserve',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_tank_b_reserve',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washing_machine_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_ad_tank_a_det_loaded',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_ad_tank_a_det_loaded',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washing_machine_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_ad_tank_b_det_loaded',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_ad_tank_b_det_loaded',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.washing_machine_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'electrolux',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wm_ad_tank_b_soft_loaded',
-    'unique_id': '999007091_50:22002306-443E071A93FA_wm_ad_tank_b_soft_loaded',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.washing_machine_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.washing_machine_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor[sensor.washing_machine_end_at-entry]
@@ -3945,6 +3997,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2026-09-29T16:00:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.washing_machine_remote_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.washing_machine_remote_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote control',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Remote control',
+    'platform': 'electrolux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_control',
+    'unique_id': '999007091_50:22002306-443E071A93FA_remote_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.washing_machine_remote_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Remote control',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disabled',
+        'enabled',
+        'not_safety_relevant_enabled',
+        'temporary_locked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_safety_relevant_enabled',
   })
 # ---
 # name: test_sensor[sensor.washing_machine_start_at-entry]
