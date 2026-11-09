@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
@@ -97,6 +97,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # supports_hsb_xy_color is False for color bulbs that also report mireds
         return self._device_data.raw.color_hue is not None
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""

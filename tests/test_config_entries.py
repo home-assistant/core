@@ -5348,6 +5348,7 @@ async def test_unique_id_ignore(
 
     # We should never set up an ignored entry.
     assert len(async_setup_entry.mock_calls) == 0
+    assert "comp" not in hass.config.components
 
     entry = hass.config_entries.async_entries("comp")[0]
 
@@ -5356,6 +5357,73 @@ async def test_unique_id_ignore(
     assert entry.title == "Ignored Title"
     assert entry.data == {}
     assert entry.discovery_keys == expected_entry_discovery_keys
+
+
+@pytest.mark.parametrize(
+    ("source", "data", "setup_calls", "component_loaded", "expected_state"),
+    [
+        pytest.param(
+            config_entries.SOURCE_IGNORE,
+            {"unique_id": "mock-unique-id", "title": "Ignored Title"},
+            0,
+            False,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            id="ignore",
+        ),
+        pytest.param(
+            config_entries.SOURCE_USER,
+            None,
+            1,
+            True,
+            config_entries.ConfigEntryState.LOADED,
+            id="user",
+        ),
+    ],
+)
+async def test_ignore_flow_does_not_set_up_component(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    data: dict[str, str] | None,
+    setup_calls: int,
+    component_loaded: bool,
+    expected_state: config_entries.ConfigEntryState,
+) -> None:
+    """Test an ignore flow does not set up the integration, unlike a user flow."""
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=None)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user flow."""
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="User Title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await manager.flow.async_init(
+            "comp", context={"source": source}, data=data
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert len(async_setup.mock_calls) == setup_calls
+    assert len(async_setup_entry.mock_calls) == setup_calls
+    assert ("comp" in hass.config.components) is component_loaded
+
+    entry = result["result"]
+    assert entry.source == source
+    assert entry.state is expected_state
+    assert hass.config_entries.async_entries("comp") == [entry]
 
 
 async def test_manual_add_overrides_ignored_entry(
