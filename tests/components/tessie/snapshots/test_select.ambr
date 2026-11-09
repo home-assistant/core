@@ -562,6 +562,67 @@
     'state': 'off',
   })
 # ---
+# name: test_select[select.test_steering_wheel_heat_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        <TessieSeatHeaterOptions.OFF: 'off'>,
+        <TessieSeatHeaterOptions.LOW: 'low'>,
+        <TessieSeatHeaterOptions.HIGH: 'high'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tessie', 'VINVINVIN')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_steering_wheel_heat_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Steering wheel heat level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Steering wheel heat level',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_steering_wheel_heat_level',
+    'unique_id': 'VINVINVIN-climate_state_steering_wheel_heat_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[select.test_steering_wheel_heat_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Steering wheel heat level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        <TessieSeatHeaterOptions.OFF: 'off'>,
+        <TessieSeatHeaterOptions.LOW: 'low'>,
+        <TessieSeatHeaterOptions.HIGH: 'high'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_steering_wheel_heat_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_select[select_option]
   StateSnapshot({
     'attributes': ReadOnlyDict({
