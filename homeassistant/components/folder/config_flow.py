@@ -7,7 +7,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -87,6 +87,7 @@ class FolderConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     @override
+    @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return options[CONF_FOLDER_PATHS]

@@ -6,6 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.const import CONF_ENTITY_ID, Platform
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -62,6 +63,7 @@ class SwitchAsXConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     MINOR_VERSION = 3
 
     @override
+    @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title and hide the wrapped entity if registered."""
         # Hide the wrapped entry if registered

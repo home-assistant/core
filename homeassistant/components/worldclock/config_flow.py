@@ -7,6 +7,7 @@ import zoneinfo
 import probatio
 
 from homeassistant.const import CONF_TIME_ZONE
+from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -97,6 +98,7 @@ class WorldclockConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow_reloads = True
 
     @override
+    @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_TIME_ZONE])

@@ -144,6 +144,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     MINOR_VERSION = 4
 
     @override
+    @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
