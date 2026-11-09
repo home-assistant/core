@@ -24,9 +24,6 @@ from electrolux_group_developer_sdk.client.appliances.wd_appliance import WDAppl
 from electrolux_group_developer_sdk.client.appliances.wm_appliance import WMAppliance
 from electrolux_group_developer_sdk.constants import APPLIANCE_STATE_RUNNING
 from electrolux_group_developer_sdk.feature_constants import (
-    AD_TANK_A_DET_LOADED_CAPABILITY,
-    AD_TANK_B_DET_LOADED_CAPABILITY,
-    AD_TANK_B_SOFT_LOADED_CAPABILITY,
     AIR_FILTER_STATE,
     APPLIANCE_STATE,
     BATTERY,
@@ -35,8 +32,6 @@ from electrolux_group_developer_sdk.feature_constants import (
     DISPLAY_FOOD_PROBE_TEMPERATURE_F,
     DISPLAY_TEMPERATURE_C,
     DISPLAY_TEMPERATURE_F,
-    ECO_LEVEL_CAPABILITY,
-    FOOD_PROBE_STATE,
     HOB_HOOD_WINDOW_NOTIFICATION,
     PM_1,
     PM_2_5,
@@ -46,17 +41,12 @@ from electrolux_group_developer_sdk.feature_constants import (
     SOUND_VOLUME,
     START_TIME,
     STOP_TIME,
-    TANK_A_DET_LOAD_FOR_NOMINAL_WEIGHT_CAPABILITY,
-    TANK_A_RESERVE_CAPABILITY,
-    TANK_B_DET_LOAD_FOR_NOMINAL_WEIGHT_CAPABILITY,
-    TANK_B_RESERVE_CAPABILITY,
     TARGET_TEMPERATURE_C,
     TARGET_TEMPERATURE_F,
     TIME_TO_END,
     TVOC,
     WATER_FILTER_STATE,
     WATER_HARDNESS,
-    WATER_USAGE_CAPABILITY,
     ZONE_RESIDUAL_HEAT_STATE,
 )
 
@@ -249,15 +239,6 @@ def get_oven_time_left(appliance: OVAppliance) -> float | None:
 
 OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription[OVAppliance], ...] = (
     _get_appliance_state_description(),
-    ElectroluxEnumSensorDescription(
-        key="food_probe_state",
-        translation_key="food_probe_state",
-        device_class=SensorDeviceClass.ENUM,
-        exists_fn=lambda appliance: appliance.is_feature_supported(FOOD_PROBE_STATE),
-        value_fn=lambda appliance: appliance.get_current_food_probe_insertion_state(),
-        feature_name=FOOD_PROBE_STATE,
-        known_values=FOOD_PROBE_STATE_KNOWN_VALUES,
-    ),
     ElectroluxSensorDescription(
         key="start_at",
         translation_key="start_at",
@@ -323,6 +304,35 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[
 )
 
 
+def get_structured_oven_start_at(
+    appliance: SOAppliance, cavity: str
+) -> datetime | None:
+    """Get when the appliance will start."""
+    return (
+        round_to_minute(start_at)
+        if (start_at := appliance.get_current_cavity_start_at(cavity)) is not None
+        else None
+    )
+
+
+def get_structured_oven_running_time(
+    appliance: SOAppliance, cavity: str
+) -> float | None:
+    """Get the amount of time the oven has been running for."""
+    running_time = appliance.get_current_cavity_running_time(cavity)
+    if running_time is None or running_time <= 0:
+        return None
+    return running_time
+
+
+def get_structured_oven_time_left(appliance: SOAppliance, cavity: str) -> float | None:
+    """Get the amount of time left the oven will be running for."""
+    time_to_end = appliance.get_current_cavity_time_to_end(cavity)
+    if time_to_end is None or time_to_end <= 0:
+        return None
+    return time_to_end
+
+
 STRUCTURED_OVEN_ELECTROLUX_SENSORS: tuple[
     ElectroluxSensorDescription[SOAppliance], ...
 ] = (_get_remote_control_description(),)
@@ -331,17 +341,39 @@ STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
     ElectroluxSubmoduleSensorDescription[SOAppliance], ...
 ] = (
     _get_appliance_state_submodule_description(),
-    ElectroluxSubmoduleEnumSensorDescription(
-        key="food_probe_state",
-        translation_key="food_probe_state",
+    ElectroluxSubmoduleSensorDescription(
+        key="start_at",
+        translation_key="start_at",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
-            cavity, FOOD_PROBE_STATE
+            cavity, START_TIME
         ),
-        value_fn=lambda appliance, cavity: (
-            appliance.get_current_cavity_food_probe_insertion_state(cavity)
+        value_fn=get_structured_oven_start_at,
+    ),
+    ElectroluxSubmoduleSensorDescription(
+        key="running_time",
+        translation_key="running_time",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
+            cavity, RUNNING_TIME
         ),
-        feature_name=FOOD_PROBE_STATE,
-        known_values=FOOD_PROBE_STATE_KNOWN_VALUES,
+        value_fn=get_structured_oven_running_time,
+    ),
+    ElectroluxSubmoduleSensorDescription(
+        key="time_left",
+        translation_key="time_left",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
+            cavity, TIME_TO_END
+        ),
+        value_fn=get_structured_oven_time_left,
     ),
 )
 
@@ -373,6 +405,45 @@ STRUCTURED_OVEN_CAVITY_TEMPERATURE_ELECTROLUX_SENSORS: tuple[
         ),
     ),
 )
+
+
+def get_care_appliance_start_at(
+    appliance: DWAppliance | TDAppliance | WDAppliance | WMAppliance,
+) -> datetime | None:
+    """Get when the appliance will start."""
+    return (
+        round_to_minute(start_at)
+        if (start_at := appliance.get_current_start_at()) is not None
+        else None
+    )
+
+
+def get_care_appliance_end_at(
+    appliance: DWAppliance | TDAppliance | WDAppliance | WMAppliance,
+) -> datetime | None:
+    """Get when the appliance will stop running."""
+    end_at: datetime | None = appliance.get_current_end_at()
+    if end_at is not None:
+        return round_to_minute(end_at)
+
+    if appliance.get_current_appliance_state() is not APPLIANCE_STATE_RUNNING:
+        return None
+
+    time_to_end = appliance.get_current_time_to_end()
+    if time_to_end is None or time_to_end <= 0:
+        return None
+    end_at = utcnow() + timedelta(seconds=time_to_end)
+    return round_to_minute(end_at)
+
+
+def get_care_appliance_time_left(
+    appliance: DWAppliance | TDAppliance | WDAppliance | WMAppliance,
+) -> float | None:
+    """Get the amount of time left the appliance will be running for."""
+    time_to_end = appliance.get_current_time_to_end()
+    if time_to_end is None or time_to_end <= 0:
+        return None
+    return time_to_end
 
 
 CARE_ELECTROLUX_SENSORS: tuple[
@@ -414,100 +485,35 @@ CARE_ELECTROLUX_SENSORS: tuple[
         feature_name=WATER_HARDNESS,
         known_values={"soft", "medium", "hard"},
     ),
-)
-
-WM_WD_ELECTROLUX_SENSORS: tuple[
-    ElectroluxSensorDescription[WDAppliance | WMAppliance], ...
-] = (
     ElectroluxSensorDescription(
-        key="wm_water_usage",
-        translation_key="wm_water_usage",
+        key="start_at",
+        translation_key="start_at",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda appliance: appliance.is_feature_supported(
-            WATER_USAGE_CAPABILITY
+            [START_TIME, STOP_TIME]
         ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_water_usage()
-        ),
+        value_fn=get_care_appliance_start_at,
     ),
     ElectroluxSensorDescription(
-        key="wm_eco_level",
-        translation_key="wm_eco_level",
+        key="end_at",
+        translation_key="end_at",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
         exists_fn=lambda appliance: appliance.is_feature_supported(
-            ECO_LEVEL_CAPABILITY
+            [START_TIME, STOP_TIME]
         ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_eco_level()
-        ),
+        value_fn=get_care_appliance_end_at,
     ),
     ElectroluxSensorDescription(
-        key="wm_tank_a_det_load_for_nominal_weight",
-        translation_key="wm_tank_a_det_load_for_nominal_weight",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            TANK_A_DET_LOAD_FOR_NOMINAL_WEIGHT_CAPABILITY
-        ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_tank_a_det_load_for_nominal_weight()
-        ),
-    ),
-    ElectroluxSensorDescription(
-        key="wm_tank_a_reserve",
-        translation_key="wm_tank_a_reserve",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            TANK_A_RESERVE_CAPABILITY
-        ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_tank_a_reserve()
-        ),
-    ),
-    ElectroluxSensorDescription(
-        key="wm_tank_b_det_load_for_nominal_weight",
-        translation_key="wm_tank_b_det_load_for_nominal_weight",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            TANK_B_DET_LOAD_FOR_NOMINAL_WEIGHT_CAPABILITY
-        ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_tank_b_det_load_for_nominal_weight()
-        ),
-    ),
-    ElectroluxSensorDescription(
-        key="wm_tank_b_reserve",
-        translation_key="wm_tank_b_reserve",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            TANK_B_RESERVE_CAPABILITY
-        ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_tank_b_reserve()
-        ),
-    ),
-    ElectroluxSensorDescription(
-        key="wm_ad_tank_a_det_loaded",
-        translation_key="wm_ad_tank_a_det_loaded",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            AD_TANK_A_DET_LOADED_CAPABILITY
-        ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_ad_tank_a_det_loaded()
-        ),
-    ),
-    ElectroluxSensorDescription(
-        key="wm_ad_tank_b_det_loaded",
-        translation_key="wm_ad_tank_b_det_loaded",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            AD_TANK_B_DET_LOADED_CAPABILITY
-        ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_ad_tank_b_det_loaded()
-        ),
-    ),
-    ElectroluxSensorDescription(
-        key="wm_ad_tank_b_soft_loaded",
-        translation_key="wm_ad_tank_b_soft_loaded",
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            AD_TANK_B_SOFT_LOADED_CAPABILITY
-        ),
-        value_fn=lambda appliance: (
-            appliance.get_current_f_c_miscellaneous_state_ad_tank_b_soft_loaded()
-        ),
+        key="time_left",
+        translation_key="time_left",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda appliance: appliance.is_feature_supported(TIME_TO_END),
+        value_fn=get_care_appliance_time_left,
     ),
 )
 
@@ -600,7 +606,6 @@ HOB_ZONE_ELECTROLUX_SENSORS: tuple[
 VACUUM_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription[RVCAppliance], ...] = (
     ElectroluxSensorDescription(
         key="battery_percentage",
-        translation_key="battery_percentage",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -631,7 +636,6 @@ AIR_PURIFIER_ELECTROLUX_SENSORS: tuple[
 ] = (
     ElectroluxSensorDescription(
         key="pm_1",
-        translation_key="pm_1",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         exists_fn=lambda appliance: _is_air_quality_sensor_supported(appliance, PM_1),
@@ -639,7 +643,6 @@ AIR_PURIFIER_ELECTROLUX_SENSORS: tuple[
     ),
     ElectroluxSensorDescription(
         key="pm_2_5",
-        translation_key="pm_2_5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         exists_fn=lambda appliance: _is_air_quality_sensor_supported(appliance, PM_2_5),
@@ -647,7 +650,6 @@ AIR_PURIFIER_ELECTROLUX_SENSORS: tuple[
     ),
     ElectroluxSensorDescription(
         key="pm_10",
-        translation_key="pm_10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         exists_fn=lambda appliance: _is_air_quality_sensor_supported(appliance, PM_10),
@@ -655,156 +657,10 @@ AIR_PURIFIER_ELECTROLUX_SENSORS: tuple[
     ),
     ElectroluxSensorDescription(
         key="tvoc",
-        translation_key="tvoc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         exists_fn=lambda appliance: _is_air_quality_sensor_supported(appliance, TVOC),
         value_fn=lambda appliance: appliance.get_current_air_quality(TVOC),
-    ),
-)
-
-
-def get_structured_oven_start_at(
-    appliance: SOAppliance, cavity: str
-) -> datetime | None:
-    """Get when the appliance will start."""
-    return (
-        round_to_minute(start_at)
-        if (start_at := appliance.get_current_cavity_start_at(cavity)) is not None
-        else None
-    )
-
-
-def get_structured_oven_running_time(
-    appliance: SOAppliance, cavity: str
-) -> float | None:
-    """Get the amount of time the oven has been running for."""
-    running_time = appliance.get_current_cavity_running_time(cavity)
-    if running_time is None or running_time <= 0:
-        return None
-    return running_time
-
-
-def get_structured_oven_time_left(appliance: SOAppliance, cavity: str) -> float | None:
-    """Get the amount of time left the oven will be running for."""
-    time_to_end = appliance.get_current_cavity_time_to_end(cavity)
-    if time_to_end is None or time_to_end <= 0:
-        return None
-    return time_to_end
-
-
-STRUCTURED_OVEN_CAVITY_ELECTROLUX_SENSORS: tuple[
-    ElectroluxSubmoduleSensorDescription[SOAppliance], ...
-] = (
-    ElectroluxSubmoduleSensorDescription(
-        key="start_at",
-        translation_key="start_at",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
-            cavity, START_TIME
-        ),
-        value_fn=get_structured_oven_start_at,
-    ),
-    ElectroluxSubmoduleSensorDescription(
-        key="running_time",
-        translation_key="running_time",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
-            cavity, RUNNING_TIME
-        ),
-        value_fn=get_structured_oven_running_time,
-    ),
-    ElectroluxSubmoduleSensorDescription(
-        key="time_left",
-        translation_key="time_left",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        exists_fn=lambda appliance, cavity: appliance.is_cavity_feature_supported(
-            cavity, TIME_TO_END
-        ),
-        value_fn=get_structured_oven_time_left,
-    ),
-)
-
-
-def get_care_appliance_start_at(
-    appliance: DWAppliance | TDAppliance | WDAppliance | WMAppliance,
-) -> datetime | None:
-    """Get when the appliance will start."""
-    return (
-        round_to_minute(start_at)
-        if (start_at := appliance.get_current_start_at()) is not None
-        else None
-    )
-
-
-def get_care_appliance_end_at(
-    appliance: DWAppliance | TDAppliance | WDAppliance | WMAppliance,
-) -> datetime | None:
-    """Get when the appliance will stop running."""
-    end_at: datetime | None = appliance.get_current_end_at()
-    if end_at is not None:
-        return round_to_minute(end_at)
-
-    if appliance.get_current_appliance_state() is not APPLIANCE_STATE_RUNNING:
-        return None
-
-    time_to_end = appliance.get_current_time_to_end()
-    if time_to_end is None or time_to_end <= 0:
-        return None
-    end_at = utcnow() + timedelta(seconds=time_to_end)
-    return round_to_minute(end_at)
-
-
-def get_care_appliance_time_left(
-    appliance: DWAppliance | TDAppliance | WDAppliance | WMAppliance,
-) -> float | None:
-    """Get the amount of time left the appliance will be running for."""
-    time_to_end = appliance.get_current_time_to_end()
-    if time_to_end is None or time_to_end <= 0:
-        return None
-    return time_to_end
-
-
-CARE_ELECTROLUX_SENSORS: tuple[
-    ElectroluxSensorDescription[DWAppliance | TDAppliance | WDAppliance | WMAppliance],
-    ...,
-] = (
-    ElectroluxSensorDescription(
-        key="start_at",
-        translation_key="start_at",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            [START_TIME, STOP_TIME]
-        ),
-        value_fn=get_care_appliance_start_at,
-    ),
-    ElectroluxSensorDescription(
-        key="end_at",
-        translation_key="end_at",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        exists_fn=lambda appliance: appliance.is_feature_supported(
-            [START_TIME, STOP_TIME]
-        ),
-        value_fn=get_care_appliance_end_at,
-    ),
-    ElectroluxSensorDescription(
-        key="time_left",
-        translation_key="time_left",
-        entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        exists_fn=lambda appliance: appliance.is_feature_supported(TIME_TO_END),
-        value_fn=get_care_appliance_time_left,
     ),
 )
 
@@ -861,13 +717,6 @@ def build_entities_for_appliance(
         entities.extend(
             ElectroluxSensor(appliance_data, coordinator, description)
             for description in CARE_ELECTROLUX_SENSORS
-            if description.exists_fn(appliance_data)
-        )
-
-    if isinstance(appliance_data, WDAppliance | WMAppliance):
-        entities.extend(
-            ElectroluxSensor(appliance_data, coordinator, description)
-            for description in WM_WD_ELECTROLUX_SENSORS
             if description.exists_fn(appliance_data)
         )
 
