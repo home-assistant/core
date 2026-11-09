@@ -103,6 +103,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_flower_box_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_flower_box_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -154,6 +207,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.17',
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_flower_box_precipitation_rate-entry]
@@ -260,6 +416,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_flower_box_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Sandy Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Surface Drip',
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_flower_box_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flower Box Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flower Box Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_flower_box_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Flower Box Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_flower_box_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Vegetables',
+  })
+# ---
 # name: test_sensors[sensor.12345_landscaping_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -313,6 +769,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_landscaping_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_landscaping_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -364,6 +873,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.17',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_landscaping_precipitation_rate-entry]
@@ -468,6 +1080,306 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Sandy Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Bubblers Drip',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_landscaping_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Landscaping Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Landscaping Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_landscaping_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Landscaping Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_landscaping_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flowers',
   })
 # ---
 # name: test_sensors[sensor.12345_morning_run_completion_time-entry]
@@ -626,6 +1538,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_test_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_test_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -677,6 +1642,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_test_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.12345_test_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_test_precipitation_rate-entry]
@@ -783,6 +1851,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_test_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_test_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_test_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_test_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_test_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_test_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_test_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TEST Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TEST Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_test_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 TEST Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_test_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Drought Tolerant Plants',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_10_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -836,6 +2204,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_10_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_10_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -887,6 +2308,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_10_precipitation_rate-entry]
@@ -993,6 +2517,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_10_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_10_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 10 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 10 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_10_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 10 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_10_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_11_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1046,6 +2870,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_11_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_11_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1097,6 +2974,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_11_precipitation_rate-entry]
@@ -1203,6 +3183,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_11_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_11_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 11 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 11 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_11_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 11 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_11_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_12_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1256,6 +3536,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_12_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_12_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1307,6 +3640,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_12_precipitation_rate-entry]
@@ -1413,6 +3849,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_12_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_12_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 12 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 12 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_12_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 12 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_12_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_4_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1466,6 +4202,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_4_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_4_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1517,6 +4306,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_4_precipitation_rate-entry]
@@ -1623,6 +4515,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_4_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_4_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 4 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 4 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_4_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 4 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_4_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_5_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1676,6 +4868,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_5_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_5_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1727,6 +4972,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_5_precipitation_rate-entry]
@@ -1833,6 +5181,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_5_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_5_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 5 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 5 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_5_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 5 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_5_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_6_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1886,6 +5534,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_6_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_6_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1937,6 +5638,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_6_precipitation_rate-entry]
@@ -2043,6 +5847,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_6_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_6_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 6 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 6 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_6_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 6 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_6_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_7_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2096,6 +6200,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_7_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_7_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2147,6 +6304,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_7_precipitation_rate-entry]
@@ -2253,6 +6513,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_7_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_7_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 7 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 7 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_7_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 7 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_7_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_8_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2306,6 +6866,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_8_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_8_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2357,6 +6970,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_8_precipitation_rate-entry]
@@ -2463,6 +7179,306 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_8_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_8_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 8 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 8 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_8_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 8 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_8_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_9_area-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2516,6 +7532,59 @@
     'state': '92.9',
   })
 # ---
+# name: test_sensors[sensor.12345_zone_9_current_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_current_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Current cycle',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Current cycle',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_current_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_current_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Current cycle',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_current_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.12345_zone_9_field_capacity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2567,6 +7636,109 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.3',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 ID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 ID',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_number_of_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_number_of_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Number of cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Number of cycles',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_number_of_cycles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_number_of_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Number of cycles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_number_of_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.12345_zone_9_precipitation_rate-entry]
@@ -2671,4 +7843,304 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_slope-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_slope',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Slope',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Slope',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_slope',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_slope-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Slope',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_slope',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Flat',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_soil_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_soil_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Soil type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Soil type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_soil_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_soil_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Soil type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_soil_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Clay Loam',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_sprinkler_head_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_sprinkler_head_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Sprinkler head type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Sprinkler head type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_sprinkler_head_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_sprinkler_head_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Sprinkler head type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_sprinkler_head_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Popup Spray',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Status',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Not Running',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_sun_exposure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_sun_exposure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Sun exposure',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Sun exposure',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_sun_exposure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_sun_exposure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Sun exposure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_sun_exposure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Full Sun',
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_vegetation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('rainmachine', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.12345_zone_9_vegetation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 9 Vegetation type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone 9 Vegetation type',
+    'platform': 'rainmachine',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_vegetation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.12345_zone_9_vegetation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12345 Zone 9 Vegetation type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.12345_zone_9_vegetation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Cool Season Grass',
   })
