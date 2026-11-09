@@ -32,15 +32,15 @@ async def async_get_config_entry_diagnostics(
                 "departure_time": coordinator.departure_time,
             },
             "route_data": {
-                "trips_count": len(coordinator.data.trips) if coordinator.data else 0,  # type: ignore[truthy-bool]
+                "trips_count": len(coordinator.data.trips) if coordinator.data else 0,
                 "has_first_trip": coordinator.data.first_trip is not None
-                if coordinator.data  # type: ignore[truthy-bool]
+                if coordinator.data
                 else False,
                 "has_next_trip": coordinator.data.next_trip is not None
-                if coordinator.data  # type: ignore[truthy-bool]
+                if coordinator.data
                 else False,
             }
-            if coordinator.data  # type: ignore[truthy-bool]
+            if coordinator.data
             else None,
         }
 
@@ -89,7 +89,7 @@ async def async_get_device_diagnostics(
     }
 
     # Add detailed trip data if available
-    if coordinator and coordinator.data:  # type: ignore[truthy-bool]
+    if coordinator and coordinator.data:
         device_data["trip_details"] = {
             "trips_count": len(coordinator.data.trips),
             "has_first_trip": coordinator.data.first_trip is not None,

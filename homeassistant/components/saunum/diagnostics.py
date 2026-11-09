@@ -33,7 +33,7 @@ async def async_get_config_entry_diagnostics(
     }
 
     # Add coordinator data if available
-    if coordinator.data:  # type: ignore[truthy-bool]
+    if coordinator.data:
         data_dict = asdict(coordinator.data)
         diagnostics_data["coordinator_data"] = data_dict
 
