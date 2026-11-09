@@ -18,7 +18,7 @@ from aiotedee.models import TedeeBridge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -151,7 +151,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         """Register the webhook at the Tedee bridge."""
         self.tedee_webhook_id = await self.tedee_client.register_webhook(webhook_url)
 
-    async def async_unregister_webhook(self) -> None:
+    async def async_unregister_webhook(self, _: Event | None = None) -> None:
         """Unregister the webhook at the Tedee bridge."""
         if self.tedee_webhook_id is not None:
             try:
@@ -159,6 +159,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             except TedeeWebhookException:
                 _LOGGER.exception("Failed to unregister Tedee webhook from bridge")
             else:
+                self.tedee_webhook_id = None
                 _LOGGER.debug("Unregistered Tedee webhook")
 
     def _async_add_remove_locks(self) -> None:

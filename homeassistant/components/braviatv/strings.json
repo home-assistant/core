@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "no_ip_control": "IP Control is disabled on your TV or the TV is not supported.",
       "not_bravia_device": "The device is not a Bravia TV."
     },

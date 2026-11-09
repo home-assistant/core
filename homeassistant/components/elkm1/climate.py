@@ -19,8 +19,8 @@ from homeassistant.const import PRECISION_WHOLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import ElkEntity, create_elk_entities
+from .models import ElkM1ConfigEntry
 
 SUPPORT_HVAC = [
     HVACMode.OFF,

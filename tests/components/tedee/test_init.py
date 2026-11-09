@@ -50,6 +50,31 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_tedee.delete_webhook.assert_called_once()
+
+
+async def test_reload_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tedee: MagicMock,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the webhook is re-registered when the entry is reloaded."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_tedee.register_webhook.call_count == 2
+    mock_tedee.delete_webhook.assert_called_once()
+
+    client = await hass_client_no_auth()
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+    resp = await client.post(urlparse(webhook_url).path, json={})
+    assert resp.status == HTTPStatus.OK
+    # The webhook component answers 200 even for unregistered webhooks
+    mock_tedee.parse_webhook_message.assert_called_once_with({})
 
 
 @pytest.mark.parametrize(

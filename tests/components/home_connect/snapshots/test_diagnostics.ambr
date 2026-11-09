@@ -127,7 +127,7 @@
           'value': 'BSH.Common.EnumType.DoorState.Open',
         }),
       }),
-      'type': 'DNE',
+      'type': 'unknown',
       'vib': 'HCS000000',
     }),
     'BOSCH-HCS000000-68A40E000000': dict({

@@ -96,6 +96,7 @@ async def setup_integration(
 async def mock_data_listener(
     callback: Callable[[str, Any], Awaitable[None]] | None = None,
     _: bool = False,
+    power_state_callback: Callable[[Any], Awaitable[None]] | None = None,
 ):
     """Mock websocket data listener."""
     if callback is not None:

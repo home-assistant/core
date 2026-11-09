@@ -31,17 +31,8 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.heos.const import (
-    ATTR_DESTINATION_POSITION,
-    ATTR_QUEUE_IDS,
-    DOMAIN,
-    SERVICE_GET_QUEUE,
-    SERVICE_GROUP_VOLUME_DOWN,
-    SERVICE_GROUP_VOLUME_SET,
-    SERVICE_GROUP_VOLUME_UP,
-    SERVICE_MOVE_QUEUE_ITEM,
-    SERVICE_REMOVE_FROM_QUEUE,
-)
+from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.services import HeosService, HeosServiceArgument
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -80,6 +71,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -718,8 +710,11 @@ async def test_group_volume_set(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GROUP_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+        HeosService.GROUP_VOLUME_SET,
+        {
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            HeosServiceArgument.VOLUME_LEVEL: 1,
+        },
         blocking=True,
     )
     controller.set_group_volume.assert_called_once_with(999, 100)
@@ -738,8 +733,11 @@ async def test_group_volume_set_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GROUP_VOLUME_SET,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+            HeosService.GROUP_VOLUME_SET,
+            {
+                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                HeosServiceArgument.VOLUME_LEVEL: 1,
+            },
             blocking=True,
         )
     controller.set_group_volume.assert_called_once_with(999, 100)
@@ -759,8 +757,11 @@ async def test_group_volume_set_not_grouped_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GROUP_VOLUME_SET,
-            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+            HeosService.GROUP_VOLUME_SET,
+            {
+                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                HeosServiceArgument.VOLUME_LEVEL: 1,
+            },
             blocking=True,
         )
     controller.set_group_volume.assert_not_called()
@@ -774,8 +775,8 @@ async def test_group_volume_down(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GROUP_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        HeosService.GROUP_VOLUME_DOWN,
+        {CommonServiceArgument.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     controller.group_volume_down.assert_called_with(999)
@@ -789,15 +790,15 @@ async def test_group_volume_up(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_GROUP_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        HeosService.GROUP_VOLUME_UP,
+        {CommonServiceArgument.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     controller.group_volume_up.assert_called_with(999)
 
 
 @pytest.mark.parametrize(
-    "service", [SERVICE_GROUP_VOLUME_DOWN, SERVICE_GROUP_VOLUME_UP]
+    "service", [HeosService.GROUP_VOLUME_DOWN, HeosService.GROUP_VOLUME_UP]
 )
 async def test_group_volume_down_up_ungrouped_raises(
     hass: HomeAssistant,
@@ -1791,9 +1792,9 @@ async def test_get_queue(
     controller.player_get_queue.return_value = queue
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        HeosService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
         },
         blocking=True,
         return_response=True,
@@ -1810,8 +1811,11 @@ async def test_remove_from_queue(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_FROM_QUEUE,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_QUEUE_IDS: [1, "2"]},
+        HeosService.REMOVE_FROM_QUEUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            HeosServiceArgument.QUEUE_IDS: [1, "2"],
+        },
         blocking=True,
     )
     controller.player_remove_from_queue.assert_called_once_with(1, [1, 2])
@@ -1825,11 +1829,11 @@ async def test_move_queue_item_queue(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MOVE_QUEUE_ITEM,
+        HeosService.MOVE_QUEUE_ITEM,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_QUEUE_IDS: [1, "2"],
-            ATTR_DESTINATION_POSITION: 10,
+            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            HeosServiceArgument.QUEUE_IDS: [1, "2"],
+            HeosServiceArgument.DESTINATION_POSITION: 10,
         },
         blocking=True,
     )
@@ -1849,11 +1853,11 @@ async def test_move_queue_item_queue_error_raises(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MOVE_QUEUE_ITEM,
+            HeosService.MOVE_QUEUE_ITEM,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_QUEUE_IDS: [1, "2"],
-                ATTR_DESTINATION_POSITION: 10,
+                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                HeosServiceArgument.QUEUE_IDS: [1, "2"],
+                HeosServiceArgument.DESTINATION_POSITION: 10,
             },
             blocking=True,
         )

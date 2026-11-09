@@ -8,6 +8,7 @@ from music_assistant_models.enums import MediaType
 from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import SearchResults
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import (
@@ -89,6 +90,8 @@ async def test_search_action_with_username(
         limit=5,
         library_only=False,
         user="user_user",
+        providers=None,
+        require_schema=None,
     )
 
 
@@ -167,6 +170,52 @@ async def test_search_action_with_unknown_username(
         )
     assert err.value.translation_key == "invalid_username"
     assert err.value.translation_placeholders == {"username": "nobody"}
+
+
+@pytest.mark.parametrize(
+    ("other_entry_domain", "config_entry_id", "translation_key"),
+    [
+        pytest.param(
+            "other", "nonexistent", "service_config_entry_not_found", id="not_found"
+        ),
+        pytest.param(
+            "other",
+            "other_entry",
+            "service_config_entry_wrong_domain",
+            id="wrong_domain",
+        ),
+        pytest.param(
+            DOMAIN,
+            "other_entry",
+            "service_config_entry_not_loaded",
+            id="not_loaded",
+        ),
+    ],
+)
+async def test_search_action_invalid_config_entry(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    other_entry_domain: str,
+    config_entry_id: str,
+    translation_key: str,
+) -> None:
+    """Test the search action with a config entry that can't be used."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    # Added but not set up
+    MockConfigEntry(domain=other_entry_domain, entry_id="other_entry").add_to_hass(hass)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {
+                ATTR_CONFIG_ENTRY_ID: config_entry_id,
+                ATTR_SEARCH_NAME: "test",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == translation_key
 
 
 @pytest.mark.parametrize(
