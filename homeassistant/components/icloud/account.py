@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 import logging
 import operator
+import threading
 from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
@@ -225,6 +226,7 @@ class IcloudAccount:
         self._family_members_fullname: dict[str, str] = {}
         self._devices: dict[str, IcloudDevice] = {}
         self._retried_fetch = False
+        self._poll_lock = threading.Lock()
         self._config_entry = config_entry
 
         self._unsub_fetch: CALLBACK_TYPE | None = None
@@ -763,28 +765,36 @@ class IcloudAccount:
         The stored session is usually still valid: it is the old service's forced
         re-login that iCloud rejects or challenges, and a new service reuses the
         session instead. Only a login that fails as well needs the user.
+
+        The timer and the update action both poll, each on its own thread. One
+        at a time, so a second poll that meets the same rejection finds the new
+        session instead of replacing it.
         """
-        assert self.api is not None
-        try:
-            self.api.authenticate()
-            self.update_devices()
-        except Exception as err:
-            # While the user is entering a code the reauth flow holds this
-            # session; a new login would replace it and could issue a second
-            # challenge.
-            if not _is_auth_failure(err) or self._reauth_pending():
-                raise
-            _LOGGER.debug("iCloud rejected the session, logging in again: %r", err)
+        with self._poll_lock:
+            if self.api is None:
+                # The poll ahead of this one was refused and left the account to
+                # the user, which it has already scheduled.
+                return
             try:
-                self.api = self._create_service()
-            except Exception as login_err:
-                if _is_auth_failure(login_err):
-                    # The old session is of no use to the reauth flow either:
-                    # keeping it could send the flow to code entry on a session
-                    # the new challenge did not come from.
-                    self.api = None
-                raise
-            self.update_devices()
+                self.api.authenticate()
+                self.update_devices()
+            except Exception as err:
+                # While the user is entering a code the reauth flow holds this
+                # session; a new login would replace it and could issue a second
+                # challenge.
+                if not _is_auth_failure(err) or self._reauth_pending():
+                    raise
+                _LOGGER.debug("iCloud rejected the session, logging in again: %r", err)
+                try:
+                    self.api = self._create_service()
+                except Exception as login_err:
+                    if _is_auth_failure(login_err):
+                        # The old session is of no use to the reauth flow either:
+                        # keeping it could send the flow to code entry on a session
+                        # the new challenge did not come from.
+                        self.api = None
+                    raise
+                self.update_devices()
 
     def keep_alive(self, now=None) -> None:
         """Keep the API alive.
