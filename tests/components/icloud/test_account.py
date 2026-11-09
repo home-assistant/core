@@ -1755,6 +1755,47 @@ async def test_a_login_that_fails_does_not_keep_the_old_challenged_session(
     assert config_entry.runtime_data.api is None
 
 
+async def test_a_challenge_that_cannot_be_delivered_is_retried_not_asked_for(
+    hass: HomeAssistant,
+    polling_service: tuple[MagicMock, dict],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a challenge with no way to send a code does not start reauth.
+
+    Asking would send the user to a password form that clears the stored
+    session, for a code that cannot arrive. Setup retries the same condition,
+    and so does every poll.
+    """
+    service, _ = polling_service
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service.authenticate.side_effect = PyiCloudFailedLoginException("rejected")
+    undeliverable = MagicMock()
+    undeliverable.requires_2fa = True
+    undeliverable.two_factor_delivery_method = "unknown"
+
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+        return_value=undeliverable,
+    ) as login:
+        await _poll(hass, freezer)
+
+        assert login.call_count == 1
+        assert not _reauth_flows(hass)
+
+        # The poll after that finds the same challenge and still leaves it be.
+        await _poll(hass, freezer)
+
+        assert not _reauth_flows(hass)
+        assert config_entry.runtime_data.api is undeliverable
+
+
 async def test_a_failed_setup_retry_keeps_the_account_polling(
     hass: HomeAssistant,
     polling_service: tuple[MagicMock, dict],

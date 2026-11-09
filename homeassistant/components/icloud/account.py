@@ -460,7 +460,15 @@ class IcloudAccount:
         _LOGGER.debug("Updating devices")
 
         if self.api.requires_2fa:
-            self._require_reauth()
+            if not code_can_be_delivered(self.api):
+                # Nothing for the user to act on, so retry like setup does
+                # rather than ask for a code that cannot be sent.
+                _LOGGER.warning(
+                    "iCloud asked for a verification code but has no way to send "
+                    "one, will retry"
+                )
+            else:
+                self._require_reauth()
             # Keep the timer running so polling resumes by itself once the
             # user has entered their verification code.
             self._fetch_interval = self._max_interval
