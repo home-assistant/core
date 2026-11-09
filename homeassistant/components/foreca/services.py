@@ -15,6 +15,7 @@ class ForecaService(StrEnum):
     """Foreca actions."""
 
     GET_3_HOUR_FORECAST = "get_3_hour_forecast"
+    GET_AIR_QUALITY_FORECAST = "get_air_quality_forecast"
     GET_FORECASTS_EXTRA = "get_forecasts_extra"
 
 
@@ -47,5 +48,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=WEATHER_DOMAIN,
         schema=None,
         func="async_get_3_hour_forecast",
+        supports_response=SupportsResponse.ONLY,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ForecaService.GET_AIR_QUALITY_FORECAST,
+        entity_domain=WEATHER_DOMAIN,
+        schema={
+            probatio.Required(ForecaServiceArgument.TYPE): probatio.In(
+                ["daily", "hourly"]
+            )
+        },
+        func="async_get_air_quality_forecast",
         supports_response=SupportsResponse.ONLY,
     )

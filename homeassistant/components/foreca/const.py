@@ -24,6 +24,15 @@ UPDATE_INTERVAL = timedelta(minutes=30)
 HOURLY_PERIODS = 168
 DAILY_PERIODS = 14
 
+POLLUTANTS = {
+    "Carbon monoxide": "carbon_monoxide",
+    "Nitrogen dioxide": "nitrogen_dioxide",
+    "Ozone": "ozone",
+    "Particulate matter <10um": "pm10",
+    "Particulate matter <2.5um": "pm25",
+    "Sulphur dioxide": "sulphur_dioxide",
+}
+
 _CLOUDINESS_CONDITIONS = {
     0: ATTR_CONDITION_SUNNY,
     1: ATTR_CONDITION_SUNNY,
