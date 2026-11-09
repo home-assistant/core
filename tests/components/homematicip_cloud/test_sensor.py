@@ -1416,6 +1416,35 @@ async def test_hmip_sensor_unknown_device_type(
     assert hass.states.get("sensor.unknown_sensor_today_rain").state == "6.5"
 
 
+async def test_hmip_sensor_second_channel_of_same_kind(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a second channel of the same kind gets its own sensor."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    device_data = fixture["devices"]["3014F711AAAA000000000002"]
+    device_data["functionalChannels"]["2"] = dict(
+        device_data["functionalChannels"]["1"], index=2, actualTemperature=7.5
+    )
+    device_data.update(id="3014F711000000000000TWO2", label="Two climate channels")
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Two climate channels"], extra_devices=[device_data]
+    )
+
+    states = {
+        entry.unique_id: hass.states.get(entry.entity_id).state
+        for entry in entity_registry.entities.values()
+        if entry.unique_id.endswith("_temperature")
+    }
+    assert states == {
+        "3014F711000000000000TWO2_1_temperature": "15.1",
+        "3014F711000000000000TWO2_2_temperature": "7.5",
+    }
+
+
 async def test_hmip_sensor_unique_ids(
     hass: HomeAssistant,
     default_mock_hap_factory: HomeFactory,
