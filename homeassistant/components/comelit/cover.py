@@ -7,11 +7,11 @@ from aiocomelit import ComelitDeviceObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -272,7 +272,11 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         self.async_on_remove(self._cancel_position_timer)
 
         if (state := await self.async_get_last_state()) is not None:
-            if (position := state.attributes.get(ATTR_CURRENT_POSITION)) is not None:
+            if (
+                position := state.attributes.get(
+                    CoverEntityStateAttribute.CURRENT_POSITION
+                )
+            ) is not None:
                 self._position = position
             elif state.state == CoverState.CLOSED:
                 self._position = 0
