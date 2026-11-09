@@ -23,7 +23,7 @@ from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
-    PRICES_SCAN_INTERVAL,
+    HOUSEHOLD_SCAN_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
@@ -122,7 +122,10 @@ async def test_setup_relations_auth_error_starts_reauth(
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-@pytest.mark.parametrize("method", ["async_get_prices", "async_get_service_point"])
+@pytest.mark.parametrize(
+    "method",
+    ["async_get_prices", "async_get_service_point", "async_get_tou_schedules"],
+)
 async def test_setup_prices_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -160,7 +163,7 @@ async def test_prices_refresh_auth_error_starts_reauth(
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeAuthenticationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL)
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
