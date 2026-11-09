@@ -64,9 +64,8 @@ rules:
   dynamic-devices:
     status: todo
     comment: |
-      Power meters, and inverters in slots that answered during setup, are added when the power station reports them.
-      A wallbox configured after setup needs a reload, because the wallbox registers are only read during setup.
-      An inverter slot that doesn't answer during setup also needs a reload, because e3dc-ess-modbus only looks for inverters then.
+      Wallboxes can be added at runtime. The integration only looks for them during setup.
+      Inverters are handled the same way. Additional inverters can probably be added at runtime too.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
