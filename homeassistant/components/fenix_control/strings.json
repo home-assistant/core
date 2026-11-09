@@ -64,6 +64,9 @@
     "set_temperature_failed": {
       "message": "Failed to set the target temperature."
     },
+    "temperature_out_of_range": {
+      "message": "The temperature {temperature} °C is outside the range {min_temp}–{max_temp} °C of the mode it would set."
+    },
     "unsupported_hvac_mode": {
       "message": "The HVAC mode {hvac_mode} is not supported."
     },

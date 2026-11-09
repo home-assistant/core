@@ -257,6 +257,95 @@ async def test_set_temperature_outside_device_range(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_leaving_defrost_checks_manual_range(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a target for heat is checked against the manual range, not defrost's."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(PresetMode.DEFROST)),
+    )
+
+    # Within the defrost range (2-15 °C), so Home Assistant passes it on
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 3.0,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "temperature_out_of_range"
+    assert err.value.translation_placeholders == {
+        "temperature": "3.0",
+        "min_temp": "5.0",
+        "max_temp": "35.0",
+    }
+
+    # Above the defrost range: Home Assistant rejects it before the integration
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 21.5,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "temp_out_of_range"
+
+    mock_fenix_client.set_setpoint.assert_not_called()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset", "temperature"),
+    [
+        # The program's setpoint is only known after the next poll
+        (PRESET_HOME, None),
+        (PRESET_BOOST, 24.0),
+    ],
+)
+async def test_preset_change_shows_new_mode_target(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset: str,
+    temperature: float | None,
+) -> None:
+    """Test the old mode's active setpoint doesn't show as the new mode's target."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(
+            SETPOINT_DEVICE,
+            preset_mode=int(PresetMode.DEFROST),
+            active_target_temperature=7.0,
+        ),
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset},
+        blocking=True,
+    )
+
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == temperature
+
+
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("device_range", "min_temp", "max_temp"),
     [

@@ -131,13 +131,13 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
                 return self.device.active_target_temperature
         return self.device.target_temperature
 
-    def _setpoint_range(self) -> tuple[float, float]:
-        """Return the range the device accepts for the setpoint a change sets.
+    def _setpoint_range(self, mode: int | None) -> tuple[float, float]:
+        """Return the range the device accepts for the setpoint of a mode.
 
         Defrost and boost have their own ranges; in the other modes a change sets
         the manual target. The bounds are rounded inwards to the step.
         """
-        match self.device.preset_mode:
+        match mode:
             case PresetMode.DEFROST:
                 device_range = self.device.defrost_temperature_range
             case PresetMode.BOOST:
@@ -159,13 +159,13 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     @override
     def min_temp(self) -> float:
         """Return the lowest target the device accepts in the current mode."""
-        return self._setpoint_range()[0]
+        return self._setpoint_range(self.device.preset_mode)[0]
 
     @property
     @override
     def max_temp(self) -> float:
         """Return the highest target the device accepts in the current mode."""
-        return self._setpoint_range()[1]
+        return self._setpoint_range(self.device.preset_mode)[1]
 
     @property
     @override
@@ -252,6 +252,19 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         mode = self.device.preset_mode
         if hvac_mode is not None or mode not in OWN_SETPOINT_FIELDS:
             mode = int(PresetMode.MANUAL)
+        # Home Assistant checks the range of the current mode; leaving defrost or
+        # boost sets the manual target, which has its own range
+        low, high = self._setpoint_range(mode)
+        if not low <= temperature <= high:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_out_of_range",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "min_temp": str(low),
+                    "max_temp": str(high),
+                },
+            )
         try:
             await self.coordinator.client.set_setpoint(
                 self._device_id, PresetMode(mode), temperature
@@ -307,6 +320,12 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         """Show the commanded state until the next poll confirms it."""
         # The cloud reports a change only after the thermostat has applied it,
         # so an immediate refresh would show the old state
+        if changes.get("preset_mode", self.device.preset_mode) != (
+            self.device.preset_mode
+        ):
+            # The setpoint the new mode regulates to is only known after the
+            # next poll; the old one would show as the new mode's target
+            changes.setdefault("active_target_temperature", None)
         device: Device = dataclasses.replace(self.device, **changes)
         data = self.coordinator.data
         # Keep the poll schedule; frequent commands must not postpone polling
