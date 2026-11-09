@@ -313,6 +313,7 @@ class RyseCoverEntity(CoverEntity):
         )
         if scanner_device is None:
             return None
+        self._device.set_ble_device(scanner_device.ble_device)
         return await self._device.pair()
 
     async def _async_send_command(
