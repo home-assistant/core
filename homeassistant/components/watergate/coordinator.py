@@ -96,9 +96,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             ) from exc
         if TYPE_CHECKING:
             # The client raises rather than returning None when a read genuinely
-            # fails; it only returns None for an empty response body, which the
-            # entities and diagnostics already tolerate at runtime (see the
-            # device-state-missing tests), so this narrows the type only.
+            # fails, so these asserts only narrow the types for mypy.
             assert state is not None
             assert telemetry is not None
             assert networking is not None
