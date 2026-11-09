@@ -251,7 +251,8 @@ class AbrpTelemetrySensor(AbrpVehicleEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return this metric's latest reading."""
-        if (tlm := self.telemetry) is None:
+        tlm = self.coordinator.data.get(self._vehicle_id)
+        if tlm is None:
             return None
         return self.entity_description.value_fn(tlm)
 
