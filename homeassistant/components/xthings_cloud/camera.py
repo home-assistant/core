@@ -14,7 +14,7 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCSendMessage,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -243,6 +243,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         return self._kvs_sessions.pop(session_id, None)
 
     @override
+    @callback
     def close_webrtc_session(self, session_id: str) -> None:
         """Close WebRTC session and clean up KVS signaling."""
         kvs_client = self._remove_webrtc_session(session_id)

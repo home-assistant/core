@@ -137,6 +137,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         await super().async_shutdown()
 
     @override
+    @callback
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:

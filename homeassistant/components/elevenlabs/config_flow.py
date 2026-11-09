@@ -11,7 +11,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_MODEL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -145,6 +145,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @override
+    @callback
     def async_get_options_flow(
         config_entry: ElevenLabsConfigEntry,
     ) -> OptionsFlow:

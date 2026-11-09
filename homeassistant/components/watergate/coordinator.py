@@ -15,7 +15,7 @@ from watergate_local_api.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -126,6 +126,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         return state_v2
 
     @override
+    @callback
     def async_set_updated_data(self, data: WatergateAgregatedRequests) -> None:
         """Manually update data, notify listeners and DO NOT reset refresh interval."""
 
