@@ -123,7 +123,6 @@ class SmartThingsEntity(Entity):
                 translation_placeholders={"manage_plans_url": MANAGE_PLANS_URL},
             ) from err
         except SmartThingsForbiddenError as err:
-            # TODO: check actual error for unentitled users after switch. We may want to revert this change.  # pylint: disable=fixme
             if (entry := self.platform.config_entry) is not None:
                 entry.async_start_reauth_if_available(self.hass)
             raise HomeAssistantError(
