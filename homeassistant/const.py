@@ -94,7 +94,7 @@ CONF_CHOOSE: Final = "choose"
 CONF_CLIENT_ID: Final = "client_id"
 CONF_CLIENT_SECRET: Final = "client_secret"
 CONF_CODE: Final = "code"
-CONF_COLOR_TEMP: Final = "color_temp"
+_DEPRECATED_CONF_COLOR_TEMP = DeprecatedConstant("color_temp", None, "2027.12")
 CONF_COMMAND: Final = "command"
 CONF_COMMAND_CLOSE: Final = "command_close"
 CONF_COMMAND_OFF: Final = "command_off"
@@ -125,7 +125,9 @@ CONF_DEVICE_ID: Final = "device_id"
 CONF_DISARM_AFTER_TRIGGER: Final = "disarm_after_trigger"
 CONF_DISCOVERY: Final = "discovery"
 CONF_DISKS: Final = "disks"
-CONF_DISPLAY_CURRENCY: Final = "display_currency"
+_DEPRECATED_CONF_DISPLAY_CURRENCY = DeprecatedConstant(
+    "display_currency", None, "2027.12"
+)
 CONF_DISPLAY_OPTIONS: Final = "display_options"
 CONF_DOMAIN: Final = "domain"
 CONF_DOMAINS: Final = "domains"
@@ -151,7 +153,9 @@ CONF_FOR: Final = "for"
 CONF_FOR_EACH: Final = "for_each"
 CONF_FORCE_UPDATE: Final = "force_update"
 CONF_FRIENDLY_NAME: Final = "friendly_name"
-CONF_FRIENDLY_NAME_TEMPLATE: Final = "friendly_name_template"
+_DEPRECATED_CONF_FRIENDLY_NAME_TEMPLATE = DeprecatedConstant(
+    "friendly_name_template", None, "2027.12"
+)
 CONF_HEADERS: Final = "headers"
 CONF_HOST: Final = "host"
 CONF_HOSTS: Final = "hosts"
@@ -323,7 +327,7 @@ ATTR_ATTRIBUTION: Final = "attribution"
 ATTR_CREDENTIALS: Final = "credentials"
 
 # Contains time-related attributes
-ATTR_NOW: Final = "now"
+_DEPRECATED_ATTR_NOW = DeprecatedConstant("now", None, "2027.12")
 ATTR_DATE: Final = "date"
 ATTR_TIME: Final = "time"
 ATTR_SECONDS: Final = "seconds"
@@ -372,10 +376,8 @@ ATTR_ICON: Final = "icon"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
-CONF_UNIT_SYSTEM_METRIC: Final = "metric"
-"""Deprecated: please use a local constant."""
-CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
-"""Deprecated: please use a local constant."""
+_DEPRECATED_CONF_UNIT_SYSTEM_METRIC = DeprecatedConstant("metric", None, "2027.12")
+_DEPRECATED_CONF_UNIT_SYSTEM_IMPERIAL = DeprecatedConstant("imperial", None, "2027.12")
 
 # Electrical attributes
 ATTR_VOLTAGE: Final = "voltage"
@@ -404,7 +406,7 @@ _DEPRECATED_ATTR_VIA_DEVICE = DeprecatedConstant(
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
-ATTR_WAKEUP: Final = "wake_up_interval"
+_DEPRECATED_ATTR_WAKEUP = DeprecatedConstant("wake_up_interval", None, "2027.12")
 
 # For devices which support a code attribute
 ATTR_CODE: Final = "code"
@@ -426,8 +428,7 @@ ATTR_TRIPPED: Final = "device_tripped"
 # time the device was tripped
 ATTR_LAST_TRIP_TIME: Final = "last_tripped_time"
 
-# For all entity's, this hold whether or not it should be hidden
-ATTR_HIDDEN: Final = "hidden"
+_DEPRECATED_ATTR_HIDDEN = DeprecatedConstant("hidden", None, "2027.12")
 
 # Location of the entity
 ATTR_LATITUDE: Final = "latitude"
@@ -443,7 +444,7 @@ ATTR_GPS_ACCURACY: Final = "gps_accuracy"
 ATTR_ASSUMED_STATE: Final = "assumed_state"
 ATTR_STATE: Final = "state"
 
-ATTR_EDITABLE: Final = "editable"
+_DEPRECATED_ATTR_EDITABLE = DeprecatedConstant("editable", None, "2027.12")
 ATTR_OPTION: Final = "option"
 
 # The entity state has been partially restored by the entity registry
@@ -959,7 +960,7 @@ SERVICE_LOCK: Final = "lock"
 SERVICE_UNLOCK: Final = "unlock"
 
 SERVICE_OPEN: Final = "open"
-SERVICE_CLOSE: Final = "close"
+_DEPRECATED_SERVICE_CLOSE = DeprecatedConstant("close", None, "2027.12")
 
 SERVICE_CLOSE_COVER: Final = "close_cover"
 SERVICE_CLOSE_COVER_TILT: Final = "close_cover_tilt"
@@ -982,20 +983,24 @@ SERVICE_SELECT_OPTION: Final = "select_option"
 # #### API / REMOTE ####
 SERVER_PORT: Final = 8123
 
-URL_ROOT: Final = "/"
+_DEPRECATED_URL_ROOT = DeprecatedConstant("/", None, "2027.12")
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
 URL_API_CORE_STATE: Final = "/api/core/state"
 URL_API_CONFIG: Final = "/api/config"
 URL_API_STATES: Final = "/api/states"
-URL_API_STATES_ENTITY: Final = "/api/states/{}"
+_DEPRECATED_URL_API_STATES_ENTITY = DeprecatedConstant(
+    "/api/states/{}", None, "2027.12"
+)
 URL_API_EVENTS: Final = "/api/events"
-URL_API_EVENTS_EVENT: Final = "/api/events/{}"
+_DEPRECATED_URL_API_EVENTS_EVENT = DeprecatedConstant("/api/events/{}", None, "2027.12")
 URL_API_SERVICES: Final = "/api/services"
-URL_API_SERVICES_SERVICE: Final = "/api/services/{}/{}"
+_DEPRECATED_URL_API_SERVICES_SERVICE = DeprecatedConstant(
+    "/api/services/{}/{}", None, "2027.12"
+)
 URL_API_COMPONENTS: Final = "/api/components"
 URL_API_ERROR_LOG: Final = "/api/error_log"
-URL_API_LOG_OUT: Final = "/api/log_out"
+_DEPRECATED_URL_API_LOG_OUT = DeprecatedConstant("/api/log_out", None, "2027.12")
 URL_API_TEMPLATE: Final = "/api/template"
 
 HTTP_BASIC_AUTHENTICATION: Final = "basic"
@@ -1019,9 +1024,9 @@ MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
-SPEED: Final = "speed"
+_DEPRECATED_SPEED = DeprecatedConstant("speed", None, "2027.12")
 WIND_SPEED: Final = "wind_speed"
-ILLUMINANCE: Final = "illuminance"
+_DEPRECATED_ILLUMINANCE = DeprecatedConstant("illuminance", None, "2027.12")
 ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -1048,7 +1053,9 @@ class EntityCategory(StrEnum):
     DIAGNOSTIC = "diagnostic"
 
 
-ENTITY_CATEGORIES: Final[list[str]] = [cls.value for cls in EntityCategory]
+_DEPRECATED_ENTITY_CATEGORIES = DeprecatedConstant(
+    [cls.value for cls in EntityCategory], None, "2027.12"
+)
 
 # The ID of the Home Assistant Media Player Cast App
 CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"

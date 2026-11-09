@@ -68,6 +68,38 @@ def test_deprecated_device_info_constant(
     )
 
 
+@pytest.mark.parametrize(
+    ("constant_name", "value"),
+    [
+        ("ATTR_EDITABLE", "editable"),
+        ("ATTR_HIDDEN", "hidden"),
+        ("ATTR_NOW", "now"),
+        ("ATTR_WAKEUP", "wake_up_interval"),
+        ("CONF_COLOR_TEMP", "color_temp"),
+        ("CONF_DISPLAY_CURRENCY", "display_currency"),
+        ("CONF_FRIENDLY_NAME_TEMPLATE", "friendly_name_template"),
+        ("CONF_UNIT_SYSTEM_IMPERIAL", "imperial"),
+        ("CONF_UNIT_SYSTEM_METRIC", "metric"),
+        ("ENTITY_CATEGORIES", ["config", "diagnostic"]),
+        ("ILLUMINANCE", "illuminance"),
+        ("SERVICE_CLOSE", "close"),
+        ("SPEED", "speed"),
+        ("URL_API_EVENTS_EVENT", "/api/events/{}"),
+        ("URL_API_LOG_OUT", "/api/log_out"),
+        ("URL_API_SERVICES_SERVICE", "/api/services/{}/{}"),
+        ("URL_API_STATES_ENTITY", "/api/states/{}"),
+        ("URL_ROOT", "/"),
+    ],
+)
+def test_deprecated_unused_constant(
+    caplog: pytest.LogCaptureFixture, constant_name: str, value: str | list[str]
+) -> None:
+    """Test the deprecated unused constants, which have no replacement."""
+    import_and_test_deprecated_constant(
+        caplog, const, constant_name, None, value, "2027.12"
+    )
+
+
 def test_deprecated_attr_via_device(caplog: pytest.LogCaptureFixture) -> None:
     """Test ATTR_VIA_DEVICE deprecation in favor of via_device_id."""
     import_and_test_deprecated_constant(
