@@ -4,6 +4,9 @@
       "infrared_brightness": {
         "default": "mdi:lightbulb-night"
       },
+      "mood": {
+        "default": "mdi:palette-swatch"
+      },
       "theme": {
         "default": "mdi:palette"
       }
@@ -39,6 +42,9 @@
     },
     "set_hev_cycle_state": {
       "service": "mdi:led-on"
+    },
+    "set_mood": {
+      "service": "mdi:palette-swatch"
     },
     "set_state": {
       "service": "mdi:led-on"

@@ -260,6 +260,14 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+LIFX_SET_MOOD_SCHEMA = cv.make_entity_service_schema(
+    {
+        probatio.Required(LIFXServiceArgument.MOOD): probatio.In(
+            ThemeLibrary.get_available_themes()
+        ),
+    }
+)
+
 SERVICES_SCHEMA = {
     LIFXService.EFFECT_COLORSWEEP: LIFX_EFFECT_COLORSWEEP_SCHEMA,
     LIFXService.EFFECT_COLORLOOP: LIFX_EFFECT_COLORLOOP_SCHEMA,
@@ -270,6 +278,7 @@ SERVICES_SCHEMA = {
     LIFXService.EFFECT_SKY: LIFX_EFFECT_SKY_SCHEMA,
     LIFXService.EFFECT_STOP: LIFX_EFFECT_STOP_SCHEMA,
     LIFXService.PAINT_THEME: LIFX_PAINT_THEME_SCHEMA,
+    LIFXService.SET_MOOD: LIFX_SET_MOOD_SCHEMA,
 }
 
 

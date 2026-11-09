@@ -5,7 +5,7 @@ import re
 from socket import gethostbyname
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from lifx import HSBK, Colors, LifxError
+from lifx import HSBK, Colors, LifxError, Theme, ThemeLibrary
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,6 +26,40 @@ from .const import CONF_SERIAL, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from .coordinator import LIFXConfigEntry
+
+
+def _theme_sort_key(slug: str) -> tuple[str, str]:
+    """Order themes as the LIFX app does: by category, then by name."""
+    theme = ThemeLibrary.get(slug)
+    if TYPE_CHECKING:
+        # Only custom themes lack these; every library theme has both
+        assert theme.category is not None
+        assert theme.unicode_name is not None
+    return theme.category, theme.unicode_name.casefold()
+
+
+# A rename alias would repeat its successor's label, so dropdowns leave it out
+THEME_OPTIONS = sorted(
+    (
+        slug
+        for slug in ThemeLibrary.get_available_themes()
+        if ThemeLibrary.get(slug).disposition != "renamed"
+    ),
+    key=_theme_sort_key,
+)
+
+
+def resolve_renamed_theme(name: str) -> Theme:
+    """Return a library theme, following a rename to the theme it became.
+
+    The library records the slug it paints, and the dropdowns only offer the
+    successor, so painting the alias itself would leave the selects blank.
+    """
+    theme = ThemeLibrary.get(name)
+    if theme.disposition == "renamed" and theme.replaced_by is not None:
+        return ThemeLibrary.get(theme.replaced_by)
+    return theme
+
 
 _SERIAL_PATTERN = re.compile(
     r"(?:[0-9a-f]{12}|(?:[0-9a-f]{2}:){5}[0-9a-f]{2})", re.IGNORECASE

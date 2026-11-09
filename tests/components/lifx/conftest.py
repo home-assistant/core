@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from lifx import Conductor, Light
+from lifx import Conductor, DeviceGroup, Light
 import pytest
 
 from homeassistant.components.lifx import manager as lifx_manager
@@ -35,6 +35,16 @@ def mock_effect_conductor() -> MagicMock:
 
     with patch.object(lifx_manager, "Conductor", return_value=mock_conductor):
         yield mock_conductor
+
+
+@pytest.fixture
+def mock_device_group() -> MagicMock:
+    """Mock the library group a Mood is applied through."""
+    group = MagicMock(spec=DeviceGroup)
+    group.apply_mood = AsyncMock()
+
+    with patch.object(lifx_manager, "DeviceGroup", return_value=group) as factory:
+        yield factory
 
 
 @pytest.fixture(autouse=True)
