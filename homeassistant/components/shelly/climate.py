@@ -1,5 +1,6 @@
 """Climate support for Shelly."""
 
+import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Self, cast, override
@@ -831,6 +832,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         self._attr_device_info = get_entity_blu_trv_device_info(coordinator, self.key)
         self._assumed_preset: str | None = None
         self._preset_command_running = False
+        self._preset_lock = asyncio.Lock()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -846,8 +848,13 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     @callback
     def _async_poll_callback(self) -> None:
         """Handle a polled update."""
-        if self._preset_command_running:
-            # The poll can not know the result of the running command yet
+        poll_coordinator = self.coordinator.config_entry.runtime_data.rpc_poll
+        if TYPE_CHECKING:
+            assert poll_coordinator is not None
+
+        if self._preset_command_running or not poll_coordinator.last_update_success:
+            # The poll can not know the result of the running command yet,
+            # or it failed and the status is not up to date
             return
 
         # The polled status is up to date again, stop assuming the preset
@@ -902,23 +909,27 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        # The boost state is only updated by polling, assume the new preset
-        # until the next poll. The command can take a while, so show it right away
-        previous_preset = self._assumed_preset
-        self._assumed_preset = preset_mode
-        self._preset_command_running = True
-        self.async_write_ha_state()
-
-        try:
-            # The TRV ends the boost after its configured duration and
-            # returns to the previous target temperature by itself
-            if preset_mode == PRESET_BOOST:
-                await self.coordinator.device.blu_trv_set_boost(self._id)
-            else:
-                await self.coordinator.device.blu_trv_clear_boost(self._id)
-        except BaseException:
-            self._assumed_preset = previous_preset
-            raise
-        finally:
-            self._preset_command_running = False
+        # Run the commands one at a time, so a newer preset is not overwritten
+        # by an older command that finishes or fails later
+        async with self._preset_lock:
+            # The boost state is only updated by polling, assume the new preset
+            # until the next poll. The command can take a while, so show it
+            # right away
+            previous_preset = self._assumed_preset
+            self._assumed_preset = preset_mode
+            self._preset_command_running = True
             self.async_write_ha_state()
+
+            try:
+                # The TRV ends the boost after its configured duration and
+                # returns to the previous target temperature by itself
+                if preset_mode == PRESET_BOOST:
+                    await self.coordinator.device.blu_trv_set_boost(self._id)
+                else:
+                    await self.coordinator.device.blu_trv_clear_boost(self._id)
+            except BaseException:
+                self._assumed_preset = previous_preset
+                raise
+            finally:
+                self._preset_command_running = False
+                self.async_write_ha_state()
