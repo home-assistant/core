@@ -10,6 +10,8 @@ from lorawan_connection import ConnectionUnavailable
 from lorawan_connection.backend.chirpstack import (
     AuthenticationError,
     ChirpStackConnection,
+    HTTP2Error,
+    TLSCertificateError,
 )
 import probatio
 
@@ -53,6 +55,10 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
             yield connection
         except AuthenticationError:
             errors["base"] = "invalid_auth"
+        except HTTP2Error:
+            errors["base"] = "http2_error"
+        except TLSCertificateError:
+            errors["base"] = "tls_certificate_error"
         except ConnectionUnavailable:
             errors["base"] = "cannot_connect"
         except Exception:
