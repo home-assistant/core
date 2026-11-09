@@ -44,7 +44,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_SOURCE
+from homeassistant.const import CONF_SOURCE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -55,6 +55,10 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.setup import async_setup_component
+
+from tests.components.usb import patch_scanned_serial_ports
+from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
 
 type RadioPicker = Callable[[RadioType], Coroutine[Any, Any, ConfigFlowResult]]
 PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
@@ -962,6 +966,128 @@ async def test_discovery_via_usb_same_device_already_setup(hass: HomeAssistant) 
     # Should abort since it's the same device
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+MOVED_RADIO_BY_ID = "/dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231214135603-if00"
+MOVED_RADIO_PROXY = (
+    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT?port_udev_id="
+    "usb-ITEAD_SONOFF_Zigbee_3.0_USB_Dongle_Plus_V2_20231214135603-if00"
+)
+
+
+MOVED_RADIO_DISCOVERY = UsbServiceInfo(
+    device=MOVED_RADIO_PROXY,
+    vid="1A86",
+    pid="55D4",
+    serial_number="20231214135603",
+    manufacturer="ITEAD",
+    description="SONOFF Zigbee 3.0 USB Dongle Plus V2",
+)
+
+
+async def _async_scan_usb(hass: HomeAssistant, ports: list[USBDevice]) -> None:
+    """Set up USB and let it scan the given ports, without starting discovery."""
+    with (
+        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
+        patch_scanned_serial_ports(return_value=ports),
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("state", "reloads"),
+    [
+        pytest.param(ConfigEntryState.LOADED, 1, id="loaded"),
+        pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="setup_retry"),
+        pytest.param(ConfigEntryState.SETUP_ERROR, 1, id="setup_error"),
+        pytest.param(ConfigEntryState.NOT_LOADED, 0, id="not_loaded"),
+    ],
+)
+@pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_discovery_via_usb_follows_moved_radio(
+    hass: HomeAssistant, state: ConfigEntryState, reloads: int
+) -> None:
+    """A configured radio discovered at another path is followed there."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_BY_ID, CONF_BAUDRATE: 115200}
+        },
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, state)
+
+    await _async_scan_usb(
+        hass,
+        [
+            USBDevice(
+                device=MOVED_RADIO_PROXY,
+                vid="1A86",
+                pid="55D4",
+                serial_number="20231214135603",
+                manufacturer="ITEAD",
+                description="SONOFF Zigbee 3.0 USB Dongle Plus V2",
+            ),
+        ],
+    )
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=MOVED_RADIO_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert entry.data == {
+        CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_PROXY, CONF_BAUDRATE: 115200}
+    }
+    assert mock_reload.mock_calls == [call(entry.entry_id)] * reloads
+
+
+@pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_discovery_via_usb_does_not_follow_present_radio(
+    hass: HomeAssistant,
+) -> None:
+    """A second radio that cannot be told apart from the configured one is new."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_BY_ID}},
+    )
+    entry.add_to_hass(hass)
+
+    await _async_scan_usb(
+        hass,
+        [
+            USBDevice(
+                device=MOVED_RADIO_BY_ID,
+                vid="1A86",
+                pid="55D4",
+                serial_number="20231214135603",
+                manufacturer="ITEAD",
+                description="SONOFF Zigbee 3.0 USB Dongle Plus V2",
+            ),
+            USBDevice(
+                device=MOVED_RADIO_PROXY,
+                vid="1A86",
+                pid="55D4",
+                serial_number="20231214135603",
+                manufacturer="ITEAD",
+                description="SONOFF Zigbee 3.0 USB Dongle Plus V2",
+            ),
+        ],
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USB}, data=MOVED_RADIO_DISCOVERY
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert entry.data == {CONF_DEVICE: {CONF_DEVICE_PATH: MOVED_RADIO_BY_ID}}
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))

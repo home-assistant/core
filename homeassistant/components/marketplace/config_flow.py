@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiogithubapi import (
     GitHubDeviceAPI,
@@ -13,11 +13,24 @@ from aiogithubapi import (
 from aiogithubapi.common.const import OAUTH_USER_LOGIN
 import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import CLIENT_ID, CLIENT_NAME, DOMAIN
+from .base import MarketplaceConfigEntry
+from .const import CLIENT_ID, CLIENT_NAME, CONF_PROFILE, DOMAIN
+from .profiles import PROFILES, get_profile
 from .utils.logger import LOGGER
 
 if TYPE_CHECKING:
@@ -40,6 +53,15 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _registration: GitHubLoginDeviceModel | None = None
     _activation: GitHubLoginOauthModel | None = None
+
+    @override
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: MarketplaceConfigEntry,
+    ) -> MarketplaceOptionsFlow:
+        """Get the options flow for this handler."""
+        return MarketplaceOptionsFlow()
 
     async def async_step_system(
         self, user_input: dict[str, Any] | None = None
@@ -166,3 +188,38 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=probatio.Schema({}),
             )
         return await self.async_step_device(None)
+
+
+class MarketplaceOptionsFlow(OptionsFlowWithReload):
+    """Choose where the Marketplace gets its content from."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick the download profile, the reload puts it to use."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={**self.config_entry.options, **user_input}
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_PROFILE): SelectSelector(
+                            SelectSelectorConfig(
+                                options=list(PROFILES),
+                                mode=SelectSelectorMode.LIST,
+                                translation_key=CONF_PROFILE,
+                            )
+                        )
+                    }
+                ),
+                {
+                    CONF_PROFILE: get_profile(
+                        self.config_entry.options.get(CONF_PROFILE)
+                    ).id
+                },
+            ),
+        )

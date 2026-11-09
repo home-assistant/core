@@ -8,8 +8,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import StarlineConfigEntry
-from .account import StarlineAccount
+from .account import StarlineAccount, StarlineConfigEntry
 from .entity import StarlineEntity
 
 BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (

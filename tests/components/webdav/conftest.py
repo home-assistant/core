@@ -37,13 +37,10 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-async def _download_mock(path: str, timeout=None) -> AsyncIterator[bytes]:
-    """Mock the download function."""
-    if path.endswith(".json"):
-        yield dumps(BACKUP_METADATA).encode()
-        return
-
-    yield b"backup data"
+async def _iter_read_mock(path: str, timeout=None) -> AsyncIterator[bytes]:
+    """Mock the streaming download function."""
+    yield b"backup "
+    yield b"data"
 
 
 @pytest.fixture(name="webdav_client")
@@ -56,11 +53,11 @@ def mock_webdav_client() -> Generator[AsyncMock]:
         ) as mock_webdav_client,
     ):
         mock = mock_webdav_client.return_value
-        mock.check.return_value = True
-        mock.mkdir.return_value = True
-        mock.list_files.return_value = MOCK_LIST_FILES
-        mock.download_iter.side_effect = _download_mock
-        mock.upload_iter.return_value = None
-        mock.clean.return_value = None
-        mock.move.return_value = None
+        mock.exists.return_value = True
+        mock.mkdir.return_value = None
+        mock.list.return_value = MOCK_LIST_FILES
+        mock.iter_read.side_effect = _iter_read_mock
+        mock.read.return_value = dumps(BACKUP_METADATA).encode()
+        mock.write.return_value = None
+        mock.delete.return_value = None
         yield mock

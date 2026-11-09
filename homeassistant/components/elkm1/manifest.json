@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@gwww", "@bdraco"],
   "config_flow": true,
+  "connectivity": ["network", "serial"],
   "dependencies": ["network"],
   "dhcp": [
     {

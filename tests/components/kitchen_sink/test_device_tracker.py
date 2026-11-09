@@ -9,18 +9,16 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, SourceType
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.kitchen_sink.services import (
-    ATTR_ACCURACY,
-    ATTR_CONNECTED,
-    SERVICE_SET_SCANNER_CONNECTED,
-    SERVICE_SET_TRACKER_LOCATION,
+    KitchenSinkService,
+    KitchenSinkServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -63,12 +61,12 @@ async def test_set_tracker_location(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_TRACKER_LOCATION,
+        KitchenSinkService.SET_TRACKER_LOCATION,
         {
-            ATTR_ENTITY_ID: TRACKER_ENTITY_ID,
-            ATTR_LATITUDE: 12.34,
-            ATTR_LONGITUDE: 56.78,
-            ATTR_ACCURACY: 42,
+            CommonServiceArgument.ENTITY_ID: TRACKER_ENTITY_ID,
+            KitchenSinkServiceArgument.LATITUDE: 12.34,
+            KitchenSinkServiceArgument.LONGITUDE: 56.78,
+            KitchenSinkServiceArgument.ACCURACY: 42,
         },
         blocking=True,
     )
@@ -89,8 +87,11 @@ async def test_set_scanner_connected(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SCANNER_CONNECTED,
-        {ATTR_ENTITY_ID: SCANNER_ENTITY_ID, ATTR_CONNECTED: False},
+        KitchenSinkService.SET_SCANNER_CONNECTED,
+        {
+            CommonServiceArgument.ENTITY_ID: SCANNER_ENTITY_ID,
+            KitchenSinkServiceArgument.CONNECTED: False,
+        },
         blocking=True,
     )
 
@@ -99,8 +100,11 @@ async def test_set_scanner_connected(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_SCANNER_CONNECTED,
-        {ATTR_ENTITY_ID: SCANNER_ENTITY_ID, ATTR_CONNECTED: True},
+        KitchenSinkService.SET_SCANNER_CONNECTED,
+        {
+            CommonServiceArgument.ENTITY_ID: SCANNER_ENTITY_ID,
+            KitchenSinkServiceArgument.CONNECTED: True,
+        },
         blocking=True,
     )
 
@@ -121,12 +125,12 @@ async def test_set_tracker_location_on_scanner_raises(hass: HomeAssistant) -> No
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TRACKER_LOCATION,
+            KitchenSinkService.SET_TRACKER_LOCATION,
             {
-                ATTR_ENTITY_ID: SCANNER_ENTITY_ID,
-                ATTR_LATITUDE: 12.34,
-                ATTR_LONGITUDE: 56.78,
-                ATTR_ACCURACY: 42,
+                CommonServiceArgument.ENTITY_ID: SCANNER_ENTITY_ID,
+                KitchenSinkServiceArgument.LATITUDE: 12.34,
+                KitchenSinkServiceArgument.LONGITUDE: 56.78,
+                KitchenSinkServiceArgument.ACCURACY: 42,
             },
             blocking=True,
         )
@@ -140,7 +144,10 @@ async def test_set_scanner_connected_on_tracker_raises(hass: HomeAssistant) -> N
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCANNER_CONNECTED,
-            {ATTR_ENTITY_ID: TRACKER_ENTITY_ID, ATTR_CONNECTED: False},
+            KitchenSinkService.SET_SCANNER_CONNECTED,
+            {
+                CommonServiceArgument.ENTITY_ID: TRACKER_ENTITY_ID,
+                KitchenSinkServiceArgument.CONNECTED: False,
+            },
             blocking=True,
         )

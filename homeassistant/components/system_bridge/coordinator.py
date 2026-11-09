@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for System Bridge."""
 
+import asyncio
 from asyncio import Task
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
@@ -17,24 +18,29 @@ from systembridgeconnector.models.modules import (
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 from systembridgeconnector.websocket_client import WebSocketClient
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
 from .data import SystemBridgeData
 
 type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
+
+UPDATE_INTERVAL = timedelta(seconds=30)
+MAX_UPDATE_INTERVAL = timedelta(minutes=2)
 
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
@@ -54,6 +60,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         self.unsub: Callable | None = None
 
         self.listen_task: Task | None = None
+        self._register_task: Task | None = None
         self.websocket_client = WebSocketClient(
             api_host=entry.data[CONF_HOST],
             api_port=entry.data[CONF_PORT],
@@ -63,13 +70,16 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         self._host = entry.data[CONF_HOST]
+        self._reconnect_delay = UPDATE_INTERVAL
+        self._unavailable_logged = False
+        self._reconnect_after: datetime | None = None
 
         super().__init__(
             hass,
             LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.data = SystemBridgeData()
@@ -85,7 +95,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             try:
                 await self.websocket_client.connect()
             except ConnectionErrorException as exception:
-                self.logger.warning(
+                self.logger.debug(
                     "[check_websocket_connected] Connection error occurred for %s: %s",
                     self.title,
                     exception,
@@ -116,12 +126,21 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         if self.unsub:
             self.unsub()
             self.unsub = None
+        # Setup failures are reported through ConfigEntryNotReady instead
+        if (
+            not self._unavailable_logged
+            and self.config_entry.state is ConfigEntryState.LOADED
+        ):
+            self.logger.info("%s is unavailable", self.title)
+            self._unavailable_logged = True
         self.last_update_success = False
         self.async_update_listeners()
         if self.listen_task is not None:
             self.listen_task.cancel(
                 msg="WebSocket disconnected",
             )
+        if self._register_task is not None:
+            self._register_task.cancel()
 
     async def async_get_data(
         self,
@@ -136,10 +155,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         # Merge new data with existing data
-        for module in MODULES:
-            if hasattr(modules_data, module):
-                self.logger.debug("[async_get_data] Set new data for: %s", module)
-                setattr(self.data, module, getattr(modules_data, module))
+        for module in modules:
+            self.logger.debug("[async_get_data] Set new data for: %s", module)
+            setattr(self.data, module, getattr(modules_data, module))
 
         return modules_data
 
@@ -153,10 +171,45 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         setattr(self.data, module_name, module)
         self.async_set_updated_data(self.data)
 
+    async def async_handle_power_state(self, event: PowerStateEvent) -> None:
+        """Go unavailable as soon as the host says it's sleeping or shutting down."""
+        if event.state is PowerState.RESUMED:
+            return
+        if (
+            not self._unavailable_logged
+            and self.config_entry.state is ConfigEntryState.LOADED
+        ):
+            self.logger.info("%s is unavailable: %s", self.title, event.state)
+            self._unavailable_logged = True
+        # Reconnecting before the host has gone would mark it available again
+        self._reconnect_after = dt_util.utcnow() + UPDATE_INTERVAL
+        await self.clean_disconnect()
+        # A sleeping host can leave the socket open, which would stop reconnects.
+        # Close it in its own task, as clean_disconnect cancels this listener
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.websocket_client.close(),
+            "System Bridge WebSocket close",
+        )
+
+    @callback
+    def async_reconnect_now(self) -> None:
+        """Reconnect without waiting out the backoff, as the host is back."""
+        self._reconnect_delay = UPDATE_INTERVAL
+        self._reconnect_after = None
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.async_request_refresh(),
+            "System Bridge reconnect",
+        )
+
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
         try:
-            await self.websocket_client.listen(callback=self.async_handle_module)
+            await self.websocket_client.listen(
+                callback=self.async_handle_module,
+                power_state_callback=self.async_handle_power_state,
+            )
         except AuthenticationException as exception:
             self.logger.error(
                 "Authentication failed while listening for %s: %s",
@@ -179,10 +232,39 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             )
             await self.clean_disconnect()
 
+    async def _register_data_listener(self) -> None:
+        """Register for data, unless a disconnect cancels it first."""
+        # The response arrives through the listener, so once it stops this
+        # would otherwise wait for the connector's timeout
+        self._register_task = self.config_entry.async_create_task(
+            self.hass,
+            self.websocket_client.register_data_listener(
+                RegisterDataListener(modules=[*MODULES, Module.AUDIO])
+            ),
+            "System Bridge register data listener",
+        )
+        try:
+            if not self._register_task.done():
+                await asyncio.wait((self._register_task,))
+        finally:
+            self._register_task.cancel()
+        if not self._register_task.cancelled():
+            self._register_task.result()
+
     @override
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
         if self.listen_task is None or not self.websocket_client.connected:
+            if (
+                self._reconnect_after is not None
+                and (wait := self._reconnect_after - dt_util.utcnow()) > timedelta()
+            ):
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="waiting_for_sleep",
+                    translation_placeholders={"title": self.title},
+                    retry_after=wait.total_seconds(),
+                )
             await self.check_websocket_connected()
 
             self.logger.debug("Create listener task for %s", self.title)
@@ -194,9 +276,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.logger.debug("Listening for data from %s", self.title)
 
             try:
-                await self.websocket_client.register_data_listener(
-                    RegisterDataListener(modules=MODULES)
-                )
+                await self._register_data_listener()
             except AuthenticationException as exception:
                 await self.clean_disconnect()
                 raise ConfigEntryAuthFailed(
@@ -209,14 +289,39 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 ) from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
                 await self.clean_disconnect()
+                self._reconnect_delay = min(
+                    self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
+                )
                 raise UpdateFailed(
-                    f"Connection error occurred for {self.title}: {exception}"
+                    translation_domain=DOMAIN,
+                    translation_key="connection_failed",
+                    translation_placeholders={
+                        "title": self.title,
+                        "host": self._host,
+                    },
+                    retry_after=self._reconnect_delay.total_seconds(),
                 ) from exception
 
-            self.logger.debug("Registered data listener for %s", self.title)
+            # A power event can stop the listener just as registration finishes
+            if self.listen_task.done() or self.listen_task.cancelling():
+                self._reconnect_delay = min(
+                    self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
+                )
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="connection_lost",
+                    translation_placeholders={"title": self.title},
+                    retry_after=self._reconnect_delay.total_seconds(),
+                )
 
-            self.last_update_success = True
-            self.async_update_listeners()
+            self.logger.debug("Registered data listener for %s", self.title)
+            self._reconnect_delay = UPDATE_INTERVAL
+            if self._unavailable_logged:
+                self.logger.info("%s is available again", self.title)
+                self._unavailable_logged = False
+                # Pushed data can mark the update successful before the
+                # refresh ends, so the built-in recovery log isn't reliable
+                self.last_update_success = True
 
             # Clean disconnect WebSocket on Home Assistant shutdown
             self.unsub = self.hass.bus.async_listen_once(

@@ -96,10 +96,9 @@ class ToloNumberEntity(ToloSaunaCoordinatorEntity, NumberEntity):
         return self.entity_description.getter(self.coordinator.data.settings) or 0
 
     @override
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value of this TOLO Number entity."""
-        int_value = int(value)
-        if int_value == 0:
-            self.entity_description.setter(self.coordinator.client, None)
-            return
-        self.entity_description.setter(self.coordinator.client, int_value)
+        int_value = int(value) or None
+        await self._async_send_command(
+            lambda client: self.entity_description.setter(client, int_value)
+        )

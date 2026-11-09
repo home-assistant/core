@@ -107,6 +107,22 @@ async def test_diagnostics(
     assert diag_normalized == snapshot
 
 
+async def test_diagnostics_before_public_fetch(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Diagnostics skip the public cache until it was fetched once."""
+    await init_entry(hass, ufp, [light])
+    ufp.api.has_public_bootstrap = False
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp.entry)
+
+    assert "bootstrap" in diag
+    assert "public_bootstrap" not in diag
+
+
 async def test_public_only_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -116,7 +132,7 @@ async def test_public_only_diagnostics(
     """Diagnostics for a public-only entry dump the public cache."""
     await setup_public_only()
     ufp_public_only.api.public_bootstrap.nvr.unifi_dict = Mock(
-        return_value={"name": "Test NVR"}
+        return_value={"name": "Test NVR", "armMode": {"status": "armed"}}
     )
     camera = Mock()
     camera.unifi_dict = Mock(
@@ -134,7 +150,7 @@ async def test_public_only_diagnostics(
     assert "bootstrap" not in diag
     # anonymize_data scrambles values; assert the structure, not the content
     assert "name" in diag["public_bootstrap"]["nvr"]
-    assert diag["public_bootstrap"]["arm_mode"] is True
+    assert diag["public_bootstrap"]["nvr"]["armMode"] == {"status": "armed"}
     # the stream URLs carry the console host and a secret alias — never leak
     dumped_camera = diag["public_bootstrap"]["cameras"][0]
     assert dumped_camera["rtspsStreams"] == "**REDACTED**"

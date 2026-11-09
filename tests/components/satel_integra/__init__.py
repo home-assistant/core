@@ -140,6 +140,13 @@ def get_output_changed_callback(mock_satel: AsyncMock) -> Callable[[], None]:
     )
 
 
+def get_system_status_callback(mock_satel: AsyncMock) -> Callable[[], None]:
+    """Return the registered system status callback."""
+    return _get_registered_callback(
+        mock_satel.add_system_status_callback, "System status"
+    )
+
+
 async def trigger_connection_status_update(
     hass: HomeAssistant,
     mock_satel: AsyncMock,

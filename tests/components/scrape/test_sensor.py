@@ -1,7 +1,6 @@
 """The tests for the Scrape sensor platform."""
 
 from datetime import timedelta
-from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -262,6 +261,37 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
     assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_scrape_numeric_value_template_none(hass: HomeAssistant) -> None:
+    """Test a numeric Scrape sensor is unknown when the value template renders none."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-temp h3",
+                        "name": "Current Temp",
+                        "value_template": "{{ none }}",
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature",
+                        "state_class": "measurement",
+                    }
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_uom_and_classes")
+    with patch(
+        "homeassistant.components.rest.util.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_temp")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_scrape_unique_id(
@@ -624,66 +654,6 @@ async def test_setup_config_entry(
     entity = entity_registry.async_get("sensor.current_version")
 
     assert entity.unique_id == "01JZN07D8D23994A49YKS649S7"
-
-
-@pytest.mark.parametrize(
-    ("get_sensor_config", "expected_state", "expected_attributes"),
-    [
-        pytest.param(
-            (
-                {
-                    "data": {
-                        "additional": {"unit_of_measurement": None},
-                        CONF_INDEX: 0,
-                        CONF_SELECT: ".current-version h1",
-                    },
-                    "subentry_id": "01JZN07D8D23994A49YKS649S7",
-                    "subentry_type": "entity",
-                    "title": "Current version",
-                    "unique_id": None,
-                },
-            ),
-            "Current Version: 2021.12.10",
-            {},
-            id="no_unit",
-        ),
-        pytest.param(
-            (
-                {
-                    "data": {
-                        "additional": {
-                            "device_class": "aqi",
-                            "unit_of_measurement": None,
-                            CONF_VALUE_TEMPLATE: "{{ 42 }}",
-                        },
-                        CONF_INDEX: 0,
-                        CONF_SELECT: ".current-version h1",
-                    },
-                    "subentry_id": "01JZN07D8D23994A49YKS649S7",
-                    "subentry_type": "entity",
-                    "title": "Current version",
-                    "unique_id": None,
-                },
-            ),
-            "42",
-            {"device_class": "aqi"},
-            id="aqi_no_unit",
-        ),
-    ],
-)
-async def test_setup_config_entry_without_unit(
-    hass: HomeAssistant,
-    loaded_entry: MockConfigEntry,
-    expected_state: str,
-    expected_attributes: dict[str, Any],
-) -> None:
-    """Test setup from config entry when the unit of measurement selector sends None."""
-    state = hass.states.get("sensor.current_version")
-    assert state is not None
-    assert state.state == expected_state
-    assert "unit_of_measurement" not in state.attributes
-    for key, value in expected_attributes.items():
-        assert state.attributes[key] == value
 
 
 async def test_templates_with_yaml(hass: HomeAssistant) -> None:

@@ -537,16 +537,16 @@ async def test_relay_channel_devices_ws_disconnect_reconnect_resync(
     await hass.async_block_till_done()
     assert _state(hass, channel.entity_id) == STATE_UNAVAILABLE
 
-    async def resync_public_bootstrap() -> Mock:
-        _set_channel_state(relay, channel, channel.on)
-        return ufp.api.public_bootstrap
-
-    ufp.api.update_public.side_effect = resync_public_bootstrap
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    # Back from the pre-disconnect cache until the library resync lands.
+    assert _state(hass, channel.entity_id) == STATE_OFF
+
+    _set_channel_state(relay, channel, channel.on)
+    ufp.public_resync()
     await hass.async_block_till_done()
 
     assert _state(hass, channel.entity_id) == STATE_ON
-    ufp.api.update_public.assert_awaited()
 
 
 @_CHANNELS
@@ -585,14 +585,12 @@ async def test_public_only_relay_channels_resignaled_after_reconnect(
     await setup_public_only()
     assert hass.states.get(BINARY_SENSOR_ENTITY_ID) is None
 
-    async def resync_public_bootstrap() -> Mock:
-        relay.inputs = [_make_input()]
-        return public_bootstrap
-
-    ufp_public_only.api.update_public.side_effect = resync_public_bootstrap
     assert ufp_public_only.devices_ws_state_subscription is not None
     ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    # The library resync applies the new input silently.
+    relay.inputs = [_make_input()]
+    ufp_public_only.public_resync()
     await hass.async_block_till_done()
 
     state = hass.states.get(BINARY_SENSOR_ENTITY_ID)
@@ -676,14 +674,11 @@ async def test_relay_readopted_during_websocket_outage(
     readopted.id = "relay-id-2"
     _set_channel_state(readopted, _OUTPUT, RelayOutputState.ON)
 
-    async def resync_public_bootstrap() -> Mock:
-        ufp.api.public_bootstrap.relays = {readopted.id: readopted}
-        return ufp.api.public_bootstrap
-
-    ufp.api.update_public.side_effect = resync_public_bootstrap
     assert ufp.devices_ws_state_subscription is not None
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.api.public_bootstrap.relays = {readopted.id: readopted}
+    ufp.public_resync(added=[readopted], removed=[relay])
     await hass.async_block_till_done()
 
     assert _state(hass, SWITCH_ENTITY_ID) == STATE_ON

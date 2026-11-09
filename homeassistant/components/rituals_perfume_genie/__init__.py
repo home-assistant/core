@@ -4,7 +4,6 @@ import asyncio
 
 from ritualsgenie import RitualsGenie, RitualsGenieHub
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -109,7 +108,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> 
 
 @callback
 def async_migrate_entities_unique_ids(
-    hass: HomeAssistant, config_entry: ConfigEntry, hubs: list[RitualsGenieHub]
+    hass: HomeAssistant, config_entry: RitualsConfigEntry, hubs: list[RitualsGenieHub]
 ) -> None:
     """Migrate unique_ids in the entity registry to the new format."""
     entity_registry = er.async_get(hass)
@@ -143,7 +142,7 @@ def async_migrate_entities_unique_ids(
 
 
 # Migration helpers for API v2
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> None:
     """Migrate config entry to version 2: drop legacy ACCOUNT_HASH and bump version."""
     if entry.version < 2:
         data = dict(entry.data)

@@ -31,6 +31,7 @@
         'hardware_id': '**REDACTED**',
         'host': 'u034.immedia-semi.com',
         'password': '**REDACTED**',
+        'refresh_token': '**REDACTED**',
         'region_id': 'u034',
         'token': '**REDACTED**',
         'uid': 'BlinkCamera_e1233333e2-0909-09cd-777a-123456789012',

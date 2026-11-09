@@ -50,6 +50,35 @@ async def test_sensor_state(
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
 
 
+@pytest.mark.parametrize(
+    ("cook_status", "expected_state"),
+    [
+        pytest.param(None, "unknown", id="missing"),
+        pytest.param("appointing", "appointing", id="appointing"),
+    ],
+)
+async def test_cook_status(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    cook_status: str | None,
+    expected_state: str,
+) -> None:
+    """Test cook status values supported by the integration."""
+    mock_devices_response(
+        aioclient_mock,
+        "CS158-AF Air Fryer Cooking",
+        details_override={"cookStatus": cook_status},
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.cs158_af_air_fryer_cooking_cooking_status")
+    assert state is not None
+    assert state.state == expected_state
+
+
 async def test_humidity(
     hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
 ) -> None:

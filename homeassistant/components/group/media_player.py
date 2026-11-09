@@ -43,6 +43,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
+
 KEY_ANNOUNCE = "announce"
 KEY_CLEAR_PLAYLIST = "clear_playlist"
 KEY_ENQUEUE = "enqueue"
@@ -112,7 +114,7 @@ def async_create_preview_media_player(
 class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
 
-    _unrecorded_attributes = frozenset({ATTR_ENTITY_ID})
+    _unrecorded_attributes = frozenset({GroupEntityStateAttribute.ENTITY_ID})
 
     _attr_available: bool = False
     _attr_should_poll = False
@@ -260,7 +262,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes for the media group."""
-        return {ATTR_ENTITY_ID: self._entities}
+        return {GroupEntityStateAttribute.ENTITY_ID: self._entities}
 
     @override
     async def async_clear_playlist(self) -> None:

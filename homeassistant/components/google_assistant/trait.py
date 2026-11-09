@@ -12,8 +12,6 @@ from homeassistant.components import (
     cover,
     event,
     fan,
-    input_button,
-    input_select,
     lawn_mower,
     light,
     media_player,
@@ -66,8 +64,15 @@ from homeassistant.components.humidifier import (
     HumidifierServiceArgument,
 )
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
+from homeassistant.components.input_select import (
+    DOMAIN as INPUT_SELECT_DOMAIN,
+    InputSelectService,
+    InputSelectServiceArgument,
+)
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     LawnMowerEntityFeature,
@@ -256,24 +261,24 @@ COVER_VALVE_STATES = {
 }
 
 SERVICE_STOP_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.STOP_COVER,
-    VALVE_DOMAIN: ValveService.STOP_VALVE,
+    COVER_DOMAIN: CoverService.STOP,
+    VALVE_DOMAIN: ValveService.STOP,
 }
 SERVICE_OPEN_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.OPEN_COVER,
-    VALVE_DOMAIN: ValveService.OPEN_VALVE,
+    COVER_DOMAIN: CoverService.OPEN,
+    VALVE_DOMAIN: ValveService.OPEN,
 }
 SERVICE_CLOSE_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.CLOSE_COVER,
-    VALVE_DOMAIN: ValveService.CLOSE_VALVE,
+    COVER_DOMAIN: CoverService.CLOSE,
+    VALVE_DOMAIN: ValveService.CLOSE,
 }
 SERVICE_TOGGLE_COVER_VALVE = {
     COVER_DOMAIN: CoverService.TOGGLE,
     VALVE_DOMAIN: ValveService.TOGGLE,
 }
 SERVICE_SET_POSITION_COVER_VALVE = {
-    COVER_DOMAIN: CoverService.SET_COVER_POSITION,
-    VALVE_DOMAIN: ValveService.SET_VALVE_POSITION,
+    COVER_DOMAIN: CoverService.SET_POSITION,
+    VALVE_DOMAIN: ValveService.SET_POSITION,
 }
 
 COVER_VALVE_CURRENT_POSITION = {
@@ -794,7 +799,7 @@ class SceneTrait(_Trait):
         if self.state.domain == BUTTON_DOMAIN:
             service = ButtonService.PRESS
         elif self.state.domain == INPUT_BUTTON_DOMAIN:
-            service = input_button.SERVICE_PRESS
+            service = InputButtonService.PRESS
 
         # Don't block for scripts or buttons, as they can be slow.
         await self.hass.services.async_call(
@@ -1815,11 +1820,11 @@ class ArmDisArmTrait(_Trait):
     commands = [COMMAND_ARM_DISARM]
 
     state_to_service = {
-        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelService.ALARM_ARM_HOME,
-        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelService.ALARM_ARM_NIGHT,
-        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelService.ALARM_ARM_AWAY,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelService.ALARM_ARM_CUSTOM_BYPASS,
-        AlarmControlPanelState.TRIGGERED: AlarmControlPanelService.ALARM_TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelService.ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelService.ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelService.ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelService.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: AlarmControlPanelService.TRIGGER,
     }
 
     state_to_support = {
@@ -1921,12 +1926,12 @@ class ArmDisArmTrait(_Trait):
             and params.get("cancel")
             and self.state.state == AlarmControlPanelState.PENDING
         ):
-            service = AlarmControlPanelService.ALARM_DISARM
+            service = AlarmControlPanelService.DISARM
         else:
             if self.state.state == AlarmControlPanelState.DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
             _verify_pin_challenge(data, self.state, challenge)
-            service = AlarmControlPanelService.ALARM_DISARM
+            service = AlarmControlPanelService.DISARM
 
         await self.hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
@@ -2304,10 +2309,10 @@ class ModesTrait(_Trait):
             option = settings["option"]
             await self.hass.services.async_call(
                 INPUT_SELECT_DOMAIN,
-                input_select.SERVICE_SELECT_OPTION,
+                InputSelectService.SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    input_select.ATTR_OPTION: option,
+                    InputSelectServiceArgument.OPTION: option,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,

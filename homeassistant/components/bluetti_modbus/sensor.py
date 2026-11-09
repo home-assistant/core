@@ -55,6 +55,12 @@ def _as_is(value: Any) -> StateType:
     return cast(StateType, value)
 
 
+def _nonzero(value: Any) -> StateType:
+    # The device reads 0 here for a single poll now and then, which would
+    # count as a meter reset.
+    return cast(StateType, value) or None
+
+
 @dataclass(frozen=True, kw_only=True)
 class BluettiModbusSensorEntityDescription(SensorEntityDescription):
     """Describes a BLUETTI Modbus sensor."""
@@ -184,6 +190,7 @@ SENSOR_DESCRIPTIONS: tuple[BluettiModbusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
+        value_fn=_nonzero,
     ),
     BluettiModbusSensorEntityDescription(
         key="d_inverter_status",
