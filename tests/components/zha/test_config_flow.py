@@ -88,6 +88,13 @@ def mock_multipan_platform():
 
 
 @pytest.fixture(autouse=True)
+def mock_bellows_probe() -> Generator[None]:
+    """Prevent the real bellows probe, whose loop thread can outlive the test."""
+    with patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=False)):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_app() -> Generator[AsyncMock]:
     """Mock zigpy app interface."""
     mock_app = create_autospec(ControllerApplication, instance=True)
