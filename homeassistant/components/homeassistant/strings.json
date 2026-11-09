@@ -621,6 +621,17 @@
       "description": "There are multiple ({number_of_entries}) {domain} config entries with the same unique ID.\nThe first {title_limit} config entries are named {titles}.\n\nTo fix this error, [configure the integration]({configure_url}) and remove all except one of the duplicates.\n\nNote: Another group of duplicates may be revealed after removing these duplicates.",
       "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collision::title%]"
     },
+    "config_entry_unique_id_collisions_removed": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Some config entries had the same unique ID as another config entry of the same integration. This is not supported, so only one config entry of each group was kept. The following config entries were removed:\n{entries}\n\nThe removed config entries were backed up to `{backup_path}`. Set up the integration again if you need a removed config entry.\n\nSelect **Submit** below to confirm you have noted this.",
+            "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collisions_removed::title%]"
+          }
+        }
+      },
+      "title": "Config entries with duplicate unique IDs were removed"
+    },
     "country_not_configured": {
       "description": "No country has been configured. Select **Learn more** below to set your country.",
       "title": "The country has not been configured"
