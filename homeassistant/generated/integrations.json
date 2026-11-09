@@ -1035,6 +1035,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "supported_by": "neopool"
     },
     "aquostv": {
@@ -1509,6 +1512,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "supported_by": "neopool"
     },
     "bbox": {
@@ -1844,6 +1850,9 @@
       "categories": [
         "water.pools_spas"
       ],
+      "connectivity": [
+        "modbus"
+      ],
       "supported_by": "neopool"
     },
     "bring": {
@@ -2164,6 +2173,9 @@
       "integration_type": "virtual",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "supported_by": "neopool"
     },
@@ -5997,6 +6009,9 @@
       "integration_type": "virtual",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "supported_by": "neopool"
     },
@@ -14520,6 +14535,9 @@
       "integration_type": "virtual",
       "categories": [
         "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
       ],
       "supported_by": "neopool"
     },
