@@ -22,6 +22,13 @@ from .entity import FressnapfTrackerEntity
 PARALLEL_UPDATES = 0
 
 
+def _seen_recently(data: Tracker) -> bool:
+    """Return whether the tracker has been seen recently."""
+    # The entity is not created if led_activatable is None
+    assert data.led_activatable is not None
+    return data.led_activatable.seen_recently
+
+
 @dataclass(frozen=True, kw_only=True)
 class FressnapfTrackerBinarySensorDescription(BinarySensorEntityDescription):
     """Class describing Fressnapf Tracker binary_sensor entities."""
@@ -44,11 +51,7 @@ BINARY_SENSOR_ENTITY_DESCRIPTIONS: tuple[
         translation_key="seen_recently",
         entity_category=EntityCategory.DIAGNOSTIC,
         exists_fn=lambda data: data.led_activatable is not None,
-        value_fn=lambda data: (
-            data.led_activatable.seen_recently
-            if data.led_activatable is not None
-            else None
-        ),
+        value_fn=_seen_recently,
     ),
 )
 
