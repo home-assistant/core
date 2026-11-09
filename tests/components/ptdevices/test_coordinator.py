@@ -107,13 +107,17 @@ async def test_update_failed(
     mock_ptdevices_config_entry: MockConfigEntry,
     mock_ptdevices_level: PTDevicesResponse,
     exception: Exception,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test library errors mark entities unavailable until the next good update."""
     await setup_integration(hass, mock_ptdevices_config_entry)
+    caplog.clear()
 
     mock_ptdevices_interface.get_data.side_effect = exception
     await _refresh(hass, freezer)
 
+    assert "Error fetching ptdevices data:" in caplog.text
+    assert "Unexpected error fetching ptdevices data" not in caplog.text
     assert hass.states.get(GARDEN_ENTITY_ID).state == STATE_UNAVAILABLE
 
     mock_ptdevices_interface.get_data.side_effect = None
