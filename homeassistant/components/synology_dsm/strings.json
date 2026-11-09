@@ -233,6 +233,9 @@
     }
   },
   "exceptions": {
+    "entry_not_loaded": {
+      "message": "DSM with serial {serial} is not loaded."
+    },
     "execution_error": {
       "message": "Execute {action} on DSM with serial {serial} not possible, because of {error}."
     },
