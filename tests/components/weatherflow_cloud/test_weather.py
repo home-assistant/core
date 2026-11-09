@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonValueType
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -36,7 +37,7 @@ async def test_weather(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_forecast_callbacks_return_none_when_station_is_missing(
+async def test_forecast_subscription_survives_a_missing_station(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_rest_api: AsyncMock,
@@ -44,7 +45,7 @@ async def test_forecast_callbacks_return_none_when_station_is_missing(
     mock_websocket_api: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test forecast callbacks do not raise when the station disappears."""
+    """Test a live forecast subscription when the station disappears."""
     with patch(
         "homeassistant.components.weatherflow_cloud.PLATFORMS", [Platform.WEATHER]
     ):
@@ -55,8 +56,8 @@ async def test_forecast_callbacks_return_none_when_station_is_missing(
     )
     assert weather is not None
 
-    assert weather._async_forecast_daily()
-    assert weather._async_forecast_hourly()
+    forecasts: list[list[JsonValueType] | None] = []
+    weather.async_subscribe_forecast("daily", forecasts.append)
 
     mock_rest_api.get_all_data.return_value = {}
 
@@ -64,5 +65,6 @@ async def test_forecast_callbacks_return_none_when_station_is_missing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert weather._async_forecast_daily() is None
-    assert weather._async_forecast_hourly() is None
+    await weather.async_update_listeners(["daily"])
+    assert forecasts
+    assert all(forecast is None for forecast in forecasts)
