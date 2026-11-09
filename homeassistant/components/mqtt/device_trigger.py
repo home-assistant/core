@@ -245,9 +245,10 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
                 value_template=self._config[CONF_VALUE_TEMPLATE],
             )
         else:
-            await self._mqtt_data.device_triggers[self.trigger_id].update_trigger(
-                self._config
-            )
+            # The trigger can exist from an automation or an earlier discovery
+            trigger = self._mqtt_data.device_triggers[self.trigger_id]
+            trigger.discovery_data = self.discovery_data
+            await trigger.update_trigger(self._config)
         debug_info.add_trigger_discovery_data(
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )

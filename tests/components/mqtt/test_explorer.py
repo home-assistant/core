@@ -719,6 +719,103 @@ async def test_artifact_messages(
         ]
 
 
+async def _async_artifact_payloads(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, artifact_id: str
+) -> list[str]:
+    """Return the payloads of the messages in the details of an artifact."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "mqtt/explorer/details", "artifact_id": artifact_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    return [msg["payload"] for msg in response["result"]["topics"][0]["messages"]]
+
+
+async def test_trigger_messages_attached_before_discovery(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the messages of a trigger an automation uses before it is discovered."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass, DISCOVERY_SENSOR_TOPIC, json.dumps(DISCOVERY_SENSOR_CONFIG)
+    )
+    await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "device",
+                    "domain": DOMAIN,
+                    "device_id": _device_id(hass, device_registry, "z2m_device"),
+                    "type": "button_short_press",
+                    "subtype": "button_1",
+                },
+                "action": {"event": "test_event"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(
+        hass, DISCOVERY_TRIGGER_TOPIC, json.dumps(DISCOVERY_TRIGGER_CONFIG)
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "z2m/action", "single")
+    await hass.async_block_till_done()
+
+    assert await _async_artifact_payloads(
+        hass, hass_ws_client, "device_trigger:z2m_button"
+    ) == ["single"]
+
+    # The automation keeps the trigger when it is removed and discovered again
+    async_fire_mqtt_message(hass, DISCOVERY_TRIGGER_TOPIC, "")
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(
+        hass, DISCOVERY_TRIGGER_TOPIC, json.dumps(DISCOVERY_TRIGGER_CONFIG)
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "z2m/action", "double")
+    await hass.async_block_till_done()
+
+    assert await _async_artifact_payloads(
+        hass, hass_ws_client, "device_trigger:z2m_button"
+    ) == ["double"]
+
+
+@pytest.mark.usefixtures("tag_mock")
+async def test_artifact_messages_topic_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the messages of a tag after its topic changed."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, DISCOVERY_TAG_TOPIC, json.dumps(DISCOVERY_TAG_CONFIG))
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "z2m/tag", "tag_1")
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(
+        hass,
+        DISCOVERY_TAG_TOPIC,
+        json.dumps({**DISCOVERY_TAG_CONFIG, "topic": "z2m/tag_new"}),
+    )
+    await hass.async_block_till_done()
+
+    assert await _async_artifact_payloads(hass, hass_ws_client, "tag:z2m_tag") == []
+
+    async_fire_mqtt_message(hass, "z2m/tag_new", "tag_2")
+    await hass.async_block_till_done()
+
+    assert await _async_artifact_payloads(hass, hass_ws_client, "tag:z2m_tag") == [
+        "tag_2"
+    ]
+
+
 async def test_device_discovery_details(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

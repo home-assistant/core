@@ -182,7 +182,10 @@ def _artifact_topics(
         "qos": payload.get(CONF_QOS, DEFAULT_QOS),
     }
     if include_messages:
-        topic["messages"] = debug_info.messages_as_dicts(artifact.messages)
+        # Messages from before a topic change are kept
+        topic["messages"] = debug_info.messages_as_dicts(
+            msg for msg in artifact.messages if msg.subscribed_topic == topic["topic"]
+        )
     return [topic]
 
 
