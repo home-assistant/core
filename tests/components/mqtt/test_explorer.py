@@ -35,6 +35,16 @@ YAML_LIGHT_CONFIG = {
     },
 }
 YAML_SENSOR_CONFIG = {"name": "Outside", "state_topic": "outside/temperature"}
+YAML_CHILD_SENSOR_CONFIG = {
+    "name": "Humidity",
+    "unique_id": "yaml_child_humidity",
+    "state_topic": "yaml/child/humidity",
+    "device": {
+        "identifiers": ["yaml_parent"],
+        "name": "YAML parent",
+        "child_device": {"identifiers": ["yaml_child"], "name": "YAML child"},
+    },
+}
 # A unique ID in YAML can be a number, the entity registry has it as a string
 YAML_BUTTON_CONFIG = {"name": "Bell", "unique_id": 1234, "command_topic": "bell/set"}
 
@@ -941,6 +951,74 @@ async def test_device_discovery_child_devices_details(
                 "device_discovery": True,
             }
         ]
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "discovery_messages", "identifiers", "expected_config"),
+    [
+        pytest.param(
+            {},
+            [(DISCOVERY_CHILD_SENSOR_TOPIC, DISCOVERY_CHILD_SENSOR_CONFIG)],
+            ("z2m_device", "z2m_child"),
+            {
+                "source": "origin:Zigbee2MQTT",
+                "type": "discovery",
+                "discovery_topic": DISCOVERY_CHILD_SENSOR_TOPIC,
+                "origin": ORIGIN,
+                "payload": DISCOVERY_CHILD_SENSOR_CONFIG["device"],
+                "device_discovery": False,
+            },
+            id="discovery",
+        ),
+        pytest.param(
+            {mqtt.DOMAIN: {sensor.DOMAIN: YAML_CHILD_SENSOR_CONFIG}},
+            [],
+            ("yaml_parent", "yaml_child"),
+            {
+                "source": "yaml",
+                "type": "yaml",
+                "discovery_topic": None,
+                "origin": None,
+                "payload": YAML_CHILD_SENSOR_CONFIG["device"],
+                "device_discovery": False,
+            },
+            id="yaml",
+        ),
+    ],
+)
+async def test_parent_registered_by_child_device_details(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    discovery_messages: list[tuple[str, dict[str, Any]]],
+    identifiers: tuple[str, str],
+    expected_config: dict[str, Any],
+) -> None:
+    """Test the config of a parent that only the config of its child registered."""
+    await mqtt_mock_entry()
+    for topic, config in discovery_messages:
+        async_fire_mqtt_message(hass, topic, json.dumps(config))
+    await hass.async_block_till_done()
+    parent_identifier, child_identifier = identifiers
+    child_device = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, child_identifier),
+        hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+    )
+    assert child_device is not None
+    client = await hass_ws_client(hass)
+
+    # The parent shows the device part of its child's config, like the child
+    for device_id in (
+        _device_id(hass, device_registry, parent_identifier),
+        child_device.id,
+    ):
+        await client.send_json_auto_id(
+            {"type": "mqtt/explorer/details", "device_id": device_id}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"]["configs"] == [expected_config]
 
 
 async def test_tag_without_device(

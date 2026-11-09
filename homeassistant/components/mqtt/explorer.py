@@ -567,36 +567,46 @@ def _async_details(
     device = device_registry.async_get(device_id)
     if device is None or device.config_entry_id != entry.entry_id:
         return None
-    # The device part per source
-    configs: dict[str, dict[str, Any]] = {}
-    for entity_id, registry_entry in entity_ids.items():
-        if registry_entry is None or registry_entry.device_id != device_id:
-            continue
-        if (
-            config := _async_entity_config(
-                hass, entry, sources, entity_id, registry_entry
-            )
-        ) is not None and not config["device_discovery"]:
-            configs.setdefault(config["source"], _device_part(config))
-    for artifact in artifacts:
-        discovery_data = artifact.discovery_data
-        if artifact.device_id != device_id or _is_device_discovery(discovery_data):
-            continue
-        source = sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD])
-        configs.setdefault(
-            source, _device_part(_discovery_config(source, discovery_data))
+    child_device_ids = {
+        child_device.id
+        for child_device in dr.async_entries_for_parent_device(
+            device_registry, device_id
         )
+    }
+    # The device part per source, from the items of the device, else from those
+    # of its child devices, as a parent can be registered by a child's config only
+    configs: dict[str, dict[str, Any]] = {}
+    for item_device_ids in ({device_id}, child_device_ids):
+        has_items = False
+        for entity_id, registry_entry in entity_ids.items():
+            if (
+                registry_entry is None
+                or registry_entry.device_id not in item_device_ids
+            ):
+                continue
+            has_items = True
+            if (
+                config := _async_entity_config(
+                    hass, entry, sources, entity_id, registry_entry
+                )
+            ) is not None and not config["device_discovery"]:
+                configs.setdefault(config["source"], _device_part(config))
+        for artifact in artifacts:
+            if artifact.device_id not in item_device_ids:
+                continue
+            has_items = True
+            discovery_data = artifact.discovery_data
+            if _is_device_discovery(discovery_data):
+                continue
+            source = sources.discovery(discovery_data[ATTR_DISCOVERY_PAYLOAD])
+            configs.setdefault(
+                source, _device_part(_discovery_config(source, discovery_data))
+            )
+        if has_items:
+            break
     # A device discovery payload is built again whole, also when the device only
     # has some of its components, or only its child devices have components
-    device_ids = {
-        device_id,
-        *(
-            child_device.id
-            for child_device in dr.async_entries_for_parent_device(
-                device_registry, device_id
-            )
-        ),
-    }
+    device_ids = {device_id, *child_device_ids}
     device_discovery_items = _device_discovery_items(hass, artifacts)
     device_discovery_topics = {
         discovery_data[ATTR_DISCOVERY_TOPIC]
