@@ -5,7 +5,6 @@ import dataclasses
 import functools
 
 from homeassistant.components import recorder, sensor
-from homeassistant.components.sensor import SensorEntityStateAttribute
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -295,7 +294,7 @@ def _async_validate_usage_stat(
 
     if (
         state_class == sensor.SensorStateClass.MEASUREMENT
-        and SensorEntityStateAttribute.LAST_RESET not in state.attributes
+        and sensor.SensorEntityStateAttribute.LAST_RESET not in state.attributes
     ):
         issues.add_issue(
             hass, "entity_state_class_measurement_no_last_reset", entity_id
@@ -429,7 +428,7 @@ def _async_validate_cost_stat(
 
     if (
         state_class == sensor.SensorStateClass.MEASUREMENT
-        and SensorEntityStateAttribute.LAST_RESET not in state.attributes
+        and sensor.SensorEntityStateAttribute.LAST_RESET not in state.attributes
     ):
         issues.add_issue(hass, "entity_state_class_measurement_no_last_reset", stat_id)
 
