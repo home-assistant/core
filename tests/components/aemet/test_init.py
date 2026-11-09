@@ -152,9 +152,13 @@ async def test_update_options_failed_reload_cancels_pending_reminder(
 
     async_reload.assert_awaited_once_with(entry.entry_id)
 
-    freezer.move_to("2021-03-29 09:00:01+00:00")
-    async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
+        freezer.move_to("2021-03-29 09:00:01+00:00")
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert notification_id not in pn._async_get_or_create_notifications(hass)
 
