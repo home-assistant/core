@@ -11,26 +11,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from sofar_modbus.modern import BatConfigCellType, BatConfigWriteStatus
 
 from homeassistant.components.sofar.const import DOMAIN
-from homeassistant.components.sofar.services import (
-    ATTR_ACTION,
-    ATTR_BATTERY_POWER_MAX,
-    ATTR_BATTERY_POWER_MIN,
-    ATTR_CHARGE_CUTOFF_SOC,
-    ATTR_ENABLED,
-    ATTR_GRID_POWER,
-    ATTR_LIMIT,
-    ATTR_MAX_POWER,
-    ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC,
-    ATTR_OFF_GRID_RECOVERY_SOC,
-    ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC,
-    ATTR_TIMEOUT,
-    SERVICE_SET_ACTIVE_POWER_LIMIT,
-    SERVICE_SET_BATTERY_CUTOFFS,
-    SERVICE_SET_FEED_IN_LIMIT,
-    SERVICE_SET_PASSIVE_MODE_POWER,
-    SERVICE_SET_PASSIVE_MODE_TIMEOUT,
-)
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_MODE
+from homeassistant.components.sofar.services import SofarService, SofarServiceArgument
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -59,9 +41,9 @@ BATTERY_CONFIG_STATUS_REGISTER = 0x1053
 CHARGE_CUTOFF_REGISTER = 0x105B
 
 DISCHARGE_CUTOFFS = {
-    ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC: 30,
-    ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC: 10,
-    ATTR_OFF_GRID_RECOVERY_SOC: 15,
+    SofarServiceArgument.ON_GRID_DISCHARGE_CUTOFF_SOC: 30,
+    SofarServiceArgument.OFF_GRID_DISCHARGE_CUTOFF_SOC: 10,
+    SofarServiceArgument.OFF_GRID_RECOVERY_SOC: 15,
 }
 
 
@@ -96,11 +78,11 @@ async def test_set_feed_in_limit(
     """Test the feed-in limit reaches both registers as one write."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_FEED_IN_LIMIT,
+        SofarService.SET_FEED_IN_LIMIT,
         {
-            ATTR_CONFIG_ENTRY_ID: init_integration.entry_id,
-            ATTR_MODE: "enabled_feed_in_limitation",
-            ATTR_MAX_POWER: 3000,
+            CommonServiceArgument.CONFIG_ENTRY_ID: init_integration.entry_id,
+            SofarServiceArgument.MODE: "enabled_feed_in_limitation",
+            SofarServiceArgument.MAX_POWER: 3000,
         },
         blocking=True,
     )
@@ -119,11 +101,11 @@ async def test_set_active_power_limit(
     """Test the active power limit arms its flag and writes the percentage."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_ACTIVE_POWER_LIMIT,
+        SofarService.SET_ACTIVE_POWER_LIMIT,
         {
-            ATTR_CONFIG_ENTRY_ID: init_integration.entry_id,
-            ATTR_ENABLED: True,
-            ATTR_LIMIT: 42.5,
+            CommonServiceArgument.CONFIG_ENTRY_ID: init_integration.entry_id,
+            SofarServiceArgument.ENABLED: True,
+            SofarServiceArgument.LIMIT: 42.5,
         },
         blocking=True,
     )
@@ -140,11 +122,11 @@ async def test_set_passive_mode_timeout(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_PASSIVE_MODE_TIMEOUT,
+        SofarService.SET_PASSIVE_MODE_TIMEOUT,
         {
-            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_TIMEOUT: 300,
-            ATTR_ACTION: "return_to_previous_mode",
+            CommonServiceArgument.CONFIG_ENTRY_ID: entry.entry_id,
+            SofarServiceArgument.TIMEOUT: 300,
+            SofarServiceArgument.ACTION: "return_to_previous_mode",
         },
         blocking=True,
     )
@@ -160,12 +142,12 @@ async def test_set_passive_mode_power(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_PASSIVE_MODE_POWER,
+        SofarService.SET_PASSIVE_MODE_POWER,
         {
-            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_GRID_POWER: 1000,
-            ATTR_BATTERY_POWER_MIN: -2000,
-            ATTR_BATTERY_POWER_MAX: 2000,
+            CommonServiceArgument.CONFIG_ENTRY_ID: entry.entry_id,
+            SofarServiceArgument.GRID_POWER: 1000,
+            SofarServiceArgument.BATTERY_POWER_MIN: -2000,
+            SofarServiceArgument.BATTERY_POWER_MAX: 2000,
         },
         blocking=True,
     )
@@ -194,7 +176,9 @@ def _commit_battery_config(unit: MockModbusUnit) -> None:
     ("data", "charge_cutoff"),
     [
         pytest.param({}, 95, id="discharge_only"),
-        pytest.param({ATTR_CHARGE_CUTOFF_SOC: 90}, 90, id="with_charge_cutoff"),
+        pytest.param(
+            {SofarServiceArgument.CHARGE_CUTOFF_SOC: 90}, 90, id="with_charge_cutoff"
+        ),
     ],
 )
 async def test_set_battery_cutoffs(
@@ -205,8 +189,12 @@ async def test_set_battery_cutoffs(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_BATTERY_CUTOFFS,
-        {ATTR_CONFIG_ENTRY_ID: entry.entry_id, **DISCHARGE_CUTOFFS, **data},
+        SofarService.SET_BATTERY_CUTOFFS,
+        {
+            CommonServiceArgument.CONFIG_ENTRY_ID: entry.entry_id,
+            **DISCHARGE_CUTOFFS,
+            **data,
+        },
         blocking=True,
     )
 
@@ -233,11 +221,11 @@ async def test_charge_cutoff_rejected_when_not_served(hass: HomeAssistant) -> No
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_BATTERY_CUTOFFS,
+            SofarService.SET_BATTERY_CUTOFFS,
             {
-                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: entry.entry_id,
                 **DISCHARGE_CUTOFFS,
-                ATTR_CHARGE_CUTOFF_SOC: 90,
+                SofarServiceArgument.CHARGE_CUTOFF_SOC: 90,
             },
             blocking=True,
         )
@@ -250,18 +238,21 @@ async def test_charge_cutoff_rejected_when_not_served(hass: HomeAssistant) -> No
     ("service", "data"),
     [
         (
-            SERVICE_SET_PASSIVE_MODE_TIMEOUT,
-            {ATTR_TIMEOUT: 60, ATTR_ACTION: "force_standby"},
-        ),
-        (
-            SERVICE_SET_PASSIVE_MODE_POWER,
+            SofarService.SET_PASSIVE_MODE_TIMEOUT,
             {
-                ATTR_GRID_POWER: 0,
-                ATTR_BATTERY_POWER_MIN: 0,
-                ATTR_BATTERY_POWER_MAX: 0,
+                SofarServiceArgument.TIMEOUT: 60,
+                SofarServiceArgument.ACTION: "force_standby",
             },
         ),
-        (SERVICE_SET_BATTERY_CUTOFFS, DISCHARGE_CUTOFFS),
+        (
+            SofarService.SET_PASSIVE_MODE_POWER,
+            {
+                SofarServiceArgument.GRID_POWER: 0,
+                SofarServiceArgument.BATTERY_POWER_MIN: 0,
+                SofarServiceArgument.BATTERY_POWER_MAX: 0,
+            },
+        ),
+        (SofarService.SET_BATTERY_CUTOFFS, DISCHARGE_CUTOFFS),
     ],
 )
 async def test_action_rejected_when_unsupported(
@@ -275,7 +266,7 @@ async def test_action_rejected_when_unsupported(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: init_integration.entry_id, **data},
+            {CommonServiceArgument.CONFIG_ENTRY_ID: init_integration.entry_id, **data},
             blocking=True,
         )
 
@@ -291,11 +282,11 @@ async def test_max_power_not_a_multiple_of_100_is_a_service_error(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FEED_IN_LIMIT,
+            SofarService.SET_FEED_IN_LIMIT,
             {
-                ATTR_CONFIG_ENTRY_ID: init_integration.entry_id,
-                ATTR_MODE: "disabled",
-                ATTR_MAX_POWER: max_power,
+                CommonServiceArgument.CONFIG_ENTRY_ID: init_integration.entry_id,
+                SofarServiceArgument.MODE: "disabled",
+                SofarServiceArgument.MAX_POWER: max_power,
             },
             blocking=True,
         )
@@ -315,11 +306,11 @@ async def test_unexpected_value_error_is_a_service_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FEED_IN_LIMIT,
+            SofarService.SET_FEED_IN_LIMIT,
             {
-                ATTR_CONFIG_ENTRY_ID: init_integration.entry_id,
-                ATTR_MODE: "disabled",
-                ATTR_MAX_POWER: 3000,
+                CommonServiceArgument.CONFIG_ENTRY_ID: init_integration.entry_id,
+                SofarServiceArgument.MODE: "disabled",
+                SofarServiceArgument.MAX_POWER: 3000,
             },
             blocking=True,
         )
@@ -337,11 +328,11 @@ async def test_write_failure_is_a_home_assistant_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FEED_IN_LIMIT,
+            SofarService.SET_FEED_IN_LIMIT,
             {
-                ATTR_CONFIG_ENTRY_ID: init_integration.entry_id,
-                ATTR_MODE: "disabled",
-                ATTR_MAX_POWER: 0,
+                CommonServiceArgument.CONFIG_ENTRY_ID: init_integration.entry_id,
+                SofarServiceArgument.MODE: "disabled",
+                SofarServiceArgument.MAX_POWER: 0,
             },
             blocking=True,
         )
@@ -351,42 +342,54 @@ async def test_write_failure_is_a_home_assistant_error(
     ("service", "data"),
     [
         pytest.param(
-            SERVICE_SET_FEED_IN_LIMIT,
-            {ATTR_MODE: "disabled", ATTR_MAX_POWER: 10_000_000},
+            SofarService.SET_FEED_IN_LIMIT,
+            {
+                SofarServiceArgument.MODE: "disabled",
+                SofarServiceArgument.MAX_POWER: 10_000_000,
+            },
             id="feed_in_max_power",
         ),
         pytest.param(
-            SERVICE_SET_PASSIVE_MODE_TIMEOUT,
-            {ATTR_TIMEOUT: 70000, ATTR_ACTION: "force_standby"},
+            SofarService.SET_PASSIVE_MODE_TIMEOUT,
+            {
+                SofarServiceArgument.TIMEOUT: 70000,
+                SofarServiceArgument.ACTION: "force_standby",
+            },
             id="passive_timeout",
         ),
         pytest.param(
-            SERVICE_SET_PASSIVE_MODE_POWER,
+            SofarService.SET_PASSIVE_MODE_POWER,
             {
-                ATTR_GRID_POWER: 200_000,
-                ATTR_BATTERY_POWER_MIN: 0,
-                ATTR_BATTERY_POWER_MAX: 0,
+                SofarServiceArgument.GRID_POWER: 200_000,
+                SofarServiceArgument.BATTERY_POWER_MIN: 0,
+                SofarServiceArgument.BATTERY_POWER_MAX: 0,
             },
             id="passive_grid_power",
         ),
         pytest.param(
-            SERVICE_SET_BATTERY_CUTOFFS,
-            {**DISCHARGE_CUTOFFS, ATTR_ON_GRID_DISCHARGE_CUTOFF_SOC: 101},
+            SofarService.SET_BATTERY_CUTOFFS,
+            {
+                **DISCHARGE_CUTOFFS,
+                SofarServiceArgument.ON_GRID_DISCHARGE_CUTOFF_SOC: 101,
+            },
             id="on_grid_discharge_cutoff",
         ),
         pytest.param(
-            SERVICE_SET_BATTERY_CUTOFFS,
-            {**DISCHARGE_CUTOFFS, ATTR_OFF_GRID_DISCHARGE_CUTOFF_SOC: 31},
+            SofarService.SET_BATTERY_CUTOFFS,
+            {
+                **DISCHARGE_CUTOFFS,
+                SofarServiceArgument.OFF_GRID_DISCHARGE_CUTOFF_SOC: 31,
+            },
             id="off_grid_discharge_cutoff",
         ),
         pytest.param(
-            SERVICE_SET_BATTERY_CUTOFFS,
-            {**DISCHARGE_CUTOFFS, ATTR_OFF_GRID_RECOVERY_SOC: 14},
+            SofarService.SET_BATTERY_CUTOFFS,
+            {**DISCHARGE_CUTOFFS, SofarServiceArgument.OFF_GRID_RECOVERY_SOC: 14},
             id="off_grid_recovery",
         ),
         pytest.param(
-            SERVICE_SET_BATTERY_CUTOFFS,
-            {**DISCHARGE_CUTOFFS, ATTR_CHARGE_CUTOFF_SOC: 59},
+            SofarService.SET_BATTERY_CUTOFFS,
+            {**DISCHARGE_CUTOFFS, SofarServiceArgument.CHARGE_CUTOFF_SOC: 59},
             id="charge_cutoff",
         ),
     ],
@@ -403,6 +406,6 @@ async def test_value_past_the_selector_bounds_is_refused(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: entry.entry_id, **data},
+            {CommonServiceArgument.CONFIG_ENTRY_ID: entry.entry_id, **data},
             blocking=True,
         )
