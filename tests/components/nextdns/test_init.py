@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import (
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(

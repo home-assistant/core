@@ -32,16 +32,6 @@ class VistapoolEntity(CoordinatorEntity[VistapoolDataUpdateCoordinator]):
         """Return if entity is available."""
         return super().available and self.coordinator.push_connected
 
-    @property
-    def pool_id(self) -> str:
-        """Return the pool ID for the entity."""
-        return self.coordinator.pool_id
-
-    @property
-    def pool_name(self) -> str:
-        """Return the friendly pool name for the entity."""
-        return self.coordinator.pool_name
-
     def build_unique_id(self, suffix: str) -> str:
         """Return a consistent unique ID for the entity."""
         return f"{self.coordinator.pool_id}-{suffix}"

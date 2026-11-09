@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
@@ -34,7 +35,9 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
+from .const import DEFAULT_NAMES
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -48,7 +51,7 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-DEFAULT_NAME = "Template Binary Sensor"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.BINARY_SENSOR]
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
@@ -222,11 +225,20 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
         def _set_state(_):
             """Set state of template binary sensor."""
             self._attr_is_on = state
-            self.async_write_ha_state()
+            if self._preview_callback:
+                self._async_preview_update()
+            else:
+                self.async_write_ha_state()
 
         delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
+
+    @override
+    def _call_on_remove_callbacks(self):
+        if self._delay_cancel:
+            self._delay_cancel()
+        return super()._call_on_remove_callbacks()
 
 
 @dataclass

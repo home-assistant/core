@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_token": "Access token"
+        },
+        "data_description": {
+          "api_token": "Personal access token for the Nature account."
+        },
+        "description": "Enter a personal access token issued at {token_url}."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cumulative_energy_normal": {
+        "name": "Imported energy"
+      },
+      "cumulative_energy_reverse": {
+        "name": "Exported energy"
+      },
+      "illuminance": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "last_motion": {
+        "name": "Last motion"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Access token is invalid or was revoked"
+    },
+    "update_failed": {
+      "message": "Error communicating with the Nature API: {error}"
+    },
+    "update_rate_limited": {
+      "message": "Nature API rate limit exceeded; requests are accepted again at {reset}"
+    }
+  }
+}

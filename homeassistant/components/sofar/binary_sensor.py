@@ -1,9 +1,11 @@
 """Support for Sofar binary sensors."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntFlag
 from typing import override
 
+from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import PowerControlFlags
 from sofar_modbus.modern.faults import FaultCategory
 
@@ -12,12 +14,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 0
 
@@ -60,7 +62,7 @@ class SofarFlagBinarySensorDescription(
 ):
     """Describe a Sofar binary sensor backed by one flags-register bit."""
 
-    attribute: str
+    flags_fn: Callable[[SofarInverter], IntFlag | None]
     flag: IntFlag
 
 
@@ -71,7 +73,7 @@ FLAG_SENSOR_DESCRIPTIONS: tuple[SofarFlagBinarySensorDescription, ...] = (
         translation_key="active_power_limit_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        attribute="power_control",
+        flags_fn=lambda device: device.active_power_control.power_control,
         flag=PowerControlFlags.ACTIVE_POWER,
     ),
 )
@@ -82,19 +84,26 @@ async def async_setup_entry(
     entry: SofarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Sofar Inverter Modbus binary sensor platform."""
+    """Set up the Sofar binary sensor platform."""
+    async_remove_unserved_entities(
+        hass,
+        entry,
+        Platform.BINARY_SENSOR,
+        FAULT_SENSOR_DESCRIPTIONS + FLAG_SENSOR_DESCRIPTIONS,
+    )
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
-    async_add_entities(
+    entities: list[SofarFaultBinarySensor | SofarFlagBinarySensor] = [
         SofarFaultBinarySensor(runtime_data, description)
         for description in FAULT_SENSOR_DESCRIPTIONS
         if description.component in served
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         SofarFlagBinarySensor(runtime_data, description)
         for description in FLAG_SENSOR_DESCRIPTIONS
         if description.component in served
     )
+    async_add_entities(entities)
 
 
 class SofarFaultBinarySensor(SofarEntity, BinarySensorEntity):
@@ -105,10 +114,9 @@ class SofarFaultBinarySensor(SofarEntity, BinarySensorEntity):
     @property
     @override
     def is_on(self) -> bool:
-        component = getattr(self.coordinator.device, self.entity_description.component)
         return any(
             fault.category is self.entity_description.category
-            for fault in component.active_faults
+            for fault in self.coordinator.device.state.active_faults
         )
 
 
@@ -119,7 +127,6 @@ class SofarFlagBinarySensor(SofarEntity, BinarySensorEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        flags = getattr(component, self.entity_description.attribute)
-        return self.entity_description.flag in flags
+    def is_on(self) -> bool | None:
+        flags = self.entity_description.flags_fn(self.coordinator.device)
+        return None if flags is None else self.entity_description.flag in flags

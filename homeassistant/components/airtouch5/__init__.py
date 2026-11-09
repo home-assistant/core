@@ -12,7 +12,7 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.COVER]
 type Airtouch5ConfigEntry = ConfigEntry[Airtouch5SimpleClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -> None:
     """Set up Airtouch 5 from a config entry."""
 
     # Create API instance
@@ -30,17 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        client = entry.runtime_data
-        await client.disconnect()
-        client.ac_status_callbacks.clear()
-        client.connection_state_callbacks.clear()
-        client.data_packet_callbacks.clear()
-        client.zone_status_callbacks.clear()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    client = entry.runtime_data
+    await client.disconnect()
+    client.ac_status_callbacks.clear()
+    client.connection_state_callbacks.clear()
+    client.data_packet_callbacks.clear()
+    client.zone_status_callbacks.clear()

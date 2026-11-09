@@ -19,7 +19,7 @@ DEFAULT_STYLE = 0
 DEFAULT_USE_SPEAKER_BOOST = True
 
 MAX_REQUEST_IDS = 3
-MODELS_PREVIOUS_INFO_NOT_SUPPORTED = ("eleven_v3",)
+MODELS_PREVIOUS_INFO_NOT_SUPPORTED = ("eleven_v3", "eleven_v3_conversational")
 
 STT_LANGUAGES = [
     "af-ZA",  # Afrikaans

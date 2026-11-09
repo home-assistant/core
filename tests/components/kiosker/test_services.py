@@ -14,30 +14,17 @@ from kiosker import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.kiosker.const import (
-    ATTR_BACKGROUND,
-    ATTR_BUTTON_BACKGROUND,
-    ATTR_BUTTON_FOREGROUND,
-    ATTR_BUTTON_TEXT,
-    ATTR_DISMISSIBLE,
-    ATTR_EXPIRE,
-    ATTR_FOREGROUND,
-    ATTR_SOUND,
-    ATTR_TEXT,
-    ATTR_URL,
-    ATTR_VISIBLE,
-    DOMAIN,
-)
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ICON, Platform
+from homeassistant.components.kiosker.const import DOMAIN
+from homeassistant.components.kiosker.services import KioskerServiceArgument
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 KIOSKER_DEVICE_ID = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
 
@@ -73,7 +60,10 @@ async def test_navigate_url(
     await hass.services.async_call(
         DOMAIN,
         "navigate_url",
-        {ATTR_DEVICE_ID: device.id, ATTR_URL: "https://example.com"},
+        {
+            CommonServiceArgument.DEVICE_ID: device.id,
+            KioskerServiceArgument.URL: "https://example.com",
+        },
         blocking=True,
     )
 
@@ -85,17 +75,17 @@ async def test_navigate_url(
     [
         pytest.param(
             {
-                ATTR_VISIBLE: True,
-                ATTR_TEXT: "Hello World",
-                ATTR_BACKGROUND: [0, 0, 0],
-                ATTR_FOREGROUND: [255, 255, 255],
-                ATTR_ICON: "star",
-                ATTR_EXPIRE: 30,
-                ATTR_DISMISSIBLE: True,
-                ATTR_BUTTON_BACKGROUND: [255, 0, 0],
-                ATTR_BUTTON_FOREGROUND: [0, 255, 0],
-                ATTR_BUTTON_TEXT: "Dismiss",
-                ATTR_SOUND: "1007",
+                KioskerServiceArgument.VISIBLE: True,
+                KioskerServiceArgument.TEXT: "Hello World",
+                KioskerServiceArgument.BACKGROUND: [0, 0, 0],
+                KioskerServiceArgument.FOREGROUND: [255, 255, 255],
+                KioskerServiceArgument.ICON: "star",
+                KioskerServiceArgument.EXPIRE: 30,
+                KioskerServiceArgument.DISMISSIBLE: True,
+                KioskerServiceArgument.BUTTON_BACKGROUND: [255, 0, 0],
+                KioskerServiceArgument.BUTTON_FOREGROUND: [0, 255, 0],
+                KioskerServiceArgument.BUTTON_TEXT: "Dismiss",
+                KioskerServiceArgument.SOUND: "1007",
             },
             id="all_fields",
         ),
@@ -124,7 +114,7 @@ async def test_set_blackout(
     await hass.services.async_call(
         DOMAIN,
         "set_blackout",
-        {ATTR_DEVICE_ID: device.id, **service_data},
+        {CommonServiceArgument.DEVICE_ID: device.id, **service_data},
         blocking=True,
     )
 
@@ -151,7 +141,10 @@ async def test_service_entry_not_loaded(
         await hass.services.async_call(
             DOMAIN,
             "navigate_url",
-            {ATTR_DEVICE_ID: device.id, ATTR_URL: "https://example.com"},
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                KioskerServiceArgument.URL: "https://example.com",
+            },
             blocking=True,
         )
 
@@ -166,17 +159,17 @@ async def test_service_entry_not_loaded(
         ),
         pytest.param(
             "set_blackout",
-            {ATTR_BACKGROUND: [0, 0]},
+            {KioskerServiceArgument.BACKGROUND: [0, 0]},
             id="set_blackout_rgb_too_short",
         ),
         pytest.param(
             "set_blackout",
-            {ATTR_BACKGROUND: [0, 0, 300]},
+            {KioskerServiceArgument.BACKGROUND: [0, 0, 300]},
             id="set_blackout_rgb_out_of_range",
         ),
         pytest.param(
             "set_blackout",
-            {ATTR_EXPIRE: "not_a_number"},
+            {KioskerServiceArgument.EXPIRE: "not_a_number"},
             id="set_blackout_expire_non_integer",
         ),
     ],
@@ -201,7 +194,7 @@ async def test_schema_rejects_invalid_input(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_DEVICE_ID: device.id, **extra_data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **extra_data},
             blocking=True,
         )
 
@@ -241,7 +234,10 @@ async def test_api_errors_are_wrapped(
         await hass.services.async_call(
             DOMAIN,
             "navigate_url",
-            {ATTR_DEVICE_ID: device.id, ATTR_URL: "https://example.com"},
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                KioskerServiceArgument.URL: "https://example.com",
+            },
             blocking=True,
         )
 
@@ -268,6 +264,9 @@ async def test_service_non_kiosker_device(
         await hass.services.async_call(
             DOMAIN,
             "navigate_url",
-            {ATTR_DEVICE_ID: other_device.id, ATTR_URL: "https://example.com"},
+            {
+                CommonServiceArgument.DEVICE_ID: other_device.id,
+                KioskerServiceArgument.URL: "https://example.com",
+            },
             blocking=True,
         )

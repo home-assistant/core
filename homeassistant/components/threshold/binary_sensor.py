@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -39,12 +38,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    ATTR_HYSTERESIS,
-    ATTR_LOWER,
-    ATTR_POSITION,
-    ATTR_SENSOR_VALUE,
-    ATTR_TYPE,
-    ATTR_UPPER,
     CONF_HYSTERESIS,
     CONF_LOWER,
     CONF_UPPER,
@@ -56,6 +49,7 @@ from .const import (
     TYPE_LOWER,
     TYPE_RANGE,
     TYPE_UPPER,
+    ThresholdEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -165,7 +159,13 @@ class ThresholdSensor(BinarySensorEntity):
 
     _attr_should_poll = False
     _unrecorded_attributes = frozenset(
-        {ATTR_ENTITY_ID, ATTR_HYSTERESIS, ATTR_LOWER, ATTR_TYPE, ATTR_UPPER}
+        {
+            ThresholdEntityStateAttribute.ENTITY_ID,
+            ThresholdEntityStateAttribute.HYSTERESIS,
+            ThresholdEntityStateAttribute.LOWER,
+            ThresholdEntityStateAttribute.TYPE,
+            ThresholdEntityStateAttribute.UPPER,
+        }
     )
 
     def __init__(
@@ -251,13 +251,17 @@ class ThresholdSensor(BinarySensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ENTITY_ID: self._entity_id,
-            ATTR_HYSTERESIS: self._hysteresis,
-            ATTR_LOWER: getattr(self, "_threshold_lower", None),
-            ATTR_POSITION: self._state_position,
-            ATTR_SENSOR_VALUE: self.sensor_value,
-            ATTR_TYPE: self.threshold_type,
-            ATTR_UPPER: getattr(self, "_threshold_upper", None),
+            ThresholdEntityStateAttribute.ENTITY_ID: self._entity_id,
+            ThresholdEntityStateAttribute.HYSTERESIS: self._hysteresis,
+            ThresholdEntityStateAttribute.LOWER: getattr(
+                self, "_threshold_lower", None
+            ),
+            ThresholdEntityStateAttribute.POSITION: self._state_position,
+            ThresholdEntityStateAttribute.SENSOR_VALUE: self.sensor_value,
+            ThresholdEntityStateAttribute.TYPE: self.threshold_type,
+            ThresholdEntityStateAttribute.UPPER: getattr(
+                self, "_threshold_upper", None
+            ),
         }
 
     @callback

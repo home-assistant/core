@@ -9,7 +9,6 @@ from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import URI_SCHEME, async_browse_media
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import MediaSelector
 
 from .const import CONF_MEDIA, DOMAIN
@@ -90,7 +89,8 @@ class CollectionImageConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA,
-                user_input or {CONF_MEDIA: cv.ensure_list(entry.data[CONF_MEDIA])},
+                user_input
+                or {CONF_MEDIA: probatio.EnsureList()(entry.data[CONF_MEDIA])},
             ),
             errors=errors,
             description_placeholders=placeholders,

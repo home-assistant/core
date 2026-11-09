@@ -29,7 +29,7 @@ from .const import (
 
 TCP_PLATFORM_SCHEMA: Final[dict[probatio.Marker, Any]] = {
     probatio.Required(CONF_HOST): cv.string,
-    probatio.Required(CONF_PORT): cv.port,
+    probatio.Required(CONF_PORT): probatio.Port(),
     probatio.Required(CONF_PAYLOAD): cv.string,
     probatio.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.positive_int,
     probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

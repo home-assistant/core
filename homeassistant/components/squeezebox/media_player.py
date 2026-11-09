@@ -665,7 +665,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _valid_type_list = [
             key
             for key in self._browse_data.content_type_media_class
-            if key not in ["apps", "app", "radios", "radio"]
+            if key
+            not in ["apps", "app", "radios", "radio", "artist tracks", "genre tracks"]
         ]
 
         _media_content_type_list = (
@@ -686,6 +687,14 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     "media_content_type": ", ".join(_valid_type_list)
                 },
             )
+
+        if query.media_content_id:
+            # Without full text search, LMS matches only album titles inside an
+            # artist and only artist names inside a genre
+            if MediaType.ARTIST in _media_content_type_list:
+                _media_content_type_list.append("artist tracks")
+            if MediaType.GENRE in _media_content_type_list:
+                _media_content_type_list.append("genre tracks")
 
         search_response_list: list[BrowseMedia] = []
 

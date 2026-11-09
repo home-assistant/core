@@ -20,8 +20,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, HomeeConfigEntry
-from .const import CLIMATE_PROFILES, LIGHT_PROFILES
+from . import HomeeConfigEntry
+from .const import CLIMATE_PROFILES, DOMAIN, LIGHT_PROFILES
 from .entity import HomeeEntity
 from .helpers import setup_homee_platform
 

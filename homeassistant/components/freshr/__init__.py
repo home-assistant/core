@@ -15,7 +15,7 @@ from .coordinator import (
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> None:
     """Set up Fresh-r from a config entry."""
     devices_coordinator = FreshrDevicesCoordinator(hass, entry)
     await devices_coordinator.async_config_entry_first_refresh()
@@ -68,9 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> bo
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

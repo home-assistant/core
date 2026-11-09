@@ -18,6 +18,8 @@ from .const import (
     ERROR_MSG_NO_DEVICE_FOUND,
 )
 
+DISCOVERY_TIMEOUT = 10
+
 
 async def _async_can_discover_devices() -> bool:
     """Return if there are devices that can be discovered."""
@@ -30,10 +32,11 @@ async def _async_can_discover_devices() -> bool:
         if not future_event.done():
             future_event.set_result(None)
 
-    async with WeatherFlowListener() as client, asyncio.timeout(10):
+    async with WeatherFlowListener() as client:
         try:
             client.on(EVENT_DEVICE_DISCOVERED, _async_found)
-            await future_event
+            async with asyncio.timeout(DISCOVERY_TIMEOUT):
+                await future_event
         except TimeoutError:
             return False
 

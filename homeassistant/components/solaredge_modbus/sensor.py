@@ -10,6 +10,8 @@ from solaredged import (
     Inverter,
     InverterStatus,
     Meter,
+    SolarEdge,
+    StorageCapacity,
     SunSpecDID,
 )
 
@@ -36,7 +38,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import LOGGER
+from .const import LOGGER, SUBSYSTEM_STORAGE_CAPACITY
 from .coordinator import SolarEdgeModbusConfigEntry
 from .entity import (
     SolarEdgeModbusBatteryEntity,
@@ -816,6 +818,21 @@ def _battery_sensor(
     )
 
 
+STORAGE_CAPACITY_SENSORS: tuple[
+    SolarEdgeModbusSensorEntityDescription[StorageCapacity], ...
+] = (
+    SolarEdgeModbusSensorEntityDescription(
+        key="storage_state_of_charge",
+        translation_key="storage_state_of_charge",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda storage: storage.state_of_charge,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SolarEdgeModbusConfigEntry,
@@ -842,7 +859,37 @@ async def async_setup_entry(
         if description.exists_fn(battery)
     )
 
+    if (storage := _reported_storage(solaredge)) is not None:
+        entities.extend(
+            SolarEdgeModbusStorageCapacitySensorEntity(
+                entry=entry, description=description, component=storage
+            )
+            for description in STORAGE_CAPACITY_SENSORS
+        )
+
     async_add_entities(entities)
+
+
+def _reported_storage(solaredge: SolarEdge) -> StorageCapacity | None:
+    """The DER storage block worth making entities from, if there is one.
+
+    An inverter running a grid profile with IEEE 1547-2018 support serves this
+    block whether or not a battery is attached, and the spec fixes the state of
+    charge at 0% when none is. Nothing in the block distinguishes that from a
+    pack that happens to sit at 0%, so a charge above zero is the evidence that
+    there is something to report. It is only worth reading at all where the
+    battery block itself gave nothing: that one is richer and has a serial
+    number, and some inverters expose no battery over Modbus but do serve this.
+    """
+    storage = solaredge.storage_capacity
+    if solaredge.batteries or storage is None:
+        return None
+
+    state_of_charge = storage.state_of_charge
+    if state_of_charge is None or state_of_charge <= 0:
+        return None
+
+    return storage
 
 
 class SolarEdgeModbusInverterSensorEntity(SolarEdgeModbusInverterEntity, SensorEntity):
@@ -869,6 +916,39 @@ class SolarEdgeModbusMeterSensorEntity(SolarEdgeModbusMeterEntity, SensorEntity)
         return self.entity_description.value_fn(
             self.coordinator.solaredge.meters[self._index - 1]
         )
+
+
+class SolarEdgeModbusStorageCapacitySensorEntity(
+    SolarEdgeModbusInverterEntity, SensorEntity
+):
+    """Defines a SolarEdge Modbus DER storage sensor entity.
+
+    The block describes the whole DER's storage and carries no identity of its
+    own, so it belongs on the inverter rather than on a sub-device.
+    """
+
+    entity_description: SolarEdgeModbusSensorEntityDescription[StorageCapacity]
+
+    def __init__(
+        self,
+        *,
+        entry: SolarEdgeModbusConfigEntry,
+        description: SolarEdgeModbusSensorEntityDescription[StorageCapacity],
+        component: StorageCapacity,
+    ) -> None:
+        """Initialize a SolarEdge Modbus DER storage sensor entity."""
+        super().__init__(
+            entry=entry,
+            description=description,
+            subsystem=SUBSYSTEM_STORAGE_CAPACITY,
+        )
+        self._component = component
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self._component)
 
 
 class SolarEdgeModbusEnergySensorEntity(RestoreSensor):

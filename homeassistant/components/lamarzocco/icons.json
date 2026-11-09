@@ -7,6 +7,12 @@
           "on": "mdi:water"
         }
       },
+      "bluetooth_connected": {
+        "default": "mdi:bluetooth",
+        "state": {
+          "off": "mdi:bluetooth-off"
+        }
+      },
       "brew_active": {
         "default": "mdi:cup",
         "state": {

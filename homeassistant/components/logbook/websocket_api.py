@@ -13,7 +13,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.const import EVENT_CALL_SERVICE
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, async_noop, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
@@ -54,6 +54,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the logbook websocket API."""
     websocket_api.async_register_command(hass, ws_get_events)
     websocket_api.async_register_command(hass, ws_event_stream)
+    websocket_api.async_register_command(hass, ws_get_action_calls)
 
 
 @callback
@@ -303,7 +304,7 @@ async def ws_event_stream(
 
     if end_time and end_time <= utc_now:
         # Not live stream but we it might be a big query
-        connection.subscriptions[msg_id] = callback(lambda: None)
+        connection.subscriptions[msg_id] = async_noop
         connection.send_result(msg_id)
         # Fetch everything from history
         await _async_send_historical_events(
@@ -506,6 +507,62 @@ async def ws_get_events(
         context_id,
         timestamp=True,
         include_entity_name=False,
+    )
+
+    connection.send_message(
+        await get_instance(hass).async_add_executor_job(
+            _ws_formatted_get_events,
+            msg["id"],
+            start_time,
+            end_time,
+            event_processor,
+        )
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "logbook/get_action_calls",
+        probatio.Required("start_time"): str,
+        probatio.Optional("end_time"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_get_action_calls(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle logbook get action calls websocket command.
+
+    Admin only, since the action data can contain secrets like alarm codes.
+    """
+    end_time_str = msg.get("end_time")
+    utc_now = dt_util.utcnow()
+
+    if start_time := dt_util.parse_datetime(msg["start_time"]):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if not end_time_str:
+        end_time = utc_now
+    elif parsed_end_time := dt_util.parse_datetime(end_time_str):
+        end_time = dt_util.as_utc(parsed_end_time)
+    else:
+        connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+        return
+
+    if start_time > utc_now:
+        connection.send_result(msg["id"], [])
+        return
+
+    event_processor = EventProcessor(
+        hass,
+        (EVENT_CALL_SERVICE,),
+        timestamp=True,
+        include_entity_name=False,
+        action_calls=True,
     )
 
     connection.send_message(

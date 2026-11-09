@@ -1,12 +1,13 @@
 """Test the KNX config flow."""
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from knx_telegram_store.connection import ConnectionCheckResult, ConnectionErrorKind
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 from xknx.exceptions import XKNXException
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
@@ -64,8 +65,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, get_fixture_path
-
 FIXTURE_KNXKEYS_PASSWORD = "test"
 FIXTURE_KEYRING = sync_load_keyring(
     get_fixture_path("fixture.knxkeys", DOMAIN), FIXTURE_KNXKEYS_PASSWORD
@@ -98,7 +97,7 @@ async def fixture_knx_setup(hass: HomeAssistant):
     with (
         patch("homeassistant.components.knx.async_setup", return_value=True),
         patch(
-            "homeassistant.components.knx.async_setup_entry", return_value=True
+            "homeassistant.components.knx.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         yield mock_async_setup_entry
@@ -131,6 +130,16 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
         else:
             mkdir_mock.assert_called_once()
             shutil_move_mock.assert_called_once()
+
+
+@contextmanager
+def _patch_check_config_success() -> Generator[None]:
+    """Patch a successful PostgreSQL connection check."""
+    with patch(
+        "knx_telegram_store.backends.postgres.PostgresStore.check_config",
+        return_value=ConnectionCheckResult.success(),
+    ):
+        yield
 
 
 def _gateway_descriptor(
@@ -1267,6 +1276,7 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
     knx_setup.assert_called_once()
 
 
+@pytest.mark.usefixtures("knx_setup")
 async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step_secure_tunnel(hass)
@@ -1296,7 +1306,23 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -
             == "keyfile_invalid_signature"
         )
 
+    with patch_file_upload():
+        secure_knxkeys = await hass.config_entries.flow.async_configure(
+            secure_knxkeys["flow_id"],
+            {
+                CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
+                CONF_KNX_KNXKEY_PASSWORD: "test",
+            },
+        )
+    assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
+    secure_knxkeys = await hass.config_entries.flow.async_configure(
+        secure_knxkeys["flow_id"],
+        {CONF_KNX_TUNNEL_ENDPOINT_IA: CONF_KNX_AUTOMATIC},
+    )
+    assert secure_knxkeys["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("knx_setup")
 async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) -> None:
     """Test configure secure knxkeys but file was not found."""
     menu_step = await _get_menu_step_secure_tunnel(hass)
@@ -1319,7 +1345,14 @@ async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) 
             },
         )
         assert secure_knxkeys["type"] is FlowResultType.FORM
+        assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
         assert secure_knxkeys["errors"] == {"base": "keyfile_no_tunnel_for_host"}
+
+    secure_knxkeys = await hass.config_entries.flow.async_configure(
+        secure_knxkeys["flow_id"],
+        {CONF_KNX_TUNNEL_ENDPOINT_IA: CONF_KNX_AUTOMATIC},
+    )
+    assert secure_knxkeys["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_flow_connection_type(
@@ -1838,9 +1871,9 @@ async def test_options_telegram_store_postgres_reuses_password(
         ),
     ],
 )
+@pytest.mark.usefixtures("knx_setup")
 async def test_options_telegram_store_postgres_connection_failure(
     hass: HomeAssistant,
-    knx_setup: AsyncMock,
     mock_config_entry: MockConfigEntry,
     error_kind: ConnectionErrorKind,
     expected_error: str,
@@ -1870,9 +1903,24 @@ async def test_options_telegram_store_postgres_connection_failure(
     assert result["step_id"] == "telegram_store_postgres"
     assert result["errors"] == {"base": expected_error}
 
+    with _patch_check_config_success():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "db.local",
+                "port": 5432,
+                "user": "knx",
+                "password": "s3cret",
+                "database": "knx_telegrams",
+                "tls": True,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("knx_setup")
 async def test_options_telegram_store_postgres_timeout(
-    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow surfaces a timeout when the connection check hangs."""
 
@@ -1906,9 +1954,24 @@ async def test_options_telegram_store_postgres_timeout(
     assert result["step_id"] == "telegram_store_postgres"
     assert result["errors"] == {"base": "timeout"}
 
+    with _patch_check_config_success():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "db.local",
+                "port": 5432,
+                "user": "knx",
+                "password": "s3cret",
+                "database": "knx_telegrams",
+                "tls": True,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("knx_setup")
 async def test_options_telegram_store_postgres_malformed_dsn(
-    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the PostgreSQL step maps a DSN the driver rejects to a form error."""
     mock_config_entry.add_to_hass(hass)
@@ -1932,6 +1995,20 @@ async def test_options_telegram_store_postgres_malformed_dsn(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "telegram_store_postgres"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with _patch_check_config_success():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "host": "db.local",
+                "port": 5432,
+                "user": "knx",
+                "password": "s3cret",
+                "database": "knx_telegrams",
+                "tls": True,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

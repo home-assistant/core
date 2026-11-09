@@ -1,8 +1,10 @@
 {
   "domain": "telegram_bot",
   "name": "Telegram bot",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@hanwg"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/telegram_bot",
   "integration_type": "service",

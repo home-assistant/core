@@ -21,6 +21,11 @@ from here_transit import (
     HERETransitTooManyRequestsError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.here_travel_time.config_flow import (
     DEFAULT_OPTIONS,
@@ -79,12 +84,6 @@ from .const import (
     DESTINATION_LONGITUDE,
     ORIGIN_LATITUDE,
     ORIGIN_LONGITUDE,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
 )
 
 

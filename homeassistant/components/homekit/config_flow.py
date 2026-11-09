@@ -19,7 +19,6 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -61,7 +60,7 @@ from .const import (
     TYPE_THERMOSTAT,
     VIDEO_CODEC_COPY,
 )
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry, HomeKitEntryData
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
@@ -287,7 +286,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
-            description_placeholders={CONF_NAME: hk_data[CONF_NAME]},
+            description_placeholders={"name": hk_data[CONF_NAME]},
         )
 
     async def _async_add_entries_for_accessory_mode_entities(
@@ -390,7 +389,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HomeKitConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -613,7 +612,7 @@ class OptionsFlowHandler(OptionsFlow):
         entity_filter: EntityFilterDict
 
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entities = probatio.EnsureList()(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
@@ -657,7 +656,7 @@ class OptionsFlowHandler(OptionsFlow):
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entities = probatio.EnsureList()(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_included_domain_entities(
                 self.hass, entity_filter, entities, CAMERA_DOMAIN
@@ -705,7 +704,7 @@ class OptionsFlowHandler(OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
 
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entities = probatio.EnsureList()(user_input[CONF_ENTITIES])
 
             def _remaining_in_domain(domain: str) -> list[str]:
                 if domain not in domains:

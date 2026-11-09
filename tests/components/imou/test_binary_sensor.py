@@ -6,6 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -20,8 +25,6 @@ from .const import (
     binary_sensor_mock_devices,
     create_online_device,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR]], indirect=True)
@@ -158,11 +161,12 @@ async def test_binary_sensor_unavailable_when_device_offline(
 ) -> None:
     """Binary sensors become unavailable when the device is offline."""
 
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
+    async def set_devices_offline(devices: list[ImouHaDevice]) -> None:
+        for device in devices:
+            device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        set_devices_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

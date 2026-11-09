@@ -3,7 +3,7 @@
 import datetime as dt
 import logging
 
-import broadlink as blk
+import broadlink_async as blk
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -48,14 +48,14 @@ class BroadlinkHeartbeat:
         hass = self._hass
         config_entries = hass.config_entries.async_entries(DOMAIN)
         hosts: set[str] = {entry.data[CONF_HOST] for entry in config_entries}
-        await hass.async_add_executor_job(self.heartbeat, hosts)
+        await self.heartbeat(hosts)
 
     @staticmethod
-    def heartbeat(hosts: set[str]) -> None:
+    async def heartbeat(hosts: set[str]) -> None:
         """Send packets to feed watchdog timers."""
         for host in hosts:
             try:
-                blk.ping(host)
+                await blk.ping(host)
             except OSError as err:
                 _LOGGER.debug("Failed to send heartbeat to %s: %s", host, err)
             else:

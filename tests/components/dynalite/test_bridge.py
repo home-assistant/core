@@ -9,6 +9,7 @@ from dynalite_devices_lib.dynalite_devices import (
     NOTIFICATION_PRESET,
     DynaliteNotification,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import dynalite
 from homeassistant.components.dynalite.const import (
@@ -20,8 +21,6 @@ from homeassistant.components.dynalite.const import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from tests.common import MockConfigEntry
 
 
 async def test_update_device(hass: HomeAssistant) -> None:

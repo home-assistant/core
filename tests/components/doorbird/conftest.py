@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from doorbirdpy import DoorBird, DoorBirdScheduleEntry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.doorbird.const import (
     CONF_EVENTS,
@@ -18,8 +19,6 @@ from homeassistant.components.doorbird.const import (
 from homeassistant.core import HomeAssistant
 
 from . import VALID_CONFIG, get_mock_doorbird_api
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 type DoorbirdMockerType = Callable[[], Coroutine[Any, Any, MockDoorbirdEntry]]
 

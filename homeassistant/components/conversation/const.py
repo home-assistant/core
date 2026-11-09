@@ -48,3 +48,19 @@ class ChatLogEventType(StrEnum):
     UPDATED = "updated"
     DELETED = "deleted"
     CONTENT_ADDED = "content_added"
+
+
+class ConversationService(StrEnum):
+    """Store keys for conversation services."""
+
+    PROCESS = "process"
+    RELOAD = "reload"
+
+
+class ConversationServiceArgument(StrEnum):
+    """Store keys for conversation service arguments."""
+
+    AGENT_ID = "agent_id"
+    CONVERSATION_ID = "conversation_id"
+    LANGUAGE = "language"
+    TEXT = "text"

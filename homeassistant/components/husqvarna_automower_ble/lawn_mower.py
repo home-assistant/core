@@ -71,8 +71,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         if state == MowerState.PAUSED:
             return LawnMowerActivity.PAUSED
         if state in (MowerState.STOPPED, MowerState.OFF, MowerState.WAIT_FOR_SAFETYPIN):
-            # This is actually stopped, but that isn't an option
-            return LawnMowerActivity.ERROR
+            return LawnMowerActivity.IDLE
         if state == MowerState.PENDING_START and activity == MowerActivity.NONE:
             # This happens when the mower is safety stopped and we try to send a
             # command to start it.

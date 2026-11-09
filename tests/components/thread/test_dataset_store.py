@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import flush_store
 from python_otbr_api.tlv_parser import TLVError
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -22,8 +23,6 @@ from . import (
     TEST_BORDER_AGENT_EXTENDED_ADDRESS,
     TEST_BORDER_AGENT_ID,
 )
-
-from tests.common import flush_store
 
 # Same as DATASET_1, but PAN ID moved to the end
 DATASET_1_REORDERED = (

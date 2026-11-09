@@ -6,11 +6,10 @@ from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
-from homeassistant.components.cast.home_assistant_cast import (  # pylint: disable=home-assistant-component-root-import
-    ATTR_URL_PATH,
-    ATTR_VIEW_PATH,
+from homeassistant.components.cast.services import (  # pylint: disable=home-assistant-component-root-import
     NO_URL_AVAILABLE_ERROR,
-    SERVICE_SHOW_VIEW,
+    CastService,
+    CastServiceArgument,
 )
 from homeassistant.components.media_player import (
     BrowseError,
@@ -18,7 +17,7 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaType,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -134,16 +133,16 @@ async def async_play_media(
             raise HomeAssistantError(f"Invalid dashboard {media_id} specified") from err
         view_path = info["views"][0]["path"] if info["views"] else "0"
 
-    data = {
-        ATTR_ENTITY_ID: cast_entity_id,
-        ATTR_VIEW_PATH: view_path,
+    data: dict[str, Any] = {
+        CommonServiceArgument.ENTITY_ID: cast_entity_id,
+        CastServiceArgument.VIEW_PATH: view_path,
     }
     if url_path != DEFAULT_DASHBOARD:
-        data[ATTR_URL_PATH] = url_path
+        data[CastServiceArgument.DASHBOARD_PATH] = url_path
 
     await hass.services.async_call(
         CAST_DOMAIN,
-        SERVICE_SHOW_VIEW,
+        CastService.SHOW_LOVELACE_VIEW,
         data,
         blocking=True,
     )

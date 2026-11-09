@@ -41,7 +41,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
                 probatio.Optional(CONF_BUTTON_EVENTS, default=[]): cv.ensure_list_csv,
                 probatio.Optional(CONF_SENSORS, default=[]): probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [
                         probatio.Schema(
                             {
@@ -56,7 +56,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     ],
                 ),
                 probatio.Optional(CONF_SWITCHES, default=[]): probatio.All(
-                    cv.ensure_list, [str]
+                    probatio.EnsureList(), [str]
                 ),
             }
         )

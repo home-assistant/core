@@ -43,6 +43,11 @@ UPDATE_DELAY_STRING = "delay"
 UPDATE_DELAY_INTERVAL = 15  # In seconds
 ATTR_LATEST_VERSION_FIRMWARE = "latest_version_firmware"
 
+OTA_MESSAGE_SLEEPING_DEVICE = (
+    "This is a battery powered sleeping device. You may need to wake it up"
+    " manually for the update to begin."
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class ZWaveUpdateEntityDescription(UpdateEntityDescription):
@@ -196,6 +201,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
 
         # Entity class attributes
         self._attr_name = "Firmware"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self._base_unique_id}.firmware_update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_installed_version = node.firmware_version
 
@@ -304,7 +310,16 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         """Get release notes."""
         if self._latest_version_firmware is None:
             return None
-        return self._latest_version_firmware.changelog
+        changelog = self._latest_version_firmware.changelog
+        if not self.node.can_sleep:
+            return changelog
+
+        message = OTA_MESSAGE_SLEEPING_DEVICE
+        if wakeup := (self.node.device_config.metadata.wakeup or "").strip():
+            message += f" To wake up this device:\n\n{wakeup}"
+        # Surround the content with blank lines so markdown inside the alert is rendered
+        header = f"<ha-alert alert-type='info'>\n\n{message}\n\n</ha-alert>"
+        return f"{header}\n\n{changelog}"
 
     @override
     async def async_install(

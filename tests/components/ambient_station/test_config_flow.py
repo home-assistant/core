@@ -49,12 +49,17 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(
-    hass: HomeAssistant, config, config_entry, setup_config_entry
-) -> None:
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_duplicate_error(hass: HomeAssistant, config) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -82,7 +82,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name},
-                "configuration_url": f"homeassistant://hassio/addon/{discovery_info.slug}/info",
+                "configuration_url": f"homeassistant://config/app/{discovery_info.slug}/info",
             }
         )
         return await self.async_step_hassio_confirm()

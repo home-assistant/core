@@ -8,11 +8,12 @@ from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import RemoteSwitchOnOff
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 1
 
@@ -21,6 +22,7 @@ PARALLEL_UPDATES = 1
 class SofarSwitchEntityDescription(SwitchEntityDescription, SofarEntityDescription):
     """Describe a Sofar switch entity."""
 
+    value_fn: Callable[[SofarInverter], RemoteSwitchOnOff | None]
     write_fn: Callable[[SofarInverter, bool], Awaitable[None]]
 
 
@@ -29,9 +31,9 @@ SWITCH_DESCRIPTIONS: tuple[SofarSwitchEntityDescription, ...] = (
         key="remote_switch_on_off",
         component="remote",
         name=None,
-        write_fn=lambda device, value: device.remote.write(
-            "remote_switch_on_off",
-            RemoteSwitchOnOff.ON if value else RemoteSwitchOnOff.OFF,
+        value_fn=lambda device: device.remote.remote_switch_on_off,
+        write_fn=lambda device, value: device.remote.async_write_switch(
+            RemoteSwitchOnOff.ON if value else RemoteSwitchOnOff.OFF
         ),
     ),
 )
@@ -42,7 +44,8 @@ async def async_setup_entry(
     entry: SofarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Sofar Inverter Modbus switch platform."""
+    """Set up the Sofar switch platform."""
+    async_remove_unserved_entities(hass, entry, Platform.SWITCH, SWITCH_DESCRIPTIONS)
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
     async_add_entities(
@@ -61,8 +64,7 @@ class SofarSwitch(SofarEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return whether the remote switch is on."""
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        value = getattr(component, self.entity_description.key)
+        value = self.entity_description.value_fn(self.coordinator.device)
         return None if value is None else bool(value)
 
     async def _async_write(self, value: bool) -> None:

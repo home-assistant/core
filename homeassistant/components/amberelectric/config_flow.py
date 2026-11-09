@@ -110,7 +110,8 @@ class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
-                        CONF_API_TOKEN, default=user_input[CONF_API_TOKEN]
+                        probatio.Secret(CONF_API_TOKEN),
+                        default=user_input[CONF_API_TOKEN],
                     ): str,
                 }
             ),

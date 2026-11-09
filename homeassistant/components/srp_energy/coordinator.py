@@ -400,5 +400,4 @@ class SRPEnergyDataUpdateCoordinator(DataUpdateCoordinator[float]):
                 )
                 return results
         except (ValueError, TypeError) as err:
-            LOGGER.error("Error communicating with API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err

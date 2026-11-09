@@ -24,7 +24,7 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: CompitConfigEntry,
         connector: CompitApiConnector,
     ) -> None:
         """Initialize."""

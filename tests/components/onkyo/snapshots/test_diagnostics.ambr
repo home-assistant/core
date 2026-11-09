@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'channel_muting': dict({
+      'center': 'ON',
+      'front_left': 'OFF',
+      'front_right': 'OFF',
+      'height_1_left': 'OFF',
+      'height_1_right': 'OFF',
+      'height_2_left': 'OFF',
+      'height_2_right': 'OFF',
+      'subwoofer': 'OFF',
+      'subwoofer_2': 'OFF',
+      'surround_back_left': 'OFF',
+      'surround_back_right': 'OFF',
+      'surround_left': 'OFF',
+      'surround_right': 'OFF',
+    }),
+    'connected': True,
+    'model_name': 'TX-NR7100',
+    'options': dict({
+      'input_sources': dict({
+        '12': 'TV',
+        '24': 'FM Radio',
+      }),
+      'listening_modes': dict({
+        '00': 'Stereo',
+        '04': 'THX',
+      }),
+      'max_volume': 100,
+      'volume_resolution': 80,
+    }),
+  })
+# ---

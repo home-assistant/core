@@ -64,7 +64,7 @@ class MelissaClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = 16
     _attr_max_temp = 30
 
@@ -87,7 +87,7 @@ class MelissaClimate(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._data:
             return self._data[self._api.TEMP]
@@ -120,7 +120,7 @@ class MelissaClimate(ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._cur_settings is None:
             return None

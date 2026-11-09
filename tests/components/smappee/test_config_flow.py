@@ -5,6 +5,9 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import setup
 from homeassistant.components.smappee.const import (
@@ -20,10 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -476,7 +475,7 @@ async def test_full_user_flow(
     )
 
     with patch(
-        "homeassistant.components.smappee.async_setup_entry", return_value=True
+        "homeassistant.components.smappee.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -499,7 +498,7 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
             "pysmappee.api.SmappeeLocalApi.load_instantaneous",
             return_value=[{"key": "phase0ActivePower", "value": 0}],
         ),
-        patch("homeassistant.components.smappee.async_setup_entry", return_value=True),
+        patch("homeassistant.components.smappee.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -545,7 +544,7 @@ async def test_full_user_local_flow(hass: HomeAssistant) -> None:
             "pysmappee.api.SmappeeLocalApi.load_instantaneous",
             return_value=[{"key": "phase0ActivePower", "value": 0}],
         ),
-        patch("homeassistant.components.smappee.async_setup_entry", return_value=True),
+        patch("homeassistant.components.smappee.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -613,3 +612,65 @@ async def test_full_zeroconf_flow_next_generation(hass: HomeAssistant) -> None:
 
         entry = hass.config_entries.async_entries(DOMAIN)[0]
         assert entry.unique_id == "5001000212"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reauthentication of the cloud entry."""
+    assert await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET},
+            "http": {"base_url": "https://example.com"},
+        },
+    )
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{DOMAIN}Cloud",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"refresh_token": "old-refresh-token"},
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        TOKEN_URL["PRODUCTION"],
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch("homeassistant.components.smappee.async_setup_entry", return_value=None):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
+    assert config_entry.data["token"]["access_token"] == "mock-access-token"

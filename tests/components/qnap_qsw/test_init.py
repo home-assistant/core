@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from aioqsw.exceptions import APIError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .util import CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_firmware_check_error(hass: HomeAssistant) -> None:

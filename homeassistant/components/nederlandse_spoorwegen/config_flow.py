@@ -12,7 +12,6 @@ from requests.exceptions import (
 )
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -28,6 +27,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN, INTEGRATION_TITLE
+from .coordinator import NSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,9 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -119,7 +121,9 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -127,7 +131,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: NSConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"route": RouteSubentryFlowHandler}

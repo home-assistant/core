@@ -1,0 +1,46 @@
+[
+  {
+    "id": "device-remo3-1",
+    "name": "Living Remo",
+    "temperature_offset": 0,
+    "humidity_offset": 0,
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2026-07-18T07:59:30Z",
+    "firmware_version": "Remo/1.14.8",
+    "mac_address": "ab:cd:ef:12:34:56",
+    "bt_mac_address": "ab:cd:ef:12:34:57",
+    "serial_number": "1W123456789012",
+    "newest_events": {
+      "te": { "val": 26.4, "created_at": "2026-07-18T07:59:00Z" },
+      "hu": { "val": 52, "created_at": "2026-07-18T07:59:00Z" },
+      "il": { "val": 123.4, "created_at": "2026-07-18T07:58:00Z" },
+      "mo": { "val": 1, "created_at": "2026-07-18T07:50:00Z" }
+    }
+  },
+  {
+    "id": "device-mini-1",
+    "name": "Bedroom Remo mini",
+    "temperature_offset": 1,
+    "humidity_offset": 0,
+    "created_at": "2025-02-01T00:00:00Z",
+    "updated_at": "2026-07-18T07:59:30Z",
+    "firmware_version": "Remo-mini/1.10.0",
+    "mac_address": "ab:cd:ef:12:34:58",
+    "serial_number": "2W123456789012",
+    "newest_events": {
+      "te": { "val": 24.0, "created_at": "2026-07-18T07:59:10Z" }
+    }
+  },
+  {
+    "id": "device-remoe-1",
+    "name": "Remo E lite",
+    "temperature_offset": 0,
+    "humidity_offset": 0,
+    "created_at": "2025-03-01T00:00:00Z",
+    "updated_at": "2026-07-18T07:59:30Z",
+    "firmware_version": "Remo-E-lite/1.7.2",
+    "mac_address": "ab:cd:ef:12:34:59",
+    "serial_number": "4W123456789012",
+    "newest_events": {}
+  }
+]

@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -89,6 +88,9 @@
       },
       "disk_usage": {
         "name": "Disk usage"
+      },
+      "fan_speed_with_index": {
+        "name": "Fan {index} speed"
       },
       "memory_usage": {
         "name": "Memory usage"

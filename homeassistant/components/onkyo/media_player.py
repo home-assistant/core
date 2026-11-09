@@ -1,21 +1,23 @@
 """Media player platform."""
 
-import asyncio
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, override
 
 from aioonkyo import Code, Kind, Status, Zone, command, query, status
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -135,7 +137,7 @@ async def async_setup_entry(
     async def disconnect_callback() -> None:
         for entity in entities.values():
             if entity.enabled:
-                entity.cancel_tasks()
+                entity.cancel_pending()
                 entity.async_write_ha_state()
 
     async def update_callback(message: Status) -> None:
@@ -178,14 +180,16 @@ async def async_setup_entry(
 class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
     """Onkyo Receiver Media Player (one per each zone)."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+
     _supports_volume: bool = False
     # None means no technical possibility of support
     _supports_sound_mode: bool | None = None
     _supports_audio_info: bool = False
     _supports_video_info: bool = False
 
-    _query_state_task: asyncio.Task | None = None
-    _query_av_info_task: asyncio.Task | None = None
+    _query_state_unsub: CALLBACK_TYPE | None = None
+    _query_av_info_unsub: CALLBACK_TYPE | None = None
 
     def __init__(
         self,
@@ -259,7 +263,7 @@ class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity will be removed from hass."""
-        self.cancel_tasks()
+        self.cancel_pending()
 
     async def query_state(self) -> None:
         """Query the receiver for all the info, that we care about."""
@@ -275,14 +279,14 @@ class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
             await self._manager.write(query.AudioInformation())
             await self._manager.write(query.VideoInformation())
 
-    def cancel_tasks(self) -> None:
-        """Cancel the tasks."""
-        if self._query_state_task is not None:
-            self._query_state_task.cancel()
-            self._query_state_task = None
-        if self._query_av_info_task is not None:
-            self._query_av_info_task.cancel()
-            self._query_av_info_task = None
+    def cancel_pending(self) -> None:
+        """Cancel the pending work."""
+        if self._query_state_unsub is not None:
+            self._query_state_unsub()
+            self._query_state_unsub = None
+        if self._query_av_info_unsub is not None:
+            self._query_av_info_unsub()
+            self._query_av_info_unsub = None
 
     @override
     async def async_turn_on(self) -> None:
@@ -490,27 +494,27 @@ class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     def _query_state_delayed(self) -> None:
-        if self._query_state_task is not None:
-            self._query_state_task.cancel()
-            self._query_state_task = None
+        if self._query_state_unsub is not None:
+            self._query_state_unsub()
+            self._query_state_unsub = None
 
-        async def coro() -> None:
-            await asyncio.sleep(QUERY_STATE_DELAY)
+        async def coro(_now: datetime) -> None:
+            self._query_state_unsub = None
             await self.query_state()
-            self._query_state_task = None
 
-        self._query_state_task = asyncio.create_task(coro())
+        self._query_state_unsub = async_call_later(self.hass, QUERY_STATE_DELAY, coro)
 
     def _query_av_info_delayed(self) -> None:
-        if self._zone is not Zone.MAIN or self._query_av_info_task is not None:
+        if self._zone is not Zone.MAIN or self._query_av_info_unsub is not None:
             return
 
-        async def coro() -> None:
-            await asyncio.sleep(QUERY_AV_INFO_DELAY)
+        async def coro(_now: datetime) -> None:
+            self._query_av_info_unsub = None
             if self._supports_audio_info:
                 await self._manager.write(query.AudioInformation())
             if self._supports_video_info:
                 await self._manager.write(query.VideoInformation())
-            self._query_av_info_task = None
 
-        self._query_av_info_task = asyncio.create_task(coro())
+        self._query_av_info_unsub = async_call_later(
+            self.hass, QUERY_AV_INFO_DELAY, coro
+        )

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from lg_rs232_tv import TVNotRespondingError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lg_tv_rs232.const import CONF_SET_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_DEVICE, MOCK_SET_ID
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_async_setup_entry(mock_lgtv: MagicMock) -> Generator[AsyncMock]:
@@ -23,7 +22,7 @@ def mock_async_setup_entry(mock_lgtv: MagicMock) -> Generator[AsyncMock]:
 
     with patch(
         "homeassistant.components.lg_tv_rs232.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

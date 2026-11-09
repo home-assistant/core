@@ -17,6 +17,11 @@ from aioamazondevices.structures import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -34,8 +39,6 @@ from homeassistant.util import slugify
 
 from . import setup_integration
 from .const import TEST_USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LIST_ENTITY_ID_PREFIX = f"{TODO_DOMAIN.lower()}.{slugify(TEST_USERNAME)}_"
 MOCK_SHOPPING_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}shopping_list"
@@ -568,6 +571,37 @@ async def test_dynamic_entities(
     # Confirm removed entities are no longer present.
     for entity_id in set(initial_entity_ids) - set(updated_entity_ids):
         assert hass.states.get(entity_id) is None
+
+
+async def test_list_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entity is recreated when a list is removed and re-added."""
+    mock_amazon_devices_client.todo_lists = [MOCK_TODO_LIST]
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is not None
+
+    mock_amazon_devices_client.todo_lists = []
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is None
+
+    mock_amazon_devices_client.todo_lists = [MOCK_TODO_LIST]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is not None
 
 
 async def test_dynamic_add_list_and_add_item(

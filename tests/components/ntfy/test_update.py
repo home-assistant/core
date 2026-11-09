@@ -9,6 +9,8 @@ from aiontfy.exceptions import (
 )
 from aiontfy.update import UpdateCheckerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ntfy.const import DEFAULT_URL, DOMAIN
@@ -23,9 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

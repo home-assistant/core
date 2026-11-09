@@ -34,7 +34,7 @@ def mock_setup():
     """Prevent setup."""
     with patch(
         "homeassistant.components.meteoclimatic.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -78,6 +78,16 @@ async def test_not_found(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "not_found"
+
+    with patch(
+        "homeassistant.components.meteoclimatic.config_flow.MeteoclimaticClient.weather_at_station",
+    ) as mock_weather_at_station:
+        mock_weather_at_station.return_value.station.name = TEST_STATION_NAME
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_STATION_CODE: TEST_STATION_CODE},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_unknown_error(hass: HomeAssistant) -> None:

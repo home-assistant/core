@@ -81,6 +81,7 @@ class OnkyoChannelMutingSwitch(
             self._channel, command.ChannelMuting.Param.OFF
         )
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

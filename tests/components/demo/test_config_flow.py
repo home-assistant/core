@@ -3,19 +3,18 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, setup
 from homeassistant.components.demo import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.usefixtures("disable_platforms")
 async def test_import(hass: HomeAssistant) -> None:
     """Test that we can import a config entry."""
-    with patch("homeassistant.components.demo.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.demo.async_setup_entry", return_value=None):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -29,7 +28,7 @@ async def test_import_once(hass: HomeAssistant) -> None:
     """Test that we don't create multiple config entries."""
     with patch(
         "homeassistant.components.demo.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

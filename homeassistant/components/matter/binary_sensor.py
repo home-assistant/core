@@ -112,8 +112,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
-        # only add binary battery sensor if a regular percentage based is not available
-        absent_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
     ),
     # BooleanState sensors (tied to device type)
     MatterDiscoverySchema(

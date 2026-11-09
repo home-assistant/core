@@ -1,11 +1,13 @@
 """Test function in __init__.py."""
 
 from collections.abc import Callable
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from mysensors import BaseSyncGateway
 from mysensors.sensor import Sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.mysensors import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,8 +16,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
+
+async def test_gateway_setup_failed(
+    hass: HomeAssistant, serial_entry: MockConfigEntry
+) -> None:
+    """Test setup fails when the gateway can't be set up."""
+    serial_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.mysensors.setup_gateway", return_value=None):
+        await hass.config_entries.async_setup(serial_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert serial_entry.state is ConfigEntryState.SETUP_ERROR
+    assert serial_entry.reason == "Gateway setup failed"
 
 
 async def test_load_unload(

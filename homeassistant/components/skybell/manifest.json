@@ -1,8 +1,10 @@
 {
   "domain": "skybell",
   "name": "SkyBell",
+  "categories": ["security_safety.doorbells_intercoms"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/skybell",
   "integration_type": "hub",

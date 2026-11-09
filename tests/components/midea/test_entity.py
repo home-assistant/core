@@ -5,6 +5,7 @@ from collections.abc import Callable
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.exceptions import SocketException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.midea.const import DOMAIN
 from homeassistant.components.midea.entity import midea_api_call
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 from . import setup_integration
 from .conftest import DummyDevice, default_ac_device, entity_entries
 from .const import TEST_DEVICE_ID, TEST_MAC_ADDRESS, TEST_MODEL, TEST_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 
 def test_midea_api_call_translates_midea_local_error() -> None:

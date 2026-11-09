@@ -18,6 +18,11 @@
       }
     }
   },
+  "exceptions": {
+    "trigger_failed": {
+      "message": "Failed to trigger the IFTTT webhook."
+    }
+  },
   "services": {
     "push_alarm_state": {
       "description": "Updates the alarm state to the specified value.",
@@ -39,6 +44,10 @@
         "event": {
           "description": "The name of the event to send.",
           "name": "Event"
+        },
+        "target": {
+          "description": "The names of the configured API keys to send the event to. Sends the event to all keys if this field is omitted.",
+          "name": "Target"
         },
         "value1": {
           "description": "Generic field to send data via the event.",

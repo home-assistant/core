@@ -32,18 +32,23 @@ from zha.application.platforms.siren import (
     StrobeLevel,
     WarningMode,
 )
+from zha.zigbee.device import ZigbeeDevice
 from zigpy.types.named import EUI64, KeyData
 from zigpy.typing import (
     UNDEFINED as ZIGPY_UNDEFINED,
     UndefinedType as ZigpyUndefinedType,
 )
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import ATTR_COMMAND, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import VolSchemaType
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    async_register_platform_entity_service,
+)
+from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from .const import (
     ATTR_DURATION,
@@ -68,6 +73,10 @@ SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
 SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
 SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
 SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
+SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
+SERVICE_DISABLE_LOCK_USER_CODE = "disable_lock_user_code"
+SERVICE_ENABLE_LOCK_USER_CODE = "enable_lock_user_code"
+SERVICE_SET_LOCK_USER_CODE = "set_lock_user_code"
 
 IEEE_SERVICE = "ieee_based_service"
 
@@ -160,7 +169,7 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
             }
         ),
         cv.deprecated(ATTR_ARGS),
-        cv.has_at_least_one_key(ATTR_ARGS, ATTR_PARAMS),
+        probatio.AtLeastOne(ATTR_ARGS, ATTR_PARAMS),
     ),
     SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: probatio.Schema(
         {
@@ -168,7 +177,7 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
             probatio.Required(ATTR_CLUSTER_ID): cv.positive_int,
             probatio.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             probatio.Required(ATTR_COMMAND): cv.positive_int,
-            probatio.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
+            probatio.Optional(ATTR_ARGS, default=[]): probatio.EnsureList(),
             probatio.Optional(ATTR_MANUFACTURER): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=-1)
             ),
@@ -186,6 +195,22 @@ def _get_gateway(service: ServiceCall) -> Gateway:
         )
 
     return gateway_proxy.gateway
+
+
+def _get_zigbee_device(zha_gateway: Gateway, ieee: EUI64) -> ZigbeeDevice:
+    """Return the Zigbee device, raising if it is missing or not a Zigbee device."""
+    zha_device = zha_gateway.get_device(ieee)
+    if zha_device is None:
+        raise ValueError(f"Device with IEEE {ieee!s} not found")
+
+    if not isinstance(zha_device, ZigbeeDevice):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_zigbee_device",
+            translation_placeholders={"ieee": str(ieee)},
+        )
+
+    return zha_device
 
 
 async def _permit(service: ServiceCall) -> None:
@@ -239,19 +264,15 @@ async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
     manufacturer: int | ZigpyUndefinedType = service.data.get(
         ATTR_MANUFACTURER, ZIGPY_UNDEFINED
     )
-    zha_device = zha_gateway.get_device(ieee)
-    response = None
-    if zha_device is not None:
-        response = await zha_device.write_zigbee_attribute(
-            endpoint_id,
-            cluster_id,
-            attribute,
-            value,
-            cluster_type=cluster_type,
-            manufacturer=manufacturer,
-        )
-    else:
-        raise ValueError(f"Device with IEEE {ieee!s} not found")
+    zha_device = _get_zigbee_device(zha_gateway, ieee)
+    response = await zha_device.write_zigbee_attribute(
+        endpoint_id,
+        cluster_id,
+        attribute,
+        value,
+        cluster_type=cluster_type,
+        manufacturer=manufacturer,
+    )
 
     _LOGGER.debug(
         (
@@ -289,45 +310,42 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
     manufacturer: int | ZigpyUndefinedType = service.data.get(
         ATTR_MANUFACTURER, ZIGPY_UNDEFINED
     )
-    zha_device = zha_gateway.get_device(ieee)
-    if zha_device is not None:
-        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
-            manufacturer = zha_device.manufacturer_code
+    zha_device = _get_zigbee_device(zha_gateway, ieee)
+    if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+        manufacturer = zha_device.manufacturer_code
 
-        await zha_device.issue_cluster_command(
-            endpoint_id,
-            cluster_id,
-            command,
-            command_type,
-            args,
-            params,
-            cluster_type=cluster_type,
-            manufacturer=manufacturer,
-        )
-        _LOGGER.debug(
-            (
-                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
-                " %s: [%s] %s: [%s] %s: [%s]"
-            ),
-            ATTR_CLUSTER_ID,
-            cluster_id,
-            ATTR_CLUSTER_TYPE,
-            cluster_type,
-            ATTR_ENDPOINT_ID,
-            endpoint_id,
-            ATTR_COMMAND,
-            command,
-            ATTR_COMMAND_TYPE,
-            command_type,
-            ATTR_ARGS,
-            args,
-            ATTR_PARAMS,
-            params,
-            ATTR_MANUFACTURER,
-            manufacturer,
-        )
-    else:
-        raise ValueError(f"Device with IEEE {ieee!s} not found")
+    await zha_device.issue_cluster_command(
+        endpoint_id,
+        cluster_id,
+        command,
+        command_type,
+        args,
+        params,
+        cluster_type=cluster_type,
+        manufacturer=manufacturer,
+    )
+    _LOGGER.debug(
+        (
+            "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+            " %s: [%s] %s: [%s] %s: [%s]"
+        ),
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        ATTR_COMMAND,
+        command,
+        ATTR_COMMAND_TYPE,
+        command_type,
+        ATTR_ARGS,
+        args,
+        ATTR_PARAMS,
+        params,
+        ATTR_MANUFACTURER,
+        manufacturer,
+    )
 
 
 async def _issue_zigbee_group_command(service: ServiceCall) -> None:
@@ -402,6 +420,16 @@ async def _warning_device_warn(service: ServiceCall) -> None:
     )
 
 
+LOCK_CODE_SLOT_SCHEMA: VolDictType = {
+    probatio.Required("code_slot"): probatio.Coerce(int)
+}
+
+LOCK_SET_USER_CODE_SCHEMA: VolDictType = {
+    **LOCK_CODE_SLOT_SCHEMA,
+    probatio.Required("user_code"): cv.string,
+}
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the ZHA services."""
@@ -449,4 +477,27 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_WARNING_DEVICE_WARN,
         _warning_device_warn,
         schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+    )
+
+    for service_name, func in (
+        (SERVICE_ENABLE_LOCK_USER_CODE, "async_enable_lock_user_code"),
+        (SERVICE_DISABLE_LOCK_USER_CODE, "async_disable_lock_user_code"),
+        (SERVICE_CLEAR_LOCK_USER_CODE, "async_clear_lock_user_code"),
+    ):
+        async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            service_name,
+            entity_domain=LOCK_DOMAIN,
+            schema=LOCK_CODE_SLOT_SCHEMA,
+            func=func,
+        )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_LOCK_USER_CODE,
+        entity_domain=LOCK_DOMAIN,
+        schema=LOCK_SET_USER_CODE_SCHEMA,
+        func="async_set_lock_user_code",
     )

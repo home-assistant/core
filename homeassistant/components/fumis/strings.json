@@ -209,5 +209,17 @@
     "unknown_error": {
       "message": "An unexpected error occurred while communicating with the Fumis online service: {error}"
     }
+  },
+  "triggers": {
+    "fuel_became_low": {
+      "description": "Triggers when one or more stoves report that their fuel became low.",
+      "fields": {
+        "device_id": {
+          "description": "The stoves to watch.",
+          "name": "Stoves"
+        }
+      },
+      "name": "Fuel became low"
+    }
   }
 }

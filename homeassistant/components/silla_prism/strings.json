@@ -28,6 +28,11 @@
     }
   },
   "entity": {
+    "number": {
+      "user_current": {
+        "name": "Maximum charging current"
+      }
+    },
     "select": {
       "charging_mode": {
         "name": "Charging mode",

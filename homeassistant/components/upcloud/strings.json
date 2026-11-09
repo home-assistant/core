@@ -15,5 +15,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with UpCloud failed"
+    },
+    "cannot_connect": {
+      "message": "Failed to connect to UpCloud"
+    }
   }
 }

@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'configuration_url': None,
     'connections': set({
     }),
@@ -34,7 +34,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'disabled_by': None,
       'id': <ANY>,
       'identifiers': set({
@@ -47,12 +47,12 @@
       }),
       'name': 'Zone 2',
       'name_by_user': None,
-      'parent_device_id': <ANY>,
+      'parent_device_id': <DeviceEntry identifiers=[('onkyo', '0009B0123456')]>,
     }),
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'disabled_by': None,
       'id': <ANY>,
       'identifiers': set({
@@ -65,7 +65,7 @@
       }),
       'name': 'Zone 3',
       'name_by_user': None,
-      'parent_device_id': <ANY>,
+      'parent_device_id': <DeviceEntry identifiers=[('onkyo', '0009B0123456')]>,
     }),
   ])
 # ---

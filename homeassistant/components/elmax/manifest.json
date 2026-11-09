@@ -1,8 +1,10 @@
 {
   "domain": "elmax",
   "name": "Elmax",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@albertogeniola"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/elmax",
   "iot_class": "cloud_polling",
   "loggers": ["elmax_api"],

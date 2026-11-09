@@ -19,8 +19,14 @@
     "connection_error": {
       "message": "Connection error occurred while downloading {url}"
     },
+    "download_path_not_found": {
+      "message": "Download path {path} does not exist"
+    },
     "invalid_value": {
       "message": "Invalid filename derived from {url}"
+    },
+    "not_loaded": {
+      "message": "Downloader is not loaded."
     },
     "subdir_invalid": {
       "message": "Invalid subdirectory, got: {subdir}"

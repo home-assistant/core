@@ -20,7 +20,7 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerResourceView,
 )
 
-from .const import DOMAIN
+from .const import DATA_REPAIRS
 from .issue_handler import RepairsFlowManager
 from .models import RepairsFlowResult
 
@@ -32,8 +32,10 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_ignore_issue)
     websocket_api.async_register_command(hass, ws_list_issues)
 
-    hass.http.register_view(RepairsFlowIndexView(hass.data[DOMAIN]["flow_manager"]))
-    hass.http.register_view(RepairsFlowResourceView(hass.data[DOMAIN]["flow_manager"]))
+    hass.http.register_view(RepairsFlowIndexView(hass.data[DATA_REPAIRS].flow_manager))
+    hass.http.register_view(
+        RepairsFlowResourceView(hass.data[DATA_REPAIRS].flow_manager)
+    )
 
 
 @callback
@@ -72,7 +74,15 @@ def ws_ignore_issue(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
-    ir.async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
+    issue_registry = ir.async_get(hass)
+    if not issue_registry.async_get_issue(msg["domain"], msg["issue_id"]):
+        connection.send_error(
+            msg["id"],
+            "unknown_issue",
+            f"Issue '{msg['issue_id']}' not found",
+        )
+        return
+    issue_registry.async_ignore(msg["domain"], msg["issue_id"], msg["ignore"])
 
     connection.send_result(msg["id"])
 
@@ -104,7 +114,7 @@ def ws_list_issues(
             "translation_placeholders": issue.translation_placeholders,
         }
         for issue in issue_registry.issues.values()
-        if issue.active
+        if issue.active and not issue_registry.async_is_hidden(issue)
     ]
     connection.send_result(msg["id"], {"issues": issues})
 

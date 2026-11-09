@@ -68,7 +68,9 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={"link": self.auth.login_url},
-            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+            ),
             errors=errors,
         )
 
@@ -102,6 +104,8 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"link": self.auth.login_url},
-            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+            ),
             errors=errors,
         )

@@ -2,6 +2,7 @@
 
 from freezegun.api import FrozenDateTimeFactory
 from nexia.home import NexiaHome
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -16,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_hold_switch(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sharkiq import AylaApi, SharkIqAuthError, SharkIqError
 
 from homeassistant import config_entries
@@ -21,8 +22,6 @@ from .const import (
     UNIQUE_ID,
 )
 
-from tests.common import MockConfigEntry
-
 
 async def test_setup_success_no_region(hass: HomeAssistant) -> None:
     """Test reauth flow."""
@@ -31,7 +30,7 @@ async def test_setup_success_no_region(hass: HomeAssistant) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    with patch("homeassistant.components.sharkiq.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sharkiq.async_setup_entry", return_value=None):
         result = await async_setup_component(hass=hass, domain=DOMAIN, config={})
 
     assert result is True
@@ -51,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch("sharkiq.AylaApi.async_set_cookie"),
         patch(
             "homeassistant.components.sharkiq.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -66,6 +65,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "password": TEST_PASSWORD,
         "region": TEST_REGION,
     }
+    assert result2["result"].unique_id == TEST_USERNAME
 
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
@@ -97,6 +97,21 @@ async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str) 
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"].get("base") == base_error
+
+    with (
+        patch("sharkiq.AylaApi.async_sign_in", return_value=True),
+        patch("sharkiq.AylaApi.async_set_cookie"),
+        patch(
+            "homeassistant.components.sharkiq.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_success(hass: HomeAssistant) -> None:

@@ -1,6 +1,7 @@
 """Test ecovacs constants."""
 
 from homeassistant.components.ecovacs.const import (
+    CONF_ACCOUNT_CREDENTIALS,
     CONF_CONTINENT,
     CONF_OVERRIDE_MQTT_URL,
     CONF_OVERRIDE_REST_URL,
@@ -39,4 +40,12 @@ SELF_HOSTED_DEVICE_ID = "HA-test_home"
 STORED_ENTRY_DATA_CLOUD = VALID_ENTRY_DATA_CLOUD | {CONF_DEVICE_ID: CLOUD_DEVICE_ID}
 STORED_ENTRY_DATA_SELF_HOSTED = VALID_ENTRY_DATA_SELF_HOSTED | {
     CONF_DEVICE_ID: SELF_HOSTED_DEVICE_ID
+}
+
+# The account credentials of the mocked authenticator, as stored in the entry
+ACCOUNT_CREDENTIALS_DATA = {
+    CONF_ACCOUNT_CREDENTIALS: {
+        "access_token": "account_token",
+        "user_id": "account_user_id",
+    }
 }

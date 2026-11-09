@@ -36,6 +36,7 @@ class OnkyoData:
     parent_device_id: str
     sources: dict[InputSource, str]
     sound_modes: dict[ListeningMode, str]
+    channel_muting_coordinator: ChannelMutingCoordinator
 
 
 type OnkyoConfigEntry = ConfigEntry[OnkyoData]
@@ -47,7 +48,7 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
     """Set up the Onkyo config entry."""
     host = entry.data[CONF_HOST]
 
@@ -83,9 +84,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
-    entry.runtime_data = OnkyoData(manager, parent_device.id, sources, sound_modes)
+    channel_muting_coordinator = ChannelMutingCoordinator(hass, entry, manager)
 
-    ChannelMutingCoordinator(hass, entry, manager)
+    entry.runtime_data = OnkyoData(
+        manager, parent_device.id, sources, sound_modes, channel_muting_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -99,11 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
                 translation_placeholders={"host": host},
             ) from exc
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
     """Unload Onkyo config entry."""
     entry.runtime_data.manager.start_unloading()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

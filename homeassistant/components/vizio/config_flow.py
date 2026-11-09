@@ -74,7 +74,8 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> probatio.Sch
             ): str,
             probatio.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
             probatio.Optional(
-                CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
+                probatio.Secret(CONF_ACCESS_TOKEN),
+                default=input_dict.get(CONF_ACCESS_TOKEN, ""),
             ): str,
         },
         extra=probatio.REMOVE_EXTRA,
@@ -91,7 +92,11 @@ def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> probatio.Sc
         input_dict = {}
 
     return probatio.Schema(
-        {probatio.Required(CONF_PIN, default=input_dict.get(CONF_PIN, "")): str}
+        {
+            probatio.Required(
+                probatio.Secret(CONF_PIN), default=input_dict.get(CONF_PIN, "")
+            ): str
+        }
     )
 
 

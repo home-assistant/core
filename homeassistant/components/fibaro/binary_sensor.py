@@ -6,7 +6,6 @@ from typing import Any, cast, override
 from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.binary_sensor import (
-    ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -14,7 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FibaroConfigEntry
+from . import FibaroConfigEntry, FibaroController
 from .entity import FibaroEntity
 
 SENSOR_TYPES = {
@@ -46,7 +45,7 @@ async def async_setup_entry(
     controller = entry.runtime_data
     async_add_entities(
         [
-            FibaroBinarySensor(device)
+            FibaroBinarySensor(device, controller)
             for device in controller.fibaro_devices[Platform.BINARY_SENSOR]
         ],
         True,
@@ -56,10 +55,11 @@ async def async_setup_entry(
 class FibaroBinarySensor(FibaroEntity, BinarySensorEntity):
     """Representation of a Fibaro Binary Sensor."""
 
-    def __init__(self, fibaro_device: DeviceModel) -> None:
+    def __init__(
+        self, fibaro_device: DeviceModel, controller: FibaroController
+    ) -> None:
         """Initialize the binary_sensor."""
-        super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        super().__init__(fibaro_device, controller)
         self._own_extra_state_attributes: Mapping[str, Any] = {}
         self._fibaro_sensor_type = None
         if fibaro_device.type in SENSOR_TYPES:

@@ -5,6 +5,7 @@ from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_component
 
 from homeassistant.components import automation
 from homeassistant.components.template import trigger as template_trigger
@@ -17,8 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, mock_component
 
 
 @pytest.fixture(autouse=True)

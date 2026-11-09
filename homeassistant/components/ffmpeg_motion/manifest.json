@@ -1,6 +1,7 @@
 {
   "domain": "ffmpeg_motion",
   "name": "FFmpeg Motion",
+  "categories": ["security_safety.cameras", "sensors.motion_presence"],
   "codeowners": [],
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/ffmpeg_motion",
