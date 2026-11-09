@@ -2855,3 +2855,32 @@ async def test_unowned_data_expires(
     assert get_saved_store_data(hass_storage) == make_store_data(
         entries={restore_entry.entry_id: {RESTORE_KEY: {"value": "owned"}}}
     )
+
+
+async def test_final_write_without_stored_data_writes_nothing(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the final write does not create the store when nothing is stored."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+
+    assert restore_state.RESTORE_STORAGE_KEY not in hass_storage
+
+
+async def test_duplicate_storage_key_unload_cleanup(
+    hass: HomeAssistant,
+    restore_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unloading after a duplicate storage key error shuts down cleanly."""
+    get_restore_crd(hass, config_entry=restore_entry)
+    with pytest.raises(ValueError, match="already in use"):
+        get_restore_crd(hass, config_entry=restore_entry)
+
+    # Runs async_shutdown of both, including the one that failed to initialize
+    await restore_entry._async_process_on_unload(hass)
+    await hass.async_block_till_done()
+
+    assert "AttributeError" not in caplog.text
+    # The key was freed by the coordinator that owned it
+    get_restore_crd(hass, config_entry=restore_entry)

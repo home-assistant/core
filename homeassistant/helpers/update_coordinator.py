@@ -727,6 +727,11 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             always_update=always_update,
         )
         store_manager = _async_get_restore_store_manager(hass)
+        # Set before registering, as a failed setup still calls async_shutdown
+        self._storage_key = storage_key
+        self._storage_scope = storage_scope
+        self._storage_version = storage_version
+        self._store_manager = store_manager
         store_manager.async_register(
             self,
             storage_scope,
@@ -734,10 +739,6 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             storage_version,
             lambda: self._serialize_data(self.data),
         )
-        self._storage_key = storage_key
-        self._storage_scope = storage_scope
-        self._storage_version = storage_version
-        self._store_manager = store_manager
         if (stored := store_manager.async_get(storage_scope, storage_key)) is None:
             return
         try:

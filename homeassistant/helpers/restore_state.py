@@ -635,8 +635,9 @@ class _RestoreStoreManager:
 
         async def _async_dump_at_final_write(_: Event) -> None:
             cancel_interval()
-            # Write even if unchanged, to retry a periodic write that failed
-            self._changed = True
+            # Write any stored data even if unchanged, to retry a failed write
+            if any(self._data.values()):
+                self._changed = True
             await self.async_dump()
 
         # Final write rather than stop, so data updated while stopping is saved
