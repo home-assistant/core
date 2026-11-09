@@ -1688,7 +1688,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.6.1
+mitsubishi-comfort==0.6.2
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -1904,7 +1904,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.23.0
+opower==0.23.1
 
 # homeassistant.components.oralb
 oralb-ble==1.1.3
@@ -1965,7 +1965,7 @@ pigpio==1.78
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.14
+plexwebsocket==0.1.0
 
 # homeassistant.components.plugwise
 plugwise==1.16.0
