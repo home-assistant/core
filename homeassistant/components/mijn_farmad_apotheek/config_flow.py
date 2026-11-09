@@ -215,18 +215,18 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(account.id)
         if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             self._abort_if_unique_id_mismatch(reason="wrong_account")
-            entry = (
-                self._get_reauth_entry()
-                if self.source == SOURCE_REAUTH
-                else self._get_reconfigure_entry()
-            )
             data_updates = {
                 CONF_EMAIL: self._login_data[CONF_EMAIL],
                 CONF_ACCESS_TOKEN: access_token,
             }
             if refresh_token is not None:
                 data_updates[CONF_REFRESH_TOKEN] = refresh_token
-            return self.async_update_reload_and_abort(entry, data_updates=data_updates)
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry()
+                if self.source == SOURCE_REAUTH
+                else self._get_reconfigure_entry(),
+                data_updates=data_updates,
+            )
         return self.async_create_entry(
             title=account.full_name,
             data={
