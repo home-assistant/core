@@ -1,5 +1,6 @@
 """Test the FENIX Control climate platform."""
 
+import asyncio
 import dataclasses
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -415,6 +416,42 @@ async def test_command_keeps_poll_schedule(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_fenix_client.get_devices.call_count == polls + 1
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_running_poll_keeps_command(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that started before a command doesn't revert it."""
+    release = asyncio.Event()
+
+    async def slow_get_devices(*args: object) -> list[Device]:
+        await release.wait()
+        return [DEVICE]
+
+    mock_fenix_client.get_devices.side_effect = slow_get_devices
+    polls = mock_fenix_client.get_devices.await_count
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_fenix_client.get_devices.await_count == polls + 1
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 21.5
+
+    # The next poll reports the thermostat again
+    mock_fenix_client.get_devices.side_effect = None
+    await _set_devices(hass, mock_fenix_client, freezer, DEVICE)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22.5
 
 
 @pytest.mark.usefixtures("init_integration")

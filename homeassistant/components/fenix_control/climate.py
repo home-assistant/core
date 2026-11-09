@@ -4,7 +4,7 @@ import dataclasses
 import math
 from typing import Any, override
 
-from pyfenixcontrol import Device, FenixControlError, HvacState, PresetMode
+from pyfenixcontrol import FenixControlError, HvacState, PresetMode
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -326,10 +326,4 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
             # The setpoint the new mode regulates to is only known after the
             # next poll; the old one would show as the new mode's target
             changes.setdefault("active_target_temperature", None)
-        device: Device = dataclasses.replace(self.device, **changes)
-        data = self.coordinator.data
-        # Keep the poll schedule; frequent commands must not postpone polling
-        self.coordinator.data = dataclasses.replace(
-            data, devices={**data.devices, self._device_id: device}
-        )
-        self.coordinator.async_update_listeners()
+        self.coordinator.async_set_device(dataclasses.replace(self.device, **changes))

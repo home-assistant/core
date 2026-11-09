@@ -1,6 +1,6 @@
 """Data update coordinator for the FENIX Control integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import override
 
 from pyfenixcontrol import (
@@ -47,10 +47,14 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
+        # Thermostats commanded while a poll runs; its snapshot may predate the
+        # command and must not overwrite the commanded state
+        self._commanded: set[str] = set()
 
     @override
     async def _async_update_data(self) -> FenixControlData:
         """Fetch the state of all thermostats."""
+        self._commanded.clear()
         try:
             installations = await self.client.get_installations()
             for installation in installations:
@@ -66,7 +70,17 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
 
-        return FenixControlData(devices={device.id: device for device in devices})
+        fresh = {device.id: device for device in devices}
+        for device_id in self._commanded & fresh.keys():
+            fresh[device_id] = self.data.devices[device_id]
+        return FenixControlData(devices=fresh)
+
+    def async_set_device(self, device: Device) -> None:
+        """Show the commanded state of a thermostat until a later poll."""
+        self._commanded.add(device.id)
+        self.data = replace(self.data, devices={**self.data.devices, device.id: device})
+        # Keep the poll schedule; frequent commands must not postpone polling
+        self.async_update_listeners()
 
     async def _trigger_installation_update(self, installation_id: str) -> None:
         """Ask the thermostats of an installation to report fresh values."""
