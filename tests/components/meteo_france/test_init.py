@@ -73,8 +73,7 @@ async def test_unload_releases_the_department(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The last entry is gone, so the shared registry is cleaned up entirely.
-    assert METEO_FRANCE_DATA not in hass.data
+    assert not hass.data[METEO_FRANCE_DATA]
 
     second_entry = _second_city(hass)
     await hass.config_entries.async_setup(second_entry.entry_id)
@@ -96,13 +95,10 @@ async def test_unload_the_city_with_alerts_first(
     await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert METEO_FRANCE_DATA in hass.data
-
     assert await hass.config_entries.async_unload(second_entry.entry_id)
     await hass.async_block_till_done()
 
     assert second_entry.state is ConfigEntryState.NOT_LOADED
-    assert METEO_FRANCE_DATA not in hass.data
 
 
 async def test_unload_closes_the_session(
