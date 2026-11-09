@@ -678,7 +678,8 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     int, finite float, bool and None, or it is not saved; override
     _serialize_data and _restore_data to convert other types. Bump
     storage_version when the stored format changes, as data stored under another
-    version is only restored if _restore_data migrates it.
+    version is only restored if _restore_data migrates it. Data no live
+    coordinator has owned for a week is removed.
 
     storage_key must be stable and unique within the config entry, or the domain
     when there is no config entry; a second live coordinator with the same key
@@ -714,14 +715,6 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             storage_scope = (RESTORE_SCOPE_DOMAINS, domain)
         else:
             raise ValueError("config_entry or domain is required")
-        store_manager = _async_get_restore_store_manager(hass)
-        store_manager.async_register(
-            self,
-            storage_scope,
-            storage_key,
-            storage_version,
-            lambda: self._serialize_data(self.data),
-        )
         super().__init__(
             hass,
             logger,
@@ -733,13 +726,27 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             request_refresh_debouncer=request_refresh_debouncer,
             always_update=always_update,
         )
+        store_manager = _async_get_restore_store_manager(hass)
+        store_manager.async_register(
+            self,
+            storage_scope,
+            storage_key,
+            storage_version,
+            lambda: self._serialize_data(self.data),
+        )
         self._storage_key = storage_key
         self._storage_scope = storage_scope
         self._storage_version = storage_version
         self._store_manager = store_manager
-        if (
-            stored := store_manager.async_get(storage_scope, storage_key)
-        ) is not None and (restored := self._restore_data(*stored)) is not None:
+        if (stored := store_manager.async_get(storage_scope, storage_key)) is None:
+            return
+        try:
+            restored = self._restore_data(*stored)
+        except Exception:
+            # Stored data is a cache, losing it must not fail the setup
+            self.logger.exception("Error restoring stored data of %s", self.name)
+            return
+        if restored is not None:
             self.data = restored
 
     @override

@@ -514,15 +514,22 @@ RESTORE_STORAGE_VERSION = 1
 RESTORE_SCOPE_CONFIG_ENTRIES = "config_entries"
 RESTORE_SCOPE_DOMAINS = "domains"
 
+# How often the last seen time of data owned by a live coordinator is refreshed
+RESTORE_LAST_SEEN_REFRESH = timedelta(days=1)
+
 type RestoreScope = tuple[str, str]
 type _StoreKey = tuple[RestoreScope, str]
 
 
 class _StoredData(NamedTuple):
-    """Data of a coordinator, JSON encoded, with the version it was stored under."""
+    """Data of a coordinator, JSON encoded, with the version it was stored under.
+
+    last_seen is the timestamp a live coordinator last owned the data.
+    """
 
     version: int
     data: bytes
+    last_seen: float
 
 
 @dataclass(slots=True)
@@ -532,6 +539,7 @@ class _Registration:
     owner: object
     version: int
     data_func: Callable[[], Any]
+    serialize_failed: bool = False
 
 
 def _check_json_types(data: Any) -> None:
@@ -607,7 +615,9 @@ class _RestoreStoreManager:
                 bucket: {
                     scope_id: {
                         storage_key: _StoredData(
-                            item["version"], cached_json_bytes(item["data"])
+                            item["version"],
+                            cached_json_bytes(item["data"]),
+                            item["last_seen"],
                         )
                         for storage_key, item in scope_data.items()
                     }
@@ -625,9 +635,11 @@ class _RestoreStoreManager:
 
         async def _async_dump_at_final_write(_: Event) -> None:
             cancel_interval()
+            # Write even if unchanged, to retry a periodic write that failed
+            self._changed = True
             await self.async_dump()
 
-        # Coordinators shut down on stop, serializing their latest data
+        # Final write rather than stop, so data updated while stopping is saved
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_FINAL_WRITE, _async_dump_at_final_write
         )
@@ -718,11 +730,16 @@ class _RestoreStoreManager:
         self._async_schedule_dump()
 
     async def async_dump(self, *_: Any) -> None:
-        """Save the data of the coordinators that changed since the last dump."""
+        """Save the data of the coordinators that changed since the last dump.
+
+        Data no live coordinator owned for STATE_EXPIRATION is removed, as nothing
+        else removes it for e.g. a removed YAML integration or a renamed key.
+        """
         dirty = self._dirty
         self._dirty = set()
         for key in dirty:
             self._async_serialize(key)
+        self._async_expire()
         if not self._changed:
             return
         self._changed = False
@@ -748,17 +765,46 @@ class _RestoreStoreManager:
             _check_json_types(data)
             encoded = cached_json_bytes(data)
         except Exception:
-            _LOGGER.exception(
-                "Error serializing restore coordinator data for %s in %s",
-                storage_key,
-                scope_id,
-            )
+            # Log once until it succeeds, as a broken coordinator fails every dump
+            if not registration.serialize_failed:
+                registration.serialize_failed = True
+                _LOGGER.exception(
+                    "Error serializing restore coordinator data for %s in %s",
+                    storage_key,
+                    scope_id,
+                )
             return
-        stored = _StoredData(registration.version, encoded)
+        registration.serialize_failed = False
         scope_data = self._data[bucket].setdefault(scope_id, {})
-        if scope_data.get(storage_key) != stored:
-            scope_data[storage_key] = stored
+        stored = scope_data.get(storage_key)
+        if (
+            stored is None
+            or stored.version != registration.version
+            or stored.data != encoded
+        ):
+            scope_data[storage_key] = _StoredData(
+                registration.version, encoded, dt_util.utcnow().timestamp()
+            )
             self._changed = True
+
+    @callback
+    def _async_expire(self) -> None:
+        """Refresh the last seen time of owned data and remove expired data."""
+        now = dt_util.utcnow().timestamp()
+        refresh_before = now - RESTORE_LAST_SEEN_REFRESH.total_seconds()
+        expire_before = now - STATE_EXPIRATION.total_seconds()
+        for bucket, scopes in self._data.items():
+            for scope_id, scope_data in list(scopes.items()):
+                for storage_key, stored in list(scope_data.items()):
+                    if ((bucket, scope_id), storage_key) in self._registrations:
+                        if stored.last_seen < refresh_before:
+                            scope_data[storage_key] = stored._replace(last_seen=now)
+                            self._changed = True
+                    elif stored.last_seen < expire_before:
+                        del scope_data[storage_key]
+                        self._changed = True
+                if not scope_data:
+                    del scopes[scope_id]
 
     @callback
     def _async_schedule_dump(self) -> None:
@@ -777,6 +823,7 @@ class _RestoreStoreManager:
                     storage_key: {
                         "version": stored.version,
                         "data": json_fragment(stored.data),
+                        "last_seen": stored.last_seen,
                     }
                     for storage_key, stored in scope_data.items()
                 }
