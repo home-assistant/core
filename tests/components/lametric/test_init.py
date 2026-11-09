@@ -8,14 +8,16 @@ from demetriek import (
     LaMetricConnectionTimeoutError,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lametric.const import DOMAIN
+from homeassistant.components.lametric.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
 
 @pytest.mark.parametrize(
@@ -89,6 +91,26 @@ async def test_setup_apps_unavailable(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == STATE_UNAVAILABLE
+
+    # The coordinator keeps polling; once the device reports its apps,
+    # the app entities recover without reloading the entry.
+    mock_lametric.apps.side_effect = None
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.frenck_s_lametric_current_app")
+    assert state
+    assert state.state == "Clock"
+    state = hass.states.get("select.frenck_s_lametric_app")
+    assert state
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "Clock",
+        "Weather",
+        "Message Board",
+        "Radio",
+        "Stopwatch",
+        "Timer",
+    ]
 
 
 @pytest.mark.parametrize(

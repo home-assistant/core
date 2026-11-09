@@ -7,6 +7,7 @@ from typing import override
 from demetriek import Device
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -21,7 +22,7 @@ from .coordinator import (
     LaMetricDataUpdateCoordinator,
 )
 from .entity import LaMetricAppsEntity, LaMetricEntity
-from .helpers import current_widget
+from .helpers import current_widget, widget_options
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -93,6 +94,7 @@ class LaMetricSensorEntity(LaMetricEntity, SensorEntity):
 class LaMetricAppsSensorEntity(LaMetricAppsEntity, SensorEntity):
     """Representation of the widget currently shown on a LaMetric device."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_translation_key = "current_app"
 
     def __init__(
@@ -103,6 +105,14 @@ class LaMetricAppsSensorEntity(LaMetricAppsEntity, SensorEntity):
         """Initialize the LaMetric apps sensor."""
         super().__init__(device_coordinator, apps_coordinator)
         self._attr_unique_id = f"{device_coordinator.data.serial_number}-current_app"
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the widgets of the device."""
+        if not (apps := self.coordinator.data):
+            return []
+        return widget_options(apps)
 
     @property
     @override
