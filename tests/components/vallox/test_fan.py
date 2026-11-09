@@ -121,20 +121,11 @@ async def test_fan_speed_missing(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("metrics", [{"A_CYC_MODE": None}])
-async def test_fan_mode_missing(
-    hass: HomeAssistant, mock_vallox_client: AsyncMock
-) -> None:
+async def test_fan_mode_missing(hass: HomeAssistant) -> None:
     """Test the fan when the unit does not report whether it is on."""
     state = hass.states.get(FAN_ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
-
-    # The unit may well be on, so turning it off must not be skipped.
-    await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
-    )
-
-    mock_vallox_client.set_values.assert_called_once_with(METRICS_UNIT_OFF)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -144,6 +135,14 @@ async def test_fan_mode_missing(
         pytest.param(SERVICE_TURN_ON, METRICS_UNIT_OFF, METRICS_UNIT_ON, id="turn_on"),
         pytest.param(
             SERVICE_TURN_OFF, METRICS_UNIT_ON, METRICS_UNIT_OFF, id="turn_off"
+        ),
+        # The unit is already in the requested state according to the last poll.
+        # It may have changed since, so check that the command is sent regardless.
+        pytest.param(
+            SERVICE_TURN_ON, METRICS_UNIT_ON, METRICS_UNIT_ON, id="turn_on_when_on"
+        ),
+        pytest.param(
+            SERVICE_TURN_OFF, METRICS_UNIT_OFF, METRICS_UNIT_OFF, id="turn_off_when_off"
         ),
     ],
 )
@@ -161,26 +160,6 @@ async def test_turn_on_off(
     mock_vallox_client.set_values.assert_called_once_with(expected_called_with)
     # One fetch at setup, and one refresh after the change.
     assert mock_vallox_client.fetch_metric_data.call_count == 2
-
-
-@pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize(
-    ("service", "metrics"),
-    [
-        pytest.param(SERVICE_TURN_ON, METRICS_UNIT_ON, id="turn_on_when_on"),
-        pytest.param(SERVICE_TURN_OFF, METRICS_UNIT_OFF, id="turn_off_when_off"),
-    ],
-)
-async def test_turn_on_off_unchanged(
-    hass: HomeAssistant, mock_vallox_client: AsyncMock, service: str
-) -> None:
-    """Test that turning the fan on or off when it already is does nothing."""
-    await hass.services.async_call(
-        FAN_DOMAIN, service, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
-    )
-
-    mock_vallox_client.set_values.assert_not_called()
-    mock_vallox_client.fetch_metric_data.assert_called_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -224,6 +203,7 @@ async def test_turn_on_off_exception(
             [
                 call.set_fan_speed(Profile.AWAY, 15),
                 call.set_profile(Profile.AWAY),
+                call.set_values(METRICS_UNIT_ON),
                 call.fetch_metric_data(),
             ],
             id="preset_and_percentage_unit_on",
@@ -233,14 +213,22 @@ async def test_turn_on_off_exception(
             {ATTR_PRESET_MODE: "Away"},
             [
                 call.set_profile(Profile.AWAY),
+                call.set_values(METRICS_UNIT_ON),
                 call.fetch_metric_data(),
             ],
             id="preset_only",
         ),
+        # The unit is already on and in Home according to the last poll. It may
+        # have changed since, so check that the preset and power-on are sent
+        # regardless.
         pytest.param(
             METRICS_UNIT_ON,
             {ATTR_PRESET_MODE: "Home"},
-            [],
+            [
+                call.set_profile(Profile.HOME),
+                call.set_values(METRICS_UNIT_ON),
+                call.fetch_metric_data(),
+            ],
             id="active_preset",
         ),
         pytest.param(
@@ -248,6 +236,7 @@ async def test_turn_on_off_exception(
             {ATTR_PERCENTAGE: 40},
             [
                 call.set_fan_speed(Profile.HOME, 40),
+                call.set_values(METRICS_UNIT_ON),
                 call.fetch_metric_data(),
             ],
             id="percentage_only",
@@ -273,7 +262,10 @@ async def test_turn_on_off_exception(
         pytest.param(
             METRICS_UNIT_OFF,
             {ATTR_PERCENTAGE: 0},
-            [],
+            [
+                call.set_values(METRICS_UNIT_OFF),
+                call.fetch_metric_data(),
+            ],
             id="zero_percentage_unit_off",
         ),
     ],
@@ -391,34 +383,28 @@ async def test_turn_on_unsupported_profile(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("preset", "metrics", "expected_set_profile_calls", "expected_fetch_count"),
+    ("preset", "metrics", "expected_profile"),
     [
-        pytest.param("Home", METRICS_PROFILE_AWAY, [call(Profile.HOME)], 2, id="home"),
-        pytest.param("Away", METRICS_PROFILE_HOME, [call(Profile.AWAY)], 2, id="away"),
+        pytest.param("Home", METRICS_PROFILE_AWAY, Profile.HOME, id="home"),
+        pytest.param("Away", METRICS_PROFILE_HOME, Profile.AWAY, id="away"),
+        pytest.param("Boost", METRICS_PROFILE_HOME, Profile.BOOST, id="boost"),
         pytest.param(
-            "Boost", METRICS_PROFILE_HOME, [call(Profile.BOOST)], 2, id="boost"
+            "Fireplace", METRICS_PROFILE_HOME, Profile.FIREPLACE, id="fireplace"
         ),
-        pytest.param(
-            "Fireplace",
-            METRICS_PROFILE_HOME,
-            [call(Profile.FIREPLACE)],
-            2,
-            id="fireplace",
-        ),
-        pytest.param(
-            "Extra", METRICS_PROFILE_HOME, [call(Profile.EXTRA)], 2, id="extra"
-        ),
-        pytest.param("Auto", METRICS_PROFILE_HOME, [call(Profile.AUTO)], 2, id="auto"),
-        # Selecting the active preset changes nothing, so there is no refresh.
-        pytest.param("Home", METRICS_PROFILE_HOME, [], 1, id="no_change"),
+        pytest.param("Extra", METRICS_PROFILE_HOME, Profile.EXTRA, id="extra"),
+        pytest.param("Auto", METRICS_PROFILE_HOME, Profile.AUTO, id="auto"),
+        # The preset is already active according to the last poll. The unit may
+        # have changed since, for example when its Boost timer ran out, so check
+        # that the preset is sent regardless.
+        pytest.param("Home", METRICS_PROFILE_HOME, Profile.HOME, id="active_home"),
+        pytest.param("Boost", METRICS_PROFILE_BOOST, Profile.BOOST, id="active_boost"),
     ],
 )
 async def test_set_preset_mode(
     hass: HomeAssistant,
     mock_vallox_client: AsyncMock,
     preset: str,
-    expected_set_profile_calls: list[_Call],
-    expected_fetch_count: int,
+    expected_profile: Profile,
 ) -> None:
     """Test set preset mode."""
     await hass.services.async_call(
@@ -428,8 +414,9 @@ async def test_set_preset_mode(
         blocking=True,
     )
 
-    assert mock_vallox_client.set_profile.call_args_list == expected_set_profile_calls
-    assert mock_vallox_client.fetch_metric_data.call_count == expected_fetch_count
+    mock_vallox_client.set_profile.assert_called_once_with(expected_profile)
+    # One fetch at setup, and one refresh after the change.
+    assert mock_vallox_client.fetch_metric_data.call_count == 2
 
 
 @pytest.mark.usefixtures("init_integration")
