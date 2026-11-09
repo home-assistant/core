@@ -285,7 +285,6 @@ class TeslemetryChargePortEntity(
     """Base class for for charge port cover entities."""
 
     api: Vehicle | VehicleRouter
-    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     @override
@@ -371,7 +370,6 @@ class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for the front trunk cover entities."""
 
     api: Vehicle | VehicleRouter
-    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
 
     @override
@@ -438,7 +436,6 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Cover entity for the rear trunk."""
 
     api: Vehicle | VehicleRouter
-    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     @override
@@ -569,7 +566,6 @@ class TeslemetryTonneauEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for the Cybertruck tonneau cover entity."""
 
     api: Vehicle | VehicleRouter
-    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
