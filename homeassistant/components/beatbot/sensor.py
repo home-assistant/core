@@ -41,6 +41,8 @@ _ERROR_OPTIONS = [error.value for error, _ in ERROR_BITS_BY_CATEGORY[_CATEGORY]]
 
 def _status_value(data: BeatbotDeviceData) -> str | None:
     """Return the category-specific work status."""
+    if data.work_status is None:
+        return None
     if status := status_for(ProductCategory(data.product_category), data.work_status):
         return status.value
     return None
@@ -48,6 +50,8 @@ def _status_value(data: BeatbotDeviceData) -> str | None:
 
 def _error_value(data: BeatbotDeviceData) -> str | None:
     """Return the first active category-specific error."""
+    if data.error_code is None:
+        return None
     if not data.error_code:
         return "none"
     if error := error_for(ProductCategory(data.product_category), data.error_code):

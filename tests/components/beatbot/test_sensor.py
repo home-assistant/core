@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from beatbot_cloud import BeatbotDeviceData
+from beatbot_cloud import BeatbotClient, BeatbotDeviceData
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -187,3 +187,30 @@ async def test_device_info(
     assert device.model == "AquaSense 2"
     assert device.model_id == "product-1"
     assert device.sw_version == "1.2.3"
+
+
+@pytest.mark.usefixtures("mock_event_client")
+async def test_initial_partial_state_keeps_unreported_values_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Use real discovery defaults without presenting missing values as zero."""
+    device = BeatbotClient._parse_device(
+        {
+            "deviceId": DEVICE_ID,
+            "productId": "product-1",
+            "productCategory": "pool_clean_bot",
+            "name": "AquaSense",
+            "isOnline": True,
+        }
+    )
+    mock_client.get_devices.return_value = [device]
+    mock_client.get_device_states.return_value = batch_state(
+        states={INTERFACE_STATE: 2}
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(STATUS_ENTITY_ID).state == "charging"
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(ERROR_ENTITY_ID).state == STATE_UNKNOWN
