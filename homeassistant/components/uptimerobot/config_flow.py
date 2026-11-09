@@ -61,8 +61,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         if TYPE_CHECKING:
-            assert response is not None
-            assert isinstance(response.data, UptimeRobotAccount)
+            assert response is None or isinstance(response.data, UptimeRobotAccount)
 
         account: UptimeRobotAccount | None = response.data if response else None
 
