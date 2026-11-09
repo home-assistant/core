@@ -89,3 +89,10 @@ class FB800(StrEnum):
     MOVE_UP_DOWN = "800.81"
     STOP_STEP_UP_DOWN = "800.82"
     CURRENT_ABS_POS_BLINDS_PERCENT = "800.85"
+
+
+class FB1018(StrEnum):
+    """FB 1018 General Purpose Digital Output."""
+
+    DIGITAL_OUT_SETP = "1018.51"
+    STATUS_DIGITAL_OUTPUT = "1018.52"

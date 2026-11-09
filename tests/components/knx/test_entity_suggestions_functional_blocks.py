@@ -87,6 +87,9 @@ TEST_PROJECT: dict[str, Any] = {
         "6/1/4": _group_address("6/1/4", DPT_PERCENT),
         "6/1/5": _group_address("6/1/5", DPT_PERCENT),
         "6/1/6": _group_address("6/1/6", DPT_PERCENT),
+        "7/1/1": _group_address("7/1/1", DPT_SWITCH),
+        "7/1/2": _group_address("7/1/2", DPT_SWITCH),
+        "7/1/3": _group_address("7/1/3", DPT_SWITCH),
     },
     "devices": {
         "1.1.1": {
@@ -152,6 +155,14 @@ TEST_PROJECT: dict[str, Any] = {
                 ),
             },
         },
+        "1.3.2": {
+            "name": "Binärausgang",
+            "channels": {
+                "CH-1": _channel(
+                    "Digitalausgang", ["1018"], ["co-110", "co-111", "co-112"]
+                ),
+            },
+        },
     },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
@@ -183,6 +194,9 @@ TEST_PROJECT: dict[str, Any] = {
         "co-73": _com_object(["423.84"], ["6/1/4"]),
         "co-74": _com_object(["423.64"], ["6/1/5"]),
         "co-75": _com_object(["423.85"], ["6/1/6"]),
+        "co-110": _com_object(["1018.51"], ["7/1/1"]),
+        "co-111": _com_object(["1018.52"], ["7/1/2"]),
+        "co-112": _com_object(["1018.54"], ["7/1/3"]),  # no config key for this DPA
     },
 }
 
@@ -256,6 +270,7 @@ def test_functional_block_platforms() -> None:
         "423": [Platform.LIGHT],
         "427": [Platform.LIGHT],
         "800": [Platform.COVER],
+        "1018": [Platform.SWITCH],
     }
 
 
@@ -445,6 +460,17 @@ def test_incomplete_config_dropped() -> None:
     assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
 
 
+def test_digital_output_suggestion() -> None:
+    """Test FB 1018 suggestion."""
+    channel = _test_channel("1.3.2", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.SWITCH)
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_switch": {"write": "7/1/1", "state": "7/1/2"}}
+    assert suggestion["unmatched"] == ["1018.54"]
+    # FB 1018 is not representable as light
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
+
+
 async def test_ws_get_entity_suggestions(
     knx: KNXTestKit,
     get_entity_suggestions: KnxSuggestionGetter,
@@ -457,7 +483,7 @@ async def test_ws_get_entity_suggestions(
 
     assert result["providers"]["fb"] == {
         "state": "ok",
-        "functional_blocks_found": ["417", "423", "427", "800", "999"],
+        "functional_blocks_found": ["1018", "417", "423", "427", "800", "999"],
     }
     suggestions = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
     assert sorted(suggestions) == [
@@ -467,6 +493,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.1.3_CH-1",
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
+        "fb_1.3.2_CH-1",
     ]
 
     switch_actuator = suggestions["fb_1.1.1_CH-1"]
@@ -488,6 +515,7 @@ async def test_ws_get_entity_suggestions(
     assert suggestions["fb_1.1.1_CH-2"]["suggested_name"] == "Ausgang 2"
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
+    assert suggestions["fb_1.3.2_CH-1"]["platform_options"] == ["switch"]
 
 
 async def test_ws_get_entity_suggestions_duplicates(

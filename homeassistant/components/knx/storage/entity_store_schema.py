@@ -40,7 +40,7 @@ from ..validation import (
     validate_sensor_attributes,
 )
 from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
-from .dpa import FB417, FB418, FB422, FB423, FB427, FB800
+from .dpa import FB417, FB418, FB422, FB423, FB427, FB800, FB1018
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
@@ -875,8 +875,8 @@ class SwitchKnxConfig:
         ga(
             write_required=True,
             valid_dpt="1",
-            dpa_write=[FB417.SWITCH_ON_OFF],
-            dpa_state=[FB417.INFO_ON_OFF],
+            dpa_write=[FB417.SWITCH_ON_OFF, FB1018.DIGITAL_OUT_SETP],
+            dpa_state=[FB417.INFO_ON_OFF, FB1018.STATUS_DIGITAL_OUTPUT],
         ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
