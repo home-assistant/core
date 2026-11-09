@@ -6,7 +6,7 @@ from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.lights import Light
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -59,7 +59,9 @@ class ElkLight(ElkEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        self._element.level(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
+        self._element.level(
+            round(kwargs.get(LightServiceArgument.BRIGHTNESS, 255) / 2.55)
+        )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
