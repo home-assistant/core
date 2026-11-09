@@ -18938,9 +18938,7 @@
                 None,
               ]),
               'area_id': None,
-              'capabilities': dict({
-                'state_class': 'measurement',
-              }),
+              'capabilities': None,
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -18973,7 +18971,6 @@
             'state': dict({
               'attributes': dict({
                 'friendly_name': 'Generator <<envoyserial>> Start battery level',
-                'state_class': 'measurement',
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.generator_<<envoyserial>>_start_battery_level',
@@ -19030,9 +19027,7 @@
                 None,
               ]),
               'area_id': None,
-              'capabilities': dict({
-                'state_class': 'measurement',
-              }),
+              'capabilities': None,
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
@@ -19065,7 +19060,6 @@
             'state': dict({
               'attributes': dict({
                 'friendly_name': 'Generator <<envoyserial>> Stop battery level',
-                'state_class': 'measurement',
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.generator_<<envoyserial>>_stop_battery_level',
