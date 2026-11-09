@@ -317,7 +317,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if TYPE_CHECKING:
-            assert self.sensor_data
+            assert self.sensor_data  # type: ignore[truthy-bool]
         return self.entity_description.value_fn(self.sensor_data)
 
 

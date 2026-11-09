@@ -162,7 +162,7 @@ class BrWeather(WeatherEntity):
         self._attr_native_wind_speed = data.wind_speed
         self._attr_wind_bearing = data.wind_bearing
 
-        if not self.hass:
+        if not self.hass:  # type: ignore[truthy-bool]
             return
         self.async_write_ha_state()
         assert self.platform.config_entry

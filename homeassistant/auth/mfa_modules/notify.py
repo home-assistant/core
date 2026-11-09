@@ -238,7 +238,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         def generate_secret_and_one_time_password() -> str:
             """Generate and send one time password."""
-            assert notify_setting
+            assert notify_setting  # type: ignore[truthy-bool]
             # secret and counter are not persistent
             notify_setting.secret = _generate_secret()
             notify_setting.counter = _generate_random()

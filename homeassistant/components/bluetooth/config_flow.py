@@ -262,7 +262,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         if CONF_SOURCE in config_entry.data:
             return RemoteAdapterOptionsFlowHandler()
-        if not (manager := get_manager()) or not manager.supports_passive_scan:
+        if not (manager := get_manager()) or not manager.supports_passive_scan:  # type: ignore[truthy-bool]
             return LocalNoPassiveOptionsFlowHandler()
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
@@ -271,7 +271,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return bool((manager := get_manager()) and manager.supports_passive_scan)
+        return bool((manager := get_manager()) and manager.supports_passive_scan)  # type: ignore[truthy-bool]
 
 
 class RemoteAdapterOptionsFlowHandler(OptionsFlow):

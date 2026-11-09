@@ -258,7 +258,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     default_entity_id: str | None = None
 
     for entity in hass.data[DATA_COMPONENT].entities:
-        if entity.platform and entity.platform.platform_name == "cloud":
+        if entity.platform and entity.platform.platform_name == "cloud":  # type: ignore[truthy-bool]
             return entity.entity_id
 
         if default_entity_id is None:
@@ -623,7 +623,7 @@ async def _async_convert_audio(
                     process.stdin.write(chunk)
                     await process.stdin.drain()
             finally:
-                if process.stdin:
+                if process.stdin:  # type: ignore[truthy-bool]
                     process.stdin.close()
 
         writer_task = hass.async_create_background_task(
@@ -1836,7 +1836,7 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
-        if entity.platform:
+        if entity.platform:  # type: ignore[truthy-bool]
             entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
         if provider.has_entity:

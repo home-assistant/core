@@ -1028,7 +1028,7 @@ class DSMREntity(SensorEntity):
     def update_data(self, telegram: Telegram | None) -> None:
         """Update data."""
         self.telegram = telegram
-        if self.hass and (
+        if self.hass and (  # type: ignore[truthy-bool]
             telegram is None
             or get_dsmr_object(
                 telegram, self._mbus_id, self.entity_description.obis_reference

@@ -267,7 +267,7 @@ class BaseTelegramBot:
             event_data[ATTR_MSG] = callback_query.message.to_dict()
             event_data[ATTR_CHAT_ID] = callback_query.message.chat.id
 
-        if callback_query.from_user:
+        if callback_query.from_user:  # type: ignore[truthy-bool]
             event_data.update(self._get_user_event_data(callback_query.from_user))
 
         # Split data into command and args if possible

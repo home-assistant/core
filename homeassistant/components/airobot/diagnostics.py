@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
 
     # Build device capabilities info
     device_capabilities = None
-    if coordinator.data:
+    if coordinator.data:  # type: ignore[truthy-bool]
         device_capabilities = {
             "has_floor_sensor": coordinator.data.status.has_floor_sensor,
             "has_co2_sensor": coordinator.data.status.has_co2_sensor,
@@ -31,6 +31,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT_CONFIG),
         "device_capabilities": device_capabilities,
-        "status": asdict(coordinator.data.status) if coordinator.data else None,
-        "settings": asdict(coordinator.data.settings) if coordinator.data else None,
+        "status": asdict(coordinator.data.status) if coordinator.data else None,  # type: ignore[truthy-bool]
+        "settings": asdict(coordinator.data.settings) if coordinator.data else None,  # type: ignore[truthy-bool]
     }

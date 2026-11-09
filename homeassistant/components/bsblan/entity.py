@@ -106,7 +106,7 @@ class BSBLanCircuitEntity(BSBLanDualCoordinatorEntity):
         """Return the slow-polled config for this circuit."""
         return (
             self.slow_coordinator.data.heating_config.get(self._circuit)
-            if self.slow_coordinator.data
+            if self.slow_coordinator.data  # type: ignore[truthy-bool]
             else None
         )
 
@@ -206,7 +206,7 @@ class BSBLanWaterHeaterDeviceEntity(BSBLanDualCoordinatorEntity):
         """
         return (
             self.slow_coordinator.data.dhw_config
-            if self.slow_coordinator.data
+            if self.slow_coordinator.data  # type: ignore[truthy-bool]
             else None
         )
 

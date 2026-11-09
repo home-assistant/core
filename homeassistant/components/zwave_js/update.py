@@ -286,7 +286,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
             if (
                 available_firmware_updates
                 and (
-                    latest_firmware := max(
+                    latest_firmware := max(  # type: ignore[truthy-bool]
                         available_firmware_updates,
                         key=lambda x: AwesomeVersion(x.version),
                     )

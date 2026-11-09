@@ -46,7 +46,7 @@ def next_due_date(task: TaskData, today: dt.datetime) -> dt.date | None:
 
         if (
             task.frequency in (Frequency.WEEKLY, Frequency.MONTHLY)
-            and (nextdue := task.nextDue[0])
+            and (nextdue := task.nextDue[0])  # type: ignore[truthy-bool]
             and task.startDate > nextdue
         ):
             return dt_util.as_local(task.nextDue[1]).date()
@@ -122,14 +122,14 @@ def get_attribute_points(
         getattr(stats, attribute)
         for gear in fields(user.items.gear.equipped)
         if (equipped := getattr(user.items.gear.equipped, gear.name))
-        and (stats := content.gear.flat[equipped])
+        and (stats := content.gear.flat[equipped])  # type: ignore[truthy-bool]
     )
 
     class_bonus = sum(
         getattr(stats, attribute) / 2
         for gear in fields(user.items.gear.equipped)
         if (equipped := getattr(user.items.gear.equipped, gear.name))
-        and (stats := content.gear.flat[equipped])
+        and (stats := content.gear.flat[equipped])  # type: ignore[truthy-bool]
         and stats.klass == user.stats.Class
     )
     if TYPE_CHECKING:

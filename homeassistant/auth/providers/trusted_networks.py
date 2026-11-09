@@ -91,7 +91,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
     @property
     def trusted_proxies(self) -> list[IPNetwork]:
         """Return trusted proxies in the system."""
-        if not self.hass.http:
+        if not self.hass.http:  # type: ignore[truthy-bool]
             return []
 
         return [

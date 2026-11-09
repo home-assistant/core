@@ -109,7 +109,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             return utc_point_in_time, True
 
         if (
-            (data := self.data)
+            (data := self.data)  # type: ignore[truthy-bool]
             and (stored_device := data.devices.get(device.mac))
             and (update_time := stored_device.update_time)
         ):

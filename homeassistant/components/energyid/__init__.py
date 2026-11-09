@@ -235,7 +235,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             ):
                 try:
                     value = float(current_state.state)
-                    timestamp = current_state.last_updated or dt_util.utcnow()
+                    timestamp = current_state.last_updated or dt_util.utcnow()  # type: ignore[truthy-bool]
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
                 except ValueError, TypeError:
                     _LOGGER.debug(

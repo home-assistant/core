@@ -218,7 +218,7 @@ class ZWaveBaseEntity(Entity):
         name = ""
         if (
             hasattr(self, "entity_description")
-            and self.entity_description
+            and self.entity_description  # type: ignore[truthy-bool]
             and self.entity_description.name
             and self.entity_description.name is not Undefined
         ):

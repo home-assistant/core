@@ -908,7 +908,7 @@ async def async_setup_entry(
         )
 
     if (
-        coordinator.data.battery
+        coordinator.data.battery  # type: ignore[truthy-bool]
         and coordinator.data.battery.percentage is not None
         and coordinator.data.battery.percentage > -1
     ):

@@ -259,7 +259,7 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
     device_triggers: dict[str, Trigger] = hass.data[DEVICE_TRIGGERS]
     for trig in triggers:
         device_trigger = device_triggers.pop(trig[CONF_DISCOVERY_ID])
-        if device_trigger:
+        if device_trigger:  # type: ignore[truthy-bool]
             discovery_hash = device_trigger.discovery_hash
 
             assert device_trigger.tasmota_trigger

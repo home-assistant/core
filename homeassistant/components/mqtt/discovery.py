@@ -902,7 +902,7 @@ async def async_start(  # noqa: C901
             )
             return
         if TYPE_CHECKING:
-            assert mqtt_data.data_config_flow_lock
+            assert mqtt_data.data_config_flow_lock  # type: ignore[truthy-bool]
 
         # Lock to prevent initiating many parallel config flows.
         # Note: The lock is not intended to prevent a race, only for performance

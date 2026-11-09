@@ -148,7 +148,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             uri_no_auth = await self.device.async_get_stream_uri(self.profile)
         except (TimeoutError, Exception) as err:
             LOGGER.error("Failed to get stream uri: %s", err)
-            if self._stream_uri_future:
+            if self._stream_uri_future:  # type: ignore[truthy-bool]
                 self._stream_uri_future.set_exception(err)
             raise
         url = URL(uri_no_auth)

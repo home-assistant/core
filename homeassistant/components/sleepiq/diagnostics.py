@@ -34,7 +34,7 @@ async def async_get_config_entry_diagnostics(
                         "pressure": sleeper.pressure,
                         "sleep_number": sleeper.sleep_number,
                         "sleep_data": (
-                            asdict(sleeper.sleep_data) if sleeper.sleep_data else None
+                            asdict(sleeper.sleep_data) if sleeper.sleep_data else None  # type: ignore[truthy-bool]
                         ),
                     }
                     for sleeper in bed.sleepers

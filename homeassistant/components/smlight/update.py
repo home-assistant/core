@@ -115,7 +115,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self.idx = idx
 
         if (
-            (data := coordinator.data)
+            (data := coordinator.data)  # type: ignore[truthy-bool]
             and idx < len(data.info.radios)
             and data.info.radios[idx].zb_type in ZWAVE_TYPES
         ):
@@ -209,7 +209,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         """Return release notes for firmware."""
         if "zigbee" in self.entity_description.key:
             radio_desc = "Zigbee"
-            if (data := self.coordinator.data) and self.idx < len(data.info.radios):
+            if (data := self.coordinator.data) and self.idx < len(data.info.radios):  # type: ignore[truthy-bool]
                 radio = data.info.radios[self.idx]
                 if radio.zb_type in ZWAVE_TYPES:
                     radio_desc = "Z-Wave"

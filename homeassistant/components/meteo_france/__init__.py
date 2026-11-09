@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
             entry.title,
         )
 
-    if coordinator_rain and not coordinator_rain.last_update_success:
+    if coordinator_rain and not coordinator_rain.last_update_success:  # type: ignore[truthy-bool]
         coordinator_rain = None
     if coordinator_alert and not coordinator_alert.last_update_success:
         coordinator_alert = None

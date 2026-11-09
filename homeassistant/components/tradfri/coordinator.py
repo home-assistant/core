@@ -98,7 +98,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         except RequestError as err:
             raise UpdateFailed(f"Error communicating with API: {err}.") from err
 
-        if not self.data or not self.last_update_success:  # Start subscription
+        if not self.data or not self.last_update_success:  # type: ignore[truthy-bool]  # Start subscription
             try:
                 cmd = self.device.observe(
                     callback=self._observe_update,

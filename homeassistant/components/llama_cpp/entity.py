@@ -243,7 +243,7 @@ async def _transform_stream(
                 yield yield_dict
         elif (
             delta.tool_calls
-            and (delta_tool_call := delta.tool_calls[0])
+            and (delta_tool_call := delta.tool_calls[0])  # type: ignore[truthy-bool]
             and delta_tool_call.function
         ):
             if (

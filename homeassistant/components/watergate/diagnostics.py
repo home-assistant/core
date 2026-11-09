@@ -116,7 +116,7 @@ async def async_get_config_entry_diagnostics(
                 },
                 TO_REDACT,
             )
-            if data
+            if data  # type: ignore[truthy-bool]
             else None
         ),
     }

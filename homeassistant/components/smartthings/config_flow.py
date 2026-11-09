@@ -68,7 +68,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data={**data, CONF_LOCATION_ID: location.location_id},
             )
 
-        if (entry := self._get_reauth_entry()) and CONF_TOKEN not in entry.data:
+        if (entry := self._get_reauth_entry()) and CONF_TOKEN not in entry.data:  # type: ignore[truthy-bool]
             if entry.data[OLD_DATA][CONF_LOCATION_ID] != location.location_id:
                 return self.async_abort(reason="reauth_location_mismatch")
             return self.async_update_reload_and_abort(

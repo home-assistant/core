@@ -103,7 +103,7 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             pool_data = data[pool_id]
             measures_coordinator = pool_data.measures_coordinator
             measures_coordinator.set_next_refresh(pool_data)
-            if not measures_coordinator.data:
+            if not measures_coordinator.data:  # type: ignore[truthy-bool]
                 await measures_coordinator.async_refresh()
 
         return data

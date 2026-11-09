@@ -367,7 +367,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Late import to avoid circular dependency
         # NOTE: Do not change to hass.config.components check - improv_ble is
         # config_flow only and may not be in the components registry
-        if improv_ble := await async_import_module(
+        if improv_ble := await async_import_module(  # type: ignore[truthy-bool]
             self.hass, "homeassistant.components.improv_ble"
         ):
             ble_mac = wifi_mac_to_bluetooth_mac(mac_address)

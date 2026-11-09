@@ -525,14 +525,14 @@ class CameraImagePreview(HomeAssistantView):
     async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
-        flow = cast(
+        flow = cast(  # type: ignore[truthy-bool]
             GenericIPCamConfigFlow,
             self.hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
         ) or cast(
             GenericOptionsFlowHandler,
             self.hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
         )
-        if not flow:
+        if not flow:  # type: ignore[truthy-bool]
             _LOGGER.warning("Unknown flow while getting image preview")
             raise web.HTTPNotFound
         user_input = flow.preview_image_settings

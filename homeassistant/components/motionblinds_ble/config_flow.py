@@ -160,7 +160,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             (
                 device
                 for device in devices
-                if device
+                if device  # type: ignore[truthy-bool]
                 and device.name
                 and f"MOTION_{mac_code.upper()}" in device.name
             ),

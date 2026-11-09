@@ -38,7 +38,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         # Link configuration-URL for the gateway device
         configuration_url = (
             f"http://{entry.data[CONF_HOST]}"
-            if device_id == gateway_id and entry
+            if device_id == gateway_id and entry  # type: ignore[truthy-bool]
             else None
         )
 

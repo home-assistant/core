@@ -72,6 +72,6 @@ async def async_get_config_entry_diagnostics(
         ],
         "update": {
             "last_update_success": data.update.last_update_success,
-            "available": update.to_dict() if update else None,
+            "available": update.to_dict() if update else None,  # type: ignore[truthy-bool]
         },
     }

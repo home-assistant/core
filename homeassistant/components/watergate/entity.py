@@ -27,6 +27,6 @@ class WatergateEntity(CoordinatorEntity[WatergateDataCoordinator]):
             serial_number=coordinator.data.state.serial_number,
             manufacturer=MANUFACTURER,
             sw_version=(
-                coordinator.data.state.firmware_version if coordinator.data else None
+                coordinator.data.state.firmware_version if coordinator.data else None  # type: ignore[truthy-bool]
             ),
         )

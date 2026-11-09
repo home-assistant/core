@@ -122,7 +122,7 @@ def get_webhook_handler(
             await coordinator.async_request_refresh()
             return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
-        if not (coordinator_data := coordinator.data):
+        if not (coordinator_data := coordinator.data):  # type: ignore[truthy-bool]
             pass
         elif body_type == WEBHOOK_VALVE_TYPE:
             coordinator_data.state.valve_state = data.state

@@ -300,7 +300,7 @@ class HlsPlaylistView(StreamView):
         if track.last_segment is None:
             return self.not_found(blocking_request, 0)
         if (
-            (last_segment := track.last_segment)
+            (last_segment := track.last_segment)  # type: ignore[truthy-bool]
             and hls_msn == last_segment.sequence
             and hls_part
             >= len(last_segment.parts)
@@ -311,7 +311,7 @@ class HlsPlaylistView(StreamView):
 
         # Receive parts until msn and part are met
         while (
-            (last_segment := track.last_segment)
+            (last_segment := track.last_segment)  # type: ignore[truthy-bool]
             and hls_msn == last_segment.sequence
             and hls_part >= len(last_segment.parts)
         ):

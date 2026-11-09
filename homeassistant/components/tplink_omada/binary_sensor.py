@@ -143,7 +143,7 @@ class OmadaGatewayPortBinarySensor(
         port = next(
             p for p in gateway.port_status if p.port_number == self._port_number
         )
-        if port:
+        if port:  # type: ignore[truthy-bool]
             self._attr_is_on = self.entity_description.update_func(port)
 
     @callback

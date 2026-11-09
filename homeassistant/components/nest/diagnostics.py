@@ -20,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     if (
         not hasattr(config_entry, "runtime_data")
-        or not config_entry.runtime_data
+        or not config_entry.runtime_data  # type: ignore[truthy-bool]
         or not (nest_devices := config_entry.runtime_data.device_manager.devices)
     ):
         return {}

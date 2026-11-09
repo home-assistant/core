@@ -318,7 +318,7 @@ def async_device_wan_latency_discovery_fn(
     obj_id: str,
 ) -> bool:
     """Determine if an device have a latency monitor."""
-    if (device := hub.api.devices[obj_id]) and device.uptime_stats:
+    if (device := hub.api.devices[obj_id]) and device.uptime_stats:  # type: ignore[truthy-bool]
         return _device_wan_latency_monitor(wan, monitor_target, device) is not None
     return False
 
@@ -424,7 +424,7 @@ def async_device_temperatures_discovery_fn(
     temperature_name: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if an device have a temperatures."""
-    if (device := hub.api.devices[obj_id]) and device.temperatures:
+    if (device := hub.api.devices[obj_id]) and device.temperatures:  # type: ignore[truthy-bool]
         return any(
             temperature_name in temperature["name"]
             for temperature in device.temperatures

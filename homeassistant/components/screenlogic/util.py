@@ -37,7 +37,7 @@ def cleanup_excluded_entity(
     data_path: ScreenLogicDataPath,
 ) -> None:
     """Remove excluded entity if it exists."""
-    assert coordinator.config_entry
+    assert coordinator.config_entry  # type: ignore[truthy-bool]
     entity_registry = er.async_get(coordinator.hass)
     unique_id = f"{coordinator.config_entry.unique_id}_{generate_unique_id(*data_path)}"
     if entity_id := entity_registry.async_get_entity_id(

@@ -26,7 +26,7 @@ async def async_get_config_entry_diagnostics(
 
     if shelly_entry_data.block:
         block_coordinator = shelly_entry_data.block
-        assert block_coordinator
+        assert block_coordinator  # type: ignore[truthy-bool]
         device_info = {
             "name": block_coordinator.name,
             "model": block_coordinator.model,

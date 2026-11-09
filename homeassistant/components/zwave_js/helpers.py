@@ -179,7 +179,7 @@ async def async_enable_server_logging_if_needed(
     # to debug to match library logging. We will store the old server log level in
     # hass.data so we can reset it later
     if (
-        not driver
+        not driver  # type: ignore[truthy-bool]
         or not driver.client.connected
         or driver.client.server_logging_enabled
     ):
@@ -200,7 +200,7 @@ async def async_disable_server_logging_if_needed(
 ) -> None:
     """Disable logging of zwave-js-server in the lib if still connected to server."""
     if (
-        not driver
+        not driver  # type: ignore[truthy-bool]
         or not driver.client.connected
         or not driver.client.server_logging_enabled
     ):

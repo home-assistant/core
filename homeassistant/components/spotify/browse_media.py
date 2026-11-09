@@ -362,7 +362,7 @@ async def build_item_response(  # noqa: C901
         if top_tracks := await spotify.get_top_tracks():
             items = [_get_track_item_payload(track) for track in top_tracks]
     elif media_content_type == MediaType.PLAYLIST:
-        if playlist := await spotify.get_playlist(media_content_id):
+        if playlist := await spotify.get_playlist(media_content_id):  # type: ignore[truthy-bool]
             title = playlist.name
             image = playlist.images[0].url if playlist.images else None
             for playlist_item in playlist.items.items:
@@ -375,7 +375,7 @@ async def build_item_response(  # noqa: C901
                         assert isinstance(playlist_item.track, Episode)
                     items.append(_get_episode_item_payload(playlist_item.track))
     elif media_content_type == MediaType.ALBUM:
-        if album := await spotify.get_album(media_content_id):
+        if album := await spotify.get_album(media_content_id):  # type: ignore[truthy-bool]
             title = album.name
             image = album.images[0].url if album.images else None
             items = [
@@ -384,14 +384,14 @@ async def build_item_response(  # noqa: C901
             ]
     elif media_content_type == MediaType.ARTIST:
         if (artist_albums := await spotify.get_artist_albums(media_content_id)) and (
-            artist := await spotify.get_artist(media_content_id)
+            artist := await spotify.get_artist(media_content_id)  # type: ignore[truthy-bool]
         ):
             title = artist.name
             image = artist.images[0].url if artist.images else None
             items = [_get_album_item_payload(album) for album in artist_albums]
     elif media_content_type == MEDIA_TYPE_SHOW:
         if (show_episodes := await spotify.get_show_episodes(media_content_id)) and (
-            show := await spotify.get_show(media_content_id)
+            show := await spotify.get_show(media_content_id)  # type: ignore[truthy-bool]
         ):
             title = show.name
             image = show.images[0].url if show.images else None

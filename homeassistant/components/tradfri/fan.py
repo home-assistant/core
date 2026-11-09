@@ -92,7 +92,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        if not self._device_data:
+        if not self._device_data:  # type: ignore[truthy-bool]
             return False
         return self._device_data.state
 
@@ -100,7 +100,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if not self._device_data:
+        if not self._device_data:  # type: ignore[truthy-bool]
             return None
 
         if self._device_data.fan_speed:
@@ -112,7 +112,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        if not self._device_data:
+        if not self._device_data:  # type: ignore[truthy-bool]
             return None
 
         if self._device_data.is_auto_mode:
@@ -123,7 +123,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if not self._device_control:
+        if not self._device_control:  # type: ignore[truthy-bool]
             return
 
         # Preset must be 'Auto'
@@ -138,7 +138,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan. Auto-mode if no argument is given."""
-        if not self._device_control:
+        if not self._device_control:  # type: ignore[truthy-bool]
             return
 
         if percentage is not None:
@@ -151,7 +151,7 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        if not self._device_control:
+        if not self._device_control:  # type: ignore[truthy-bool]
             return
 
         if percentage == 0:
@@ -165,6 +165,6 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        if not self._device_control:
+        if not self._device_control:  # type: ignore[truthy-bool]
             return
         await self._api(self._device_control.turn_off())

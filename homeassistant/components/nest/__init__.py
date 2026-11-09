@@ -186,8 +186,8 @@ class SignalUpdateCallback:
 
     def _supported_traits(self, device_id: str) -> list[str]:
         if (
-            not self._config_entry.runtime_data
-            or not (device_manager := self._config_entry.runtime_data.device_manager)
+            not self._config_entry.runtime_data  # type: ignore[truthy-bool]
+            or not (device_manager := self._config_entry.runtime_data.device_manager)  # type: ignore[truthy-bool]
             or not (device := device_manager.devices.get(device_id))
         ):
             return []
@@ -264,7 +264,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None
     await auth.async_get_access_token()
 
     subscriber = await api.new_subscriber(hass, entry, auth)
-    if not subscriber:
+    if not subscriber:  # type: ignore[truthy-bool]
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="subscriber_create_failed",

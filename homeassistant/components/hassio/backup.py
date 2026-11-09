@@ -202,7 +202,7 @@ class SupervisorBackupAgent(BackupAgent):
         The upload will be skipped if the backup already exists in the agent's location.
         """
         with suppress(BackupNotFound):
-            if await self.async_get_backup(backup.backup_id):
+            if await self.async_get_backup(backup.backup_id):  # type: ignore[truthy-bool]
                 _LOGGER.debug(
                     "Backup %s already exists in location %s",
                     backup.backup_id,
@@ -578,7 +578,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         if (
             # Check for None to be backwards compatible with the old BackupAgent API,
             # this can be removed in HA Core 2025.10
-            backup
+            backup  # type: ignore[truthy-bool]
             and restore_homeassistant
             and restore_database != backup.database_included
         ):

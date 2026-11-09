@@ -218,7 +218,7 @@ async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     integrations = await async_get_integrations(hass, SUPPORTED_DOMAINS)
     return {
         domain: integration_or_exception.name
-        if (integration_or_exception := integrations[domain])
+        if (integration_or_exception := integrations[domain])  # type: ignore[truthy-bool]
         and not isinstance(integration_or_exception, Exception)
         else domain
         for domain in SUPPORTED_DOMAINS

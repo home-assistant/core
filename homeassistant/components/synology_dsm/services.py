@@ -45,7 +45,7 @@ async def _service_handler(call: ServiceCall) -> None:
             translation_placeholders={"serials": ", ".join(sorted(dsm_devices))},
         )
 
-    if not dsm_device:
+    if not dsm_device:  # type: ignore[truthy-bool]
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="serial_not_found",

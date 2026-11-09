@@ -61,7 +61,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="score",
         value_fn=lambda sleeper: (
-            sleeper.sleep_data.sleep_score if sleeper.sleep_data else None
+            sleeper.sleep_data.sleep_score if sleeper.sleep_data else None  # type: ignore[truthy-bool]
         ),
     ),
     SleepIQSensorEntityDescription(
@@ -73,7 +73,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda sleeper: (
             round(sleeper.sleep_data.duration / 3600, 1)
-            if sleeper.sleep_data and sleeper.sleep_data.duration
+            if sleeper.sleep_data and sleeper.sleep_data.duration  # type: ignore[truthy-bool]
             else None
         ),
     ),
@@ -83,7 +83,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="bpm",
         value_fn=lambda sleeper: (
-            sleeper.sleep_data.heart_rate if sleeper.sleep_data else None
+            sleeper.sleep_data.heart_rate if sleeper.sleep_data else None  # type: ignore[truthy-bool]
         ),
     ),
     SleepIQSensorEntityDescription(
@@ -92,7 +92,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="brpm",
         value_fn=lambda sleeper: (
-            sleeper.sleep_data.respiratory_rate if sleeper.sleep_data else None
+            sleeper.sleep_data.respiratory_rate if sleeper.sleep_data else None  # type: ignore[truthy-bool]
         ),
     ),
     SleepIQSensorEntityDescription(
@@ -101,7 +101,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        value_fn=lambda sleeper: sleeper.sleep_data.hrv if sleeper.sleep_data else None,
+        value_fn=lambda sleeper: sleeper.sleep_data.hrv if sleeper.sleep_data else None,  # type: ignore[truthy-bool]
     ),
 )
 

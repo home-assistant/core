@@ -201,7 +201,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if TYPE_CHECKING:
-            assert self.sensor_data
+            assert self.sensor_data  # type: ignore[truthy-bool]
         return self.entity_description.value_fn(self.sensor_data)
 
 

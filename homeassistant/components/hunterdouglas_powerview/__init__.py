@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
             f"Connection error to PowerView hub {hub_address}: {err}"
         ) from err
 
-    if not device_info:
+    if not device_info:  # type: ignore[truthy-bool]
         raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
     if CONF_API_VERSION not in config:

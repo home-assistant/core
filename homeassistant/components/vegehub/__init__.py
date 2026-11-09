@@ -93,7 +93,7 @@ def get_webhook_handler(
             )
         data = await request.json()
 
-        if coordinator:
+        if coordinator:  # type: ignore[truthy-bool]
             await coordinator.update_from_webhook(data)
 
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)

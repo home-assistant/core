@@ -80,7 +80,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         """Close the connection."""
         if (
             threading.get_ident() in self.recorder_and_worker_thread_ids
-            and self._conn
+            and self._conn  # type: ignore[truthy-bool]
             and hasattr(self._conn, "current")
             and (conn := self._conn.current())
         ):

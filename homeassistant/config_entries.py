@@ -1729,7 +1729,7 @@ class ConfigEntriesFlowManager(
     ) -> tuple[ConfigFlow, ConfigFlowResult]:
         """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
-        if not flow:
+        if not flow:  # type: ignore[truthy-bool]
             raise data_entry_flow.UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler

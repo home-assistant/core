@@ -222,7 +222,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             redact_debug_log=True,
         )
 
-        if not self.connection:
+        if not self.connection:  # type: ignore[truthy-bool]
             LOGGER.error("Unable to establish a connection with %s", self.host)
             return
 

@@ -126,7 +126,7 @@ async def async_validate_trigger_config(
     config = TRIGGER_SCHEMA(config)
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if not device_entry:
+    if not device_entry:  # type: ignore[truthy-bool]
         raise InvalidDeviceAutomationConfig(
             f"Device {config[CONF_DEVICE_ID]} not found"
         )
