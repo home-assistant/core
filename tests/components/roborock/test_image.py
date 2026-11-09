@@ -172,6 +172,26 @@ async def test_map_status_change(
         assert body != old_body
 
 
+@patch("homeassistant.components.roborock.coordinator.MAP_SLEEP", 0)
+async def test_restore_map_when_device_reports_no_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test restoring the last known map when the device reports no map."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.status.map_present = 0
+    fake_vacuum.v1_properties.status.refresh.side_effect = None
+
+    freezer.tick(V1_LOCAL_NOT_CLEANING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert fake_vacuum.v1_properties.maps.set_current_map.await_args.args == (1,)
+    fake_vacuum.v1_properties.home.refresh.assert_awaited()
+
+
 @pytest.mark.parametrize(
     ("multi_maps_list", "expected_entity_ids"),
     [

@@ -1,5 +1,6 @@
 """Roborock Coordinator."""
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -37,6 +38,7 @@ from .const import (
     A01_UPDATE_INTERVAL,
     DOMAIN,
     IMAGE_CACHE_INTERVAL,
+    MAP_SLEEP,
     Q10_UPDATE_INTERVAL,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
@@ -167,6 +169,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         if mac := properties_api.network_info.mac:
             self.device_info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
         self.last_update_state: str | None = None
+        self._last_map_flag: int | None = properties_api.maps.current_map
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
         self._last_home_update_attempt = dt_util.utcnow()
         self.last_home_update: datetime | None = None
@@ -297,6 +300,19 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         )
         _LOGGER.debug("Updated device properties")
 
+    async def _restore_map(self) -> None:
+        """Restore the last known map if the device reports no map."""
+        if self._last_map_flag is None:
+            return
+        try:
+            await self.properties_api.maps.set_current_map(self._last_map_flag)
+            await asyncio.sleep(MAP_SLEEP)
+            await self.properties_api.home.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to restore map: %s", ex)
+        else:
+            self.last_home_update = dt_util.utcnow()
+
     @override
     async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
@@ -319,6 +335,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
         # since the last map update, you can update the map.
         new_status = self.properties_api.status
+        if (current_map := self.properties_api.maps.current_map) is not None:
+            self._last_map_flag = current_map
+        if not new_status.map_present and not new_status.in_cleaning:
+            await self._restore_map()
         if (
             new_status.in_cleaning
             and (dt_util.utcnow() - self._last_home_update_attempt)
