@@ -306,8 +306,8 @@ class PersonStorageCollection(collection.DictStorageCollection):
 class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
-    @override
     @callback
+    @override
     def ws_list_item(
         self,
         hass: HomeAssistant,

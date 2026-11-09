@@ -125,8 +125,8 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         self._state_v2_confirmed = True
         return state_v2
 
-    @override
     @callback
+    @override
     def async_set_updated_data(self, data: WatergateAgregatedRequests) -> None:
         """Manually update data, notify listeners and DO NOT reset refresh interval."""
 

@@ -332,8 +332,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self.title = ""
 
     @staticmethod
-    @override
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> GenericOptionsFlowHandler:

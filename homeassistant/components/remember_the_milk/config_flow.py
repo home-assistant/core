@@ -47,8 +47,8 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @classmethod
-    @override
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: RememberTheMilkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

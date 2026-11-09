@@ -320,8 +320,8 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
                 )
             )
 
-    @override
     @callback
+    @override
     def _unschedule_refresh(self) -> None:
         """Stop listening to fetched price data when unused."""
         super()._unschedule_refresh()

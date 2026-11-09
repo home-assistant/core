@@ -144,8 +144,8 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    @override
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ElevenLabsConfigEntry,
     ) -> OptionsFlow:

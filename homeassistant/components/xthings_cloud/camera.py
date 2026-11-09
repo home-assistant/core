@@ -242,8 +242,8 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._pending_candidates.pop(session_id, None)
         return self._kvs_sessions.pop(session_id, None)
 
-    @override
     @callback
+    @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close WebRTC session and clean up KVS signaling."""
         kvs_client = self._remove_webrtc_session(session_id)

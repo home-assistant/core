@@ -144,8 +144,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             else "en"
         )
 
-    @override
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._voices
