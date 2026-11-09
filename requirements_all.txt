@@ -3618,7 +3618,7 @@ yt-dlp[default]==2026.07.04
 zabbix-utils==2.0.4
 
 # homeassistant.components.zamg
-zamg==0.4.1
+zamg==0.5.0
 
 # homeassistant.components.zimi
 zcc-helper==3.8
