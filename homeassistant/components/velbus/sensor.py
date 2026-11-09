@@ -155,7 +155,16 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
 
         if is_counter:
-            self._attr_name = f"{self._attr_name}-counter"
+            self._attr_translation_key = "counter"
+            self._attr_translation_placeholders = {"channel_name": channel.get_name()}
+            del self._attr_name
+
+    @override
+    def _default_to_device_class_name(self) -> bool:
+        """Use entity translations instead of device class for counter totals."""
+        if self._is_counter:
+            return False
+        return super()._default_to_device_class_name()
 
     @property
     @override

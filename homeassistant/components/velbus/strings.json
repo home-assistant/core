@@ -58,12 +58,17 @@
   "entity": {
     "light": {
       "button_light": {
-        "name": "Button LED"
+        "name": "LED {channel_name}"
       }
     },
     "select": {
       "select_program": {
         "name": "Program"
+      }
+    },
+    "sensor": {
+      "counter": {
+        "name": "{channel_name} counter"
       }
     }
   },
@@ -88,9 +93,6 @@
     },
     "scan_failed": {
       "message": "Scan service: {error}."
-    },
-    "scan_start_failed": {
-      "message": "Connection error while connecting to Velbus: {error}."
     },
     "set_memo_text_failed": {
       "message": "Failed to set the memo text on the Velbus module: {error}."

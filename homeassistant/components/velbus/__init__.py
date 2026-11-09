@@ -61,8 +61,7 @@ async def velbus_scan_task(
     except ConnectionError as ex:
         raise PlatformNotReady(
             translation_domain=DOMAIN,
-            translation_key="scan_start_failed",
-            translation_placeholders={"error": str(ex)},
+            translation_key="connection_failed",
         ) from ex
     # create all modules
     dev_reg = dr.async_get(hass)

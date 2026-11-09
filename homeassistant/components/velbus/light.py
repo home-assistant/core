@@ -120,7 +120,8 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the button light (led)."""
         super().__init__(channel)
-        self._attr_name = f"LED {self._channel.get_name()}"
+        del self._attr_name
+        self._attr_translation_placeholders = {"channel_name": channel.get_name()}
 
     @property
     @override
