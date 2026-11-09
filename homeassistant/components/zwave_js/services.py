@@ -34,11 +34,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
@@ -321,8 +317,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ),
     )
 
-    services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
-    services.async_register()
+    hass.services.async_register(
+        const.DOMAIN,
+        const.SERVICE_REFRESH_VALUE,
+        _async_poll_value,
+        schema=probatio.Schema(
+            {
+                probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                probatio.Optional(
+                    const.ATTR_REFRESH_ALL_VALUES, default=False
+                ): cv.boolean,
+            }
+        ),
+    )
 
 
 @callback
@@ -963,76 +970,26 @@ async def _async_refresh_notifications(call: ServiceCall) -> None:
     await _async_call_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
 
 
-class ZWaveServices:
-    """Class that holds our services (Zwave Commands).
+async def _async_poll_value(call: ServiceCall) -> None:
+    """Poll value on a node."""
+    ent_reg = er.async_get(call.hass)
+    entries: list[er.RegistryEntry] = []
+    for entity_id in set(expand_entity_ids(call.hass, call.data[ATTR_ENTITY_ID])):
+        entry = ent_reg.async_get(entity_id)
+        if entry is None or entry.platform != const.DOMAIN:
+            _LOGGER.info("Entity %s is not a valid %s entity", entity_id, const.DOMAIN)
+            continue
+        entries.append(entry)
 
-    Services that should be published to hass.
-    """
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        ent_reg: er.EntityRegistry,
-        dev_reg: dr.DeviceRegistry,
-    ) -> None:
-        """Initialize with hass object."""
-        self._hass = hass
-        self._ent_reg = ent_reg
-        self._dev_reg = dev_reg
-
-    @callback
-    def async_register(self) -> None:
-        """Register all our services."""
-
-        @callback
-        def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate entities exist and are from the zwave_js platform."""
-            val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
-            invalid_entities = []
-            for entity_id in val[ATTR_ENTITY_ID]:
-                entry = self._ent_reg.async_get(entity_id)
-                if entry is None or entry.platform != const.DOMAIN:
-                    _LOGGER.info(
-                        "Entity %s is not a valid %s entity", entity_id, const.DOMAIN
-                    )
-                    invalid_entities.append(entity_id)
-
-            # Remove invalid entities
-            val[ATTR_ENTITY_ID] = list(set(val[ATTR_ENTITY_ID]) - set(invalid_entities))
-
-            if not val[ATTR_ENTITY_ID]:
-                raise probatio.Invalid(
-                    f"No {const.DOMAIN} entities found in service call"
-                )
-
-            return val
-
-        # Should be adjusted to register actions outside the ZWaveServices class
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_REFRESH_VALUE,
-            self.async_poll_value,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
-                        probatio.Optional(
-                            const.ATTR_REFRESH_ALL_VALUES, default=False
-                        ): cv.boolean,
-                    },
-                    validate_entities,
-                )
-            ),
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=const.DOMAIN,
+            translation_key="no_entities_found",
         )
 
-    async def async_poll_value(self, service: ServiceCall) -> None:
-        """Poll value on a node."""
-        for entity_id in service.data[ATTR_ENTITY_ID]:
-            entry = self._ent_reg.async_get(entity_id)
-            assert entry  # Schema validation would have failed if we can't do this
-            async_dispatcher_send(
-                self._hass,
-                f"{const.DOMAIN}_{entry.unique_id}_poll_value",
-                service.data[const.ATTR_REFRESH_ALL_VALUES],
-            )
+    for entry in entries:
+        async_dispatcher_send(
+            call.hass,
+            f"{const.DOMAIN}_{entry.unique_id}_poll_value",
+            call.data[const.ATTR_REFRESH_ALL_VALUES],
+        )

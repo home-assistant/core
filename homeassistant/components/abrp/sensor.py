@@ -207,7 +207,6 @@ async def async_setup_entry(
 ) -> None:
     """Create telemetry sensors for every vehicle in the ABRP garage."""
     runtime = entry.runtime_data
-    vehicles = runtime.vehicles
     telemetry_coordinator = runtime.telemetry_coordinator
 
     added: set[tuple[int, Metric]] = set()
@@ -216,7 +215,7 @@ async def async_setup_entry(
     def _add_new_sensors() -> None:
         """Create a sensor per ``(vehicle, metric)`` pair that now carries a value."""
         entities: list[SensorEntity] = []
-        for raw, _ in vehicles:
+        for raw, _ in runtime.garage_coordinator.data:
             vehicle_id = raw.vehicle_id
             tlm = telemetry_coordinator.data.get(vehicle_id)
             if tlm is None:

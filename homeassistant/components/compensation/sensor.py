@@ -33,6 +33,8 @@ from homeassistant.core import (
     State,
     callback,
 )
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -104,7 +106,16 @@ async def async_setup_entry(
     name = entry.title
 
     async_add_entities(
-        [CompensationSensor(entry.entry_id, name, source, attribute, conf)]
+        [
+            CompensationSensor(
+                entry.entry_id,
+                name,
+                source,
+                attribute,
+                conf,
+                device=async_entity_id_to_device(hass, source),
+            )
+        ]
     )
 
 
@@ -120,9 +131,11 @@ class CompensationSensor(SensorEntity):
         source: str,
         attribute: str | None,
         config: dict[str, Any],
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the Compensation sensor."""
 
+        self.device_entry = device
         self._attr_name = name
         self._source_entity_id = source
         self._source_attribute = attribute

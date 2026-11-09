@@ -5,6 +5,7 @@ import copy
 from unittest.mock import patch
 
 from aioairzone.const import API_DATA, API_SYSTEMS
+from aioairzone.exceptions import IaqSensorNotAvailable
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -69,6 +70,10 @@ async def test_airzone_sensors_availability(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",

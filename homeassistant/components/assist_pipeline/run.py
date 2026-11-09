@@ -86,7 +86,7 @@ class _PipelineProcessor(Protocol):
         """Invalidate active processing."""
 
     def cleanup(self) -> None:
-        """Clean up resources after a pipeline error."""
+        """Clean up resources when a run stops early."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

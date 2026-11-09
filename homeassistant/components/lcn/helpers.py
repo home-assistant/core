@@ -305,7 +305,7 @@ async def async_update_config_entry(
 
 
 def get_device_config(
-    address: AddressType, config_entry: ConfigEntry
+    address: AddressType, config_entry: LcnConfigEntry
 ) -> ConfigType | None:
     """Return the device configuration for given address and ConfigEntry."""
     for device_config in config_entry.data[CONF_DEVICES]:

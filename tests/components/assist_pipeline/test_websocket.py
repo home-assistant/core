@@ -14,7 +14,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import (
     DOMAIN,
-    MS_PER_CHUNK,
     SAMPLE_CHANNELS,
     SAMPLE_RATE,
     SAMPLE_WIDTH,
@@ -33,7 +32,6 @@ from homeassistant.helpers import chat_session, device_registry as dr
 from .conftest import (
     BYTES_ONE_SECOND,
     BYTES_PER_CHUNK,
-    MockSTTProviderEntity,
     MockWakeWordEntity,
     MockWakeWordEntity2,
     make_10ms_chunk,
@@ -2804,143 +2802,3 @@ async def test_intent_progress_event(
                 events.append(msg["event"]["data"])
 
     assert events == expected_delta_events
-
-
-WAKE_WORD_AUDIO_RUN = {
-    "type": "assist_pipeline/run",
-    "start_stage": "stt",
-    "end_stage": "stt",
-    "input": {
-        "sample_rate": SAMPLE_RATE,
-        "wake_word_phrase": "okay nabu",
-        "wake_word_audio_ms": MS_PER_CHUNK,
-    },
-}
-
-
-@pytest.mark.usefixtures("init_components")
-async def test_stt_wake_word_audio(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mock_stt_provider_entity: MockSTTProviderEntity,
-) -> None:
-    """Test a run whose audio starts with the wake word the client detected."""
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(WAKE_WORD_AUDIO_RUN)
-
-    msg = await client.receive_json()
-    assert msg["success"]
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "wake_word-end"
-    assert msg["event"]["data"] == {
-        "wake_word_output": {
-            "wake_word_phrase": "okay nabu",
-            "wake_word_audio_ms": MS_PER_CHUNK,
-        }
-    }
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-start"
-
-    command = make_10ms_chunk(b"command")
-    await client.send_bytes(bytes([handler_id]) + make_10ms_chunk(b"okay nabu"))
-    await client.send_bytes(bytes([handler_id]) + command)
-    await client.send_bytes(bytes([handler_id]))
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-end"
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-
-    # The wake word audio is removed before speech-to-text
-    assert b"".join(mock_stt_provider_entity.received) == command
-
-
-@pytest.mark.usefixtures("init_components", "mock_stt_provider_entity")
-async def test_stt_wake_word_audio_duplicate(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
-    """Test a client's wake word is rejected when another run just woke up."""
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(WAKE_WORD_AUDIO_RUN)
-
-    msg = await client.receive_json()
-    assert msg["success"]
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-    handler_id = msg["event"]["data"]["runner_data"]["stt_binary_handler_id"]
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "wake_word-end"
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-start"
-
-    await client.send_bytes(bytes([handler_id]))
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "stt-end"
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-
-    # Same wake word within the cooldown
-    await client.send_json_auto_id(WAKE_WORD_AUDIO_RUN)
-
-    msg = await client.receive_json()
-    assert msg["success"]
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-start"
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "wake_word-rejected"
-
-    msg = await client.receive_json()
-    assert msg["event"]["type"] == "run-end"
-
-
-@pytest.mark.parametrize(
-    "run_input",
-    [
-        pytest.param(
-            {"sample_rate": SAMPLE_RATE, "wake_word_audio_ms": MS_PER_CHUNK},
-            id="no_wake_word_phrase",
-        ),
-        pytest.param(
-            {
-                "sample_rate": SAMPLE_RATE,
-                "wake_word_phrase": "okay nabu",
-                "wake_word_audio_ms": 0,
-            },
-            id="no_wake_word_audio",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("init_components")
-async def test_stt_wake_word_audio_invalid(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    run_input: dict[str, Any],
-) -> None:
-    """Test wake word audio needs its phrase and a length."""
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "assist_pipeline/run",
-            "start_stage": "stt",
-            "end_stage": "stt",
-            "input": run_input,
-        }
-    )
-
-    msg = await client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_format"

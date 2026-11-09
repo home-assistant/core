@@ -17,48 +17,21 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
 from homeassistant.components.mastodon.const import (
-    ATTR_ACCOUNT_NAME,
-    ATTR_ATTRIBUTION_DOMAINS,
-    ATTR_AVATAR,
-    ATTR_AVATAR_DESCRIPTION,
     ATTR_AVATAR_MIME_TYPE,
-    ATTR_BOT,
-    ATTR_CONTENT_WARNING,
-    ATTR_DELETE_AVATAR,
-    ATTR_DELETE_HEADER,
-    ATTR_DISCOVERABLE,
-    ATTR_DISPLAY_NAME,
-    ATTR_DURATION,
-    ATTR_FIELDS,
     ATTR_FOCUS_X,
     ATTR_FOCUS_Y,
-    ATTR_HEADER,
-    ATTR_HEADER_DESCRIPTION,
     ATTR_HEADER_MIME_TYPE,
-    ATTR_HIDE_NOTIFICATIONS,
-    ATTR_IDEMPOTENCY_KEY,
-    ATTR_IN_REPLY_TO,
-    ATTR_LANGUAGE,
-    ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_SOURCE,
-    ATTR_NOTE,
-    ATTR_QUOTE_APPROVAL_POLICY,
-    ATTR_QUOTED_STATUS,
-    ATTR_STATUS,
     ATTR_THUMBNAIL,
-    ATTR_VISIBILITY,
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import (
-    SERVICE_GET_ACCOUNT,
-    SERVICE_MUTE_ACCOUNT,
-    SERVICE_POST,
-    SERVICE_UNMUTE_ACCOUNT,
-    SERVICE_UPDATE_PROFILE,
+    MastodonService,
+    MastodonServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -87,10 +60,10 @@ async def test_get_account_success(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_ACCOUNT,
+        MastodonService.GET_ACCOUNT,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
         },
         blocking=True,
         return_response=True,
@@ -118,10 +91,10 @@ async def test_get_account_failure(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_ACCOUNT,
+            MastodonService.GET_ACCOUNT,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_ACCOUNT_NAME: "@test@mastodon.social",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.ACCOUNT_NAME: "@test@mastodon.social",
             },
             blocking=True,
             return_response=True,
@@ -136,31 +109,31 @@ async def test_get_account_failure(
     ),
     [
         (
-            {ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social"},
+            {MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social"},
             True,
             None,
         ),
         (
             {
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-                ATTR_HIDE_NOTIFICATIONS: False,
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
+                MastodonServiceArgument.HIDE_NOTIFICATIONS: False,
             },
             False,
             None,
         ),
         (
             {
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-                ATTR_DURATION: timedelta(hours=2),
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
+                MastodonServiceArgument.DURATION: timedelta(hours=2),
             },
             True,
             7200,
         ),
         (
             {
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-                ATTR_DURATION: timedelta(hours=12),
-                ATTR_HIDE_NOTIFICATIONS: False,
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
+                MastodonServiceArgument.DURATION: timedelta(hours=12),
+                MastodonServiceArgument.HIDE_NOTIFICATIONS: False,
             },
             False,
             43200,
@@ -181,14 +154,15 @@ async def test_mute_account_success(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_MUTE_ACCOUNT,
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | service_data,
+        MastodonService.MUTE_ACCOUNT,
+        {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+        | service_data,
         blocking=True,
         return_response=False,
     )
 
     mock_mastodon_client.account_lookup.assert_called_once_with(
-        acct=service_data[ATTR_ACCOUNT_NAME]
+        acct=service_data[MastodonServiceArgument.ACCOUNT_NAME]
     )
     account = mock_mastodon_client.account_lookup.return_value
     assert mock_mastodon_client.account_mute.call_count == 1
@@ -221,11 +195,11 @@ async def test_mute_account_duration_too_long(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MUTE_ACCOUNT,
+            MastodonService.MUTE_ACCOUNT,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
-                ATTR_DURATION: timedelta(seconds=10),
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
+                MastodonServiceArgument.DURATION: timedelta(seconds=10),
             },
             blocking=True,
             return_response=False,
@@ -250,10 +224,10 @@ async def test_mute_account_failure_not_found(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MUTE_ACCOUNT,
+            MastodonService.MUTE_ACCOUNT,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
             },
             blocking=True,
             return_response=False,
@@ -281,10 +255,10 @@ async def test_mute_account_failure_api_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_MUTE_ACCOUNT,
+            MastodonService.MUTE_ACCOUNT,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
             },
             blocking=True,
             return_response=False,
@@ -309,10 +283,10 @@ async def test_unmute_account_success(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UNMUTE_ACCOUNT,
+        MastodonService.UNMUTE_ACCOUNT,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
         },
         blocking=True,
         return_response=False,
@@ -340,10 +314,10 @@ async def test_unmute_account_failure_not_found(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UNMUTE_ACCOUNT,
+            MastodonService.UNMUTE_ACCOUNT,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
             },
             blocking=True,
             return_response=False,
@@ -371,10 +345,10 @@ async def test_unmute_account_failure_api_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UNMUTE_ACCOUNT,
+            MastodonService.UNMUTE_ACCOUNT,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.ACCOUNT_NAME: "@trwnh@mastodon.social",
             },
             blocking=True,
             return_response=False,
@@ -392,7 +366,7 @@ async def test_unmute_account_failure_api_error(
     [
         (
             {
-                ATTR_STATUS: "test toot",
+                MastodonServiceArgument.STATUS: "test toot",
             },
             {
                 "status": "test toot",
@@ -408,7 +382,10 @@ async def test_unmute_account_failure_api_error(
             },
         ),
         (
-            {ATTR_STATUS: "test toot", ATTR_VISIBILITY: "private"},
+            {
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.VISIBILITY: "private",
+            },
             {
                 "status": "test toot",
                 "spoiler_text": None,
@@ -424,9 +401,9 @@ async def test_unmute_account_failure_api_error(
         ),
         (
             {
-                ATTR_STATUS: "test toot",
-                ATTR_CONTENT_WARNING: "Spoiler",
-                ATTR_VISIBILITY: "private",
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.CONTENT_WARNING: "Spoiler",
+                MastodonServiceArgument.VISIBILITY: "private",
             },
             {
                 "status": "test toot",
@@ -443,10 +420,10 @@ async def test_unmute_account_failure_api_error(
         ),
         (
             {
-                ATTR_STATUS: "test toot",
-                ATTR_CONTENT_WARNING: "Spoiler",
-                ATTR_LANGUAGE: "nl",
-                ATTR_MEDIA: "/image.jpg",
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.CONTENT_WARNING: "Spoiler",
+                MastodonServiceArgument.LANGUAGE: "nl",
+                MastodonServiceArgument.MEDIA: "/image.jpg",
             },
             {
                 "status": "test toot",
@@ -463,11 +440,11 @@ async def test_unmute_account_failure_api_error(
         ),
         (
             {
-                ATTR_STATUS: "test toot",
-                ATTR_CONTENT_WARNING: "Spoiler",
-                ATTR_LANGUAGE: "en",
-                ATTR_MEDIA: "/image.jpg",
-                ATTR_MEDIA_DESCRIPTION: "A test image",
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.CONTENT_WARNING: "Spoiler",
+                MastodonServiceArgument.LANGUAGE: "en",
+                MastodonServiceArgument.MEDIA: "/image.jpg",
+                MastodonServiceArgument.MEDIA_DESCRIPTION: "A test image",
             },
             {
                 "status": "test toot",
@@ -483,7 +460,10 @@ async def test_unmute_account_failure_api_error(
             },
         ),
         (
-            {ATTR_STATUS: "test toot", ATTR_LANGUAGE: "invalid-lang"},
+            {
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.LANGUAGE: "invalid-lang",
+            },
             {
                 "status": "test toot",
                 "language": "invalid-lang",
@@ -499,8 +479,8 @@ async def test_unmute_account_failure_api_error(
         ),
         (
             {
-                ATTR_STATUS: "test toot\nwith idempotency",
-                ATTR_IDEMPOTENCY_KEY: "post_once_only",
+                MastodonServiceArgument.STATUS: "test toot\nwith idempotency",
+                MastodonServiceArgument.IDEMPOTENCY_KEY: "post_once_only",
             },
             {
                 "status": "test toot\nwith idempotency",
@@ -516,7 +496,10 @@ async def test_unmute_account_failure_api_error(
             },
         ),
         (
-            {ATTR_STATUS: "test toot", ATTR_QUOTE_APPROVAL_POLICY: "followers"},
+            {
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.QUOTE_APPROVAL_POLICY: "followers",
+            },
             {
                 "status": "test toot",
                 "spoiler_text": None,
@@ -531,7 +514,10 @@ async def test_unmute_account_failure_api_error(
             },
         ),
         (
-            {ATTR_STATUS: "test toot", ATTR_IN_REPLY_TO: "1234567890"},
+            {
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.IN_REPLY_TO: "1234567890",
+            },
             {
                 "status": "test toot",
                 "spoiler_text": None,
@@ -546,7 +532,10 @@ async def test_unmute_account_failure_api_error(
             },
         ),
         (
-            {ATTR_STATUS: "test toot", ATTR_QUOTED_STATUS: "1234567890"},
+            {
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.QUOTED_STATUS: "1234567890",
+            },
             {
                 "status": "test toot",
                 "spoiler_text": None,
@@ -583,9 +572,9 @@ async def test_service_post(
     ):
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             }
             | payload,
             blocking=True,
@@ -609,11 +598,11 @@ async def test_service_post_local_media_source(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_POST,
+        MastodonService.POST,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_STATUS: "test toot",
-            ATTR_MEDIA: [
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            MastodonServiceArgument.STATUS: "test toot",
+            MastodonServiceArgument.MEDIA: [
                 {
                     ATTR_MEDIA_SOURCE: {
                         "media_content_id": "media-source://media_source/local/screenshot.jpg",
@@ -685,11 +674,11 @@ async def test_service_post_camera_source(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
-                ATTR_MEDIA: [
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://camera/camera.demo_camera",
@@ -744,11 +733,11 @@ async def test_service_post_image_source(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
-                ATTR_MEDIA: [
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://image/image.test",
@@ -805,11 +794,11 @@ async def test_service_post_tts_source(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
-                ATTR_MEDIA: [
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://tts/demo?message=Tooooot&language=en",
@@ -872,11 +861,11 @@ async def test_service_post_media_source_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
-                ATTR_MEDIA: [
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://xbox/123456789/",
@@ -898,7 +887,7 @@ async def test_service_post_media_source_not_supported(
     [
         (
             {
-                ATTR_MEDIA: [
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://media_source/local/screenshot.jpg",
@@ -915,7 +904,7 @@ async def test_service_post_media_source_not_supported(
         ),
         (
             {
-                ATTR_MEDIA: [
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://media_source/local/test.mp3",
@@ -934,7 +923,7 @@ async def test_service_post_media_source_not_supported(
         ),
         (
             {
-                ATTR_MEDIA: [
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://media_source/local/test.mp3",
@@ -951,7 +940,7 @@ async def test_service_post_media_source_not_supported(
         ),
         (
             {
-                ATTR_MEDIA: [
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://media_source/local/not_media.txt",
@@ -964,7 +953,7 @@ async def test_service_post_media_source_not_supported(
         ),
         (
             {
-                ATTR_MEDIA: [
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://tts/demo?message=Tooooot&language=en",
@@ -996,10 +985,10 @@ async def test_service_post_media_source_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.STATUS: "test toot",
             }
             | payload,
             blocking=True,
@@ -1021,11 +1010,11 @@ async def test_service_post_media_source_upload_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
-                ATTR_MEDIA: [
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
                             "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
@@ -1050,11 +1039,11 @@ async def test_service_post_absolute_path_deprecated(
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
+            MastodonService.POST,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
-                ATTR_MEDIA: "/image.jpg",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.MEDIA: "/image.jpg",
             },
             blocking=True,
         )
@@ -1069,15 +1058,15 @@ async def test_service_post_absolute_path_deprecated(
     [
         (
             {
-                ATTR_STATUS: "test toot",
+                MastodonServiceArgument.STATUS: "test toot",
             },
             {"status": "test toot", "spoiler_text": None, "visibility": None},
         ),
         (
             {
-                ATTR_STATUS: "test toot",
-                ATTR_CONTENT_WARNING: "Spoiler",
-                ATTR_MEDIA: "/image.jpg",
+                MastodonServiceArgument.STATUS: "test toot",
+                MastodonServiceArgument.CONTENT_WARNING: "Spoiler",
+                MastodonServiceArgument.MEDIA: "/image.jpg",
             },
             {
                 "status": "test toot",
@@ -1112,8 +1101,9 @@ async def test_post_service_failed(
     with pytest.raises(HomeAssistantError, match="Unable to send message"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            MastodonService.POST,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+            | payload,
             blocking=True,
             return_response=False,
         )
@@ -1139,8 +1129,9 @@ async def test_post_media_upload_failed(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            MastodonService.POST,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+            | payload,
             blocking=True,
             return_response=False,
         )
@@ -1163,8 +1154,9 @@ async def test_post_path_not_whitelisted(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            MastodonService.POST,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+            | payload,
             blocking=True,
             return_response=False,
         )
@@ -1188,8 +1180,9 @@ async def test_idempotency_key_too_short(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            MastodonService.POST,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+            | payload,
             blocking=True,
             return_response=False,
         )
@@ -1212,8 +1205,9 @@ async def test_service_entry_availability(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id} | payload,
+            MastodonService.POST,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry2.entry_id}
+            | payload,
             blocking=True,
             return_response=False,
         )
@@ -1222,8 +1216,8 @@ async def test_service_entry_availability(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_POST,
-            {ATTR_CONFIG_ENTRY_ID: "bad-config_id"} | payload,
+            MastodonService.POST,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: "bad-config_id"} | payload,
             blocking=True,
             return_response=False,
         )
@@ -1234,51 +1228,58 @@ async def test_service_entry_availability(
     ("payload", "kwargs"),
     [
         (
-            {ATTR_DISPLAY_NAME: "Test User"},
-            {ATTR_DISPLAY_NAME: "Test User"},
+            {MastodonServiceArgument.DISPLAY_NAME: "Test User"},
+            {MastodonServiceArgument.DISPLAY_NAME: "Test User"},
         ),
         (
-            {ATTR_NOTE: "bio"},
-            {ATTR_NOTE: "bio"},
+            {MastodonServiceArgument.NOTE: "bio"},
+            {MastodonServiceArgument.NOTE: "bio"},
         ),
         (
-            {ATTR_LOCKED: True},
-            {ATTR_LOCKED: True},
+            {MastodonServiceArgument.LOCKED: True},
+            {MastodonServiceArgument.LOCKED: True},
         ),
         (
-            {ATTR_BOT: False},
-            {ATTR_BOT: False},
+            {MastodonServiceArgument.BOT: False},
+            {MastodonServiceArgument.BOT: False},
         ),
         (
-            {ATTR_DISCOVERABLE: True},
-            {ATTR_DISCOVERABLE: True},
-        ),
-        (
-            {ATTR_FIELDS: [{"name": "Pronouns", "value": "He/Him, They/Them"}]},
-            {ATTR_FIELDS: [("Pronouns", "He/Him, They/Them")]},
-        ),
-        (
-            {ATTR_ATTRIBUTION_DOMAINS: ["example.com", "test.com"]},
-            {ATTR_ATTRIBUTION_DOMAINS: ["example.com", "test.com"]},
+            {MastodonServiceArgument.DISCOVERABLE: True},
+            {MastodonServiceArgument.DISCOVERABLE: True},
         ),
         (
             {
-                ATTR_AVATAR: {
+                MastodonServiceArgument.FIELDS: [
+                    {"name": "Pronouns", "value": "He/Him, They/Them"}
+                ]
+            },
+            {MastodonServiceArgument.FIELDS: [("Pronouns", "He/Him, They/Them")]},
+        ),
+        (
+            {MastodonServiceArgument.ATTRIBUTION_DOMAINS: ["example.com", "test.com"]},
+            {MastodonServiceArgument.ATTRIBUTION_DOMAINS: ["example.com", "test.com"]},
+        ),
+        (
+            {
+                MastodonServiceArgument.AVATAR: {
                     "media_content_id": "media-source://camera/camera.demo_camera",
                     "media_content_type": "image/jpeg",
                 }
             },
-            {ATTR_AVATAR: b"I play the sax\n", ATTR_AVATAR_MIME_TYPE: "image/jpeg"},
+            {
+                MastodonServiceArgument.AVATAR: b"I play the sax\n",
+                ATTR_AVATAR_MIME_TYPE: "image/jpeg",
+            },
         ),
         (
             {
-                ATTR_AVATAR: {
+                MastodonServiceArgument.AVATAR: {
                     "media_content_id": "media-source://media_source/local/screenshot.jpg",
                     "media_content_type": "image/jpeg",
                 }
             },
             {
-                ATTR_AVATAR: Path(
+                MastodonServiceArgument.AVATAR: Path(
                     "tests/testing_config/media/screenshot.jpg"
                 ).resolve(),
                 ATTR_AVATAR_MIME_TYPE: "image/jpeg",
@@ -1286,52 +1287,69 @@ async def test_service_entry_availability(
         ),
         (
             {
-                ATTR_AVATAR: {
+                MastodonServiceArgument.AVATAR: {
                     "media_content_id": "media-source://image/image.test",
                     "media_content_type": "image/png",
                 }
             },
-            {ATTR_AVATAR: b"\x89PNG\n", ATTR_AVATAR_MIME_TYPE: "image/png"},
+            {
+                MastodonServiceArgument.AVATAR: b"\x89PNG\n",
+                ATTR_AVATAR_MIME_TYPE: "image/png",
+            },
         ),
         (
             {
-                ATTR_HEADER: {
+                MastodonServiceArgument.HEADER: {
                     "media_content_id": "media-source://camera/camera.demo_camera",
                     "media_content_type": "image/jpeg",
                 }
             },
-            {ATTR_HEADER: b"I play the sax\n", ATTR_HEADER_MIME_TYPE: "image/jpeg"},
+            {
+                MastodonServiceArgument.HEADER: b"I play the sax\n",
+                ATTR_HEADER_MIME_TYPE: "image/jpeg",
+            },
         ),
         (
             {
-                ATTR_HEADER: {
+                MastodonServiceArgument.HEADER: {
                     "media_content_id": "media-source://image/image.test",
                     "media_content_type": "image/png",
                 }
             },
-            {ATTR_HEADER: b"\x89PNG\n", ATTR_HEADER_MIME_TYPE: "image/png"},
+            {
+                MastodonServiceArgument.HEADER: b"\x89PNG\n",
+                ATTR_HEADER_MIME_TYPE: "image/png",
+            },
         ),
         (
             {
-                ATTR_HEADER: {
+                MastodonServiceArgument.HEADER: {
                     "media_content_id": "media-source://media_source/local/screenshot.jpg",
                     "media_content_type": "image/jpeg",
                 }
             },
             {
-                ATTR_HEADER: Path(
+                MastodonServiceArgument.HEADER: Path(
                     "tests/testing_config/media/screenshot.jpg"
                 ).resolve(),
                 ATTR_HEADER_MIME_TYPE: "image/jpeg",
             },
         ),
         (
-            {ATTR_AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."},
-            {ATTR_AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."},
+            {
+                MastodonServiceArgument.AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."
+            },
+            {
+                MastodonServiceArgument.AVATAR_DESCRIPTION: "Alex wearing a green shirt and glasses."
+            },
         ),
         (
-            {ATTR_HEADER_DESCRIPTION: "Mountain landscape at sunset."},
-            {ATTR_HEADER_DESCRIPTION: "Mountain landscape at sunset."},
+            {
+                MastodonServiceArgument.HEADER_DESCRIPTION: "Mountain landscape at sunset."
+            },
+            {
+                MastodonServiceArgument.HEADER_DESCRIPTION: "Mountain landscape at sunset."
+            },
         ),
     ],
 )
@@ -1355,8 +1373,11 @@ async def test_service_update_profile(
     ):
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_PROFILE,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
+            MastodonService.UPDATE_PROFILE,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                **payload,
+            },
             blocking=True,
             return_response=return_response,
         )
@@ -1368,8 +1389,8 @@ async def test_service_update_profile(
 @pytest.mark.parametrize(
     ("payload", "call_method"),
     [
-        ({ATTR_DELETE_HEADER: True}, "account_delete_header"),
-        ({ATTR_DELETE_AVATAR: True}, "account_delete_avatar"),
+        ({MastodonServiceArgument.DELETE_HEADER: True}, "account_delete_header"),
+        ({MastodonServiceArgument.DELETE_AVATAR: True}, "account_delete_avatar"),
     ],
 )
 @pytest.mark.parametrize("return_response", [True, False])
@@ -1389,8 +1410,8 @@ async def test_service_update_profile_delete_pictures(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_PROFILE,
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
+        MastodonService.UPDATE_PROFILE,
+        {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
         blocking=True,
         return_response=return_response,
     )
@@ -1423,10 +1444,10 @@ async def test_service_update_profile_exceptions(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_PROFILE,
+            MastodonService.UPDATE_PROFILE,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DISPLAY_NAME: "Test User",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.DISPLAY_NAME: "Test User",
             },
             blocking=True,
             return_response=True,
@@ -1459,10 +1480,10 @@ async def test_service_update_profile_media_source_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_PROFILE,
+            MastodonService.UPDATE_PROFILE,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_AVATAR: {
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                MastodonServiceArgument.AVATAR: {
                     "media_content_id": "media-source://xbox/123456789/",
                     "media_content_type": "video",
                 },

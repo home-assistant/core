@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.snooz.const import DOMAIN
@@ -12,7 +13,13 @@ from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import TEST_ADDRESS, TEST_PAIRING_TOKEN, SnoozFixture
+from . import (
+    SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME,
+    TEST_ADDRESS,
+    TEST_PAIRING_TOKEN,
+    SnoozFixture,
+    create_mock_snooz,
+)
 
 
 async def test_setup_retries_when_service_info_not_found(
@@ -46,6 +53,26 @@ async def test_setup_retries_when_service_info_not_found(
         f"Could not find Snooz with address {TEST_ADDRESS}: mock reachability reason"
         in caplog.text
     )
+
+
+async def test_setup_with_device_name_from_characteristic(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup succeeds when the cached advertisement has the bare device name."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
+    )
+    entry.add_to_hass(hass)
+    inject_bluetooth_service_info(hass, SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME)
+
+    device = await create_mock_snooz()
+    with patch("homeassistant.components.snooz.SnoozDevice", return_value=device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_device_registry(
