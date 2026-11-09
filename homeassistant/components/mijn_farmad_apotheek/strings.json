@@ -82,7 +82,7 @@
       "message": "Searching at pharmacy {apb} failed."
     },
     "setup_failed": {
-      "message": "Unable to connect to Farmad: {error}"
+      "message": "Unable to connect to Farmad."
     }
   },
   "services": {
