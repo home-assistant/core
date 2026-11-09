@@ -55,5 +55,25 @@
         "name": "Thunderstorm probability"
       }
     }
+  },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly"
+      }
+    }
+  },
+  "services": {
+    "get_forecasts_extra": {
+      "description": "Retrieves the forecast values that weather.get_forecasts has no place for, such as precipitation type, snow, solar radiation, sunshine and sunrise. They come from the forecast already fetched, so the action makes no API requests.",
+      "fields": {
+        "type": {
+          "description": "The forecast to return the values for.",
+          "name": "Forecast type"
+        }
+      },
+      "name": "Get extra forecast values"
+    }
   }
 }
