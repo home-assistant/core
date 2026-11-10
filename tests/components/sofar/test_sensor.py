@@ -51,7 +51,7 @@ from . import (
     seed_pv_inverter,
 )
 
-# Values the app shows, worked out from other battery_config fields.
+# Values the library works out from other battery_config fields.
 DERIVED_KEYS = {
     "on_grid_discharge_cutoff_soc",
     "off_grid_discharge_cutoff_soc",
@@ -97,7 +97,7 @@ def test_sensor_description_components_are_real() -> None:
     for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS):
         component = getattr(inverter, description.component, None)
         assert component is not None, f"unknown component {description.component!r}"
-        assert description.key in DERIVED_KEYS or hasattr(component, description.key), (
+        assert hasattr(component, description.key), (
             f"{description.component}.{description.key} does not exist"
         )
 
@@ -367,68 +367,6 @@ async def test_value_fn_reads_the_field_its_key_names(
 
 
 @pytest.mark.parametrize(
-    ("key", "values", "expected"),
-    [
-        pytest.param(
-            "on_grid_discharge_cutoff_soc",
-            {"bat_config_depth_of_discharge": 73},
-            27,
-            id="on_grid",
-        ),
-        pytest.param(
-            "on_grid_discharge_cutoff_soc",
-            {"bat_config_depth_of_discharge": None},
-            None,
-            id="on_grid_unread",
-        ),
-        pytest.param(
-            "off_grid_discharge_cutoff_soc",
-            {"bat_config_end_of_discharge": 90},
-            10,
-            id="off_grid",
-        ),
-        pytest.param(
-            "off_grid_discharge_cutoff_soc",
-            {"bat_config_end_of_discharge": None},
-            None,
-            id="off_grid_unread",
-        ),
-        pytest.param(
-            "off_grid_recovery_soc",
-            {"bat_config_end_of_discharge": 90, "bat_config_eps_buffer": 5},
-            15,
-            id="recovery",
-        ),
-        pytest.param(
-            "off_grid_recovery_soc",
-            {"bat_config_end_of_discharge": None, "bat_config_eps_buffer": 5},
-            None,
-            id="recovery_end_of_discharge_unread",
-        ),
-        pytest.param(
-            "off_grid_recovery_soc",
-            {"bat_config_end_of_discharge": 90, "bat_config_eps_buffer": None},
-            None,
-            id="recovery_eps_buffer_unread",
-        ),
-    ],
-)
-async def test_derived_cutoff_soc(
-    init_integration: MockConfigEntry,
-    key: str,
-    values: dict[str, int | None],
-    expected: int | None,
-) -> None:
-    """Test cut-off sensors show what the SofarCloud app shows."""
-    device = init_integration.runtime_data.readings.device
-    with patch.dict(device.battery_config._values, values):
-        assert (
-            next(d for d in SENSOR_DESCRIPTIONS if d.key == key).value_fn(device)
-            == expected
-        )
-
-
-@pytest.mark.parametrize(
     "hide_charge_cutoff",
     [
         pytest.param(deny_charge_cutoff, id="mask_denies"),
@@ -518,13 +456,14 @@ async def _setup_hybrid_with_tower(
     return entry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_battery_pack_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a pack's entities match their snapshot."""
+    """Test a pack's entities match their snapshot, one per cell it has."""
     pack = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"),
         (

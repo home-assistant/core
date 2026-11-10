@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from sofar_modbus.modern.battery_pack import BatteryPack
 
@@ -27,6 +27,11 @@ class SofarEntityDescription(EntityDescription):
     part: SofarPart | None = None  # None keeps the entity on the inverter
 
 
+def entity_unique_id(serial: str, key: str) -> str:
+    """Name an entity by the inverter's serial and its key."""
+    return f"{serial}_{key}"
+
+
 def battery_pack_identifier(serial: str, pack: BatteryPack) -> str:
     """Name the device of one BTS battery pack by its group and place."""
     return f"{serial}_battery_pack_{pack.group_nr}_{pack.pack_nr}"
@@ -43,13 +48,15 @@ def async_remove_unserved_entities(
     # Without a stored set, served is only a guess from the type.
     if SERVED_COMPONENTS not in entry.data:
         return
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
     registry = er.async_get(hass)
     for description in descriptions:
         if description.component in entry.runtime_data.served_components:
             continue
         if (
             entity_id := registry.async_get_entity_id(
-                platform, DOMAIN, f"{entry.unique_id}_{description.key}"
+                platform, DOMAIN, entity_unique_id(entry.unique_id, description.key)
             )
         ) is not None:
             registry.async_remove(entity_id)
@@ -75,7 +82,7 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
 
     def _unique_id(self, serial: str) -> str:
         """Name the entity by the inverter's serial and its key."""
-        return f"{serial}_{self.entity_description.key}"
+        return entity_unique_id(serial, self.entity_description.key)
 
     def _device_info(
         self, runtime_data: SofarRuntimeData, serial: str

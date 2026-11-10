@@ -1,13 +1,18 @@
 """Test pushbullet notification platform."""
 
+import errno
 from http import HTTPStatus
+import os
+from unittest.mock import patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 import requests_mock
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.pushbullet.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_CONFIG
 
@@ -193,3 +198,42 @@ async def test_pushbullet_push_mixed(
         "type": "note",
     }
     assert requests_mock.request_history[-1].json() == expected_body
+
+
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
+@pytest.mark.usefixtures("requests_mock")
+async def test_pushbullet_push_file_read_error(
+    hass: HomeAssistant, error_no: int, translation_key: str
+) -> None:
+    """Test that a file read error raises a translated error."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch(
+            "homeassistant.components.pushbullet.notify.open",
+            side_effect=OSError(error_no, os.strerror(error_no)),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "pushbullet",
+            {"message": "Test", "data": {"file": "/some/file.jpg"}},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": "/some/file.jpg"}
