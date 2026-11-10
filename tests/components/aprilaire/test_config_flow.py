@@ -52,7 +52,7 @@ async def test_config_flow_invalid_data(
         patch("pyaprilaire.client.AprilaireClient", return_value=client),
         patch(
             "homeassistant.components.aprilaire.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -85,7 +85,7 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
         patch("pyaprilaire.client.AprilaireClient", return_value=client),
         patch(
             "homeassistant.components.aprilaire.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
