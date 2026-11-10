@@ -8,7 +8,20 @@ import probatio
 import pytest
 
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
-from homeassistant.components.knx.storage.dpa import FB417, FB418
+from homeassistant.components.knx.storage.dpa import (
+    FB343,
+    FB344,
+    FB345,
+    FB417,
+    FB418,
+    FB802,
+    FB803,
+    FB804,
+    FB1002,
+    FB1014,
+    FB1021,
+    functional_block,
+)
 from homeassistant.components.knx.storage.entity_store_schema import (
     KNX_SCHEMA_FOR_PLATFORM,
 )
@@ -88,6 +101,9 @@ TEST_PROJECT: dict[str, Any] = {
         "6/1/4": _group_address("6/1/4", DPT_PERCENT),
         "6/1/5": _group_address("6/1/5", DPT_PERCENT),
         "6/1/6": _group_address("6/1/6", DPT_PERCENT),
+        "7/0/1": _group_address("7/0/1", DPT_SWITCH),
+        "7/0/2": _group_address("7/0/2", DPT_SWITCH),
+        "7/0/3": _group_address("7/0/3", None),
         "7/1/1": _group_address("7/1/1", DPT_SWITCH),
         "7/1/2": _group_address("7/1/2", DPT_SWITCH),
         "7/1/3": _group_address("7/1/3", DPT_SWITCH),
@@ -160,6 +176,12 @@ TEST_PROJECT: dict[str, Any] = {
                 ),
             },
         },
+        "1.3.1": {
+            "name": "Binäreingang",
+            "channels": {
+                "CH-1": _channel("Eingang 1", ["1014"], ["co-100", "co-101"]),
+            },
+        },
         "1.3.2": {
             "name": "Binärausgang",
             "channels": {
@@ -207,6 +229,8 @@ TEST_PROJECT: dict[str, Any] = {
         "co-73": _com_object(["423.84"], ["6/1/4"]),
         "co-74": _com_object(["423.64"], ["6/1/5"]),
         "co-75": _com_object(["423.85"], ["6/1/6"]),
+        "co-100": _com_object(["1014.51"], ["7/0/1", "7/0/2"]),
+        "co-101": _com_object(["1014.52"], ["7/0/3"]),  # no config key for this DPA
         "co-110": _com_object(["1018.51"], ["7/1/1"]),
         "co-111": _com_object(["1018.52"], ["7/1/2"]),
         "co-112": _com_object(["1018.54"], ["7/1/3"]),  # no config key for this DPA
@@ -280,6 +304,9 @@ def test_collect_dpa_index_duplicate_annotation() -> None:
 def test_functional_block_platforms() -> None:
     """Test the functional block to platform map derived from schema annotations."""
     assert _functional_block_platforms() == {
+        "343": [Platform.BINARY_SENSOR],
+        "344": [Platform.BINARY_SENSOR],
+        "345": [Platform.BINARY_SENSOR],
         "372": [Platform.FAN],
         # light is the default for FB 417
         "417": [Platform.LIGHT, Platform.SWITCH],
@@ -288,6 +315,12 @@ def test_functional_block_platforms() -> None:
         "423": [Platform.LIGHT],
         "427": [Platform.LIGHT],
         "800": [Platform.COVER],
+        "802": [Platform.BINARY_SENSOR],
+        "803": [Platform.BINARY_SENSOR],
+        "804": [Platform.BINARY_SENSOR],
+        "1002": [Platform.BINARY_SENSOR],
+        "1014": [Platform.BINARY_SENSOR],
+        "1021": [Platform.BINARY_SENSOR],
         "1018": [Platform.SWITCH],
     }
 
@@ -478,6 +511,53 @@ def test_incomplete_config_dropped() -> None:
     assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
 
 
+def test_binary_sensor_suggestion() -> None:
+    """Test FB 1014 suggestion of a state only platform."""
+    channel = _test_channel("1.3.1", "CH-1")
+    suggestion = _build_platform_suggestion(
+        TEST_PROJECT, channel, Platform.BINARY_SENSOR
+    )
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_sensor": {"state": "7/0/1", "passive": ["7/0/2"]}}
+    assert suggestion["unmatched"] == ["1014.52"]
+    assert suggestion["matched_group_addresses"] == [
+        {"address": "7/0/1", "name": "GA 7/0/1"},
+        {"address": "7/0/2", "name": "GA 7/0/2"},
+    ]
+
+
+@pytest.mark.parametrize(
+    "dpa",
+    [
+        FB343.WINDOW_STATUS,
+        FB344.DEW_POINT_STATUS,
+        FB345.PRESENCE_STATUS,
+        FB802.WIND_ALARM,
+        FB803.RAIN_ALARM,
+        FB804.FROST_ALARM,
+        FB1002.IN_ALARM,
+        FB1014.DIGITAL_INPUT_VALUE,
+        FB1021.LOCK,
+    ],
+)
+def test_binary_sensor_functional_blocks(dpa: str) -> None:
+    """Test the status DPAs of binary sensor functional blocks."""
+    project = _with_com_objects(**{"co-90": _com_object([dpa], ["7/0/1"])})
+    channel = _channel("Sensor", [functional_block(dpa)], ["co-90"])
+    suggestion = _build_platform_suggestion(project, channel, Platform.BINARY_SENSOR)
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_sensor": {"state": "7/0/1"}}
+    assert suggestion["unmatched"] == []
+
+
+def test_binary_sensor_invalid_dpt_dropped() -> None:
+    """Test that a state GA with non-matching DPT yields no suggestion."""
+    # 1/0/5 is DPT 5.001 - not a valid binary sensor address
+    project = _with_com_objects(**{"co-90": _com_object(["345.51"], ["1/0/5"])})
+    channel = _channel("Präsenz", ["345"], ["co-90"])
+    assert _build_platform_suggestion(project, channel, Platform.BINARY_SENSOR) is None
+
+
 def test_digital_output_suggestion() -> None:
     """Test FB 1018 suggestion."""
     channel = _test_channel("1.3.2", "CH-1")
@@ -526,7 +606,16 @@ async def test_ws_get_entity_suggestions(
 
     assert result["providers"]["fb"] == {
         "state": "ok",
-        "functional_blocks_found": ["1018", "372", "417", "423", "427", "800", "999"],
+        "functional_blocks_found": [
+            "1014",
+            "1018",
+            "372",
+            "417",
+            "423",
+            "427",
+            "800",
+            "999",
+        ],
     }
     suggestions = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
     assert sorted(suggestions) == [
@@ -536,6 +625,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.1.3_CH-1",
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
+        "fb_1.3.1_CH-1",
         "fb_1.3.2_CH-1",
         "fb_1.3.3_CH-1",
     ]
@@ -559,6 +649,7 @@ async def test_ws_get_entity_suggestions(
     assert suggestions["fb_1.1.1_CH-2"]["suggested_name"] == "Ausgang 2"
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
+    assert suggestions["fb_1.3.1_CH-1"]["platform_options"] == ["binary_sensor"]
     assert suggestions["fb_1.3.2_CH-1"]["platform_options"] == ["switch"]
     assert suggestions["fb_1.3.3_CH-1"]["platform_options"] == ["fan"]
 

@@ -10,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pysmhi"],
   "quality_scale": "platinum",
-  "requirements": ["pysmhi==2.1.0"]
+  "requirements": ["pysmhi==3.0.0"]
 }
