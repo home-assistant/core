@@ -3027,7 +3027,7 @@ radiotherm==2.1.0
 rainbowminer-api-client==0.2.3
 
 # homeassistant.components.rapt_ble
-rapt-ble==2.0.0
+rapt-ble==2.0.1
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.9
@@ -3048,7 +3048,7 @@ renault-api==0.6.3
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.22.0
+reolink-aio==0.23.0
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
