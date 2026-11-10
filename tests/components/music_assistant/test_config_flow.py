@@ -25,7 +25,6 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
     CONF_USE_APP,
-    MusicAssistantConfigFlow,
     _get_server_info,
     _test_connection,
 )
@@ -1033,17 +1032,31 @@ async def test_finish_auth_errors(
     assert result["reason"] == abort_reason
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_get_server_info")
 async def test_auth_step_with_error(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test auth step receiving error from OAuth2 callback."""
-    flow = MusicAssistantConfigFlow()
-    flow.hass = hass
-    flow.url = "http://localhost:8095"
-    flow.server_info = mock_get_server_info.return_value
+    """Test the flow aborts when the OAuth2 callback returns an error."""
+    # Set up auth to register the OAuth2 callback view
+    assert await async_setup_component(hass, "auth", {})
 
-    result = await flow.async_step_auth(user_input={"error": "access_denied"})
+    result = await _async_start_external_auth(hass)
+
+    state = _encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(
+        f"/auth/external/callback?error=access_denied&state={state}"
+    )
+    assert resp.status == 200
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_error"
