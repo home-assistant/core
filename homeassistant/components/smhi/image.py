@@ -1,5 +1,6 @@
 """Image platform for SMHI integration."""
 
+import asyncio
 from datetime import datetime
 from typing import override
 
@@ -51,6 +52,7 @@ class SMHIRadarImage(SmhiEntity[SMHIRadarDataUpdateCoordinator], ImageEntity):
         super().__init__(latitude, longitude, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_unique_id = f"{latitude}, {longitude}-radar"
+        self._image_lock = asyncio.Lock()
 
     @override
     def update_entity_data(self) -> None:
@@ -61,7 +63,8 @@ class SMHIRadarImage(SmhiEntity[SMHIRadarDataUpdateCoordinator], ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return the radar image, drawn once per radar update."""
         valid_time = self.coordinator.data["valid_time"]
-        if self._image is None or self._image_valid_time != valid_time:
-            self._image = await self.coordinator.async_get_image()
-            self._image_valid_time = valid_time
+        async with self._image_lock:
+            if self._image is None or self._image_valid_time != valid_time:
+                self._image = await self.coordinator.async_get_image()
+                self._image_valid_time = valid_time
         return self._image

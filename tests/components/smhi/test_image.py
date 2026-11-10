@@ -1,5 +1,6 @@
 """Test for the smhi image entity."""
 
+import asyncio
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
@@ -16,6 +17,7 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.image import async_get_image
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -82,6 +84,33 @@ async def test_image_cached_per_radar_update(
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == b"new radar image"
     assert mock_radar_client.async_get_image.call_count == 2
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "load_int")
+async def test_image_concurrent_requests(
+    hass: HomeAssistant,
+    mock_radar_client: MagicMock,
+) -> None:
+    """Test concurrent requests for the same radar update fetch the image once."""
+    fetching = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _get_image() -> bytes:
+        fetching.set()
+        await release.wait()
+        return b"radar image"
+
+    mock_radar_client.async_get_image.side_effect = _get_image
+
+    requests = [
+        hass.async_create_task(async_get_image(hass, ENTITY_ID)) for _ in range(3)
+    ]
+    await fetching.wait()
+    release.set()
+    images = await asyncio.gather(*requests)
+
+    assert [image.content for image in images] == [b"radar image"] * 3
+    assert mock_radar_client.async_get_image.call_count == 1
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "load_int")
