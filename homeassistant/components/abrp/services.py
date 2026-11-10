@@ -124,7 +124,6 @@ async def _async_send_telemetry(call: ServiceCall) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="send_telemetry_failed",
-            translation_placeholders={"error": str(err)},
         ) from err
 
 

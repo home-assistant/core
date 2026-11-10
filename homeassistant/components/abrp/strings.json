@@ -82,7 +82,7 @@
       "message": "Failed to refresh the OAuth2 access token."
     },
     "send_telemetry_failed": {
-      "message": "Failed to send telemetry to A Better Routeplanner: {error}"
+      "message": "Failed to send telemetry to A Better Routeplanner."
     },
     "telemetry_write_not_granted": {
       "message": "Home Assistant is not allowed to send telemetry to A Better Routeplanner yet; please re-authenticate to grant it."
