@@ -228,7 +228,7 @@ def test_get_suggested_entities_no_suitable_entities(
 
 def test_energyid_sensor_mapping_flow_handler_repr() -> None:
     """Test instantiating and repr-ing the handler."""
-    handler = EnergyIDSensorMappingFlowHandler()
+    handler = EnergyIDSensorMappingFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     assert handler.__class__.__name__ == "EnergyIDSensorMappingFlowHandler"
 
 

@@ -462,8 +462,8 @@ async def test_discovery_rejects_a_device_that_is_not_a_light(
 
 def test_flow_matching_uses_host() -> None:
     """Test unidentified flows match by their target host."""
-    flow = LIFXConfigFlow()
-    other_flow = LIFXConfigFlow()
+    flow = LIFXConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
+    other_flow = LIFXConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.host = IP_ADDRESS
     other_flow.host = IP_ADDRESS
 

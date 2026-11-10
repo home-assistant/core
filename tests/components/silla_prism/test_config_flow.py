@@ -151,7 +151,7 @@ async def test_probe_detects_no_traffic(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test the base-topic probe times out when the topic is silent."""
-    flow = PrismConfigFlow()
+    flow = PrismConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     with patch(
         "homeassistant.components.silla_prism.config_flow._PROBE_TIMEOUT",
@@ -165,7 +165,7 @@ async def test_probe_ignores_unrecognized(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test the probe ignores traffic that is not a Prism protocol message."""
-    flow = PrismConfigFlow()
+    flow = PrismConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     with patch(
         "homeassistant.components.silla_prism.config_flow._PROBE_TIMEOUT",

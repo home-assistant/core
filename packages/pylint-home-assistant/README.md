@@ -177,6 +177,7 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
+| `W7465` | [`home-assistant-tests-direct-flow-handler`](#w7465-home-assistant-tests-direct-flow-handler) | Tests should not create an integration's flow handler themselves |
 
 ## `home_assistant_logger` checker
 
@@ -824,6 +825,39 @@ taken from a test argument counts when all its `pytest.mark.parametrize`
 values end with `_successful`.
 
 See the [config-flow-test-coverage quality scale rule](https://contributors.home-assistant.io/core/quality-scale/config-flow-test-coverage/).
+
+
+## `home_assistant_tests_direct_flow_handler` checker
+
+Detects integration tests that create a flow handler themselves instead of
+letting the flow manager create it.
+
+Tests in `tests/components` should run a flow the way the frontend does:
+start it with `hass.config_entries.flow.async_init` (or `options` or
+`subentries`), answer its steps with `async_configure`, and assert on the
+results. Driving the handler directly skips the flow manager, so the context,
+unique ID handling, schema validation, and step routing are never exercised:
+
+```python
+# Bad
+flow = config_flow.MyIntegrationFlowHandler()
+flow.hass = hass
+result = await flow.async_step_user({CONF_HOST: "1.2.3.4"})
+
+# Good
+result = await hass.config_entries.flow.async_init(
+    DOMAIN, context={"source": SOURCE_USER}
+)
+result = await hass.config_entries.flow.async_configure(
+    result["flow_id"], {CONF_HOST: "1.2.3.4"}
+)
+```
+
+### `W7465`: `home-assistant-tests-direct-flow-handler`
+
+A test creates an instance of a flow handler defined in an integration, such
+as its config flow, options flow, subentry flow, or repair flow. Let the flow
+manager create it instead.
 
 
 ## `home_assistant_enforce_utcnow` checker

@@ -46,7 +46,7 @@ async def test_single_instance_allowed(
 
 async def test_without_config(hass: HomeAssistant) -> None:
     """Test config flow with no configuration."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.context = {}
 
@@ -97,7 +97,7 @@ async def test_with_invalid_credentials(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
     """Test config flow with invalid username and/or password."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.context = {}
 
@@ -134,7 +134,7 @@ async def test_cannot_connect_exception(
     raised_exception: Exception | type[Exception],
 ) -> None:
     """Test config flow encountering a connection-related exception."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
 
     with patch(
@@ -160,7 +160,7 @@ async def test_with_existing_config(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
     """Test config flow with existing configuration."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.context = {}
 

@@ -16,7 +16,7 @@ def init_config_flow(
     hass: HomeAssistant, side_effect: type[Exception] | None = None
 ) -> config_flow.FlowHandler:
     """Init a configuration flow."""
-    flow = config_flow.FlowHandler()
+    flow = config_flow.FlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     if side_effect:
         flow._get_auth_url = Mock(side_effect=side_effect)

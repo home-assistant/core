@@ -56,7 +56,7 @@ async def init_config_flow(hass: HomeAssistant) -> config_flow.OwnTracksFlow:
         hass,
         {"external_url": BASE_URL},
     )
-    flow = config_flow.OwnTracksFlow()
+    flow = config_flow.OwnTracksFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     return flow
 
