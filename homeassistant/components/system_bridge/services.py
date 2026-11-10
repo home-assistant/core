@@ -126,6 +126,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
         # A url or path opens on the host, as open_url and open_path do
         admin_only=True,
+        description_placeholders={
+            "icon_naming_url": "https://specifications.freedesktop.org/icon-naming/latest/"
+        },
     )
 
     hass.services.async_register(
