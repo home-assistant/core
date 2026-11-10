@@ -135,6 +135,5 @@ get_history:
 
     allow_truncation:
       required: false
-      default: false
       selector:
         boolean:
