@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, mock_component
 
@@ -900,3 +901,154 @@ async def test_if_fires_on_time_change(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+
+def _automation_config(trigger: dict) -> dict:
+    """Return an automation config recording the trigger values."""
+    return {
+        automation.DOMAIN: {
+            "trigger": {"platform": "template", **trigger},
+            "action": {
+                "service": "test.automation",
+                "data_template": {
+                    "value": "{{ trigger.value }}",
+                    "previous_value": "{{ trigger.previous_value }}",
+                },
+            },
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "trigger",
+    [
+        pytest.param(
+            {
+                "value_template": "{{ states('test.entity') }}",
+                "triggered_when": "changed",
+            },
+            id="top_level",
+        ),
+        pytest.param(
+            {
+                "options": {
+                    "value_template": "{{ states('test.entity') }}",
+                    "triggered_when": "changed",
+                },
+            },
+            id="options",
+        ),
+    ],
+)
+async def test_triggered_when_changed(
+    hass: HomeAssistant, calls: list[ServiceCall], trigger: dict
+) -> None:
+    """Test firing on every new rendered value."""
+    assert await async_setup_component(
+        hass, automation.DOMAIN, _automation_config(trigger)
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    for state in ("world", "planet", "planet", "hello"):
+        hass.states.async_set("test.entity", state)
+        await hass.async_block_till_done()
+
+    assert [call.data for call in calls] == [
+        {"value": "world", "previous_value": "hello"},
+        {"value": "planet", "previous_value": "world"},
+        {"value": "hello", "previous_value": "planet"},
+    ]
+
+
+async def test_turned_true_trigger_values(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test the rendered values are passed to the trigger when turning true."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        _automation_config(
+            {"value_template": "{{ states('test.entity') == 'world' and 'yes' }}"}
+        ),
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+
+    assert [call.data for call in calls] == [{"value": "yes", "previous_value": False}]
+
+
+async def test_triggered_when_changed_after_error(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test recovering from an error to the same value does not fire."""
+    hass.states.async_set("test.number", "2")
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        _automation_config(
+            {
+                "value_template": "{{ 84 // states('test.number') | int }}",
+                "triggered_when": "changed",
+            }
+        ),
+    )
+    await hass.async_block_till_done()
+
+    for number in ("0", "2", "4"):
+        hass.states.async_set("test.number", number)
+        await hass.async_block_till_done()
+
+    assert [call.data for call in calls] == [{"value": 21, "previous_value": 42}]
+
+
+async def test_triggered_when_changed_with_for(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
+) -> None:
+    """Test a new value restarts the for period."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        _automation_config(
+            {
+                "value_template": "{{ states('test.entity') }}",
+                "triggered_when": "changed",
+                "for": {"seconds": 5},
+            }
+        ),
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "planet")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [call.data for call in calls] == [
+        {"value": "planet", "previous_value": "world"}
+    ]
+
+
+def test_invalid_triggered_when() -> None:
+    """Test an unknown triggered_when value is rejected."""
+    with pytest.raises(probatio.Invalid):
+        template_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "template",
+                "value_template": "{{ true }}",
+                "triggered_when": "always",
+            }
+        )

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 import probatio
 
@@ -29,11 +29,18 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_TRIGGERED_WHEN: Final = "triggered_when"
+TRIGGERED_WHEN_TURNED_TRUE: Final = "turned_true"
+TRIGGERED_WHEN_CHANGED: Final = "changed"
+
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_PLATFORM): "template",
         probatio.Required(CONF_VALUE_TEMPLATE): cv.template,
         probatio.Optional(CONF_FOR): cv.positive_time_period_template,
+        probatio.Optional(
+            CONF_TRIGGERED_WHEN, default=TRIGGERED_WHEN_TURNED_TRUE
+        ): probatio.In([TRIGGERED_WHEN_TURNED_TRUE, TRIGGERED_WHEN_CHANGED]),
     }
 )
 
@@ -51,20 +58,23 @@ async def async_attach_trigger(
     variables = trigger_info["variables"] or {}
     value_template: Template = config[CONF_VALUE_TEMPLATE]
     time_delta = config.get(CONF_FOR)
+    fire_on_change = config[CONF_TRIGGERED_WHEN] == TRIGGERED_WHEN_CHANGED
     delay_cancel = None
     job = HassJob(action)
     armed = False
+    last_value: Any = None
 
-    # Arm at setup if the template is already false.
     try:
-        if not result_as_boolean(value_template.async_render(variables)):
-            armed = True
+        last_value = value_template.async_render(variables)
     except exceptions.TemplateError as ex:
         _LOGGER.warning(
             "Error initializing 'template' trigger for '%s': %s",
             trigger_info["name"],
             ex,
         )
+    else:
+        # Arm at setup if the template is already false.
+        armed = not result_as_boolean(last_value)
 
     @callback
     def template_listener(
@@ -72,7 +82,7 @@ async def async_attach_trigger(
         updates: list[TrackTemplateResult],
     ) -> None:
         """Listen for state changes and calls action."""
-        nonlocal delay_cancel, armed
+        nonlocal delay_cancel, armed, last_value
         result = updates.pop().result
 
         if isinstance(result, exceptions.TemplateError):
@@ -83,20 +93,27 @@ async def async_attach_trigger(
             )
             return
 
+        # The tracker reports a result again after an error, even if unchanged.
+        if fire_on_change and result == last_value:
+            return
+
         if delay_cancel:
             delay_cancel()
             delay_cancel = None
 
-        if not result_as_boolean(result):
-            armed = True
-            return
+        previous_value = last_value
+        last_value = result
 
-        # Only fire when previously armed.
-        if not armed:
-            return
+        if not fire_on_change:
+            if not result_as_boolean(result):
+                armed = True
+                return
 
-        # Fire!
-        armed = False
+            # Only fire when previously armed.
+            if not armed:
+                return
+
+            armed = False
 
         entity_id = event and event.data["entity_id"]
         from_s = event and event.data["old_state"]
@@ -112,6 +129,8 @@ async def async_attach_trigger(
             "entity_id": entity_id,
             "from_state": from_s,
             "to_state": to_s,
+            "value": result,
+            "previous_value": previous_value,
         }
         trigger_variables = {
             **trigger_data,
