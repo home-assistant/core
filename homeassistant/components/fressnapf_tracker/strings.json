@@ -92,6 +92,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "seen_recently": {
+        "name": "Seen recently"
+      }
+    },
     "light": {
       "led": {
         "name": "Flashlight"
