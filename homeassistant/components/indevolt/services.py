@@ -68,16 +68,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
     hass.services.async_register(
-        DOMAIN,
-        IndevoltService.CHARGE,
-        charge,
-        schema=RT_ACTION_SERVICE_SCHEMA,
+        DOMAIN, IndevoltService.CHARGE, charge, schema=RT_ACTION_SERVICE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN,
-        IndevoltService.DISCHARGE,
-        discharge,
-        schema=RT_ACTION_SERVICE_SCHEMA,
+        DOMAIN, IndevoltService.DISCHARGE, discharge, schema=RT_ACTION_SERVICE_SCHEMA
     )
 
 
