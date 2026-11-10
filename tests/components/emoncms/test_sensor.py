@@ -159,6 +159,53 @@ async def test_retagged_feeds_move_device(
     assert hass.states.get(entities[0].entity_id).name.startswith("kitchen ")
 
 
+async def test_retag_after_empty_poll_reloads(
+    hass: HomeAssistant,
+    config_single_feed: MockConfigEntry,
+    emoncms_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a retag is detected across an empty feed list poll."""
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [{**get_feed(1), "tag": "garage"}],
+    }
+    await setup_integration(hass, config_single_feed)
+
+    for feeds in ([], [{**get_feed(1), "tag": "kitchen"}]):
+        emoncms_client.async_request.return_value = {"success": True, "message": feeds}
+        freezer.tick(60)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Each setup fetches the uuid once, so this counts reloads
+    assert emoncms_client.async_get_uuid.await_count == 2
+
+
+async def test_retag_excluded_feed_does_not_reload(
+    hass: HomeAssistant,
+    config_single_feed: MockConfigEntry,
+    emoncms_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test retagging a feed that was not selected does not reload the entry."""
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [get_feed(1), {**get_feed(2), "tag": "garage"}],
+    }
+    await setup_integration(hass, config_single_feed)
+
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [get_feed(1), {**get_feed(2), "tag": "kitchen"}],
+    }
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert emoncms_client.async_get_uuid.await_count == 1
+
+
 async def test_upgrade_prefixes_custom_name_with_tag(
     hass: HomeAssistant,
     config_entry_unique_id: MockConfigEntry,
