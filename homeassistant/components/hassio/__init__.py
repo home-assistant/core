@@ -357,6 +357,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         return False
 
+    # The persistent issue of the removed legacy "homeassistant" backup folder
+    ir.async_delete_issue(hass, DOMAIN, "legacy_homeassistant_folder")
+
     async def _async_read_core_log() -> list[str]:
         """Return the end of the log of Home Assistant since it started."""
         supervisor = get_supervisor_passthrough_client(hass)
