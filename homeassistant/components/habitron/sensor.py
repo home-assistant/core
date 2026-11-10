@@ -55,21 +55,11 @@ async def async_setup_entry(
     bus_area_names = {area.nmbr: area.name for area in hbtn_rt.areas}
 
     def bus_area_id(area_no: int) -> str | None:
-        """Return the HA area for a bus area, creating it only when needed.
-
-        Creating them all up front would run on every reload and resurrect an
-        area the user has since renamed or deleted -- ``async_get_or_create``
-        matches by name, so a renamed area is not found and is recreated under
-        its old bus name.
-        """
+        """Return the HA area for a bus area, creating it only when needed."""
         name = bus_area_names.get(area_no)
         return area_reg.async_get_or_create(name).id if name else None
 
-    # The deviating analog-input area is stamped only when the registry entry
-    # is first created, never on a reload: a user may later move the entity or
-    # clear its area to inherit the device area, and clearing it reads as
-    # ``area_id is None`` -- indistinguishable from a fresh entity. A deleted
-    # entry counts as known too, since re-adding restores the area it had.
+    # Set an analog input's own area only on first registration, never on reload.
     ent_reg = er.async_get(hass)
     known_unique_ids = {
         registered.unique_id
@@ -118,15 +108,10 @@ async def async_setup_entry(
         )
 
     for hbt_module in hbtn_rt.modules:
-        # The library only populates ``analogins`` for modules that have analog
-        # inputs, so iterate it directly instead of hard-coding module types --
-        # ``type == 3`` marks a real (enabled) analog input.
         for ain in hbt_module.analogins:
             if ain.type != 3:
                 continue
-            # ain.area == 0 means "the module's own area"; only a value that
-            # differs is a real deviation, and only an entity never registered
-            # gets it, so a later user area choice survives reloads.
+            # Area 0 means the module's own area.
             analog_uid = f"{hbt_module.uid}_{ANALOG_DESCRIPTION.key}_{ain.nmbr}"
             if (
                 ain.area not in (0, hbt_module.area)
@@ -156,9 +141,7 @@ async def async_setup_entry(
             add_described(hbtn_rt, router_member, (router_description,))
 
     if pending_areas:
-        # Applied when the registry entry is created rather than when the entity
-        # is added: a disabled entity is registered but never added, and once
-        # enabled it is no longer new. HA has no per-entity ``suggested_area``.
+        # On registry creation, since a disabled entity is never added.
         @callback
         def _async_stamp_area(
             event: Event[er.EventEntityRegistryUpdatedData],
@@ -183,22 +166,7 @@ async def async_setup_entry(
 
 @dataclass(frozen=True, kw_only=True)
 class HbtnSensorEntityDescription(SensorEntityDescription):
-    """Habitron-specific sensor description.
-
-    The per-owner accessors let one entity class serve every member list, so
-    only the three flags need saying:
-
-    ``diag_check`` falls back to a hidden diagnostic entity when the member's
-    own ``type`` says it is one -- the router's current, voltage and timeout
-    streams only reveal that at runtime.
-
-    ``translated_name`` drops the bus name, so the display name comes from the
-    ``translation_key`` instead.
-
-    ``numbered`` appends the member number to the unique_id, for a device that
-    carries several members of the same kind (the router channels, a module's
-    analogue inputs) where the key alone would not tell them apart.
-    """
+    """Habitron sensor entity description."""
 
     value_fn: Callable[[Any, int], Any]
     subscribe_fn: Callable[[Any, int], BusMember] | None = None
@@ -223,13 +191,10 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
         """Initialize the described sensor."""
         super().__init__(module, sensor, coord, idx)
         self.entity_description = description
-        # Members sharing a description -- router channels, analogue inputs --
-        # would collide on uid and key alone, hence the member number.
         self._attr_unique_id = f"{module.uid}_{description.key}"
         if description.numbered:
             self._attr_unique_id = f"{self._attr_unique_id}_{sensor.nmbr}"
         if description.translated_name:
-            # Let the translation_key (not the bus name) drive the display name.
             del self._attr_name
         if description.diag_check and sensor.is_diagnostic:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -242,23 +207,11 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
         if (subscribe_fn := self.entity_description.subscribe_fn) is not None:
             member = subscribe_fn(self._module, self._sensor_idx)
             member.add_listener(self._handle_coordinator_update)
-            # Unsubscribed through ``async_on_remove`` rather than
-            # ``async_will_remove_from_hass``: the latter is skipped when adding
-            # the entity fails after this hook has run -- ``entity_platform``
-            # then calls ``add_to_platform_abort``, which runs only the
-            # on-remove callbacks -- and the library would keep a listener for
-            # an entity Home Assistant has discarded.
+            # async_on_remove also runs when adding the entity fails.
             self.async_on_remove(
                 lambda: member.remove_listener(self._handle_coordinator_update)
             )
-        # CoordinatorEntity.async_added_to_hass does not pick up a value, and
-        # the coordinator's first refresh completed before this platform was set
-        # up, so without this the entity would start out "unknown" until the
-        # next coordinator tick. Taking the value is all there is to do:
-        # ``add_to_platform_finish`` writes the state right after this hook
-        # returns, and a write attempted from in here would be dropped anyway --
-        # ``_async_write_ha_state`` returns early while ``_platform_state`` is
-        # still ADDING.
+        # The first refresh ran before the platform was set up.
         self._refresh_native_value()
 
     @callback
@@ -277,31 +230,17 @@ class HbtnDescribedSensor(HabitronEntity, SensorEntity):
 
 
 class HbtnHostSensor(HbtnDescribedSensor):
-    """A reading of the hub itself rather than of the bus.
-
-    Host readings are polled apart from the bus status and their errors are
-    swallowed, so that a hub-diagnostics hiccup cannot mark every bus entity
-    unavailable. That trade only holds while the readings say when they stopped
-    being live: ``SmartHub.host_valid`` means "a poll has ever succeeded" and
-    never goes back to false, so CPU, memory and disk would otherwise keep
-    reporting their last value indefinitely, indistinguishable from a fresh one.
-    """
+    """Sensor for a host reading of the hub itself."""
 
     @property
     @override
     def available(self) -> bool:
-        """Whether the hub answered the most recent host poll."""
+        """Return if the hub answered the last host poll."""
         return super().available and self.coordinator.host_readings_ok
 
 
 class LogicSensor(HbtnDescribedSensor):
-    """Logic/counter sensor with a computed, per-instance display name.
-
-    Kept as a thin subclass because the value/subscription index is the logic's
-    list position (``logic.idx``) while the unique_id is keyed on ``logic.nmbr``,
-    and the name is templated from both — expressing that purely through the
-    shared description would need per-instance hooks that only this member uses.
-    """
+    """Logic/counter sensor of a module."""
 
     def __init__(
         self,
@@ -312,7 +251,7 @@ class LogicSensor(HbtnDescribedSensor):
     ) -> None:
         """Initialize the logic sensor."""
         super().__init__(module, logic, coord, idx, LOGIC_DESCRIPTION)
-        # Value/subscription index is the logic's list position, not its nmbr.
+        # The value index is the logic's list position, not its number.
         self._sensor_idx = logic.idx
         self._attr_unique_id = f"{self._module.uid}_logic_{logic.nmbr}"
         self._attr_translation_placeholders = {
@@ -375,11 +314,6 @@ TEMP_EXT_DESCRIPTION = HbtnSensorEntityDescription(
     entity_registry_enabled_default=False,
     value_fn=lambda module, idx: module.sensors[idx].value,
 )
-# No ``subscribe_fn``: analogue values live in the compact status mirror (the
-# Smart In reads all six from it, the Smart Controller its two), and nothing
-# else ever writes them -- push events do not carry them at all. A change
-# therefore always moves the status CRC and reaches the entity through the
-# coordinator; subscribing as well would only write the state a second time.
 ANALOG_DESCRIPTION = HbtnSensorEntityDescription(
     key="analog_in",
     translation_key="analog_sensor",
@@ -422,27 +356,12 @@ EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="ekey_id",
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
-    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
-    # and the same read moves the module CRC, so the coordinator already updates
-    # the entity -- subscribing would write the state twice. The FINGER bus event
-    # writes it too, but nothing receives events yet; the subscription belongs
-    # with the push receiver in a later PR.
 )
-# The finger sensors bind to ``module.sensors[idx]`` -- the canonical member for
-# the finger number, which both the 10-second poll parser (``_status_ekey``) and
-# the FINGER bus event write (habitron_client >= 2.0.9). ``module.fingers[0]``
-# instead carries the combined user+finger reading as one atomic event, meant for
-# the access-control event platform in a later PR, not this per-number sensor.
 EKEY_FINGER_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger",
     translation_key="ekey_finger",
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
-    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
-    # and the same read moves the module CRC, so the coordinator already updates
-    # the entity -- subscribing would write the state twice. The FINGER bus event
-    # writes it too, but nothing receives events yet; the subscription belongs
-    # with the push receiver in a later PR.
 )
 EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_user_name",
@@ -451,11 +370,6 @@ EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: decode_user(
         int(module.sensors[idx].value or 0), module.ids
     ),
-    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
-    # and the same read moves the module CRC, so the coordinator already updates
-    # the entity -- subscribing would write the state twice. The FINGER bus event
-    # writes it too, but nothing receives events yet; the subscription belongs
-    # with the push receiver in a later PR.
 )
 EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger_name",
@@ -464,11 +378,6 @@ EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     options=list(FINGER_KEYS),
     translated_name=True,
     value_fn=lambda module, idx: decode_finger(int(module.sensors[idx].value or 0)),
-    # No ``subscribe_fn``: the poll parser (``_status_ekey``) writes this member
-    # and the same read moves the module CRC, so the coordinator already updates
-    # the entity -- subscribing would write the state twice. The FINGER bus event
-    # writes it too, but nothing receives events yet; the subscription belongs
-    # with the push receiver in a later PR.
 )
 STATUS_DESCRIPTION = HbtnSensorEntityDescription(
     key="module_status",
@@ -494,8 +403,6 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="memory_usage",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
-    # Host health of the machine the hub runs on, like the CPU readings below
-    # -- not a building-automation measurement anyone automates on.
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
@@ -553,17 +460,11 @@ LOGIC_DESCRIPTION = HbtnSensorEntityDescription(
     translation_key="logic_state",
     state_class=SensorStateClass.MEASUREMENT,
     translated_name=True,
-    # No ``subscribe_fn``: counter values come from the compact status mirror,
-    # which the module CRC covers, so a change already moves the coordinator's
-    # data and updates the entity. Subscribing would write the state twice.
     value_fn=lambda module, idx: module.logic[idx].value,
 )
 
 
-# Which entity descriptions a bus member's name maps to. Keyed by the name the
-# library gives the member; the ekey members produce two entities each -- the
-# raw value and the resolved name. A member whose name is not listed simply
-# gets no entity.
+# Entity descriptions by bus member name; unlisted members get no entity.
 HUB_SENSORS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
     "Memory usage": (MEMORY_DESCRIPTION,),
     "Disk usage": (DISK_DESCRIPTION,),
@@ -576,8 +477,6 @@ HUB_DIAGS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
 }
 
 MODULE_SENSORS: dict[str, tuple[HbtnSensorEntityDescription, ...]] = {
-    # The external probe is disabled by default; the two descriptions differ
-    # only in entity_registry_enabled_default.
     "Temperature": (TEMP_DESCRIPTION,),
     "Temperature ext.": (TEMP_EXT_DESCRIPTION,),
     "Humidity": (HUMIDITY_DESCRIPTION,),

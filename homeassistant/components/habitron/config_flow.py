@@ -30,26 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_hub_mac(host: str) -> str | None:
-    """Return the hub's MAC, or ``None`` when it reports none.
-
-    This is the identity every path keys on: it is the same whichever interface
-    the hub currently uses, and the custom (HACS) integration derives it the
-    same way, so an installation moving to core is recognised rather than
-    offered a second time.
-
-    A hub that cannot be reached raises ``CannotConnect`` instead of returning
-    ``None``: the two need different answers -- "update the hub software" helps
-    nobody whose address is simply wrong.
-    """
+    """Return the hub's LAN MAC, or ``None`` when it reports none."""
     try:
         async with HabitronClient(host) as client:
             hub = await async_build_hub(client)
     except (HabitronError, OSError) as err:
         raise CannotConnect from err
     if not hub.uid:
-        # A hub without an Ethernet interface reports its address as null, and
-        # a firmware placeholder is no identity either -- both leave the uid
-        # empty, and both mean "this hub cannot be told apart from another".
         _LOGGER.debug(
             "Hub at %s reported %r, which is no usable MAC", host, hub.lan_mac
         )
@@ -59,15 +46,9 @@ async def _async_hub_mac(host: str) -> str | None:
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-
     host_input = data[CONF_HOST]
 
-    # The hub runs on this machine when the entered address is *any* of HA's own
-    # local addresses -- not just the route-selected one. A multi-homed host, or
-    # a SmartCenter reachable over both LAN and WLAN, has several; match them all
-    # so the same hub is not stored once as a remote address and once as
-    # ``local``. Typing ``local`` explicitly still works (it is not an IP, so it
-    # falls through to the sentinel branch below).
+    # Any of HA's own addresses means a hub on this machine.
     own_ips = {str(ip) for ip in await network.async_get_enabled_source_ips(hass)}
     if host_input in own_ips:
         host_input = CONF_DEFAULT_HOST
@@ -75,24 +56,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     host_to_test = host_input
     if host_to_test == CONF_DEFAULT_HOST:
-        # Resolve the sentinel to a concrete local IP for the probe.
         host_to_test = await network.async_get_source_ip(hass)
 
-    # Resolve the name first so an unresolvable host maps to ``host_not_found``
-    # ("try an IP") rather than a generic connection error. ``get_host_ip``
-    # raises ``HabitronConnectionError`` only for a DNS failure; ``test_connection``
-    # resolves internally too and wraps *every* failure (DNS included) into a
-    # ``HabitronError``, so without resolving here a bad name would only ever
-    # surface as ``cannot_connect``.
+    # Resolve first: ``test_connection`` reports a DNS failure like any other error.
     try:
         await get_host_ip(host_to_test)
     except HabitronConnectionError as exc:
         raise HostNotFound from exc
 
-    # Connection test. ``test_connection`` wraps expected connection failures
-    # into ``HabitronError``; anything else (e.g. a response-processing bug)
-    # propagates so the caller's ``unknown`` path surfaces the real fault
-    # instead of hiding it as a network error.
     try:
         result, host_name = await test_connection(host_to_test)
     except (OSError, TimeoutError, HabitronError) as exc:
@@ -101,10 +72,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not result:
         raise CannotConnect
 
-    # ``test_connection`` returns an empty name when the TCP probe succeeds but
-    # the hub's metadata query gets no answer. Fall back to the probed address
-    # (the resolved own IP for the ``local`` sentinel) so the entry never ends
-    # up with a blank title.
+    # The name is empty when the hub does not answer the metadata query.
     return {"title": host_name or host_to_test}
 
 
@@ -120,40 +88,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._udp_devices: list[dict[str, str]] | None = None
 
     async def _cached_discover(self) -> list[dict[str, str]]:
-        """Run the network discovery once per flow and reuse the result.
-
-        The scan blocks briefly; the user step would otherwise run it both when
-        showing the form and again on submit. A discovery failure yields an
-        empty list so the flow still offers the manual host entry.
-        """
+        """Run the network discovery once per flow."""
         if self._udp_devices is None:
             try:
                 self._udp_devices = await discover_smarthubs()
             except (HabitronError, OSError) as err:
-                # A missing route/interface surfaces as OSError from the own-IP
-                # lookup; either way discovery is best-effort, so fall back to
-                # the empty list and let the user enter the host manually.
                 _LOGGER.debug("SmartHub discovery failed: %s", err)
                 self._udp_devices = []
         return self._udp_devices
 
     async def _async_canonical_host(self, host: str) -> str:
-        """Return a comparable form of ``host``.
-
-        The same hub can be entered in more than one way, and comparing the raw
-        strings would miss that, adding a second entry -- and a second
-        connection -- to a hub that is already configured. Canonicalised here:
-        the ``local`` sentinel (a hub on Home Assistant's own machine, stored as
-        the sentinel rather than as that IP) and casing, which is insignificant
-        for host names.
-
-        Both the manual and the SSDP step compare through this, so the same hub
-        is recognised whichever way it was first added.
-        """
-        # Any of HA's own local addresses is the same machine as the ``local``
-        # sentinel: a multi-homed host, or a SmartCenter reachable over both LAN
-        # and WLAN, exposes several. Collapse them all to the sentinel so an
-        # entry stored under one local address still matches another.
+        """Return a comparable form of ``host``."""
         own_ips = {
             str(ip) for ip in await network.async_get_enabled_source_ips(self.hass)
         }
@@ -163,33 +108,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             resolved = await self.hass.async_add_executor_job(
                 socket.gethostbyname, host
             )
-            # A name that resolves to one of our own addresses is the same
-            # machine as the sentinel; returning the bare IP here would make
-            # ``smarthub.local`` and an entry stored as ``local`` look different.
             if resolved in own_ips:
                 return CONF_DEFAULT_HOST
             return resolved
         return host.casefold()
 
     async def _async_stored_host(self, host: str) -> str:
-        """Return ``host`` in the form an entry stores it.
-
-        ``validate_input`` writes any of Home Assistant's own addresses as the
-        ``local`` sentinel, so anything that derives an id from -- or writes --
-        the stored host has to use the same form.
-        """
+        """Return ``host`` in the form an entry stores it."""
         own_ips = {
             str(ip) for ip in await network.async_get_enabled_source_ips(self.hass)
         }
         return CONF_DEFAULT_HOST if host in own_ips else host
 
     async def _async_probe_host(self, host: str) -> str:
-        """Return an address the hub client can actually dial.
-
-        ``local`` is our own sentinel, not a name any resolver knows, and the
-        UDP probe answers with the address it was reached at -- so a name is
-        resolved too, or its reply cannot be matched.
-        """
+        """Return an IP address the hub client can dial."""
         if host == CONF_DEFAULT_HOST:
             return await network.async_get_source_ip(self.hass)
         with contextlib.suppress(OSError):
@@ -197,18 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return host
 
     async def _async_hub_identity(self, host: str) -> str | None:
-        """Return the id this hub is keyed by: its MAC, or ``None``.
-
-        The MAC is the only identity, on every path. It is the one identifier
-        both the manual and the discovery flow can obtain, it survives every
-        address change, and the custom (HACS) integration derives it the same
-        way -- so an installation moving over is recognised instead of being
-        offered a second time. There is no fallback: a hub that answers but
-        reports no usable ``lan mac`` yields ``None``, and both callers refuse
-        it rather than invent an id two hubs could share. A hub that cannot be
-        reached raises ``CannotConnect``, which is a different answer for the
-        user (see ``_async_hub_mac``).
-        """
+        """Return the hub's MAC as its unique id, or ``None``."""
         return await _async_hub_mac(await self._async_probe_host(host))
 
     async def _async_matching_entry(
@@ -216,17 +137,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entries: list[config_entries.ConfigEntry],
         *hosts: str | None,
     ) -> config_entries.ConfigEntry | None:
-        """Return the entry already configured for one of ``hosts``, if any.
-
-        Both sides have to be canonicalised: an entry added manually as
-        ``smarthub.local`` and a discovery reporting ``192.168.1.50`` are the
-        same hub, and comparing the raw strings would miss that and offer a
-        duplicate entry -- and a second connection -- for a hub that is
-        already configured.
-        """
+        """Return the entry already configured for one of ``hosts``, if any."""
         candidates = {host for host in hosts if host}
-        # Nothing configured (or nothing to compare): skip the canonicalisation
-        # and its name lookups, there is nothing this could collide with.
         if not entries or not candidates:
             return None
         canonical = {await self._async_canonical_host(host) for host in candidates}
@@ -243,13 +155,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _is_device_already_configured(
         self, host: str, ip: str | None = None
     ) -> bool:
-        """Check if a device with this host or IP is already configured.
-
-        ``_async_current_entries`` skips ignored entries in a user flow, which
-        is what makes an ignored hub configurable again by hand: core lets
-        ``_abort_if_unique_id_configured`` through for that case, so this check
-        must not abort behind its back.
-        """
+        """Check if a device with this host or IP is already configured."""
         return (
             await self._async_matching_entry(
                 list(self._async_current_entries()), host, ip
@@ -260,33 +166,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_schedule_reload_if_retrying(
         self, entry: config_entries.ConfigEntry
     ) -> None:
-        """Reload an entry that is sitting out its setup retry backoff.
-
-        A data change reaches a loaded entry through the update listener this
-        integration registers -- but that listener only exists once setup has
-        succeeded. An entry still retrying has none, so it would keep waiting
-        out its backoff on the address it already failed with, even though this
-        flow just reached the hub and corrected it.
-        """
+        """Reload an entry in setup retry, which has no update listener yet."""
         if entry.state is config_entries.ConfigEntryState.SETUP_RETRY:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
     def _async_entry_by_hub_identity(
         self, unique_id: str
     ) -> config_entries.ConfigEntry | None:
-        """Return the entry already bound to the hub with this MAC, if any.
-
-        A carried-over entry keeps its older id until a successful setup adopts
-        the MAC -- and its stored address can be stale, which is usually the
-        very reason it never got that far. Neither the unique id nor the address
-        finds it then, and the hub would be configured a second time while the
-        old entry stays unable to ever adopt the identity that would resolve the
-        duplicate. Its hub device still records the MAC, and that survives any
-        move.
-
-        A live entry wins over an ignored one: a discovery sees both, and an
-        ignored entry for the hub must not take the update the live one needs.
-        """
+        """Return the entry bound to the hub with this MAC, preferring a live one."""
         bound = [
             entry
             for entry in self._async_current_entries()
@@ -300,28 +187,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_abort_if_host_configured(
         self, host: str, *, unique_id: str
     ) -> config_entries.ConfigFlowResult | None:
-        """Abort when this address is already configured under another identity.
-
-        The unique-id check only recognises an entry that is already keyed by
-        the hub's MAC. An entry carried over from the custom integration keeps
-        its older id -- a serial, or ``habitron_<host>`` -- until its first
-        successful setup adopts the MAC (see ``HbtnCoordinator._async_resolve_uid``), and
-        in that window the same hub would be offered, and configured, a second
-        time. The address is the one thing both entries agree on, so match on
-        that as well.
-
-        The stored host is refreshed like the unique-id path does it; the
-        identity itself is left to setup, which adopts it anyway and must not
-        race with a flow doing the same.
-
-        ``_async_current_entries`` carries the right ignore semantics for both
-        callers: a discovery sees ignored entries and stays silent for them,
-        while a user flow does not -- adding an ignored hub by hand is how
-        un-ignoring works.
-        """
-        # Everything that awaits comes first. Name resolution gives a setup the
-        # chance to bind an entry to a hub, so what is decided from bindings is
-        # decided only afterwards, with no await until the caller is done.
+        """Abort when the hub is configured under an entry not keyed by its MAC."""
+        # Await first, so the bindings checked below cannot change before the abort.
         stored_host = await self._async_stored_host(host)
         by_address = await self._async_matching_entry(
             [
@@ -332,11 +199,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host,
         )
 
-        # The recorded identity is the strongest witness and needs no address
-        # at all, so it wins. Only an entry still bound to no hub can be this
-        # one by its address: one bound to a *different* MAC -- by its unique
-        # id or by the hub device it registered -- is a different hub, and the
-        # address it stores may simply be what DHCP has since handed this one.
+        # An entry bound to another MAC is another hub, even at the same address.
         entry = self._async_entry_by_hub_identity(unique_id)
         if (
             entry is None
@@ -367,41 +230,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_host_in_ssdp")
         host_str = str(host)
 
-        # No UDP scan here: the only field taken from it was the address, and
-        # that is ``host_str`` by construction -- scanning would just delay the
-        # flow.
         self._discovered_device = {"ip": host_str}
 
         try:
             unique_id = await self._async_hub_identity(host_str)
         except CannotConnect:
-            # Advertised but not reachable right now. Dropping the flow is the
-            # honest answer: SSDP re-announces, so it comes back on its own.
             return self.async_abort(reason="cannot_connect")
         if unique_id is None:
-            # No MAC, no identity: a hub that cannot be told apart from another
-            # must not be offered, or two of them would share an entry.
             return self.async_abort(reason="no_mac_address")
 
         await self.async_set_unique_id(unique_id)
-        # The identity match comes first: a live entry bound to this hub by its
-        # hub device has to get the new address even when an ignored entry
-        # carries the MAC as its id, which the unique-id check alone would pick.
+        # Before the unique id check, so a live entry wins over an ignored one.
         if (
             result := await self._async_abort_if_host_configured(
                 host_str, unique_id=unique_id
             )
         ) is not None:
             return result
-        # The entry registers an update listener that reloads on a data change,
-        # so leave the reload to it: having both schedules two reloads and is
-        # reported as breaking in 2026.12. An entry still sitting out its setup
-        # retry has no such listener, but needs no help either -- core reloads
-        # it from here regardless of ``reload_on_update``, because a discovery
-        # source proves the hub is online (``_abort_if_unique_id_configured``).
-        # The host is written in stored form --
-        # overwriting a ``local`` entry with the discovered IP would leave setup
-        # pointing at a stale address once that IP changes.
+        # The entry's update listener does the reload.
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: await self._async_stored_host(host_str)},
             reload_on_update=False,
@@ -420,13 +266,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = {CONF_HOST: host}
             try:
                 info = await validate_input(self.hass, data)
-                # Probed again: the address may have been handed to another hub
-                # while the form was open, and the entry belongs to whichever
-                # hub answers there now.
+                # Probe again: the address may now belong to another hub.
                 unique_id = await self._async_hub_identity(host)
             except CannotConnect, HostNotFound:
-                # A briefly-offline hub or an unresolved discovery host should be
-                # retryable via the confirmation form, not aborted.
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -434,15 +276,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if unique_id is None:
                     return self.async_abort(reason="no_mac_address")
-                # Checked again for the hub that answered: while the form was
-                # open, a carried-over entry may have adopted its MAC in its
-                # setup, and creating the entry now would replace that one, and
-                # with it its stored settings. Outside the try, since the
-                # aborts are raised as exceptions.
                 await self.async_set_unique_id(unique_id)
                 stored_host = await self._async_stored_host(host)
-                # Identity first, as in the discovery step: a live entry bound
-                # by its hub device wins over an ignored entry with the MAC.
                 if (
                     result := await self._async_abort_if_host_configured(
                         host, unique_id=unique_id
@@ -486,10 +321,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host_input = user_input[CONF_HOST]
 
-            # Reachability first: it separates a wrong address from a hub that
-            # answers but reports no MAC, and it is what tells an unresolvable
-            # name ("try an IP") from a refused connection. Asking for the
-            # identity first would report every one of them as a missing MAC.
             try:
                 info = await validate_input(self.hass, user_input)
                 unique_id = await self._async_hub_identity(host_input)
@@ -502,19 +333,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if unique_id is None:
-                    # The hub answers but has no MAC, so it cannot be told apart
-                    # from another one. Shown on the form rather than aborted:
-                    # updating the hub's software makes the retry work.
                     errors["base"] = "no_mac_address"
                 else:
                     await self.async_set_unique_id(unique_id)
                     stored_host = await self._async_stored_host(host_input)
-                    # Before the abort below, which raises: a user re-entering a
-                    # hub whose entry is still retrying is asking for it to be
-                    # tried now, and ``_abort_if_unique_id_configured`` only
-                    # bypasses the backoff for discovery sources. The host is
-                    # written first, as the reload starts eagerly and would
-                    # otherwise dial the old address.
+                    # Core skips the retry backoff for discovery sources only.
                     if (
                         known
                         := self.hass.config_entries.async_entry_for_domain_unique_id(
@@ -527,12 +350,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             known, data={**known.data, CONF_HOST: stored_host}
                         )
                         self._async_schedule_reload_if_retrying(known)
-                    # Re-entering a known hub at a new address updates the
-                    # stored host, so a DHCP change does not leave the entry on
-                    # the old one. The entry's update listener handles the
-                    # reload. An ignored entry is deliberately let through:
-                    # adding it by hand is how un-ignoring works, and the new
-                    # entry replaces it.
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: stored_host},
                         reload_on_update=False,
