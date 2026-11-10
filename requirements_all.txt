@@ -2465,7 +2465,7 @@ pyliebherrhomeapi==0.5.2
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.7.0
+pylitterbot==2025.8.0
 
 # homeassistant.components.london_air
 pylondonair==0.1.1
