@@ -13,6 +13,9 @@ from zwave_js_server.const import (
     CommandClass,
     SetValueStatus,
 )
+from zwave_js_server.const.command_class.window_covering import (
+    WindowCoveringPropertyKey,
+)
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -996,6 +999,57 @@ async def test_fibaro_fgr223_shutter_cover_no_tilt(
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
 
+@pytest.mark.parametrize(
+    ("property_key", "device_class"),
+    [
+        pytest.param(
+            WindowCoveringPropertyKey.OUTBOUND_BOTTOM,
+            CoverDeviceClass.SHADE,
+            id="outbound_bottom",
+        ),
+        pytest.param(
+            WindowCoveringPropertyKey.INBOUND_TOP_BOTTOM,
+            CoverDeviceClass.SHADE,
+            id="inbound_top_bottom",
+        ),
+        pytest.param(
+            WindowCoveringPropertyKey.OUTBOUND_LEFT,
+            CoverDeviceClass.CURTAIN,
+            id="outbound_left",
+        ),
+        pytest.param(
+            WindowCoveringPropertyKey.INBOUND_LEFT_RIGHT,
+            CoverDeviceClass.CURTAIN,
+            id="inbound_left_right",
+        ),
+    ],
+)
+async def test_window_covering_device_class(
+    hass: HomeAssistant,
+    client: MagicMock,
+    window_covering_outbound_bottom_state: dict[str, Any],
+    integration: MockConfigEntry,
+    property_key: WindowCoveringPropertyKey,
+    device_class: CoverDeviceClass,
+) -> None:
+    """Test the Window Covering device class follows the covering parameter."""
+    node_state = copy.deepcopy(window_covering_outbound_bottom_state)
+    for value in node_state["values"]:
+        if (
+            value.get("commandClass") == CommandClass.WINDOW_COVERING
+            and value.get("propertyKey") == WindowCoveringPropertyKey.OUTBOUND_BOTTOM
+        ):
+            value["propertyKey"] = property_key
+            value["metadata"]["ccSpecific"]["parameter"] = property_key
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+
+    states = hass.states.async_all(COVER_DOMAIN)
+    assert len(states) == 1
+    assert states[0].attributes[ATTR_DEVICE_CLASS] == device_class
+
+
 async def test_iblinds_v3_cover(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1006,6 +1060,7 @@ async def test_iblinds_v3_cover(
     entity_id = "cover.blind_west_bed_1_horizontal_slats_angle"
     state = hass.states.get(entity_id)
     assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
     # This device has no state because there is no position value
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (

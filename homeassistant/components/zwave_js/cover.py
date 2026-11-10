@@ -22,6 +22,7 @@ from zwave_js_server.const.command_class.window_covering import (
     WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
     WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
     SlatStates,
+    WindowCoveringPropertyKey,
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -44,6 +45,19 @@ from .entity import ZWaveBaseEntity
 from .models import ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
+
+HORIZONTAL_POSITION_PROPERTY_KEYS = {
+    WindowCoveringPropertyKey.OUTBOUND_LEFT,
+    WindowCoveringPropertyKey.OUTBOUND_LEFT_NO_POSITION,
+    WindowCoveringPropertyKey.OUTBOUND_RIGHT,
+    WindowCoveringPropertyKey.OUTBOUND_RIGHT_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_LEFT,
+    WindowCoveringPropertyKey.INBOUND_LEFT_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_RIGHT,
+    WindowCoveringPropertyKey.INBOUND_RIGHT_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_LEFT_RIGHT,
+    WindowCoveringPropertyKey.INBOUND_LEFT_RIGHT_NO_POSITION,
+}
 
 
 async def async_setup_entry(
@@ -486,7 +500,12 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
             if value and value.property_key_name
         ]
         self._attr_name = self.generate_name(additional_info=additional_info)
-        self._attr_device_class = CoverDeviceClass.WINDOW
+        if tilt_value:
+            self._attr_device_class = CoverDeviceClass.BLIND
+        elif pos_value and pos_value.property_key in HORIZONTAL_POSITION_PROPERTY_KEYS:
+            self._attr_device_class = CoverDeviceClass.CURTAIN
+        else:
+            self._attr_device_class = CoverDeviceClass.SHADE
 
     @property
     @override
