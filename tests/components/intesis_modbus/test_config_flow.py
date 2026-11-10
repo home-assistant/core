@@ -255,6 +255,20 @@ async def test_duplicate_aborts(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_overlapping_flows_create_one_entry(hass: HomeAssistant) -> None:
+    """Two flows for the same gateway that both pass the probe end in one entry."""
+    with _patch_temporary_unit(_seeded()):
+        first = await _submit_link(hass)
+        second = await _submit_link(hass)
+    first = await _finish_features(hass, first)
+    assert first["type"] is FlowResultType.CREATE_ENTRY
+    second = await _finish_features(hass, second)
+    assert second["type"] is FlowResultType.ABORT
+    assert second["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_second_gateway_on_same_port(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

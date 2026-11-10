@@ -151,6 +151,13 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert self._model is not None
         if user_input is not None:
+            # Another flow for the same gateway may have finished meanwhile
+            self._async_abort_entries_match(
+                {
+                    CONF_DEVICE: self._data[CONF_DEVICE],
+                    CONF_UNIT_ID: self._data[CONF_UNIT_ID],
+                }
+            )
             return self.async_create_entry(
                 title=self._model.name, data={**self._data, **user_input}
             )

@@ -239,6 +239,29 @@ async def test_set_temperature_with_hvac_mode(
     assert state.attributes[ATTR_TEMPERATURE] == 22
 
 
+async def test_set_temperature_with_unsupported_hvac_mode_raises(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A mode the unit does not have is refused before any write."""
+    writes: list[WriteEvent] = []
+    mock_connection.for_unit(1).on_write(writes.append)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: 22,
+                ATTR_HVAC_MODE: HVACMode.AUTO,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "not_valid_hvac_mode"
+    assert writes == []
+
+
 async def test_set_hvac_mode_heat_cool(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
