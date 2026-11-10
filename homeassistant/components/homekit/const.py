@@ -131,8 +131,15 @@ TYPE_AIR_PURIFIER = "air_purifier"
 TYPE_HEATER_COOLER = "heater_cooler"
 TYPE_THERMOSTAT = "thermostat"
 
+# #### Media Player Types ####
+TYPE_SET_TOP_BOX = "set_top_box"
+TYPE_STREAMING_STICK = "streaming_stick"
+TYPE_TELEVISION = "television"
+
 # #### Categories ####
 CATEGORY_RECEIVER = 34
+CATEGORY_SET_TOP_BOX = 35
+CATEGORY_STREAMING_STICK = 36
 
 # #### Services ####
 SERV_ACCESSORY_INFO = "AccessoryInformation"
