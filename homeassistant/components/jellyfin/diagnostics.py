@@ -15,7 +15,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: JellyfinConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.sessions
 
     return {
         "entry": {
