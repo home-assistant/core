@@ -221,6 +221,11 @@ class AppleTvMediaPlayer(
         if (
             self._is_feature_available(FeatureName.PowerState)
             and self.atv.power.power_state is PowerState.Off
+            # AirPlay receivers (a sleeping Apple TV, HomePods) report power
+            # off while they play audio streamed from another device.
+            and not (
+                self._playing and self._playing.device_state is DeviceState.Playing
+            )
         ):
             return MediaPlayerState.OFF
         if self._playing:
