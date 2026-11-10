@@ -1758,6 +1758,43 @@ DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
+dynamic_template_condition = probatio.All(
+    # Wrap a shorthand template condition in a template condition
+    dynamic_template,
+    lambda config: {
+        CONF_VALUE_TEMPLATE: config,
+        CONF_CONDITION: "template",
+    },
+)
+
+BUILT_IN_CONDITIONS: ValueSchemas = {
+    "and": AND_CONDITION_SCHEMA,
+    "device": DEVICE_CONDITION_SCHEMA,
+    "not": NOT_CONDITION_SCHEMA,
+    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+    "or": OR_CONDITION_SCHEMA,
+    "state": STATE_CONDITION_SCHEMA,
+    "template": TEMPLATE_CONDITION_SCHEMA,
+    "time": TIME_CONDITION_SCHEMA,
+    "trigger": TRIGGER_CONDITION_SCHEMA,
+}
+
+
+# This is first round of validation, we don't want to mutate the config here already,
+# just ensure basics as condition type and alias are there.
+def _base_condition_validator(value: Any) -> Any:
+    probatio.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            probatio.Required(CONF_CONDITION): probatio.All(
+                str, probatio.NotIn(BUILT_IN_CONDITIONS)
+            ),
+        },
+        extra=probatio.ALLOW_EXTRA,
+    )(value)
+    return value
+
+
 def _condition_shorthand(value: Any) -> tuple[str, str, probatio.Schema] | None:
     """Return the key, the condition and the schema of a condition shorthand."""
     if not isinstance(value, dict) or CONF_CONDITIONS in value:
@@ -1808,43 +1845,6 @@ def _condition_validator(
         }
 
     return validator
-
-
-dynamic_template_condition = probatio.All(
-    # Wrap a shorthand template condition in a template condition
-    dynamic_template,
-    lambda config: {
-        CONF_VALUE_TEMPLATE: config,
-        CONF_CONDITION: "template",
-    },
-)
-
-BUILT_IN_CONDITIONS: ValueSchemas = {
-    "and": AND_CONDITION_SCHEMA,
-    "device": DEVICE_CONDITION_SCHEMA,
-    "not": NOT_CONDITION_SCHEMA,
-    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-    "or": OR_CONDITION_SCHEMA,
-    "state": STATE_CONDITION_SCHEMA,
-    "template": TEMPLATE_CONDITION_SCHEMA,
-    "time": TIME_CONDITION_SCHEMA,
-    "trigger": TRIGGER_CONDITION_SCHEMA,
-}
-
-
-# This is first round of validation, we don't want to mutate the config here already,
-# just ensure basics as condition type and alias are there.
-def _base_condition_validator(value: Any) -> Any:
-    probatio.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            probatio.Required(CONF_CONDITION): probatio.All(
-                str, probatio.NotIn(BUILT_IN_CONDITIONS)
-            ),
-        },
-        extra=probatio.ALLOW_EXTRA,
-    )(value)
-    return value
 
 
 CONDITION_SCHEMA: probatio.Schema = probatio.Schema(
