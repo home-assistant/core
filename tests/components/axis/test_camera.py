@@ -8,6 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
+from homeassistant.components.axis.camera import AxisCamera
 from homeassistant.components.axis.const import (
     CONF_COMPANION,
     CONF_STREAM_PROFILE,
@@ -21,6 +22,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -82,6 +85,30 @@ async def test_camera(
         == "rtsp://root:pass@1.2.3.4/axis-media/media.amp?videocodec=h264"
         f"{'' if not stream_profile else f'&{stream_profile}'}"
     )
+
+
+@pytest.mark.parametrize(
+    ("auth", "expected_authentication"),
+    [
+        pytest.param(None, HTTP_DIGEST_AUTHENTICATION, id="digest"),
+        pytest.param(object(), HTTP_BASIC_AUTHENTICATION, id="basic"),
+    ],
+)
+async def test_camera_uses_vapix_authentication(
+    config_entry_factory: ConfigEntryFactoryType,
+    auth: object | None,
+    expected_authentication: str,
+) -> None:
+    """Test the snapshot authentication follows VAPIX authentication."""
+    config_entry = await config_entry_factory()
+
+    with (
+        patch.object(config_entry.runtime_data.api.vapix, "auth", auth),
+        patch("homeassistant.components.axis.camera.MjpegCamera.__init__") as init,
+    ):
+        AxisCamera(config_entry.runtime_data)
+
+    assert init.call_args.kwargs["authentication"] == expected_authentication
 
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])
