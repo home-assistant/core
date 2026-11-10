@@ -15,8 +15,10 @@ from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
+    KEY_DATA_BOOTSTRAP_PROGRESS,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    SIGNAL_BOOTSTRAP_PROGRESS,
 )
 from homeassistant.core import (
     Context,
@@ -132,6 +134,7 @@ def async_register_commands(
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_slugify)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_bootstrap_progress)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
@@ -246,6 +249,32 @@ def handle_subscribe_bootstrap_integrations(
     )
 
     connection.send_result(msg["id"])
+
+
+@callback
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "subscribe_bootstrap_progress",
+    }
+)
+def handle_subscribe_bootstrap_progress(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe bootstrap progress command."""
+
+    @callback
+    def forward_bootstrap_progress(message: dict[str, Any]) -> None:
+        """Forward bootstrap progress to websocket."""
+        connection.send_message(messages.event_message(msg["id"], message))
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, SIGNAL_BOOTSTRAP_PROGRESS, forward_bootstrap_progress
+    )
+
+    connection.send_result(msg["id"])
+    # Send the current progress so (re)connecting clients do not wait a tick.
+    if (progress := hass.data.get(KEY_DATA_BOOTSTRAP_PROGRESS)) is not None:
+        forward_bootstrap_progress(progress)
 
 
 @callback

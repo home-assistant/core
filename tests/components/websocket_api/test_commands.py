@@ -53,7 +53,9 @@ from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAG
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
+    KEY_DATA_BOOTSTRAP_PROGRESS,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    SIGNAL_BOOTSTRAP_PROGRESS,
     EntityCategory,
 )
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
@@ -3722,6 +3724,43 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["id"] == subscription
     assert msg["type"] == "event"
     assert msg["event"] == message
+
+
+async def test_subscribe_bootstrap_progress(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test bootstrap progress updates are forwarded."""
+    await websocket_client.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["success"]
+
+    message = {"phase": "setup", "integrations": {"total": 3, "done": 1}}
+    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_PROGRESS, message)
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == message
+
+
+async def test_subscribe_bootstrap_progress_sends_current_progress(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a (re)connecting client gets the current progress right away."""
+    hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] = {"phase": "setup"}
+    first = await hass_ws_client(hass)
+    await first.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    assert (await first.receive_json())["success"]
+    assert (await first.receive_json())["event"] == {"phase": "setup"}
+    await first.close()
+
+    hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] = {"phase": "wrap_up"}
+    reconnected = await hass_ws_client(hass)
+    await reconnected.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
+    assert (await reconnected.receive_json())["success"]
+    assert (await reconnected.receive_json())["event"] == {"phase": "wrap_up"}
 
 
 async def test_subscribe_system_state(

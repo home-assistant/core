@@ -9,11 +9,13 @@ import sys
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    async_fire_time_changed,
     get_test_config_dir,
     mock_config_flow,
     mock_integration,
@@ -21,15 +23,28 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import bootstrap, config as config_util, core, loader, runner
-from homeassistant.config_entries import ConfigEntry
+from homeassistant import (
+    bootstrap,
+    config as config_util,
+    config_entries,
+    core,
+    loader,
+    runner,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigEntryDisabler
 from homeassistant.const import (
     BASE_PLATFORMS,
     CONF_DEBUG,
+    KEY_DATA_BOOTSTRAP_PROGRESS,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    SIGNAL_BOOTSTRAP_PROGRESS,
 )
 from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
@@ -1877,3 +1892,163 @@ async def test_recorder_not_promoted(hass: HomeAssistant) -> None:
     )
 
     assert "recorder" not in all_integrations
+
+
+def _track_bootstrap_progress(
+    hass: HomeAssistant,
+) -> list[tuple[CoreState, dict[str, Any]]]:
+    """Record each bootstrap progress message with the core state it was sent in."""
+    progress: list[tuple[CoreState, dict[str, Any]]] = []
+
+    @callback
+    def _progress(data: dict[str, Any]) -> None:
+        progress.append((hass.state, data))
+
+    async_dispatcher_connect(hass, SIGNAL_BOOTSTRAP_PROGRESS, _progress)
+    return progress
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_concurrent_setup(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test progress lists concurrent setups as active and counts finished ones."""
+    hass.set_state(CoreState.not_running)
+    release = asyncio.Event()
+    all_started = asyncio.Event()
+    started: set[str] = set()
+
+    def gen_domain_setup(domain: str):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+            started.add(domain)
+            if len(started) == 2:
+                all_started.set()
+            await release.wait()
+            return True
+
+        return async_setup
+
+    for domain in ("integration_a", "integration_b"):
+        mock_integration(
+            hass, MockModule(domain=domain, async_setup=gen_domain_setup(domain))
+        )
+    progress = _track_bootstrap_progress(hass)
+
+    setup_task = hass.async_create_task(
+        bootstrap._async_set_up_integrations(
+            hass, {"integration_a": {}, "integration_b": {}}
+        )
+    )
+    await all_started.wait()
+    freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+    async_fire_time_changed(hass)
+    _, blocked = progress[-1]
+    release.set()
+    await setup_task
+
+    _, first = progress[0]
+    assert first["phase"] == bootstrap.BootstrapPhase.PREPARING
+    assert first["integrations"]["total"] is None
+
+    assert blocked["phase"] == bootstrap.BootstrapPhase.SETUP
+    assert blocked["stage"] == "2"
+    assert set(blocked["active"]) == {"integration_a", "integration_b"}
+    assert blocked["integrations"]["done"] == blocked["integrations"]["total"] - 2
+
+    _, final = progress[-1]
+    assert final["phase"] == bootstrap.BootstrapPhase.WRAP_UP
+    assert final["active"] == {}
+    assert final["integrations"]["done"] == final["integrations"]["total"]
+    assert final["integrations"]["failed"] == []
+    assert hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] is final
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_failures_and_retries(hass: HomeAssistant) -> None:
+    """Test failed integrations and config entries are reported but counted done."""
+    hass.set_state(CoreState.not_running)
+    retry_attempt = asyncio.Event()
+
+    async def async_setup_entry_retry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        if not retry_attempt.is_set():
+            retry_attempt.set()
+            raise ConfigEntryNotReady
+        await asyncio.Event().wait()
+
+    async def async_setup_failed(hass: HomeAssistant, config: ConfigType) -> bool:
+        return False
+
+    mock_integration(
+        hass, MockModule(domain="integration_fail", async_setup=async_setup_failed)
+    )
+    for domain, setup_entry in (
+        ("integration_retry", async_setup_entry_retry),
+        ("integration_error", AsyncMock(side_effect=ConfigEntryError)),
+        ("integration_ok", AsyncMock(return_value=None)),
+    ):
+        mock_integration(hass, MockModule(domain=domain, async_setup_entry=setup_entry))
+        mock_platform(hass, f"{domain}.config_flow", None)
+        MockConfigEntry(domain=domain).add_to_hass(hass)
+    MockConfigEntry(
+        domain="integration_ok", disabled_by=ConfigEntryDisabler.USER
+    ).add_to_hass(hass)
+    progress = _track_bootstrap_progress(hass)
+
+    with (
+        mock_config_flow("integration_retry", config_entries.ConfigFlow),
+        mock_config_flow("integration_error", config_entries.ConfigFlow),
+        mock_config_flow("integration_ok", config_entries.ConfigFlow),
+    ):
+        await bootstrap._async_set_up_integrations(
+            hass,
+            {
+                "integration_fail": {},
+                "integration_retry": {},
+                "integration_error": {},
+                "integration_ok": {},
+            },
+        )
+        _, final = progress[-1]
+        # The entry retries once Home Assistant has started; it still counts as retrying.
+        await hass.async_start()
+
+    assert final["phase"] == bootstrap.BootstrapPhase.WRAP_UP
+    assert final["integrations"]["done"] == final["integrations"]["total"]
+    assert final["integrations"]["failed"] == ["integration_fail"]
+    assert final["config_entries"] == {
+        "total": 3,
+        "done": 3,
+        "retrying": ["integration_retry"],
+        "failed": ["integration_error"],
+    }
+
+    _, running = progress[-1]
+    assert running["phase"] == bootstrap.BootstrapPhase.RUNNING
+    assert running["config_entries"]["retrying"] == ["integration_retry"]
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_running_transition(hass: HomeAssistant) -> None:
+    """Test progress reports starting and running only on the core state change."""
+    hass.set_state(CoreState.not_running)
+    mock_integration(hass, MockModule(domain="normal_integration"))
+    progress = _track_bootstrap_progress(hass)
+
+    await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+    state, data = progress[-1]
+    assert state is CoreState.not_running
+    assert data["phase"] == bootstrap.BootstrapPhase.WRAP_UP
+
+    await hass.async_start()
+
+    assert [(state, data["phase"]) for state, data in progress[-2:]] == [
+        (CoreState.starting, bootstrap.BootstrapPhase.STARTING),
+        (CoreState.running, bootstrap.BootstrapPhase.RUNNING),
+    ]
+    assert (
+        hass.data[KEY_DATA_BOOTSTRAP_PROGRESS]["phase"]
+        == bootstrap.BootstrapPhase.RUNNING
+    )

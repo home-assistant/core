@@ -3,6 +3,7 @@
 import asyncio
 from collections import defaultdict
 import contextlib
+from enum import StrEnum
 from functools import partial
 from itertools import chain
 import logging
@@ -65,9 +66,13 @@ from .components import (
 from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     BASE_PLATFORMS,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    KEY_DATA_BOOTSTRAP_PROGRESS,
     KEY_DATA_LOGGING as DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
+    SIGNAL_BOOTSTRAP_PROGRESS,
 )
 from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
@@ -95,10 +100,11 @@ from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .loader import Integration
 from .setup import (
-    # _setup_started is marked as protected to make it clear
+    # _setup_started and _async_get_domains_pending_setup are marked as protected to make it clear
     # that it is not part of the public API and should not be used
     # by integrations. It is only used for internal tracking of
     # which integrations are being set up.
+    _async_get_domains_pending_setup,
     _setup_started,
     async_get_setup_timings,
     async_notify_setup_error,
@@ -919,6 +925,7 @@ async def _async_set_up_integrations(
     )
 
     async_set_domains_to_be_loaded(hass, all_domains)
+    watcher.async_set_planned_domains(all_domains)
 
     # Initialize recorder
     if "recorder" in all_domains:
@@ -945,6 +952,7 @@ async def _async_set_up_integrations(
             _LOGGER.info("Already set up stage %s: %s", name, stage_domains_unfiltered)
             continue
 
+        watcher.async_set_phase(BootstrapPhase.SETUP, name)
         stage_dep_domains_unfiltered = {
             dep
             for domain in stage_domains
@@ -984,6 +992,7 @@ async def _async_set_up_integrations(
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
+    watcher.async_set_phase(BootstrapPhase.WRAP_UP)
     try:
         async with hass.timeout.async_timeout(
             WRAP_UP_TIMEOUT,
@@ -1007,6 +1016,31 @@ async def _async_set_up_integrations(
         )
 
 
+class BootstrapPhase(StrEnum):
+    """Startup phases reported in the bootstrap progress."""
+
+    PREPARING = "preparing"
+    """Resolving the domains to set up; the total is not known yet."""
+    SETUP = "setup"
+    """Setting up the integrations of a bootstrap stage."""
+    WRAP_UP = "wrap_up"
+    """Waiting for the tasks created during integration setup."""
+    STARTING = "starting"
+    """CoreState.starting: start event listeners and startup jobs."""
+    RUNNING = "running"
+    """CoreState.running: startup is finished."""
+
+
+_FAILED_CONFIG_ENTRY_STATES = {
+    config_entries.ConfigEntryState.SETUP_ERROR,
+    config_entries.ConfigEntryState.MIGRATION_ERROR,
+}
+_PENDING_CONFIG_ENTRY_STATES = {
+    config_entries.ConfigEntryState.NOT_LOADED,
+    config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+}
+
+
 class _WatchPendingSetups:
     """Periodic log and dispatch of setups that are pending."""
 
@@ -1022,6 +1056,10 @@ class _WatchPendingSetups:
         self._handle: asyncio.TimerHandle | None = None
         self._previous_was_empty = True
         self._loop = hass.loop
+        self._started = monotonic()
+        self._phase = BootstrapPhase.PREPARING
+        self._stage: str | None = None
+        self._planned_domains: set[str] | None = None
 
     def _async_watch(self) -> None:
         """Periodic log of setups that are pending."""
@@ -1038,6 +1076,7 @@ class _WatchPendingSetups:
         elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
             _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
         self._async_dispatch(remaining_with_setup_started)
+        self._async_dispatch_progress()
         if (
             self._setup_started
             and self._duration_count % LOG_SLOW_STARTUP_INTERVAL == 0
@@ -1060,6 +1099,86 @@ class _WatchPendingSetups:
             )
         self._previous_was_empty = not remaining_with_setup_started
 
+    @core.callback
+    def async_set_planned_domains(self, domains: set[str]) -> None:
+        """Set the domains bootstrap will set up, including dependencies."""
+        self._planned_domains = set(domains)
+        self._async_dispatch_progress()
+
+    @core.callback
+    def async_set_phase(self, phase: BootstrapPhase, stage: str | None = None) -> None:
+        """Set the current phase and dispatch the progress."""
+        self._phase = phase
+        self._stage = stage
+        self._async_dispatch_progress()
+
+    @core.callback
+    def _async_core_state_changed(self, phase: BootstrapPhase, _: core.Event) -> None:
+        """Dispatch the progress when the core state changes after bootstrap."""
+        self.async_set_phase(phase)
+
+    def _async_progress(self) -> dict[str, Any]:
+        """Return the startup progress.
+
+        Progress is counted in integrations (domains) whose setup attempt
+        finished, out of those bootstrap scheduled. It does not measure time.
+        """
+        now = monotonic()
+        active: dict[str, float] = {}
+        for (domain, _), start_time in self._setup_started.items():
+            active[domain] = max(active.get(domain, 0.0), now - start_time)
+
+        integrations: dict[str, Any] = {"total": None, "done": 0, "failed": []}
+        entries: dict[str, Any] = {
+            "total": 0,
+            "done": 0,
+            "retrying": [],
+            "failed": [],
+        }
+        if (planned := self._planned_domains) is not None:
+            pending = _async_get_domains_pending_setup(self._hass) & planned
+            components = self._hass.config.components
+            integrations["total"] = len(planned)
+            integrations["done"] = len(planned) - len(pending)
+            integrations["failed"] = sorted(planned - pending - components)
+            retrying: set[str] = set()
+            failed: set[str] = set()
+            for entry in self._hass.config_entries.async_entries(
+                include_ignore=False, include_disabled=False
+            ):
+                if entry.domain not in planned:
+                    continue
+                entries["total"] += 1
+                if (
+                    entry.state not in _PENDING_CONFIG_ENTRY_STATES
+                    or entry.domain not in pending
+                ):
+                    entries["done"] += 1
+                if entry.state is config_entries.ConfigEntryState.SETUP_RETRY or (
+                    # A setup after the domain finished is a retry attempt.
+                    entry.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+                    and entry.domain not in pending
+                ):
+                    retrying.add(entry.domain)
+                elif entry.state in _FAILED_CONFIG_ENTRY_STATES:
+                    failed.add(entry.domain)
+            entries["retrying"] = sorted(retrying)
+            entries["failed"] = sorted(failed)
+
+        return {
+            "phase": self._phase,
+            "stage": self._stage,
+            "elapsed": now - self._started,
+            "integrations": integrations,
+            "config_entries": entries,
+            "active": active,
+        }
+
+    def _async_dispatch_progress(self) -> None:
+        """Store and dispatch the startup progress."""
+        progress = self._hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] = self._async_progress()
+        async_dispatcher_send_internal(self._hass, SIGNAL_BOOTSTRAP_PROGRESS, progress)
+
     def _async_schedule_next(self) -> None:
         """Schedule the next call."""
         self._handle = self._loop.call_later(
@@ -1068,11 +1187,21 @@ class _WatchPendingSetups:
 
     def async_start(self) -> None:
         """Start watching."""
+        self._async_dispatch_progress()
         self._async_schedule_next()
 
     def async_stop(self) -> None:
         """Stop watching."""
         self._async_dispatch({})
+        self._async_dispatch_progress()
+        # Progress keeps the wrap up phase until the core state changes.
+        for event_type, phase in (
+            (EVENT_HOMEASSISTANT_START, BootstrapPhase.STARTING),
+            (EVENT_HOMEASSISTANT_STARTED, BootstrapPhase.RUNNING),
+        ):
+            self._hass.bus.async_listen_once(
+                event_type, partial(self._async_core_state_changed, phase)
+            )
         if self._handle:
             self._handle.cancel()
             self._handle = None
