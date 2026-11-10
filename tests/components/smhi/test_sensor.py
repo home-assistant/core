@@ -4,7 +4,12 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmhi import SmhiFireForecastException, SMHIForecast
+from pysmhi import (
+    SmhiFireForecastException,
+    SMHIForecast,
+    SMHIRadar,
+    SmhiRadarException,
+)
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -16,6 +21,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
+
+RADAR_ENTITY_ID = "sensor.test_radar_precipitation_intensity"
+RADAR_REFLECTIVITY_ENTITY_ID = "sensor.test_radar_reflectivity"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -122,3 +130,73 @@ async def test_fire_sensor_unavailable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "6.6"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "load_int")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
+@pytest.mark.parametrize(
+    ("dbz", "precipitation", "expected_dbz", "expected_precipitation"),
+    [
+        pytest.param(-30.0, 0.0, "-30.0", "0.0", id="no_echo"),
+        pytest.param(None, None, STATE_UNKNOWN, STATE_UNKNOWN, id="no_data"),
+    ],
+)
+async def test_radar_sensor_values(
+    hass: HomeAssistant,
+    mock_radar_client: MagicMock,
+    get_radar_data: SMHIRadar,
+    freezer: FrozenDateTimeFactory,
+    dbz: float | None,
+    precipitation: float | None,
+    expected_dbz: str,
+    expected_precipitation: str,
+) -> None:
+    """Test the radar sensors without an echo or data at the location."""
+    mock_radar_client.async_get_radar.return_value = {
+        **get_radar_data,
+        "dbz": dbz,
+        "precipitation": precipitation,
+    }
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state
+    assert state.state == expected_precipitation
+    state = hass.states.get(RADAR_REFLECTIVITY_ENTITY_ID)
+    assert state
+    assert state.state == expected_dbz
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "load_int")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
+async def test_radar_sensor_unavailable(
+    hass: HomeAssistant,
+    mock_radar_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the radar sensor becomes unavailable when the radar fails."""
+    mock_radar_client.async_get_radar.side_effect = SmhiRadarException("boom")
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_radar_client.async_get_radar.side_effect = None
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state
+    assert state.state == "1.25"

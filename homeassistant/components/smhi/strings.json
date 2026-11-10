@@ -28,6 +28,11 @@
     }
   },
   "entity": {
+    "image": {
+      "radar": {
+        "name": "Radar"
+      }
+    },
     "sensor": {
       "build_up_index": {
         "name": "Build up index"
@@ -110,6 +115,12 @@
           "wet_snow": "Wet snow"
         }
       },
+      "radar_precipitation_intensity": {
+        "name": "Radar precipitation intensity"
+      },
+      "radar_reflectivity": {
+        "name": "Radar reflectivity"
+      },
       "rate_of_spread": {
         "name": "Potential rate of spread"
       },
@@ -127,6 +138,12 @@
     },
     "forecast_update_failed": {
       "message": "Failed to retrieve the forecast from the SMHI API"
+    },
+    "radar_image_failed": {
+      "message": "Failed to retrieve the radar image from the SMHI API"
+    },
+    "radar_update_failed": {
+      "message": "Failed to retrieve the radar from the SMHI API"
     }
   }
 }
