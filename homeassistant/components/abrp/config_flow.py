@@ -41,8 +41,8 @@ class AbrpFlowHandler(
         data = {"scope": " ".join(OAUTH2_SCOPES)}
         if self.source == SOURCE_REAUTH:
             id_token = self._get_reauth_entry().data["token"].get("id_token")
-            # Only prefills the login page; the account is still checked on return.
             with suppress(AbrpAuthError):
+                # Only prefills the login page; the account is still checked on return.
                 if email := parse_unverified_identity(id_token).email:
                     data["login_hint"] = email
         return data
