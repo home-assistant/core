@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONFIG_FLOW_VERSION, DEFAULT_OWM_MODE, DOMAIN, OWM_MODES, PLATFORMS
+from .const import CONFIG_FLOW_VERSION, DOMAIN, OWM_MODE_V30, OWM_MODES, PLATFORMS
 from .coordinator import OWMUpdateCoordinator, get_owm_update_coordinator
 from .repairs import async_create_issue, async_delete_issue
 from .services import async_setup_services
@@ -76,7 +76,7 @@ async def async_migrate_entry(
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
     if version < 5:
-        combined_data = {**data, **options, CONF_MODE: DEFAULT_OWM_MODE}
+        combined_data = {**data, **options, CONF_MODE: OWM_MODE_V30}
         new_data, new_options = build_data_and_options(combined_data)
         config_entries.async_update_entry(
             entry,

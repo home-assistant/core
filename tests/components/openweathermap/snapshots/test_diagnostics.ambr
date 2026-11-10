@@ -64,6 +64,22 @@
         }),
       ]),
       'hourly_forecast': list([
+        dict({
+          'cloud_coverage': 75,
+          'condition': 'cloudy',
+          'datetime': '2024-04-25T16:45:36+00:00',
+          'humidity': 82,
+          'native_apparent_temperature': 2.07,
+          'native_dew_point': 3.99,
+          'native_wind_gust_speed': 11.81,
+          'precipitation': 1.21,
+          'precipitation_probability': 25,
+          'pressure': 1000,
+          'temperature': 6.84,
+          'uv_index': 0.13,
+          'wind_bearing': 199,
+          'wind_speed': 9.83,
+        }),
       ]),
       'minute_forecast': dict({
         'forecast': list([
