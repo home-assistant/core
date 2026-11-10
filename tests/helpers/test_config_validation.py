@@ -1051,6 +1051,153 @@ def test_template_complex() -> None:
         assert schema(value) == value
 
 
+INVALID_TEMPLATE = "{{ partial_print }"
+INVALID_TEMPLATE_MESSAGE = "invalid template (TemplateSyntaxError: unexpected '}')"
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("value", "expected_path"),
+    [
+        pytest.param(INVALID_TEMPLATE, [], id="string"),
+        pytest.param(["{{ beer }}", INVALID_TEMPLATE], [1], id="list_index"),
+        pytest.param({"a": "{{ beer }}", "b": INVALID_TEMPLATE}, ["b"], id="dict_key"),
+        pytest.param({INVALID_TEMPLATE: 1}, [INVALID_TEMPLATE], id="dict_template_key"),
+        pytest.param(
+            {"data": {"a": ["{{ beer }}", {"b": INVALID_TEMPLATE}]}},
+            ["data", "a", 1, "b"],
+            id="nested",
+        ),
+    ],
+)
+def test_template_complex_error_path(value: Any, expected_path: list[Any]) -> None:
+    """Test template_complex reports the path of the failing element."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        cv.template_complex(value)
+
+    assert excinfo.value.path == expected_path
+    assert excinfo.value.error_message == INVALID_TEMPLATE_MESSAGE
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("validator", "value", "expected_path", "expected_message"),
+    [
+        pytest.param(
+            probatio.Any(cv.string, cv.template_complex),
+            {"a": [INVALID_TEMPLATE]},
+            ["a", 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="any_string_template_complex",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data": {"a": INVALID_TEMPLATE}},
+            ["data", "a"],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_data",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data_template": {"a": [INVALID_TEMPLATE]}},
+            ["data_template", "a", 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_data_template",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data": [INVALID_TEMPLATE]},
+            ["data"],
+            "template value should be a string",
+            id="service_data_not_a_dict",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+            },
+            ["target", "entity_id", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_target_entity_id",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {
+                    "area_id": "kitchen",
+                    "exclude": {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+                },
+            },
+            ["target", "exclude", "entity_id", 1],
+            f"Entity ID {INVALID_TEMPLATE} is not a valid entity ID",
+            id="service_target_exclude_entity_id",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {
+                    "area_id": "kitchen",
+                    "exclude": {"entity_id": [[INVALID_TEMPLATE]]},
+                },
+            },
+            ["target", "exclude", "entity_id", 0, 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_target_exclude_entity_id_nested_list",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "target": {"entity_id": INVALID_TEMPLATE}},
+            ["target", "entity_id"],
+            "expected 'all' or 'none'",
+            id="service_target_entity_id_not_a_list",
+        ),
+        pytest.param(
+            selector.TargetSelector(),
+            {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+            ["entity_id", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="target_selector_entity_id",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"repeat": {"for_each": ["a", INVALID_TEMPLATE], "sequence": []}}],
+            [0, "repeat", "for_each", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="repeat_for_each",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"repeat": {"for_each": {"a": INVALID_TEMPLATE}, "sequence": []}}],
+            [0, "repeat", "for_each"],
+            "template value should be a string",
+            id="repeat_for_each_not_a_list",
+        ),
+        pytest.param(
+            cv.positive_time_period_template,
+            {"hours": 1, "minutes": INVALID_TEMPLATE},
+            ["minutes"],
+            "expected float",
+            id="positive_time_period_template",
+        ),
+    ],
+)
+def test_template_complex_any_branch_error(
+    validator: Any, value: Any, expected_path: list[Any], expected_message: str
+) -> None:
+    """Test which error wins when template_complex is one branch of an Any.
+
+    Any reports the error with the longest path, and the first one on a tie.
+    """
+    with pytest.raises(probatio.Invalid) as excinfo:
+        probatio.Schema(validator)(value)
+
+    assert excinfo.value.path == expected_path
+    assert excinfo.value.error_message == expected_message
+
+
 def test_time_zone() -> None:
     """Test time zone validation."""
     schema = probatio.Schema(cv.time_zone)

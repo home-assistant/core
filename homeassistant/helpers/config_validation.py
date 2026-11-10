@@ -743,13 +743,21 @@ def template_complex(value: Any) -> Any:
     if isinstance(value, list):
         return_list = value.copy()
         for idx, element in enumerate(return_list):
-            return_list[idx] = template_complex(element)
+            try:
+                return_list[idx] = template_complex(element)
+            except probatio.Invalid as err:
+                err.prepend([idx])
+                raise
         return return_list
     if isinstance(value, dict):
-        return {
-            template_complex(key): template_complex(element)
-            for key, element in value.items()
-        }
+        return_dict = {}
+        for key, element in value.items():
+            try:
+                return_dict[template_complex(key)] = template_complex(element)
+            except probatio.Invalid as err:
+                err.prepend([key])
+                raise
+        return return_dict
     if isinstance(value, str) and template_helper.is_template_string(value):
         return template(value)
 
