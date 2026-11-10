@@ -1700,68 +1700,48 @@ TRIGGER_CONDITION_SCHEMA = probatio.Schema(
     }
 )
 
-AND_CONDITION_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): "and",
-        probatio.Required(CONF_CONDITIONS): _list_of(
-            # pylint: disable-next=unnecessary-lambda
-            lambda value: CONDITION_SCHEMA(value)
-        ),
-    }
+_CONDITION_LIST_SCHEMA = _list_of(
+    # pylint: disable-next=unnecessary-lambda
+    lambda value: CONDITION_SCHEMA(value)
 )
 
-AND_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required("and"): _list_of(
-            # pylint: disable-next=unnecessary-lambda
-            lambda value: CONDITION_SCHEMA(value)
-        ),
-    }
-)
 
-OR_CONDITION_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): "or",
-        probatio.Required(CONF_CONDITIONS): _list_of(
-            # pylint: disable-next=unnecessary-lambda
-            lambda value: CONDITION_SCHEMA(value)
-        ),
-    }
-)
+def _logical_condition_schemas(
+    condition: str, shorthand_key: str
+) -> tuple[probatio.Schema, probatio.Schema]:
+    """Return the schema and the shorthand schema of a logical condition.
 
-OR_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required("or"): _list_of(
-            # pylint: disable-next=unnecessary-lambda
-            lambda value: CONDITION_SCHEMA(value)
+    A shorthand is validated with the shorthand schema only, so the two must
+    differ in nothing but the keys which hold the condition and its children.
+    """
+    return (
+        probatio.Schema(
+            {
+                **CONDITION_BASE_SCHEMA,
+                probatio.Required(CONF_CONDITION): condition,
+                probatio.Required(CONF_CONDITIONS): _CONDITION_LIST_SCHEMA,
+            }
         ),
-    }
-)
+        probatio.Schema(
+            {
+                **CONDITION_BASE_SCHEMA,
+                probatio.Required(shorthand_key): _CONDITION_LIST_SCHEMA,
+            }
+        ),
+    )
 
-NOT_CONDITION_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): "not",
-        probatio.Required(CONF_CONDITIONS): _list_of(
-            # pylint: disable-next=unnecessary-lambda
-            lambda value: CONDITION_SCHEMA(value)
-        ),
-    }
-)
 
-NOT_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required("not"): _list_of(
-            # pylint: disable-next=unnecessary-lambda
-            lambda value: CONDITION_SCHEMA(value)
-        ),
-    }
+AND_CONDITION_SCHEMA, AND_CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas(
+    "and", "and"
 )
+OR_CONDITION_SCHEMA, OR_CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas(
+    "or", "or"
+)
+NOT_CONDITION_SCHEMA, NOT_CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas(
+    "not", "not"
+)
+# A list of conditions as the condition is a shorthand for an and condition
+CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas("and", CONF_CONDITION)[1]
 
 DEVICE_CONDITION_BASE_SCHEMA = probatio.Schema(
     {
@@ -1778,41 +1758,6 @@ DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-def expand_condition_shorthand(value: Any | None) -> Any:
-    """Expand boolean condition shorthand notations."""
-
-    if not isinstance(value, dict) or CONF_CONDITIONS in value:
-        return value
-
-    for key, schema in (
-        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
-        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
-        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
-    ):
-        try:
-            schema(value)
-            return {
-                CONF_CONDITION: key,
-                CONF_CONDITIONS: value[key],
-                **{k: value[k] for k in value if k != key},
-            }
-        except probatio.MultipleInvalid:
-            pass
-
-    if isinstance(value.get(CONF_CONDITION), list):
-        try:
-            CONDITION_SHORTHAND_SCHEMA(value)
-            return {
-                CONF_CONDITION: "and",
-                CONF_CONDITIONS: value[CONF_CONDITION],
-                **{k: value[k] for k in value if k != CONF_CONDITION},
-            }
-        except probatio.MultipleInvalid:
-            pass
-
-    return value
-
-
 dynamic_template_condition = probatio.All(
     # Wrap a shorthand template condition in a template condition
     dynamic_template,
@@ -1820,16 +1765,6 @@ dynamic_template_condition = probatio.All(
         CONF_VALUE_TEMPLATE: config,
         CONF_CONDITION: "template",
     },
-)
-
-CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): _list_of(
-            # pylint: disable-next=unnecessary-lambda
-            lambda value: CONDITION_SCHEMA(value)
-        ),
-    }
 )
 
 BUILT_IN_CONDITIONS: ValueSchemas = {
@@ -1860,18 +1795,61 @@ def _base_condition_validator(value: Any) -> Any:
     return value
 
 
+def _condition_shorthand(value: Any) -> tuple[str, str, probatio.Schema] | None:
+    """Return the key, the condition and the schema of a condition shorthand."""
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
+        return None
+
+    if CONF_CONDITION in value:
+        if isinstance(value[CONF_CONDITION], list):
+            return CONF_CONDITION, "and", CONDITION_SHORTHAND_SCHEMA
+        return None
+
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
+        if key in value:
+            return key, key, schema
+
+    return None
+
+
+def _condition_validator(
+    default_schema: VolSchemaType | Callable[[Any], dict[str, Any]],
+) -> Callable[[Any], dict[Hashable, Any]]:
+    """Create a validator for a condition, which may be written as a shorthand."""
+    condition_validator = key_value_schemas(
+        CONF_CONDITION,
+        BUILT_IN_CONDITIONS,
+        default_schema,
+        "a condition, a list of conditions or a valid template",
+        list_alternatives=False,
+    )
+
+    # probatio.to_openapi reads this annotation when the schema is serialized
+    # for LLM tools. Keep None in it, or the condition is no longer nullable.
+    def validator(value: Any | None) -> dict[Hashable, Any]:
+        if (shorthand := _condition_shorthand(value)) is None:
+            return condition_validator(value)
+
+        # The shorthand is validated as written, so errors have the path of
+        # the failing child, and the children are validated only once.
+        key, condition, schema = shorthand
+        validated: dict[Hashable, Any] = schema(value)
+        return {
+            CONF_CONDITION: condition,
+            CONF_CONDITIONS: validated.pop(key),
+            **validated,
+        }
+
+    return validator
+
+
 CONDITION_SCHEMA: probatio.Schema = probatio.Schema(
     probatio.Any(
-        probatio.All(
-            expand_condition_shorthand,
-            key_value_schemas(
-                CONF_CONDITION,
-                BUILT_IN_CONDITIONS,
-                _base_condition_validator,
-                "a condition, a list of conditions or a valid template",
-                list_alternatives=False,
-            ),
-        ),
+        _condition_validator(_base_condition_validator),
         dynamic_template_condition,
     )
 )
@@ -1892,18 +1870,8 @@ dynamic_template_condition_action = probatio.All(
 
 
 CONDITION_ACTION_SCHEMA: probatio.Schema = probatio.Schema(
-    probatio.All(
-        expand_condition_shorthand,
-        key_value_schemas(
-            CONF_CONDITION,
-            BUILT_IN_CONDITIONS,
-            probatio.Any(
-                dynamic_template_condition_action,
-                _base_condition_validator,
-            ),
-            "a condition, a list of conditions or a valid template",
-            list_alternatives=False,
-        ),
+    _condition_validator(
+        probatio.Any(dynamic_template_condition_action, _base_condition_validator)
     )
 )
 
