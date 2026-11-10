@@ -57,6 +57,7 @@ from .entity import (
     async_remove_unserved_entities,
     battery_pack_identifier,
 )
+from .helpers import enum_options, option_slug
 
 PARALLEL_UPDATES = 0
 
@@ -162,7 +163,7 @@ class SofarSensor(SofarEntity, SensorEntity):
         value = self.entity_description.value_fn(self.coordinator.device)
         # IntEnum stringifies as the raw int; use the option slug.
         if isinstance(value, IntEnum):
-            return value.name.lower()
+            return option_slug(value)
         return value
 
 
@@ -418,7 +419,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="state",
         translation_key="system_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[state.name.lower() for state in SystemState],
+        options=enum_options(SystemState),
         value_fn=lambda device: device.state.system_state,
     ),
     SofarSensorDescription(
@@ -1376,7 +1377,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="battery_config_id",
         translation_key="bat_config_protocol",
         device_class=SensorDeviceClass.ENUM,
-        options=[protocol.name.lower() for protocol in BatConfigProtocol],
+        options=enum_options(BatConfigProtocol),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config_id.bat_config_protocol,
@@ -1495,7 +1496,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="battery_config",
         translation_key="bat_config_cell_type",
         device_class=SensorDeviceClass.ENUM,
-        options=[cell_type.name.lower() for cell_type in BatConfigCellType],
+        options=enum_options(BatConfigCellType),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config.bat_config_cell_type,
@@ -1571,7 +1572,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="rtc_sync",
         translation_key="sync_rtc_result",
         device_class=SensorDeviceClass.ENUM,
-        options=[result.name.lower() for result in SyncRtcResult],
+        options=enum_options(SyncRtcResult),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.rtc_sync.sync_rtc_result,
     ),
@@ -1580,7 +1581,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="feed_in",
         translation_key="feedin_limitation_mode",
         device_class=SensorDeviceClass.ENUM,
-        options=[mode.name.lower() for mode in FeedinLimitationMode],
+        options=enum_options(FeedinLimitationMode),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.feed_in.feedin_limitation_mode,
@@ -1619,7 +1620,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="passive",
         translation_key="passive_mode_timeout_action",
         device_class=SensorDeviceClass.ENUM,
-        options=[action.name.lower() for action in PassiveModeTimeoutAction],
+        options=enum_options(PassiveModeTimeoutAction),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.passive.passive_mode_timeout_action,
