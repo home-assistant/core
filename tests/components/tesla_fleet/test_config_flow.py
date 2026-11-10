@@ -917,7 +917,6 @@ async def test_region_default_fallback(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

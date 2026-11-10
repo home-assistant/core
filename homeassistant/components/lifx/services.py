@@ -6,9 +6,6 @@ from lifx import ThemeLibrary
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ATTR_XY_COLOR,
     COLOR_GROUP,
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
@@ -94,11 +91,11 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         probatio.Exclusive(LIFXServiceArgument.RGB_COLOR, COLOR_GROUP): probatio.All(
             probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
         ),
-        probatio.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Exclusive(LIFXServiceArgument.XY_COLOR, COLOR_GROUP): probatio.All(
             probatio.Coerce(tuple),
             probatio.ExactSequence((cv.small_float, cv.small_float)),
         ),
-        probatio.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): probatio.All(
+        probatio.Exclusive(LIFXServiceArgument.HS_COLOR, COLOR_GROUP): probatio.All(
             probatio.Coerce(tuple),
             probatio.ExactSequence(
                 (
@@ -109,9 +106,9 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
                 )
             ),
         ),
-        probatio.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=1500, max=9000)
-        ),
+        probatio.Exclusive(
+            LIFXServiceArgument.COLOR_TEMP_KELVIN, COLOR_GROUP
+        ): probatio.All(probatio.Coerce(int), probatio.Range(min=1500, max=9000)),
         LIFXServiceArgument.PERIOD: probatio.All(
             probatio.Coerce(float), probatio.Range(min=0.05)
         ),
