@@ -24,7 +24,7 @@ from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
 from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -357,6 +357,39 @@ async def test_camera_live_view_no_subscription(
     # Requesting an image without subscription should raise an error
     with pytest.raises(HomeAssistantError):
         await async_get_image(hass, "camera.front_live_view")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ring_client")
+async def test_camera_update_without_last_event(
+    hass: HomeAssistant,
+    mock_ring_devices: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test updating a camera that has no last event, like one without a subscription."""
+    await setup_platform(hass, Platform.CAMERA)
+    await async_setup_component(hass, "homeassistant", {})
+
+    front_camera_mock = mock_ring_devices.get_device(765432)
+    front_camera_mock.has_subscription = False
+
+    # The coordinator update clears the camera's last event
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    front_camera_mock.async_recording_url.reset_mock()
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: "camera.front_live_view"},
+        blocking=True,
+    )
+
+    # The entity helper logs a failing update instead of raising it
+    assert "Update for camera.front_live_view fails" not in caplog.text
+    front_camera_mock.async_recording_url.assert_not_called()
+    assert hass.states.get("camera.front_live_view").attributes["video_url"] is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

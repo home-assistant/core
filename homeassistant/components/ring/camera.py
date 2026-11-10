@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Generic, override
+from typing import Any, Generic, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -264,32 +264,28 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = self._device.motion_detection
             self.async_write_ha_state()
 
-        if TYPE_CHECKING:
-            # _last_event is set before calling update so will never be None
-            assert self._last_event
-
-        if self._last_event["recording"]["status"] != "ready":
+        # A camera without history or a subscription has no event, and a
+        # coordinator update can clear it while the video url is fetched
+        if (last_event := self._last_event) is None or last_event["recording"][
+            "status"
+        ] != "ready":
             return
 
+        event_id = last_event["id"]
         utcnow = dt_util.utcnow()
-        if self._last_video_id == self._last_event["id"] and utcnow <= self._expires_at:
+        if self._last_video_id == event_id and utcnow <= self._expires_at:
             return
 
-        if self._last_video_id != self._last_event["id"]:
+        if self._last_video_id != event_id:
             self._images = {}
 
-        self._video_url = await self._async_get_video()
+        self._video_url = await self._async_get_video(event_id)
 
-        self._last_video_id = self._last_event["id"]
+        self._last_video_id = event_id
         self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
     @exception_wrap
-    async def _async_get_video(self) -> str | None:
-        if TYPE_CHECKING:
-            # _last_event is set before calling update so will never be None
-            assert self._last_event
-        event_id = self._last_event.get("id")
-        assert event_id and isinstance(event_id, int)
+    async def _async_get_video(self, event_id: int) -> str | None:
         return await self._device.async_recording_url(event_id)
 
     @exception_wrap
