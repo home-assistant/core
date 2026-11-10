@@ -24,7 +24,6 @@ from homeassistant.components.abrp.coordinator import GARAGE_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestTransientError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -193,12 +192,12 @@ async def test_stream_auth_refreshes_expired_token(
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
             None,
-            OAuth2TokenRequestTransientError,
+            AbrpApiError,
             False,
             id="server_error",
         ),
-        pytest.param(None, ClientError("boom"), ClientError, False, id="client_error"),
-        pytest.param(None, TimeoutError(), TimeoutError, False, id="timeout"),
+        pytest.param(None, ClientError("boom"), AbrpApiError, False, id="client_error"),
+        pytest.param(None, TimeoutError(), AbrpApiError, False, id="timeout"),
     ],
 )
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -212,7 +211,7 @@ async def test_stream_auth_refresh_failure(
     expected: type[Exception],
     expected_reauth: bool,
 ) -> None:
-    """Only a rejected refresh is terminal for the stream and starts reauth.
+    """Only a rejected refresh is terminal and starts reauth; others are API errors.
 
     The library stops on ``AbrpAuthError`` and backs off on anything else.
     """
