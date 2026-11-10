@@ -9,6 +9,7 @@ from typing import Any, override
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
+    BadRequestException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
@@ -18,6 +19,7 @@ from systembridgeconnector.models.modules import (
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.models.settings import Settings
 from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 from systembridgeconnector.websocket_client import WebSocketClient
 
@@ -171,6 +173,26 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         setattr(self.data, module_name, module)
         self.async_set_updated_data(self.data)
 
+    async def async_handle_settings(self, settings: Settings) -> None:
+        """Follow the saved commands when any client changes the settings."""
+        self.data.commands = settings.commands.allowlist
+        self.async_set_updated_data(self.data)
+
+    async def _async_update_commands(self) -> None:
+        """Fetch the saved commands, keeping the last ones if the host can't say."""
+        try:
+            commands = await self.websocket_client.get_commands()
+        except (
+            BadRequestException,
+            ConnectionClosedException,
+            ConnectionErrorException,
+        ) as exception:
+            self.logger.debug(
+                "Could not get the saved commands for %s: %s", self.title, exception
+            )
+            return
+        self.data.commands = commands.allowlist
+
     async def async_handle_power_state(self, event: PowerStateEvent) -> None:
         """Go unavailable as soon as the host says it's sleeping or shutting down."""
         if event.state is PowerState.RESUMED:
@@ -209,6 +231,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             await self.websocket_client.listen(
                 callback=self.async_handle_module,
                 power_state_callback=self.async_handle_power_state,
+                settings_callback=self.async_handle_settings,
             )
         except AuthenticationException as exception:
             self.logger.error(
@@ -315,6 +338,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 )
 
             self.logger.debug("Registered data listener for %s", self.title)
+            # Changes made while disconnected send no event, so fetch them now
+            await self._async_update_commands()
             self._reconnect_delay = UPDATE_INTERVAL
             if self._unavailable_logged:
                 self.logger.info("%s is available again", self.title)

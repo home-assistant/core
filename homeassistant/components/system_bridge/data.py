@@ -15,6 +15,7 @@ from systembridgeconnector.models.modules import (
     Process,
     System,
 )
+from systembridgeconnector.models.settings import SettingsCommandDefinition
 
 
 @dataclass
@@ -23,6 +24,8 @@ class SystemBridgeData:
 
     audio: Audio | None = None
     battery: Battery | None = None
+    # The saved commands from the host's allowlist, None until first fetched
+    commands: list[SettingsCommandDefinition] | None = None
     cpu: CPU = field(default_factory=CPU)
     disks: Disks | None = None
     displays: list[Display] = field(default_factory=list[Display])
