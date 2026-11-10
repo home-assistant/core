@@ -56,12 +56,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         data = {**entry.data}
         # The RC80B and RC31A models got their own command sets, split from
         # the R1700BTs and S360DB ones, which they were incorrectly grouped with.
-        old_command_set = data[CONF_COMMAND_SET]
         command_set = MODEL_TO_COMMAND_SET[EdifierModel(data[CONF_MODEL])]
-        if (
-            old_command_set == EdifierCommandSet.R1700BTS
-            and command_set is EdifierCommandSet.RC80B
-        ):
+        if command_set is EdifierCommandSet.RC80B:
             # The R1700BTs Line 1 and Line 2 codes are the RC80B Opt/Coax and
             # Line 1/2 toggles, so keep the existing button entities.
             renamed_keys = {"line_1": "opt_coax", "line_2": "line_1_2"}
@@ -76,10 +72,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 return {"new_unique_id": f"{entry.entry_id}_{renamed_keys[key]}"}
 
             await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
-        elif (
-            old_command_set == EdifierCommandSet.S360DB
-            and command_set is EdifierCommandSet.R2600
-        ):
+        elif command_set is EdifierCommandSet.R2600:
             # The R2600 command set has no Bluetooth, optical or coaxial input.
             entity_registry = er.async_get(hass)
             for key in ("bluetooth", "optical", "coax"):

@@ -161,6 +161,7 @@ async def test_migrate_entry_from_v3(
     assert entry.unique_id == f"{expected_command_set}_{EMITTER_ENTITY_ID}"
 
 
+@pytest.mark.parametrize("version", [1, 2, 3])
 @pytest.mark.parametrize(
     ("model", "old_command_set", "old_keys", "expected_keys"),
     [
@@ -180,15 +181,16 @@ async def test_migrate_entry_from_v3(
         ),
     ],
 )
-async def test_migrate_entry_from_v3_buttons(
+async def test_migrate_entry_buttons(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    version: int,
     model: str,
     old_command_set: str,
     old_keys: list[str],
     expected_keys: dict[str, str],
 ) -> None:
-    """Test v3 migration keeps or removes button entities for the new command set."""
+    """Test migration keeps or removes button entities for the new command set."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=f"Edifier {model} via Test IR emitter",
@@ -198,7 +200,7 @@ async def test_migrate_entry_from_v3_buttons(
             CONF_COMMAND_SET: old_command_set,
         },
         unique_id=f"{old_command_set}_{EMITTER_ENTITY_ID}",
-        version=3,
+        version=version,
     )
     entry.add_to_hass(hass)
     old_entity_ids = {
