@@ -1,6 +1,7 @@
 """Config flow for the A Better Routeplanner integration."""
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
 from typing import Any, override
 
@@ -38,16 +39,12 @@ class AbrpFlowHandler(
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         data = {"scope": " ".join(OAUTH2_SCOPES)}
-        if self.source != SOURCE_REAUTH:
-            return data
-        id_token = self._get_reauth_entry().data["token"].get("id_token")
-        try:
-            email = parse_unverified_identity(id_token).email
-        except AbrpAuthError:
-            return data
-        # Only prefills the login page; the account is still checked on return.
-        if email:
-            data["login_hint"] = email
+        if self.source == SOURCE_REAUTH:
+            id_token = self._get_reauth_entry().data["token"].get("id_token")
+            # Only prefills the login page; the account is still checked on return.
+            with suppress(AbrpAuthError):
+                if email := parse_unverified_identity(id_token).email:
+                    data["login_hint"] = email
         return data
 
     @override

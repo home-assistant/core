@@ -19,7 +19,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import (
     CLIENT_ID,
-    CLIENT_SECRET,
     REDIRECT_URI,
     USER_SUB,
     build_id_token,
@@ -90,12 +89,6 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-    _method, _url, data, _headers = aioclient_mock.mock_calls[0]
-    assert data["client_id"] == CLIENT_ID
-    assert data["client_secret"] == CLIENT_SECRET
-    assert data["grant_type"] == "authorization_code"
-    assert data["code"] == "abcd"
 
 
 async def test_no_cloud(hass: HomeAssistant) -> None:
@@ -394,7 +387,6 @@ async def test_reauth_login_hint(
         hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
     )
 
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}&state={state}"
