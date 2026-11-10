@@ -23,7 +23,10 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.shelly.const import DOMAIN, RPC_COVER_UPDATE_TIME_SEC
-from homeassistant.components.shelly.services import SERVICE_SET_COVER_POSITION_AND_TILT
+from homeassistant.components.shelly.services import (
+    ShellyService,
+    ShellyServiceArgument,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -549,8 +552,12 @@ async def test_rpc_cover_set_position_and_tilt(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_COVER_POSITION_AND_TILT,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 100, ATTR_TILT_POSITION: 100},
+        ShellyService.SET_COVER_POSITION_AND_TILT,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ShellyServiceArgument.POSITION: 100,
+            ShellyServiceArgument.TILT_POSITION: 100,
+        },
         blocking=True,
     )
 
@@ -567,11 +574,11 @@ async def test_rpc_cover_set_position_and_tilt_not_supported(
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_COVER_POSITION_AND_TILT,
+            ShellyService.SET_COVER_POSITION_AND_TILT,
             {
                 ATTR_ENTITY_ID: "cover.test_name_test_cover_0",
-                ATTR_POSITION: 100,
-                ATTR_TILT_POSITION: 100,
+                ShellyServiceArgument.POSITION: 100,
+                ShellyServiceArgument.TILT_POSITION: 100,
             },
             blocking=True,
         )
