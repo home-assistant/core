@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, TypedDict, override
+from typing import TypedDict
 
 from homeassistant.components.application_credentials import (
     CONF_AUTH_DOMAIN,
@@ -22,7 +22,6 @@ from .const import DOMAIN, app_auth_domain
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION = 1
-STORAGE_MINOR_VERSION = 2
 STORAGE_KEY = f"{DOMAIN}.app_ledger"
 
 
@@ -32,29 +31,13 @@ class AppLedgerData(TypedDict):
     apps: dict[str, str]
 
 
-class _AppLedgerStore(Store[AppLedgerData]):
-    """Store for the app ledger, migrating older formats."""
-
-    @override
-    async def _async_migrate_func(
-        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
-    ) -> AppLedgerData:
-        """Migrate to the latest version."""
-        if old_minor_version < 2:
-            # The redirect URI of these apps is unknown, so they are never reused.
-            return {"apps": dict.fromkeys(old_data["app_ids"], "")}
-        return old_data  # type: ignore[return-value]
-
-
 class SmartThingsAppLedger:
     """Track every SmartThings app this Home Assistant instance has provisioned."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the app ledger."""
         self.hass = hass
-        self._store = _AppLedgerStore(
-            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_MINOR_VERSION
-        )
+        self._store = Store[AppLedgerData](hass, STORAGE_VERSION, STORAGE_KEY)
         self._data: AppLedgerData | None = None
         self.provisioning_lock = asyncio.Lock()
 

@@ -76,23 +76,6 @@ async def test_is_stale(
     assert ledger.is_stale(auth_domain, redirect_uri) is expected
 
 
-async def test_migrate_app_ids(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test app ids from the first storage format are migrated as not reusable."""
-    hass_storage[STORAGE_KEY] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": STORAGE_KEY,
-        "data": {"app_ids": ["app-1"]},
-    }
-
-    ledger = await async_get_app_ledger(hass)
-
-    assert ledger.is_provisioned_auth_domain(f"{DOMAIN}_app-1")
-    assert not ledger.is_reusable("app-1", REDIRECT_URI)
-
-
 async def test_get_app_ledger_is_a_singleton(hass: HomeAssistant) -> None:
     """Test the same ledger instance is returned for a given hass."""
     ledger1 = await async_get_app_ledger(hass)

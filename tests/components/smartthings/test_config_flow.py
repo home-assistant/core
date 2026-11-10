@@ -75,7 +75,7 @@ async def with_provisioned_credential(
     """Store the credential of an app provisioned for the given redirect URI."""
     hass_storage[STORAGE_KEY] = {
         "version": 1,
-        "minor_version": 2,
+        "minor_version": 1,
         "key": STORAGE_KEY,
         "data": {"apps": {"existing-app-id": ledger_redirect_uri}},
     }
@@ -260,7 +260,7 @@ async def test_pat_flow_only_reuses_owned_app(
     """Check an existing app is only reused if this instance provisioned it."""
     hass_storage[STORAGE_KEY] = {
         "version": 1,
-        "minor_version": 2,
+        "minor_version": 1,
         "key": STORAGE_KEY,
         "data": {"apps": ledger_apps},
     }
