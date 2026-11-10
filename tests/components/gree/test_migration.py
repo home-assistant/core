@@ -230,6 +230,19 @@ async def test_split_offline_preserves_records(
         _records(device_registry, entity_registry, source, identifier)
         for identifier in reversed(_IDENTIFIERS)
     ]
+    helper_entry = MockConfigEntry(domain="template")
+    helper_entry.add_to_hass(hass)
+    owned_helper = entity_registry.async_get_or_create(
+        "sensor",
+        "template",
+        "owned-helper",
+        config_entry=helper_entry,
+        device_id=records[0][0].id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    unowned_helper = entity_registry.async_get_or_create(
+        "sensor", "template", "unowned-helper", device_id=records[-1][0].id
+    )
     assert not await hass.config_entries.async_setup(source.entry_id)
     await hass.async_block_till_done()
 
@@ -275,6 +288,8 @@ async def test_split_offline_preserves_records(
         assert child.source == SOURCE_IMPORT
         assert child.state is ConfigEntryState.SETUP_RETRY
     device().bind.assert_not_awaited()
+    assert entity_registry.async_get(owned_helper.entity_id) == owned_helper
+    assert entity_registry.async_get(unowned_helper.entity_id) == unowned_helper
 
 
 def _stored_state(hass: HomeAssistant) -> dict[str, Any]:
@@ -1187,7 +1202,7 @@ async def test_foreign_entity_ownership_preflight(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """A device shared with an unrelated entry cannot be transferred."""
+    """A Gree entity owned by an unrelated entry prevents device transfer."""
     source = _legacy(hass)
     records = [
         _records(device_registry, entity_registry, source, identifier)
@@ -1196,7 +1211,11 @@ async def test_foreign_entity_ownership_preflight(
     other = MockConfigEntry(domain="other")
     other.add_to_hass(hass)
     entity_registry.async_get_or_create(
-        "sensor", "other", "unit", config_entry=other, device_id=records[-1][0].id
+        "climate",
+        DOMAIN,
+        _CANONICAL[-1],
+        config_entry=other,
+        device_id=records[-1][0].id,
     )
     await _assert_rejected(
         hass,
@@ -1628,6 +1647,12 @@ async def test_restored_migrated_child_repairs_and_loads_after_discovery(
     count: int,
 ) -> None:
     """A migrated child repairs ownership and loads without changing durable identity."""
+    helper = entity_registry.async_get_or_create(
+        "sensor",
+        "template",
+        "child-helper",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
     source = _legacy(hass)
     representative = _records(device_registry, entity_registry, source, _IDENTIFIERS[0])
     old_device, entities = _records(
@@ -1649,6 +1674,9 @@ async def test_restored_migrated_child_repairs_and_loads_after_discovery(
     assert child.state is ConfigEntryState.SETUP_RETRY
     _assert_records(
         device_registry, entity_registry, enabled_device, entities, child.entry_id
+    )
+    helper = entity_registry.async_update_entity(
+        helper.entity_id, device_id=old_device.id
     )
     stored = _stored_state(hass)
     for row in stored[registry_key]["data"][records_key][-count:]:
@@ -1710,6 +1738,7 @@ async def test_restored_migrated_child_repairs_and_loads_after_discovery(
             entities,
             child.entry_id,
         )
+        assert restored_entities.async_get(helper.entity_id) == helper
         assert {
             entity.id
             for entity in er.async_entries_for_config_entry(

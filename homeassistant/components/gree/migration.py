@@ -149,7 +149,7 @@ def _orphan_identifiers(hass: HomeAssistant, source_id: str) -> dict[str, str]:
 
 @callback
 def _inventory(hass: HomeAssistant, source_id: str) -> dict[str, _Group]:
-    """Validate the entire source and all previously created destinations."""
+    """Validate source and destination Gree records, excluding linked helpers."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -212,9 +212,13 @@ def _inventory(hass: HomeAssistant, source_id: str) -> dict[str, _Group]:
             group.entities.append(entity)
 
     for device in devices.values():
-        linked_entities = er.async_entries_for_device(
-            entity_registry, device.id, include_disabled_entities=True
-        )
+        linked_entities = [
+            entity
+            for entity in er.async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            )
+            if entity.platform == DOMAIN
+        ]
         raw_identifiers = {
             _entity_identifier(entity)
             for entity in linked_entities
