@@ -18,7 +18,6 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.config_flow import LIFXConfigFlow
 from homeassistant.components.lifx.const import CONF_SERIAL
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -460,14 +459,38 @@ async def test_discovery_rejects_a_device_that_is_not_a_light(
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
-def test_flow_matching_uses_host() -> None:
-    """Test unidentified flows match by their target host."""
-    flow = LIFXConfigFlow()
-    other_flow = LIFXConfigFlow()
-    flow.host = IP_ADDRESS
-    other_flow.host = IP_ADDRESS
+async def test_ip_discovery_matches_in_progress_flow_by_host(
+    hass: HomeAssistant, mock_light: Light
+) -> None:
+    """Test IP-only discovery aborts while a flow for the same host is in progress."""
+    with patch(
+        "homeassistant.components.lifx.config_flow.find_by_ip",
+        return_value=mock_light,
+    ) as mock_find_by_ip:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=_homekit_info(),
+        )
 
-    assert flow.is_matching(other_flow)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "discovery_confirm"
+
+        duplicate_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=_dhcp_info(),
+        )
+
+    assert duplicate_result["type"] is FlowResultType.ABORT
+    assert duplicate_result["reason"] == "already_in_progress"
+    # The second flow matched on its host before connecting to the device
+    mock_find_by_ip.assert_awaited_once()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(("source", "data"), DISCOVERY_SOURCES)
