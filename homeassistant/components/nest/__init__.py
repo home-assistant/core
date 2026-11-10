@@ -262,6 +262,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None
     await auth.async_get_access_token()
 
     subscriber = await api.new_subscriber(hass, entry, auth)
+    if not subscriber:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_create_failed",
+        )
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True

@@ -265,6 +265,20 @@ async def test_subscriber_configuration_failure(
     assert entries[0].reason == "Configuration error in the Nest subscriber"
 
 
+async def test_subscriber_create_failure(
+    hass: HomeAssistant,
+    setup_base_platform,
+) -> None:
+    """Test setup fails when the subscriber can't be created."""
+    with patch("homeassistant.components.nest.api.new_subscriber", return_value=None):
+        await setup_base_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
+    assert entries[0].reason == "Failed to create the Nest subscriber"
+
+
 async def test_legacy_entry_setup_error(hass: HomeAssistant) -> None:
     """Test setup of a legacy config entry fails and the entry is removed."""
     entry = MockConfigEntry(domain=DOMAIN, data={})

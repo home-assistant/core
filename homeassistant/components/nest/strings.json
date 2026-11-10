@@ -140,6 +140,9 @@
     "subscriber_configuration_error": {
       "message": "Configuration error in the Nest subscriber"
     },
+    "subscriber_create_failed": {
+      "message": "Failed to create the Nest subscriber"
+    },
     "subscriber_error": {
       "message": "Subscriber failed to connect to Google, please see logs for details."
     },
