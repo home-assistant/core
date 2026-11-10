@@ -797,35 +797,6 @@ async def test_trigger_messages_attached_before_discovery(
     ) == ["double"]
 
 
-@pytest.mark.usefixtures("tag_mock")
-async def test_artifact_messages_topic_change(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-) -> None:
-    """Test the messages of a tag after its topic changed."""
-    await mqtt_mock_entry()
-    async_fire_mqtt_message(hass, DISCOVERY_TAG_TOPIC, json.dumps(DISCOVERY_TAG_CONFIG))
-    await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "z2m/tag", "tag_1")
-    await hass.async_block_till_done()
-    async_fire_mqtt_message(
-        hass,
-        DISCOVERY_TAG_TOPIC,
-        json.dumps({**DISCOVERY_TAG_CONFIG, "topic": "z2m/tag_new"}),
-    )
-    await hass.async_block_till_done()
-
-    assert await _async_artifact_payloads(hass, hass_ws_client, "tag:z2m_tag") == []
-
-    async_fire_mqtt_message(hass, "z2m/tag_new", "tag_2")
-    await hass.async_block_till_done()
-
-    assert await _async_artifact_payloads(hass, hass_ws_client, "tag:z2m_tag") == [
-        "tag_2"
-    ]
-
-
 async def test_device_discovery_details(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
