@@ -225,8 +225,12 @@ class MatterThermostatSetpointNumber(MatterRangeNumber):
     @override
     def _update_from_device(self) -> None:
         """Update from device."""
-        super()._update_from_device()
         description = self.entity_description
+        if description.native_min_value is not None:
+            self._attr_native_min_value = description.native_min_value
+        if description.native_max_value is not None:
+            self._attr_native_max_value = description.native_max_value
+        super()._update_from_device()
         if (
             description.min_attribute is not None
             and self.get_matter_attribute_value(description.min_attribute) is None
