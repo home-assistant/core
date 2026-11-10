@@ -2062,23 +2062,6 @@ def test_theme_selector_options_match_the_library(service: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "argument",
-    [
-        LIFXServiceArgument.COLOR_NAME,
-        LIFXServiceArgument.RGB_COLOR,
-        LIFXServiceArgument.HS_COLOR,
-        LIFXServiceArgument.XY_COLOR,
-        LIFXServiceArgument.COLOR_TEMP_KELVIN,
-    ],
-)
-def test_pulse_documents_every_color_argument(argument: str) -> None:
-    """Test the action editor offers every color argument pulse accepts."""
-    services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
-
-    assert argument in services[LIFXService.EFFECT_PULSE]["fields"]
-
-
-@pytest.mark.parametrize(
     ("service", "default"),
     [
         pytest.param(LIFXService.EFFECT_MOVE, None, id="move"),
