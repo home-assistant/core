@@ -4,6 +4,7 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_EXCLUDE, ENTITY_MATCH_ALL
+from homeassistant.core import split_entity_id
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.registry import NextNamePart
 from homeassistant.helpers.template.render_info import render_info_cv
@@ -126,6 +127,11 @@ class EntityExtension(BaseTemplateExtension):
                     for entity_id in group.expand_entity_ids(
                         self.hass, target_entity_ids, include_groups=True
                     ):
+                        if self.hass.states.get(entity_id) is None:
+                            render_info.entities.add(entity_id)  # type: ignore[attr-defined]
+                            render_info.domains_lifecycle.add(  # type: ignore[attr-defined]
+                                split_entity_id(entity_id)[0]
+                            )
                         if (
                             entity_id.startswith(group.ENTITY_PREFIX)
                             or entity_id in group_entity_ids

@@ -263,8 +263,11 @@ async def test_resolve_target_tracks_group_dependencies(hass: HomeAssistant) -> 
             nested_group.entity_id,
             excluded_group.entity_id,
             excluded_nested_group.entity_id,
+            "light.member",
+            "light.excluded_member",
         }
     )
+    assert info.domains_lifecycle == {"light"}
 
 
 @pytest.mark.parametrize(
@@ -339,6 +342,73 @@ async def test_resolve_target_all_tracks_entity_lifecycle(
     await hass.async_block_till_done()
     assert results == [2, 1]
 
+    tracker.async_remove()
+
+
+@pytest.mark.parametrize(
+    (
+        "target",
+        "group_entity_id",
+        "member_entity_ids",
+        "initial_entity_ids",
+        "expected",
+    ),
+    [
+        (
+            {"entity_id": "light.late_group"},
+            "light.late_group",
+            ["light.member_one", "light.member_two"],
+            [],
+            2,
+        ),
+        (
+            {
+                "entity_id": "light.member",
+                "exclude": {"entity_id": "light.late_group"},
+            },
+            "light.late_group",
+            ["light.member"],
+            ["light.member"],
+            0,
+        ),
+    ],
+)
+async def test_resolve_target_tracks_groups_loaded_after_render(
+    hass: HomeAssistant,
+    target: dict[str, object],
+    group_entity_id: str,
+    member_entity_ids: list[str],
+    initial_entity_ids: list[str],
+    expected: int,
+) -> None:
+    """Test group loads after the initial render update target results."""
+    for entity_id in initial_entity_ids:
+        hass.states.async_set(entity_id, "on")
+
+    template = Template("{{ resolve_target(target) | count }}", hass)
+    info = template.async_render_to_info({"target": target})
+    assert info.domains_lifecycle == {"light"}
+    assert group_entity_id in info.entities
+
+    results: list[int] = []
+
+    @callback
+    def handle_result(
+        event: Event[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
+        results.extend(int(update.result) for update in updates)
+
+    tracker = async_track_template_result(
+        hass, [TrackTemplate(template, {"target": target})], handle_result
+    )
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    group_entity = MockEntity(entity_id=group_entity_id, unique_id="late_group")
+    group_entity.group = GenericGroup(group_entity, member_entity_ids)
+    await platform.async_add_entities([group_entity])
+    await hass.async_block_till_done()
+
+    assert results == [expected]
     tracker.async_remove()
 
 
