@@ -219,6 +219,15 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
         return {d.mac: d for d in await self.omada_client.get_devices()}
 
 
+class OmadaLanCoordinator(OmadaCoordinator[LanNetwork]):
+    """Read the configured LAN networks for one site."""
+
+    @override
+    async def poll_update(self) -> dict[str, LanNetwork]:
+        networks = await self.omada_client.get_lan_networks()
+        return {network.id: network for network in networks}
+
+
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
     """Coordinator for getting details about the site's connected clients."""
 
@@ -323,12 +332,3 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
-
-
-class OmadaLanCoordinator(OmadaCoordinator[LanNetwork]):
-    """Read the configured LAN networks for one site."""
-
-    @override
-    async def poll_update(self) -> dict[str, LanNetwork]:
-        networks = await self.omada_client.get_lan_networks()
-        return {network.id: network for network in networks}
