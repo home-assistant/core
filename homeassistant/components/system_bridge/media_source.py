@@ -2,6 +2,8 @@
 
 from typing import override
 
+from packaging.version import parse as parse_version
+from systembridgeconnector.helpers import media_file_url
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles
@@ -20,7 +22,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNED_MEDIA_URL_MIN_VERSION
 from .coordinator import SystemBridgeConfigEntry
 
 
@@ -71,11 +73,8 @@ class SystemBridgeSource(MediaSource):
         """Resolve media to a url."""
         entry_id, path, mime_type = item.identifier.split("~~", 2)
         entry = _get_loaded_entry(self.hass, entry_id, Unresolvable)
-        path_split = path.split("/", 1)
-        return PlayMedia(
-            f"{_build_base_url(entry)}&base={path_split[0]}&path={path_split[1]}",
-            mime_type,
-        )
+        base, file_path = path.split("/", 1)
+        return PlayMedia(_build_file_url(entry, base, file_path), mime_type)
 
     @override
     async def async_browse_media(
@@ -138,13 +137,23 @@ class SystemBridgeSource(MediaSource):
         )
 
 
-def _build_base_url(
-    entry: SystemBridgeConfigEntry,
-) -> str:
-    """Build base url for System Bridge media."""
+def _build_file_url(entry: SystemBridgeConfigEntry, base: str, path: str) -> str:
+    """Build the URL for a System Bridge media file."""
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    token = entry.data[CONF_TOKEN]
+    system = entry.runtime_data.data.system
+    if (
+        system is not None
+        and system.version is not None
+        and parse_version(system.version).release >= SIGNED_MEDIA_URL_MIN_VERSION
+    ):
+        # The URL goes to players such as cast devices, so it's signed for
+        # this file rather than carrying the API token
+        return media_file_url(host, port, token, base, path)
     return (
-        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        f"/api/media/file/data?token={entry.data[CONF_TOKEN]}"
+        f"http://{host}:{port}/api/media/file/data"
+        f"?token={token}&base={base}&path={path}"
     )
 
 

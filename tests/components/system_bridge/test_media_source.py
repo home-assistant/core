@@ -1,9 +1,16 @@
 """Test the System Bridge integration."""
 
+from dataclasses import replace
+from datetime import UTC, datetime
+from unittest.mock import patch
+from urllib.parse import parse_qs, urlparse
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
+from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgeconnector.models.modules import Module
 
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
@@ -138,6 +145,40 @@ async def test_file(
     assert resolve_media_file == snapshot(
         name=f"{DOMAIN}_media_source_file_image",
     )
+
+
+async def test_file_signed_url(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test hosts that accept signed URLs get one, without the API token."""
+    coordinator = init_integration.runtime_data
+    await coordinator.async_handle_module(
+        Module.SYSTEM, replace(FIXTURE_SYSTEM, version="5.25.0")
+    )
+
+    with patch(
+        "systembridgeconnector.helpers.utcnow",
+        return_value=datetime(2026, 11, 10, 12, tzinfo=UTC),
+    ):
+        resolved = await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents/my file.txt~~text/plain",
+            None,
+        )
+
+    url = urlparse(resolved.url)
+    query = parse_qs(url.query)
+    assert f"{url.scheme}://{url.netloc}{url.path}" == (
+        "http://127.0.0.1:9170/api/media/file/data"
+    )
+    assert "token" not in query
+    assert query["base"] == ["documents"]
+    assert query["path"] == ["my file.txt"]
+    assert query["expires"] == [
+        str(int(datetime(2026, 11, 11, 12, tzinfo=UTC).timestamp()))
+    ]
+    assert len(query["sig"][0]) == 64
 
 
 @pytest.mark.parametrize(
