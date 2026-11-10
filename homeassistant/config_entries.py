@@ -1501,6 +1501,22 @@ class ConfigEntry[_DataT = Any]:
         )
 
     @callback
+    def _async_delete_stale_reauth_issue(self, hass: HomeAssistant) -> None:
+        """Delete the reauth issue unless a reauth flow is active or starting."""
+        if (
+            # The issue is hidden, keep it for when the entry is enabled again
+            self.disabled_by
+            or self._reauth_lock.locked()
+            or any(self.async_get_active_flows(hass, {SOURCE_REAUTH}))
+        ):
+            return
+        ir.async_delete_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"config_entry_reauth_{self.domain}_{self.entry_id}",
+        )
+
+    @callback
     def async_get_active_flows(
         self, hass: HomeAssistant, sources: set[str]
     ) -> Generator[ConfigFlowResult]:
@@ -1608,6 +1624,8 @@ class ConfigEntriesFlowManager(
             background=True,
         )
         self._flow_subscriptions: list[Callable[[str, str], None]] = []
+        # Reauth flows aborted by core, whose issue must outlive the flow
+        self._reauth_issue_kept_flow_ids: set[str] = set()
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
         """Wait till all import flows in progress are initialized."""
@@ -1729,8 +1747,6 @@ class ConfigEntriesFlowManager(
     ) -> tuple[ConfigFlow, ConfigFlowResult]:
         """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
-        if not flow:
-            raise data_entry_flow.UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = flow_id
@@ -1771,6 +1787,9 @@ class ConfigEntriesFlowManager(
 
         # Clean up issue if this is a reauth flow
         if flow.context["source"] == SOURCE_REAUTH:
+            if flow.flow_id in self._reauth_issue_kept_flow_ids:
+                self._reauth_issue_kept_flow_ids.discard(flow.flow_id)
+                return
             if (entry_id := flow.context.get("entry_id")) is not None:
                 # The config entry's domain is flow.handler
                 issue_id = f"config_entry_reauth_{flow.handler}_{entry_id}"
@@ -2375,7 +2394,9 @@ class ConfigEntries:
         self._entries[entry.entry_id] = entry
         self.async_update_issues()
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
-        await self.async_setup(entry.entry_id)
+        # Ignored entries are never set up, so don't load the integration for them
+        if entry.source != SOURCE_IGNORE:
+            await self.async_setup(entry.entry_id)
         self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> dict[str, Any]:
@@ -2423,8 +2444,7 @@ class ConfigEntries:
         ir.async_get(self.hass).async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
-        # abort any reauth flow that is active for the removed entry and
-        # linked issues.
+        # abort any reauth flow that is active for the removed entry.
         _abort_reauth_flows(self.hass, entry.domain, entry_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
@@ -2664,24 +2684,28 @@ class ConfigEntries:
         # attempts.
         entry.async_cancel_retry_setup()
 
-        # Abort any in-progress reauth flow and linked issues
+        # Abort any in-progress reauth flow, but keep its issue so a reauth
+        # started by the setup below updates it instead of losing its ignore.
         _abort_reauth_flows(self.hass, entry.domain, entry_id)
 
-        if entry.domain not in self.hass.config.components:
-            # If the component is not loaded, just load it as
-            # the config entry will be loaded as well. We need
-            # to do this before holding the lock to avoid a
-            # deadlock.
-            await async_setup_component(self.hass, entry.domain, self._hass_config)
-            return entry.state is ConfigEntryState.LOADED
+        try:
+            if entry.domain not in self.hass.config.components:
+                # If the component is not loaded, just load it as
+                # the config entry will be loaded as well. We need
+                # to do this before holding the lock to avoid a
+                # deadlock.
+                await async_setup_component(self.hass, entry.domain, self._hass_config)
+                return entry.state is ConfigEntryState.LOADED
 
-        async with entry.setup_lock:
-            unload_result = await self.async_unload(entry_id, _lock=False)
+            async with entry.setup_lock:
+                unload_result = await self.async_unload(entry_id, _lock=False)
 
-            if not unload_result or entry.disabled_by:
-                return unload_result
+                if not unload_result or entry.disabled_by:
+                    return unload_result
 
-            return await self.async_setup(entry_id, _lock=False)
+                return await self.async_setup(entry_id, _lock=False)
+        finally:
+            entry._async_delete_stale_reauth_issue(self.hass)  # noqa: SLF001
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None
@@ -4456,11 +4480,15 @@ async def _async_get_flow_handler(
 @callback
 def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None:
     """Abort reauth flows for an entry."""
-    for progress_flow in hass.config_entries.flow.async_progress_by_handler(
+    flow_manager = hass.config_entries.flow
+    for progress_flow in flow_manager.async_progress_by_handler(
         domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
     ):
         if "flow_id" in progress_flow:
-            hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+            # The issue is updated or deleted after a reload, and deleted
+            # with the config entry on removal
+            flow_manager._reauth_issue_kept_flow_ids.add(progress_flow["flow_id"])  # noqa: SLF001
+            flow_manager.async_abort(progress_flow["flow_id"])
 
 
 # These can be removed if no deprecated constants are in this module anymore

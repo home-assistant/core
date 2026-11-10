@@ -1741,6 +1741,118 @@ def test_comp_entity_ids() -> None:
             schema(invalid)
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param("all", "all", id="all"),
+        pytest.param("ALL", "all", id="all_upper"),
+        pytest.param("none", "none", id="none"),
+        pytest.param("NoNe", "none", id="none_mixed_case"),
+        pytest.param(None, "none", id="none_value"),
+        pytest.param([], [], id="empty_list"),
+        pytest.param("light.kitchen", ["light.kitchen"], id="string"),
+        pytest.param("LIGHT.Kitchen", ["light.kitchen"], id="string_upper"),
+        pytest.param(
+            "light.kitchen, light.ceiling",
+            ["light.kitchen", "light.ceiling"],
+            id="comma_string",
+        ),
+        pytest.param(
+            ["light.kitchen", "light.ceiling"],
+            ["light.kitchen", "light.ceiling"],
+            id="list",
+        ),
+    ],
+)
+def test_comp_entity_ids_valid(
+    validator: Callable[[Any], Any], value: Any, expected: str | list[str]
+) -> None:
+    """Test component entity ID validators accept and normalize valid values."""
+    assert validator(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("validator", "value", "message"),
+    [
+        pytest.param(
+            cv.comp_entity_ids,
+            "not-entity-id",
+            "Entity ID not-entity-id is an invalid entity ID",
+            id="comp_entity_ids-string",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            ["light.kitchen", "not-entity-id"],
+            "Entity ID not-entity-id is an invalid entity ID",
+            id="comp_entity_ids-list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            ["all"],
+            "Entity ID all is an invalid entity ID",
+            id="comp_entity_ids-all_in_list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            4,
+            "Entity IDs must be a string or a list",
+            id="comp_entity_ids-int",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            "not-entity-id",
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID",
+            id="comp_entity_ids_or_uuids-string",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            ["light.kitchen", "not-entity-id"],
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID",
+            id="comp_entity_ids_or_uuids-list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            4,
+            "Entity IDs must be a string or a list",
+            id="comp_entity_ids_or_uuids-int",
+        ),
+        pytest.param(
+            cv.make_entity_service_schema({}),
+            {"entity_id": "not-entity-id"},
+            "Entity ID not-entity-id is an invalid entity ID at 'entity_id'",
+            id="entity_service_schema-string",
+        ),
+        pytest.param(
+            cv.make_entity_service_schema({}),
+            {"entity_id": ["light.kitchen", "not-entity-id"]},
+            "Entity ID not-entity-id is an invalid entity ID at 'entity_id'",
+            id="entity_service_schema-list",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"action": "light.turn_on", "target": {"entity_id": "not-entity-id"}}],
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID"
+            " at '[0].target.entity_id'",
+            id="script_schema-target",
+        ),
+    ],
+)
+def test_comp_entity_ids_invalid_message(
+    validator: Callable[[Any], Any], value: Any, message: str
+) -> None:
+    """Test component entity ID validators report the entity ID error."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        validator(value)
+    assert str(excinfo.value) == message
+
+
 def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = probatio.Schema(cv.uuid4_hex)

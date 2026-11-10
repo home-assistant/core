@@ -19,12 +19,19 @@ from pytest_homeassistant.components.common import (
     target_entities,
 )
 
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import ClimateEntityCapabilityAttribute, HVACMode
 from homeassistant.components.temperature.condition import CONDITIONS
+from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
 from homeassistant.components.weather import ATTR_WEATHER_TEMPERATURE_UNIT
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
+_CLIMATE_UNIT_ATTRIBUTES = {
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
+_WATER_HEATER_UNIT_ATTRIBUTES = {
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 _WEATHER_UNIT_ATTRIBUTES = {ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS}
 
 
@@ -176,6 +183,7 @@ async def test_temperature_sensor_condition_behavior_all(
         HVACMode.AUTO,
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
         attribute_required=True,
     ),
 )
@@ -213,6 +221,7 @@ async def test_temperature_climate_condition_behavior_any(
         HVACMode.AUTO,
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
         attribute_required=True,
     ),
 )
@@ -250,6 +259,7 @@ async def test_temperature_climate_condition_behavior_all(
         "eco",
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
         attribute_required=True,
     ),
 )
@@ -287,6 +297,7 @@ async def test_temperature_water_heater_condition_behavior_any(
         "eco",
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
         attribute_required=True,
     ),
 )
@@ -491,10 +502,30 @@ async def test_temperature_condition_unit_conversion_climate(
         condition="temperature.is_value",
         entity_id="climate.test",
         pass_states=[
-            {"state": HVACMode.AUTO, "attributes": {"current_temperature": 25}}
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {"current_temperature": 25, **_CLIMATE_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {
+                    "current_temperature": 80,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
         ],
         fail_states=[
-            {"state": HVACMode.AUTO, "attributes": {"current_temperature": 20}}
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {"current_temperature": 20, **_CLIMATE_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {
+                    "current_temperature": 68,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
         ],
         numerical_condition_options=[
             {

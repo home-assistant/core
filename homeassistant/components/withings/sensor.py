@@ -995,7 +995,6 @@ class WithingsGoalsSensor(
     @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        assert self.coordinator.data
         return self.entity_description.value_fn(self.coordinator.data)
 
 

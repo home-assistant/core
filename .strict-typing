@@ -195,6 +195,7 @@ homeassistant.components.duckdns.*
 homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
+homeassistant.components.e3dc.*
 homeassistant.components.easyenergy.*
 homeassistant.components.ecosmart.*
 homeassistant.components.ecovacs.*
@@ -694,6 +695,7 @@ homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
 homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
+homeassistant.components.watergate.*
 homeassistant.components.watts.*
 homeassistant.components.watttime.*
 homeassistant.components.wattwaechter.*

@@ -10,6 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
+from yarl import URL
 
 from homeassistant.components.abrp.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import SOURCE_USER
@@ -290,3 +291,105 @@ async def test_garage_fetch_error_aborts(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "sub",
+        "refresh_token",
+        "expected_reason",
+        "expected_access_token",
+        "expected_setups",
+    ),
+    [
+        pytest.param(
+            USER_SUB,
+            "mock-refresh-token",
+            "reauth_successful",
+            "new-access-token",
+            1,
+            id="same_account",
+        ),
+        pytest.param(
+            "other-sub",
+            "mock-refresh-token",
+            "wrong_account",
+            "mock-access-token",
+            0,
+            id="wrong_account",
+        ),
+        pytest.param(
+            USER_SUB,
+            None,
+            "oauth_error",
+            "mock-access-token",
+            0,
+            id="missing_refresh_token",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    config_entry: MockConfigEntry,
+    sub: str,
+    refresh_token: str | None,
+    expected_reason: str,
+    expected_access_token: str,
+    expected_setups: int,
+) -> None:
+    """Reauth updates the token, but only with a usable token for the same account."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
+    _mock_token_post(
+        aioclient_mock, build_id_token(sub), "new-access-token", refresh_token
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    assert config_entry.data["token"]["access_token"] == expected_access_token
+    # Reauth must not re-read the garage; setup does that on reload.
+    mock_abrp_client.assert_not_called()
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == expected_setups
+
+
+@pytest.mark.parametrize(
+    ("id_token", "expected_login_hint"),
+    [
+        pytest.param(
+            build_id_token(email="sofie@example.com", name="Sofie"),
+            "sofie@example.com",
+            id="email",
+        ),
+        pytest.param(build_id_token(name="Sofie"), None, id="no_email"),
+        pytest.param("header.not-base64!.sig", None, id="unparsable_id_token"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauth_login_hint(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    expected_login_hint: str | None,
+) -> None:
+    """Reauth prefills the stored account's email on the login page when known."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert URL(result["url"]).query.get("login_hint") == expected_login_hint
