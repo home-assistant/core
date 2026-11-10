@@ -7,6 +7,7 @@ from enum import Enum
 from functools import cache, partial
 import inspect
 import logging
+import threading
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast, overload
 
@@ -573,12 +574,16 @@ async def _async_load_services_yaml(hass: HomeAssistant, domains: set[str]) -> N
         if type(int_or_exc) is Integration and int_or_exc.has_services:
             integrations.append(int_or_exc)
             continue
+        if isinstance(int_or_exc, Integration):
+            _LOGGER.error("Failed to load services.yaml for integration: %s", domain)
+            loaded[domain] = {}
+            continue
+        # Not cached, so the lookup is retried once the integration is installed
         _LOGGER.error(
             "Failed to load services.yaml for integration: %s",
             domain,
-            exc_info=None if isinstance(int_or_exc, Integration) else int_or_exc,
+            exc_info=int_or_exc,
         )
-        loaded[domain] = {}
 
     if integrations:
         loaded.update(
@@ -639,8 +644,9 @@ async def _async_get_registered_descriptions(
             if cache_key in descriptions_cache:
                 continue
             # The YAML may not describe dynamically defined services
-            # (e.g. shell_command) that never call async_set_service_schema
-            yaml_description = yaml_descriptions[domain].get(service_name)
+            # (e.g. shell_command) that never call async_set_service_schema,
+            # or the integration may have failed to load
+            yaml_description = yaml_descriptions.get(domain, {}).get(service_name)
             if yaml_description is None:
                 yaml_description = _build_description(None)
             descriptions_cache[cache_key] = _add_registration(
@@ -840,7 +846,11 @@ def async_set_service_schema(
 
     hass.data.pop(REGISTERED_SERVICE_DESCRIPTIONS_CACHE, None)
     descriptions_cache[(domain, service)] = description
-    _async_schedule_service_events(hass)
+    # Integrations with a sync setup call this from the executor
+    if hass.loop_thread_id != threading.get_ident():
+        hass.loop.call_soon_threadsafe(_async_schedule_service_events, hass)
+    else:
+        _async_schedule_service_events(hass)
 
 
 @callback

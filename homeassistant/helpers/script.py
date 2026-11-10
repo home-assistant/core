@@ -55,6 +55,7 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
+    CONF_SERVICE_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
     CONF_STOP,
     CONF_TARGET,
@@ -354,7 +355,8 @@ async def async_validate_action_config(
 
     elif action_type == cv.SCRIPT_ACTION_CALL_SERVICE:
         # Templated actions are only known when run
-        if isinstance(action := config.get(CONF_ACTION), str):
+        action = config.get(CONF_ACTION, config.get(CONF_SERVICE_TEMPLATE))
+        if isinstance(action, str):
             await service.async_declare_service(hass, action)
 
     elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
