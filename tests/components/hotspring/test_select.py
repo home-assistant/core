@@ -146,7 +146,7 @@ async def test_unsupported_entities_not_added(
     device_fixture.jets = {
         1: Jet(jet_id=1, speed=JetSpeed.OFF, is_enabled=False, on_seconds=0),
     }
-    device_fixture.heater.heating_mode = HeatingMode.INVALID
+    device_fixture.heater.heating_mode = HeatingMode.UNKNOWN
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SELECT])
 
     assert not entity_registry.async_is_registered(JET_1_ENTITY_ID)

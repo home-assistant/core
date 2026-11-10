@@ -700,7 +700,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             and (host_ia := self._selected_tunnel.individual_address)
             and not keyring.get_tunnel_interfaces_by_host(host=host_ia)
         ):
-            return {"base": "keyfile_no_tunnel_for_host"}, {CONF_HOST: str(host_ia)}
+            return {"base": "keyfile_no_tunnel_for_host"}, {"host": str(host_ia)}
         return {}, {}
 
     async def _async_keyring_selected(

@@ -11,7 +11,7 @@ from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -114,8 +114,8 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.data[CONF_HOST] = host
         self.context["title_placeholders"] = {
-            CONF_NAME: self.bridge_id,
-            CONF_HOST: host,
+            "name": self.bridge_id,
+            "host": host,
         }
         return await self.async_step_link()
 
@@ -165,8 +165,8 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="link",
             errors=errors,
             description_placeholders={
-                CONF_NAME: self.bridge_id,
-                CONF_HOST: self.data[CONF_HOST],
+                "name": self.bridge_id,
+                "host": self.data[CONF_HOST],
             },
         )
 

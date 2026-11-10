@@ -4,12 +4,6 @@
       "camera_in_use": {
         "default": "mdi:webcam"
       },
-      "locked": {
-        "default": "mdi:lock-open-variant",
-        "state": {
-          "on": "mdi:lock"
-        }
-      },
       "pending_reboot": {
         "default": "mdi:restart"
       }
@@ -53,6 +47,14 @@
     "select": {
       "audio_input": {
         "default": "mdi:microphone-settings"
+      },
+      "power_profile": {
+        "default": "mdi:speedometer",
+        "state": {
+          "balanced": "mdi:scale-balance",
+          "performance": "mdi:rocket-launch",
+          "power-saver": "mdi:leaf"
+        }
       }
     },
     "sensor": {
@@ -200,6 +202,12 @@
         "default": "mdi:monitor",
         "state": {
           "off": "mdi:monitor-off"
+        }
+      },
+      "keep_awake": {
+        "default": "mdi:coffee",
+        "state": {
+          "off": "mdi:coffee-off"
         }
       }
     }

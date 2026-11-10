@@ -914,18 +914,19 @@ async def async_setup_entry(
         )
 
     if api.is_public_only:
-        async_add_entities(
+        public_entities = [
             entity
             for public, _ in data.get_public_cameras()
             if public is not None
             for entity in _async_public_event_entities(data, public)
-        )
-        async_add_entities(
+        ]
+        public_entities.extend(
             entity
             for public, _ in data.get_public_devices(ModelType.SENSOR)
             if public is not None
             for entity in _async_sensor_event_entities(data, public, public)
         )
+        async_add_entities(public_entities)
         return
 
     # Everything below is driven by the private bootstrap, which public-only
@@ -944,10 +945,11 @@ async def async_setup_entry(
             )
 
     data.async_subscribe_adopt(_add_new_device)
-    async_add_entities(_async_event_entities(data))
-    async_add_entities(
+    entities = _async_event_entities(data)
+    entities.extend(
         entity
         for public, private in data.get_public_devices(ModelType.SENSOR)
         if private is not None
         for entity in _async_sensor_event_entities(data, private, public)
     )
+    async_add_entities(entities)

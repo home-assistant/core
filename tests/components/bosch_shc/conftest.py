@@ -53,6 +53,7 @@ from boschshcpy.services_impl import (
     DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
+    OutdoorSirenPowerSupplyService,
     OutdoorSirenService,
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
@@ -270,6 +271,7 @@ def outdoor_siren_device(
     device_id: str = "hdm:ZigBee:outdoorsiren1",
     name: str = "Outdoor Siren",
     sound_level: OutdoorSirenService.SoundLevel = OutdoorSirenService.SoundLevel.MEDIUM,
+    power_supply: OutdoorSirenPowerSupplyService | None = None,
 ) -> SHCOutdoorSiren:
     """Build a minimal device double for the outdoor_sirens bucket."""
     device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
@@ -285,6 +287,8 @@ def outdoor_siren_device(
     siren_service = create_autospec(OutdoorSirenService, instance=True)
     siren_service.sound_level = sound_level
     device.siren = siren_service
+    device.supports_power_supply = power_supply is not None
+    device.power_supply = power_supply
     return device
 
 
@@ -606,6 +610,7 @@ def micromodule_dimmer_device(
     supports_dimmer_configuration: bool = False,
     edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
     | None = None,
+    dimming_speed: int | None = 5,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -622,6 +627,7 @@ def micromodule_dimmer_device(
     device.brightness = brightness
     device.supports_dimmer_configuration = supports_dimmer_configuration
     device.edge_phase_control_mode = edge_phase_control_mode
+    device.dimming_speed = dimming_speed
     return device
 
 

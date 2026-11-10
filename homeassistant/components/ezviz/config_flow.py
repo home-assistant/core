@@ -270,7 +270,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             # A unique ID is passed in via the discovery info
             assert self.unique_id is not None
-        self.context["title_placeholders"] = {ATTR_SERIAL: self.unique_id}
+        self.context["title_placeholders"] = {"serial": self.unique_id}
         self.ip_address = discovery_info[CONF_IP_ADDRESS]
 
         return await self.async_step_confirm()
@@ -312,8 +312,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=discovered_camera_schema,
             errors=errors,
             description_placeholders={
-                ATTR_SERIAL: self.unique_id,
-                CONF_IP_ADDRESS: self.ip_address,
+                "serial": self.unique_id,
+                "ip_address": self.ip_address,
             },
         )
 
@@ -334,7 +334,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                self.context["title_placeholders"] = {ATTR_SERIAL: item.title}
+                self.context["title_placeholders"] = {"serial": item.title}
                 entry = await self.async_set_unique_id(item.title)
 
         if not entry:
@@ -418,7 +418,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_URL: reconfigure_entry.data[CONF_URL]},
             ),
             errors=errors,
-            description_placeholders={CONF_USERNAME: reconfigure_entry.title},
+            description_placeholders={"username": reconfigure_entry.title},
         )
 
 

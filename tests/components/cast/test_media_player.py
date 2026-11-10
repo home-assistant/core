@@ -14,7 +14,6 @@ from pychromecast.const import CAST_TYPE_CHROMECAST, CAST_TYPE_GROUP
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
-    assert_setup_component,
     async_load_fixture,
     mock_platform,
 )
@@ -2100,12 +2099,7 @@ async def test_failed_cast_other_url(
 ) -> None:
     """Test warning when casting from internal_url fails."""
     await async_setup_component(hass, "homeassistant", {})
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            tts.DOMAIN,
-            {tts.DOMAIN: {"platform": "demo"}},
-        )
+    assert await async_setup_component(hass, tts.DOMAIN, {})
 
     info = get_fake_chromecast_info()
     chromecast, _ = await async_setup_media_player_cast(hass, info)
@@ -2129,10 +2123,7 @@ async def test_failed_cast_internal_url(
         hass,
         {"internal_url": "http://example.local:8123"},
     )
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(
-            hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "demo"}}
-        )
+    assert await async_setup_component(hass, tts.DOMAIN, {})
 
     info = get_fake_chromecast_info()
     chromecast, _ = await async_setup_media_player_cast(hass, info)
@@ -2159,12 +2150,7 @@ async def test_failed_cast_external_url(
         hass,
         {"external_url": "http://example.com:8123"},
     )
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            tts.DOMAIN,
-            {tts.DOMAIN: {"platform": "demo"}},
-        )
+    assert await async_setup_component(hass, tts.DOMAIN, {})
 
     info = get_fake_chromecast_info()
     chromecast, _ = await async_setup_media_player_cast(hass, info)
