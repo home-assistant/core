@@ -14,4 +14,4 @@ class TouchlineData:
     """Runtime data for the Touchline integration."""
 
     touchline: PyTouchline
-    number_of_devices: int
+    devices: list[PyTouchline]
