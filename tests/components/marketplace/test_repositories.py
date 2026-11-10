@@ -3557,6 +3557,164 @@ async def test_integration_manifest_of_a_version(
         )
 
 
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("members", "resource"),
+    [
+        pytest.param(
+            {"card.js": "card", "card.js.map": "map", "plugin-basic.js": "other"},
+            "card.js",
+            id="named_like_the_zip",
+        ),
+        pytest.param(
+            {"plugin-basic.js": "card", "translations/en.json": "{}"},
+            "plugin-basic.js",
+            id="named_like_the_repository",
+        ),
+    ],
+)
+async def test_install_plugin_from_the_catalog_zip_release(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    aioclient_mock: AiohttpClientMocker,
+    config_dir: Path,
+    members: dict[str, str],
+    resource: str,
+) -> None:
+    """Test a dashboard resource shipping a ZIP release installs what it holds."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+
+    for url, content in (
+        (
+            f"https://raw.githubusercontent.com/{REPOSITORY_PLUGIN}/1.0.0/hacs.json",
+            b'{"name": "Card", "zip_release": true, "filename": "card.zip"}',
+        ),
+        (
+            f"https://github.com/{REPOSITORY_PLUGIN}/releases/download/1.0.0/card.zip",
+            _zip_bytes(members),
+        ),
+    ):
+        response_mocker.add(url, mocked_response(url, content=content))
+    aioclient_mock.mock_calls.clear()
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert not github_api_calls(aioclient_mock)
+    assert _installed_files(config_dir) == sorted(
+        f"www/community/plugin-basic/{member}" for member in members
+    )
+    assert repository.data.file_name == resource
+    assert [
+        item["url"] for item in repository._get_resource_handler().async_items()
+    ] == [f"/local/community/plugin-basic/{resource}?v=1296267-1.0.0"]
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_plugin_zip_release_without_a_resource_is_refused(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    config_dir: Path,
+) -> None:
+    """Test a ZIP release without a dashboard resource in its root is not installed."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_PLUGIN)
+
+    for url, content in (
+        (
+            f"https://raw.githubusercontent.com/{REPOSITORY_PLUGIN}/1.0.0/hacs.json",
+            b'{"name": "Card", "zip_release": true, "filename": "card.zip"}',
+        ),
+        (
+            f"https://github.com/{REPOSITORY_PLUGIN}/releases/download/1.0.0/card.zip",
+            _zip_bytes({"dist/card.js": "card"}),
+        ),
+    ):
+        response_mocker.add(url, mocked_response(url, content=content))
+
+    response = await _install(hass, hass_ws_client, repository.data.id)
+
+    assert not response["success"]
+    assert "card.zip has no dashboard resource" in response["error"]["message"]
+    assert not repository.data.installed
+    assert _installed_files(config_dir) == []
+
+
+def test_plugin_zip_resource_stays_in_the_root(
+    mock_repository_plugin: PluginRepository,
+) -> None:
+    """Test the file name in hacs.json can not point the resource outside the card."""
+    mock_repository_plugin.repository_manifest.zip_release = True
+    mock_repository_plugin.repository_manifest.filename = "../card.zip"
+    local = Path(mock_repository_plugin.content.path.local)
+    local.mkdir(parents=True)
+    (local.parent / "card.js").write_text("someone else's card")
+
+    assert mock_repository_plugin._find_extracted_resource() is None
+
+
+@pytest.mark.parametrize(
+    ("installed", "file_name"),
+    [
+        pytest.param(False, "", id="not_installed"),
+        pytest.param(True, "card.js", id="installed"),
+    ],
+)
+def test_update_filenames_of_a_plugin_zip_release(
+    mock_repository_plugin: PluginRepository, installed: bool, file_name: str
+) -> None:
+    """Test a ZIP release asset is the content, the resource is found on install."""
+    mock_repository_plugin.data.installed = installed
+    mock_repository_plugin.data.file_name = "card.js"
+    mock_repository_plugin.repository_manifest.zip_release = True
+    mock_repository_plugin.repository_manifest.filename = "card-v1.zip"
+    # The version to install can name another ZIP than the newest release has
+    mock_repository_plugin.releases.objects = [
+        GitHubReleaseModel({"tag_name": "3", "assets": [{"name": "card-v2.zip"}]})
+    ]
+
+    mock_repository_plugin.update_filenames()
+
+    assert mock_repository_plugin.content.path.remote == "release"
+    assert mock_repository_plugin.data.file_name == file_name
+
+
+async def test_plugin_zip_resource_is_taken_after_the_write(
+    mock_repository_plugin: PluginRepository,
+) -> None:
+    """Test the resource of a ZIP release replaces the old one only once written."""
+    mock_repository_plugin.data.file_name = "old.js"
+    mock_repository_plugin.repository_manifest.zip_release = True
+    mock_repository_plugin.repository_manifest.filename = "card.zip"
+    local = Path(mock_repository_plugin.content.path.local)
+    local.mkdir(parents=True)
+    (local / "card.js").write_text("card")
+
+    await mock_repository_plugin.async_check_written_content()
+    assert mock_repository_plugin.data.file_name == "old.js"
+
+    with patch.object(mock_repository_plugin, "update_dashboard_resources"):
+        await mock_repository_plugin.async_post_installation()
+    assert mock_repository_plugin.data.file_name == "card.js"
+
+
+async def test_catalog_plugin_zip_release_needs_a_release(
+    mock_repository_plugin: PluginRepository,
+) -> None:
+    """Test a ZIP release is not looked for at a commit, only a release has it."""
+    mock_repository_plugin.repository_manifest.zip_release = True
+    mock_repository_plugin.repository_manifest.filename = "card.zip"
+
+    with pytest.raises(CatalogContentUnresolvedError) as exc_info:
+        await mock_repository_plugin._async_resolve_catalog_content(
+            "abc1234", commit=True
+        )
+
+    assert exc_info.value.translation_key == "catalog_zip_release_without_release"
+
+
 async def test_catalog_zip_release_needs_a_domain(
     marketplace: MarketplaceManager,
 ) -> None:
