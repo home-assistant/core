@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -44,14 +44,16 @@ async def test_dimmer_actions(
     hass: HomeAssistant,
     mock_dimmer: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test every supported dimmer action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, LIGHT_DOMAIN, "a1b2c3d4e5f6g7-10")
     # turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_once_with(0, 0)
@@ -59,7 +61,7 @@ async def test_dimmer_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer", ATTR_TRANSITION: 1},
+        {ATTR_ENTITY_ID: entity_id, ATTR_TRANSITION: 1},
         blocking=True,
     )
     mock_dimmer.restore_dimmer_state.assert_called_once_with(1)
@@ -68,7 +70,7 @@ async def test_dimmer_actions(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer",
+            ATTR_ENTITY_ID: entity_id,
             ATTR_BRIGHTNESS: 0,
             ATTR_TRANSITION: 1,
         },
@@ -80,7 +82,7 @@ async def test_dimmer_actions(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmer_full_name_dimmer", ATTR_BRIGHTNESS: 33},
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 33},
         blocking=True,
     )
     mock_dimmer.set_dimmer_state.assert_called_with(12, 0)

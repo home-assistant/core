@@ -9,7 +9,7 @@ from velbusaio.properties import Property as VelbusProperty
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -31,7 +31,12 @@ class VelbusEntity(Entity):
         """Initialize a Velbus entity."""
         self._channel = channel
         self._module_address = str(channel.get_module_address())
-        self._attr_name = channel.get_name()
+        if channel.is_sub_device():
+            # Child device already carries the channel name; avoid duplicating it
+            # in the entity friendly name (device name + entity name).
+            self._attr_name = None
+        else:
+            self._attr_name = channel.get_name()
         serial = channel.get_module_serial()
         # Modules like the VMB4RY report a serial of "0"; fall back to the module
         # address so entities on multiple such modules keep distinct unique ids.
@@ -50,10 +55,25 @@ class VelbusEntity(Entity):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo:
-        """Return device info, linking a sub-device to its module device."""
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
+        """Return device info for this entity's device."""
         channel = self._channel
-        device_info = DeviceInfo(
+        if channel.is_sub_device():
+            config_entry = self.platform.config_entry
+            if TYPE_CHECKING:
+                assert config_entry
+            parent_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._module_address),
+                config_entry_id=config_entry.entry_id,
+            )
+            assert parent_device_id is not None
+            return ChildDeviceInfo(
+                identifiers={(DOMAIN, self._get_identifier())},
+                name=channel.get_name(),
+                parent_device_id=parent_device_id,
+            )
+        return DeviceInfo(
             identifiers={(DOMAIN, self._get_identifier())},
             manufacturer="Velleman",
             model=channel.get_module_type_name(),
@@ -62,16 +82,6 @@ class VelbusEntity(Entity):
             sw_version=channel.get_module_sw_version(),
             serial_number=channel.get_module_serial(),
         )
-        if channel.is_sub_device():
-            config_entry = self.platform.config_entry
-            if TYPE_CHECKING:
-                assert config_entry
-            device_info.via_device_id = dr.async_get_device_id_by_identifier(
-                self.hass,
-                (DOMAIN, self._module_address),
-                config_entry_id=config_entry.entry_id,
-            )
-        return device_info
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -105,7 +115,9 @@ def api_call[_T: VelbusEntity, **_P](
         try:
             await func(self, *args, **kwargs)
         except OSError as exc:
-            entity_name = self.name if isinstance(self.name, str) else "Unknown"
+            entity_name = (
+                self.name if isinstance(self.name, str) else self.entity_id or "Unknown"
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="api_call_failed",

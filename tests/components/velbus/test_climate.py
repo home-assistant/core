@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import get_entity_id, init_integration
 
 
 async def test_entities(
@@ -43,14 +43,19 @@ async def test_set_target_temperature(
     hass: HomeAssistant,
     mock_temperature: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the target temperature climate action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, CLIMATE_DOMAIN, "asdfghjk-3")
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_TEMPERATURE: 29},
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TEMPERATURE: 29,
+        },
         blocking=True,
     )
     mock_temperature.set_temp.assert_called_once_with(29)
@@ -69,15 +74,20 @@ async def test_set_preset_mode(
     hass: HomeAssistant,
     mock_temperature: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     set_mode: str,
     expected_mode: str,
 ) -> None:
     """Test the preset mode climate action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, CLIMATE_DOMAIN, "asdfghjk-3")
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_PRESET_MODE: set_mode},
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: set_mode,
+        },
         blocking=True,
     )
     mock_temperature.set_preset.assert_called_once_with(expected_mode)
@@ -94,14 +104,19 @@ async def test_set_hvac_mode(
     hass: HomeAssistant,
     mock_temperature: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     set_mode: str,
 ) -> None:
     """Test the hvac mode climate action."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, CLIMATE_DOMAIN, "asdfghjk-3")
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_HVAC_MODE: set_mode},
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_HVAC_MODE: set_mode,
+        },
         blocking=True,
     )
     mock_temperature.set_mode.assert_called_once_with(set_mode)
@@ -111,14 +126,19 @@ async def test_set_hvac_mode_invalid(
     hass: HomeAssistant,
     mock_temperature: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the hvac mode climate action with an invalid mode."""
     await init_integration(hass, config_entry)
+    entity_id = get_entity_id(entity_registry, CLIMATE_DOMAIN, "asdfghjk-3")
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_HVAC_MODE: "auto"},
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_HVAC_MODE: "auto",
+            },
             blocking=True,
         )
     mock_temperature.set_mode.assert_not_called()
