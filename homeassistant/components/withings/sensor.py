@@ -8,6 +8,7 @@ from typing import Any, override
 from aiowithings import (
     Activity,
     Device,
+    DeviceModel,
     Goals,
     MeasurementPosition,
     MeasurementType,
@@ -695,6 +696,7 @@ class WithingsDeviceSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
     value_fn: Callable[[Device], StateType]
+    exists_fn: Callable[[Device], bool] = lambda _: True
 
 
 DEVICE_SENSORS = [
@@ -704,6 +706,8 @@ DEVICE_SENSORS = [
         options=["low", "medium", "high"],
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda device: device.battery,
+        # The Aura Sensor V2 is a wired Sleep Analyzer, so it has no battery
+        exists_fn=lambda device: device.model is not DeviceModel.AURA_SENSOR_V2,
     )
 ]
 
@@ -886,9 +890,11 @@ async def async_setup_entry(
                     )
                 ):
                     continue
+                withings_device = device_coordinator.data[device_id]
                 async_add_entities(
                     WithingsDeviceSensor(device_coordinator, description, device_id)
                     for description in DEVICE_SENSORS
+                    if description.exists_fn(withings_device)
                 )
                 current_devices.add(device_id)
 
