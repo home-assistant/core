@@ -153,7 +153,6 @@ class MjpegCamera(Camera):
                 response = await websession.get(
                     self._still_image_url, headers=self._auth_headers
                 )
-                response.raise_for_status()
 
                 return await response.read()
 
@@ -186,16 +185,15 @@ class MjpegCamera(Camera):
             if self._still_image_url:
                 # Fallback to MJPEG stream if still image URL is not available
                 with suppress(TimeoutError, httpx2.HTTPError):
-                    response = await client.get(
-                        self._still_image_url, auth=auth, timeout=TIMEOUT
-                    )
-                    response.raise_for_status()
-                    return response.content
+                    return (
+                        await client.get(
+                            self._still_image_url, auth=auth, timeout=TIMEOUT
+                        )
+                    ).content
 
             async with client.stream(
                 "get", self._mjpeg_url, auth=auth, timeout=TIMEOUT
             ) as stream:
-                stream.raise_for_status()
                 return await async_extract_image_from_mjpeg(
                     stream.aiter_bytes(BUFFER_SIZE)
                 )

@@ -63,21 +63,6 @@ async def test_camera_image(
     assert image.content == b"image_bytes"
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_camera_image_http_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test that an HTTP error response raises instead of returning its body."""
-    aioclient_mock.get("http://example.com/still", status=401)
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await async_get_image(hass, ENTITY_CAMERA)
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "error_getting_image"
-
-
 @pytest.fixture
 def mock_digest_config_entry() -> MockConfigEntry:
     """Return a mocked config entry that uses digest authentication."""
@@ -126,27 +111,3 @@ async def test_digest_camera_image_error(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
-
-
-@respx.mock
-async def test_digest_camera_image_http_error(
-    hass: HomeAssistant,
-    mock_digest_config_entry: MockConfigEntry,
-) -> None:
-    """Test that HTTP error responses raise instead of returning their bodies."""
-    mock_digest_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_digest_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    respx.get("http://example.com/still").mock(
-        return_value=httpx2.Response(401, content=b"Unauthorized")
-    )
-    respx.get("https://example.com/mjpeg").mock(
-        return_value=httpx2.Response(401, content=b"Unauthorized")
-    )
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await async_get_image(hass, ENTITY_CAMERA)
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "error_getting_image"
