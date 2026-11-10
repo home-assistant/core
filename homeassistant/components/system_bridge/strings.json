@@ -79,6 +79,43 @@
         "name": "Sleep"
       }
     },
+    "event": {
+      "notification": {
+        "name": "Notification",
+        "state_attributes": {
+          "action": {
+            "name": "Action"
+          },
+          "buttons": {
+            "name": "Buttons"
+          },
+          "event_type": {
+            "state": {
+              "clicked": "Clicked",
+              "closed": "Closed",
+              "sent": "Sent"
+            }
+          },
+          "message": {
+            "name": "Message"
+          },
+          "notification_id": {
+            "name": "Notification ID"
+          },
+          "reason": {
+            "name": "Reason",
+            "state": {
+              "closed": "Closed",
+              "dismissed": "Dismissed",
+              "expired": "Expired"
+            }
+          },
+          "title": {
+            "name": "Title"
+          }
+        }
+      }
+    },
     "media_player": {
       "audio": {
         "name": "Audio"
@@ -382,12 +419,36 @@
     }
   },
   "issues": {
+    "deprecated_notify_action": {
+      "description": "The action `{action}` is deprecated and will be removed in a future release.\n\nUpdate your automations and scripts to use the notify entity with the `{new_action_1}` or `{new_action_2}` action instead.\n\n## Example automation using `{new_action_1}` action:\n\n{example_yaml_1}\n\n## Example automation using `{new_action_2}` action:\n\n{example_yaml_2}",
+      "title": "Detected use of deprecated action {action}"
+    },
     "unsupported_version": {
       "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version.",
       "title": "System Bridge upgrade required"
     }
   },
   "selector": {
+    "buttons": {
+      "fields": {
+        "id": {
+          "description": "Reported when the button is pressed. Can't be \"default\", which is reported when the notification itself is clicked.",
+          "name": "ID"
+        },
+        "label": {
+          "description": "Text shown on the button.",
+          "name": "Label"
+        }
+      }
+    },
+    "icon": {
+      "options": {
+        "dialog-error": "Error",
+        "dialog-information": "Information",
+        "dialog-question": "Question",
+        "dialog-warning": "Warning"
+      }
+    },
     "key": {
       "options": {
         "alt": "Alt",
@@ -460,6 +521,13 @@
         "restart": "[%key:common::action::restart%]",
         "shutdown": "Shutdown",
         "sleep": "Sleep"
+      }
+    },
+    "urgency": {
+      "options": {
+        "critical": "Critical",
+        "low": "Low",
+        "normal": "Normal"
       }
     }
   },
@@ -547,6 +615,48 @@
         }
       },
       "name": "Send keyboard keypress"
+    },
+    "send_message": {
+      "description": "Sends a notification to the computer, with options the standard notify action doesn't have. Only administrators can use it.",
+      "fields": {
+        "buttons": {
+          "description": "Up to 3 buttons to show on the notification. Pressing one reports its ID. Linux and Windows only.",
+          "name": "Buttons"
+        },
+        "duration": {
+          "description": "How long the notification shows for.",
+          "name": "Duration"
+        },
+        "icon": {
+          "description": "Icon to show with the notification: an image path on the computer, or on Linux an icon name from the icon theme. Standard icon names: {icon_naming_url}.",
+          "name": "Icon"
+        },
+        "message": {
+          "description": "The message body of the notification.",
+          "name": "Message"
+        },
+        "path": {
+          "description": "File or folder on the computer to open when the notification is clicked. Can't be used with URL.",
+          "name": "[%key:common::config_flow::data::path%]"
+        },
+        "sound": {
+          "description": "Path to a sound file on the computer to play with the notification. Linux only.",
+          "name": "Sound"
+        },
+        "title": {
+          "description": "Title of the notification.",
+          "name": "Title"
+        },
+        "urgency": {
+          "description": "How urgent the notification is. Critical notifications stay until they're dismissed. Linux only.",
+          "name": "Urgency"
+        },
+        "url": {
+          "description": "URL to open on the computer when the notification is clicked. Can't be used with path.",
+          "name": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "name": "Send message"
     },
     "send_text": {
       "description": "Sends text for the server to type.",
