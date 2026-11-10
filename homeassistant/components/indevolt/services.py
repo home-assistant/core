@@ -68,10 +68,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
     hass.services.async_register(
-        DOMAIN,  # Keep the same integration domain.
-        IndevoltService.CHARGE,  # Keep the existing charge action name.
-        charge,  # Keep the existing charge handler.
-        schema=RT_ACTION_SERVICE_SCHEMA,  # Keep the shared validation rules.
+        DOMAIN,
+        IndevoltService.CHARGE,
+        charge,
+        schema=RT_ACTION_SERVICE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,  # Keep the same integration domain.
