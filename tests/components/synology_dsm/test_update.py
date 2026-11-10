@@ -273,3 +273,29 @@ async def test_package_release_notes(
     )
     result = await client.receive_json()
     assert result["result"] == "<p>Fixed issues.</p>"
+
+
+async def test_first_visible_package_installed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_dsm: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_packages: dict[str, SynoPackage],
+) -> None:
+    """Test packages are still fetched while only hidden packages are installed."""
+    for package_id in ("AudioStation", "DhcpServer", "MariaDB10", "Node.js_v22"):
+        del mock_packages[package_id]
+    await setup_integration(hass, mock_dsm, mock_config_entry)
+
+    async def install_package(*args: bool) -> None:
+        """Install a package, as seen by the next fetch."""
+        mock_packages["PHP8.4"] = mock_package(
+            "PHP8.4", "PHP 8.4", "8.4.27-0051", "8.4.28-0052"
+        )
+
+    mock_dsm.update.side_effect = install_package
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(PHP_ENTITY_ID).state == STATE_ON

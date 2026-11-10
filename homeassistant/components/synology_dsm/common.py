@@ -47,6 +47,7 @@ from .const import (
     DOMAIN,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
+    HIDDEN_PACKAGE_INSTALL_TYPE,
     ISSUE_MISSING_BACKUP_SETUP,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
@@ -286,7 +287,17 @@ class SynoApi:
         self._with_storage = bool(self._fetching_entities.get(SynoStorage.API_KEY))
         self._with_photos = bool(self._fetching_entities.get(SynoStorage.API_KEY))
         self._with_upgrade = bool(self._fetching_entities.get(SynoCoreUpgrade.API_KEY))
-        self._with_package = bool(self._fetching_entities.get(SynoCorePackage.API_KEY))
+        # Keep fetching while no visible package exists, as no entity subscribes yet
+        self._with_package = bool(
+            self._fetching_entities.get(SynoCorePackage.API_KEY)
+            or (
+                self.package is not None
+                and all(
+                    package.install_type == HIDDEN_PACKAGE_INSTALL_TYPE
+                    for package in self.package.get_all_packages()
+                )
+            )
+        )
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )

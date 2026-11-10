@@ -17,11 +17,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import SynoApi
+from .const import HIDDEN_PACKAGE_INSTALL_TYPE
 from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
-# Package Center does not list these packages
-HIDDEN_INSTALL_TYPE = "system_hidden"
 PACKAGE_RELEASE_NOTES_URL = "https://www.synology.com/en-global/releaseNote"
 
 
@@ -74,7 +73,7 @@ async def async_setup_entry(
             package
             for package in package_api.get_all_packages()
             if package.package_id not in known_package_ids
-            and package.install_type != HIDDEN_INSTALL_TYPE
+            and package.install_type != HIDDEN_PACKAGE_INSTALL_TYPE
         ]
         known_package_ids.update(package.package_id for package in new_packages)
         async_add_entities(
