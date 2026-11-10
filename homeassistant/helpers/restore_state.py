@@ -595,6 +595,8 @@ class _RestoreStoreManager:
         self._dirty: set[_StoreKey] = set()
         # Whether _data differs from what was last saved
         self._changed = False
+        # Whether the store exists on disk or a write to it was attempted
+        self._store_written = False
 
     async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the store and set up saving it.
@@ -611,6 +613,7 @@ class _RestoreStoreManager:
             _LOGGER.error("Error loading restore coordinator data", exc_info=exc)
             stored = None
         if stored is not None:
+            self._store_written = True
             self._data = {
                 bucket: {
                     scope_id: {
@@ -635,8 +638,9 @@ class _RestoreStoreManager:
 
         async def _async_dump_at_final_write(_: Event) -> None:
             cancel_interval()
-            # Write any stored data even if unchanged, to retry a failed write
-            if any(self._data.values()):
+            # Write even if unchanged, to retry a failed write, but never create
+            # the store when no coordinator ever used it
+            if self._store_written:
                 self._changed = True
             await self.async_dump()
 
@@ -744,6 +748,7 @@ class _RestoreStoreManager:
         if not self._changed:
             return
         self._changed = False
+        self._store_written = True
         _LOGGER.debug("Dumping restore coordinator data")
         await self._store.async_save(self._data_to_save())
 

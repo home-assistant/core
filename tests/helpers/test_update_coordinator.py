@@ -1649,6 +1649,8 @@ def get_stored_data(hass_storage: dict[str, Any], entry: MockConfigEntry) -> Any
 async def flush_restore_store(hass: HomeAssistant) -> None:
     """Save the data of all restore coordinators that changed."""
     await restore_state._async_get_restore_store_manager(hass).async_dump()
+    # A dump scheduled by a removal may still be writing
+    await hass.async_block_till_done()
 
 
 def get_restore_crd(
@@ -2680,7 +2682,8 @@ async def test_update_during_write_is_saved(
     restore_entry: MockConfigEntry,
 ) -> None:
     """Test data that changes while a write is in progress is saved after it."""
-    store = restore_state._async_get_restore_store_manager(hass)._store
+    manager = restore_state._async_get_restore_store_manager(hass)
+    store = manager._store
     write_started = asyncio.Event()
     finish_write = asyncio.Event()
     original_write = store._async_write_data
@@ -2693,11 +2696,11 @@ async def test_update_during_write_is_saved(
     crd = get_restore_crd(hass, config_entry=restore_entry)
     with patch.object(store, "_async_write_data", slow_write):
         crd.async_set_updated_data({"value": "first"})
-        first_dump = hass.async_create_task(flush_restore_store(hass))
+        first_dump = hass.async_create_task(manager.async_dump())
         await write_started.wait()
 
         crd.async_set_updated_data({"value": "second"})
-        second_dump = hass.async_create_task(flush_restore_store(hass))
+        second_dump = hass.async_create_task(manager.async_dump())
         finish_write.set()
         await first_dump
         await second_dump
@@ -2884,3 +2887,24 @@ async def test_duplicate_storage_key_unload_cleanup(
     assert "AttributeError" not in caplog.text
     # The key was freed by the coordinator that owned it
     get_restore_crd(hass, config_entry=restore_entry)
+
+
+async def test_final_write_retries_failed_removal_of_last_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test the final write retries a failed write that removed the last data."""
+    await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
+    store = restore_state._async_get_restore_store_manager(hass)._store
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    with patch.object(store, "_async_write_data", side_effect=WriteError("disk full")):
+        crd.async_remove_stored_data()
+        await hass.async_block_till_done()
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "stored"}
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+
+    assert get_saved_store_data(hass_storage) == make_store_data()
