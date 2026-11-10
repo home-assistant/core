@@ -1,5 +1,6 @@
 """Provides the constants needed for the component."""
 
+from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -16,6 +17,8 @@ DOMAIN: Final = "button"
 DATA_COMPONENT: HassKey[EntityComponent[ButtonEntity]] = HassKey(DOMAIN)
 
 SERVICE_PRESS = "press"
+
+HOLD_TIMEOUT: Final = timedelta(seconds=30)
 
 
 class ButtonDeviceClass(StrEnum):

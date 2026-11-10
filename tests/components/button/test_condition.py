@@ -255,3 +255,42 @@ async def test_button_is_being_held_condition_for(
 
     freezer.tick(timedelta(seconds=5))
     assert cond.async_check() is False
+
+
+@pytest.mark.parametrize(
+    ("condition_options", "valid_at_hold_start"),
+    [
+        pytest.param({}, True, id="no_duration"),
+        pytest.param({"for": {"seconds": 5}}, False, id="duration"),
+    ],
+)
+async def test_button_is_being_held_condition_timeout(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    condition_options: dict[str, Any],
+    valid_at_hold_start: bool,
+) -> None:
+    """Test the is_being_held condition stops passing when the hold times out."""
+    state, attributes = _button_event("long_press_start", _ALL_BUTTON_EVENT_TYPES)
+    hass.states.async_set(
+        _EVENT_ENTITY_ID, state, attributes | {ATTR_DEVICE_CLASS: "button"}
+    )
+    await hass.async_block_till_done()
+
+    cond = await create_target_condition(
+        hass,
+        condition="button.is_being_held",
+        target={CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+        behavior="any",
+        condition_options=condition_options,
+    )
+    # The timeout changes the result without a state change.
+    assert cond.needs_polling is True
+    assert cond.async_check() is valid_at_hold_start
+
+    freezer.tick(timedelta(seconds=29.999))
+    assert cond.async_check() is True
+
+    # Without a release, the hold ends after the timeout, like the held trigger.
+    freezer.tick(timedelta(seconds=0.001))
+    assert cond.async_check() is False

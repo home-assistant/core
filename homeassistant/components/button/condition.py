@@ -12,6 +12,9 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import Condition, EntityConditionBase
+from homeassistant.util import dt as dt_util
+
+from .const import HOLD_TIMEOUT
 
 
 class ButtonIsBeingHeldCondition(EntityConditionBase):
@@ -30,6 +33,12 @@ class ButtonIsBeingHeldCondition(EntityConditionBase):
         """
         return False
 
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        """Return True, as a hold times out without a state change."""
+        return True
+
     @override
     def _should_include(self, state: State) -> bool:
         """Skip entities that can't tell when a hold ends."""
@@ -45,10 +54,12 @@ class ButtonIsBeingHeldCondition(EntityConditionBase):
 
     @override
     def is_valid_state(self, entity_state: State) -> bool:
-        """Check if the last event of the entity started a hold."""
+        """Check if the last event of the entity started a hold, not timed out."""
         return (
             entity_state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
             == ButtonEventType.LONG_PRESS_START
+            # Like the held trigger, so a missed release doesn't keep it held.
+            and dt_util.utcnow() - entity_state.last_changed < HOLD_TIMEOUT
         )
 
 
