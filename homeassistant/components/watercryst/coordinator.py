@@ -72,8 +72,6 @@ class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
                 translation_key="update_failed",
                 translation_placeholders={
                     "coordinator_name": self.name,
-                    "error_name": type(err).__name__,
-                    "error": str(err),
                 },
                 retry_after=60,
             ) from err

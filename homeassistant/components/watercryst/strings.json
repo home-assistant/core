@@ -108,7 +108,7 @@
       "message": "An unexpected error occurred"
     },
     "update_failed": {
-      "message": "Failed to update {coordinator_name}, ({error_name}): {error}"
+      "message": "Failed to update {coordinator_name}"
     },
     "update_failed_unauthorized": {
       "message": "Failed to update {coordinator_name}, unauthorized"
