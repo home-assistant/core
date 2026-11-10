@@ -22,6 +22,9 @@
         "data": {
           "otp_code": "Code"
         },
+        "data_description": {
+          "otp_code": "The current code from your two-step authentication app."
+        },
         "title": "Synology DSM: two-step authentication"
       },
       "backup_share": {
@@ -43,12 +46,23 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "password": "[%key:component::synology_dsm::config::step::user::data_description::password%]",
+          "port": "[%key:component::synology_dsm::config::step::user::data_description::port%]",
+          "ssl": "[%key:component::synology_dsm::config::step::user::data_description::ssl%]",
+          "username": "[%key:component::synology_dsm::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::synology_dsm::config::step::user::data_description::verify_ssl%]"
+        },
         "description": "Do you want to set up {name} ({host})?"
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::synology_dsm::config::step::user::data_description::password%]",
+          "username": "[%key:component::synology_dsm::config::step::user::data_description::username%]"
         },
         "title": "Reauthenticate Synology DSM"
       },
@@ -62,7 +76,12 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "[%key:component::synology_dsm::config::step::user::data_description::host%]"
+          "host": "[%key:component::synology_dsm::config::step::user::data_description::host%]",
+          "password": "[%key:component::synology_dsm::config::step::user::data_description::password%]",
+          "port": "[%key:component::synology_dsm::config::step::user::data_description::port%]",
+          "ssl": "[%key:component::synology_dsm::config::step::user::data_description::ssl%]",
+          "username": "[%key:component::synology_dsm::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::synology_dsm::config::step::user::data_description::verify_ssl%]"
         }
       },
       "user": {
@@ -75,7 +94,12 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Synology NAS."
+          "host": "The hostname or IP address of your Synology NAS.",
+          "password": "The password of the DSM user.",
+          "port": "The port of the DSM web interface. Leave empty to use the default port (5000, or 5001 when using SSL).",
+          "ssl": "Connect to DSM over HTTPS.",
+          "username": "The DSM user Home Assistant uses to connect. The user must be a member of the administrators group.",
+          "verify_ssl": "Verify the SSL certificate of the NAS. Disable this when the NAS uses a self-signed certificate."
         }
       }
     }
@@ -209,6 +233,9 @@
     }
   },
   "exceptions": {
+    "entry_not_loaded": {
+      "message": "DSM with serial {serial} is not loaded."
+    },
     "execution_error": {
       "message": "Execute {action} on DSM with serial {serial} not possible, because of {error}."
     },
@@ -269,7 +296,8 @@
         },
         "data_description": {
           "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]",
-          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]"
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
+          "snap_profile_type": "The quality of the snapshots taken from Surveillance Station cameras."
         }
       }
     }

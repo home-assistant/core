@@ -83,11 +83,7 @@ rules:
     comment: >-
       The page does not describe the Host field. Add a configuration_basic
       block that says it takes the unit's IP address and where to find it.
-  entity-unavailable:
-    status: todo
-    comment: >-
-      The binary sensor compares its value with == 1, so it reports off instead
-      of unknown when the value is missing from the data.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates:
