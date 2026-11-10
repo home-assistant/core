@@ -157,7 +157,28 @@ async def async_get_datapoints(call: ServiceCall) -> ServiceResponse:
             },
         ) from err
 
-    return {"points": dev_points}
+    return {
+        "devicepoints": [
+            {
+                "category": item["category"],
+                "parameter_id": item["parameterId"],
+                "parameter_name": item["parameterName"],
+                "parameter_unit": item["parameterUnit"],
+                "value": item["value"],
+                "str_value": item["strVal"],
+                "timestamp": item["timestamp"],
+                "min_value": item["minValue"],
+                "max_value": item["maxValue"],
+                "step_value": item["stepValue"],
+                "scale_value": item["scaleValue"],
+                "writable": item["writable"],
+                "enum_values": item["enumValues"],
+                "smart_home_categories": item["smartHomeCategories"],
+                "zone_id": item["zoneId"],
+            }
+            for item in dev_points
+        ]
+    }
 
 
 @callback
