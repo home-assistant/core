@@ -312,6 +312,40 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to roller blind (0, 1)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x010F},
+        product_type={0x0301, 0x0302},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={0, 1},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to gate (3, 4)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="gate",
+        manufacturer_id={0x010F},
+        product_type={0x0301, 0x0302},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={3, 4},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="blind_tilt",
@@ -342,23 +376,6 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR222
-    # Operating mode (10) set to roller blind (0, 1)
-    ZWaveDiscoverySchema(
-        platform=Platform.COVER,
-        hint="shutter",
-        manufacturer_id={0x010F},
-        product_type={0x0301, 0x0302},
-        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-        required_values=[
-            ZWaveValueDiscoverySchema(
-                command_class={CommandClass.CONFIGURATION},
-                property={10},
-                endpoint={0},
-                value={0, 1},
-            )
-        ],
-    ),
-    # Fibaro Shutter Fibaro FGR222
     # Operating mode (10) set to venetian blind (2)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
@@ -372,23 +389,6 @@ DISCOVERY_SCHEMAS = [
                 property={10},
                 endpoint={0},
                 value={2},
-            )
-        ],
-    ),
-    # Fibaro Shutter Fibaro FGR222
-    # Operating mode (10) set to gate (3, 4)
-    ZWaveDiscoverySchema(
-        platform=Platform.COVER,
-        hint="gate",
-        manufacturer_id={0x010F},
-        product_type={0x0301, 0x0302},
-        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-        required_values=[
-            ZWaveValueDiscoverySchema(
-                command_class={CommandClass.CONFIGURATION},
-                property={10},
-                endpoint={0},
-                value={3, 4},
             )
         ],
     ),
