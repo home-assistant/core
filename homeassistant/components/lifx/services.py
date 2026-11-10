@@ -30,6 +30,8 @@ from .const import DATA_LIFX_MANAGER, DOMAIN, LIFXService, LIFXServiceArgument
 if TYPE_CHECKING:
     from .manager import LIFXManager
 
+BRIGHTNESS_GROUP = "brightness"
+
 LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
     LIFXServiceArgument.INFRARED: probatio.All(
@@ -83,10 +85,10 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         # A brightness of zero would pulse to black
         probatio.Exclusive(
-            LIFXServiceArgument.BRIGHTNESS, LIFXServiceArgument.BRIGHTNESS
+            LIFXServiceArgument.BRIGHTNESS, BRIGHTNESS_GROUP
         ): probatio.All(VALID_BRIGHTNESS, probatio.Clamp(min=1)),
         probatio.Exclusive(
-            LIFXServiceArgument.BRIGHTNESS_PCT, LIFXServiceArgument.BRIGHTNESS
+            LIFXServiceArgument.BRIGHTNESS_PCT, BRIGHTNESS_GROUP
         ): probatio.All(VALID_BRIGHTNESS_PCT, probatio.Clamp(min=1)),
         probatio.Exclusive(LIFXServiceArgument.COLOR_NAME, COLOR_GROUP): cv.string,
         probatio.Exclusive(LIFXServiceArgument.RGB_COLOR, COLOR_GROUP): probatio.All(
@@ -124,10 +126,10 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         probatio.Exclusive(
-            LIFXServiceArgument.BRIGHTNESS, LIFXServiceArgument.BRIGHTNESS
+            LIFXServiceArgument.BRIGHTNESS, BRIGHTNESS_GROUP
         ): VALID_BRIGHTNESS,
         probatio.Exclusive(
-            LIFXServiceArgument.BRIGHTNESS_PCT, LIFXServiceArgument.BRIGHTNESS
+            LIFXServiceArgument.BRIGHTNESS_PCT, BRIGHTNESS_GROUP
         ): VALID_BRIGHTNESS_PCT,
         # A saturation of zero switches the bulb to color temperature mode
         LIFXServiceArgument.SATURATION_MAX: probatio.All(
