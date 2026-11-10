@@ -223,6 +223,11 @@ class DeviceCategory(StrEnum):
     """
     HWSB = "hwsb"
     """Outdoor equipment"""
+    INFRARED_AC = "infrared_ac"
+    """Air conditioner controlled by an infrared remote hub (virtual remote)
+
+    https://developer.tuya.com/en/docs/cloud/ir-control-hub-open-service?id=Kb3oe2mk8ya72
+    """
     JS = "js"
     """Water purifier"""
     JSQ = "jsq"
