@@ -12,20 +12,17 @@ from dsmr_parser.objects import DSMRObject
 import probatio
 from serialx import SerialException
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
 
-from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
     CONF_ENCRYPTION_KEY,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
-    CONF_TIME_BETWEEN_UPDATE,
-    DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
     DSMR_PROTOCOL,
     DSMR_VERSIONS,
@@ -182,15 +179,6 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
     _pending_data: dict[str, Any]
     _pending_title: str
 
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: DsmrConfigEntry,
-    ) -> DSMROptionFlowHandler:
-        """Get the options flow for this handler."""
-        return DSMROptionFlowHandler()
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -325,31 +313,6 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             return {**data, **info, CONF_PROTOCOL: protocol}
         return data
-
-
-class DSMROptionFlowHandler(OptionsFlow):
-    """Handle options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_TIME_BETWEEN_UPDATE,
-                        default=self.config_entry.options.get(
-                            CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
-                        ),
-                    ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
-                }
-            ),
-        )
 
 
 class CannotConnect(HomeAssistantError):
