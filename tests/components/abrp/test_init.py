@@ -2,7 +2,6 @@
 
 from dataclasses import replace
 from http import HTTPStatus
-import logging
 import time
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -34,8 +33,8 @@ from . import setup_integration
 from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
-    MOCK_VEHICLE_MODEL,
     MOCK_VEHICLE_MODEL_2,
+    MOCK_VEHICLE_NAME,
     MOCK_VEHICLE_NAME_2,
     build_vehicle_model_display,
     fire_connection,
@@ -318,70 +317,65 @@ async def test_garage_poll_failure(
     )
 
 
-@pytest.mark.parametrize(
-    ("display_error", "warns"),
-    [
-        pytest.param(AbrpAuthError("HTTP 401"), True, id="auth_error"),
-        pytest.param(ValueError("boom"), True, id="unexpected_error"),
-        pytest.param(AbrpApiError("HTTP 404"), False, id="api_error"),
-        pytest.param(TimeoutError("budget exceeded"), False, id="timeout"),
-    ],
-)
 @pytest.mark.usefixtures("mock_telemetry_stream")
-async def test_display_failure_degrades_only_that_vehicle(
+async def test_devices_created_from_garage(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
     device_registry: dr.DeviceRegistry,
-    caplog: pytest.LogCaptureFixture,
-    display_error: Exception,
-    warns: bool,
 ) -> None:
-    """A failed display lookup falls back for that vehicle only.
-
-    Rejections and unexpected errors warn; a 404 or timeout is routine.
-    """
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = display_error
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL_2] = (
-        build_vehicle_model_display(manufacturer="Rivian", model="R1S")
-    )
+    """Each vehicle gets a device; without a name or display it shows the typecode."""
+    display = build_vehicle_model_display()
+    mock_abrp_client.return_value = [
+        replace(mock_abrp_vehicles[0], display=display),
+        replace(mock_abrp_vehicles[1], name=None),
+    ]
 
     await setup_integration(hass, config_entry_with_vehicles)
 
-    assert f"No display metadata for vehicle {MOCK_VEHICLE_ID}" in caplog.text
-    scope = config_entry_with_vehicles.unique_id
-    degraded = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{scope}_{MOCK_VEHICLE_ID}"), config_entry_with_vehicles.entry_id
-    )
-    enriched = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{scope}_{MOCK_VEHICLE_ID_2}"), config_entry_with_vehicles.entry_id
-    )
-    assert degraded.manufacturer is None
-    assert degraded.model == MOCK_VEHICLE_MODEL
-    assert enriched.manufacturer == "Rivian"
-    assert (
-        any(
-            record.levelno == logging.WARNING and MOCK_VEHICLE_MODEL in record.message
-            for record in caplog.records
+    devices = [
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{config_entry_with_vehicles.unique_id}_{vehicle_id}"),
+            config_entry_with_vehicles.entry_id,
         )
-        is warns
-    )
+        for vehicle_id in (MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2)
+    ]
+    # ``model_name`` drops the make, which has its own field.
+    assert [
+        (device.name, device.manufacturer, device.model, device.configuration_url)
+        for device in devices
+    ] == [
+        (
+            MOCK_VEHICLE_NAME,
+            display.manufacturer,
+            display.model_name,
+            f"https://abetterrouteplanner.com/?vehicle_id={MOCK_VEHICLE_ID}",
+        ),
+        (
+            MOCK_VEHICLE_MODEL_2,
+            None,
+            MOCK_VEHICLE_MODEL_2,
+            f"https://abetterrouteplanner.com/?vehicle_id={MOCK_VEHICLE_ID_2}",
+        ),
+    ]
 
 
 @pytest.mark.usefixtures("mock_telemetry_stream")
-async def test_display_failure_on_poll_keeps_device_metadata(
+async def test_display_missing_on_poll_keeps_device_metadata(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     mock_abrp_client: AsyncMock,
+    mock_abrp_vehicles: list[AbrpVehicle],
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failed display lookup on a poll keeps the make and model already shown."""
-    display = build_vehicle_model_display(manufacturer="Rivian", model="R2")
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = display
+    """A poll without display metadata keeps the make and model already shown."""
+    display = build_vehicle_model_display()
+    mock_abrp_client.return_value = [replace(mock_abrp_vehicles[0], display=display)]
     await setup_integration(hass, config_entry_with_vehicles)
 
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = AbrpApiError("HTTP 503")
+    mock_abrp_client.return_value = mock_abrp_vehicles[:1]
     freezer.tick(GARAGE_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
