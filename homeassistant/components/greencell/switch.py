@@ -49,12 +49,6 @@ class GreencellChargingSwitch(GreencellEntity, SwitchEntity):
         self._cmd_topic = f"/greencell/evse/{serial_number}/cmd"
         self._attr_unique_id = f"{serial_number}_charging"
 
-    @property
-    @override
-    def is_on(self) -> bool:
-        """Return True while the device is charging or waiting for the car."""
-        return self._evse_state.can_be_stopped()
-
     @override
     async def async_added_to_hass(self) -> None:
         """Register the entity with Home Assistant."""
@@ -74,6 +68,7 @@ class GreencellChargingSwitch(GreencellEntity, SwitchEntity):
             return
         if isinstance(data, dict) and isinstance(state := data.get("state"), str):
             self._evse_state.update(state)
+            self._attr_is_on = self._evse_state.can_be_stopped()
             self.async_write_ha_state()
 
     @override

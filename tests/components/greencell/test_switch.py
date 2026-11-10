@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -72,7 +73,7 @@ async def test_switch_state_follows_status(
     expected_state: str,
 ) -> None:
     """The switch state mirrors the charging status reported by the device."""
-    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, TEST_STATUS_TOPIC, payload)
     await hass.async_block_till_done()
