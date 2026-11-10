@@ -74,13 +74,9 @@ def _make_module(uid: str = "MOD-1") -> MagicMock:
     return mod
 
 
-def _make_sensor_descriptor(name: str = "Humidity", type_: int = 1) -> MagicMock:
-    """Build a stub IfDescriptor."""
-    desc = MagicMock()
-    desc.nmbr = 0
-    desc.name = name
-    desc.type = type_
-    return desc
+def _make_sensor_descriptor(name: str = "Humidity", type_: int = 1) -> Sensor:
+    """Build a sensor member, so ``is_diagnostic`` follows ``type_``."""
+    return Sensor(nmbr=0, name=name, type=type_)
 
 
 def _make_value(value: float) -> MagicMock:
@@ -225,9 +221,9 @@ def test_described_sensor_marks_diagnostic_entity_when_flagged() -> None:
 def test_described_sensor_not_diagnostic_for_normal_type() -> None:
     """A non-DIAG type stays user-visible."""
     module = _make_module()
-    sensor_desc = _make_sensor_descriptor(type_=1)
+    sensor_desc = _make_sensor_descriptor(name="Iload", type_=1)
     coord = MagicMock(spec=DataUpdateCoordinator)
-    entity = HbtnDescribedSensor(module, sensor_desc, coord, 0, HUMIDITY_DESCRIPTION)
+    entity = HbtnDescribedSensor(module, sensor_desc, coord, 0, CURRENT_DESCRIPTION)
     assert getattr(entity, "_attr_entity_registry_enabled_default", True) is not False
 
 
