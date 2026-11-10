@@ -124,36 +124,39 @@ async def test_feeds_grouped_by_tag(
     assert hass.states.get("sensor.tag_parameter_3").name == "tag parameter 3"
 
 
-async def test_retagged_feed_moves_device(
+async def test_retagged_feeds_move_device(
     hass: HomeAssistant,
-    config_single_feed: MockConfigEntry,
+    config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     emoncms_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a feed moves to the new tag's device when its tag changes."""
+    """Test retagged feeds move to the new tag's device with a single reload."""
     emoncms_client.async_request.return_value = {
         "success": True,
-        "message": [{**get_feed(1, unit="°C"), "tag": "garage"}],
+        "message": [{**get_feed(i, unit="°C"), "tag": "garage"} for i in (1, 2)],
     }
-    await setup_integration(hass, config_single_feed)
+    await setup_integration(hass, config_entry)
+    assert emoncms_client.async_get_uuid.await_count == 1
 
     emoncms_client.async_request.return_value = {
         "success": True,
-        "message": [{**get_feed(1, unit="°C"), "tag": "kitchen"}],
+        "message": [{**get_feed(i, unit="°C"), "tag": "kitchen"} for i in (1, 2)],
     }
     freezer.tick(60)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    entity = entity_registry.async_get("sensor.garage_temperature_parameter_1")
+    # Each setup fetches the uuid once, so this counts reloads
+    assert emoncms_client.async_get_uuid.await_count == 2
     (device,) = dr.async_entries_for_config_entry(
-        device_registry, config_single_feed.entry_id
+        device_registry, config_entry.entry_id
     )
-    assert device.id == entity.device_id
     assert device.name == "kitchen"
-    assert hass.states.get(entity.entity_id).name == "kitchen Temperature parameter 1"
+    entities = er.async_entries_for_device(entity_registry, device.id)
+    assert len(entities) == 2
+    assert hass.states.get(entities[0].entity_id).name.startswith("kitchen ")
 
 
 async def test_upgrade_prefixes_custom_name_with_tag(

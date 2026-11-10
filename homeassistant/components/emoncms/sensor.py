@@ -263,7 +263,6 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             "emoncms_details": elem[FEED_NAME],
         }
         self._attr_unique_id = f"{unique_id}-{elem[FEED_ID]}"
-        self._tag = elem[FEED_TAG]
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{unique_id}-{elem[FEED_TAG]}")},
@@ -304,12 +303,6 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
-        if data and data[self.idx][FEED_TAG] != self._tag:
-            # The device is derived from the tag at setup
-            self.hass.config_entries.async_schedule_reload(
-                self.coordinator.config_entry.entry_id
-            )
-            return
         if data:
             self._update_attributes(data[self.idx])
         super()._handle_coordinator_update()

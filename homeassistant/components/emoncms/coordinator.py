@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MESSAGE, CONF_SUCCESS, LOGGER
+from .const import CONF_MESSAGE, CONF_SUCCESS, FEED_ID, FEED_TAG, LOGGER
 
 type EmonCMSConfigEntry = ConfigEntry[EmoncmsCoordinator]
 
@@ -41,4 +41,15 @@ class EmoncmsCoordinator(DataUpdateCoordinator[list[dict[str, Any]] | None]):
         data = await self.emoncms_client.async_request("/feed/list.json")
         if not data[CONF_SUCCESS]:
             raise UpdateFailed
-        return data[CONF_MESSAGE]
+        feeds = data[CONF_MESSAGE]
+        if self.data:
+            old_tags = {feed[FEED_ID]: feed[FEED_TAG] for feed in self.data}
+            if any(
+                old_tags.get(feed[FEED_ID], feed[FEED_TAG]) != feed[FEED_TAG]
+                for feed in feeds
+            ):
+                # Devices are derived from tags at setup; one reload per poll
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
+        return feeds
