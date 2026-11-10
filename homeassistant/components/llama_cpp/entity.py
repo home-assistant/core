@@ -438,7 +438,12 @@ class LlamaCppBaseLLMEntity(Entity):
                 # llama.cpp rejects a trailing assistant message (prefill) with a
                 # structured response_format
                 messages.pop()
+            content_count = len(chat_log.content)
             await async_complete(None, response_format)
+            if len(chat_log.content) == content_count:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="response_not_found"
+                )
 
 
 async def async_prepare_files_for_prompt(

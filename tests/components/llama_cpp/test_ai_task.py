@@ -467,6 +467,45 @@ async def test_generate_structured_data_with_tools_api_error(
     assert len(requests) == 3
 
 
+@pytest.mark.parametrize(
+    ("config_entry_data", "streaming", "empty_response"),
+    [
+        pytest.param({}, False, _completion(None), id="non_streaming"),
+        pytest.param(
+            {CONF_STREAMING: True}, True, _stream([_chunk([])]), id="streaming"
+        ),
+    ],
+)
+async def test_generate_structured_data_with_tools_empty_response(
+    hass: HomeAssistant,
+    mock_completion: AsyncMock,
+    streaming: bool,
+    empty_response: ChatCompletion | AsyncGenerator[ChatCompletionChunk],
+) -> None:
+    """Test an empty structured answer does not return the unstructured one."""
+    _record_requests(
+        mock_completion,
+        [
+            _tool_call_response("call_1", streaming),
+            # The unstructured answer happens to be a JSON object
+            _text_response('{"temperature": 99}', streaming),
+            empty_response,
+        ],
+    )
+
+    with pytest.raises(HomeAssistantError, match="No response was returned"):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Temperature",
+            entity_id=ENTITY_ID,
+            instructions="What is the living room temperature?",
+            structure=probatio.Schema(
+                {probatio.Required("temperature"): selector.selector({"number": {}})}
+            ),
+            llm_api=TemperatureAPI(hass=hass, id="temperature", name="Temperature"),
+        )
+
+
 async def test_generate_structured_data_custom_serializer(
     hass: HomeAssistant,
     mock_completion: AsyncMock,
