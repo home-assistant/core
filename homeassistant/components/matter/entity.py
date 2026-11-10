@@ -29,10 +29,13 @@ from .helpers import (
     MatterConfigEntry,
     endpoint_requires_child_device,
     get_child_device_id,
+    get_child_device_names,
     get_device_id,
     get_discovery_key,
     get_entity_unique_id,
 )
+from .semantic_tags import get_labeling_list
+from .util import get_clean_name
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -41,31 +44,6 @@ if TYPE_CHECKING:
     from .models import MatterEntityInfo
 
 LOGGER = logging.getLogger(__name__)
-
-# Due to variances in labeling implementations, labels are vendor and product specific.
-# This dictionary defines which labels to use for specific vendor/product combinations.
-# The keys are vendor IDs, the values are dictionaries with product IDs as keys
-# and lists of label names to use as values. If the value is None, no labels are used
-VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
-    4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
-    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
-    4961: {
-        1: ["inovelliname", "label", "name", "button"],  # Inovelli VTM31
-        2: ["label", "devicetype", "button"],  # Inovelli VTM35
-        4: None,  # Inovelli VTM36
-        16: ["label", "name", "button"],  # Inovelli VTM30
-    },
-    65521: {  # Test/DIY devices
-        32768: ["ha_entitylabel"],
-        32769: ["ha_entitylabel"],
-        32770: ["ha_entitylabel"],
-    },
-    65522: {  # Test/DIY devices
-        32768: ["ha_entitylabel"],
-        32769: ["ha_entitylabel"],
-        32770: ["ha_entitylabel"],
-    },
-}
 
 
 def catch_matter_error[_R, **P](
@@ -101,7 +79,6 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
-    _child_device_name: str | None = None
     _platform_translation_key: str | None = None
     # Cooldown in seconds to debounce state writes on updates from the device.
     # Platforms which derive their state from multiple attributes can set this
@@ -131,8 +108,9 @@ class MatterEntity(Entity):
             node_device_id, endpoint, entity_info
         )
         # An endpoint that represents an independent physical sub-unit (e.g. one
-        # socket of a multi-socket plug) gets its own child device, and all its
-        # entities are placed there with clean names instead of a numeric suffix.
+        # socket of a multi-socket plug) gets its own child device when semantic
+        # tags or vendor labels name it, and all its entities are placed there
+        # with clean names instead of a numeric suffix.
         self._requires_endpoint_device = endpoint_requires_child_device(endpoint)
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
@@ -160,12 +138,11 @@ class MatterEntity(Entity):
                 self._attr_name = None
 
         # Matter labels can be used to modify the entity name by appending the
-        # text, or to name the endpoint's child device when it has one.
-        if name_modifier := self._get_name_modifier():
-            if self._requires_endpoint_device:
-                self._child_device_name = name_modifier
-            else:
-                self._name_postfix = name_modifier
+        # text. Endpoints split into a child device are named by the child.
+        if not self._requires_endpoint_device and (
+            name_modifier := self._get_name_modifier()
+        ):
+            self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()
@@ -182,7 +159,17 @@ class MatterEntity(Entity):
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         node_device_id = get_device_id(server_info, self._endpoint)
         node_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
-        if not self._requires_endpoint_device:
+        # The name can only be missing if the node changed since the entity was
+        # created; the entity then stays on the node device.
+        if (
+            not self._requires_endpoint_device
+            or (
+                child_device_name := get_child_device_names(self._endpoint.node).get(
+                    self._endpoint.endpoint_id
+                )
+            )
+            is None
+        ):
             return DeviceInfo(identifiers={node_identifier})
         # The node device is pre-created in the adapter before entities are added,
         # so it resolves here for use as the child device's parent.
@@ -196,21 +183,16 @@ class MatterEntity(Entity):
         child_device_id = get_child_device_id(server_info, self._endpoint)
         return ChildDeviceInfo(
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{child_device_id}")},
-            name=self._child_device_name or f"Endpoint {self._endpoint.endpoint_id}",
+            name=child_device_name.name,
+            translation_key=child_device_name.translation_key,
+            translation_placeholders=dict(
+                child_device_name.translation_placeholders or ()
+            ),
             parent_device_id=parent_device_id,
         )
 
     def _find_matching_labels(self) -> list[str]:
         """Find all labels for a Matter entity."""
-
-        device_info = self._endpoint.device_info
-        labeling_list = (
-            VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
-                device_info.productID
-            )
-            if device_info is not None
-            else None
-        )
 
         # get the labels from the UserLabel and FixedLabel clusters
         user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
@@ -223,10 +205,10 @@ class MatterEntity(Entity):
         )
 
         found_labels: list[str] = [
-            lbl.value
-            for label in labeling_list or []
+            value
+            for label in get_labeling_list(self._endpoint)
             for lbl in (*user_label_list, *fixed_label_list)
-            if lbl.label.lower() == label
+            if lbl.label.lower() == label and (value := get_clean_name(lbl.value))
         ]
         return found_labels
 

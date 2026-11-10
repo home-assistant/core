@@ -2284,7 +2284,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'bottom Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bottom Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_energy_20ecn4101_bottom_identify',
@@ -2335,7 +2335,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'top Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Top Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.eve_energy_20ecn4101_top_identify',
@@ -3515,7 +3515,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_41_identify-entry]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_1_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3529,7 +3529,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_endpoint_41_identify',
+    'entity_id': 'button.kitchen_switch_channel_1_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3552,21 +3552,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_41_identify-state]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_1_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 41 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_endpoint_41_identify',
+    'entity_id': 'button.kitchen_switch_channel_1_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_42_identify-entry]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_2_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3580,7 +3580,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_endpoint_42_identify',
+    'entity_id': 'button.kitchen_switch_channel_2_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3603,21 +3603,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_42_identify-state]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_2_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 42 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_endpoint_42_identify',
+    'entity_id': 'button.kitchen_switch_channel_2_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_43_identify-entry]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_3_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3631,7 +3631,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_endpoint_43_identify',
+    'entity_id': 'button.kitchen_switch_channel_3_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3654,21 +3654,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_43_identify-state]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_3_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 43 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 3 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_endpoint_43_identify',
+    'entity_id': 'button.kitchen_switch_channel_3_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_44_identify-entry]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_4_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3682,7 +3682,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.kitchen_switch_endpoint_44_identify',
+    'entity_id': 'button.kitchen_switch_channel_4_identify',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3705,14 +3705,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[lifx_switch_115][button.kitchen_switch_endpoint_44_identify-state]
+# name: test_buttons[lifx_switch_115][button.kitchen_switch_channel_4_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 44 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 4 Identify',
     }),
     'context': <ANY>,
-    'entity_id': 'button.kitchen_switch_endpoint_44_identify',
+    'entity_id': 'button.kitchen_switch_channel_4_identify',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

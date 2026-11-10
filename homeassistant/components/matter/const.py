@@ -20,6 +20,31 @@ ID_TYPE_SERIAL = "serial"
 FEATUREMAP_ATTRIBUTE_ID = 65532
 CLUSTER_REVISION_ATTRIBUTE_ID = 65533
 
+# Due to variances in labeling implementations, labels are vendor and product specific.
+# This dictionary defines which labels to use for specific vendor/product combinations.
+# The keys are vendor IDs, the values are dictionaries with product IDs as keys
+# and lists of label names to use as values. If the value is None, no labels are used
+VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
+    4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
+    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
+    4961: {
+        1: ["inovelliname", "label", "name", "button"],  # Inovelli VTM31
+        2: ["label", "devicetype", "button"],  # Inovelli VTM35
+        4: None,  # Inovelli VTM36
+        16: ["label", "name", "button"],  # Inovelli VTM30
+    },
+    65521: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
+    65522: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
+}
+
 # Maximum Mireds value per the Matter spec is 65279
 # Conversion between Kelvin and Mireds is 1,000,000 / Kelvin,
 # so this corresponds to a minimum color temperature of ~15.3K

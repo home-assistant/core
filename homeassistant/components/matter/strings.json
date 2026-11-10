@@ -48,6 +48,59 @@
       }
     }
   },
+  "device": {
+    "channel": {
+      "name": "Channel {number}"
+    },
+    "column": {
+      "name": "Column {column}"
+    },
+    "position_bottom": {
+      "name": "Bottom"
+    },
+    "position_bottom_left": {
+      "name": "Bottom left"
+    },
+    "position_bottom_middle": {
+      "name": "Bottom middle"
+    },
+    "position_bottom_right": {
+      "name": "Bottom right"
+    },
+    "position_left": {
+      "name": "Left"
+    },
+    "position_middle": {
+      "name": "Middle"
+    },
+    "position_middle_left": {
+      "name": "Middle left"
+    },
+    "position_middle_right": {
+      "name": "Middle right"
+    },
+    "position_right": {
+      "name": "Right"
+    },
+    "position_top": {
+      "name": "Top"
+    },
+    "position_top_left": {
+      "name": "Top left"
+    },
+    "position_top_middle": {
+      "name": "Top middle"
+    },
+    "position_top_right": {
+      "name": "Top right"
+    },
+    "row": {
+      "name": "Row {row}"
+    },
+    "row_column": {
+      "name": "Row {row}, column {column}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "active_hardware_faults": {
