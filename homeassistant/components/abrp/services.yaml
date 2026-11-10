@@ -1,0 +1,64 @@
+send_telemetry:
+  fields:
+    vehicle:
+      required: true
+      selector:
+        device:
+          integration: abrp
+    time:
+      selector:
+        datetime:
+    location:
+      example: '{"latitude": 59.3293, "longitude": 18.0686}'
+      selector:
+        location:
+          radius: false
+    soc:
+      example: 72
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "%"
+          mode: box
+    power:
+      example: -7.2
+      selector:
+        number:
+          min: -1000
+          max: 1000
+          step: 0.1
+          unit_of_measurement: "kW"
+          mode: box
+    odometer:
+      example: 12345
+      selector: &km
+        number:
+          min: 0
+          max: 10000000
+          step: 0.1
+          unit_of_measurement: "km"
+          mode: box
+    estimated_range:
+      example: 310
+      selector: *km
+    battery_temperature:
+      example: 18
+      selector:
+        number:
+          min: -100
+          max: 100
+          step: 0.1
+          unit_of_measurement: "°C"
+          mode: box
+    charging_state:
+      selector:
+        select:
+          translation_key: charging_state
+          options:
+            - charging_ac
+            - charging_dc
+            - charging_unknown
+            - not_charging
+            - plugged_in

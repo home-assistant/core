@@ -33,6 +33,7 @@ GARAGE_SCAN_INTERVAL = timedelta(hours=1)
 class AbrpData:
     """Runtime data stored on the config entry."""
 
+    client: AbrpClient
     garage_coordinator: AbrpGarageCoordinator
     telemetry_coordinator: AbrpTelemetryCoordinator
 

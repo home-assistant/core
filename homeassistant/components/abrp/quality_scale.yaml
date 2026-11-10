@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: No custom actions.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: >-
@@ -14,9 +12,7 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: No custom actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -35,9 +31,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: No custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

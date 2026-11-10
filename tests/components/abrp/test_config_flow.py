@@ -76,7 +76,7 @@ async def test_full_flow(
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}&state={state}"
-        "&scope=openid+profile+email+offline_access"
+        "&scope=openid+profile+email+offline_access+veh:read+tlm:read+tlm:write"
     )
 
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
