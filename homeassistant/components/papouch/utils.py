@@ -1,7 +1,12 @@
 """File contains helper functions that are used in various places."""
 
 import aiohttp
-from aiopapouch import PapouchHTTPClient
+from aiopapouch import (
+    DeviceAuthError,
+    DeviceConnectionError,
+    DeviceParseError,
+    PapouchHTTPClient,
+)
 
 from .const import DEFAULT_WEB_PORT
 
@@ -26,7 +31,7 @@ async def _get_device_name(
             return f"{name} (NONAME)"
         if not name and location:
             return f"Papouch device ({location})"
-    except aiohttp.ClientError:
+    except DeviceAuthError, DeviceConnectionError, DeviceParseError:
         pass
 
     return "Papouch Device - (NONAME)"

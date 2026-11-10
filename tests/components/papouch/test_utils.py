@@ -2,17 +2,21 @@
 
 from unittest.mock import AsyncMock, patch
 
-import aiohttp
+from aiopapouch import DeviceAuthError, DeviceConnectionError, DeviceParseError
 import pytest
 
 from homeassistant.components.papouch.utils import _get_device_name
 
 
-async def test_get_device_name_error() -> None:
+@pytest.mark.parametrize(
+    ("exception"),
+    [DeviceAuthError(), DeviceConnectionError(), DeviceParseError()],
+)
+async def test_get_device_name_error(exception) -> None:
     """Test fallback name on connection error."""
     with patch("homeassistant.components.papouch.utils.PapouchHTTPClient") as mock_cls:
         mock_client = mock_cls.return_value
-        mock_client.get_device_info = AsyncMock(side_effect=aiohttp.ClientError())
+        mock_client.get_device_info = AsyncMock(side_effect=exception)
         mock_session = AsyncMock()
 
         name = await _get_device_name(mock_session, "192.168.1.50")
