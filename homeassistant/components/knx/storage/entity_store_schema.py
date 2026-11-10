@@ -915,8 +915,8 @@ class SwitchKnxConfig:
         ga(
             write_required=True,
             valid_dpt="1",
-            dpa_write=[dpa.FB417.SWITCH_ON_OFF],
-            dpa_state=[dpa.FB417.INFO_ON_OFF],
+            dpa_write=[dpa.FB417.SWITCH_ON_OFF, dpa.FB1018.DIGITAL_OUT_SETP],
+            dpa_state=[dpa.FB417.INFO_ON_OFF, dpa.FB1018.STATUS_DIGITAL_OUTPUT],
         ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False

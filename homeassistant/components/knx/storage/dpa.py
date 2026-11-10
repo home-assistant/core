@@ -146,6 +146,13 @@ class FB1014(StrEnum):
     DIGITAL_INPUT_VALUE = "1014.51"
 
 
+class FB1018(StrEnum):
+    """FB 1018 General Purpose Digital Output."""
+
+    DIGITAL_OUT_SETP = "1018.51"
+    STATUS_DIGITAL_OUTPUT = "1018.52"
+
+
 class FB1021(StrEnum):
     """FB 1021 Lock Sensor."""
 
