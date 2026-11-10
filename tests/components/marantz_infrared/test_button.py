@@ -104,10 +104,10 @@ async def test_button_press_sends_correct_code(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
-        (BUTTON_ENTITY_ID_SPEAKER_A_OFF, MarantzAudioCode.SPEAKER_B_OFF),
-        (BUTTON_ENTITY_ID_SPEAKER_A_ON, MarantzAudioCode.SPEAKER_B_ON),
-        (BUTTON_ENTITY_ID_SPEAKER_B_OFF, MarantzAudioCode.SPEAKER_A_OFF),
-        (BUTTON_ENTITY_ID_SPEAKER_B_ON, MarantzAudioCode.SPEAKER_A_ON),
+        (BUTTON_ENTITY_ID_SPEAKER_A_OFF, MarantzAudioCode.SPEAKER_A_OFF),
+        (BUTTON_ENTITY_ID_SPEAKER_A_ON, MarantzAudioCode.SPEAKER_A_ON),
+        (BUTTON_ENTITY_ID_SPEAKER_B_OFF, MarantzAudioCode.SPEAKER_B_OFF),
+        (BUTTON_ENTITY_ID_SPEAKER_B_ON, MarantzAudioCode.SPEAKER_B_ON),
         (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON, MarantzAudioCode.POWER_AMP_DIRECT_ON),
         (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF, MarantzAudioCode.POWER_AMP_DIRECT_OFF),
     ],
