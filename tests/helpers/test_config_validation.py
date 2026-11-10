@@ -1151,7 +1151,7 @@ def test_template_complex_error_path(value: Any, expected_path: list[Any]) -> No
             cv.SERVICE_SCHEMA,
             {"action": "light.turn_on", "target": {"entity_id": INVALID_TEMPLATE}},
             ["target", "entity_id"],
-            "expected 'all' or 'none'",
+            f"Entity {INVALID_TEMPLATE} is neither a valid entity ID nor a valid UUID",
             id="service_target_entity_id_not_a_list",
         ),
         pytest.param(
