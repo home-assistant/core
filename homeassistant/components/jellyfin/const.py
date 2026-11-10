@@ -52,6 +52,12 @@ SUPPORTED_COLLECTION_TYPES: Final = [
 ]
 
 SUPPORTED_AUDIO_CODECS: Final = ["aac", "mp3", "vorbis", "wma"]
+AUDIO_CODEC_MIME_TYPES: Final = {
+    "aac": "audio/aac",
+    "mp3": "audio/mpeg",
+    "vorbis": "audio/ogg",
+    "wma": "audio/x-ms-wma",
+}
 
 PLAYABLE_ITEM_TYPES: Final = [ITEM_TYPE_AUDIO, ITEM_TYPE_EPISODE, ITEM_TYPE_MOVIE]
 

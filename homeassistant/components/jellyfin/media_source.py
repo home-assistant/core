@@ -18,6 +18,7 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    AUDIO_CODEC_MIME_TYPES,
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
     CONF_AUDIO_CODEC,
@@ -88,7 +89,7 @@ class JellyfinSource(MediaSource):
         )
 
         stream_url = self._get_stream_url(media_item)
-        mime_type = _media_mime_type(media_item)
+        mime_type = self._get_stream_mime_type(media_item)
 
         # Media Sources without a mime type have been filtered
         # out during library creation
@@ -540,6 +541,16 @@ class JellyfinSource(MediaSource):
             return self.api.video_url(item_id)  # type: ignore[no-any-return]
 
         raise BrowseError(f"Unsupported media type {media_type}")
+
+    def _get_stream_mime_type(self, media_item: dict[str, Any]) -> str | None:
+        """Return the mime type of the stream returned by _get_stream_url."""
+        if media_item[ITEM_KEY_MEDIA_TYPE] == MEDIA_TYPE_AUDIO and (
+            audio_codec := self.entry.options.get(CONF_AUDIO_CODEC)
+        ):
+            # The server transcodes to the configured codec, so the source
+            # file's mime type no longer describes the stream
+            return AUDIO_CODEC_MIME_TYPES[audio_codec]
+        return _media_mime_type(media_item)
 
 
 def _media_mime_type(media_item: dict[str, Any]) -> str | None:
