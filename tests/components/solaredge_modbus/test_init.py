@@ -1333,8 +1333,10 @@ async def test_attachment_check_skipped_when_polling_disabled(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_modbus_unit: MockModbusUnit,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Periodic attachment probing does not run when polling is disabled."""
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="SolarEdge SE10000H",
@@ -1343,6 +1345,12 @@ async def test_attachment_check_skipped_when_polling_disabled(
         pref_disable_polling=True,
     )
     await _setup(hass, entry)
+
+    assert (
+        "SolarEdge SE10000H did not answer for power_control while probing,"
+        " so the entities those would carry are missing" in caplog.text
+    )
+    assert "looked at again" not in caplog.text
 
     with patch.object(SolarEdge, "async_probe") as mock_probe:
         await _tick_attachment_check(hass, freezer)
