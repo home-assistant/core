@@ -16,6 +16,7 @@ from zamg import ZamgApiError
 
 from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
 )
@@ -46,7 +47,7 @@ async def test_hourly_forecast(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the hourly forecast starts with the current hour."""
+    """Test the hourly forecast starts with the hour in progress."""
     await init_integration(hass, mock_config_entry)
 
     response = await hass.services.async_call(
@@ -60,13 +61,17 @@ async def test_hourly_forecast(
 
 
 @pytest.mark.parametrize(
-    ("now", "state", "temperature"),
+    ("now", "state", "temperature", "wind_gust_speed"),
     [
-        pytest.param("2026-09-26T04:30:00+00:00", "sunny", 10.0, id="first_hour"),
-        pytest.param("2026-09-26T05:46:00+00:00", "sunny", 11.0, id="late"),
-        pytest.param("2026-09-26T06:00:00+00:00", "partlycloudy", 12.0, id="full_hour"),
-        pytest.param("2026-09-26T03:59:00+00:00", STATE_UNKNOWN, None, id="before"),
-        pytest.param("2026-09-26T12:00:00+00:00", STATE_UNKNOWN, None, id="after"),
+        pytest.param("2026-09-26T05:00:00+00:00", "sunny", 10.0, 28.8, id="first_hour"),
+        pytest.param("2026-09-26T05:59:00+00:00", "sunny", 10.0, 28.8, id="late"),
+        pytest.param("2026-09-26T06:00:00+00:00", "sunny", 11.0, 34.2, id="full_hour"),
+        pytest.param(
+            "2026-09-26T04:59:00+00:00", STATE_UNKNOWN, None, 27.0, id="before"
+        ),
+        pytest.param(
+            "2026-09-26T13:00:00+00:00", STATE_UNKNOWN, None, None, id="after"
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_nwp_client")
@@ -77,8 +82,9 @@ async def test_current_hour(
     now: str,
     state: str,
     temperature: float | None,
+    wind_gust_speed: float | None,
 ) -> None:
-    """Test the state comes from the record whose hour contains the time."""
+    """Test the state comes from the current hour and gusts from the hour in progress."""
     freezer.move_to(now)
     await init_integration(hass, mock_config_entry)
 
@@ -86,6 +92,7 @@ async def test_current_hour(
     assert entity is not None
     assert entity.state == state
     assert entity.attributes.get(ATTR_WEATHER_TEMPERATURE) == temperature
+    assert entity.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == wind_gust_speed
 
 
 async def test_next_hour_without_request(
@@ -97,13 +104,13 @@ async def test_next_hour_without_request(
     """Test the state moves to the next record at the full hour."""
     freezer.move_to("2026-09-26T05:46:00+00:00")
     await init_integration(hass, mock_config_entry)
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_WEATHER_TEMPERATURE] == 11.0
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_WEATHER_TEMPERATURE] == 10.0
 
     freezer.move_to("2026-09-26T06:00:00+00:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_WEATHER_TEMPERATURE] == 12.0
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_WEATHER_TEMPERATURE] == 11.0
     assert mock_nwp_client.get_forecast.await_count == 1
 
 
@@ -157,8 +164,8 @@ async def test_unavailable_then_recovers(
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    # 07:10 belongs to the record valid at 08:00.
-    assert hass.states.get(ENTITY_ID).state == "fog"
+    # 07:10 belongs to the record valid at 07:00.
+    assert hass.states.get(ENTITY_ID).state == "partlycloudy"
 
 
 async def test_rate_limit_retries_after_reset(
@@ -183,5 +190,5 @@ async def test_rate_limit_retries_after_reset(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_nwp_client.get_forecast.await_count == 3
-    # 06:20 belongs to the record valid at 07:00.
-    assert hass.states.get(ENTITY_ID).state == "partlycloudy"
+    # 06:20 belongs to the record valid at 06:00.
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_WEATHER_TEMPERATURE] == 11.0

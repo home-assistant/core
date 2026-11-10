@@ -29,8 +29,8 @@ from .coordinator import (
 
 PARALLEL_UPDATES = 0
 
-# Interval values such as precipitation are reported for the hour that ends at
-# the record's time, so the record for "now" is the first one after it.
+# Gusts and precipitation cover the hour that ends at a record's time; the
+# other values are valid at that time.
 _RECORD_INTERVAL = timedelta(hours=1)
 
 
@@ -47,15 +47,15 @@ async def async_setup_entry(
         )
 
 
-def _current_record(
-    records: tuple[NwpForecastRecord, ...], now: datetime
+def _record_at(
+    records: tuple[NwpForecastRecord, ...], time: datetime
 ) -> NwpForecastRecord | None:
-    """Return the record whose hour contains the given time."""
+    """Return the record for the hour that starts at or before the given time."""
     return next(
         (
             record
             for record in records
-            if record.valid_time - _RECORD_INTERVAL <= now < record.valid_time
+            if record.valid_time <= time < record.valid_time + _RECORD_INTERVAL
         ),
         None,
     )
@@ -132,7 +132,7 @@ class GeoSphereAustriaForecastWeather(
     @property
     def _record(self) -> NwpForecastRecord | None:
         """Return the record for the current hour."""
-        return _current_record(self.coordinator.data.records, dt_util.utcnow())
+        return _record_at(self.coordinator.data.records, dt_util.utcnow())
 
     @property
     @override
@@ -193,15 +193,19 @@ class GeoSphereAustriaForecastWeather(
     @property
     @override
     def native_wind_gust_speed(self) -> float | None:
-        """Return the wind gust speed."""
-        if (record := self._record) is None:
+        """Return the wind gust speed for the hour in progress."""
+        if (
+            record := _record_at(
+                self.coordinator.data.records, dt_util.utcnow() + _RECORD_INTERVAL
+            )
+        ) is None:
             return None
         return record.wind_gust
 
     @callback
     @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
-        """Return the hourly forecast from the current hour on."""
+        """Return the hourly forecast from the hour in progress on."""
         now = dt_util.utcnow()
         return [
             _to_forecast(record)

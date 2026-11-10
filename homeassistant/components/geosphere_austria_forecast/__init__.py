@@ -5,8 +5,9 @@ from zamg import NwpClient
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
-from .const import REQUEST_TIMEOUT, SUBENTRY_TYPE_LOCATION
+from .const import MAX_PARALLEL_REQUESTS, REQUEST_TIMEOUT, SUBENTRY_TYPE_LOCATION
 from .coordinator import (
     GeoSphereAustriaForecastConfigEntry,
     GeoSphereAustriaForecastCoordinator,
@@ -22,14 +23,29 @@ async def async_setup_entry(
     client = NwpClient(session=async_get_clientsession(hass))
     client.request_timeout = REQUEST_TIMEOUT
 
-    coordinators: dict[str, GeoSphereAustriaForecastCoordinator] = {}
-    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION):
-        coordinator = GeoSphereAustriaForecastCoordinator(hass, entry, subentry, client)
-        await coordinator.async_config_entry_first_refresh()
-        coordinators[subentry.subentry_id] = coordinator
+    # Registered first, so a location added while the forecasts load is not missed.
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
+
+    coordinators = {
+        subentry.subentry_id: GeoSphereAustriaForecastCoordinator(
+            hass, entry, subentry, client
+        )
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION)
+    }
+    # Wait for every refresh to settle, so that none outlives a failed setup.
+    results = await gather_with_limited_concurrency(
+        MAX_PARALLEL_REQUESTS,
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators.values()
+        ),
+        return_exceptions=True,
+    )
+    for result in results:
+        if isinstance(result, BaseException):
+            raise result
 
     entry.runtime_data = coordinators
-    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 

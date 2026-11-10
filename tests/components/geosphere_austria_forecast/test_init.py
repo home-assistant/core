@@ -1,12 +1,13 @@
 """Test the GeoSphere Austria Forecast integration setup."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from zamg import ZamgApiError, ZamgNoDataError
+from zamg import NwpForecast, ZamgApiError, ZamgNoDataError
 
 from homeassistant.components.geosphere_austria_forecast.const import (
     DOMAIN,
@@ -97,6 +98,53 @@ async def test_added_location_gets_an_entity(
     await hass.async_block_till_done()
     assert len(hass.states.async_all(Platform.WEATHER)) == 2
     mock_nwp_client.get_forecast.assert_awaited_with(latitude=47.07, longitude=15.44)
+
+
+async def test_location_added_during_setup_gets_an_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nwp_client: MagicMock,
+    forecast: NwpForecast,
+) -> None:
+    """Test a location added while the forecasts load gets its own weather entity."""
+
+    async def add_location(**kwargs: float) -> NwpForecast:
+        mock_nwp_client.get_forecast.side_effect = None
+        hass.config_entries.async_add_subentry(mock_config_entry, GRAZ)
+        return forecast
+
+    mock_nwp_client.get_forecast.side_effect = add_location
+    await init_integration(hass, mock_config_entry)
+
+    assert len(hass.states.async_all(Platform.WEATHER)) == 2
+
+
+async def test_locations_are_fetched_concurrently(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nwp_client: MagicMock,
+    forecast: NwpForecast,
+) -> None:
+    """Test setup does not wait for one location before fetching the next."""
+    in_flight = 0
+    peak = 0
+
+    async def get_forecast(**kwargs: float) -> NwpForecast:
+        nonlocal in_flight, peak
+        in_flight += 1
+        peak = max(peak, in_flight)
+        await asyncio.sleep(0)
+        in_flight -= 1
+        return forecast
+
+    mock_nwp_client.get_forecast.side_effect = get_forecast
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(mock_config_entry, GRAZ)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert peak == 2
 
 
 @pytest.mark.usefixtures("mock_nwp_client")
