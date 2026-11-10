@@ -132,7 +132,7 @@ class BackupAgentClient:
     async def __aenter__(self) -> Self:
         """Async context manager entrypoint."""
 
-        return await self.open()  # type: ignore[return-value]  # mypy will otherwise raise an error
+        return await self.open()
 
     async def __aexit__(
         self,
@@ -299,7 +299,7 @@ class BackupAgentClient:
                 files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
         return files
 
-    async def open(self) -> BackupAgentClient:
+    async def open(self) -> Self:
         """Return initialized `BackupAgentClient`.
 
         This is to avoid calling `__aenter__` dunder method.

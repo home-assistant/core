@@ -7,7 +7,9 @@ from enum import IntEnum
 from typing import cast, override
 
 from sofar_modbus.model import CorrectedTotal
+from sofar_modbus.modern.battery_pack import BatteryPack
 from sofar_modbus.modern.device import (
+    BATTERY_PACKS,
     BATTERY_STRING_COMPONENTS,
     PV_STRING_COMPONENTS,
     SofarInverter,
@@ -43,11 +45,18 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
+from .const import DOMAIN
+from .coordinator import SofarConfigEntry, SofarRuntimeData
+from .entity import (
+    SofarEntity,
+    SofarEntityDescription,
+    async_remove_unserved_entities,
+    battery_pack_identifier,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -101,6 +110,40 @@ async def async_setup_entry(
     entry.async_on_unload(
         runtime_data.readings.async_add_listener(_async_add_wired_battery_strings)
     )
+    if BATTERY_PACKS in served:
+        _async_setup_battery_packs(entry, runtime_data, async_add_entities)
+
+
+@callback
+def _async_setup_battery_packs(
+    entry: SofarConfigEntry,
+    runtime_data: SofarRuntimeData,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add each BTS pack's sensors the first time the pack answers."""
+
+    @callback
+    def _async_add_answered_packs() -> None:
+        """Add the sensors of packs that answered for the first time."""
+        new = {
+            place: pack
+            for place, pack in runtime_data.readings.device.battery_packs.items()
+            if pack.answered and place not in runtime_data.added_battery_packs
+        }
+        if not new:
+            return
+        runtime_data.added_battery_packs.update(new)
+        async_add_entities(
+            SofarPackSensor(runtime_data, description, pack)
+            for pack in new.values()
+            for description in PACK_SENSOR_DESCRIPTIONS
+            if description.exists_fn(pack)
+        )
+
+    _async_add_answered_packs()
+    entry.async_on_unload(
+        runtime_data.packs.async_add_listener(_async_add_answered_packs)
+    )
 
 
 def _is_battery_string(description: SofarSensorDescription) -> bool:
@@ -145,6 +188,62 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         return cast(int | float | None, self._attr_native_value)
 
 
+class SofarPackSensor(SofarEntity, SensorEntity):
+    """Defines a Sofar BTS battery pack sensor."""
+
+    entity_description: SofarPackSensorDescription
+
+    def __init__(
+        self,
+        runtime_data: SofarRuntimeData,
+        entity_description: SofarPackSensorDescription,
+        pack: BatteryPack,
+    ) -> None:
+        """Initialize the entity."""
+        # The base builds the unique ID and device info from this pack.
+        self._pack = pack
+        super().__init__(runtime_data, entity_description)
+
+    @override
+    def _unique_id(self, serial: str) -> str:
+        """Name the entity after its pack, which repeats every key."""
+        return (
+            f"{battery_pack_identifier(serial, self._pack)}"
+            f"_{self.entity_description.key}"
+        )
+
+    @override
+    def _device_info(
+        self, runtime_data: SofarRuntimeData, serial: str
+    ) -> dr.DeviceInfo:
+        """Place the entity on its own pack, connected via the inverter."""
+        return dr.DeviceInfo(
+            identifiers={(DOMAIN, battery_pack_identifier(serial, self._pack))},
+            via_device_id=runtime_data.inverter_device_id,
+            translation_key="battery_pack",
+            translation_placeholders={
+                "group": str(self._pack.group_nr + 1),
+                "pack": str(self._pack.pack_nr + 1),
+            },
+            model=self._pack.pack_model or None,
+            sw_version=(
+                None if self._pack.bms_version is None else str(self._pack.bms_version)
+            ),
+            serial_number=self._pack.pack_serial_number or None,
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Whether this pack answered the most recent pack poll."""
+        return super().available and self._pack.answered
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        return self.entity_description.value_fn(self._pack)
+
+
 @dataclass(frozen=True, kw_only=True)
 class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
     """Describe a Sofar sensor."""
@@ -157,6 +256,14 @@ class SofarTotalSensorDescription(SensorEntityDescription, SofarEntityDescriptio
     """Describe a Sofar cumulative total sensor."""
 
     total_fn: Callable[[SofarInverter], CorrectedTotal]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SofarPackSensorDescription(SensorEntityDescription, SofarEntityDescription):
+    """Describe a Sofar BTS battery pack sensor."""
+
+    exists_fn: Callable[[BatteryPack], bool] = lambda _: True
+    value_fn: Callable[[BatteryPack], StateType]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1707,4 +1814,115 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
             device.battery_energy.battery_output_energy_total_corrected
         ),
     ),
+)
+
+
+def _cell_voltage(cell: int) -> SofarPackSensorDescription:
+    """Describe one cell's voltage, shown only for cells the pack has."""
+    return SofarPackSensorDescription(
+        key=f"cell_voltage_{cell}",
+        component=BATTERY_PACKS,
+        translation_key="cell_voltage",
+        translation_placeholders={"cell": str(cell)},
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        exists_fn=lambda pack: (
+            pack.cells_in_pack is not None and cell <= pack.cells_in_pack
+        ),
+        value_fn=lambda pack: pack.cell_voltages[cell - 1],
+    )
+
+
+def _cell_temperature(sensor: int) -> SofarPackSensorDescription:
+    """Describe one of the pack's four cell temperature sensors."""
+    return SofarPackSensorDescription(
+        key=f"cell_temperature_{sensor}",
+        component=BATTERY_PACKS,
+        translation_key="cell_temperature",
+        translation_placeholders={"sensor": str(sensor)},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda pack: pack.cell_temperatures[sensor - 1],
+    )
+
+
+PACK_SENSOR_DESCRIPTIONS: tuple[SofarPackSensorDescription, ...] = (
+    SofarPackSensorDescription(
+        key="remaining_capacity",
+        component=BATTERY_PACKS,
+        translation_key="remaining_capacity",
+        native_unit_of_measurement="Ah",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda pack: pack.pack_remaining_capacity,
+    ),
+    SofarPackSensorDescription(
+        key="full_charge_capacity",
+        component=BATTERY_PACKS,
+        translation_key="full_charge_capacity",
+        native_unit_of_measurement="Ah",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda pack: pack.pack_full_charge_capacity,
+    ),
+    SofarPackSensorDescription(
+        key="charge_cycle",
+        component=BATTERY_PACKS,
+        translation_key="charge_cycle",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda pack: pack.pack_cycles,
+    ),
+    SofarPackSensorDescription(
+        key="cell_voltage_max",
+        component=BATTERY_PACKS,
+        translation_key="cell_voltage_max",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda pack: pack.cell_max_voltage,
+    ),
+    SofarPackSensorDescription(
+        key="cell_voltage_min",
+        component=BATTERY_PACKS,
+        translation_key="cell_voltage_min",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda pack: pack.cell_min_voltage,
+    ),
+    SofarPackSensorDescription(
+        key="mosfet_temperature",
+        component=BATTERY_PACKS,
+        translation_key="mosfet_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda pack: pack.pack_temperature_mos,
+    ),
+    SofarPackSensorDescription(
+        key="internal_temperature",
+        component=BATTERY_PACKS,
+        translation_key="internal_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda pack: pack.pack_temperature_env,
+    ),
+    *(_cell_temperature(sensor) for sensor in range(1, 5)),
+    *(_cell_voltage(cell) for cell in range(1, 25)),
 )

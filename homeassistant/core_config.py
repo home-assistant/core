@@ -17,8 +17,6 @@ import yarl
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
 from .const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_FRIENDLY_NAME,
     BASE_PLATFORMS,
     CONF_ALLOWLIST_EXTERNAL_DIRS,
     CONF_ALLOWLIST_EXTERNAL_URLS,
@@ -52,6 +50,7 @@ from .const import (
     EVENT_CORE_CONFIG_UPDATE,
     KEY_DATA_LOGGING_DISABLED_REASON,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+    EntityStateAttribute,
     UnitOfLength,
     __version__,
 )
@@ -166,8 +165,8 @@ _PACKAGE_DEFINITION_SCHEMA = probatio.Schema(
 
 _CUSTOMIZE_DICT_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_FRIENDLY_NAME): cv.string,
-        probatio.Optional(ATTR_ASSUMED_STATE): cv.boolean,
+        probatio.Optional(EntityStateAttribute.FRIENDLY_NAME): cv.string,
+        probatio.Optional(EntityStateAttribute.ASSUMED_STATE): cv.boolean,
     },
     extra=probatio.ALLOW_EXTRA,
 )
