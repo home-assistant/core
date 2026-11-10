@@ -1,5 +1,13 @@
 {
   "entity": {
+    "sensor": {
+      "last_event_fixture": {
+        "default": "mdi:shower-head"
+      },
+      "last_event_usage": {
+        "default": "mdi:water"
+      }
+    },
     "switch": {
       "shutoff_valve": {
         "default": "mdi:valve-closed",
