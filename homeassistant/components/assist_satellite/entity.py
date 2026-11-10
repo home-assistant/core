@@ -30,7 +30,6 @@ from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import chat_session, entity
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityDescription
 
 from .const import DOMAIN, PREANNOUNCE_URL, AssistSatelliteEntityFeature
@@ -209,10 +208,8 @@ class AssistSatelliteEntity(entity.Entity):
         """Follow what the satellite's wake words are worth."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                voice_support.SIGNAL_WAKE_WORDS_CHANGED,
-                self._async_wake_word_audio_wanted_changed,
+            voice_support.async_on_wake_words_changed(
+                self.hass, self._async_wake_word_audio_wanted_changed
             )
         )
 

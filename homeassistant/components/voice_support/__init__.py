@@ -20,10 +20,9 @@ from homeassistant.components.labs import (
 )
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery_flow
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -44,11 +43,11 @@ from .const import CONF_INTEGRATION_CREATED_APP, DOMAIN
 # Internal, see the module docstring: not for other integrations to use
 __all__ = [
     "DOMAIN",
-    "SIGNAL_WAKE_WORDS_CHANGED",
     "AudioRun",
     "AudioRunRequest",
     "WakeWordAccepted",
     "WakeWordRejected",
+    "async_on_wake_words_changed",
     "async_start_run",
     "async_verifies_wake_word",
 ]
@@ -58,17 +57,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PREVIEW_FEATURE_WAKE_WORD_VERIFICATION = "wake_word_verification"
 
 DATA_CLIENT: HassKey[VoiceSupportClient] = HassKey(DOMAIN)
-
-SIGNAL_WAKE_WORDS_CHANGED = f"{DOMAIN}_wake_words_changed"
-"""Sent when async_verifies_wake_word may answer differently than it did.
-
-A satellite asked for wake word audio buffers it and detects at a lower
-threshold, so it is told once rather than per detection -- which means it
-has to be told again when the answer moves: the app arriving or going
-away, or the person turning the preview feature off. Not when an app
-update changes the models it has, which would need the client to say so
-and is the rarest of the three by a long way.
-"""
+DATA_LISTENERS: HassKey[list[CALLBACK_TYPE]] = HassKey(f"{DOMAIN}_listeners")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,9 +86,35 @@ def async_verifies_wake_word(hass: HomeAssistant, wake_word: str) -> bool:
 
 
 @callback
+def async_on_wake_words_changed(
+    hass: HomeAssistant, listener: CALLBACK_TYPE
+) -> CALLBACK_TYPE:
+    """Call listener when async_verifies_wake_word may answer differently.
+
+    A satellite asked for wake word audio buffers it and detects at a lower
+    threshold, so it is told once rather than per detection -- which means
+    it has to be told again when the answer moves: the app arriving or
+    going away, or the person turning the preview feature off. Not when an
+    app update changes the models it has, which would need the client to
+    say so and is the rarest of the three by a long way.
+
+    Returns a callable that stops listening.
+    """
+    listeners = hass.data.setdefault(DATA_LISTENERS, [])
+    listeners.append(listener)
+
+    @callback
+    def _remove() -> None:
+        listeners.remove(listener)
+
+    return _remove
+
+
+@callback
 def _async_wake_words_changed(hass: HomeAssistant) -> None:
     """Tell satellites the answer may have moved."""
-    async_dispatcher_send(hass, SIGNAL_WAKE_WORDS_CHANGED)
+    for listener in hass.data.get(DATA_LISTENERS, []).copy():
+        listener()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

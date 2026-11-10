@@ -61,7 +61,6 @@ from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import create_eager_task
@@ -2517,12 +2516,12 @@ async def test_wake_word_audio_subscribed_again_when_the_answer_moves(
         assert mock_device.voice_assistant_wake_word_audio is False
 
         wanted = True
-        async_dispatcher_send(hass, voice_support.SIGNAL_WAKE_WORDS_CHANGED)
+        voice_support._async_wake_words_changed(hass)
         await hass.async_block_till_done()
         assert mock_device.voice_assistant_wake_word_audio is True
 
-        # And nothing happens when it is sent but nothing moved
-        async_dispatcher_send(hass, voice_support.SIGNAL_WAKE_WORDS_CHANGED)
+        # And nothing happens when it fires but nothing moved
+        voice_support._async_wake_words_changed(hass)
         await hass.async_block_till_done()
         assert mock_device.voice_assistant_wake_word_audio is True
 
