@@ -346,6 +346,7 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to venetian blind (2)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="blind_tilt",
@@ -372,7 +373,13 @@ DISCOVERY_SCHEMAS = [
                 command_class={CommandClass.MANUFACTURER_PROPRIETARY},
                 property={"fibaro"},
                 property_key={"venetianBlindsTilt"},
-            )
+            ),
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={2},
+            ),
         ],
     ),
     # Fibaro Shutter Fibaro FGR222
@@ -399,7 +406,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.COVER,
         hint="blind_tilt",
         manufacturer_id={0x010F},
-        product_id={0x1000, 0x1001},
         product_type={0x0303},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -437,7 +443,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.COVER,
         hint="shutter",
         manufacturer_id={0x010F},
-        product_id={0x1000, 0x1001},
         product_type={0x0303},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -498,7 +503,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.COVER,
         hint="blind_tilt",
         manufacturer_id={0x0460},
-        product_id={0x0082, 0x0083},
+        product_id={0x0082, 0x0083, 0x0085},
         product_type={0x0003},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -536,7 +541,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.COVER,
         hint="shutter",
         manufacturer_id={0x0460},
-        product_id={0x0082, 0x0083},
+        product_id={0x0082, 0x0083, 0x0085},
         product_type={0x0003},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
