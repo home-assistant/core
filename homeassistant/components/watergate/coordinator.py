@@ -83,6 +83,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         self.api = api
         self._supports_state_v2 = True
         self._state_v2_confirmed = False
+        self._power_unavailable_logged = False
 
     @override
     async def _async_update_data(self) -> WatergateAgregatedRequests:
@@ -117,10 +118,16 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
         # The voltage is a diagnostic extra: failing to read it must not make the
         # entities backed by the other requests unavailable.
         try:
-            return await self.api.async_get_power_supply_data()
+            power = await self.api.async_get_power_supply_data()
         except WatergateApiException as exc:
-            _LOGGER.debug("Could not read the battery voltage: %s", exc)
+            if not self._power_unavailable_logged:
+                _LOGGER.info("Battery voltage is unavailable: %s", exc)
+                self._power_unavailable_logged = True
             return None
+        if self._power_unavailable_logged:
+            _LOGGER.info("Battery voltage is available again")
+            self._power_unavailable_logged = False
+        return power
 
     async def _async_fetch_device_state(self) -> DeviceStateV2 | None:
         """Fetch the device state, preferring v2 and falling back to v1."""

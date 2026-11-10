@@ -4,6 +4,7 @@ from collections.abc import Generator
 import copy
 from datetime import timedelta
 from http import HTTPStatus
+import logging
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -438,6 +439,33 @@ async def test_power_supply_failure_does_not_fail_the_update(
 
     assert mock_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("valve.sonic").state != STATE_UNAVAILABLE
+
+
+async def test_power_supply_failure_is_logged_once(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An unavailable battery voltage is logged once, and once when it is back."""
+    caplog.set_level(logging.INFO)
+    mock_watergate_client.async_get_power_supply_data.side_effect = (
+        WatergateApiException("Server error")
+    )
+    await init_integration(hass, mock_entry)
+    assert caplog.text.count("Battery voltage is unavailable") == 1
+
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert caplog.text.count("Battery voltage is unavailable") == 1
+
+    mock_watergate_client.async_get_power_supply_data.side_effect = None
+    freezer.tick(timedelta(minutes=2, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert caplog.text.count("Battery voltage is available again") == 1
 
 
 async def test_power_supply_webhook_refreshes_the_battery_voltage(
