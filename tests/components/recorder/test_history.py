@@ -1798,6 +1798,39 @@ async def test_get_history_service_truncated_identical_states(
         ),
         pytest.param(
             {
+                "start_time": "2023-05-08 05:00:00Z",
+                "end_time": "2023-05-08 12:00:00Z",
+                "entity_id": [
+                    "sensor.sensor",
+                ],
+                "allow_truncation": True,
+            },
+            {
+                "history": {
+                    "sensor.sensor": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:00:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                    ],
+                },
+                "truncated": ["sensor.sensor"],
+            },
+            id="with_explicit_end_time_truncated",
+        ),
+        pytest.param(
+            {
                 "start_time": "2023-05-08 08:30:00Z",
                 "entity_id": [
                     "sensor.sensor",
