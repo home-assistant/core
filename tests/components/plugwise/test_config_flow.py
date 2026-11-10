@@ -402,7 +402,7 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]
+    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]  # pylint: disable=home-assistant-tests-flow-manager-internals
     assert len(flows_in_progress) == 1
     assert list(flows_in_progress)[0].product == "smile_thermo"
 
@@ -416,7 +416,7 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
 
-    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]
+    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]  # pylint: disable=home-assistant-tests-flow-manager-internals
     assert len(flows_in_progress) == 1
     assert list(flows_in_progress)[0].product == "smile_open_therm"
 
@@ -430,7 +430,7 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     assert result3.get("reason") == "anna_with_adam"
 
     # Adam should still be there
-    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]
+    flows_in_progress = hass.config_entries.flow._handler_progress_index[DOMAIN]  # pylint: disable=home-assistant-tests-flow-manager-internals
     assert len(flows_in_progress) == 1
     assert list(flows_in_progress)[0].product == "smile_open_therm"
 

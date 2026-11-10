@@ -322,7 +322,7 @@ async def test_import_migration(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     assert flow.migrate_entry == old_entry.entry_id
 
     state = config_entry_oauth2_flow._encode_jwt(

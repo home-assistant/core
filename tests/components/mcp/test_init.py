@@ -329,7 +329,7 @@ async def test_mcp_server_setup_auth_failure_with_www_authenticate_header(
     assert flows[0]["step_id"] == "reauth_confirm"
 
     # Get the flow handler instance and verify it has the correct auth_header
-    flow_handler = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    flow_handler = hass.config_entries.flow._progress[flows[0]["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     assert flow_handler.auth_header is not None
     assert (
         flow_handler.auth_header.resource_metadata_url
@@ -876,7 +876,7 @@ async def test_tool_call_no_auth_auth_failure_with_www_authenticate_header(
     assert flows[0]["step_id"] == "reauth_confirm"
 
     # Get the flow handler instance and verify it has the correct auth_header
-    flow_handler = hass.config_entries.flow._progress[flows[0]["flow_id"]]
+    flow_handler = hass.config_entries.flow._progress[flows[0]["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     assert flow_handler.auth_header is not None
     assert (
         flow_handler.auth_header.resource_metadata_url

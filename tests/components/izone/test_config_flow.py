@@ -341,7 +341,7 @@ async def test_select_controller_aborts_when_uid_not_on_shelf(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_controller"
 
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow = hass.config_entries.flow._progress[result["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     result = await flow.async_step_select_controller(
         {config_flow.SELECTED_CONTROLLER_UID: "000000099"}
     )
@@ -395,7 +395,7 @@ async def test_select_controller_aborts_already_configured_when_uid_left_shelf(
         version=2,
     ).add_to_hass(hass)
 
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow = hass.config_entries.flow._progress[result["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     result = await flow.async_step_select_controller(
         {config_flow.SELECTED_CONTROLLER_UID: claimed_uid}
     )
@@ -613,7 +613,7 @@ async def test_user_candidates_skips_discovery_without_host_placeholder(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_controller"
 
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow = hass.config_entries.flow._progress[result["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     incomplete = {
         "flow_id": "incomplete-discovery",
         "handler": DOMAIN,
@@ -1293,7 +1293,7 @@ async def test_confirm_asserts_when_controller_data_is_missing(
         result = await async_follow_user_handoff(hass, result)
 
     # Corrupt flow-local state that the public path always sets before confirm.
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow = hass.config_entries.flow._progress[result["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     flow._discovered_controller_host = None
     with pytest.raises(AssertionError):
         await flow.async_step_confirm()
@@ -1312,7 +1312,7 @@ async def test_confirm_asserts_when_unique_id_is_not_string(
         result = await async_finish_user_discover(hass, result)
         result = await async_follow_user_handoff(hass, result)
 
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow = hass.config_entries.flow._progress[result["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
     flow.context["unique_id"] = None
 
     with pytest.raises(AssertionError):
@@ -1549,7 +1549,7 @@ async def test_user_manual_host_handoff_by_uid_when_shelf_host_stale(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "192.0.2.55"}
     assert result["result"].unique_id == "000000001"
-    assert stale_shelf_flow_id not in hass.config_entries.flow._progress
+    assert stale_shelf_flow_id not in hass.config_entries.flow._progress  # pylint: disable=home-assistant-tests-flow-manager-internals
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
@@ -1835,7 +1835,7 @@ async def test_user_manual_host_handoff_by_uid_when_typed_host_differs(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "continue_setup"
     assert result["next_flow"] == (config_entries.FlowType.CONFIG_FLOW, shelf_flow_id)
-    assert shelf_flow_id in hass.config_entries.flow._progress
+    assert shelf_flow_id in hass.config_entries.flow._progress  # pylint: disable=home-assistant-tests-flow-manager-internals
 
 
 @pytest.mark.usefixtures("mock_entry_setup")

@@ -426,14 +426,14 @@ async def test_setup_failed_update_reauth(
     ufp.api.update = AsyncMock(side_effect=NotAuthorized)
     for _ in range(AUTH_RETRIES):
         await time_changed(hass, DEVICE_UPDATE_INTERVAL)
-        assert len(hass.config_entries.flow._progress) == 0
+        assert len(hass.config_entries.flow._progress) == 0  # pylint: disable=home-assistant-tests-flow-manager-internals
 
     assert ufp.api.update.call_count == AUTH_RETRIES
     assert ufp.entry.state is ConfigEntryState.LOADED
 
     await time_changed(hass, DEVICE_UPDATE_INTERVAL)
     assert ufp.api.update.call_count == AUTH_RETRIES + 1
-    assert len(hass.config_entries.flow._progress) == 1
+    assert len(hass.config_entries.flow._progress) == 1  # pylint: disable=home-assistant-tests-flow-manager-internals
 
 
 async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> None:

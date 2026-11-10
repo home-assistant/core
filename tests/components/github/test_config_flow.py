@@ -103,7 +103,7 @@ async def test_flow_with_remove_while_activating(
     assert hass.config_entries.flow.async_get(result["flow_id"])
 
     # Simulate user canceling the flow
-    hass.config_entries.flow._async_remove_flow_progress(result["flow_id"])
+    hass.config_entries.flow._async_remove_flow_progress(result["flow_id"])  # pylint: disable=home-assistant-tests-flow-manager-internals
     await hass.async_block_till_done()
 
     with pytest.raises(UnknownFlow):

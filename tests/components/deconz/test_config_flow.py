@@ -232,7 +232,7 @@ async def test_manual_configuration_after_discovery_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_input"
-    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges  # pylint: disable=home-assistant-tests-flow-manager-internals
 
 
 async def test_manual_configuration_after_discovery_ResponseError(
@@ -247,7 +247,7 @@ async def test_manual_configuration_after_discovery_ResponseError(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_input"
-    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges  # pylint: disable=home-assistant-tests-flow-manager-internals
 
 
 async def test_manual_configuration_update_configuration(
