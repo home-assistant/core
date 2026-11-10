@@ -648,7 +648,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "key_slot"
     assert result["errors"] == {}
-    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])  # pylint: disable=home-assistant-tests-flow-manager-internals
+    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
     assert flows[0].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
     assert flows[0].local_name == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
@@ -914,7 +914,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_uuid_addres
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "key_slot"
     assert result["errors"] == {}
-    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])  # pylint: disable=home-assistant-tests-flow-manager-internals
+    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
     assert flows[0].unique_id == LOCK_DISCOVERY_INFO_UUID_ADDRESS.address
     assert flows[0].local_name == LOCK_DISCOVERY_INFO_UUID_ADDRESS.name
@@ -990,7 +990,7 @@ async def test_integration_discovery_precedence_over_bt_non_unique_name(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "key_slot"
     assert result["errors"] == {}
-    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])  # pylint: disable=home-assistant-tests-flow-manager-internals
+    flows = list(hass.config_entries.flow._handler_progress_index[DOMAIN])
     assert len(flows) == 1
     assert flows[0].unique_id == OLD_FIRMWARE_LOCK_DISCOVERY_INFO.address
     assert flows[0].local_name == OLD_FIRMWARE_LOCK_DISCOVERY_INFO.name

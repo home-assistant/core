@@ -177,7 +177,6 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
-| `W7464` | [`home-assistant-tests-flow-manager-internals`](#w7464-home-assistant-tests-flow-manager-internals) | Tests should not access private attributes of the flow manager, such as the flow handler in `_progress` |
 
 ## `home_assistant_logger` checker
 
@@ -825,37 +824,6 @@ taken from a test argument counts when all its `pytest.mark.parametrize`
 values end with `_successful`.
 
 See the [config-flow-test-coverage quality scale rule](https://contributors.home-assistant.io/core/quality-scale/config-flow-test-coverage/).
-
-
-## `home_assistant_tests_flow_manager_internals` checker
-
-Detects integration tests that reach into the config entry flow managers.
-
-### `W7464`: `home-assistant-tests-flow-manager-internals`
-
-Tests in `tests/components` should drive a flow the way the frontend does:
-start it with `async_init`, answer its steps with `async_configure` and assert
-on the results. They should not access private attributes of
-`hass.config_entries.flow`, `hass.config_entries.options` or
-`hass.config_entries.subentries`, such as `_progress` to get the flow handler,
-`_handler_progress_index`, or `_async_remove_flow_progress`:
-
-```python
-# Bad
-flow = hass.config_entries.flow._progress[result["flow_id"]]
-assert flow.host == "1.2.3.4"
-
-# Good
-result = await hass.config_entries.flow.async_configure(
-    result["flow_id"], {CONF_PASSWORD: "password"}
-)
-assert result["data"] == {CONF_HOST: "1.2.3.4", CONF_PASSWORD: "password"}
-```
-
-To list the flows in progress, use the public
-`hass.config_entries.flow.async_progress()` or `async_progress_by_handler()`.
-A local name bound to one of the flow managers, like
-`manager = hass.config_entries.flow`, is followed too.
 
 
 ## `home_assistant_enforce_utcnow` checker

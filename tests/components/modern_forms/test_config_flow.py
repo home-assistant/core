@@ -85,7 +85,7 @@ async def test_full_zeroconf_flow_implementation(
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") is FlowResultType.FORM
 
-    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
+    flow = hass.config_entries.flow._progress[flows[0]["flow_id"]]
     assert flow.host == "192.168.1.123"
     assert flow.name == "example"
 

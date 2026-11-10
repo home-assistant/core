@@ -1345,7 +1345,7 @@ async def test_oauth_and_external_step_new_flow(
         other_flow.handler = TEST_DOMAIN
         other_flow.flow_id = "01J00000000000000000009999"
         other_flow.context = {"source": config_entries.SOURCE_ZEROCONF}
-        hass.config_entries.flow._async_add_flow_progress(other_flow)  # pylint: disable=home-assistant-tests-flow-manager-internals
+        hass.config_entries.flow._async_add_flow_progress(other_flow)
 
         start_tool = StartFlowTool()
         res = await start_tool.async_call(

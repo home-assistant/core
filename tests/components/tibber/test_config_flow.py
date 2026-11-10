@@ -72,7 +72,7 @@ async def test_oauth_create_entry_abort_exceptions(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    handler = hass.config_entries.flow._progress[result["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
+    handler = hass.config_entries.flow._progress[result["flow_id"]]
 
     _mock_tibber(tibber_mock, update_side_effect=exception)
     flow_result = await handler.async_oauth_create_entry(
@@ -161,7 +161,7 @@ async def test_data_api_extra_authorize_scope(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    handler = hass.config_entries.flow._progress[result["flow_id"]]  # pylint: disable=home-assistant-tests-flow-manager-internals
+    handler = hass.config_entries.flow._progress[result["flow_id"]]
     assert handler.extra_authorize_data["scope"] == " ".join(DATA_API_DEFAULT_SCOPES)
 
 

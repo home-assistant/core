@@ -427,7 +427,7 @@ async def test_config_flow_zigbee_recommended(hass: HomeAssistant) -> None:
     assert zha_flow["context"]["source"] == "hardware"
     assert zha_flow["step_id"] == "confirm"
 
-    progress_zha_flows = hass.config_entries.flow._async_progress_by_handler(  # pylint: disable=home-assistant-tests-flow-manager-internals
+    progress_zha_flows = hass.config_entries.flow._async_progress_by_handler(
         handler="zha",
         match_context=None,
     )
@@ -519,7 +519,7 @@ async def test_config_flow_zigbee_custom_zha(hass: HomeAssistant) -> None:
         }
     ]
 
-    progress_zha_flows = hass.config_entries.flow._async_progress_by_handler(  # pylint: disable=home-assistant-tests-flow-manager-internals
+    progress_zha_flows = hass.config_entries.flow._async_progress_by_handler(
         handler="zha",
         match_context=None,
     )

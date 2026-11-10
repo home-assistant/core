@@ -233,7 +233,7 @@ async def test_form_exceptions(
     assert result["errors"] == {"base": base_error}
 
     # Simulate that the user gives up and closes the window...
-    hass.config_entries.flow._async_remove_flow_progress(result["flow_id"])  # pylint: disable=home-assistant-tests-flow-manager-internals
+    hass.config_entries.flow._async_remove_flow_progress(result["flow_id"])
     await hass.async_block_till_done()
 
     with pytest.raises(UnknownFlow):
