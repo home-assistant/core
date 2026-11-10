@@ -25,6 +25,11 @@
         "default": "mdi:power-sleep"
       }
     },
+    "event": {
+      "notification": {
+        "default": "mdi:message-badge"
+      }
+    },
     "media_player": {
       "audio": {
         "default": "mdi:speaker"

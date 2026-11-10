@@ -18,6 +18,7 @@ from systembridgeconnector.models.modules import (
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.models.notification import NotificationEvent
 from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 from systembridgeconnector.websocket_client import WebSocketClient
 
@@ -31,10 +32,11 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
+from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES, SIGNAL_NOTIFICATION_EVENT
 from .data import SystemBridgeData
 
 type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
@@ -203,11 +205,20 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             "System Bridge reconnect",
         )
 
+    async def async_handle_notification_event(self, event: NotificationEvent) -> None:
+        """Pass a click on, or close of, a notification to the event entity."""
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_NOTIFICATION_EVENT.format(self.config_entry.entry_id),
+            event,
+        )
+
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
         try:
             await self.websocket_client.listen(
                 callback=self.async_handle_module,
+                notification_event_callback=self.async_handle_notification_event,
                 power_state_callback=self.async_handle_power_state,
             )
         except AuthenticationException as exception:
