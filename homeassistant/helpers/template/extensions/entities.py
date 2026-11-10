@@ -3,6 +3,7 @@
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import ATTR_ENTITY_ID, CONF_EXCLUDE, ENTITY_MATCH_ALL
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.registry import NextNamePart
 
@@ -87,11 +88,39 @@ class EntityExtension(BaseTemplateExtension):
         if not isinstance(target_dict, Mapping):
             return []
 
-        from homeassistant.helpers import target  # noqa: PLC0415
+        from homeassistant.helpers import config_validation as cv, target  # noqa: PLC0415
 
-        target_selection = target.TargetSelection(dict(target_dict))
+        target_config = dict(target_dict)
+
+        def _normalize_entity_ids(config: dict[str, Any]) -> None:
+            if ATTR_ENTITY_ID not in config:
+                return
+            entity_ids = cv.comp_entity_ids_or_uuids(config[ATTR_ENTITY_ID])
+            if isinstance(entity_ids, list):
+                entity_ids = er.async_validate_entity_ids(
+                    er.async_get(self.hass), entity_ids
+                )
+            config[ATTR_ENTITY_ID] = entity_ids
+
+        _normalize_entity_ids(target_config)
+        if (exclude_config := target_config.get(CONF_EXCLUDE)) is not None:
+            exclude_config = dict(exclude_config)
+            _normalize_entity_ids(exclude_config)
+            target_config[CONF_EXCLUDE] = exclude_config
+
+        target_selection = target.TargetSelection(target_config)
         if not target_selection.has_any_target:
             return []
+
+        if target_config.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
+            excluded = target.async_extract_excluded_entity_ids(
+                self.hass, target_selection, expand_group
+            )
+            return [
+                entity_id
+                for entity_id in self.hass.states.async_entity_ids()
+                if entity_id not in excluded
+            ]
 
         selected = target.async_extract_referenced_entity_ids(
             self.hass,

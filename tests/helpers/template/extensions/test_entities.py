@@ -154,6 +154,31 @@ async def test_resolve_target(
     }
 
 
+async def test_resolve_target_entity_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test resolving comma-separated entity IDs and registry IDs."""
+    first_entity = entity_registry.async_get_or_create(
+        "sensor", "test", "first"
+    ).entity_id
+    second_entry = entity_registry.async_get_or_create("sensor", "test", "second")
+
+    assert set(
+        render(
+            hass,
+            "{{ resolve_target(target) }}",
+            {"target": {"entity_id": f"{first_entity}, {second_entry.entity_id}"}},
+        )
+    ) == {first_entity, second_entry.entity_id}
+    assert set(
+        render(
+            hass,
+            "{{ resolve_target(target) }}",
+            {"target": {"entity_id": second_entry.id}},
+        )
+    ) == {second_entry.entity_id}
+
+
 @pytest.mark.parametrize("target", [None, [], "sensor.test", 123, {}])
 def test_resolve_target_empty_or_invalid(hass: HomeAssistant, target: object) -> None:
     """Test resolving an empty or invalid target."""
@@ -184,6 +209,43 @@ async def test_resolve_target_expand_group(
                 "{{ resolve_target(target, expand_group=expand_group) }}",
                 {
                     "target": {"entity_id": group.entity_id},
+                    "expand_group": expand_group,
+                },
+            )
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("expand_group", "expected"),
+    [
+        (True, {"light.other"}),
+        (False, {"light.group_member", "light.other"}),
+    ],
+)
+async def test_resolve_target_all(
+    hass: HomeAssistant, expand_group: bool, expected: set[str]
+) -> None:
+    """Test resolving all entities and applying group exclusions."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    group = MockEntity(entity_id="light.test_group", unique_id="group")
+    group.group = GenericGroup(group, ["light.group_member"])
+    await platform.async_add_entities([group])
+    await hass.async_block_till_done()
+    hass.states.async_set("light.group_member", "on")
+    hass.states.async_set("light.other", "on")
+
+    assert (
+        set(
+            render(
+                hass,
+                "{{ resolve_target(target, expand_group=expand_group) }}",
+                {
+                    "target": {
+                        "entity_id": "all",
+                        "exclude": {"entity_id": group.entity_id},
+                    },
                     "expand_group": expand_group,
                 },
             )
