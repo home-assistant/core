@@ -43,9 +43,9 @@ PRESET_MODE_TO_PRESET: dict[int, str] = {
     mode: preset for preset, mode in PRESET_TO_PRESET_MODE.items()
 }
 
-# Modes that regulate to their own setpoint (program, defrost, boost)
-SETPOINT_PRESET_MODES: frozenset[int] = frozenset(
-    {PresetMode.PROGRAM, PresetMode.DEFROST, PresetMode.BOOST}
+# Modes that regulate to a target temperature
+TARGET_PRESET_MODES: frozenset[int] = frozenset(
+    {PresetMode.MANUAL, PresetMode.PROGRAM, PresetMode.DEFROST, PresetMode.BOOST}
 )
 # Device fields with the setpoint of the modes that keep their mode when it changes;
 # in the other modes a new target sets the manual target
@@ -131,7 +131,7 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         """Return the temperature the thermostat regulates to.
 
         Manual, defrost and boost have their own setpoints; the program reports
-        the setpoint it currently uses.
+        the setpoint it currently uses. Off regulates to no target.
         """
         match self.device.preset_mode:
             case PresetMode.DEFROST:
@@ -140,7 +140,9 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
                 return self.device.boost_temperature
             case PresetMode.PROGRAM:
                 return self.device.active_target_temperature
-        return self.device.target_temperature
+            case PresetMode.MANUAL:
+                return self.device.target_temperature
+        return None
 
     def _setpoint_range(self, mode: int | None) -> tuple[float, float]:
         """Return the range the device accepts for the setpoint of a mode.
@@ -233,17 +235,14 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         if self.device.holiday_active:
             # A holiday is set for the whole installation and locks the controls
             return ClimateEntityFeature(0)
-        features = (
-            ClimateEntityFeature.PRESET_MODE
+        # Also while off: Home Assistant rejects a target sent together with an
+        # HVAC mode if the feature is missing
+        return (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if (
-            self.device.preset_mode == PresetMode.MANUAL
-            or self.device.preset_mode in SETPOINT_PRESET_MODES
-        ):
-            return features | ClimateEntityFeature.TARGET_TEMPERATURE
-        return features
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -276,6 +275,11 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
                 },
             )
         mode = self.device.preset_mode
+        if hvac_mode is None and mode not in TARGET_PRESET_MODES:
+            # A target alone must not turn on a thermostat that is off
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="no_target_mode"
+            )
         if hvac_mode is not None or mode not in OWN_SETPOINT_FIELDS:
             mode = int(PresetMode.MANUAL)
         # Home Assistant checks the range of the current mode; leaving defrost or

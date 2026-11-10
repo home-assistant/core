@@ -510,6 +510,63 @@ async def test_set_temperature_with_heat_mode(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_with_heat_mode_when_off(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an off thermostat accepts a target together with the heat mode."""
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 21.5,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 21.5
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("preset_mode", [int(PresetMode.OFF), None, 99])
+async def test_set_temperature_without_target_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: int | None,
+) -> None:
+    """Test a target alone doesn't turn on an off thermostat."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(DEVICE, preset_mode=preset_mode),
+    )
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_TEMPERATURE) is None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "no_target_mode"
+    mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_with_unsupported_hvac_mode(
     hass: HomeAssistant, mock_fenix_client: MagicMock
 ) -> None:

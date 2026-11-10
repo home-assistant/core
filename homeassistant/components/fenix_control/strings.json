@@ -55,6 +55,9 @@
     "holiday_active": {
       "message": "A holiday schedule is active for this installation; the thermostat can't be controlled until it ends or is canceled."
     },
+    "no_target_mode": {
+      "message": "The thermostat is off or in a mode without a target temperature. Set an HVAC mode together with the temperature, or turn the thermostat on first."
+    },
     "set_hvac_mode_failed": {
       "message": "Failed to set the HVAC mode."
     },
