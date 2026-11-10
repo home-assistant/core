@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import RPC_COVER_UPDATE_TIME_SEC
+from .const import RPC_COVER_UPDATE_TIME_SEC, ShellyServiceArgument
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -379,7 +379,9 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
         """Move the cover and its tilt to a specific position in a single call."""
         await self.coordinator.device.cover_set_position(
-            self._id, pos=kwargs[ATTR_POSITION], slat_pos=kwargs[ATTR_TILT_POSITION]
+            self._id,
+            pos=kwargs[ShellyServiceArgument.POSITION],
+            slat_pos=kwargs[ShellyServiceArgument.TILT_POSITION],
         )
 
     @rpc_call
