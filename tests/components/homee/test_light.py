@@ -182,6 +182,36 @@ async def test_light_color_mode_attribute(
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == expected_color_temp
 
 
+async def test_light_unsupported_color_mode_falls_back(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a reported mode outside the supported modes falls back."""
+    mock_homee.nodes = [build_mock_node("lights.json")]
+    mock_homee.nodes[0].attribute_map = mock_attribute_map(
+        mock_homee.nodes[0].attributes
+    )
+    attributes = mock_homee.nodes[0].attributes
+    temp_attribute = next(
+        attribute
+        for attribute in attributes
+        if attribute.type == AttributeType.COLOR_TEMPERATURE and attribute.instance == 1
+    )
+    temp_attribute.editable = False
+    mode_attribute = next(
+        attribute
+        for attribute in attributes
+        if attribute.type == AttributeType.COLOR_MODE
+    )
+    mode_attribute.current_value = 2.0
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("light.test_light_light_1")
+    assert state is not None
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+
+
 async def test_light_snapshot(
     hass: HomeAssistant,
     mock_homee: MagicMock,
