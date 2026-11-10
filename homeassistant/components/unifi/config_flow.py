@@ -21,7 +21,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -322,7 +321,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         return hub.sites
 
     @callback
-    def _get_reauth_or_reconfigure_entry(self) -> ConfigEntry:
+    def _get_reauth_or_reconfigure_entry(self) -> UnifiConfigEntry:
         """Return the config entry the current flow is modifying."""
         if self.source == SOURCE_REAUTH:
             return self._get_reauth_entry()
@@ -342,6 +341,9 @@ class UnifiOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the UniFi Network options."""
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="integration_not_setup")
+
         self.hub = self.config_entry.runtime_data
         self.options[CONF_BLOCK_CLIENT] = self.hub.config.option_block_clients
 

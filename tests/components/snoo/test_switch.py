@@ -55,7 +55,7 @@ async def test_update_success(hass: HomeAssistant, bypass_api: AsyncMock) -> Non
         target={"entity_id": "switch.test_snoo_sleepytime_sounds"},
     )
 
-    assert bypass_api.set_sticky_white_noise.assert_called_once
+    bypass_api.set_sticky_white_noise.assert_called_once()
     assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_ON
 
 
@@ -84,5 +84,5 @@ async def test_update_failed(
             target={"entity_id": "switch.test_snoo_sleepytime_sounds"},
         )
 
-    assert bypass_api.set_level.assert_called_once
+    bypass_api.set_sticky_white_noise.assert_called_once()
     assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_OFF

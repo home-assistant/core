@@ -25,6 +25,9 @@ AUDIO_MIN_VERSION: Final = (5, 16, 0)
 # Backends before 5.23.0 list players without their controls or details
 PLAYER_DETAILS_MIN_VERSION: Final = (5, 23, 0)
 
+# Backends before 5.25.0 only accept the API token in media file URLs
+SIGNED_MEDIA_URL_MIN_VERSION: Final = (5, 25, 0)
+
 AUDIO_OUTPUT: Final = "output"
 AUDIO_INPUT: Final = "input"
 
