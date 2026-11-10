@@ -1,5 +1,10 @@
 set_run_state:
   fields:
+    id:
+      required: true
+      example: "zm.example.com"
+      selector:
+        text:
     name:
       required: true
       example: "Home"

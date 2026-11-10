@@ -319,27 +319,13 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
             ) from ex
 
-        if (exclude := target.get(CONF_EXCLUDE)) and CONF_ENTITY_ID in exclude:
+        if exclude := target.get(CONF_EXCLUDE):
             try:
-                registry = entity_registry.async_get(hass)
-                excluded_entity_ids = [
-                    entity_id
-                    for entity_id_or_uuid in cv.entity_ids_or_uuids(
-                        exclude[CONF_ENTITY_ID]
-                    )
-                    if (
-                        entity_id := entity_registry.async_resolve_entity_id(
-                            registry, entity_id_or_uuid
-                        )
-                    )
-                    is not None
-                ]
+                target[CONF_EXCLUDE] = cv.TARGET_EXCLUDE_SCHEMA(exclude)
             except probatio.Invalid as ex:
                 raise HomeAssistantError(
-                    "Template rendered invalid excluded entity IDs: "
-                    f"{exclude[CONF_ENTITY_ID]}"
+                    f"Template rendered invalid exclude block: {exclude}"
                 ) from ex
-            target[CONF_EXCLUDE] = {**exclude, CONF_ENTITY_ID: excluded_entity_ids}
 
     service_data = {}
 
@@ -350,11 +336,16 @@ def async_prepare_call_from_config(
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
-                    "Error rendering data template: Result is not a Dictionary"
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                    translation_key="service_data_template_not_dict",
                 )
             service_data.update(render)
         except TemplateError as ex:
-            raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
+            raise HomeAssistantError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="service_data_template_error",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
         if target:

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from infrared_protocols.commands.nec import NECCommand
 import pytest
-from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch
+from zha.application.platforms import ENTITY_REGISTRY, ClusterMatch, ZclPlatformEntity
 from zha.application.platforms.infrared import (
     BaseInfraredEmitter,
     BaseInfraredReceiver,
@@ -37,7 +37,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 
-class FakeEmitter(BaseInfraredEmitter):
+class FakeEmitter(ZclPlatformEntity, BaseInfraredEmitter):
     """Emitter that records what it was asked to transmit."""
 
     _unique_id_suffix = "fake_emitter"
@@ -63,7 +63,7 @@ class FakeFailingEmitter(FakeEmitter):
         raise ZHAException("Failed to send IR command")
 
 
-class FakeReceiver(BaseInfraredReceiver):
+class FakeReceiver(ZclPlatformEntity, BaseInfraredReceiver):
     """Receiver that captures signals on demand."""
 
     _unique_id_suffix = "fake_receiver"

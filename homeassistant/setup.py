@@ -195,11 +195,15 @@ async def _async_process_dependencies(
 ) -> list[str]:
     """Ensure all dependencies are set up.
 
+    After dependencies which are scheduled to be loaded are waited for as well,
+    but they are not essential, so they are never reported as failed.
+
     Returns a list of dependencies which failed to set up.
     """
     setup_futures = hass.data.setdefault(_DATA_SETUP, {})
 
     dependencies_tasks: dict[str, Awaitable[bool]] = {}
+    awaited_after_dependencies: set[str] = set()
 
     def _dependency_awaitable(dep: str, kind: str) -> Awaitable[bool] | None:
         """Return an awaitable for the setup of dep, or None if already set up."""
@@ -227,6 +231,7 @@ async def _async_process_dependencies(
             continue
         if (fut := _dependency_awaitable(dep, "after dependency")) is not None:
             dependencies_tasks[dep] = fut
+            awaited_after_dependencies.add(dep)
 
     if not dependencies_tasks:
         return []
@@ -241,9 +246,18 @@ async def _async_process_dependencies(
     async with hass.timeout.async_freeze(integration.domain):
         results = await asyncio.gather(*dependencies_tasks.values())
 
-    failed = [
-        domain for idx, domain in enumerate(dependencies_tasks) if not results[idx]
-    ]
+    failed: list[str] = []
+    for domain, result in zip(dependencies_tasks, results, strict=True):
+        if result:
+            continue
+        if domain not in awaited_after_dependencies:
+            failed.append(domain)
+            continue
+        _LOGGER.debug(
+            "Ignoring failed after dependency '%s' of '%s'",
+            domain,
+            integration.domain,
+        )
 
     if failed:
         _LOGGER.error(

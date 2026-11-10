@@ -17,26 +17,11 @@ from pywebpush import WebPushException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.html5 import DOMAIN, notify as html5
-from homeassistant.components.html5.const import (
-    ATTR_ACTIONS,
-    ATTR_BADGE,
-    ATTR_DIR,
-    ATTR_IMAGE,
-    ATTR_LANG,
-    ATTR_RENOTIFY,
-    ATTR_REQUIRE_INTERACTION,
-    ATTR_SILENT,
-    ATTR_TAG,
-    ATTR_TIMESTAMP,
-    ATTR_TTL,
-    ATTR_URGENCY,
-    ATTR_VIBRATE,
-)
+from homeassistant.components.html5.const import ATTR_TAG
 from homeassistant.components.html5.http import ATTR_ACTION
 from homeassistant.components.html5.notify import ATTR_DISMISS, DEFAULT_TTL
-from homeassistant.components.html5.services import SERVICE_DISMISS_MESSAGE
+from homeassistant.components.html5.services import HTML5Service, HTML5ServiceArgument
 from homeassistant.components.notify import (
-    ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
@@ -45,9 +30,9 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -698,58 +683,68 @@ async def test_send_message_unavailable(
 @pytest.mark.parametrize(
     ("service_data", "expected_payload", "expected_ttl", "expected_headers"),
     [
-        ({ATTR_MESSAGE: "World"}, {"body": "World"}, DEFAULT_TTL, None),
+        ({HTML5ServiceArgument.MESSAGE: "World"}, {"body": "World"}, DEFAULT_TTL, None),
         (
-            {ATTR_ICON: "/static/icons/favicon-192x192.png"},
+            {HTML5ServiceArgument.ICON: "/static/icons/favicon-192x192.png"},
             {"icon": "/static/icons/favicon-192x192.png"},
             DEFAULT_TTL,
             None,
         ),
         (
-            {ATTR_BADGE: "/static/images/notification-badge.png"},
+            {HTML5ServiceArgument.BADGE: "/static/images/notification-badge.png"},
             {"badge": "/static/images/notification-badge.png"},
             DEFAULT_TTL,
             None,
         ),
         (
-            {ATTR_IMAGE: "/static/images/image.jpg"},
+            {HTML5ServiceArgument.IMAGE: "/static/images/image.jpg"},
             {"image": "/static/images/image.jpg"},
             DEFAULT_TTL,
             None,
         ),
-        ({ATTR_TAG: "message-group-1"}, {"tag": "message-group-1"}, DEFAULT_TTL, None),
-        ({ATTR_DIR: "rtl"}, {"dir": "rtl"}, DEFAULT_TTL, None),
-        ({ATTR_RENOTIFY: True}, {"renotify": True}, DEFAULT_TTL, None),
-        ({ATTR_SILENT: True}, {"silent": True}, DEFAULT_TTL, None),
         (
-            {ATTR_REQUIRE_INTERACTION: True},
+            {HTML5ServiceArgument.TAG: "message-group-1"},
+            {"tag": "message-group-1"},
+            DEFAULT_TTL,
+            None,
+        ),
+        ({HTML5ServiceArgument.DIR: "rtl"}, {"dir": "rtl"}, DEFAULT_TTL, None),
+        ({HTML5ServiceArgument.RENOTIFY: True}, {"renotify": True}, DEFAULT_TTL, None),
+        ({HTML5ServiceArgument.SILENT: True}, {"silent": True}, DEFAULT_TTL, None),
+        (
+            {HTML5ServiceArgument.REQUIRE_INTERACTION: True},
             {"requireInteraction": True},
             DEFAULT_TTL,
             None,
         ),
         (
-            {ATTR_VIBRATE: [200, 100, 200]},
+            {HTML5ServiceArgument.VIBRATE: [200, 100, 200]},
             {"vibrate": [200, 100, 200]},
             DEFAULT_TTL,
             None,
         ),
-        ({ATTR_LANG: "es-419"}, {"lang": "es-419"}, DEFAULT_TTL, None),
-        ({ATTR_TIMESTAMP: "1970-01-01 00:00:00"}, {"timestamp": 0}, DEFAULT_TTL, None),
-        ({ATTR_TTL: {"days": 28}}, {}, 2419200, None),
-        ({ATTR_TTL: {"seconds": 0}}, {}, 0, None),
+        ({HTML5ServiceArgument.LANG: "es-419"}, {"lang": "es-419"}, DEFAULT_TTL, None),
         (
-            {ATTR_URGENCY: "high"},
+            {HTML5ServiceArgument.TIMESTAMP: "1970-01-01 00:00:00"},
+            {"timestamp": 0},
+            DEFAULT_TTL,
+            None,
+        ),
+        ({HTML5ServiceArgument.TTL: {"days": 28}}, {}, 2419200, None),
+        ({HTML5ServiceArgument.TTL: {"seconds": 0}}, {}, 0, None),
+        (
+            {HTML5ServiceArgument.URGENCY: "high"},
             {},
             DEFAULT_TTL,
             {"Urgency": "high"},
         ),
         (
             {
-                ATTR_ACTIONS: [
+                HTML5ServiceArgument.ACTIONS: [
                     {
                         ATTR_ACTION: "callback-event",
-                        ATTR_TITLE: "Callback Event",
-                        ATTR_ICON: "/static/icons/favicon-192x192.png",
+                        HTML5ServiceArgument.TITLE: "Callback Event",
+                        HTML5ServiceArgument.ICON: "/static/icons/favicon-192x192.png",
                     }
                 ]
             },
@@ -766,7 +761,7 @@ async def test_send_message_unavailable(
             None,
         ),
         (
-            {ATTR_DATA: {"customKey": "customValue"}},
+            {HTML5ServiceArgument.DATA: {"customKey": "customValue"}},
             {"data": {"jwt": "JWT", "customKey": "customValue"}},
             DEFAULT_TTL,
             None,
@@ -800,8 +795,12 @@ async def test_html5_send_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_ENTITY_ID: "notify.my_desktop", ATTR_TITLE: "Hello", **service_data},
+        HTML5Service.SEND_MESSAGE,
+        {
+            CommonServiceArgument.ENTITY_ID: "notify.my_desktop",
+            HTML5ServiceArgument.TITLE: "Hello",
+            **service_data,
+        },
         blocking=True,
     )
 
@@ -828,7 +827,7 @@ async def test_html5_send_message(
     ("service_data", "expected_payload"),
     [
         (
-            {ATTR_TAG: "message-group-1"},
+            {HTML5ServiceArgument.TAG: "message-group-1"},
             {ATTR_DISMISS: True, ATTR_TAG: "message-group-1"},
         ),
         (
@@ -858,9 +857,9 @@ async def test_html5_dismiss_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISMISS_MESSAGE,
+        HTML5Service.DISMISS_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.my_desktop",
+            CommonServiceArgument.ENTITY_ID: "notify.my_desktop",
             **service_data,
         },
         blocking=True,

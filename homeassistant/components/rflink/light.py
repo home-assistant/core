@@ -8,8 +8,6 @@ import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityStateAttribute,
@@ -35,11 +33,7 @@ from .const import (
     EVENT_KEY_ID,
 )
 from .entity import SwitchableRflinkDevice
-from .utils import (
-    brightness_to_rflink,
-    create_issue_yaml_migration,
-    rflink_to_brightness,
-)
+from .utils import brightness_to_rflink, rflink_to_brightness
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,11 +72,6 @@ RFLINK_PLATFORM = {
         )
     },
 }
-
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=probatio.ALLOW_EXTRA,
-)
 
 
 def entity_type_for_device_id(device_id):
@@ -184,14 +173,10 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        device_config = config[CONF_DEVICE_DEFAULTS]
-        async_add_entities(devices_from_config(config))
-        automatic_add_config(hass, config)
-    else:
-        device_config = discovery_info[CONF_DEVICE_DEFAULTS]
-        async_add_entities(devices_from_config(discovery_info))
-        automatic_add_config(hass, discovery_info)
+        return
+    device_config = discovery_info[CONF_DEVICE_DEFAULTS]
+    async_add_entities(devices_from_config(discovery_info))
+    automatic_add_config(hass, discovery_info)
 
 
 class RflinkLight(SwitchableRflinkDevice, LightEntity):

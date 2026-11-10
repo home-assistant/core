@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@Rendili", "@KJonline"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/hive",
   "homekit": {
     "models": ["HHKBridge*"]

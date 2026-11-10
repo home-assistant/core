@@ -147,6 +147,16 @@ async def otbr_config_entry_thread_fixture(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
 
+@pytest.fixture(name="fast_border_agent_discovery")
+def fast_border_agent_discovery_fixture() -> Generator[None]:
+    """Shorten Thread router discovery so block_till_done does not wait 30s."""
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Mock zeroconf in all tests."""

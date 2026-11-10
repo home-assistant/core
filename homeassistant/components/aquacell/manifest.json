@@ -4,6 +4,7 @@
   "categories": ["water.water_treatment"],
   "codeowners": ["@Jordi1990"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["http", "network"],
   "documentation": "https://www.home-assistant.io/integrations/aquacell",
   "integration_type": "device",

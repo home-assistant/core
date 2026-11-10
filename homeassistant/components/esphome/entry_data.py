@@ -53,6 +53,7 @@ from aioesphomeapi import (
 from aioesphomeapi.model import ButtonInfo, SerialProxyIdentity
 from aioesphomeapi.model_conversions import STATE_TYPE_TO_INFO_TYPE
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant import config_entries
 from homeassistant.components import usb
@@ -87,7 +88,7 @@ COMPONENT_TYPE_TO_STATE_TYPE: Final[dict[str, type[EntityState]]] = {
     for state_type, component_type in STATE_TYPE_TO_COMPONENT_TYPE.items()
 }
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 

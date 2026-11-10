@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "cloud"],
   "dhcp": [
     {

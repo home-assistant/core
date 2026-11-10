@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from airtouch4pyapi import AirTouch
 from airtouch4pyapi.airtouch import AirTouchStatus
@@ -20,7 +20,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 type AirTouch4ConfigEntry = ConfigEntry[AirtouchDataUpdateCoordinator]
 
 
-class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
+class AirtouchDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, list[dict[str, Any]]]]
+):
     """Class to manage fetching Airtouch data."""
 
     def __init__(
@@ -38,7 +40,7 @@ class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, list[dict[str, Any]]]:
         """Fetch data from Airtouch."""
         await self.airtouch.UpdateInfo()
         if self.airtouch.Status != AirTouchStatus.OK:

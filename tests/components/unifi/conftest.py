@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 
@@ -98,31 +97,6 @@ def fixture_discovery():
         ),
     ):
         yield mock
-
-
-@pytest.fixture(name="mock_device_registry")
-def fixture_device_registry(hass: HomeAssistant, device_registry: dr.DeviceRegistry):
-    """Mock device registry."""
-    config_entry = MockConfigEntry(domain="something_else")
-    config_entry.add_to_hass(hass)
-
-    for idx, device in enumerate(
-        (
-            "00:00:00:00:00:01",
-            "00:00:00:00:00:02",
-            "00:00:00:00:00:03",
-            "00:00:00:00:00:04",
-            "00:00:00:00:00:05",
-            "00:00:00:00:00:06",
-            "00:00:00:00:01:01",
-            "00:00:00:00:02:02",
-        )
-    ):
-        device_registry.async_get_or_create(
-            name=f"Device {idx}",
-            config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, device)},
-        )
 
 
 # Config entry fixtures

@@ -4,6 +4,7 @@
   "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@Thomas55555", "@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/remote_calendar",
   "integration_type": "service",
   "iot_class": "cloud_polling",

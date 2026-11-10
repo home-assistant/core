@@ -20,7 +20,8 @@ class EcoNetEntity[_EquipmentT: Equipment = Equipment](Entity):
     def __init__(self, econet: _EquipmentT) -> None:
         """Initialize."""
         self._econet = econet
-        self._attr_name = econet.device_name
+        if not self.has_entity_name:
+            self._attr_name = econet.device_name
         self._attr_unique_id = f"{econet.device_id}_{econet.device_name}"
 
     @override

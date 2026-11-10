@@ -35,12 +35,6 @@
       "inactive_reason": {
         "default": "mdi:sleep"
       },
-      "my_lawn_last_time_completed": {
-        "default": "mdi:clock-outline"
-      },
-      "my_lawn_progress": {
-        "default": "mdi:collage"
-      },
       "number_of_charging_cycles": {
         "default": "mdi:battery-sync-outline"
       },
@@ -58,19 +52,13 @@
       }
     },
     "switch": {
-      "my_lawn_work_area": {
-        "default": "mdi:square-outline",
-        "state": {
-          "on": "mdi:square"
-        }
-      },
       "stay_out_zones": {
         "default": "mdi:rhombus-outline",
         "state": {
           "on": "mdi:rhombus"
         }
       },
-      "work_area_work_area": {
+      "work_area": {
         "default": "mdi:square-outline",
         "state": {
           "on": "mdi:square"

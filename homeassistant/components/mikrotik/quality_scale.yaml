@@ -70,7 +70,13 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices: done
+  stale-devices:
+    status: done
+    comment: |
+      Interface devices the hub no longer reports are removed automatically.
+      Client devices are not, as a client which is only away drops out of the
+      DHCP leases too; the user can remove a client device unless the client
+      is currently connected, and it is re-created when the client returns.
 
   # Platinum
   async-dependency: todo

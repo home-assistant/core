@@ -21,7 +21,12 @@ from .discovery import (
 )
 from .services import async_setup_services
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -192,6 +197,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> N
                 )
             try:
                 resolved = await async_discover_endpoint(hass, unique_id)
+            except pizone.EndpointVerifyError as err:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"host": err.host},
+                ) from err
             except (OSError, RuntimeError) as err:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,

@@ -295,14 +295,15 @@ async def test_media_view(
 
     client = await hass_client()
 
-    # Protects against non-existent files
-    resp = await client.head("/media/local/invalid.txt")
+    # Protects against non-existent files. A media extension is used so the
+    # existence check is what rejects the request, not the media-type check.
+    resp = await client.head("/media/local/invalid.mp3")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    resp = await client.get("/media/local/invalid.txt")
+    resp = await client.get("/media/local/invalid.mp3")
     assert resp.status == HTTPStatus.NOT_FOUND
 
-    resp = await client.get("/media/recordings/invalid.txt")
+    resp = await client.get("/media/recordings/invalid.mp3")
     assert resp.status == HTTPStatus.NOT_FOUND
 
     # Protects against non-media files

@@ -1963,12 +1963,9 @@ async def test_entity_service_call_exclude_group_entity(
     } == expected_entity_ids
 
 
-async def test_service_call_exclude(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_service_call_exclude(hass: HomeAssistant) -> None:
     """Test the exclude block of a target is passed on to the service call."""
     calls = async_mock_service(hass, "test_domain", "test_service")
-    entry = entity_registry.async_get_or_create("light", "test", "unique")
 
     await service.async_call_from_config(
         hass,
@@ -1978,7 +1975,7 @@ async def test_service_call_exclude(
                 "area_id": "kitchen",
                 "exclude": {
                     "area_id": "{{ 'pantry' }}",
-                    "entity_id": [entry.id, "light.static"],
+                    "entity_id": ["{{ 'light.rendered' }}", "light.static"],
                 },
             },
         },
@@ -1988,25 +1985,77 @@ async def test_service_call_exclude(
     assert dict(calls[0].data) == {
         "area_id": ["kitchen"],
         "exclude": {
-            "area_id": "pantry",
-            "entity_id": [entry.entity_id, "light.static"],
+            "area_id": ["pantry"],
+            "entity_id": ["light.rendered", "light.static"],
         },
     }
 
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param(
+            {"area_id": "kitchen", "exclude": {"entity_id": "{{ 'invalid' }}"}},
+            id="invalid_entity_id",
+        ),
+        pytest.param(
+            {"area_id": "kitchen", "exclude": {"entity_id": "{{ 'Light.Kitchen' }}"}},
+            id="uppercase_entity_id",
+        ),
+        pytest.param(
+            "{{ {'area_id': 'kitchen', 'exclude': {'exclude': {}}} }}",
+            id="nested",
+        ),
+    ],
+)
+async def test_service_call_exclude_invalid(
+    hass: HomeAssistant, target: dict[str, Any] | str
+) -> None:
+    """Test a rendered exclude block is validated like a static one."""
     with pytest.raises(
         exceptions.HomeAssistantError,
-        match="Template rendered invalid excluded entity IDs",
+        match="Template rendered invalid exclude block",
     ):
         service.async_prepare_call_from_config(
             hass,
-            {
-                "action": "test_domain.test_service",
-                "target": {
-                    "area_id": "kitchen",
-                    "exclude": {"entity_id": "{{ 'invalid' }}"},
-                },
-            },
+            {"action": "test_domain.test_service", "target": target},
+            validate_config=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("data", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            "{{ 100 }}",
+            "service_data_template_not_dict",
+            None,
+            id="not_dict",
+        ),
+        pytest.param(
+            {"value": "{{ 1 / 0 }}"},
+            "service_data_template_error",
+            {"error": "ZeroDivisionError: division by zero"},
+            id="render_error",
+        ),
+    ],
+)
+async def test_service_call_data_template_error(
+    hass: HomeAssistant,
+    data: dict[str, Any] | str,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test errors rendering the service data are translated."""
+    with pytest.raises(exceptions.HomeAssistantError) as err:
+        service.async_prepare_call_from_config(
+            hass,
+            {"action": "test_domain.test_service", "data": data},
+            validate_config=True,
+        )
+    assert err.value.translation_domain == "homeassistant"
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
 
 
 async def test_call_single_entity_uses_parallel_updates(

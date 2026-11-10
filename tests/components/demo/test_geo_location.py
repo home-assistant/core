@@ -1,9 +1,14 @@
 """The tests for the demo platform."""
 
+from collections.abc import Generator
+from unittest.mock import patch
+
 from freezegun import freeze_time
-from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
+import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import geo_location
+from homeassistant.components.demo import DOMAIN
 from homeassistant.components.demo.geo_location import (
     DEFAULT_UPDATE_INTERVAL,
     NUMBER_OF_DEMO_DEVICES,
@@ -12,22 +17,31 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
+    Platform,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
+
+@pytest.fixture
+def geo_location_only() -> Generator[None]:
+    """Enable only the geo_location platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.GEO_LOCATION],
+    ):
+        yield
 
 
-async def test_setup_platform(hass: HomeAssistant, disable_platforms) -> None:
-    """Test setup of demo platform via configuration."""
+@pytest.mark.usefixtures("geo_location_only")
+async def test_setup_entry(hass: HomeAssistant) -> None:
+    """Test setup of demo platform via config entry."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
     with freeze_time(utcnow):
-        with assert_setup_component(1, geo_location.DOMAIN):
-            assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
         # In this test, one zone and geolocation entities have been
@@ -58,3 +72,25 @@ async def test_setup_platform(hass: HomeAssistant, disable_platforms) -> None:
         ]
         assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES
         assert all_states != all_states_updated
+
+
+@pytest.mark.usefixtures("geo_location_only")
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """Test unloading the config entry removes the events and stops updates."""
+    utcnow = dt_util.utcnow()
+    with freeze_time(utcnow):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert len(hass.states.async_entity_ids(geo_location.DOMAIN)) == (
+            NUMBER_OF_DEMO_DEVICES
+        )
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.async_entity_ids(geo_location.DOMAIN) == []
+
+        # The update timer is cancelled, so no new events are added
+        async_fire_time_changed(hass, utcnow + DEFAULT_UPDATE_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert hass.states.async_entity_ids(geo_location.DOMAIN) == []

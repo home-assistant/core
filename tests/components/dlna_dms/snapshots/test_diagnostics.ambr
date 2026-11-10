@@ -1,0 +1,43 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'device': dict({
+      'device_type': 'urn:schemas-upnp-org:device:MediaServer:1',
+      'manufacturer': 'device_manufacturer',
+      'model_description': 'Test media server',
+      'model_name': 'device_model_name',
+      'model_number': '1.0',
+      'search_capabilities': list([
+        'dc:title',
+        'upnp:class',
+      ]),
+      'services': dict({
+        'urn:schemas-upnp-org:service:ConnectionManager:1': list([
+          'GetProtocolInfo',
+        ]),
+        'urn:schemas-upnp-org:service:ContentDirectory:1': list([
+          'Browse',
+          'GetSearchCapabilities',
+          'GetSortCapabilities',
+          'Search',
+        ]),
+      }),
+      'sort_capabilities': list([
+        'dc:title',
+        'dc:date',
+      ]),
+      'source_protocol_info': list([
+        'http-get:*:audio/mpeg:*',
+        'http-get:*:video/mp4:*',
+      ]),
+      'system_update_id': 42,
+    }),
+  })
+# ---
+# name: test_diagnostics_disconnected
+  dict({
+    'available': False,
+    'device': None,
+  })
+# ---

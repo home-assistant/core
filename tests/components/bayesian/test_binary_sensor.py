@@ -1201,161 +1201,275 @@ async def test_mirrored_observations(
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
-    await _test_mirrored_observations(hass, issue_registry)
+    await _test_mirrored_observations(
+        hass, issue_registry, "mirrored_entry/Test_Binary"
+    )
+    for issue in issue_registry.issues.values():
+        assert issue.config_entry_id is None
+        assert issue.translation_key == "manual_migration"
+
+
+MIRRORED_OBSERVATION_SUBENTRIES = [
+    ConfigSubentryData(
+        data={
+            "platform": "state",
+            "entity_id": "binary_sensor.test_monitored",
+            "to_state": "on",
+            "prob_given_true": 0.8,
+            "prob_given_false": 0.4,
+            "name": "observation_1",
+        },
+        subentry_type="observation",
+        title="observation_1",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "state",
+            "entity_id": "binary_sensor.test_monitored",
+            "to_state": "off",
+            "prob_given_true": 0.2,
+            "prob_given_false": 0.59,
+            "name": "observation_2",
+        },
+        subentry_type="observation",
+        title="observation_2",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "numeric_state",
+            "entity_id": "sensor.test_monitored1",
+            "above": 5,
+            "prob_given_true": 0.7,
+            "prob_given_false": 0.4,
+            "name": "observation_3",
+        },
+        subentry_type="observation",
+        title="observation_3",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "numeric_state",
+            "entity_id": "sensor.test_monitored1",
+            "below": 5,
+            "prob_given_true": 0.3,
+            "prob_given_false": 0.6,
+            "name": "observation_4",
+        },
+        subentry_type="observation",
+        title="observation_4",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "template",
+            "value_template": "{{states('sensor.test_monitored2') == 'off'}}",
+            "prob_given_true": 0.79,
+            "prob_given_false": 0.4,
+            "name": "observation_5",
+        },
+        subentry_type="observation",
+        title="observation_5",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "template",
+            "value_template": "{{states('sensor.test_monitored2') == 'on'}}",
+            "prob_given_true": 0.2,
+            "prob_given_false": 0.6,
+            "name": "observation_6",
+        },
+        subentry_type="observation",
+        title="observation_6",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "state",
+            "entity_id": "sensor.colour",
+            "to_state": "blue",
+            "prob_given_true": 0.33,
+            "prob_given_false": 0.8,
+            "name": "observation_7",
+        },
+        subentry_type="observation",
+        title="observation_7",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "state",
+            "entity_id": "sensor.colour",
+            "to_state": "green",
+            "prob_given_true": 0.3,
+            "prob_given_false": 0.15,
+            "name": "observation_8",
+        },
+        subentry_type="observation",
+        title="observation_8",
+        unique_id=None,
+    ),
+    ConfigSubentryData(
+        data={
+            "platform": "state",
+            "entity_id": "sensor.colour",
+            "to_state": "red",
+            "prob_given_true": 0.4,
+            "prob_given_false": 0.05,
+            "name": "observation_9",
+        },
+        subentry_type="observation",
+        title="observation_9",
+        unique_id=None,
+    ),
+]
+
+
+def _mirrored_observations_config_entry(name: str = "Test_Binary") -> MockConfigEntry:
+    """Return a config entry with mirrored observations."""
+    return MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": name,
+            "prior": 0.1,
+            "probability_threshold": DEFAULT_PROBABILITY_THRESHOLD,
+        },
+        subentries_data=MIRRORED_OBSERVATION_SUBENTRIES,
+        title=name,
+    )
 
 
 async def test_mirrored_observations_config_entry(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test sensor on legacy mirrored observations."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "name": "Test_Binary",
-            "prior": 0.1,
-            "probability_threshold": DEFAULT_PROBABILITY_THRESHOLD,
-        },
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    "platform": "state",
-                    "entity_id": "binary_sensor.test_monitored",
-                    "to_state": "on",
-                    "prob_given_true": 0.8,
-                    "prob_given_false": 0.4,
-                    "name": "observation_1",
-                },
-                subentry_type="observation",
-                title="observation_1",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "state",
-                    "entity_id": "binary_sensor.test_monitored",
-                    "to_state": "off",
-                    "prob_given_true": 0.2,
-                    "prob_given_false": 0.59,
-                    "name": "observation_2",
-                },
-                subentry_type="observation",
-                title="observation_2",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "numeric_state",
-                    "entity_id": "sensor.test_monitored1",
-                    "above": 5,
-                    "prob_given_true": 0.7,
-                    "prob_given_false": 0.4,
-                    "name": "observation_3",
-                },
-                subentry_type="observation",
-                title="observation_3",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "numeric_state",
-                    "entity_id": "sensor.test_monitored1",
-                    "below": 5,
-                    "prob_given_true": 0.3,
-                    "prob_given_false": 0.6,
-                    "name": "observation_4",
-                },
-                subentry_type="observation",
-                title="observation_4",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "template",
-                    "value_template": "{{states('sensor.test_monitored2') == 'off'}}",
-                    "prob_given_true": 0.79,
-                    "prob_given_false": 0.4,
-                    "name": "observation_5",
-                },
-                subentry_type="observation",
-                title="observation_5",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "template",
-                    "value_template": "{{states('sensor.test_monitored2') == 'on'}}",
-                    "prob_given_true": 0.2,
-                    "prob_given_false": 0.6,
-                    "name": "observation_6",
-                },
-                subentry_type="observation",
-                title="observation_6",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "state",
-                    "entity_id": "sensor.colour",
-                    "to_state": "blue",
-                    "prob_given_true": 0.33,
-                    "prob_given_false": 0.8,
-                    "name": "observation_7",
-                },
-                subentry_type="observation",
-                title="observation_7",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "state",
-                    "entity_id": "sensor.colour",
-                    "to_state": "green",
-                    "prob_given_true": 0.3,
-                    "prob_given_false": 0.15,
-                    "name": "observation_8",
-                },
-                subentry_type="observation",
-                title="observation_8",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "platform": "state",
-                    "entity_id": "sensor.colour",
-                    "to_state": "red",
-                    "prob_given_true": 0.4,
-                    "prob_given_false": 0.05,
-                    "name": "observation_9",
-                },
-                subentry_type="observation",
-                title="observation_9",
-                unique_id=None,
-            ),
-        ],
-    )
+    config_entry = _mirrored_observations_config_entry()
     config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await _test_mirrored_observations(hass, issue_registry)
+    await _test_mirrored_observations(
+        hass, issue_registry, f"mirrored_entry/{config_entry.entry_id}"
+    )
+    for key in ("binary_sensor.test_monitored", "sensor.test_monitored1", "template"):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"mirrored_entry/{config_entry.entry_id}/{key}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == config_entry.entry_id
+        assert issue.translation_key == "mirrored_observation"
+        assert issue.breaks_in_ha_version is None
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"mirrored_entry/{config_entry.entry_id}/template"
+    ).translation_placeholders == {
+        "name": "Test_Binary",
+        "entity": "{{states('sensor.test_monitored2') == 'off'}}",
+    }
+
+
+async def test_mirrored_observations_same_name_config_entries(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test two config entries with the same name get separate issues."""
+    config_entries = [_mirrored_observations_config_entry() for _ in range(2)]
+    for config_entry in config_entries:
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 6
+    for config_entry in config_entries:
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"mirrored_entry/{config_entry.entry_id}/sensor.test_monitored1"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    assert {issue.config_entry_id for issue in issue_registry.issues.values()} == {
+        config_entries[1].entry_id
+    }
+    assert len(issue_registry.issues) == 3
+
+
+async def test_mirrored_observations_subentry_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the issue is deleted when one of the mirrored observations is removed."""
+    config_entry = _mirrored_observations_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"mirrored_entry/{config_entry.entry_id}/binary_sensor.test_monitored"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    subentry_id = next(
+        subentry.subentry_id
+        for subentry in config_entry.subentries.values()
+        if subentry.title == "observation_2"
+    )
+    assert hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert len(issue_registry.issues) == 2
+
+
+async def test_mirrored_observations_ignored_after_reload(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test an ignored issue stays ignored when the config entry is reloaded."""
+    config_entry = _mirrored_observations_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_id = f"mirrored_entry/{config_entry.entry_id}/sensor.test_monitored1"
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert len(issue_registry.issues) == 3
+
+
+async def test_mirrored_observations_config_entry_removed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test issues are deleted when the config entry is removed."""
+    config_entry = _mirrored_observations_config_entry()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 3
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
 
 
 async def _test_mirrored_observations(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, issue_id_prefix: str
 ) -> None:
     """Common test code for mirrored observations."""
     hass.states.async_set("sensor.test_monitored2", "on")
     await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 3
-    assert (
-        issue_registry.issues[
-            ("bayesian", "mirrored_entry/Test_Binary/sensor.test_monitored1")
-        ]
-        is not None
-    )
+    for entity_id in ("binary_sensor.test_monitored", "sensor.test_monitored1"):
+        assert (DOMAIN, f"{issue_id_prefix}/{entity_id}") in issue_registry.issues
 
 
 async def test_missing_prob_given_false(
