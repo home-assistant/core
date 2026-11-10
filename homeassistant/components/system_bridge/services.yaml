@@ -67,7 +67,16 @@ send_message:
       required: false
       example: dialog-information
       selector:
-        text:
+        select:
+          options:
+            - dialog-information
+            - dialog-warning
+            - dialog-error
+            - dialog-question
+          mode: dropdown
+          custom_value: true
+          translation_key: icon
+          sort: false
     urgency:
       required: false
       example: critical
