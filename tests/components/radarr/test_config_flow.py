@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiopyarr import exceptions
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -23,8 +24,6 @@ from . import (
     patch_async_setup_entry,
     setup_integration,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -54,6 +53,16 @@ async def test_cannot_connect(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_invalid_auth(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -67,6 +76,16 @@ async def test_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_wrong_app(hass: HomeAssistant) -> None:
@@ -85,6 +104,20 @@ async def test_wrong_app(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "wrong_app"
 
+    with (
+        patch(
+            "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
+            return_value=("v3", API_KEY, "/test"),
+        ),
+        patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_URL: URL, CONF_VERIFY_SSL: False},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_zero_conf_failure(hass: HomeAssistant) -> None:
     """Test we show user form on api key retrieval failure."""
@@ -102,8 +135,24 @@ async def test_zero_conf_failure(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "zeroconf_failed"
 
+    with (
+        patch(
+            "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
+            return_value=("v3", API_KEY, "/test"),
+        ),
+        patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_URL: URL, CONF_VERIFY_SSL: False},
+        )
 
-async def test_unknown_error(hass: HomeAssistant) -> None:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_unknown_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on unknown error."""
     with patch(
         "homeassistant.components.radarr.config_flow.RadarrClient.async_get_system_status",
@@ -118,6 +167,16 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
+
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zero_conf(hass: HomeAssistant) -> None:

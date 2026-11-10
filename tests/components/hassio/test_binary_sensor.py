@@ -11,6 +11,7 @@ from uuid import uuid4
 from aiohasupervisor.models import AddonState, InstalledAddonComplete
 from aiohasupervisor.models.mounts import (
     CIFSMountResponse,
+    DiskMountResponse,
     MountsInfo,
     MountState,
     MountType,
@@ -18,18 +19,17 @@ from aiohasupervisor.models.mounts import (
     NFSMountResponse,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hassio import DOMAIN, get_addons_info
 from homeassistant.components.hassio.const import ADDONS_COORDINATOR
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -363,10 +363,60 @@ async def test_addon_state_event_ignored(
     assert state.state == "off"
 
 
+@pytest.mark.parametrize(
+    ("mount", "expected_model_id"),
+    [
+        pytest.param(
+            CIFSMountResponse(
+                share="files",
+                server="1.2.3.4",
+                name="NAS",
+                type=MountType.CIFS,
+                usage=MountUsage.SHARE,
+                read_only=False,
+                state=MountState.ACTIVE,
+                user_path=PurePath("/share/nas"),
+            ),
+            "share/cifs",
+            id="cifs",
+        ),
+        pytest.param(
+            NFSMountResponse(
+                path=PurePath("/files"),
+                server="1.2.3.4",
+                name="NAS",
+                type=MountType.NFS,
+                usage=MountUsage.MEDIA,
+                read_only=False,
+                state=MountState.ACTIVE,
+                user_path=PurePath("/media/nas"),
+            ),
+            "media/nfs",
+            id="nfs",
+        ),
+        pytest.param(
+            DiskMountResponse(
+                uuid="0a1b2c3d-4e5f-6789-abcd-ef0123456789",
+                filesystem="ext4",
+                name="NAS",
+                type=MountType.DISK,
+                usage=MountUsage.BACKUP,
+                read_only=False,
+                state=MountState.ACTIVE,
+                user_path=None,
+            ),
+            "backup/disk",
+            id="disk",
+        ),
+    ],
+)
 async def test_mount_binary_sensor(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     supervisor_client: AsyncMock,
+    mount: CIFSMountResponse | DiskMountResponse | NFSMountResponse,
+    expected_model_id: str,
 ) -> None:
     """Test hassio mounts binary sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -387,17 +437,8 @@ async def test_mount_binary_sensor(
     assert hass.states.get(entity_id) is None
 
     # Add a mount.
-    mock_mounts: list[CIFSMountResponse | NFSMountResponse] = [
-        CIFSMountResponse(
-            share="files",
-            server="1.2.3.4",
-            name="NAS",
-            type=MountType.CIFS,
-            usage=MountUsage.SHARE,
-            read_only=False,
-            state=MountState.ACTIVE,
-            user_path=PurePath("/share/nas"),
-        )
+    mock_mounts: list[CIFSMountResponse | DiskMountResponse | NFSMountResponse] = [
+        mount
     ]
     supervisor_client.mounts.info = AsyncMock(
         return_value=MountsInfo(default_backup_mount=None, mounts=mock_mounts)
@@ -406,6 +447,12 @@ async def test_mount_binary_sensor(
     # Let it reload.
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1000))
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mount_NAS"), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model_id == expected_model_id
 
     # Verify that the entity is disabled by default.
     assert hass.states.get(entity_id) is None

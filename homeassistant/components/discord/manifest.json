@@ -1,8 +1,10 @@
 {
   "domain": "discord",
   "name": "Discord",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/discord",
   "integration_type": "service",
   "iot_class": "cloud_push",

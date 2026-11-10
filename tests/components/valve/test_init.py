@@ -3,6 +3,14 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
@@ -25,15 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 
@@ -149,19 +148,17 @@ def mock_config_entry(hass: HomeAssistant) -> tuple[MockConfigEntry, list[ValveE
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.VALVE]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(config_entry, [Platform.VALVE])
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(

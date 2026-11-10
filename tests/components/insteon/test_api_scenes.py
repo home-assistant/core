@@ -9,6 +9,8 @@ from pyinsteon.constants import ResponseStatus
 from pyinsteon.managers.scene_controller_manager import SceneControllerError
 import pyinsteon.managers.scene_manager
 import pytest
+from pytest_homeassistant.common import load_json_array_fixture
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.insteon.api import async_load_api, scenes
 from homeassistant.components.insteon.const import ID, TYPE
@@ -16,9 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
 from .mock_devices import MockDevices
-
-from tests.common import load_json_array_fixture
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="scene_data", scope="module")

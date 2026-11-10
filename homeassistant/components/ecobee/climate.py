@@ -42,18 +42,7 @@ from .const import (
     LOGGER,
     MANUFACTURER,
 )
-from .services import (
-    ATTR_COOL_TEMP,
-    ATTR_END_DATE,
-    ATTR_END_TIME,
-    ATTR_FAN_MIN_ON_TIME,
-    ATTR_FAN_MODE,
-    ATTR_HEAT_TEMP,
-    ATTR_START_DATE,
-    ATTR_START_TIME,
-    ATTR_VACATION_NAME,
-    _async_get_thermostats,
-)
+from .services import EcobeeServiceArgument, _async_get_thermostats
 from .util import is_indefinite_hold
 
 PRESET_AWAY_INDEFINITELY = "away_indefinitely"
@@ -167,7 +156,7 @@ class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_min_humidity = DEFAULT_MIN_HUMIDITY
     _attr_max_humidity = DEFAULT_MAX_HUMIDITY
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
@@ -257,13 +246,13 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self.thermostat["runtime"]["actualTemperature"] / 10.0
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
@@ -271,7 +260,7 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
@@ -306,7 +295,7 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return None
@@ -506,7 +495,7 @@ class Thermostat(ClimateEntity):
             )
 
         elif preset_mode == PRESET_TEMPERATURE:
-            self.set_temp_hold(self.current_temperature)
+            self.set_temp_hold(self.native_current_temperature)
 
         elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
             self.data.ecobee.set_climate_hold(
@@ -766,7 +755,7 @@ class Thermostat(ClimateEntity):
         LOGGER.debug(
             "Setting sensors %s to be used on thermostat %s for program %s",
             sensor_names,
-            self.device_info.get("name"),
+            self.device_info.name,
             preset_mode,
         )
         self.data.ecobee.update_climate_sensors(
@@ -828,23 +817,23 @@ class Thermostat(ClimateEntity):
 
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
-        vacation_name = service_data[ATTR_VACATION_NAME]
+        vacation_name = service_data[EcobeeServiceArgument.VACATION_NAME]
         cool_temp = TemperatureConverter.convert(
-            service_data[ATTR_COOL_TEMP],
+            service_data[EcobeeServiceArgument.COOL_TEMP],
             self.hass.config.units.temperature_unit,
             UnitOfTemperature.FAHRENHEIT,
         )
         heat_temp = TemperatureConverter.convert(
-            service_data[ATTR_HEAT_TEMP],
+            service_data[EcobeeServiceArgument.HEAT_TEMP],
             self.hass.config.units.temperature_unit,
             UnitOfTemperature.FAHRENHEIT,
         )
-        start_date = service_data.get(ATTR_START_DATE)
-        start_time = service_data.get(ATTR_START_TIME)
-        end_date = service_data.get(ATTR_END_DATE)
-        end_time = service_data.get(ATTR_END_TIME)
-        fan_mode = service_data[ATTR_FAN_MODE]
-        fan_min_on_time = service_data[ATTR_FAN_MIN_ON_TIME]
+        start_date = service_data.get(EcobeeServiceArgument.START_DATE)
+        start_time = service_data.get(EcobeeServiceArgument.START_TIME)
+        end_date = service_data.get(EcobeeServiceArgument.END_DATE)
+        end_time = service_data.get(EcobeeServiceArgument.END_TIME)
+        fan_mode = service_data[EcobeeServiceArgument.FAN_MODE]
+        fan_min_on_time = service_data[EcobeeServiceArgument.FAN_MIN_ON_TIME]
 
         kwargs = {
             key: value

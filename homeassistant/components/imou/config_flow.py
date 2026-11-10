@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from . import async_migrate_entry
 from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,12 +39,30 @@ REAUTH_SCHEMA = probatio.Schema(
     }
 )
 
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_APP_SECRET)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
+        probatio.Required(CONF_API_URL): SelectSelector(
+            SelectSelectorConfig(
+                options=list(API_URLS),
+                translation_key="api_url",
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+    }
+)
+
 
 class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Imou integration."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Validate credentials and close the temporary client."""
@@ -106,6 +125,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
+        await async_migrate_entry(self.hass, self._get_reauth_entry())
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -134,5 +154,44 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             description_placeholders={"app_id": reauth_entry.data[CONF_APP_ID]},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        # Migrate before applying a new region. Otherwise a reload would treat
+        # the region the user just chose as a legacy value and swap it.
+        await async_migrate_entry(self.hass, reconfigure_entry)
+        if user_input is not None:
+            credentials = {
+                CONF_APP_ID: reconfigure_entry.data[CONF_APP_ID],
+                CONF_APP_SECRET: user_input[CONF_APP_SECRET],
+                CONF_API_URL: user_input[CONF_API_URL],
+            }
+            if not (errors := await self._validate_input(credentials)):
+                await self.async_set_unique_id(reconfigure_entry.data[CONF_APP_ID])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={
+                        CONF_APP_SECRET: user_input[CONF_APP_SECRET],
+                        CONF_API_URL: user_input[CONF_API_URL],
+                    },
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA,
+                user_input
+                or {
+                    CONF_APP_SECRET: reconfigure_entry.data[CONF_APP_SECRET],
+                    CONF_API_URL: reconfigure_entry.data[CONF_API_URL],
+                },
+            ),
+            description_placeholders={"app_id": reconfigure_entry.data[CONF_APP_ID]},
             errors=errors,
         )

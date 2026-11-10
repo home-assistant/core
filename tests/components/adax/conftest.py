@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
 
 from homeassistant.components.adax.const import (
     ACCOUNT_ID,
@@ -18,8 +19,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_UNIQUE_ID,
 )
-
-from tests.common import AsyncMock, MockConfigEntry
 
 CLOUD_CONFIG = {
     ACCOUNT_ID: 12345,

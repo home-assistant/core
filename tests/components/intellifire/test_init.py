@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 from intellifire4py.const import IntelliFireApiMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intellifire import CONF_USER_ID
 from homeassistant.components.intellifire.const import (
@@ -26,8 +27,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_migration_v1_1_to_v1_3(

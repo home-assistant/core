@@ -21,6 +21,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 API_KEY = "psk_123456789"
+ACTIVE_SITE = Site(
+    id="01FG0AGP818PXK0DWHXJRRT2DH",
+    nmi="11111111111",
+    channels=[],
+    network="Jemena",
+    status=SiteStatus.ACTIVE,
+    active_from=date(2002, 1, 1),
+    closed_on=None,
+    interval_length=30,
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -230,6 +240,21 @@ async def test_single_closed_site_no_closed_date(
     assert enter_api_key_result.get("step_id") == "user"
     assert enter_api_key_result.get("errors") == {"api_token": "no_site"}
 
+    single_site_closed_no_close_date_api.return_value.get_sites.return_value = [
+        ACTIVE_SITE
+    ]
+    enter_api_key_result = await hass.config_entries.flow.async_configure(
+        enter_api_key_result["flow_id"],
+        user_input={CONF_API_TOKEN: API_KEY},
+    )
+    assert enter_api_key_result.get("step_id") == "site"
+
+    enter_api_key_result = await hass.config_entries.flow.async_configure(
+        enter_api_key_result["flow_id"],
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
+    )
+    assert enter_api_key_result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_single_site_rejoin(
     hass: HomeAssistant, single_site_rejoin_api: Mock
@@ -282,6 +307,19 @@ async def test_no_site(hass: HomeAssistant, no_site_api: Mock) -> None:
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "no_site"}
 
+    no_site_api.get_sites.return_value = [ACTIVE_SITE]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: API_KEY},
+    )
+    assert result.get("step_id") == "site"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     """Test invalid api key."""
@@ -301,6 +339,20 @@ async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "invalid_api_token"}
 
+    invalid_key_api.return_value.get_sites.side_effect = None
+    invalid_key_api.return_value.get_sites.return_value = [ACTIVE_SITE]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: API_KEY},
+    )
+    assert result.get("step_id") == "site"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     """Test invalid api key."""
@@ -319,6 +371,20 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     # Goes back to the user step
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "unknown_error"}
+
+    api_error.return_value.get_sites.side_effect = None
+    api_error.return_value.get_sites.return_value = [ACTIVE_SITE]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_TOKEN: API_KEY},
+    )
+    assert result.get("step_id") == "site"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_site_filtering(single_site_rejoin_api: Mock) -> None:

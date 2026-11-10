@@ -2,6 +2,7 @@
   "domain": "mobile_app",
   "name": "Mobile App",
   "after_dependencies": ["cloud", "camera", "conversation", "notify"],
+  "categories": ["presence_location.phones_companion_apps"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "dependencies": [

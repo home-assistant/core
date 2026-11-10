@@ -306,6 +306,9 @@
     'presets': dict({
     }),
     'state': dict({
+      'AudioReactive': dict({
+        'on': False,
+      }),
       'bri': 128,
       'ledmap': 0,
       'lor': 0,

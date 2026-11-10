@@ -4,8 +4,9 @@ from logging import getLogger
 
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.recorder import get_instance
 
-from .util import async_migration_in_progress, get_instance
+from .util import async_migration_in_progress
 
 _LOGGER = getLogger(__name__)
 

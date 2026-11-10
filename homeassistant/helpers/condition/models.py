@@ -10,7 +10,7 @@ from typing import Any, Never, TypedDict, Unpack, final
 import probatio
 
 from homeassistant.const import CONF_CONDITION, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop, callback
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -38,7 +38,9 @@ CONDITION_BASE_SCHEMA = probatio.Schema(
 _CONDITION_SCHEMA = CONDITION_BASE_SCHEMA.extend(
     {
         probatio.Optional(CONF_OPTIONS): object,
-        probatio.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Optional(CONF_TARGET): probatio.All(
+            cv.TARGET_FIELDS, cv.exclude_requires_target
+        ),
     }
 )
 
@@ -61,11 +63,6 @@ type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 type ConditionCheckerTypeOptional = Callable[
     [HomeAssistant, TemplateVarsType], bool | None
 ]
-
-
-@callback
-def _async_noop() -> None:
-    """Do nothing."""
 
 
 class ConditionChecker(abc.ABC):
@@ -155,7 +152,7 @@ class ConditionChecker(abc.ABC):
 
         Intended to be overridden in derived classes that can track changes.
         """
-        return _async_noop
+        return async_noop
 
     @final
     def async_check(

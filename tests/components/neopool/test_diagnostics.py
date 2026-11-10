@@ -1,19 +1,19 @@
 """Test the NeoPool diagnostics."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.neopool.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
@@ -37,6 +37,20 @@ async def test_entry_diagnostics(
             "entry_id",
         )
     )
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_entry_diagnostics_redacts_serial_device(
+    hass: HomeAssistant,
+    mock_config_entry_serial: MockConfigEntry,
+) -> None:
+    """The serial device path is redacted; it can carry a USB adapter serial."""
+    await setup_integration(hass, mock_config_entry_serial)
+
+    result = await async_get_config_entry_diagnostics(hass, mock_config_entry_serial)
+
+    assert result["config_entry"]["data"]["device"] == REDACTED
+    assert "/dev/ttyUSB0" not in str(result)
 
 
 @pytest.mark.usefixtures("mock_neopool_client")

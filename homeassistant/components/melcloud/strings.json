@@ -139,6 +139,9 @@
     "cannot_connect": {
       "message": "Error communicating with MELCloud: {error}"
     },
+    "device_rate_limit_exceeded": {
+      "message": "MELCloud rate limit exceeded for {device}. Your account may be temporarily blocked."
+    },
     "rate_limit_exceeded": {
       "message": "MELCloud rate limit exceeded. Your account may be temporarily blocked."
     },

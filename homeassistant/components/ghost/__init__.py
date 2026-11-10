@@ -28,7 +28,7 @@ class GhostRuntimeData:
     api: GhostAdminAPI
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GhostConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GhostConfigEntry) -> None:
     """Set up Ghost from a config entry."""
     api_url = entry.data[CONF_API_URL]
     admin_api_key = entry.data[CONF_ADMIN_API_KEY]
@@ -42,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GhostConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GhostConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GhostConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,12 +1,12 @@
 """DataUpdateCoordinator for the airtouch integration."""
 
+from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from airtouch4pyapi import AirTouch
 from airtouch4pyapi.airtouch import AirTouchStatus
 
-from homeassistant.components.climate import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,10 +15,14 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=60)
+
 type AirTouch4ConfigEntry = ConfigEntry[AirtouchDataUpdateCoordinator]
 
 
-class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
+class AirtouchDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, list[dict[str, Any]]]]
+):
     """Class to manage fetching Airtouch data."""
 
     def __init__(
@@ -36,7 +40,7 @@ class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, list[dict[str, Any]]]:
         """Fetch data from Airtouch."""
         await self.airtouch.UpdateInfo()
         if self.airtouch.Status != AirTouchStatus.OK:

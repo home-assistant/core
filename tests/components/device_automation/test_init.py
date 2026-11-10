@@ -6,6 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import attr
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant import loader
@@ -33,9 +40,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import RequirementsNotFound
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.typing import WebSocketGenerator
 
 
 @attr.s(frozen=True, slots=True)
@@ -1341,8 +1345,28 @@ BAD_AUTOMATIONS = [
     ),
 ]
 
-BAD_TRIGGERS = BAD_CONDITIONS = [
+BAD_CONDITIONS = [
     *BAD_AUTOMATIONS,
+    ({"domain": "light"}, "required key not provided at '{path}device_id'"),
+]
+
+BAD_TRIGGERS = [
+    (
+        {"device_id": "very_unique", "domain": "light"},
+        "expected type to be one of",
+    ),
+    (
+        {"device_id": "wrong", "domain": "light"},
+        "Unknown device 'wrong'",
+    ),
+    (
+        {"device_id": "wrong"},
+        "required key not provided at '{path}domain'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
+        "Unknown entity 'wrong'",
+    ),
     ({"domain": "light"}, "required key not provided at '{path}device_id'"),
 ]
 

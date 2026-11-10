@@ -13,6 +13,17 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    async_capture_events,
+    mock_integration,
+    mock_registry,
+)
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,13 +32,11 @@ from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Context,
@@ -51,20 +60,8 @@ from homeassistant.helpers.event import (
     async_track_state_removed_domain,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    async_capture_events,
-    mock_integration,
-    mock_registry,
-)
 
 
 def test_generate_entity_id_requires_hass_or_ids() -> None:
@@ -144,12 +141,12 @@ async def test_device_class(hass: HomeAssistant) -> None:
     ent.hass = hass
     ent.async_write_ha_state()
     state = hass.states.get(ent.entity_id)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(EntityStateAttribute.DEVICE_CLASS) is None
 
     ent._attr_device_class = "test_class"
     ent.async_write_ha_state()
     state = hass.states.get(ent.entity_id)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
+    assert state.attributes.get(EntityStateAttribute.DEVICE_CLASS) == "test_class"
 
 
 async def test_warn_slow_update(
@@ -991,7 +988,7 @@ async def test_attribution_attribute(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(mock_entity.entity_id)
-    assert state.attributes.get(ATTR_ATTRIBUTION) == "Home Assistant"
+    assert state.attributes.get(EntityStateAttribute.ATTRIBUTION) == "Home Assistant"
 
 
 async def test_entity_category_property(hass: HomeAssistant) -> None:
@@ -1080,10 +1077,16 @@ async def _test_friendly_name(
 
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name
+    )
 
     await async_update_entity(hass, ent.entity_id)
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name
+    )
 
 
 @pytest.mark.parametrize("has_entity_name", [False, True])
@@ -1107,19 +1110,23 @@ async def test_friendly_name_empty_override_uses_device_name(
 
     entry = entity_registry.async_update_entity(ent.entity_id, name="")
     await hass.async_block_till_done()
-    assert hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Device Bla"
+    assert (
+        hass.states.get(ent.entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == "Device Bla"
+    )
 
     assert entry.device_id is not None
     device_registry.async_update_device(entry.device_id, name_by_user="Living room")
     await hass.async_block_till_done()
     assert (
-        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Living room"
+        hass.states.get(ent.entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == "Living room"
     )
 
     entity_registry.async_update_entity(ent.entity_id, name=None)
     await hass.async_block_till_done()
     assert (
-        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME]
+        hass.states.get(ent.entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
         == "Living room Temperature"
     )
 
@@ -1137,7 +1144,7 @@ async def test_friendly_name_empty_override_uses_device_name(
         (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
-        (True, "Entity Blu", UNDEFINED, "Mock Title Entity Blu"),
+        (True, "Entity Blu", Undefined, "Mock Title Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ],
 )
@@ -1145,7 +1152,7 @@ async def test_friendly_name_attr(
     hass: HomeAssistant,
     has_entity_name: bool,
     entity_name: str | None,
-    device_name: str | UndefinedType | None,
+    device_name: str | Undefined | None,
     expected_friendly_name: str | None,
 ) -> None:
     """Test friendly name when the entity uses _attr_*."""
@@ -1173,10 +1180,10 @@ async def test_friendly_name_attr(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_description(
@@ -1211,10 +1218,10 @@ async def test_friendly_name_description(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla English cls"),
+        (True, Undefined, "Device Bla English cls"),
     ],
 )
 async def test_friendly_name_description_device_class_name(
@@ -1484,10 +1491,10 @@ async def test_entity_name_translation_placeholder_errors(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property(
@@ -1521,11 +1528,11 @@ async def test_friendly_name_property(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property_device_class_name(
@@ -1729,7 +1736,10 @@ async def test_friendly_name_updated(
 
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name1
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name1
+    )
 
     device = device_registry.async_get_device_by_identifier(
         ("hue", "1234"), config_entry.entry_id
@@ -1738,7 +1748,10 @@ async def test_friendly_name_updated(
     await hass.async_block_till_done()
 
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name2
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name2
+    )
 
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1749,7 +1762,10 @@ async def test_friendly_name_updated(
     await hass.async_block_till_done()
 
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name3
+    assert (
+        state.attributes.get(EntityStateAttribute.FRIENDLY_NAME)
+        == expected_friendly_name3
+    )
 
 
 @pytest.mark.parametrize(
@@ -1843,20 +1859,29 @@ async def test_device_updates_follow_device_id_change(
     expected_device = devices[expected_device_identifier]
     assert ent.device_entry == expected_device
     state = hass.states.get(ent.entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+    assert (
+        state.attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == expected_friendly_name_after_move
+    )
 
     # Renaming the previous device must not affect the entity
     device_registry.async_update_device(old_device.id, name_by_user="Old renamed")
     await hass.async_block_till_done()
     assert ent.device_entry == expected_device
     state = hass.states.get(ent.entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+    assert (
+        state.attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == expected_friendly_name_after_move
+    )
 
     # Renaming the new device must update the entity
     device_registry.async_update_device(new_device.id, name_by_user="New renamed")
     await hass.async_block_till_done()
     state = hass.states.get(ent.entity_id)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_final
+    assert (
+        state.attributes[EntityStateAttribute.FRIENDLY_NAME]
+        == expected_friendly_name_final
+    )
 
 
 async def test_device_entry_cleared_when_detached_from_device(
@@ -2383,7 +2408,7 @@ class _PhaseTrackingEntity(entity.Entity):
     def __init__(self) -> None:
         """Initialize the entity."""
         self.phases: list[str] = []
-        self.state_in_finished: State | None = None
+        self.state_after_write: State | None = None
         self._key: str | None = None
 
     @property
@@ -2408,23 +2433,57 @@ class _PhaseTrackingEntity(entity.Entity):
         self.phases.append("write")
         super()._async_write_ha_state()
 
+
+class _WritingEntity(_PhaseTrackingEntity):
+    """Entity writing the state itself to work with it under the new entity_id."""
+
     @callback
-    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
-        """Record the state when the change is finished."""
-        super().async_entity_id_change_finished(old_entity_id)
-        self.phases.append("finished")
-        self.state_in_finished = self.hass.states.get(self.entity_id)
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-key, write the state, then read it."""
+        super().async_entity_id_changed(old_entity_id)
+        self.async_write_ha_state()
+        self.phases.append("after write")
+        self.state_after_write = self.hass.states.get(self.entity_id)
 
 
+class _NoSuperEntity(_PhaseTrackingEntity):
+    """Entity whose async_entity_id_changed does not call super()."""
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-key without calling super()."""
+        self.phases.append("changed")
+        self._key = self.entity_id
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "phases", "key_after_write"),
+    [
+        pytest.param(
+            _PhaseTrackingEntity, ["changed", "write"], None, id="core_writes"
+        ),
+        pytest.param(
+            _WritingEntity,
+            ["changed", "write", "after write"],
+            "test.test2",
+            id="hook_writes",
+        ),
+        pytest.param(_NoSuperEntity, ["changed", "write"], None, id="no_super"),
+    ],
+)
 async def test_change_entity_id_phases(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_class: type[_PhaseTrackingEntity],
+    phases: list[str],
+    key_after_write: str | None,
 ) -> None:
-    """Test the entity_id change hooks run around a single state write."""
+    """Test the state is written once, by the hook or else by core after it."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
     )
     platform = MockEntityPlatform(hass, domain="test")
-    ent = _PhaseTrackingEntity()
+    ent = entity_class()
     await platform.async_add_entities([ent])
     ent.phases.clear()
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
@@ -2432,11 +2491,13 @@ async def test_change_entity_id_phases(
     entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
 
     # The change completes synchronously while the registry event is dispatched
-    assert ent.phases == ["changed", "write", "finished"]
+    assert ent.phases == phases
     await hass.async_block_till_done()
-    assert ent.phases == ["changed", "write", "finished"]
-    assert ent.state_in_finished is not None
-    assert ent.state_in_finished.attributes["key"] == "test.test2"
+    assert ent.phases == phases
+    # Work after the hook's own write sees the state under the new entity_id
+    assert (
+        ent.state_after_write and ent.state_after_write.attributes["key"]
+    ) == key_after_write
     # The added state already carries the re-keyed attribute, no extra event
     assert [
         (
@@ -2449,7 +2510,7 @@ async def test_change_entity_id_phases(
 
 
 class _SuspendingEntity(entity.Entity):
-    """Entity whose async_entity_id_change_finished starts a suspending task."""
+    """Entity whose async_entity_id_changed starts a suspending task."""
 
     _attr_unique_id = "5678"
 
@@ -2460,9 +2521,9 @@ class _SuspendingEntity(entity.Entity):
         self.entity_ids_after_resume: list[str] = []
 
     @callback
-    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
         """Record the change, then start a task which waits until resumed."""
-        super().async_entity_id_change_finished(old_entity_id)
+        super().async_entity_id_changed(old_entity_id)
         self.calls.append((old_entity_id, self.entity_id))
         self.hass.async_create_task(self._async_wait_for_resume())
 
@@ -2472,10 +2533,10 @@ class _SuspendingEntity(entity.Entity):
         self.entity_ids_after_resume.append(self.entity_id)
 
 
-async def test_change_entity_id_again_while_finishing(
+async def test_change_entity_id_again_while_task_awaits(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test an entity_id change while a task of the finished hook awaits."""
+    """Test an entity_id change while a task started by the hook awaits."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="a"
     )
@@ -2485,7 +2546,7 @@ async def test_change_entity_id_again_while_finishing(
 
     entity_registry.async_update_entity("test.a", new_entity_id="test.b")
     # Registry events are not serialized with the task started by the first
-    # async_entity_id_change_finished, the second change runs while it awaits
+    # async_entity_id_changed, the second change runs while it awaits
     entity_registry.async_update_entity("test.b", new_entity_id="test.c")
     ent.resume.set()
     await hass.async_block_till_done()
@@ -2504,10 +2565,10 @@ async def test_change_entity_id_again_while_finishing(
     _assert_entity_bookkeeping(hass, platform, ent, ["test.d"])
 
 
-async def test_remove_while_finishing_entity_id_change(
+async def test_remove_while_entity_id_change_task_awaits(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test removing the entity while a task of the finished hook awaits."""
+    """Test removing the entity while a task started by the hook awaits."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="a"
     )
@@ -2526,38 +2587,36 @@ async def test_remove_while_finishing_entity_id_change(
     _assert_entity_bookkeeping(hass, platform, ent, [])
 
 
-class _RaisingChangedEntity(_PhaseTrackingEntity):
-    """Entity whose async_entity_id_changed raises."""
+class _RaisingBeforeWriteEntity(_PhaseTrackingEntity):
+    """Entity whose async_entity_id_changed raises before the state is written."""
 
     @callback
     def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Raise."""
+        """Re-key, then raise."""
         super().async_entity_id_changed(old_entity_id)
         raise ValueError("Boom")
 
 
-class _RaisingFinishedEntity(_PhaseTrackingEntity):
-    """Entity whose async_entity_id_change_finished raises."""
+class _RaisingAfterWriteEntity(_WritingEntity):
+    """Entity whose async_entity_id_changed raises after writing the state."""
 
     @callback
-    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
-        """Raise."""
-        super().async_entity_id_change_finished(old_entity_id)
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Write the state, then raise."""
+        super().async_entity_id_changed(old_entity_id)
         raise ValueError("Boom")
 
 
 @pytest.mark.parametrize(
-    ("entity_class", "message"),
+    ("entity_class", "phases"),
     [
         pytest.param(
-            _RaisingChangedEntity,
-            "Error handling entity_id change of test.test2 from test.test",
-            id="changed",
+            _RaisingBeforeWriteEntity, ["changed", "write"], id="before_write"
         ),
         pytest.param(
-            _RaisingFinishedEntity,
-            "Error finishing entity_id change of test.test2 from test.test",
-            id="finished",
+            _RaisingAfterWriteEntity,
+            ["changed", "write", "after write"],
+            id="after_write",
         ),
     ],
 )
@@ -2566,9 +2625,9 @@ async def test_change_entity_id_hook_raises(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     entity_class: type[_PhaseTrackingEntity],
-    message: str,
+    phases: list[str],
 ) -> None:
-    """Test a raising hook is logged and still leaves the new state written."""
+    """Test a raising hook is logged and still leaves the new state written once."""
     entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
     )
@@ -2580,10 +2639,10 @@ async def test_change_entity_id_hook_raises(
     entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
     await hass.async_block_till_done()
 
-    assert ent.phases == ["changed", "write", "finished"]
+    assert ent.phases == phases
     assert hass.states.get("test.test") is None
     assert hass.states.get("test.test2").attributes["key"] == "test.test2"
-    assert message in caplog.text
+    assert "Error handling entity_id change of test.test2 from test.test" in caplog.text
     assert "ValueError: Boom" in caplog.text
 
 
@@ -2640,7 +2699,7 @@ async def test_change_entity_id_then_update(
 
     entity_registry.async_update_entity("test_domain.renamed", name="New name")
     await hass.async_block_till_done()
-    assert hass.states.get("test_domain.renamed").name == "New name"
+    assert hass.states.get("test_domain.renamed").name == "Renamed device New name"
     assert hass.states.async_entity_ids() == ["test_domain.renamed"]
 
 
@@ -2652,11 +2711,15 @@ def _async_entity_id_changed(self: entity.Entity, old_entity_id: str) -> None:
     """Run when the entity_id has been changed."""
 
 
-def _entity_class(module: str, methods: dict[str, Any]) -> type[entity.Entity]:
+def _entity_class(
+    module: str,
+    methods: dict[str, Any],
+    base: type[entity.Entity] = entity.Entity,
+) -> type[entity.Entity]:
     """Return an entity class defined in module with the given methods."""
     return type(
         "GeneratedEntity",
-        (entity.Entity,),
+        (base,),
         {"__module__": module, "_attr_unique_id": "5678", **methods},
     )
 
@@ -2671,6 +2734,10 @@ _CORE_ADDED = _entity_class(_CORE_MODULE, _ADDED_METHODS)
 _CUSTOM_ADDED = _entity_class(_CUSTOM_MODULE, _ADDED_METHODS)
 _CORE_ADDED_HOOK = _entity_class(_CORE_MODULE, _ADDED_HOOK_METHODS)
 _CUSTOM_ADDED_HOOK = _entity_class(_CUSTOM_MODULE, _ADDED_HOOK_METHODS)
+_CUSTOM_SUBCLASS_OF_CORE_ADDED = _entity_class(_CUSTOM_MODULE, {}, _CORE_ADDED)
+_CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED = _entity_class(
+    _CUSTOM_MODULE, _ADDED_METHODS, _CORE_ADDED
+)
 
 
 class _AddedEntity(entity.Entity):
@@ -2680,14 +2747,6 @@ class _AddedEntity(entity.Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when the entity has been added to hass."""
-
-
-class _FinishedOnlyAddedEntity(_AddedEntity):
-    """Entity opting in with only async_entity_id_change_finished."""
-
-    @callback
-    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
-        """Run when the state has been written under the new entity_id."""
 
 
 class _RemovedEntity(entity.Entity):
@@ -2901,10 +2960,18 @@ class _InternalAndAddedEntity(_InternalAddedEntity):
         pytest.param(_AddedEntity, True, id="added"),
         pytest.param(_RemovedEntity, True, id="removed"),
         pytest.param(_PreparedEntity, True, id="prepared"),
-        pytest.param(_CORE_ADDED, True, id="core_module_added"),
+        pytest.param(_CORE_ADDED, False, id="core_module_added"),
         pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
         pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
         pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(
+            _CUSTOM_SUBCLASS_OF_CORE_ADDED, False, id="custom_subclass_of_core_added"
+        ),
+        pytest.param(
+            _CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED,
+            True,
+            id="custom_added_subclass_of_core_added",
+        ),
         pytest.param(_HookOnly, False, id="hook_only"),
         pytest.param(_HookAboveAdded, False, id="hook_above_added"),
         pytest.param(_AddedBelowHook, True, id="added_below_hook"),
@@ -2919,7 +2986,6 @@ class _InternalAndAddedEntity(_InternalAddedEntity):
         pytest.param(_InternalAddedEntity, False, id="internal_only"),
         pytest.param(_AddToPlatformEntity, False, id="add_to_platform_only"),
         pytest.param(_InternalAndAddedEntity, True, id="internal_and_added"),
-        pytest.param(_FinishedOnlyAddedEntity, False, id="finished_only"),
         pytest.param(_CoordinatorCamera, False, id="coordinator_camera"),
         pytest.param(_CameraCoordinator, False, id="camera_coordinator"),
         pytest.param(_PlainCamera, False, id="plain_camera"),
@@ -2956,9 +3022,18 @@ def _custom_on_remove() -> None:
         pytest.param(_PlainEntity, False, id="plain"),
         pytest.param(_AddedEntity, True, id="added"),
         pytest.param(_RemovedEntity, True, id="removed"),
+        pytest.param(_CORE_ADDED, False, id="core_module_added"),
         pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
         pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
         pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(
+            _CUSTOM_SUBCLASS_OF_CORE_ADDED, False, id="custom_subclass_of_core_added"
+        ),
+        pytest.param(
+            _CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED,
+            True,
+            id="custom_added_subclass_of_core_added",
+        ),
         pytest.param(_HookAboveAdded, False, id="hook_above_added"),
         pytest.param(_AddedBelowHook, True, id="added_below_hook"),
         pytest.param(
@@ -2973,7 +3048,6 @@ def _custom_on_remove() -> None:
         pytest.param(_InternalAddedEntity, False, id="internal_only"),
         pytest.param(_AddToPlatformEntity, False, id="add_to_platform_only"),
         pytest.param(_InternalAndAddedEntity, True, id="internal_and_added"),
-        pytest.param(_FinishedOnlyAddedEntity, False, id="finished_only"),
     ],
 )
 async def test_change_entity_id_opt_in(

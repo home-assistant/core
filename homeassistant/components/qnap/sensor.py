@@ -410,7 +410,8 @@ class QNAPSystemSensor(QNAPSensor):
             return self.coordinator.data["system_health"]
 
         if self.entity_description.key == "system_temp":
-            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
+            temp = self.coordinator.data["system_stats"]["system"]["temp_c"]
+            return None if temp is None else int(temp)
 
         if self.entity_description.key == "uptime":
             uptime = self.coordinator.data["system_stats"]["uptime"]

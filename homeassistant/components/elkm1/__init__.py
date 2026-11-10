@@ -10,7 +10,7 @@ from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
 import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ENABLED,
     CONF_EXCLUDE,
@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -59,10 +59,8 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .entity import create_elk_system_device_info
-from .models import ELKM1Data
+from .models import ElkM1ConfigEntry, ELKM1Data
 from .services import async_setup_services
-
-type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
 SYNC_TIMEOUT = 120
 
@@ -219,14 +217,14 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 @callback
 def _async_find_matching_config_entry(
     hass: HomeAssistant, prefix: str
-) -> ConfigEntry | None:
+) -> ElkM1ConfigEntry | None:
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.unique_id == prefix:
             return entry
     return None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> None:
     """Set up Elk-M1 Control from a config entry."""
     conf = entry.data
 
@@ -256,8 +254,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
                 _included(conf[item]["include"], True, config[item]["included"])
                 _included(conf[item]["exclude"], False, config[item]["included"])
             except (ValueError, probatio.Invalid) as err:
-                _LOGGER.error("Config item: %s; %s", item, err)
-                return False
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_config_item",
+                    translation_placeholders={"item": item},
+                ) from err
 
     elk = Elk(
         {
@@ -289,9 +290,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
     try:
         await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait()
         sync_success = True
-    except LoginFailed:
-        _LOGGER.error("ElkM1 login failed for %s", conf[CONF_HOST])
-        return False
+    except LoginFailed as exc:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="login_failed",
+            translation_placeholders={"host": conf[CONF_HOST]},
+        ) from exc
     except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
     finally:
@@ -317,14 +321,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
 
     # Register the ElkM1 system device before forwarding platforms so entities
     # on any platform can deterministically resolve it as their via_device.
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
-        **create_elk_system_device_info(elk, prefix, entry.unique_id),
+        device_info=create_elk_system_device_info(elk, prefix, entry.unique_id),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -> None:
@@ -334,12 +336,13 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
         values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # disconnect cleanly
-    entry.runtime_data.elk.disconnect()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # disconnect cleanly
+        entry.runtime_data.elk.disconnect()
 
 
 class LoginFailed(Exception):

@@ -1,19 +1,28 @@
 """Tests for the INDI Allsky sensor platform."""
 
+import asyncio
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import ExposureData, SensorData
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.indi_allsky.coordinator import IndiAllSkyData
+from homeassistant.components.indi_allsky.sensor import _parse_timestamp
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures(
@@ -475,3 +484,176 @@ async def test_initial_sensor_fetch_preserved(
     state = hass.states.get("sensor.indi_allsky_dew_point")
     assert state is not None
     assert state.state == "14.8"
+
+
+async def test_exposure_complete_triggers_sensor_fetch_and_queues_trailing(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_exposure_data: ExposureData,
+) -> None:
+    """Test that exposure_complete event triggers sensor fetch and queues one trailing fetch if in-flight."""
+    fetch_started = asyncio.Event()
+    unblock_fetch = asyncio.Event()
+
+    async def _slow_fetch() -> None:
+        fetch_started.set()
+        await unblock_fetch.wait()
+
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.reset_mock()
+    mock_indi_allsky_client.fetch_sensors.side_effect = _slow_fetch
+    fetch_started.clear()
+    unblock_fetch.clear()
+
+    callbacks = mock_indi_allsky_client.callbacks.get("exposure_complete", [])
+    assert callbacks
+    for cb in callbacks:
+        cb(mock_exposure_data)
+
+    await fetch_started.wait()
+
+    # While first fetch is in flight, fire multiple exposure completes
+    for cb in callbacks:
+        cb(mock_exposure_data)
+        cb(mock_exposure_data)
+
+    # Let the first fetch finish; second fetch should run and then complete
+    mock_indi_allsky_client.fetch_sensors.side_effect = None
+    unblock_fetch.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_indi_allsky_client.fetch_sensors.call_count == 2
+
+
+async def test_periodic_sensor_polling(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test periodic fallback sensor polling via time interval tracker."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.reset_mock()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_indi_allsky_client.fetch_sensors.assert_called_once()
+
+
+async def test_periodic_sensor_polling_disabled(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test periodic fallback sensor polling is not scheduled when pref_disable_polling is true."""
+    entry = MockConfigEntry(
+        domain="indi_allsky",
+        title="INDI Allsky",
+        data={
+            "host": "127.0.0.1",
+            "port": 443,
+            "ssl": True,
+            "verify_ssl": True,
+        },
+        entry_id="disabled_polling_entry_id",
+        pref_disable_polling=True,
+    )
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, entry)
+
+    mock_indi_allsky_client.fetch_sensors.reset_mock()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_indi_allsky_client.fetch_sensors.assert_not_called()
+
+
+async def test_dynamic_sensor_edge_cases(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_exposure_data: ExposureData,
+) -> None:
+    """Test dynamic sensor edge cases for native_value, metadata, and timestamps."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    dynamic_data = SensorData.from_dict(
+        {
+            "sensors": {
+                "custom_wind_direction": {
+                    "name": "Custom Wind Direction",
+                    "value": 180.0,
+                    "unit": "°",
+                    "device_class": "wind_direction",
+                },
+                "corrupted_temp": {
+                    "name": "Corrupted Temp",
+                    "value": "invalid_number",
+                    "unit": "°C",
+                    "device_class": "temperature",
+                },
+            }
+        }
+    )
+
+    for callback in mock_indi_allsky_client.callbacks.get("sensor_update", []):
+        callback(dynamic_data)
+    await hass.async_block_till_done()
+
+    # Verify wind_direction state_class measurement_angle
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == "180.0"
+    assert state.attributes.get("state_class") == "measurement_angle"
+
+    # Verify corrupted temp with state_class returns None (state unknown)
+    state = hass.states.get("sensor.indi_allsky_corrupted_temp")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now simulate coordinator having sensor missing from sensors dict
+    coordinator = mock_config_entry.runtime_data
+    coordinator.data = replace(
+        coordinator.data, sensor=SensorData.from_dict({"sensors": {}})
+    )
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now simulate coordinator having sensor = None
+    coordinator.data = replace(coordinator.data, sensor=None)
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now simulate coordinator having sensor with sensors not a dict
+    coordinator.data = replace(
+        coordinator.data, sensor=replace(dynamic_data, sensors=None)
+    )
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.indi_allsky_custom_wind_direction")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Now test _parse_timestamp with timezone-aware datetime string
+    ts_data = IndiAllSkyData(
+        exposure=replace(mock_exposure_data, create_date="2026-10-22T01:00:00+02:00")
+    )
+    ts = _parse_timestamp(ts_data)
+    assert ts is not None
+    assert ts.tzinfo == dt_util.UTC

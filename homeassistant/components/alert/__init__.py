@@ -10,9 +10,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -28,12 +25,14 @@ from .const import (
     CONF_NOTIFIERS,
     CONF_SKIP_FIRST,
     CONF_TITLE,
+    DATA_COMPONENT,
     DEFAULT_CAN_ACK,
     DEFAULT_SKIP_FIRST,
     DOMAIN,
     LOGGER,
 )
 from .entity import AlertEntity
+from .services import async_setup_services
 
 ALERT_SCHEMA = probatio.Schema(
     {
@@ -62,13 +61,19 @@ CONFIG_SCHEMA = probatio.Schema(
     {DOMAIN: cv.schema_with_slug_keys(ALERT_SCHEMA)}, extra=probatio.ALLOW_EXTRA
 )
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component.
 
     DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
     """
-    component = EntityComponent[AlertEntity](LOGGER, DOMAIN, hass)
+    component = hass.data[DATA_COMPONENT] = EntityComponent[AlertEntity](
+        LOGGER, DOMAIN, hass
+    )
 
     entities: list[AlertEntity] = []
 
@@ -109,9 +114,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not entities:
         return False
 
-    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    async_setup_services(hass)
 
     await component.async_add_entities(entities)
 

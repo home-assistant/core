@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, CONF_IP_ADDRESS, CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -33,7 +33,7 @@ async def async_get_config_entry_diagnostics(
         {
             "entry": entry.as_dict(),
             "device_info": entry.runtime_data.data.device_info,
-            ATTR_SW_VERSION: entry.runtime_data.software_version,
+            "sw_version": entry.runtime_data.software_version,
             "attributes": attributes,
         },
         TO_REDACT,

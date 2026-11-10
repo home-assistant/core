@@ -11,6 +11,12 @@ from pyenphase.const import PHASENAMES, PhaseNames
 from pyenphase.models.acb import ACBChargeStatus, EnvoyACB
 from pyenphase.models.meters import CtType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import (
@@ -29,13 +35,6 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import setup_integration
 from .conftest import _load_json_2_meter_data, _load_json_2_production_data
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.parametrize(
@@ -1123,6 +1122,7 @@ async def test_sensor_encharge_aggregate_data(
         assert entity_state.attributes.get("state_class") == target[2]
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("mock_envoy"),
     [
@@ -1161,8 +1161,23 @@ async def test_sensor_encharge_enpower_data(
         mock_envoy.data.enpower.last_report_date
     )
     assert entity_state.attributes.get("state_class") is None
+    assert (
+        entity_state := hass.states.get(
+            f"{ENTITY_BASE}_{sn}_communication_level_2_4_ghz"
+        )
+    )
+    assert entity_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert int(entity_state.state) == mock_envoy.data.enpower.comm_level_2_4_ghz
+    assert (
+        entity_state := hass.states.get(
+            f"{ENTITY_BASE}_{sn}_communication_level_sub_ghz"
+        )
+    )
+    assert entity_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert int(entity_state.state) == mock_envoy.data.enpower.comm_level_sub_ghz
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("mock_envoy"),
     [
@@ -1227,6 +1242,20 @@ async def test_sensor_encharge_power_data(
             encharge_inventory.last_report_date
         )
         assert entity_state.attributes.get("state_class") is None
+        assert (
+            entity_state := hass.states.get(
+                f"{ENTITY_BASE}_{sn}_communication_level_2_4_ghz"
+            )
+        )
+        assert entity_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+        assert int(entity_state.state) == encharge_inventory.comm_level_2_4_ghz
+        assert (
+            entity_state := hass.states.get(
+                f"{ENTITY_BASE}_{sn}_communication_level_sub_ghz"
+            )
+        )
+        assert entity_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+        assert int(entity_state.state) == encharge_inventory.comm_level_sub_ghz
 
 
 ACB_POWER_INT_NAMES: tuple[str, ...] = (

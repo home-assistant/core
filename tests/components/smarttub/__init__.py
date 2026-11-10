@@ -2,11 +2,11 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.smarttub.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 async def trigger_update(hass: HomeAssistant) -> None:

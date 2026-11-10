@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.solarman.const import CONF_SN, DOMAIN, MODEL_NAME_MAP
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 8080
@@ -53,11 +52,12 @@ def mock_solarman(device_fixture: str) -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+        fixture_dir = device_fixture.replace(" ", "_")
         client.get_config.return_value = load_json_object_fixture(
-            f"{device_fixture}/config.json", DOMAIN
+            f"{fixture_dir}/config.json", DOMAIN
         )
         client.fetch_data.return_value = load_json_object_fixture(
-            f"{device_fixture}/data.json", DOMAIN
+            f"{fixture_dir}/data.json", DOMAIN
         )
         yield client
 
@@ -66,6 +66,6 @@ def mock_solarman(device_fixture: str) -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.solarman.async_setup_entry", return_value=True
+        "homeassistant.components.solarman.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

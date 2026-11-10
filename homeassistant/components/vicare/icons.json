@@ -28,6 +28,12 @@
       "frost_protection": {
         "default": "mdi:snowflake"
       },
+      "holiday": {
+        "default": "mdi:beach"
+      },
+      "holiday_at_home": {
+        "default": "mdi:home-clock"
+      },
       "mounting_mode": {
         "default": "mdi:wrench"
       },
@@ -155,6 +161,12 @@
     }
   },
   "services": {
+    "get_circulation_schedule": {
+      "service": "mdi:calendar-search"
+    },
+    "set_circulation_schedule": {
+      "service": "mdi:calendar-clock"
+    },
     "set_vicare_mode": {
       "service": "mdi:cog"
     }

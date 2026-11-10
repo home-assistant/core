@@ -438,7 +438,7 @@ class GoogleHealthDeviceSensor(
         )
 
         if device.mac_address:
-            device_info["connections"] = {(CONNECTION_NETWORK_MAC, device.mac_address)}
+            device_info.connections = {(CONNECTION_NETWORK_MAC, device.mac_address)}
         self._attr_device_info = device_info
 
     @property

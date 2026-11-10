@@ -1,9 +1,9 @@
 """Tests for AccuWeather."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:

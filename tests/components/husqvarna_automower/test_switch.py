@@ -10,6 +10,12 @@ from aioautomower.model import MowerAttributes, MowerModes, Zone
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import (
@@ -32,13 +38,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-    snapshot_platform,
-)
 
 TEST_AREA_ID = 0
 TEST_VARIABLE_ZONE_ID = "203F6359-AB56-4D57-A6DC-703095BB695D"

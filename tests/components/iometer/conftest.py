@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from iometer import Reading, Status
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.iometer.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def mock_setup_entry() -> Generator[MagicMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.iometer.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

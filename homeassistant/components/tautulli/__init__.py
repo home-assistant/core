@@ -11,7 +11,7 @@ from .coordinator import TautulliConfigEntry, TautulliDataUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TautulliConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TautulliConfigEntry) -> None:
     """Set up Tautulli from a config entry."""
     host_configuration = PyTautulliHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
@@ -28,9 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TautulliConfigEntry) -> 
     await entry.runtime_data.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TautulliConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TautulliConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

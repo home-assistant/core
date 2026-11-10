@@ -164,7 +164,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._swing_wrapper = definition.swing_wrapper
         self._switch_wrapper = definition.switch_wrapper
         self._target_humidity_wrapper = definition.target_humidity_wrapper
-        self._attr_temperature_unit = definition.temperature_unit
+        self._attr_native_temperature_unit = definition.temperature_unit
 
         if self._current_temperature:
             self._current_temp_unit = get_temperature_unit(
@@ -260,6 +260,18 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             commands.extend(
                 self._hvac_mode_wrapper.get_update_commands(self.device, tuya_mode)
             )
+        elif (
+            hvac_mode == self.entity_description.switch_only_hvac_mode
+            and self._preset_wrapper
+            and self._preset_wrapper.options
+            and self._read_wrapper(self._preset_wrapper) is None
+        ):
+            # The mode DP holds an HVAC value such as "off": select a preset.
+            commands.extend(
+                self._preset_wrapper.get_update_commands(
+                    self.device, self._preset_wrapper.options[0]
+                )
+            )
         await self._async_send_commands(commands)
 
     @override
@@ -287,24 +299,24 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         value = kwargs[ATTR_TEMPERATURE]
-        if self._set_temp_unit and self._set_temp_unit != self.temperature_unit:
+        if self._set_temp_unit and self._set_temp_unit != self.native_temperature_unit:
             value = TemperatureConverter.convert(
-                value, self.temperature_unit, self._set_temp_unit
+                value, self.native_temperature_unit, self._set_temp_unit
             )
         await self._async_send_wrapper_updates(self._set_temperature, value)
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         value = self._read_wrapper(self._current_temperature)
         if (
             value is not None
             and self._current_temp_unit
-            and self._current_temp_unit != self.temperature_unit
+            and self._current_temp_unit != self.native_temperature_unit
         ):
             return TemperatureConverter.convert(
-                value, self._current_temp_unit, self.temperature_unit
+                value, self._current_temp_unit, self.native_temperature_unit
             )
         return value
 
@@ -316,16 +328,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         value = self._read_wrapper(self._set_temperature)
         if (
             value is not None
             and self._set_temp_unit
-            and self._set_temp_unit != self.temperature_unit
+            and self._set_temp_unit != self.native_temperature_unit
         ):
             return TemperatureConverter.convert(
-                value, self._set_temp_unit, self.temperature_unit
+                value, self._set_temp_unit, self.native_temperature_unit
             )
         return value
 
@@ -351,8 +363,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return None
 
         # If we do have a mode wrapper, check if the mode maps to an HVAC mode.
-        tuya_mode = self._read_wrapper(self._hvac_mode_wrapper)
-        return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode) if tuya_mode else None
+        if tuya_mode := self._read_wrapper(self._hvac_mode_wrapper):
+            return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode)
+
+        # The mode DP holds a preset rather than an HVAC mode.
+        if self._read_wrapper(self._preset_wrapper) is not None:
+            return self.entity_description.switch_only_hvac_mode
+        return None
 
     @property
     @override

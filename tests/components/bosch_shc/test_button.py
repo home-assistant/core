@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .conftest import motion_detector2_device, setup_integration, smoke_detector_device
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "button.smoke_detector_start_self_test"
 

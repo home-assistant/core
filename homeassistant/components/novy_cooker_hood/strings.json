@@ -52,6 +52,11 @@
       }
     }
   },
+  "exceptions": {
+    "transmitter_not_found": {
+      "message": "Cannot migrate the configuration because the radio frequency transmitter no longer exists"
+    }
+  },
   "selector": {
     "code": {
       "options": {

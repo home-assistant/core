@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import httpx2
 from openai import AuthenticationError, OpenAIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ovhcloud_ai_endpoints.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -478,6 +477,7 @@ async def test_reconfigure_conversation_agent(
     ("stored_apis", "expected_apis"),
     [
         pytest.param(["assist"], ["assist"], id="valid-api"),
+        pytest.param(["homeassistant"], ["homeassistant"], id="homeassistant-api"),
         pytest.param(["mcp-deleted-entry"], [], id="removed-api"),
         pytest.param(
             ["assist", "mcp-deleted-entry"], ["assist"], id="valid-and-removed-api"
@@ -510,7 +510,10 @@ async def test_reconfigure_conversation_agent_filters_removed_llm_api(
 
     schema = result["data_schema"].schema
     key = next(k for k in schema if k == CONF_LLM_HASS_API)
-    assert [option["value"] for option in schema[key].config["options"]] == ["assist"]
+    assert [option["value"] for option in schema[key].config["options"]] == [
+        "assist",
+        "homeassistant",
+    ]
     assert key.default() == expected_apis
 
     # An unchanged form submission must pass the selector's validation.

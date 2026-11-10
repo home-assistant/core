@@ -5,7 +5,6 @@ import logging
 from pybotvac import Account
 from pybotvac.exceptions import NeatoException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -18,12 +17,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import DOMAIN
-from .hub import NeatoHub
+from .hub import NeatoConfigEntry, NeatoHub
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-
-type NeatoConfigEntry = ConfigEntry[NeatoHub]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
@@ -41,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> None:
     """Set up config entry."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed
@@ -66,9 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NeatoConfigEntry) -> None:
     """Unload config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -138,6 +138,7 @@
       "battery_charger_status": {
         "name": "Charging status",
         "state": {
+          "charged": "Charged",
           "charging": "[%key:common::state::charging%]",
           "disabled": "[%key:common::state::disabled%]",
           "discharging": "[%key:common::state::discharging%]",
@@ -288,7 +289,6 @@
       "ups_id": { "name": "System identifier" },
       "ups_load": { "name": "Load" },
       "ups_load_high": { "name": "Overload setting" },
-      "ups_power": { "name": "Apparent power" },
       "ups_power_nominal": { "name": "Nominal power" },
       "ups_realpower": { "name": "Real power" },
       "ups_realpower_nominal": { "name": "Nominal real power" },

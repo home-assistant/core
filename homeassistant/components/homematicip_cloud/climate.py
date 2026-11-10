@@ -79,7 +79,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
         """Initialize heating group."""
@@ -121,13 +121,13 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._device.setPointTemperature
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         if self._simple_heating:
             return self._simple_heating.valveActualTemperature

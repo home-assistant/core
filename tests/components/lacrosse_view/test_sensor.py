@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from lacrosse_view import HTTPError, Sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.lacrosse_view.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -28,8 +29,6 @@ from . import (
     TEST_UNITS_OVERRIDE_SENSOR,
     TEST_UNSUPPORTED_SENSOR,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_entities_added(hass: HomeAssistant) -> None:

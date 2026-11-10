@@ -1,5 +1,6 @@
 """Test the Monarch Money coordinator."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -7,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from gql.transport.exceptions import TransportError, TransportServerError
 from monarchmoney import LoginFailedException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.monarch_money.coordinator import (
     MonarchMoneyDataUpdateCoordinator,
@@ -16,8 +18,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -107,6 +107,7 @@ async def test_update_auth_error_starts_reauthentication(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_config_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test refresh authentication errors start reauthentication."""
     await setup_integration(hass, mock_config_entry)
@@ -115,8 +116,9 @@ async def test_update_auth_error_starts_reauthentication(
         TransportServerError("forbidden", code=403)
     )
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not coordinator.last_update_success
@@ -162,6 +164,7 @@ async def test_update_connection_error_is_retryable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_config_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     api_error: Exception,
 ) -> None:
     """Test refresh connection errors mark data unavailable without reauth."""
@@ -171,8 +174,9 @@ async def test_update_connection_error_is_retryable(
         api_error
     )
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not coordinator.last_update_success

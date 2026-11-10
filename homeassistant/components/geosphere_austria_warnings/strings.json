@@ -22,6 +22,15 @@
   },
   "entity": {
     "sensor": {
+      "active_warning_level": {
+        "name": "Active warning level",
+        "state": {
+          "none": "No warning",
+          "orange": "Orange",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
+      },
       "active_warnings": {
         "name": "Active warnings",
         "unit_of_measurement": "warnings"
@@ -38,15 +47,6 @@
       "advance_warnings": {
         "name": "Advance warnings",
         "unit_of_measurement": "warnings"
-      },
-      "warning_level": {
-        "name": "Warning level",
-        "state": {
-          "none": "No warning",
-          "orange": "Orange",
-          "red": "Red",
-          "yellow": "Yellow"
-        }
       }
     }
   },
@@ -56,6 +56,9 @@
     },
     "connection_error": {
       "message": "Error communicating with the GeoSphere Austria Warn API: {error}"
+    },
+    "entity_migration_conflict": {
+      "message": "Cannot migrate the warning-level sensor: unique ID {new_unique_id} is already used by entity {conflicting_entity_id}."
     },
     "municipality_not_found": {
       "message": "No Austrian municipality was found for the configured location"

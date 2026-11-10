@@ -1,6 +1,7 @@
 {
   "domain": "color_extractor",
   "name": "ColorExtractor",
+  "categories": ["lighting"],
   "codeowners": ["@GenericStudent"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/color_extractor",

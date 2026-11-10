@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, create_autospec, patch
 
 import aiosomecomfort
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
@@ -11,8 +12,6 @@ from homeassistant.components.honeywell.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 HEATUPPERSETPOINTLIMIT = 35
 HEATLOWERSETPOINTLIMIT = 20

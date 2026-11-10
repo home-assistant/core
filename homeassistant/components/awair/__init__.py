@@ -16,7 +16,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: AwairConfigEntry
-) -> bool:
+) -> None:
     """Set up Awair integration from a config entry."""
     session = async_get_clientsession(hass)
 
@@ -38,17 +38,19 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def _async_update_listener(hass: HomeAssistant, entry: AwairConfigEntry) -> None:
-    """Handle options update."""
-    if entry.title != entry.runtime_data.title:
-        await hass.config_entries.async_reload(entry.entry_id)
+    """Reload when the title or the host changed."""
+    coordinator = entry.runtime_data
+    if entry.title != coordinator.title or entry.data[CONF_HOST] != coordinator.host:
+        # Updates arriving before the reload replaces the coordinator are handled
+        coordinator.title = entry.title
+        coordinator.host = entry.data[CONF_HOST]
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: AwairConfigEntry
-) -> bool:
+) -> None:
     """Unload Awair configuration."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

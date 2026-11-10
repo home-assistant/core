@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components import switch
 from homeassistant.components.wake_on_lan.switch import WolSwitch
 from homeassistant.const import (
@@ -14,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 async def test_valid_hostname(
@@ -333,13 +333,32 @@ async def test_changed_entity_id(
         await hass.async_block_till_done()
     assert len(calls) == 1
 
+    entity = hass.data[switch.DOMAIN].get_entity("switch.wake_on_lan")
+    assert isinstance(entity, WolSwitch)
+    assert entity._off_script is not None
+
     # Change entity_id while loaded
-    entry = entity_registry.async_get("switch.wake_on_lan")
-    assert entry is not None
-    entity_registry.async_update_entity(
-        entry.entity_id, new_entity_id="switch.custom_wol"
-    )
-    await hass.async_block_till_done()
+    with (
+        patch.object(
+            entity._off_script,
+            "async_stop",
+            wraps=entity._off_script.async_stop,
+        ) as stop_mock,
+        patch.object(
+            entity._off_script,
+            "async_unload",
+            wraps=entity._off_script.async_unload,
+        ) as unload_mock,
+    ):
+        entity_registry.async_update_entity(
+            "switch.wake_on_lan", new_entity_id="switch.custom_wol"
+        )
+        await hass.async_block_till_done()
+
+    # The entity is not removed, so the off script is neither stopped nor unloaded
+    stop_mock.assert_not_called()
+    unload_mock.assert_not_called()
+    assert hass.states.get("switch.wake_on_lan") is None
 
     # Turn off should still work after entity_id change
     with patch("homeassistant.components.wake_on_lan.switch.sp.call", return_value=1):

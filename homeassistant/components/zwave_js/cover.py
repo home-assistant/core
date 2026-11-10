@@ -39,10 +39,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, DOMAIN
-from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
-from .models import ZwaveJSConfigEntry
+from .models import ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

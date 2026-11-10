@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyezvizapi.constants import BatteryCameraWorkMode, DeviceCatagories, SupportExt
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .test_init import _mock_camera_data
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "select.camera_1_battery_work_mode"
 

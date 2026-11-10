@@ -2,15 +2,14 @@
 
 from kasa import Device
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import _mocked_device, initialize_config_entry_for_device
-
-from tests.common import async_load_json_object_fixture
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(

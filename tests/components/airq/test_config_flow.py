@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aioairq import InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.airq.const import (
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import TEST_DEVICE_INFO, TEST_USER_DATA
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=IPv4Address("192.168.0.123"),
@@ -309,6 +308,7 @@ async def test_user_flow_succeeds_during_zeroconf_discovery(
     assert user_result2["type"] is FlowResultType.CREATE_ENTRY
     assert user_result2["title"] == TEST_DEVICE_INFO["name"]
     assert user_result2["data"] == TEST_USER_DATA
+    assert user_result2["result"].unique_id == TEST_DEVICE_INFO["id"]
 
     # 4. The zeroconf discovery flow should now be aborted: completing
     #    the user flow created a config entry for this unique_id, so

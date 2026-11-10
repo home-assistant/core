@@ -8,6 +8,15 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    json_round_trip,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, CoreState, HomeAssistant, State
@@ -29,16 +38,6 @@ from homeassistant.helpers.restore_state import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    async_fire_time_changed,
-    json_round_trip,
-    mock_integration,
-    mock_platform,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"

@@ -103,7 +103,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
     ) -> None:
         """Initialize the thermostat."""
-        super().__init__(coordinator, zone, zone.zone_id)  # type: ignore[arg-type] # until fix issue #139773
+        super().__init__(coordinator, zone, str(zone.zone_id))
         thermostat = self._thermostat
         unit = thermostat.get_unit()
         min_humidity, max_humidity = thermostat.get_humidity_setpoint_limits()
@@ -124,7 +124,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._attr_max_humidity = percent_conv(max_humidity)
         self._attr_min_temp = min_setpoint
         self._attr_max_temp = max_setpoint
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             UnitOfTemperature.CELSIUS if unit == "C" else UnitOfTemperature.FAHRENHEIT
         )
         self._attr_target_temperature_step = 0.5 if unit == "C" else 1.0
@@ -136,7 +136,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self._zone.get_temperature()
 
@@ -152,7 +152,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         await self._thermostat.set_fan_mode(fan_mode)
         self._signal_thermostat_update()
 
-    async def async_set_hvac_run_mode(self, run_mode, hvac_mode):
+    async def async_set_hvac_run_mode(
+        self, run_mode: str | None = None, hvac_mode: HVACMode | None = None
+    ) -> None:
         """Set the hvac run mode."""
         if run_mode is not None:
             if run_mode == HOLD_PERMANENT:
@@ -226,7 +228,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Temperature we try to reach."""
         current_mode = self._zone.get_current_mode()
 
@@ -238,7 +240,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Highest temperature we are trying to reach."""
         current_mode = self._zone.get_current_mode()
 
@@ -248,7 +250,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Lowest temperature we are trying to reach."""
         current_mode = self._zone.get_current_mode()
 

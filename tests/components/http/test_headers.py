@@ -4,10 +4,9 @@ from http import HTTPStatus
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http.headers import setup_headers
-
-from tests.typing import ClientSessionGenerator
 
 
 async def mock_handler(_: web.Request) -> web.Response:

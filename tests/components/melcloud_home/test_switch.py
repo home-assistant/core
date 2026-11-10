@@ -9,6 +9,11 @@ from aiomelcloudhome.exceptions import (
     MelCloudHomeTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -23,12 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -172,7 +171,7 @@ async def test_no_standby_switch_without_support(
     """Test units without standby support get no standby switch."""
     context = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
     building = context["buildings"][0]
-    building["airToAirUnits"][0]["capabilities"]["hasStandbyMode"] = False
+    building["airToAirUnits"][0]["capabilities"]["hasStandby"] = False
     building["airToWaterUnits"][0]["capabilities"]["hasStandbyMode"] = False
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
 

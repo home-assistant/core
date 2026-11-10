@@ -2,12 +2,11 @@
 
 from haphilipsjs import PhilipsTV
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.philips_js.const import TV_STATE_OFF
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

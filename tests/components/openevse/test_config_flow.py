@@ -5,19 +5,14 @@ from unittest.mock import MagicMock
 
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    SOURCE_ZEROCONF,
-)
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -504,10 +499,7 @@ async def test_reconfigure_flow_host_only(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -543,10 +535,7 @@ async def test_reconfigure_flow_with_auth(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -592,10 +581,7 @@ async def test_reconfigure_flow_duplicate_host(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -633,10 +619,7 @@ async def test_reconfigure_flow_errors(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -678,10 +661,7 @@ async def test_reconfigure_flow_changed_serial(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -715,10 +695,7 @@ async def test_reconfigure_flow_no_serial(
 
     mock_charger.test_and_get.return_value = {"model": "openevse_wifi_v1"}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"

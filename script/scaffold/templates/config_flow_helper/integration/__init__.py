@@ -5,7 +5,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up NEW_NAME from a config entry."""
     # TODO Optionally store an object for your platforms to access
     # entry.runtime_data = ...
@@ -17,8 +17,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # TODO Remove if the integration does not have an options flow
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
 
-    return True
-
 
 # TODO Remove if the integration does not have an options flow
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -26,6 +24,6 @@ async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) 
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, (Platform.SENSOR,))
+    await hass.config_entries.async_unload_platforms_or_raise(entry, (Platform.SENSOR,))

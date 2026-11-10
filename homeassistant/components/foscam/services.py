@@ -1,5 +1,7 @@
 """Services for the Foscam integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -16,14 +18,24 @@ from .const import (
     DIR_TOPRIGHT,
     DIR_UP,
     DOMAIN,
-    SERVICE_PTZ,
-    SERVICE_PTZ_PRESET,
 )
 
 DEFAULT_TRAVELTIME = 0.125
-ATTR_MOVEMENT = "movement"
-ATTR_TRAVELTIME = "travel_time"
-ATTR_PRESET_NAME = "preset_name"
+
+
+class FoscamService(StrEnum):
+    """Store keys for Foscam services."""
+
+    PTZ = "ptz"
+    PTZ_PRESET = "ptz_preset"
+
+
+class FoscamServiceArgument(StrEnum):
+    """Store keys for Foscam service arguments."""
+
+    MOVEMENT = "movement"
+    TRAVEL_TIME = "travel_time"
+    PRESET_NAME = "preset_name"
 
 
 @callback
@@ -33,10 +45,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_PTZ,
+        FoscamService.PTZ,
         entity_domain=CAMERA_DOMAIN,
         schema={
-            probatio.Required(ATTR_MOVEMENT): probatio.In(
+            probatio.Required(FoscamServiceArgument.MOVEMENT): probatio.In(
                 [
                     DIR_UP,
                     DIR_DOWN,
@@ -49,7 +61,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 ]
             ),
             probatio.Optional(
-                ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME
+                FoscamServiceArgument.TRAVEL_TIME, default=DEFAULT_TRAVELTIME
             ): cv.small_float,
         },
         func="async_perform_ptz",
@@ -58,8 +70,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_PTZ_PRESET,
+        FoscamService.PTZ_PRESET,
         entity_domain=CAMERA_DOMAIN,
-        schema={probatio.Required(ATTR_PRESET_NAME): cv.string},
+        schema={probatio.Required(FoscamServiceArgument.PRESET_NAME): cv.string},
         func="async_perform_ptz_preset",
     )

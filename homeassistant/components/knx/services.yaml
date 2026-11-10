@@ -74,3 +74,8 @@ exposure_register:
       selector:
         boolean:
 reload:
+save_scene:
+  target:
+    entity:
+      domain: scene
+      integration: knx

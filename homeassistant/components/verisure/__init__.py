@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -40,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Set up Verisure from a config entry."""
     await hass.async_add_executor_job(migrate_cookie_files, hass, entry)
 
@@ -70,8 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> 
     # Update options
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    return True
-
 
 async def update_listener(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Handle options update."""
@@ -79,13 +76,9 @@ async def update_listener(hass: HomeAssistant, entry: VerisureConfigEntry) -> No
     entry.runtime_data.async_update_listeners()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Unload Verisure config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
-
-    return True
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
@@ -95,7 +88,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: VerisureConfigEntry) ->
         await hass.async_add_executor_job(os.unlink, cookie_file)
 
 
-def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def migrate_cookie_files(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Migrate old cookie file to new location."""
     cookie_file = Path(hass.config.path(STORAGE_DIR, f"verisure_{entry.unique_id}"))
     if cookie_file.exists():
@@ -104,7 +97,7 @@ def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -127,5 +120,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, version=2)
 
     LOGGER.debug("Migration to version %s successful", entry.version)
-
-    return True

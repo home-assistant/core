@@ -19,3 +19,8 @@ BATTERY_WAKE_UPDATE_INTERVAL = 6 * BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
 BATTERY_ALL_WAKE_UPDATE_INTERVAL = 2 * BATTERY_WAKE_UPDATE_INTERVAL
 
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
+
+ACCOUNT_DEVICE_HA_URL = (
+    "https://www.home-assistant.io/integrations/reolink/#cant-set-up-the-integration"
+)
+ACCOUNT_DEVICE_REOLINK_URL = "https://support.reolink.com/articles/61043321354265-Introduction-to-Reolink-Local-Device-and-Account-Device/#h_01KZQW3H9DPM7R1S131Z1K0F1Q"

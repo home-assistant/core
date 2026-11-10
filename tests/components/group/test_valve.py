@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components.group.valve import DEFAULT_NAME
 from homeassistant.components.valve import (
@@ -33,8 +34,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 VALVE_GROUP = "valve.valve_group"
 DEMO_VALVE1 = "valve.front_garden"

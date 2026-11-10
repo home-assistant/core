@@ -27,7 +27,8 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
         self._avm_wrapper = avm_wrapper
         self._mac: str = device.mac_address
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)}
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
+            name=device.hostname,
         )
 
     @property
@@ -48,26 +49,6 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
     async def async_process_update(self) -> None:
         """Update device."""
         raise NotImplementedError
-
-
-class FritzBoxBaseEntity:
-    """Fritz host entity base class."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, avm_wrapper: AvmWrapper, device_name: str) -> None:
-        """Init device info class."""
-        self._avm_wrapper = avm_wrapper
-        self._device_name = device_name
-        self.mac_address = self._avm_wrapper.mac
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self._avm_wrapper.unique_id)},
-        )
 
 
 @dataclass(frozen=True, kw_only=True)

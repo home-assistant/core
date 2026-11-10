@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from telegram import (
     AcceptedGiftTypes,
     Bot,
@@ -18,7 +19,6 @@ from telegram import (
 from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot.const import (
-    ATTR_MEDIA,
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
     CONF_API_ENDPOINT,
@@ -35,8 +35,6 @@ from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -133,7 +131,7 @@ def mock_external_calls() -> Generator[None]:
                 date=dt_util.utcnow(),
                 chat=Chat(id=chat_id, type=ChatType.PRIVATE),
             )
-            for idx, _ in enumerate(kwargs[ATTR_MEDIA])
+            for idx, _ in enumerate(kwargs["media"])
         ]
 
     with (

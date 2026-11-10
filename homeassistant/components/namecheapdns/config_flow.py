@@ -8,7 +8,7 @@ from aiohttp import ClientError
 import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -134,13 +134,14 @@ class NamecheapDnsConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
                 "account_panel": f"https://ap.www.namecheap.com/Domains/DomainControlPanel/{entry.data[CONF_DOMAIN]}/advancedns",
-                CONF_NAME: entry.title,
-                CONF_DOMAIN: entry.data[CONF_DOMAIN],
+                "name": entry.title,
+                "domain": entry.data[CONF_DOMAIN],
             },
         )
