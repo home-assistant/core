@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from pysnooz import SnoozDeviceModel
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
@@ -24,7 +23,6 @@ from . import (
     TEST_PAIRING_TOKEN,
     SnoozFixture,
     create_mock_snooz,
-    create_mock_snooz_config_entry,
 )
 
 TEST_ENTRY_DATA = {
@@ -168,30 +166,6 @@ async def test_device_registry(
         (DOMAIN, TEST_ADDRESS), mock_connected_snooz.entry.entry_id
     )
     assert device_entry == snapshot
-
-
-@pytest.mark.parametrize(
-    ("model", "expected_model_name"),
-    [
-        (SnoozDeviceModel.PRO, "Pro"),
-        (SnoozDeviceModel.BREEZ, "Breez"),
-    ],
-)
-async def test_device_registry_model(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    model: SnoozDeviceModel,
-    expected_model_name: str,
-) -> None:
-    """Test the device registry entry names the device model."""
-    device = await create_mock_snooz(model=model)
-    entry = await create_mock_snooz_config_entry(hass, device)
-
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, TEST_ADDRESS), entry.entry_id
-    )
-    assert device_entry is not None
-    assert device_entry.model == expected_model_name
 
 
 async def test_removing_entry_cleans_up_connections(

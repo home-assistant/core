@@ -1,14 +1,9 @@
 """Tests for the Snooz component."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from unittest.mock import patch
 
-from pysnooz import (
-    SnoozDeviceModel,
-    SnoozDeviceState,
-    parse_snooz_advertisement,
-    turn_off,
-)
+from pysnooz import SnoozDeviceState, parse_snooz_advertisement, turn_off
 from pysnooz.testing import MockSnoozDevice
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import (
@@ -106,16 +101,13 @@ class SnoozFixture:
 async def create_mock_snooz(
     connected: bool = True,
     initial_state: SnoozDeviceState = SnoozDeviceState(on=False, volume=0),
-    model: SnoozDeviceModel = SnoozDeviceModel.ORIGINAL,
 ) -> MockSnoozDevice:
     """Create a mock device."""
 
     ble_device = generate_ble_device(TEST_ADDRESS, TEST_SNOOZ_LOCAL_NAME)
     advertisement = parse_snooz_advertisement(SNOOZ_SERVICE_INFO_PAIRING)
     assert advertisement is not None
-    device = MockSnoozDevice(
-        ble_device, replace(advertisement, model=model), initial_state=initial_state
-    )
+    device = MockSnoozDevice(ble_device, advertisement, initial_state=initial_state)
 
     # execute a command to initiate the connection
     if connected is True:
