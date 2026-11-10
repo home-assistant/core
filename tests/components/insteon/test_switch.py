@@ -1,10 +1,18 @@
 """Tests for the Insteon scene switches."""
 
+from asyncio import Event
+from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
-from pyinsteon.managers import scene_state_manager
+from pyinsteon.managers import scene_manager, scene_state_manager
 from pyinsteon.managers.scene_state_manager import SceneStateManager
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    mock_restore_cache,
+)
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon import (
@@ -31,8 +39,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
-
-from tests.common import MockConfigEntry, mock_restore_cache
 
 EVENING = "switch.evening"
 MOVIE = "switch.movie"
@@ -73,7 +79,7 @@ def scenes() -> SceneStateManager:
 
 
 @pytest.fixture(autouse=True)
-def patch_setup(devices: MockDevices, scenes: SceneStateManager):
+def patch_setup(devices: MockDevices, scenes: SceneStateManager) -> Generator[None]:
     """Patch the Insteon connection, devices and scene states."""
 
     async def load_scene_states(work_dir: str) -> SceneStateManager:
@@ -84,6 +90,7 @@ def patch_setup(devices: MockDevices, scenes: SceneStateManager):
         patch.object(insteon, "async_connect", return_value=True),
         patch.object(insteon, "async_close"),
         patch.object(insteon, "devices", devices),
+        patch.object(insteon, "async_load_scene_states", load_scene_states),
         patch.object(insteon_utils, "devices", devices),
         patch.object(insteon_entity, "devices", devices),
         patch.object(insteon_switch, "devices", devices),
@@ -124,6 +131,63 @@ async def test_scene_entities(
     assert evening.state == STATE_UNKNOWN
     assert evening.attributes[ATTR_ASSUMED_STATE] is True
     assert evening.attributes[ATTR_FRIENDLY_NAME] == "Evening"
+
+
+async def test_scenes_discovered_after_device_config(
+    hass: HomeAssistant,
+    devices: MockDevices,
+    scenes: SceneStateManager,
+    entity_registry: er.EntityRegistry,
+    tmp_path: Path,
+) -> None:
+    """Create scene switches after uncached device databases have been read."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / "insteon_scenes.json").write_text('{"20": "Evening"}')
+    aldb_data = await async_load_json_array_fixture(hass, "insteon/scene_data.json")
+    await devices.async_load()
+    read_started = Event()
+    finish_read = Event()
+
+    async def read_device_config() -> None:
+        read_started.set()
+        await finish_read.wait()
+        for device in aldb_data:
+            devices.fill_aldb(device["address"], device["aldb"])
+
+    devices.modem.async_read_config.side_effect = read_device_config
+    with (
+        patch.object(scene_manager, "devices", devices),
+        patch.object(scene_manager, "scene_states", scenes),
+        patch.object(scene_manager, "_scene_names", {}),
+        patch.object(scene_manager.controller_manager, "_scenes", {}),
+        patch.object(
+            insteon_switch,
+            "async_load_scene_states",
+            scene_manager.async_load_scene_states,
+        ),
+        patch.object(
+            insteon, "async_load_scene_states", scene_manager.async_load_scene_states
+        ),
+    ):
+        config_entry = await _setup(hass)
+        await read_started.wait()
+        assert scenes.get(20) is None
+        assert hass.states.get(EVENING) is None
+
+        finish_read.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert hass.states.get(EVENING).state == STATE_UNKNOWN
+        scene_entry = entity_registry.async_get(EVENING)
+        assert scene_entry.unique_id == "aaaaaa_scene_20"
+
+        await insteon.async_get_device_config(hass, config_entry)
+        await hass.async_block_till_done()
+        assert entity_registry.async_get(EVENING) is scene_entry
+        assert [
+            entry.entity_id
+            for entry in entity_registry.entities.values()
+            if entry.unique_id.startswith("aaaaaa_scene_")
+        ] == [EVENING]
 
 
 async def test_scene_entities_leave_the_modem(

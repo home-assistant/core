@@ -5,6 +5,7 @@ import logging
 
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.constants import ReadWriteMode
+from pyinsteon.managers.scene_manager import async_load_scene_states
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
@@ -66,6 +67,7 @@ async def async_get_device_config(hass, config_entry):
             await device.async_read_config()
 
     await devices.async_save(workdir=hass.config.config_dir)
+    await async_load_scene_states(hass.config.config_dir)
 
 
 async def close_insteon_connection(*args):
