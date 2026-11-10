@@ -808,9 +808,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             data_entry_flow.Required(
                 probatio.Secret(CONF_KNX_KNXKEY_PASSWORD),
-                default=self.initial_data.get(CONF_KNX_KNXKEY_PASSWORD),
                 visible=_KEYRING_UPLOAD_VISIBLE,
-            ): selector.TextSelector(),
+            ): _PASSWORD_SELECTOR,
         }
 
     async def async_step_secure_tunnel(
@@ -973,9 +972,8 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 config=selector.FileSelectorConfig(accept=".knxkeys")
             ),
             probatio.Required(
-                probatio.Secret(CONF_KNX_KNXKEY_PASSWORD),
-                default=self.initial_data.get(CONF_KNX_KNXKEY_PASSWORD),
-            ): selector.TextSelector(),
+                probatio.Secret(CONF_KNX_KNXKEY_PASSWORD)
+            ): _PASSWORD_SELECTOR,
         }
         return self.async_show_form(
             step_id="secure_knxkeys",
