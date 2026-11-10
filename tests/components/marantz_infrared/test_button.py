@@ -26,7 +26,7 @@ BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON = (
 )
 BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF = (
     "button.marantz_pm8006_integrated_amplifier_power_amp_direct_off"
-    )
+)
 
 
 @pytest.fixture
@@ -63,8 +63,6 @@ async def test_entities(
         (BUTTON_ENTITY_ID_SPEAKER_AB, MarantzAudioCode.SPEAKER_AB),
         (BUTTON_ENTITY_ID_SOURCE_DIRECT, MarantzAudioCode.SOURCE_DIRECT),
         (BUTTON_ENTITY_ID_LOUDNESS, MarantzAudioCode.LOUDNESS),
-        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON, MarantzAudioCode.POWER_AMP_DIRECT_ON),
-        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF, MarantzAudioCode.POWER_AMP_DIRECT_OFF),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -75,6 +73,37 @@ async def test_button_press_sends_correct_code(
     expected_code: MarantzAudioCode,
 ) -> None:
     """Test pressing a button sends the correct IR code."""
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
+
+
+@pytest.mark.parametrize(
+    "model",
+    ["pm8006_integrated_amplifier"],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    ("entity_id", "expected_code"),
+    [
+        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON, MarantzAudioCode.POWER_AMP_DIRECT_ON),
+        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF, MarantzAudioCode.POWER_AMP_DIRECT_OFF),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_pm8006_button_press_sends_correct_code(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    entity_id: str,
+    expected_code: MarantzAudioCode,
+) -> None:
+    """Test pressing a PM8006 button sends the correct IR code."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
