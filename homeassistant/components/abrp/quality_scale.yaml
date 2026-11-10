@@ -59,9 +59,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: Deferred to a follow-up PR.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -69,8 +67,8 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Deferred to a follow-up PR.
+    status: exempt
+    comment: The only setting is the ABRP account; reauthentication covers changing credentials.
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios.
