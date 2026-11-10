@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from . import get_addons_list
 from .const import (
     ATTR_SLUG,
+    DATA_AUTO_UPDATE,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
@@ -26,6 +27,7 @@ from .const import (
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE,
     ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
@@ -254,6 +256,48 @@ class AppPortConflictRepairFlow(AddonIssueRepairFlow):
         return placeholders or None
 
 
+AUTO_UPDATE_PLACEHOLDERS = {"settings_url": "/config/updates"}
+
+
+class AutoUpdateChoiceRepairFlow(RepairsFlow):
+    """Ask whether Home Assistant may install bug fix updates automatically."""
+
+    async def async_step_init(self, _: None = None) -> RepairsFlowResult:
+        """Offer the choices."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["turn_on", "keep_off"],
+            description_placeholders=AUTO_UPDATE_PLACEHOLDERS,
+        )
+
+    def _async_confirm(self, step_id: str) -> RepairsFlowResult:
+        """Explain a choice before it is made."""
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=probatio.Schema({}),
+            description_placeholders=AUTO_UPDATE_PLACEHOLDERS,
+            last_step=True,
+        )
+
+    async def async_step_turn_on(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Turn automatic updates on."""
+        if user_input is None:
+            return self._async_confirm("turn_on")
+        self.hass.data[DATA_AUTO_UPDATE].async_set_enabled(True)
+        return self.async_create_entry(data={})
+
+    async def async_step_keep_off(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Keep automatic updates off."""
+        if user_input is None:
+            return self._async_confirm("keep_off")
+        self.hass.data[DATA_AUTO_UPDATE].async_set_enabled(False)
+        return self.async_create_entry(data={})
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -262,6 +306,8 @@ async def async_create_fix_flow(
     """Create flow."""
     if issue_id == ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER:
         return ConfirmRepairFlow()
+    if issue_id == ISSUE_KEY_CORE_AUTO_UPDATE_CHOOSE:
+        return AutoUpdateChoiceRepairFlow()
     supervisor_issues = get_issues_info(hass)
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:
