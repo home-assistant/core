@@ -1573,7 +1573,8 @@ async def test_integration_reload(
 ) -> None:
     """Run test for integration reload."""
 
-    caplog.set_level(logging.DEBUG)
+    # The mock_modbus fixture sets the caplog level to WARNING
+    caplog.set_level(logging.DEBUG)  # pylint: disable=home-assistant-tests-redundant-caplog-level
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
@@ -1633,7 +1634,6 @@ async def test_integration_reload_failed(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration connect failure on reload."""
-    caplog.set_level(logging.DEBUG)
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
