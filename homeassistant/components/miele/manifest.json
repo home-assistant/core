@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning", "climate.fans_ventilation"],
   "codeowners": ["@astrandb"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/miele",
   "integration_type": "hub",

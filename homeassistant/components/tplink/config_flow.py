@@ -20,7 +20,6 @@ from homeassistant.components import ffmpeg, stream
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -59,6 +58,7 @@ from .const import (
     CONNECT_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import TPLinkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_config_updates(
-        self, entry: ConfigEntry, host: str, device: Device | None
+        self, entry: TPLinkConfigEntry, host: str, device: Device | None
     ) -> dict | None:
         """Return updates if the host or device config has changed."""
         entry_data = entry.data
@@ -148,7 +148,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _update_config_if_entry_in_setup_error(
-        self, entry: ConfigEntry, host: str, device: Device | None
+        self, entry: TPLinkConfigEntry, host: str, device: Device | None
     ) -> ConfigFlowResult | None:
         """Update device config if discovery finds a device in error state."""
         if entry.state not in (
@@ -385,7 +385,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             # self.host is set by async_step_user and async_step_pick_device
             assert self.host is not None
-        placeholders: dict[str, str] = {CONF_HOST: self.host}
+        placeholders: dict[str, str] = {"host": self.host}
 
         if user_input:
             username = user_input[CONF_USERNAME]
@@ -869,6 +869,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 **placeholders,
-                CONF_MAC: reconfigure_entry.unique_id,
+                "mac": reconfigure_entry.unique_id,
             },
         )

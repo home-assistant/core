@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
+from influxdb.exceptions import InfluxDBClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -38,7 +38,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     BASE_V1_CONFIG,
-    BASE_V2_CONFIG,
     INFLUX_CLIENT_PATH,
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
@@ -588,158 +587,6 @@ async def test_single_instance(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
-@pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api", "db_name", "host"),
-    [
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-            BASE_V1_CONFIG[CONF_DB_NAME],
-            BASE_V1_CONFIG[CONF_HOST],
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            _get_write_api_mock_v2,
-            BASE_V2_CONFIG[CONF_BUCKET],
-            BASE_V2_CONFIG[CONF_URL],
-        ),
-    ],
-    indirect=["mock_client"],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_import(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    config_base: dict[str, Any],
-    get_write_api: Any,
-    db_name: str,
-    host: str,
-) -> None:
-    """Test we can import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=config_base,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{db_name} ({host})"
-    assert result["data"] == config_base
-
-    assert get_write_api(mock_client).call_count == 1
-
-
-@pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api", "test_exception", "reason"),
-    [
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-            ConnectionError("fail"),
-            "cannot_connect",
-        ),
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-            InfluxDBClientError("fail"),
-            "cannot_connect",
-        ),
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-            InfluxDBServerError("fail"),
-            "cannot_connect",
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            _get_write_api_mock_v2,
-            ConnectionError("fail"),
-            "cannot_connect",
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            _get_write_api_mock_v2,
-            ApiException(http_resp=MagicMock()),
-            "invalid_config",
-        ),
-        (
-            API_VERSION_2,
-            BASE_V2_CONFIG,
-            _get_write_api_mock_v2,
-            Exception(),
-            "unknown",
-        ),
-    ],
-    indirect=["mock_client"],
-)
-async def test_import_connection_error(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    config_base: dict[str, Any],
-    get_write_api: Any,
-    test_exception: Exception,
-    reason: str,
-) -> None:
-    """Test abort on connection error."""
-    write_api = get_write_api(mock_client)
-    write_api.side_effect = test_exception
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=config_base,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-
-
-@pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api"),
-    [
-        (
-            DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            _get_write_api_mock_v1,
-        ),
-    ],
-    indirect=["mock_client"],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_single_instance_import(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    config_base: dict[str, Any],
-    get_write_api: Any,
-) -> None:
-    """Test we cannot setup a second entry for InfluxDB."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config_base,
-    )
-
-    mock_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=config_base,
     )
 
     assert result["type"] is FlowResultType.ABORT

@@ -13,19 +13,19 @@
       "reconfigure": {
         "description": "Update where this inverter is reached, for example after it moved to another address or its RS485 bus was rewired. Moving it between a network and a serial connection keeps this entry and its history.\n\nIt has to stay the same inverter: the serial number that answers is checked against the one this entry was set up with.",
         "menu_options": {
-          "reconfigure_serial": "[%key:component::sofar::config::step::user::menu_options::serial%]",
-          "reconfigure_tcp": "[%key:component::sofar::config::step::user::menu_options::tcp%]"
+          "reconfigure_serial": "[%key:component::modbus::common::serial_rtu%]",
+          "reconfigure_tcp": "[%key:component::modbus::common::modbus_tcp%]"
         }
       },
       "reconfigure_serial": {
         "data": {
-          "baudrate": "[%key:component::sofar::config::step::serial::data::baudrate%]",
-          "device": "[%key:component::sofar::config::step::serial::data::device%]",
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
           "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
         },
         "data_description": {
           "baudrate": "[%key:component::sofar::config::step::serial::data_description::baudrate%]",
-          "device": "[%key:component::sofar::config::step::serial::data_description::device%]",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
           "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
         },
         "description": "Reach this inverter over a serial port wired to its RS485 terminals."
@@ -37,21 +37,21 @@
           "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
         },
         "data_description": {
-          "host": "[%key:component::sofar::config::step::tcp::data_description::host%]",
-          "port": "[%key:component::sofar::config::step::tcp::data_description::port%]",
+          "host": "[%key:component::modbus::common::tcp_host_description%]",
+          "port": "[%key:component::modbus::common::tcp_port_description%]",
           "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
         },
         "description": "Reach this inverter over the network, either directly or through a Modbus TCP bridge."
       },
       "serial": {
         "data": {
-          "baudrate": "Baud rate",
-          "device": "Serial port",
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
           "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
         },
         "data_description": {
           "baudrate": "The speed of the RS485 bus, as set on the inverter. The Sofar default is 9600.",
-          "device": "The serial port the inverter's RS485 bus is wired to. Ports shared over the network by a serial proxy, such as an ESPHome device, are listed here alongside the local ones.",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
           "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
         },
         "description": "Set up an inverter wired to a serial port over RS485. The inverter model and register map are detected automatically from its serial number."
@@ -63,8 +63,8 @@
           "unit_id": "Modbus unit ID"
         },
         "data_description": {
-          "host": "The hostname or IP address of the inverter, or of the Modbus TCP bridge it's connected through.",
-          "port": "The Modbus TCP port to connect on.",
+          "host": "[%key:component::modbus::common::tcp_host_description%]",
+          "port": "[%key:component::modbus::common::tcp_port_description%]",
           "unit_id": "The inverter's Modbus unit ID, also called its Modbus device address."
         },
         "description": "Set up an inverter reached over the network, either directly or through a Modbus TCP bridge. The inverter model and register map are detected automatically from its serial number."
@@ -72,8 +72,8 @@
       "user": {
         "description": "A Sofar inverter can be set up in Home Assistant in two different ways.\n\nYou can reach it over the network, which covers a Modbus TCP bridge or a stick that speaks Modbus TCP, or over a serial port its RS485 terminals are wired to, which covers ports shared over the network by a serial proxy.",
         "menu_options": {
-          "serial": "Serial port (Modbus RTU)",
-          "tcp": "Network (Modbus TCP)"
+          "serial": "[%key:component::modbus::common::serial_rtu%]",
+          "tcp": "[%key:component::modbus::common::modbus_tcp%]"
         }
       }
     }
@@ -81,6 +81,9 @@
   "device": {
     "battery": {
       "name": "Battery {number}"
+    },
+    "battery_pack": {
+      "name": "Battery pack {group}.{pack}"
     },
     "pv_string": {
       "name": "PV string {number}"
@@ -717,6 +720,18 @@
       "battery_state_of_health_total": {
         "name": "Battery state of health total"
       },
+      "cell_temperature": {
+        "name": "Cell temperature {sensor}"
+      },
+      "cell_voltage": {
+        "name": "Cell voltage {cell}"
+      },
+      "cell_voltage_max": {
+        "name": "Highest cell voltage"
+      },
+      "cell_voltage_min": {
+        "name": "Lowest cell voltage"
+      },
       "charge_cycle": {
         "name": "Charge cycle"
       },
@@ -770,6 +785,9 @@
       "feedin_max_power": {
         "name": "Feed-in maximum power"
       },
+      "full_charge_capacity": {
+        "name": "Full charge capacity"
+      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
@@ -784,6 +802,9 @@
       },
       "import_energy_total": {
         "name": "Import energy total"
+      },
+      "internal_temperature": {
+        "name": "Internal temperature"
       },
       "inverter_temperature_1": {
         "name": "Inverter temperature 1"
@@ -802,6 +823,9 @@
       },
       "module_temperature_2": {
         "name": "Module temperature 2"
+      },
+      "mosfet_temperature": {
+        "name": "MOSFET temperature"
       },
       "off_grid_discharge_cutoff_soc": {
         "name": "Off-grid discharge cut-off state of charge"
@@ -978,6 +1002,9 @@
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
       },
+      "remaining_capacity": {
+        "name": "Remaining capacity"
+      },
       "solar_generation_today": {
         "name": "Solar generation today"
       },
@@ -1052,6 +1079,9 @@
     }
   },
   "exceptions": {
+    "charge_cutoff_unsupported": {
+      "message": "{title} does not support setting the charge cut-off."
+    },
     "invalid_action_value": {
       "message": "The provided value is not valid for this action."
     },
@@ -1107,6 +1137,32 @@
         }
       },
       "name": "Set active power limit"
+    },
+    "set_battery_cutoffs": {
+      "description": "Sets the battery's cut-off levels, as shown on the SofarCloud app's battery parameters page. The inverter stores each change, so avoid calling this often. Only for inverters with battery storage.",
+      "fields": {
+        "charge_cutoff_soc": {
+          "description": "The charge level at which the battery stops charging. Left unchanged when omitted. Not every inverter supports it.",
+          "name": "Charge cut-off state of charge"
+        },
+        "config_entry_id": {
+          "description": "The Sofar inverter to send this to.",
+          "name": "Inverter"
+        },
+        "off_grid_discharge_cutoff_soc": {
+          "description": "The charge level at which the battery stops discharging during a grid outage. At most the on-grid cut-off.",
+          "name": "Off-grid discharge cut-off state of charge"
+        },
+        "off_grid_recovery_soc": {
+          "description": "The charge level the battery recharges to before it discharges off-grid again. At least 5% above the off-grid cut-off.",
+          "name": "Off-grid discharge recovery state of charge"
+        },
+        "on_grid_discharge_cutoff_soc": {
+          "description": "The charge level at which the battery stops discharging while the grid is up.",
+          "name": "On-grid discharge cut-off state of charge"
+        }
+      },
+      "name": "Set battery cut-offs"
     },
     "set_feed_in_limit": {
       "description": "Limits how much power the inverter exports to the grid.",

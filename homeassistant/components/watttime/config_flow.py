@@ -93,7 +93,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=error_step_id,
                 data_schema=error_schema,
                 errors={"base": "invalid_auth"},
-                description_placeholders={CONF_USERNAME: username},
+                description_placeholders={"username": username},
             )
         except Exception as err:  # noqa: BLE001
             LOGGER.exception("Unexpected exception while logging in: %s", err)
@@ -101,7 +101,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=error_step_id,
                 data_schema=error_schema,
                 errors={"base": "unknown"},
-                description_placeholders={CONF_USERNAME: username},
+                description_placeholders={"username": username},
             )
 
         if CONF_LATITUDE in self._data:
@@ -210,7 +210,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=STEP_REAUTH_CONFIRM_DATA_SCHEMA,
-                description_placeholders={CONF_USERNAME: self._data[CONF_USERNAME]},
+                description_placeholders={"username": self._data[CONF_USERNAME]},
             )
 
         self._data[CONF_PASSWORD] = user_input[CONF_PASSWORD]

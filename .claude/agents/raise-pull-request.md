@@ -147,7 +147,7 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 | New integration | New folder in components/ |
 | New feature | Adds capability to existing integration |
 | Deprecation | Adds deprecation warnings for future breaking change |
-| Breaking change | Removes or changes existing functionality |
+| Breaking change | Breaks or removes something users rely on, including the removal at the end of an integration deprecation (also a YAML import). Removing a deprecated core API that nothing in core uses anymore is Code quality. See [When it is backward-incompatible](https://contributors.home-assistant.io/releases/guides/backward-incompatible-changes/#when-it-is-backward-incompatible) |
 | Code quality | Only refactoring or test additions, no functional change |
 
 **Track results:**
