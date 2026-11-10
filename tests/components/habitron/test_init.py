@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from habitron_client import HabitronError, HabitronTimeoutError, SmartHub
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitron import (
     _async_cleanup_stale_devices,
@@ -18,13 +19,23 @@ from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_SSDP, ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 
+from .common import ReplayClient
 from .const import MOCK_HOST, MOCK_MAC, MOCK_NAME, MOCK_UDN, MOCK_UID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 async def test_setup_entry(
@@ -44,6 +55,37 @@ async def test_setup_entry(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, MOCK_UID), entry.entry_id
     )
+
+
+@pytest.mark.usefixtures("setup_homeassistant", "entity_registry_enabled_by_default")
+async def test_setup_from_recording(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Set up from a recorded SmartHub with 11 modules."""
+    recording = await async_load_json_object_fixture(
+        hass, "anon_recording.json", DOMAIN
+    )
+    # The anonymiser replaced the MAC with a placeholder that is not hex.
+    recording["smhub_info"]["hardware"]["network"]["lan mac"] = MOCK_MAC
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.habitron.coordinator.HabitronClient",
+        return_value=ReplayClient(recording),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert devices == snapshot(name="devices")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_unload_entry(
