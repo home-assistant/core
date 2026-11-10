@@ -18,11 +18,12 @@ from homeassistant.components.rachio.coordinator import (
         pytest.param(1, 0, 3000, 1.0, id="headroom-for-other-calls"),
         pytest.param(1, 0, 1700, 1.0, id="smaller-limit"),
         pytest.param(1, 5, 3500, 1.0, id="hose-timers-use-budget"),
-        pytest.param(100, 0, 3500, 30, id="capped"),
+        pytest.param(131, 0, 3500, 60, id="longest-interval"),
+        pytest.param(132, 0, 3500, None, id="no-interval-fits"),
     ],
 )
 def test_min_poll_interval(
-    controllers: int, bases: int, limit: int, expected: float
+    controllers: int, bases: int, limit: int, expected: float | None
 ) -> None:
     """Test the shortest allowed polling interval stays within the limit."""
     assert min_poll_interval(controllers, bases, limit) == expected

@@ -9,32 +9,20 @@ from typing import TYPE_CHECKING, Any, override
 from rachiopy import Rachio
 from requests.exceptions import RequestException, Timeout
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
-    END_OF_RUN_POLL_DELAY,
-    HEADER_RATE_REMAINING,
-    HEADER_RATE_RESET,
-    HOSE_TIMER_SCHEDULE_CALLS_PER_DAY,
     KEY_DAY_VIEWS,
     KEY_ID,
     KEY_PROGRAM_RUN_SUMMARIES,
     KEY_START_TIME,
     KEY_STATUS,
     KEY_VALVES,
-    KEY_ZONE_DURATION,
-    KEY_ZONE_START_DATE,
-    MAX_POLL_INTERVAL,
-    MINUTES_PER_DAY,
-    POLL_API_BUDGET_FRACTION,
-    POLL_INTERVAL_STEP,
-    POLL_RESERVE_CALLS,
 )
 
 if TYPE_CHECKING:
@@ -47,6 +35,17 @@ MONTH = "month"
 YEAR = "year"
 
 UPDATE_DELAY_TIME = 8
+
+HEADER_RATE_REMAINING = "x-ratelimit-remaining"
+HEADER_RATE_RESET = "x-ratelimit-reset"
+MINUTES_PER_DAY = 24 * 60
+# The smart hose timer schedule coordinator polls every 30 minutes
+HOSE_TIMER_SCHEDULE_CALLS_PER_DAY = MINUTES_PER_DAY // 30
+POLL_INTERVAL_STEP = 0.5
+MAX_POLL_INTERVAL = 60
+POLL_API_BUDGET_FRACTION = 0.9
+# Polling pauses below this many remaining calls so commands keep working
+POLL_RESERVE_CALLS = 50
 
 
 class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -157,16 +156,21 @@ def hose_timer_calls_per_day(base_count: int) -> int:
     return status_calls + base_count * HOSE_TIMER_SCHEDULE_CALLS_PER_DAY
 
 
-def min_poll_interval(controller_count: int, base_count: int, call_limit: int) -> float:
-    """Return the shortest interval, in minutes, that stays within the API budget."""
+def min_poll_interval(
+    controller_count: int, base_count: int, call_limit: int
+) -> float | None:
+    """Return the shortest interval, in minutes, that stays within the API budget.
+
+    Returns None if even the longest interval would use more than the budget.
+    """
     budget = call_limit * POLL_API_BUDGET_FRACTION - hose_timer_calls_per_day(
         base_count
     )
-    for step in range(1, round(MAX_POLL_INTERVAL / POLL_INTERVAL_STEP)):
+    for step in range(1, round(MAX_POLL_INTERVAL / POLL_INTERVAL_STEP) + 1):
         interval = step * POLL_INTERVAL_STEP
         if controller_calls_per_day(controller_count, interval) <= budget:
             return interval
-    return MAX_POLL_INTERVAL
+    return None
 
 
 class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -187,7 +191,6 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the Rachio controller update coordinator."""
         self.rachio = rachio
         self.controller_id = controller_id
-        self._cancel_end_of_run_poll: CALLBACK_TYPE | None = None
         self._resume_polling_at: datetime | None = None
         self._calls_remaining = 0
         super().__init__(
@@ -219,7 +222,10 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.rachio.device.current_schedule, self.controller_id
             )
         except RequestException as err:
-            raise UpdateFailed(f"Could not connect to the Rachio API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        self._pause_if_calls_running_out(response[0])
         status = int(response[0][KEY_STATUS])
         if status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
             raise ConfigEntryAuthFailed(
@@ -227,10 +233,12 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="authentication_failed",
             )
         if not HTTPStatus.OK <= status < HTTPStatus.MULTIPLE_CHOICES:
-            raise UpdateFailed(f"Rachio API error {status}: {response[1]}")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"status": str(status)},
+            )
         data: dict[str, Any] = response[1] or {}
-        self._pause_if_calls_running_out(response[0])
-        self._schedule_end_of_run_poll(data)
         return data
 
     @callback
@@ -245,42 +253,3 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         self._calls_remaining = remaining
         self._resume_polling_at = reset
-
-    @callback
-    def _schedule_end_of_run_poll(self, data: dict[str, Any]) -> None:
-        """Poll again just after the running zone is due to finish.
-
-        Without this a zone that ends between two polls would be shown as
-        running until the next regular poll.
-        """
-        self._async_cancel_end_of_run_poll()
-        start = data.get(KEY_ZONE_START_DATE)
-        duration = data.get(KEY_ZONE_DURATION)
-        if not start or not duration:
-            return
-        end = dt_util.utc_from_timestamp(start / 1000 + duration) + timedelta(
-            seconds=END_OF_RUN_POLL_DELAY
-        )
-        if end <= dt_util.utcnow():
-            return
-        self._cancel_end_of_run_poll = async_track_point_in_utc_time(
-            self.hass, self._async_end_of_run_poll, end
-        )
-
-    @callback
-    def _async_cancel_end_of_run_poll(self) -> None:
-        """Cancel a pending end of run poll."""
-        if self._cancel_end_of_run_poll:
-            self._cancel_end_of_run_poll()
-            self._cancel_end_of_run_poll = None
-
-    async def _async_end_of_run_poll(self, _now: datetime) -> None:
-        """Refresh now that the running zone should have finished."""
-        self._cancel_end_of_run_poll = None
-        await self.async_refresh()
-
-    @override
-    async def async_shutdown(self) -> None:
-        """Cancel any pending poll and shut down."""
-        self._async_cancel_end_of_run_poll()
-        await super().async_shutdown()

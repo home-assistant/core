@@ -15,15 +15,10 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_API_KEY, UnitOfTime
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
-)
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
@@ -32,17 +27,13 @@ from homeassistant.helpers.service_info.zeroconf import (
 from .const import (
     CONF_MANUAL_RUN_MINS,
     CONF_POLL_ENABLED,
-    CONF_POLL_INTERVAL,
     CONF_POLLING,
     DEFAULT_API_DAILY_CALL_LIMIT,
     DEFAULT_MANUAL_RUN_MINS,
-    DEFAULT_POLL_INTERVAL,
     DOMAIN,
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
-    MAX_POLL_INTERVAL,
-    POLL_INTERVAL_STEP,
 )
 from .coordinator import (
     controller_calls_per_day,
@@ -208,54 +199,40 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             rate_limit = DEFAULT_API_DAILY_CALL_LIMIT
 
         options = self.config_entry.options
-        polling = options.get(CONF_POLLING, {})
-        min_interval = min_poll_interval(controller_count, base_count, rate_limit)
-        interval = max(
-            polling.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL), min_interval
-        )
-
         schema: dict[Any, Any] = {
             probatio.Optional(
                 CONF_MANUAL_RUN_MINS,
                 default=options.get(CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS),
             ): int
         }
-        if controller_count:
+        placeholders: dict[str, str] = {}
+        interval = min_poll_interval(controller_count, base_count, rate_limit)
+        if controller_count and interval:
             schema[probatio.Required(CONF_POLLING)] = section(
                 probatio.Schema(
                     {
                         probatio.Optional(
                             CONF_POLL_ENABLED,
-                            default=polling.get(CONF_POLL_ENABLED, False),
-                        ): bool,
-                        probatio.Optional(
-                            CONF_POLL_INTERVAL, default=interval
-                        ): NumberSelector(
-                            NumberSelectorConfig(
-                                min=min_interval,
-                                max=MAX_POLL_INTERVAL,
-                                step=POLL_INTERVAL_STEP,
-                                mode=NumberSelectorMode.SLIDER,
-                                unit_of_measurement=UnitOfTime.MINUTES,
-                            )
-                        ),
+                            default=options.get(CONF_POLLING, {}).get(
+                                CONF_POLL_ENABLED, False
+                            ),
+                        ): bool
                     }
                 ),
                 {"collapsed": False},
             )
-
-        controller_calls = controller_calls_per_day(controller_count, interval)
-        return self.async_show_form(
-            step_id="init",
-            data_schema=probatio.Schema(schema),
-            description_placeholders={
+            controller_calls = controller_calls_per_day(controller_count, interval)
+            placeholders = {
                 "interval": f"{interval:g}",
                 "controller_calls": f"{controller_calls:,}",
                 "total_calls": f"{controller_calls + hose_timer_calls_per_day(base_count):,}",
                 "daily_limit": f"{rate_limit:,}",
-                "min_interval": f"{min_interval:g}",
-                "controller_count": str(controller_count),
-            },
+            }
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(schema),
+            description_placeholders=placeholders,
         )
 
 

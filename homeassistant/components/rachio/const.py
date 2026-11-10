@@ -99,31 +99,11 @@ SIGNAL_RACHIO_SCHEDULE_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_schedule"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 
-# Optional polling of sprinkler controllers, for installations whose Home
-# Assistant instance cannot receive webhooks from the Rachio cloud.
 CONF_POLLING = "polling"
 CONF_POLL_ENABLED = "poll_enabled"
-CONF_POLL_INTERVAL = "poll_interval"
-DEFAULT_POLL_INTERVAL = 5
-POLL_INTERVAL_STEP = 0.5
-POLL_API_BUDGET_FRACTION = 0.9
-MAX_POLL_INTERVAL = 30
 
-# Rachio documents a limit of 3500 API calls per day per account. The actual
-# limit is read from the API's response headers, this is used if it is missing.
+# Rachio's documented daily limit, used if the API does not report one
 DEFAULT_API_DAILY_CALL_LIMIT = 3500
-HEADER_RATE_LIMIT = "x-ratelimit-limit"
-HEADER_RATE_REMAINING = "x-ratelimit-remaining"
-HEADER_RATE_RESET = "x-ratelimit-reset"
-# Polling pauses below this many remaining calls so commands keep working
-POLL_RESERVE_CALLS = 50
-# Seconds to wait after a zone is due to finish before checking that it did
-END_OF_RUN_POLL_DELAY = 3
-KEY_ZONE_START_DATE = "zoneStartDate"
-KEY_ZONE_DURATION = "zoneDuration"
-MINUTES_PER_DAY = 24 * 60
-# The smart hose timer schedule coordinator polls every 30 minutes.
-HOSE_TIMER_SCHEDULE_CALLS_PER_DAY = MINUTES_PER_DAY // 30
 
 # Webhook callbacks
 LISTEN_EVENT_TYPES = [

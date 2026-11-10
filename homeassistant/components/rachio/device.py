@@ -18,7 +18,6 @@ from homeassistant.exceptions import (
 
 from .const import (
     DEFAULT_API_DAILY_CALL_LIMIT,
-    HEADER_RATE_LIMIT,
     KEY_BASE_STATIONS,
     KEY_DEVICES,
     KEY_ENABLED,
@@ -43,6 +42,8 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+HEADER_RATE_LIMIT = "x-ratelimit-limit"
 
 PERMISSION_ERROR = "7"
 
@@ -186,7 +187,6 @@ class RachioIro:
         self._flex_schedules = data[KEY_FLEX_SCHEDULES]
         self._init_data = data
         self._webhooks: list[dict[str, Any]] = webhooks
-        # Set up by the config entry when the user enables polling
         self.poll_coordinator: RachioControllerUpdateCoordinator | None = None
         _LOGGER.debug('%s has ID "%s"', self, self.controller_id)
 
