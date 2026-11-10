@@ -595,7 +595,7 @@ def _message_location(ssdp_device: SsdpDevice, dst: DeviceOrServiceType) -> str 
     """
     headers = ssdp_device.combined_headers(dst)
     if headers and (location := headers.get("location")):
-        return location
+        return str(location)
     return ssdp_device.location
 
 
