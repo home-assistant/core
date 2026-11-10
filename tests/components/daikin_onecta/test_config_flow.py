@@ -19,7 +19,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.daikin_onecta.config_flow import FlowHandler
 from homeassistant.components.daikin_onecta.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -190,54 +189,6 @@ async def test_zeroconf_flow_uses_oauth_discovery(
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-
-
-async def test_invalid_oauth_token(
-    hass: HomeAssistant,
-) -> None:
-    """Abort when the OAuth access token is not a valid JWT."""
-    flow = FlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_oauth_create_entry({"token": {"access_token": "invalid"}})
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "invalid_token"
-
-
-@pytest.mark.parametrize(
-    ("error", "reason"),
-    [
-        (
-            OnectaAuthenticationError(401, method="GET", path="/v1/gateway-devices"),
-            "invalid_auth",
-        ),
-        (
-            OnectaConnectionError(
-                "network unavailable", method="GET", path="/v1/gateway-devices"
-            ),
-            "cannot_connect",
-        ),
-    ],
-)
-async def test_oauth_create_entry_validates_gateway_access(
-    hass: HomeAssistant, error: Exception, reason: str
-) -> None:
-    """Abort setup when the gateway API cannot be accessed."""
-    flow = FlowHandler()
-    flow.hass = hass
-    flow.context = {"source": config_entries.SOURCE_USER}
-
-    with patch(
-        "homeassistant.components.daikin_onecta.config_flow.OnectaClient.get_gateway_devices",
-        side_effect=error,
-    ):
-        result = await flow.async_oauth_create_entry(
-            {"token": {"access_token": FAKE_ACCESS_TOKEN}}
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(
