@@ -964,16 +964,27 @@ async def test_fibaro_fgr222_shutter_cover_no_tilt(
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
 
+@pytest.mark.parametrize(
+    ("operating_mode", "device_class"),
+    [
+        pytest.param(1, CoverDeviceClass.SHUTTER, id="roller_blind"),
+        pytest.param(3, CoverDeviceClass.GATE, id="gate_without_positioning"),
+        pytest.param(4, CoverDeviceClass.GATE, id="gate_with_positioning"),
+        pytest.param(5, CoverDeviceClass.SHUTTER, id="roller_blind_built_in_driver"),
+        pytest.param(
+            6, CoverDeviceClass.SHUTTER, id="roller_blind_built_in_driver_impulse"
+        ),
+    ],
+)
 async def test_fibaro_fgr223_shutter_cover_no_tilt(
     hass: HomeAssistant,
     client: MagicMock,
     fibaro_fgr223_shutter_state: dict[str, Any],
     integration: MockConfigEntry,
+    operating_mode: int,
+    device_class: CoverDeviceClass,
 ) -> None:
-    """Test absence of tilt function for Fibaro Shutter roller blind.
-
-    Fibaro Shutter devices can have operating mode set to roller blind (1).
-    """
+    """Test Fibaro Shutter operating modes without tilt."""
     node_state = replace_value_of_zwave_value(
         fibaro_fgr223_shutter_state,
         [
@@ -983,7 +994,7 @@ async def test_fibaro_fgr223_shutter_cover_no_tilt(
                 endpoint=0,
             ),
         ],
-        1,
+        operating_mode,
     )
     node = Node(client, node_state)
     client.driver.controller.emit("node added", {"node": node})
@@ -992,6 +1003,7 @@ async def test_fibaro_fgr223_shutter_cover_no_tilt(
     state = hass.states.get(FIBARO_FGR_223_SHUTTER_COVER_ENTITY)
     assert state
     assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_DEVICE_CLASS] == device_class
     assert ATTR_CURRENT_POSITION in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 

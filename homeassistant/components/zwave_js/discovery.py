@@ -396,6 +396,42 @@ DISCOVERY_SCHEMAS = [
         ),
         discovery_suppressed=True,
     ),
+    # Fibaro Shutter Fibaro FGR223
+    # Operating mode (151) set to roller blind (1, 5, 6)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter",
+        manufacturer_id={0x010F},
+        product_id={0x1000, 0x1001},
+        product_type={0x0303},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={151},
+                endpoint={0},
+                value={1, 5, 6},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR223
+    # Operating mode (151) set to gate (3, 4)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="gate",
+        manufacturer_id={0x010F},
+        product_id={0x1000, 0x1001},
+        product_type={0x0303},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={151},
+                endpoint={0},
+                value={3, 4},
+            )
+        ],
+    ),
     # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
