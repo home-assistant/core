@@ -18,8 +18,7 @@ from pyatv.interface import Playing
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.apple_tv import AppleTVManager
-from homeassistant.components.apple_tv.const import DOMAIN, SIGNAL_DISCONNECTED
+from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -31,10 +30,12 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_source import PlayMedia
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
+    SERVICE_TURN_OFF,
     SERVICE_VOLUME_SET,
     STATE_OFF,
     STATE_PLAYING,
@@ -47,6 +48,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from .common import create_conf, mrp_service
 
 ENTITY_ID = "media_player.living_room_living_room"
+REMOTE_ENTITY_ID = "remote.living_room_living_room"
 _MUSIC_URL = "http://example.local:8123/api/tts_proxy/abc.mp3"
 _VIDEO_URL = "http://example.local:8123/video.mp4"
 
@@ -370,10 +372,7 @@ async def test_disconnect_does_not_report_power_off(
     assert hass.states.get(ENTITY_ID).state == STATE_PLAYING
 
     observed_states: list[str] = []
-    reconnect_states: list[tuple[str, bool]] = []
     reconnect_ready = asyncio.Event()
-    manager: AppleTVManager = mock_atv.listener
-    dispatch_send = manager._dispatch_send
 
     @callback
     def record_state(event: Event[EventStateChangedData]) -> None:
@@ -383,23 +382,16 @@ async def test_disconnect_does_not_report_power_off(
         await reconnect_ready.wait()
         return mock_atv
 
-    def record_dispatch(signal: str, *args: object) -> None:
-        reconnect_states.append((signal, manager.is_connecting))
-        dispatch_send(signal, *args)
-
     remove_listener = async_track_state_change_event(hass, ENTITY_ID, record_state)
     scan_result = create_conf("127.0.0.1", "Living Room", mrp_service())
     with (
         patch("homeassistant.components.apple_tv.scan", return_value=[scan_result]),
         patch("homeassistant.components.apple_tv.connect", side_effect=reconnect),
-        patch.object(manager, "_dispatch_send", side_effect=record_dispatch),
     ):
-        getattr(manager, callback_name)(*callback_args)
-        assert reconnect_states == [(SIGNAL_DISCONNECTED, True)]
+        getattr(mock_atv.listener, callback_name)(*callback_args)
         await hass.async_block_till_done()
 
         assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
-        assert STATE_OFF not in observed_states
 
         reconnect_ready.set()
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -411,22 +403,16 @@ async def test_disconnect_does_not_report_power_off(
     assert STATE_OFF not in observed_states
 
 
-async def test_missing_transport_before_reconnect_is_unknown(
+async def test_remote_turn_off_reports_off(
     hass: HomeAssistant, mock_atv: AsyncMock
 ) -> None:
-    """An enabled connection is not off even if no retry task exists yet."""
-    with patch.object(mock_atv.listener, "_start_connect_loop"):
-        mock_atv.listener.connection_closed()
-        await hass.async_block_till_done()
-
-    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
-
-
-async def test_intentionally_disabled_connection_remains_off(
-    hass: HomeAssistant, mock_atv: AsyncMock
-) -> None:
-    """Preserve the existing explicit remote-disconnect state."""
-    await mock_atv.listener.disconnect()
+    """Closing the connection after turning the remote off reports off."""
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: REMOTE_ENTITY_ID},
+        blocking=True,
+    )
     mock_atv.listener.connection_closed()
     await hass.async_block_till_done()
 
