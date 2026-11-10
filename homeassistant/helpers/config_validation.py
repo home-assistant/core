@@ -2113,21 +2113,20 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
     }
 )
 
-_parallel_sequence_action = probatio.All(
-    # Wrap a shorthand sequences in a parallel action
-    probatio.All(ensure_list, [script_action]),
-    lambda config: {
-        CONF_SEQUENCE: config,
-    },
-)
+
+def _parallel_branch(value: Any) -> dict[str, Any]:
+    """Validate a parallel branch, wrapping shorthand actions in a sequence."""
+    if isinstance(value, dict):
+        with contextlib.suppress(ValueError):
+            if determine_script_action(value) == SCRIPT_ACTION_SEQUENCE:
+                return cast(dict[str, Any], _SCRIPT_SEQUENCE_SCHEMA(value))
+    return {CONF_SEQUENCE: SCRIPT_SCHEMA(value)}
+
 
 _SCRIPT_PARALLEL_SCHEMA = probatio.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        probatio.Required(CONF_PARALLEL): probatio.All(
-            ensure_list,
-            [probatio.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)],
-        ),
+        probatio.Required(CONF_PARALLEL): _list_of(_parallel_branch),
     }
 )
 
