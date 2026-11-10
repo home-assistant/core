@@ -21,6 +21,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.ryse.const import MANUFACTURER_NAME, SERVICE_UUID
+from homeassistant.components.ryse.helpers import RyseAuthenticationFailed
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -806,6 +807,88 @@ async def test_unload_releases_in_flight_reconnect(
 
     assert setup_integration.state is ConfigEntryState.NOT_LOADED
     assert mock_device.unpair.await_count >= 1
+
+
+async def test_static_advertisement_reconnects_after_disconnect(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test an unchanged advertisement still reconnects a dropped shade."""
+    client = mock_device.client
+    mock_device.pair.reset_mock()
+    mock_device.send_get_position.reset_mock()
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+
+    inject_ryse(hass, local_ryse_scanner, make_advertisement())
+    await hass.async_block_till_done()
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_rejected_bond_starts_reauth(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+) -> None:
+    """Test a confirmed bond rejection starts reauthentication."""
+    mock_device.client = None
+    mock_device.pair.side_effect = RyseAuthenticationFailed("rejected")
+    mock_device.unpair.reset_mock()
+
+    with pytest.raises(HomeAssistantError, match="Failed to open cover: rejected"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
+
+    assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_reconnect_backs_off_after_repeated_failures(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test repeated reconnect failures wait longer than the initial cooldown."""
+    assert setup_integration.state is ConfigEntryState.LOADED
+    client = mock_device.client
+    mock_device.pair.side_effect = BleakError("link dropped")
+    mock_device.pair.reset_mock()
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+
+    await async_see_shade(hass, local_ryse_scanner)
+    assert mock_device.pair.await_count == 1
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x02")
+    assert mock_device.pair.await_count == 2
+
+    mock_device.pair.reset_mock()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await async_see_shade(hass, local_ryse_scanner, token=b"\x03")
+    mock_device.pair.assert_not_awaited()
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_device.pair.assert_awaited_once()
 
 
 async def test_advertisement_reconnects_after_disconnect(

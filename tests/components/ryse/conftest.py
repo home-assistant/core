@@ -54,7 +54,7 @@ def mock_device() -> MagicMock:
     device.send_set_position = AsyncMock()
     device.send_get_position = AsyncMock()
 
-    async def _pair() -> bool:
+    async def _pair(*_args: object, **_kwargs: object) -> bool:
         device.client = MagicMock(is_connected=True)
         return True
 

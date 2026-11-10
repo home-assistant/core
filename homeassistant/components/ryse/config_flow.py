@@ -14,13 +14,17 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from . import _async_unpair
 from .const import DOMAIN, MANUFACTURER_ID, SERVICE_UUID
-from .helpers import async_local_scanner_devices, best_local_scanner_device
+from .helpers import (
+    RyseAuthenticationFailed,
+    async_local_scanner_devices,
+    best_local_scanner_device,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,8 +83,13 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device = RyseBLEDevice(local.ble_device)
         try:
-            if await device.pair():
+            # Reauth must delete the BlueZ device first. Bleak skips Pair when
+            # BlueZ already reports the shade as paired, so a reset shade would
+            # otherwise keep the stale bond.
+            if await device.pair(replace_bond=self.source == SOURCE_REAUTH):
                 return None
+        except RyseAuthenticationFailed:
+            return "cannot_connect"
         except TimeoutError, OSError, EOFError, BleakError:
             return "cannot_connect"
         except Exception:

@@ -11,6 +11,16 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import HomeAssistant
 
+try:
+    from ryseble.device import RyseAuthenticationFailed as _RyseAuthenticationFailed
+except ImportError:  # ryseble < 1.16 reports every pair() failure as False
+
+    class _RyseAuthenticationFailed(Exception):  # type: ignore[no-redef]
+        """The shade rejected the bond."""
+
+
+RyseAuthenticationFailed = _RyseAuthenticationFailed
+
 
 def async_local_scanner_devices(
     hass: HomeAssistant, address: str
@@ -51,7 +61,14 @@ def best_local_scanner_device(
     *,
     prefer: BLEDevice | None = None,
 ) -> BluetoothScannerDevice | None:
-    """Return the preferred local scanner device from *devices*."""
+    """Return the preferred local scanner device from *devices*.
+
+    This chooses the BLEDevice the integration stores and whether a local
+    adapter currently sees the shade. The Bluetooth client wrapper still
+    selects the connection backend by address, including proxies, so this
+    ranking does not pin the GATT route. That pin belongs in the Bluetooth
+    stack, where every integration can use it.
+    """
     if not devices:
         return None
     sorted_by_rssi = sorted(

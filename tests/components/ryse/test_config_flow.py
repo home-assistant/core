@@ -15,6 +15,7 @@ from pytest_homeassistant.components.bluetooth import (
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.ryse.const import DOMAIN, MANUFACTURER_ID
+from homeassistant.components.ryse.helpers import RyseAuthenticationFailed
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -40,6 +41,7 @@ PAIRING_ERRORS = [
     (OSError("os error"), "cannot_connect"),
     (EOFError("eof"), "cannot_connect"),
     (BleakError("bleak error"), "cannot_connect"),
+    (RyseAuthenticationFailed("rejected"), "cannot_connect"),
     (False, "cannot_connect"),
 ]
 
@@ -170,7 +172,7 @@ async def test_async_step_user_success_when_unpair_fails(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DEVICE_ADDRESS
-    mock_device.pair.assert_awaited_once()
+    mock_device.pair.assert_awaited_once_with(replace_bond=False)
     mock_device.unpair.assert_awaited_once()
     cancel()
 
@@ -998,7 +1000,29 @@ async def test_reauth_success(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    mock_device.pair.assert_awaited_once()
+    mock_device.pair.assert_awaited_once_with(replace_bond=True)
+    cancel()
+
+
+async def test_reauth_replaces_existing_bluez_bond(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test reauth asks the library to remove a bond BlueZ already reports."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    device = make_ble_device(paired=True)
+    cancel = register_local_scanner(hass, device, make_advertisement())
+    await _abort_bluetooth_flows(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_device.pair.assert_awaited_once_with(replace_bond=True)
     cancel()
 
 

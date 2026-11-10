@@ -19,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .helpers import async_best_local_scanner_device
+from .helpers import RyseAuthenticationFailed, async_best_local_scanner_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> None
     try:
         paired = await device.pair()
         if not paired:
-            raise ConfigEntryAuthFailed(connect_error)
+            # False is not a confirmed bond rejection.
+            raise ConfigEntryNotReady(connect_error)
+    except RyseAuthenticationFailed as err:
+        raise ConfigEntryAuthFailed(connect_error) from err
     except (TimeoutError, OSError, EOFError, BleakError) as err:
         raise ConfigEntryNotReady(connect_error) from err
     finally:

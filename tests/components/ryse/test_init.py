@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ryse.const import SERVICE_UUID
+from homeassistant.components.ryse.helpers import RyseAuthenticationFailed
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -106,14 +107,31 @@ async def test_setup_without_ble_device(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_starts_reauth_when_pairing_fails(
+async def test_setup_retries_when_pairing_returns_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     local_ryse_scanner: BLEDevice,
     mock_device: MagicMock,
 ) -> None:
-    """Test a lost or rejected bond starts reauth instead of retrying forever."""
+    """Test an undifferentiated pair() failure is retried instead of reauth."""
     mock_device.pair.side_effect = AsyncMock(return_value=False)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_device.unpair.assert_awaited_once()
+    assert not list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_setup_starts_reauth_when_bond_is_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+) -> None:
+    """Test a rejected bond starts reauth instead of retrying forever."""
+    mock_device.pair.side_effect = RyseAuthenticationFailed("rejected")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -158,9 +176,14 @@ async def test_setup_releases_connection_on_unexpected_pair_error(
 @pytest.mark.parametrize(
     ("pair_result", "expected_state"),
     [
-        pytest.param(False, ConfigEntryState.SETUP_ERROR, id="pair_returns_false"),
+        pytest.param(False, ConfigEntryState.SETUP_RETRY, id="pair_returns_false"),
         pytest.param(
             BleakError("ble err"), ConfigEntryState.SETUP_RETRY, id="pair_raises"
+        ),
+        pytest.param(
+            RyseAuthenticationFailed("rejected"),
+            ConfigEntryState.SETUP_ERROR,
+            id="bond_rejected",
         ),
     ],
 )
@@ -176,7 +199,7 @@ async def test_setup_reports_pairing_outcome_when_unpair_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device: MagicMock,
-    pair_result: bool | BleakError,
+    pair_result: bool | Exception,
     expected_state: ConfigEntryState,
     unpair_side_effect: Exception,
 ) -> None:

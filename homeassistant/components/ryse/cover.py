@@ -10,11 +10,8 @@ from bleak import BleakClient, BleakError
 from ryseble.device import RyseBLEDevice
 
 from homeassistant.components.bluetooth import (
-    BluetoothCallbackMatcher,
-    BluetoothChange,
-    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
-    async_register_callback,
+    async_register_advertisement_callback,
 )
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -30,10 +27,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RyseConfigEntry, _async_unpair
 from .const import MANUFACTURER_NAME
-from .helpers import async_best_local_scanner_device
+from .helpers import RyseAuthenticationFailed, async_best_local_scanner_device
 
 PARALLEL_UPDATES = 1  # one BLE connection at a time
 _RECONNECT_COOLDOWN = 5.0
+_RECONNECT_COOLDOWN_MAX = 300.0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +64,7 @@ class RyseCoverEntity(CoverEntity):
         self._connect_lock = asyncio.Lock()
         self._expected_disconnect = False
         self._reconnect_when_seen = False
+        self._reconnect_failures = 0
         self._reconnect_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
 
         self._attr_unique_id = device.address
@@ -92,14 +91,13 @@ class RyseCoverEntity(CoverEntity):
             function=self._async_reconnect,
         )
         self.async_on_remove(self._reconnect_debouncer.async_shutdown)
+        # Fires for unchanged advertisements. The change callback does not, so a
+        # shade with a static advert would otherwise stay unavailable.
         self.async_on_remove(
-            async_register_callback(
+            async_register_advertisement_callback(
                 self.hass,
                 self._async_ble_advertisement,
-                BluetoothCallbackMatcher(
-                    address=self._device.address, connectable=True
-                ),
-                BluetoothScanningMode.PASSIVE,
+                self._device.address,
             )
         )
         self._async_attach_disconnect_callback()
@@ -176,9 +174,7 @@ class RyseCoverEntity(CoverEntity):
 
     @callback
     def _async_ble_advertisement(
-        self,
-        service_info: BluetoothServiceInfoBleak,
-        change: BluetoothChange,
+        self, _service_info: BluetoothServiceInfoBleak
     ) -> None:
         """Reconnect once the shade is advertising again after a dropped link."""
         if not self._reconnect_when_seen or self._is_connected():
@@ -221,21 +217,44 @@ class RyseCoverEntity(CoverEntity):
         try:
             if not await self._async_ensure_connected():
                 if not self._expected_disconnect:
+                    self._note_reconnect_failure()
                     self.async_write_ha_state()
                 return
             if self._expected_disconnect:
                 return
             await self._device.send_get_position()
+        except RyseAuthenticationFailed as err:
+            if self._expected_disconnect:
+                return
+            self._note_reconnect_failure()
+            await self._async_drop_client(str(err))
+            self._config_entry.async_start_reauth(self.hass)
         except (TimeoutError, OSError, EOFError, BleakError) as err:
             if self._expected_disconnect:
                 return
+            self._note_reconnect_failure()
             await self._async_drop_client(str(err))
         else:
             if self._expected_disconnect:
                 return
+            self._note_reconnect_success()
             self._reconnect_when_seen = False
             self._set_available(True)
         self.async_write_ha_state()
+
+    def _note_reconnect_failure(self) -> None:
+        """Lengthen the wait after each consecutive reconnect failure."""
+        self._reconnect_failures += 1
+        if self._reconnect_debouncer is None:
+            return
+        delay = _RECONNECT_COOLDOWN * (2 ** (self._reconnect_failures - 1))
+        self._reconnect_debouncer.cooldown = min(delay, _RECONNECT_COOLDOWN_MAX)
+
+    def _note_reconnect_success(self) -> None:
+        """Restore the short reconnect interval after a successful bond."""
+        self._reconnect_failures = 0
+        if self._reconnect_debouncer is not None:
+            self._reconnect_debouncer.cooldown = _RECONNECT_COOLDOWN
 
     def _set_available(self, available: bool, reason: str | None = None) -> None:
         """Update availability, logging once on each transition."""
@@ -279,9 +298,8 @@ class RyseCoverEntity(CoverEntity):
         ryseble's writes are no-ops when ``client`` is None, so a command that
         runs after a failed poll would otherwise appear to succeed.
 
-        ``pair()`` returns False for both a rejected bond and a transport
-        error it already swallowed, so a failure stays retryable instead of
-        starting reauthentication.
+        ``pair()`` returning False is not a confirmed bond rejection.
+        ``RyseAuthenticationFailed`` is, and the caller starts reauthentication.
         """
         async with self._connect_lock:
             if self._expected_disconnect:
@@ -303,9 +321,12 @@ class RyseCoverEntity(CoverEntity):
             return False
 
     async def _async_pair_on_local_adapter(self) -> bool | None:
-        """Bond on the selected local adapter, not a proxy-selected backend.
+        """Pair when a local adapter sees the shade.
 
-        Returns True on success, False when pairing was rejected, and None
+        A proxy-only sighting is refused because the BlueZ agent cannot pair
+        through it. The Bluetooth stack still chooses the connection backend.
+
+        Returns True on success, False when pairing returned False, and None
         when no local adapter currently sees the shade.
         """
         scanner_device = async_best_local_scanner_device(
@@ -322,12 +343,21 @@ class RyseCoverEntity(CoverEntity):
         """Send a cover command, reconnecting first if needed."""
         try:
             if not await self._async_ensure_connected():
+                self._note_reconnect_failure()
                 self.async_write_ha_state()
                 raise HomeAssistantError(f"Failed to {description}: failed to pair")
             await send()
+            self._note_reconnect_success()
             self._reconnect_when_seen = False
             self._set_available(True)
+        except RyseAuthenticationFailed as err:
+            self._note_reconnect_failure()
+            await self._async_drop_client(str(err))
+            self._config_entry.async_start_reauth(self.hass)
+            self.async_write_ha_state()
+            raise HomeAssistantError(f"Failed to {description}: {err}") from err
         except (TimeoutError, OSError, EOFError, BleakError) as err:
+            self._note_reconnect_failure()
             await self._async_drop_client(str(err))
             self.async_write_ha_state()
             raise HomeAssistantError(f"Failed to {description}: {err}") from err
@@ -355,8 +385,8 @@ class RyseCoverEntity(CoverEntity):
     async def async_update(self) -> None:
         """Fetch the current state and position from a connected shade.
 
-        Do not pair here: ryseble logs ERROR on a failed pair(), which would
-        spam every 15s while the shade is out of range.
+        Do not pair here. Reconnect is driven by advertisements, including
+        ones whose payload has not changed, and backs off after failures.
         """
         if not self._is_connected():
             return
