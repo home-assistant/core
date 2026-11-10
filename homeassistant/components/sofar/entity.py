@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from sofar_modbus.modern.battery_pack import BatteryPack
 
@@ -48,7 +48,8 @@ def async_remove_unserved_entities(
     # Without a stored set, served is only a guess from the type.
     if SERVED_COMPONENTS not in entry.data:
         return
-    assert entry.unique_id is not None
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
     registry = er.async_get(hass)
     for description in descriptions:
         if description.component in entry.runtime_data.served_components:
