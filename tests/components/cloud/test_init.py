@@ -11,7 +11,7 @@ from hass_nabucasa import (
     LoginFailedReason,
     LogoutEvent,
 )
-from hass_nabucasa.remote import Certificate, RemoteClientCertificateError
+from hass_nabucasa.remote import Certificate
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 
@@ -124,51 +124,56 @@ async def test_disabling_remote_without_backend(
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
 async def test_toggling_remote_client_certificate(hass: HomeAssistant) -> None:
-    """Test toggling client certificates updates the remote connection."""
+    """Test toggling client certificates restarts the remote tunnel."""
     cl = hass.data[DATA_CLOUD]
     prefs = cl.client.prefs
 
     with (
         patch.object(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem"),
-        patch.object(cl.remote, "reload_client_certificates") as reload,
+        patch.object(cl, "started", True),
+        patch.object(cl.remote, "stop") as stop,
+        patch.object(cl.remote, "start") as start,
     ):
         await prefs.async_update(remote_require_client_certificate=True)
         await hass.async_block_till_done()
 
         assert cl.client.remote_ssl_peer_certificate == "/ssl/client_ca.pem"
-        assert reload.call_count == 1
+        assert stop.call_count == 1
+        assert start.call_count == 1
 
         await prefs.async_update(alexa_enabled=False)
         await hass.async_block_till_done()
 
-        assert reload.call_count == 1
+        assert stop.call_count == 1
+        assert start.call_count == 1
 
         await prefs.async_update(remote_require_client_certificate=False)
         await hass.async_block_till_done()
 
         assert cl.client.remote_ssl_peer_certificate is None
-        assert reload.call_count == 2
+        assert stop.call_count == 2
+        assert start.call_count == 2
 
 
+@pytest.mark.parametrize("started", [None, False])
 @pytest.mark.usefixtures("mock_cloud_fixture")
-async def test_toggling_remote_client_certificate_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_toggling_remote_client_certificate_without_remote(
+    hass: HomeAssistant, started: bool | None
 ) -> None:
-    """Test a failure to require client certificates is logged."""
+    """Test toggling client certificates does not start remote if cloud isn't started."""
     cl = hass.data[DATA_CLOUD]
 
     with (
         patch.object(hass.http, "ssl_peer_certificate", "/ssl/client_ca.pem"),
-        patch.object(
-            cl.remote,
-            "reload_client_certificates",
-            side_effect=RemoteClientCertificateError("No client CA"),
-        ),
+        patch.object(cl, "started", started),
+        patch.object(cl.remote, "stop") as stop,
+        patch.object(cl.remote, "start") as start,
     ):
         await cl.client.prefs.async_update(remote_require_client_certificate=True)
         await hass.async_block_till_done()
 
-    assert "Unable to require client certificates for remote access" in caplog.text
+    stop.assert_not_called()
+    start.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")

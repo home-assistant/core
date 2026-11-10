@@ -16,7 +16,6 @@ from hass_nabucasa import (
     NabuCasaBaseError,
     RemoteNotConnected,
 )
-from hass_nabucasa.remote import RemoteClientCertificateError
 import probatio
 
 from homeassistant.components import alexa, google_assistant
@@ -86,8 +85,6 @@ from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .services import async_setup_services
 from .subscription import async_subscription_info
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MODE = MODE_PROD
 
@@ -562,12 +559,11 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
             remote_ssl_peer_certificate = cloud.client.remote_ssl_peer_certificate
             if remote_ssl_peer_certificate != cur_remote_ssl_peer_certificate:
                 cur_remote_ssl_peer_certificate = remote_ssl_peer_certificate
-                try:
-                    await cloud.remote.reload_client_certificates()
-                except RemoteClientCertificateError as err:
-                    _LOGGER.error(
-                        "Unable to require client certificates for remote access: %s",
-                        err,
+                if cloud.started:
+                    await cloud.remote.stop()
+                    # Start waits until the backend is loaded, which can take a while
+                    hass.async_create_background_task(
+                        cloud.remote.start(), "cloud remote start"
                     )
 
             if prefs.remote_enabled == cur_remote_enabled:
