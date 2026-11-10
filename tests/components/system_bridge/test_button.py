@@ -2,10 +2,16 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import (
@@ -237,6 +243,35 @@ async def test_command_buttons_follow_settings(
 
     assert hass.states.get(COMMAND_ENTITY_ID) is None
     assert entity_registry.async_get(COMMAND_ENTITY_ID) is None
+    assert hass.states.get("button.hostname_lock_screen")
+
+
+async def test_settings_change_while_fetching_commands(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a settings change during the reconnect fetch isn't undone by it."""
+    settings_callback = mock_websocket_client.listen.call_args.kwargs[
+        "settings_callback"
+    ]
+    lock_screen = SettingsCommandDefinition(id="lock-screen", name="Lock screen")
+
+    async def fetch_stale() -> SettingsCommands:
+        await settings_callback(
+            Settings(
+                commands=SettingsCommands(allowlist=[FIXTURE_COMMAND, lock_screen])
+            )
+        )
+        return SettingsCommands(allowlist=[FIXTURE_COMMAND])
+
+    mock_websocket_client.connected = False
+    mock_websocket_client.get_commands.side_effect = fetch_stale
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert hass.states.get("button.hostname_lock_screen")
 
 

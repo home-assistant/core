@@ -182,6 +182,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
     async def _async_update_commands(self) -> None:
         """Fetch the saved commands, keeping the last ones if the host can't say."""
+        previous = self.data.commands
         try:
             commands = await self.websocket_client.get_commands()
         except (
@@ -193,7 +194,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 "Could not get the saved commands for %s: %s", self.title, exception
             )
             return
-        self.data.commands = {command.id: command for command in commands.allowlist}
+        # A settings event received during the request is at least as new
+        if self.data.commands is previous:
+            self.data.commands = {command.id: command for command in commands.allowlist}
 
     async def async_handle_power_state(self, event: PowerStateEvent) -> None:
         """Go unavailable as soon as the host says it's sleeping or shutting down."""
