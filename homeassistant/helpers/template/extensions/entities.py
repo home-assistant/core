@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import ATTR_ENTITY_ID, CONF_EXCLUDE, ENTITY_MATCH_ALL
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.registry import NextNamePart
+from homeassistant.helpers.template.render_info import render_info_cv
 
 from .base import BaseTemplateExtension, TemplateFunction
 
@@ -88,7 +89,7 @@ class EntityExtension(BaseTemplateExtension):
         if not isinstance(target_dict, Mapping):
             return []
 
-        from homeassistant.helpers import config_validation as cv, target  # noqa: PLC0415
+        from homeassistant.helpers import config_validation as cv, group, target  # noqa: PLC0415
 
         target_config = dict(target_dict)
 
@@ -111,6 +112,25 @@ class EntityExtension(BaseTemplateExtension):
         target_selection = target.TargetSelection(target_config)
         if not target_selection.has_any_target:
             return []
+
+        if (
+            expand_group
+            and (render_info := render_info_cv.get()) is not None
+            and render_info.collecting
+        ):
+            entity_ids = [target_selection.entity_ids]
+            if target_selection.exclude is not None:
+                entity_ids.append(target_selection.exclude.entity_ids)
+            group_entity_ids = group.get_group_entities(self.hass)
+            for target_entity_ids in entity_ids:
+                for entity_id in group.expand_entity_ids(
+                    self.hass, target_entity_ids, include_groups=True
+                ):
+                    if (
+                        entity_id.startswith(group.ENTITY_PREFIX)
+                        or entity_id in group_entity_ids
+                    ):
+                        render_info.entities.add(entity_id)  # type: ignore[attr-defined]
 
         if target_config.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
             excluded = target.async_extract_excluded_entity_ids(

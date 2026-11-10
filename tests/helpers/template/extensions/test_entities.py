@@ -12,7 +12,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.group import GenericGroup
 
-from tests.helpers.template.helpers import render
+from tests.helpers.template.helpers import render, render_to_info
 
 
 def test_entity_name(
@@ -214,6 +214,50 @@ async def test_resolve_target_expand_group(
             )
         )
         == expected
+    )
+
+
+async def test_resolve_target_tracks_group_dependencies(hass: HomeAssistant) -> None:
+    """Test group entities expanded by resolve_target are tracked as dependencies."""
+    platform = MockEntityPlatform(hass, domain="light", platform_name="test")
+    nested_group = MockEntity(entity_id="light.nested_group", unique_id="nested")
+    nested_group.group = GenericGroup(nested_group, ["light.member"])
+    target_group = MockEntity(entity_id="light.target_group", unique_id="target")
+    target_group.group = GenericGroup(target_group, [nested_group.entity_id])
+    excluded_nested_group = MockEntity(
+        entity_id="light.excluded_nested_group", unique_id="excluded_nested"
+    )
+    excluded_nested_group.group = GenericGroup(
+        excluded_nested_group, ["light.excluded_member"]
+    )
+    excluded_group = MockEntity(entity_id="light.excluded_group", unique_id="excluded")
+    excluded_group.group = GenericGroup(
+        excluded_group, [excluded_nested_group.entity_id]
+    )
+    await platform.async_add_entities(
+        [nested_group, target_group, excluded_nested_group, excluded_group]
+    )
+    await hass.async_block_till_done()
+
+    info = render_to_info(
+        hass,
+        "{{ resolve_target(target) | count }}",
+        {
+            "target": {
+                "entity_id": target_group.entity_id,
+                "exclude": {"entity_id": excluded_group.entity_id},
+            }
+        },
+    )
+
+    assert info.result() == 1
+    assert info.entities == frozenset(
+        {
+            target_group.entity_id,
+            nested_group.entity_id,
+            excluded_group.entity_id,
+            excluded_nested_group.entity_id,
+        }
     )
 
 
