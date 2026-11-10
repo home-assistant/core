@@ -98,10 +98,10 @@
   },
   "exceptions": {
     "connect_error": {
-      "message": "Error connecting to SmartHub: {error}"
+      "message": "Error connecting to SmartHub."
     },
     "connect_refused": {
-      "message": "Connection refused to SmartHub: {error}"
+      "message": "Connection refused to SmartHub."
     },
     "connect_timeout": {
       "message": "Timeout while connecting to SmartHub."
@@ -110,10 +110,10 @@
       "message": "The hub at {host} is already configured as {uid}. Remove the duplicate entry."
     },
     "update_network_error": {
-      "message": "Network error fetching status from SmartHub: {error}"
+      "message": "Network error fetching status from SmartHub."
     },
     "update_protocol_error": {
-      "message": "SmartHub sent an unusable answer: {error}"
+      "message": "SmartHub sent an unusable answer."
     },
     "update_timeout": {
       "message": "Timeout fetching system status from SmartHub."

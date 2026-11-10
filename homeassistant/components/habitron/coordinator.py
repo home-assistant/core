@@ -153,13 +153,11 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="connect_refused",
-                translation_placeholders={"error": str(err)},
             ) from err
         except (OSError, ConnectionError, HabitronError) as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="connect_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     async def _async_connect_and_build(self) -> None:
@@ -329,13 +327,11 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_network_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         except HabitronError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_protocol_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         await self._async_update_host()
         self._update_router_issue()
