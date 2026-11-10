@@ -29,6 +29,7 @@ DPT_PERCENT = {"main": 5, "sub": 1}
 DPT_COLOR_TEMP_ABS = {"main": 7, "sub": 600}
 DPT_COLOR_RGB = {"main": 232, "sub": 600}
 DPT_COLOR_RGBW = {"main": 251, "sub": 600}
+DPT_FAN_STAGE = {"main": 5, "sub": 10}
 DPT_TEMPERATURE = {"main": 9, "sub": 1}
 DPT_HVAC_MODE = {"main": 20, "sub": 102}
 
@@ -89,6 +90,10 @@ TEST_PROJECT: dict[str, Any] = {
         "6/1/4": _group_address("6/1/4", DPT_PERCENT),
         "6/1/5": _group_address("6/1/5", DPT_PERCENT),
         "6/1/6": _group_address("6/1/6", DPT_PERCENT),
+        "7/2/1": _group_address("7/2/1", DPT_PERCENT),
+        "7/2/2": _group_address("7/2/2", DPT_PERCENT),
+        "7/2/3": _group_address("7/2/3", DPT_SWITCH),
+        "7/2/4": _group_address("7/2/4", DPT_FAN_STAGE),
         "7/4/1": _group_address("7/4/1", DPT_TEMPERATURE),
         "7/4/2": _group_address("7/4/2", DPT_TEMPERATURE),
         "7/4/3": _group_address("7/4/3", DPT_PERCENT),
@@ -166,6 +171,14 @@ TEST_PROJECT: dict[str, Any] = {
                 ),
             },
         },
+        "1.3.3": {
+            "name": "Lüftungsaktor",
+            "channels": {
+                "CH-1": _channel(
+                    "Lüfter", ["372"], ["co-120", "co-121", "co-122", "co-123"]
+                ),
+            },
+        },
         "1.3.5": {
             "name": "Temperatursensor",
             "channels": {
@@ -221,6 +234,10 @@ TEST_PROJECT: dict[str, Any] = {
         "co-73": _com_object(["423.84"], ["6/1/4"]),
         "co-74": _com_object(["423.64"], ["6/1/5"]),
         "co-75": _com_object(["423.85"], ["6/1/6"]),
+        "co-120": _com_object(["372.51"], ["7/2/1"]),
+        "co-121": _com_object(["372.55"], ["7/2/2"]),
+        "co-122": _com_object(["372.54"], ["7/2/3"]),  # no config key for this DPA
+        "co-123": _com_object(["372.56"], ["7/2/4"]),  # no config key for this DPA
         "co-140": _com_object(["321.51"], ["7/4/1", "7/4/3", "7/4/2"]),
         "co-170": _com_object(["321.51"], ["7/7/1"]),
         "co-171": _com_object(["398.56"], ["7/7/2"]),
@@ -295,6 +312,7 @@ def test_collect_dpa_index_duplicate_annotation() -> None:
 def test_functional_block_platforms() -> None:
     """Test the functional block to platform map derived from schema annotations."""
     assert _functional_block_platforms() == {
+        "372": [Platform.FAN],
         # light is the default for FB 417
         "417": [Platform.LIGHT, Platform.SWITCH],
         "418": [Platform.LIGHT],
@@ -519,6 +537,31 @@ def test_incomplete_config_dropped() -> None:
     assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
 
 
+def test_fan_suggestion() -> None:
+    """Test FB 372 suggestion using the percentage speed option."""
+    channel = _test_channel("1.3.3", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.FAN)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "speed": {"ga_speed": {"write": "7/2/1", "state": "7/2/2"}}
+    }
+    assert suggestion["unmatched"] == ["372.54", "372.56"]
+
+
+def test_fan_without_write_address_dropped() -> None:
+    """Test that a fan without a speed write address yields no suggestion."""
+    channel = _channel("Lüfter Status", ["372"], ["co-121", "co-123"])
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.FAN) is None
+
+
+def test_fan_invalid_dpt_dropped() -> None:
+    """Test that a speed GA with non-matching DPT yields no suggestion."""
+    # 7/2/4 is DPT 5.010 - not valid for the percentage speed address
+    project = _with_com_objects(**{"co-90": _com_object(["372.51"], ["7/2/4"])})
+    channel = _channel("Lüfter Stufen", ["372"], ["co-90"])
+    assert _build_platform_suggestion(project, channel, Platform.FAN) is None
+
+
 def test_sensor_suggestion() -> None:
     """Test FB 321 suggestion setting the DPT of a dpt-class selector."""
     channel = _test_channel("1.3.5", "CH-1")
@@ -595,6 +638,7 @@ async def test_ws_get_entity_suggestions(
         "state": "ok",
         "functional_blocks_found": [
             "321",
+            "372",
             "398",
             "399",
             "417",
@@ -612,6 +656,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.1.3_CH-1",
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
+        "fb_1.3.3_CH-1",
         "fb_1.3.5_CH-1",
         "fb_1.3.8_CH-1",
     ]
@@ -635,6 +680,7 @@ async def test_ws_get_entity_suggestions(
     assert suggestions["fb_1.1.1_CH-2"]["suggested_name"] == "Ausgang 2"
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
+    assert suggestions["fb_1.3.3_CH-1"]["platform_options"] == ["fan"]
     # a room temperature sensor is only suggested as climate with a controller
     assert suggestions["fb_1.3.5_CH-1"]["platform_options"] == ["sensor"]
     assert suggestions["fb_1.3.8_CH-1"]["platform_options"] == ["climate", "sensor"]

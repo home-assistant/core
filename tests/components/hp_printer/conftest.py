@@ -20,7 +20,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hp_printer.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_SSL
 
 HOST = "192.168.1.12"
 SERIAL_NUMBER = "TH12A3B4CD"
@@ -165,6 +165,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
-        data={CONF_HOST: HOST},
+        data={CONF_HOST: HOST, CONF_SSL: False},
         unique_id=SERIAL_NUMBER,
+        minor_version=2,
     )
