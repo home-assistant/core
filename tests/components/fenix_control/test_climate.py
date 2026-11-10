@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -566,6 +567,26 @@ async def test_set_temperature_fahrenheit_rounds_to_step(
     )
 
     assert mock_fenix_client.set_setpoint.call_args.args[2] == 22.0
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fahrenheit_target_step(
+    hass: HomeAssistant, mock_fenix_client: MagicMock
+) -> None:
+    """Test the UI steps whole °F, and one step down changes the target."""
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TARGET_TEMP_STEP] == 0.5
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    # 20.5 °C shows as 69 °F; one whole step down must reach a new 0.5 °C target
+    for target_f, expected_c in ((69, 20.5), (68, 20.0)):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target_f},
+            blocking=True,
+        )
+        assert mock_fenix_client.set_setpoint.call_args.args[2] == expected_c
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TARGET_TEMP_STEP] == 1
 
 
 @pytest.mark.usefixtures("init_integration")

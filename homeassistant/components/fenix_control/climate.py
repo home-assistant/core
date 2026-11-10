@@ -88,7 +88,6 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     _attr_hvac_modes = list(HVAC_MODE_TO_PRESET_MODE)
     _attr_preset_modes = list(PRESET_TO_PRESET_MODE)
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = TEMPERATURE_STEP
 
     def __init__(self, coordinator: FenixControlCoordinator, device_id: str) -> None:
         """Initialize the thermostat."""
@@ -107,6 +106,18 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     def _remember_on_mode(self) -> None:
         if (mode := self.hvac_mode) not in (None, HVACMode.OFF):
             self._last_on_mode = mode
+
+    @property
+    @override
+    def target_temperature_step(self) -> float:
+        """Return the step the UI uses to change the target.
+
+        Home Assistant doesn't convert the step: in Fahrenheit, 0.5 °F would be
+        rounded back to the same 0.5 °C target, so whole degrees are used.
+        """
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+            return TEMPERATURE_STEP
+        return 1.0
 
     @property
     @override
