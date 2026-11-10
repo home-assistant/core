@@ -10,11 +10,11 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioabrp import (
-    AbrpApiError,
     AbrpVehicle,
     AbstractAuth,
     ChargingState,
     ConnectionEvent,
+    Location,
     MetricValue,
     Telemetry,
     TelemetryStream,
@@ -42,12 +42,10 @@ REDIRECT_URI = "https://example.com/auth/external/callback"
 MOCK_VEHICLE_ID = 123456789012
 MOCK_VEHICLE_NAME = "Rivian R2 2027 Standard Long Range"
 MOCK_VEHICLE_MODEL = "rivian:r2:26:ncma91:rwd:w21"
-MOCK_PAINT = "WHITE"
 
 MOCK_VEHICLE_ID_2 = 123456789013
 MOCK_VEHICLE_NAME_2 = "Rivian R1S 2024 Quad Max"
 MOCK_VEHICLE_MODEL_2 = "rivian:r1s:24:max:tri:w22"
-MOCK_PAINT_2 = "BLACK"
 
 # Distinct from ``USER_SUB`` so a snapshot picking up the wrong one is obvious.
 SENSOR_TEST_SUB = "abrp-test-sub"
@@ -73,7 +71,7 @@ def build_vehicle_model_display(
     )
 
 
-def build_metric_value(value: float | ChargingState) -> MetricValue:
+def build_metric_value(value: float | ChargingState | Location) -> MetricValue:
     """Build a typed MetricValue (the unit of coordinator telemetry state)."""
     return MetricValue(value=value, time=None, provider=None)
 
@@ -166,13 +164,11 @@ def mock_abrp_vehicles() -> list[AbrpVehicle]:
             vehicle_id=MOCK_VEHICLE_ID,
             name=MOCK_VEHICLE_NAME,
             vehicle_model=MOCK_VEHICLE_MODEL,
-            paint=MOCK_PAINT,
         ),
         AbrpVehicle(
             vehicle_id=MOCK_VEHICLE_ID_2,
             name=MOCK_VEHICLE_NAME_2,
             vehicle_model=MOCK_VEHICLE_MODEL_2,
-            paint=MOCK_PAINT_2,
         ),
     ]
 
@@ -181,30 +177,12 @@ def mock_abrp_vehicles() -> list[AbrpVehicle]:
 def mock_abrp_client(
     mock_abrp_vehicles: list[AbrpVehicle],
 ) -> Generator[AsyncMock]:
-    """Patch the ``aioabrp.AbrpClient`` boundary with configurable mocks."""
-    display_responses: dict[str, VehicleModelDisplay | BaseException] = {}
-
-    async def _display(self: Any, typecode: str) -> VehicleModelDisplay:
-        outcome = display_responses.get(typecode)
-        if outcome is None:
-            raise AbrpApiError(f"HTTP 404 (no display fixture for {typecode})")
-        if isinstance(outcome, BaseException):
-            raise outcome
-        return outcome
-
-    with (
-        patch(
-            "aioabrp.AbrpClient.async_get_vehicles",
-            autospec=True,
-            return_value=mock_abrp_vehicles,
-        ) as mock_client,
-        patch(
-            "aioabrp.AbrpClient.async_get_vehicle_model_display",
-            autospec=True,
-            side_effect=_display,
-        ),
-    ):
-        mock_client.display_responses = display_responses
+    """Patch the garage request of ``aioabrp.AbrpClient``."""
+    with patch(
+        "aioabrp.AbrpClient.async_get_vehicles",
+        autospec=True,
+        return_value=mock_abrp_vehicles,
+    ) as mock_client:
         yield mock_client
 
 

@@ -1,6 +1,8 @@
 """The tests for the notify file platform."""
 
-from unittest.mock import MagicMock
+import errno
+import os
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -121,16 +123,33 @@ async def test_read_file_decoding_error(
     assert hae.value.translation_domain == DOMAIN
 
 
-async def test_read_file_dne(
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
+async def test_read_file_os_errors(
     hass: HomeAssistant,
     mock_is_allowed_path: MagicMock,
     setup_ha_file_integration,
+    error_no: int,
+    translation_key: str,
 ) -> None:
-    """Test handling error if file does not exist."""
-    file_name = "tests/components/file/fixtures/file_dne.yaml"
+    """Test handling the errors of reading the file."""
+    file_name = "tests/components/file/fixtures/file_read.yaml"
 
-    with pytest.raises(HomeAssistantError) as hae:
-        _ = await hass.services.async_call(
+    with (
+        patch(
+            "homeassistant.components.file.services.open",
+            side_effect=OSError(error_no, os.strerror(error_no)),
+        ),
+        pytest.raises(HomeAssistantError) as hae,
+    ):
+        await hass.services.async_call(
             DOMAIN,
             FileService.READ_FILE,
             {
@@ -140,4 +159,6 @@ async def test_read_file_dne(
             blocking=True,
             return_response=True,
         )
-    assert file_name in str(hae.value)
+    assert hae.value.translation_domain == "homeassistant"
+    assert hae.value.translation_key == translation_key
+    assert hae.value.translation_placeholders == {"path": file_name}

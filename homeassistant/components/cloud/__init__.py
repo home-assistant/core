@@ -563,6 +563,9 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
 
 async def async_setup_entry(hass: HomeAssistant, entry: CloudConfigEntry) -> None:
     """Set up a config entry."""
+    if entry.title == "Home Assistant Cloud":
+        hass.config_entries.async_update_entry(entry, title="Home Assistant Link")
+
     platforms = PLATFORMS.copy()
     if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
         with suppress(NabuCasaBaseError):

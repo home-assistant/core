@@ -10,10 +10,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
 
-from . import TeslemetryConfigEntry
 from .const import DOMAIN
 from .entity import TeslemetryVehicleCommandEntity, TeslemetryVehicleStreamEntity
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 VEHICLE_REDACT = [
     "id",

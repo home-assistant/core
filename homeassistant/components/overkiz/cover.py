@@ -677,6 +677,7 @@ def _async_check_deprecated_low_speed_cover(
         DOMAIN,
         issue_id,
         breaks_in_ha_version="2027.5.0",
+        config_entry_id=entity_entry.config_entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=(

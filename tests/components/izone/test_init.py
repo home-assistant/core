@@ -495,10 +495,11 @@ async def test_setup_discovery_bind_failure_retries(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "connected"),
     [
-        pytest.param(ConnectionError("gone"), id="connection-error"),
-        pytest.param(ControllerCommandError("rejected"), id="command-rejected"),
+        pytest.param(ConnectionError("gone"), True, id="connection-error"),
+        pytest.param(ControllerCommandError("rejected"), True, id="command-rejected"),
+        pytest.param(None, False, id="system-offline"),
     ],
 )
 async def test_setup_first_refresh_failure_closes_controller(
@@ -506,11 +507,16 @@ async def test_setup_first_refresh_failure_closes_controller(
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
-    side_effect: Exception,
+    side_effect: Exception | None,
+    connected: bool,
 ) -> None:
-    """A failed first refresh closes the controller and retries setup."""
+    """A failed first refresh closes the controller and retries setup.
+
+    This includes a reachable bridge whose iZone system is offline.
+    """
     mock_config_entry.add_to_hass(hass)
     mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
+    mock_controller.connected = connected
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

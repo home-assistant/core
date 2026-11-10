@@ -1,10 +1,15 @@
 """Weather platform for the Foreca integration."""
 
+from collections.abc import Callable
 from typing import override
 
 from pyforeca import DailyForecast, HourlyForecast
 
 from homeassistant.components.weather import (
+    ATTR_WEATHER_PRECIPITATION_UNIT,
+    ATTR_WEATHER_TEMPERATURE_UNIT,
+    ATTR_WEATHER_VISIBILITY_UNIT,
+    UNIT_CONVERSIONS,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
@@ -16,15 +21,19 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import symbol_to_condition
 from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
 from .entity import ForecaEntity
 
 PARALLEL_UPDATES = 0
+
+_CONFIDENCE = {"g": "good", "y": "normal", "o": "low"}
+_ROUNDING_PRECISION = 2
 
 
 async def async_setup_entry(
@@ -52,6 +61,7 @@ def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
         condition=symbol_to_condition(day.symbol),
         native_temperature=day.max_temp,
         native_templow=day.min_temp,
+        native_apparent_temperature=day.max_feels_like_temp,
         native_precipitation=day.precip_accum,
         precipitation_probability=day.precip_prob,
         native_wind_speed=day.max_wind_speed,
@@ -59,6 +69,7 @@ def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
         wind_bearing=day.wind_dir,
         native_pressure=day.pressure,
         native_dew_point=day.max_dew_point,
+        cloud_coverage=day.cloudiness,
         uv_index=day.uv_index,
     )
 
@@ -197,3 +208,123 @@ class ForecaWeather(
             for hour in self.coordinator.data.hourly
             if (forecast := _hourly_to_forecast(hour)) is not None
         ]
+
+    async def async_get_forecasts_extra(self, type: str) -> ServiceResponse:
+        """Return the forecast values that weather.get_forecasts has no field for."""
+        if type == "hourly":
+            return {
+                "forecast": [
+                    extra
+                    for hour in self.coordinator.data.hourly
+                    if (extra := self._hourly_extra(hour)) is not None
+                ]
+            }
+        return {
+            "forecast": [
+                extra
+                for day in self.coordinator.data.daily
+                if (extra := self._daily_extra(day)) is not None
+            ]
+        }
+
+    def _hourly_extra(self, hour: HourlyForecast) -> dict[str, JsonValueType] | None:
+        """Return an hour's values that a Home Assistant forecast cannot hold."""
+        if (timestamp := dt_util.parse_datetime(hour.time or "")) is None:
+            return None
+        return {
+            "datetime": timestamp.isoformat(),
+            "precipitation_type": hour.precip_type,
+            "snow_accumulation": self._snow(hour.snow_accum),
+            "snow_depth": self._snow(hour.snow_depth),
+            "solar_radiation": hour.solar_radiation,
+            "thunderstorm_probability": hour.thunder_prob,
+            "visibility": self._visibility(hour.visibility),
+        }
+
+    def _daily_extra(self, day: DailyForecast) -> dict[str, JsonValueType] | None:
+        """Return a day's values that a Home Assistant forecast cannot hold."""
+        if (date := dt_util.parse_date(day.date or "")) is None:
+            return None
+        return {
+            "datetime": dt_util.start_of_local_day(date).isoformat(),
+            "apparent_templow": self._temperature(day.min_feels_like_temp),
+            "max_humidity": day.max_rel_humidity,
+            "min_humidity": day.min_rel_humidity,
+            "min_dew_point": self._temperature(day.min_dew_point),
+            "min_visibility": self._visibility(day.min_visibility),
+            "snow_accumulation": self._snow(day.snow_accum),
+            "snow_depth": self._snow(day.snow_depth),
+            "sunshine_duration": day.sunhours,
+            "solar_radiation_sum": day.solar_radiation_sum,
+            "sunrise": _from_epoch(day.sunrise_epoch),
+            "sunset": _from_epoch(day.sunset_epoch),
+            "confidence": _CONFIDENCE.get(day.confidence or ""),
+            "temperature_ensemble": _percentiles(
+                day.max_temp_ensemble, self._temperature
+            ),
+            "templow_ensemble": _percentiles(day.min_temp_ensemble, self._temperature),
+            "precipitation_ensemble": _percentiles(
+                day.precip_accum_ensemble, self._precipitation
+            ),
+        }
+
+    def _temperature(self, value: float | None) -> float | None:
+        """Convert a temperature in °C to the entity's temperature unit."""
+        if value is None:
+            return None
+        return round(
+            UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                value, UnitOfTemperature.CELSIUS, self._temperature_unit
+            ),
+            _ROUNDING_PRECISION,
+        )
+
+    def _visibility(self, value: float | None) -> float | None:
+        """Convert a distance in metres to the entity's visibility unit."""
+        if value is None:
+            return None
+        return round(
+            UNIT_CONVERSIONS[ATTR_WEATHER_VISIBILITY_UNIT](
+                value, UnitOfLength.METERS, self._visibility_unit
+            ),
+            _ROUNDING_PRECISION,
+        )
+
+    def _precipitation(self, value: float | None) -> float | None:
+        """Convert an amount in mm to the entity's precipitation unit."""
+        if value is None:
+            return None
+        return round(
+            UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                value, UnitOfPrecipitationDepth.MILLIMETERS, self._precipitation_unit
+            ),
+            _ROUNDING_PRECISION,
+        )
+
+    def _snow(self, value: float | None) -> float | None:
+        """Convert a snow thickness in cm to the entity's precipitation unit."""
+        if value is None:
+            return None
+        return round(
+            UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                value, UnitOfPrecipitationDepth.CENTIMETERS, self._precipitation_unit
+            ),
+            _ROUNDING_PRECISION,
+        )
+
+
+def _percentiles(
+    values: dict[str, float | None] | None,
+    convert: Callable[[float | None], float | None],
+) -> dict[str, JsonValueType] | None:
+    """Convert each ensemble percentile, keeping the API's p000-style keys."""
+    if values is None:
+        return None
+    return {key: convert(value) for key, value in values.items()}
+
+
+def _from_epoch(epoch: int | None) -> str | None:
+    """Return a Unix time as an ISO 8601 timestamp in UTC."""
+    if epoch is None:
+        return None
+    return dt_util.utc_from_timestamp(epoch).isoformat()
