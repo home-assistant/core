@@ -1,7 +1,7 @@
 """Services for Indevolt integration."""
 
 import asyncio
-from enum import StrEnum  # Keep action and field keys string-compatible.
+from enum import StrEnum
 from typing import Final, Never
 
 from indevolt_api import (
@@ -11,7 +11,7 @@ from indevolt_api import (
 )
 import probatio
 
-from homeassistant.const import CommonServiceArgument  # Use shared selector keys.
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
@@ -21,31 +21,31 @@ from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 
 
-class IndevoltService(StrEnum):  # Only used by this module.
-    """Store keys for Indevolt services."""  # Match services.yaml.
+class IndevoltService(StrEnum):
+    """Store keys for Indevolt services."""
 
-    CHARGE = "charge"  # Preserve the existing charge action name.
-    DISCHARGE = "discharge"  # Preserve the existing discharge action name.
+    CHARGE = "charge"
+    DISCHARGE = "discharge"
 
 
-class IndevoltServiceArgument(StrEnum):  # Top-level action fields only.
-    """Store keys for Indevolt service arguments."""  # Match services.yaml.
+class IndevoltServiceArgument(StrEnum):
+    """Store keys for Indevolt service arguments."""
 
-    POWER = "power"  # Both actions share this power field.
-    TARGET_SOC = "target_soc"  # Both actions share this target SOC field.
+    POWER = "power"
+    TARGET_SOC = "target_soc"
 
 
 RT_ACTION_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        probatio.Required(CommonServiceArgument.DEVICE_ID): probatio.All(  # Shared key.
+        probatio.Required(CommonServiceArgument.DEVICE_ID): probatio.All(
             probatio.EnsureList(),
             [cv.string],
         ),
-        probatio.Required(IndevoltServiceArgument.TARGET_SOC): probatio.All(  # SOC key.
+        probatio.Required(IndevoltServiceArgument.TARGET_SOC): probatio.All(
             probatio.Coerce(int),
             probatio.Range(min=0, max=100),
         ),
-        probatio.Required(IndevoltServiceArgument.POWER): probatio.All(  # Power key.
+        probatio.Required(IndevoltServiceArgument.POWER): probatio.All(
             probatio.Coerce(int),
             probatio.Range(min=0, max=10800),
         ),
@@ -74,10 +74,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=RT_ACTION_SERVICE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN,  # Keep the same integration domain.
-        IndevoltService.DISCHARGE,  # Keep the existing discharge action name.
-        discharge,  # Keep the existing discharge handler.
-        schema=RT_ACTION_SERVICE_SCHEMA,  # Keep the shared validation rules.
+        DOMAIN,
+        IndevoltService.DISCHARGE,
+        discharge,
+        schema=RT_ACTION_SERVICE_SCHEMA,
     )
 
 
@@ -89,8 +89,8 @@ async def _async_handle_realtime_action(
     """Validate and execute a realtime action for one or more coordinators."""
     coordinators = await _async_get_coordinators_from_call(hass, call)
 
-    power: int = call.data[IndevoltServiceArgument.POWER]  # Use the schema key.
-    target_soc: int = call.data[IndevoltServiceArgument.TARGET_SOC]  # String keys work.
+    power: int = call.data[IndevoltServiceArgument.POWER]
+    target_soc: int = call.data[IndevoltServiceArgument.TARGET_SOC]
 
     _validate_realtime_action(coordinators, action, power, target_soc)
     await _execute_realtime_action(coordinators, action, power, target_soc)
