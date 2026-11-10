@@ -131,10 +131,20 @@ class Trigger:
     @callback
     def async_log_message(self, msg: ReceiveMessage) -> None:
         """Keep a received message in the debug info of a discovered trigger."""
-        if self.discovery_data is not None:
-            debug_info.log_trigger_message(
-                self.hass, self.discovery_data[ATTR_DISCOVERY_HASH], msg
+        debug_info_triggers = self.hass.data[DATA_MQTT].debug_info_triggers
+        # Each automation that uses the trigger receives the message
+        if (
+            self.discovery_data is None
+            or (
+                trigger_debug_info := debug_info_triggers.get(
+                    self.discovery_data[ATTR_DISCOVERY_HASH]
+                )
             )
+            is None
+            or msg in trigger_debug_info["messages"]
+        ):
+            return
+        trigger_debug_info["messages"].append(msg)
 
     async def add_trigger(
         self, action: TriggerActionType, trigger_info: TriggerInfo
@@ -175,9 +185,10 @@ class Trigger:
         # Unsubscribe+subscribe if this trigger is in use and topic has changed
         # If topic is same unsubscribe+subscribe will execute in the wrong order
         # because unsubscribe is done with help of async_create_task
-        if topic_changed:
-            for trig in self.trigger_instances:
-                await trig.async_attach_trigger()
+        if not topic_changed:
+            return
+        for trig in self.trigger_instances:
+            await trig.async_attach_trigger()
 
     def detach_trigger(self) -> None:
         """Remove MQTT device trigger."""

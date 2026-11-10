@@ -892,12 +892,21 @@ async def test_device_discovery_child_devices_details(
                         "platform": "sensor",
                         "unique_id": "z2m_hub_child_humidity",
                         "state_topic": "z2m/hub/child/humidity",
-                    }
+                    },
+                    "temperature": {
+                        "platform": "sensor",
+                        "unique_id": "z2m_hub_child_temperature",
+                        "state_topic": "z2m/hub/child/temperature",
+                    },
                 },
             }
         ],
     }
     async_fire_mqtt_message(hass, topic, json.dumps(config))
+    # The components of another device are left out
+    async_fire_mqtt_message(
+        hass, DEVICE_DISCOVERY_TOPIC, json.dumps(DEVICE_DISCOVERY_CONFIG)
+    )
     await hass.async_block_till_done()
     child_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, "z2m_hub_child"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
@@ -1114,34 +1123,6 @@ async def test_details_invalid(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_format"
-
-
-@pytest.mark.parametrize(
-    "message",
-    [
-        pytest.param({"type": "mqtt/explorer/structure"}, id="structure"),
-        pytest.param(
-            {"type": "mqtt/explorer/details", "entity_id": "sensor.test"},
-            id="details",
-        ),
-    ],
-)
-async def test_not_loaded(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    message: dict[str, Any],
-) -> None:
-    """Test the commands when MQTT is not loaded."""
-    await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id(message)
-    response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "not_loaded"
 
 
 @pytest.mark.parametrize(

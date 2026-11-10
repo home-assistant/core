@@ -144,17 +144,6 @@ def add_trigger_discovery_data(
     }
 
 
-def log_trigger_message(
-    hass: HomeAssistant, discovery_hash: tuple[str, str], msg: ReceiveMessage
-) -> None:
-    """Log a message received by a device trigger."""
-    if (
-        trigger := hass.data[DATA_MQTT].debug_info_triggers.get(discovery_hash)
-    ) is not None and msg not in (messages := trigger["messages"]):
-        # Each automation that uses the trigger receives the message
-        messages.append(msg)
-
-
 def update_trigger_discovery_data(
     hass: HomeAssistant,
     discovery_hash: tuple[str, str],
