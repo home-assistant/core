@@ -510,6 +510,23 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
                 sensor_keys={"allowedTemperatureRange": "allowedTemperatureRange"},
             )
         },
+        "hvac": {
+            "": AmazonDeviceFeature(
+                properties=["coolerStage", "primaryHeaterStage"],
+                supported_operations=[],
+                supported_modes=[],
+                friendly_name=None,
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={},
+                sensor_keys={
+                    "coolerStage": "coolerStage",
+                    "primaryHeaterStage": "primaryHeaterStage",
+                },
+            )
+        },
     },
     unsupported_features={},
 )
@@ -777,6 +794,28 @@ TEST_DEVICE_THERMOSTAT_SENSORS: dict[str, AmazonDeviceSensor] = {
         feature_name="mode",
         property_name="mode",
         instance="5",
+    ),
+    "coolerStage": AmazonDeviceSensor(
+        name="coolerStage",
+        value="OFF",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="hvac",
+        property_name="coolerStage",
+        instance="",
+    ),
+    "primaryHeaterStage": AmazonDeviceSensor(
+        name="primaryHeaterStage",
+        value="OFF",
+        error=False,
+        error_msg=None,
+        error_type=None,
+        scale=None,
+        feature_name="hvac",
+        property_name="primaryHeaterStage",
+        instance="",
     ),
 }
 

@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -79,13 +80,6 @@ async def async_setup_entry(
 
     _check_device()
     entry.async_on_unload(coordinator.async_add_listener(_check_device))
-
-
-def _format_temperature(value: float) -> str:
-    """Format a temperature the way Amazon expects it."""
-    if float(value).is_integer():
-        return str(int(value))
-    return str(value)
 
 
 class AmazonClimateEntity(AmazonEntity, ClimateEntity):
@@ -227,6 +221,22 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
 
     @property
     @override
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running HVAC action."""
+        cooler = self._sensor_value("hvac", "coolerStage")
+        heater = self._sensor_value("hvac", "primaryHeaterStage")
+        if cooler is None and heater is None:
+            return None
+        if self.hvac_mode == HVACMode.OFF:
+            return HVACAction.OFF
+        if cooler not in (None, "OFF"):
+            return HVACAction.COOLING
+        if heater not in (None, "OFF"):
+            return HVACAction.HEATING
+        return HVACAction.IDLE
+
+    @property
+    @override
     def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (value := self._sensor_value("temperatureSensor", "temperature")) is None:
@@ -302,10 +312,10 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
                 sensor.error_msg = None
         self.async_write_ha_state()
 
-    def _temperature_payload(self, value: float) -> dict[str, str]:
+    def _temperature_payload(self, value: float) -> dict[str, float | str]:
         """Return a setpoint payload in the thermostat scale."""
         return {
-            "value": _format_temperature(value),
+            "value": value,
             "scale": UNIT_TO_AMAZON[self.native_temperature_unit],
         }
 

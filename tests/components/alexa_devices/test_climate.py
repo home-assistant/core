@@ -1,6 +1,7 @@
 """Tests for the Alexa Devices climate platform."""
 
 from copy import deepcopy
+from dataclasses import replace
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
@@ -12,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -24,6 +26,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
@@ -38,7 +41,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
-from .const import TEST_DEVICE_THERMOSTAT, TEST_DEVICE_THERMOSTAT_SN
+from .const import (
+    TEST_DEVICE_THERMOSTAT,
+    TEST_DEVICE_THERMOSTAT_SENSORS,
+    TEST_DEVICE_THERMOSTAT_SN,
+)
 
 ENTITY_ID = "climate.thermostat_test"
 
@@ -193,7 +200,7 @@ def _operation(
             [
                 _operation(
                     "setTargetSetpoint",
-                    {"targetSetpoint": {"value": "68", "scale": "FAHRENHEIT"}},
+                    {"targetSetpoint": {"value": 68, "scale": "FAHRENHEIT"}},
                 )
             ],
             (HVACMode.HEAT, {ATTR_TEMPERATURE: 20.0}),
@@ -207,8 +214,8 @@ def _operation(
                 _operation(
                     "setTargetSetpoint",
                     {
-                        "lowerSetpoint": {"value": "64.4", "scale": "FAHRENHEIT"},
-                        "upperSetpoint": {"value": "75.2", "scale": "FAHRENHEIT"},
+                        "lowerSetpoint": {"value": 64.4, "scale": "FAHRENHEIT"},
+                        "upperSetpoint": {"value": 75.2, "scale": "FAHRENHEIT"},
                     },
                 )
             ],
@@ -226,8 +233,8 @@ def _operation(
                 _operation(
                     "setTargetSetpoint",
                     {
-                        "lowerSetpoint": {"value": "64.4", "scale": "FAHRENHEIT"},
-                        "upperSetpoint": {"value": "75.2", "scale": "FAHRENHEIT"},
+                        "lowerSetpoint": {"value": 64.4, "scale": "FAHRENHEIT"},
+                        "upperSetpoint": {"value": 75.2, "scale": "FAHRENHEIT"},
                     },
                 )
             ],
@@ -431,7 +438,7 @@ async def test_celsius_thermostat(
         TEST_DEVICE_THERMOSTAT,
         "thermostat",
         "setTargetSetpoint",
-        command_payload={"targetSetpoint": {"value": "21.5", "scale": "CELSIUS"}},
+        command_payload={"targetSetpoint": {"value": 21.5, "scale": "CELSIUS"}},
         instance=None,
     )
 
@@ -511,3 +518,79 @@ async def test_partial_state(
     assert state.state == HVACMode.HEAT_COOL
     assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+
+
+@pytest.mark.parametrize(
+    ("mode", "stages", "expected_action"),
+    [
+        pytest.param(
+            "AUTO",
+            {"coolerStage": "OFF", "primaryHeaterStage": "OFF"},
+            HVACAction.IDLE,
+            id="idle",
+        ),
+        pytest.param(
+            "COOL",
+            {"coolerStage": "ON", "primaryHeaterStage": "OFF"},
+            HVACAction.COOLING,
+            id="cooling",
+        ),
+        pytest.param(
+            "HEAT",
+            {"coolerStage": "OFF", "primaryHeaterStage": "ON"},
+            HVACAction.HEATING,
+            id="heating",
+        ),
+        pytest.param(
+            "OFF",
+            {"coolerStage": "OFF", "primaryHeaterStage": "OFF"},
+            HVACAction.OFF,
+            id="off",
+        ),
+        pytest.param(
+            "HEAT",
+            {"primaryHeaterStage": "ON"},
+            HVACAction.HEATING,
+            id="heater_only",
+        ),
+    ],
+)
+async def test_hvac_action(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mode: str,
+    stages: dict[str, str],
+    expected_action: HVACAction,
+) -> None:
+    """Test the HVAC action follows the cooler and heater stages."""
+    sensors = mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN]
+    sensors["thermostatMode"].value = mode
+    del sensors["coolerStage"], sensors["primaryHeaterStage"]
+    sensors.update(
+        {
+            key: replace(TEST_DEVICE_THERMOSTAT_SENSORS[key], value=value)
+            for key, value in stages.items()
+        }
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_HVAC_ACTION] == expected_action
+
+
+async def test_hvac_action_unknown(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a thermostat without HVAC stages has no HVAC action."""
+    device = deepcopy(TEST_DEVICE_THERMOSTAT)
+    del device.features["hvac"]
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_THERMOSTAT_SN: device
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert ATTR_HVAC_ACTION not in state.attributes

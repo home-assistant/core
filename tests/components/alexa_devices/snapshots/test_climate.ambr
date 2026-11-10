@@ -62,6 +62,7 @@
         'circulate',
       ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat Test',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
