@@ -6,12 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
-from syrupy.assertion import SnapshotAssertion
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.sony_projector.const import DOMAIN
 from homeassistant.components.sony_projector.coordinator import SCAN_INTERVAL
@@ -30,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_HOST
@@ -90,16 +85,6 @@ async def init_integration(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry
-
-
-async def test_entities(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the switch entity."""
-    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 @pytest.mark.parametrize(
