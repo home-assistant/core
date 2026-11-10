@@ -62,7 +62,7 @@ __all__ = [
     "DOMAIN",
     "METER_CONFIG_SCHEMA",
     "async_setup",
-    "max_28_days",
+    "max_27_days",
 ]
 
 
