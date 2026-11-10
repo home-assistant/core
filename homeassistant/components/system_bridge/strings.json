@@ -496,10 +496,10 @@
   },
   "services": {
     "dismiss_message": {
-      "description": "Closes a notification sent with `system_bridge.send_message`. Linux only.",
+      "description": "Closes a notification sent with the System Bridge send message action. Linux only.",
       "fields": {
         "id": {
-          "description": "The ID returned by `system_bridge.send_message`.",
+          "description": "The ID returned by the System Bridge send message action.",
           "name": "ID"
         }
       },
