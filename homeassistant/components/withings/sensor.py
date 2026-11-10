@@ -891,11 +891,26 @@ async def async_setup_entry(
                 ):
                     continue
                 withings_device = device_coordinator.data[device_id]
-                async_add_entities(
+                if device_entities := [
                     WithingsDeviceSensor(device_coordinator, description, device_id)
                     for description in DEVICE_SENSORS
                     if description.exists_fn(withings_device)
-                )
+                ]:
+                    async_add_entities(device_entities)
+                else:
+                    # Register devices without sensors, so they still show up
+                    device_registry.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        identifiers={(DOMAIN, device_id)},
+                        manufacturer="Withings",
+                        name=withings_device.raw_model,
+                        model=withings_device.raw_model,
+                        via_device_id=dr.async_get_device_id_by_identifier(
+                            hass,
+                            (DOMAIN, str(entry.unique_id)),
+                            config_entry_id=entry.entry_id,
+                        ),
+                    )
                 current_devices.add(device_id)
 
         if old_devices:
