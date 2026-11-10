@@ -33,7 +33,6 @@ class MockModbusApi:
 VENTILATION_HOLDING: dict[int, list[int]] = {
     1174: [0, 3],  # general.wochentag
     202: [0, 123],  # outside_temperature.temp_aussenluft (scale 0.001 -> 0.123)
-    5002: [0, 4],  # ventilation.betriebsart: Automatikbetrieb
     5016: [0, 21000],  # room_temperature.temp_raumluft_soll (-> 21.0)
 }
 HEAT_PUMP_HOLDING: dict[int, list[int]] = {

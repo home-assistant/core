@@ -23,7 +23,6 @@ from .helpers import create_modbus_params
 
 PLATFORMS: list[Platform] = [
     Platform.NUMBER,
-    Platform.SELECT,
     Platform.SENSOR,
 ]
 

@@ -76,9 +76,6 @@ class AerosmartEntity(CoordinatorEntity[AerosmartCoordinator]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
-                translation_placeholders={
-                    "field": description.key,
-                    "error": str(err),
-                },
+                translation_placeholders={"field": description.key},
             ) from err
         self.coordinator.async_update_listeners()

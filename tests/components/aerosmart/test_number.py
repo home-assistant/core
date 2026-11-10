@@ -116,13 +116,18 @@ async def test_number_write_error_is_translated(
         5016, ModbusConnectionError("simulated write failure")
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: ROOM_SETPOINT, "value": 21.5},
             blocking=True,
         )
+
+    assert exc_info.value.translation_placeholders == {
+        "field": "room_temperature_setpoint"
+    }
+    assert isinstance(exc_info.value.__cause__, ModbusConnectionError)
 
 
 async def test_number_read_back_error_is_translated(
@@ -143,7 +148,7 @@ async def test_number_read_back_error_is_translated(
                 "room_temperature", "temp_raumluft_soll", 21.5, 21.0
             ),
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -151,6 +156,11 @@ async def test_number_read_back_error_is_translated(
             {ATTR_ENTITY_ID: ROOM_SETPOINT, "value": 21.5},
             blocking=True,
         )
+
+    assert exc_info.value.translation_placeholders == {
+        "field": "room_temperature_setpoint"
+    }
+    assert isinstance(exc_info.value.__cause__, WriteVerificationError)
 
 
 async def test_number_descriptions_match_library_metadata(
