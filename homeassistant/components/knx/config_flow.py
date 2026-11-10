@@ -642,6 +642,11 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_KNX_ROUTE_BACK, not bool(self._selected_tunnel)
         )
 
+        # TCP connections don't bind to a local interface
+        _udp_only: FieldCondition = {
+            "field": CONF_KNX_TUNNELING_TYPE,
+            "value": CONF_KNX_TUNNELING,
+        }
         fields: VolDictType = {
             probatio.Required(
                 CONF_KNX_TUNNELING_TYPE, default=default_type
@@ -655,11 +660,11 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             probatio.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
             probatio.Required(CONF_PORT, default=port): _PORT_SELECTOR,
             data_entry_flow.Required(
-                CONF_KNX_ROUTE_BACK,
-                default=_route_back,
-                visible={"field": CONF_KNX_TUNNELING_TYPE, "value": CONF_KNX_TUNNELING},
+                CONF_KNX_ROUTE_BACK, default=_route_back, visible=_udp_only
             ): selector.BooleanSelector(),
-            probatio.Optional(CONF_KNX_LOCAL_IP): _IP_SELECTOR,
+            data_entry_flow.Optional(
+                CONF_KNX_LOCAL_IP, visible=_udp_only
+            ): _IP_SELECTOR,
         }
 
         if not self._found_tunnels and not errors.get("base"):

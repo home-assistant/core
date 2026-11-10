@@ -561,8 +561,9 @@ async def test_routing_secure_keyfile(
                 CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
-                # hidden for TCP - value is discarded
+                # hidden for TCP - values are discarded
                 CONF_KNX_ROUTE_BACK: True,
+                CONF_KNX_LOCAL_IP: "192.168.1.112",
             },
             "Tunneling TCP @ 192.168.0.1",
             {
