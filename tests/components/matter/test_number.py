@@ -652,6 +652,41 @@ async def test_thermostat_unoccupied_setpoint_needs_features(
 
 
 @pytest.mark.parametrize(
+    ("feature_map", "heating", "cooling"),
+    [
+        pytest.param(419, False, False, id="occupancy_removed"),
+        pytest.param(422, False, True, id="heating_removed"),
+        pytest.param(421, True, False, id="cooling_removed"),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_unoccupied_setpoint_feature_removed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    feature_map: int,
+    heating: bool,
+    cooling: bool,
+) -> None:
+    """Test an unoccupied setpoint is removed when one of its features is removed."""
+    assert hass.states.get(UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID)
+    assert hass.states.get(UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID)
+
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=513,
+        attribute_id=65532,
+        value=feature_map,
+    )
+
+    assert bool(hass.states.get(UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID)) is heating
+    assert bool(hass.states.get(UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID)) is cooling
+
+
+@pytest.mark.parametrize(
     ("status", "translation_key"),
     [
         pytest.param(
