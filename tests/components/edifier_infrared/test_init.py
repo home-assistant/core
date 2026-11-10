@@ -1,5 +1,7 @@
 """Tests for the Edifier Infrared integration setup."""
 
+from unittest.mock import patch
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
@@ -10,8 +12,9 @@ from homeassistant.components.edifier_infrared.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_setup_and_unload_entry(
@@ -156,3 +159,69 @@ async def test_migrate_entry_from_v3(
     assert entry.data[CONF_MODEL] == model
     assert entry.data[CONF_COMMAND_SET] == expected_command_set
     assert entry.unique_id == f"{expected_command_set}_{EMITTER_ENTITY_ID}"
+
+
+@pytest.mark.parametrize(
+    ("model", "old_command_set", "old_keys", "expected_keys"),
+    [
+        pytest.param(
+            "RC80B",
+            "r1700bts",
+            ["bluetooth", "line_1", "line_2"],
+            {"bluetooth": "bluetooth", "opt_coax": "line_1", "line_1_2": "line_2"},
+            id="rc80b-renames-buttons",
+        ),
+        pytest.param(
+            "RC31A",
+            "s360db",
+            ["bluetooth", "optical", "coax", "pc", "aux"],
+            {"pc": "pc", "aux": "aux"},
+            id="rc31a-removes-buttons",
+        ),
+    ],
+)
+async def test_migrate_entry_from_v3_buttons(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    model: str,
+    old_command_set: str,
+    old_keys: list[str],
+    expected_keys: dict[str, str],
+) -> None:
+    """Test v3 migration keeps or removes button entities for the new command set."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"Edifier {model} via Test IR emitter",
+        data={
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_MODEL: model,
+            CONF_COMMAND_SET: old_command_set,
+        },
+        unique_id=f"{old_command_set}_{EMITTER_ENTITY_ID}",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+    old_entity_ids = {
+        key: entity_registry.async_get_or_create(
+            Platform.BUTTON,
+            DOMAIN,
+            f"{entry.entry_id}_{key}",
+            config_entry=entry,
+        ).entity_id
+        for key in old_keys
+    }
+
+    with patch("homeassistant.components.edifier_infrared.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.version == 4
+    assert {
+        entity_entry.unique_id: entity_entry.entity_id
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        )
+    } == {
+        f"{entry.entry_id}_{new_key}": old_entity_ids[old_key]
+        for new_key, old_key in expected_keys.items()
+    }
