@@ -7,6 +7,7 @@ import aiohttp
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+import yarl
 
 from homeassistant import config_entries
 from homeassistant.components.indi_allsky.const import DOMAIN
@@ -193,7 +194,10 @@ async def test_validation_session_is_detached(
     kwargs = mock_create_session.call_args.kwargs
     assert kwargs["verify_ssl"] is False
     assert kwargs["auto_cleanup"] is False
-    assert isinstance(kwargs["cookie_jar"], aiohttp.CookieJar)
+    cookie_jar: aiohttp.CookieJar = kwargs["cookie_jar"]
+    login_url = yarl.URL("https://127.0.0.1/indi-allsky/login")
+    cookie_jar.update_cookies({"session": "abc"}, response_url=login_url)
+    assert "session" in cookie_jar.filter_cookies(login_url)
     mock_session.detach.assert_called_once_with()
 
 
