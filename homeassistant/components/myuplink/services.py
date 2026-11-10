@@ -7,7 +7,13 @@ from aiohttp import ClientError
 import probatio
 
 from homeassistant.const import CommonServiceArgument
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -23,15 +29,39 @@ from .coordinator import MyUplinkConfigEntry
 class MyUplinkService(StrEnum):
     """Store keys for myUplink services."""
 
+    GET_DATAPOINTS = "get_datapoints"
     SET_DATAPOINT = "set_datapoint"
 
 
 class MyUplinkServiceArgument(StrEnum):
     """Store keys for myUplink service arguments."""
 
+    DATAPOINTS = "datapoints"
     DATAPOINT_ID = "datapoint_id"
     VALUE = "value"
 
+
+SERVICE_GET_DATAPOINT_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(MyUplinkServiceArgument.DATAPOINTS): probatio.All(
+            probatio.EnsureList(),
+            probatio.Length(min=1),
+            [
+                probatio.Schema(
+                    {
+                        probatio.Required(
+                            MyUplinkServiceArgument.DATAPOINT_ID
+                        ): probatio.All(
+                            cv.positive_int,
+                            probatio.Range(min=1, max=99999),
+                        )
+                    }
+                )
+            ],
+        ),
+    },
+)
 
 SERVICE_SET_DATAPOINT_SCHEMA = probatio.Schema(
     {
@@ -99,6 +129,37 @@ async def async_set_datapoint(call: ServiceCall) -> None:
     await config_entry.runtime_data.async_request_refresh()
 
 
+async def async_get_datapoints(call: ServiceCall) -> ServiceResponse:
+    """Handle the get_datapoint service call."""
+
+    datapoints = call.data[MyUplinkServiceArgument.DATAPOINTS]
+    config_entry: MyUplinkConfigEntry
+
+    device_entry, config_entry = async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[CommonServiceArgument.DEVICE_ID]
+    )
+
+    api = config_entry.runtime_data.api
+    device_id = await _get_myuplink_device_id(call.hass, device_entry)
+    points: list[str] = [str(datapoint["datapoint_id"]) for datapoint in datapoints]
+    try:
+        dev_points = await api.async_get_device_points_json(
+            device_id,
+            points=points,
+        )
+    except ClientError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="get_datapoint_error",
+            translation_placeholders={
+                "device": device_id,
+                "point": ", ".join(points),
+            },
+        ) from err
+
+    return {"points": dev_points}
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
@@ -109,4 +170,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         MyUplinkService.SET_DATAPOINT,
         async_set_datapoint,
         schema=SERVICE_SET_DATAPOINT_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        MyUplinkService.GET_DATAPOINTS,
+        async_get_datapoints,
+        schema=SERVICE_GET_DATAPOINT_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
