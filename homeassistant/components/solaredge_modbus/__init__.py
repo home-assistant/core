@@ -194,13 +194,26 @@ async def async_setup_entry(
     )
 
 
+def _settleable_blocks(blocks: AbstractSet[str]) -> frozenset[str]:
+    """Return the silent blocks from `blocks` that can be settled as absent.
+
+    Blocks that finding hardware depends on are never settled on their own,
+    except batteries when storage control is also silent (meaning the inverter
+    does not serve the 57xxx StorEdge register space at all).
+    """
+    settled = frozenset(blocks) - DISCOVERY_SUBSYSTEMS
+    if SUBSYSTEM_STORAGE_CONTROL in settled and SUBSYSTEM_BATTERIES in blocks:
+        return settled | {SUBSYSTEM_BATTERIES}
+    return settled
+
+
 def _known_silent_blocks(entry: SolarEdgeModbusConfigEntry) -> frozenset[str]:
     """Return the blocks the last attachment check settled as silent.
 
-    Blocks that finding hardware depends on are never settled, so one stored
-    by anything else is not taken for absent either.
+    Blocks that finding hardware depends on are never settled on their own, so
+    one stored by anything else is not taken for absent either.
     """
-    return frozenset(entry.data.get(CONF_SILENT_BLOCKS, ())) - DISCOVERY_SUBSYSTEMS
+    return _settleable_blocks(frozenset(entry.data.get(CONF_SILENT_BLOCKS, ())))
 
 
 def _attachment_identities(solaredge: SolarEdge) -> frozenset[str]:
@@ -271,9 +284,9 @@ async def _async_reload_when_attachments_change(
     # later removal until the entry loads again. Blocks that finding hardware
     # depends on are never settled: picking up what was wired in later is what
     # asking is for.
-    settled = (
+    settled = _settleable_blocks(
         probed.unresponsive_blocks & solaredge.unresponsive_blocks
-    ) - DISCOVERY_SUBSYSTEMS
+    )
     entry.runtime_data.settled_silent_blocks = settled
 
     # Kept with the entry for the next setup, before a reload below can start

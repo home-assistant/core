@@ -1327,3 +1327,40 @@ async def test_reads_wait_longer_than_the_probe(
 
     assert during_probe == [None]
     assert mock_modbus_unit.required_timeout == READ_TIMEOUT
+
+
+async def test_batteries_settled_when_storage_control_is_silent(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Batteries are settled alongside storage control when both stay silent."""
+    mock_modbus_unit.fail_read(SITE_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        await _tick_attachment_check(hass, freezer)
+        await _tick_attachment_check(hass, freezer)
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert asked == [
+        frozenset(),
+        frozenset({"batteries", "storage_control"}),
+        frozenset({"batteries", "storage_control"}),
+    ]
+    assert mock_config_entry.data[CONF_SILENT_BLOCKS] == [
+        "batteries",
+        "storage_control",
+    ]
