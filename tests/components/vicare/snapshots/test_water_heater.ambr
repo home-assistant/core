@@ -8,6 +8,7 @@
     'capabilities': dict({
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
@@ -50,7 +51,7 @@
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
-      <WaterHeaterStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.model0_domestic_hot_water',
@@ -69,6 +70,7 @@
     'capabilities': dict({
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
+      <WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
@@ -111,7 +113,7 @@
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
-      <WaterHeaterStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.model0_domestic_hot_water_2',

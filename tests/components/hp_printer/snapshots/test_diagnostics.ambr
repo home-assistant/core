@@ -232,6 +232,7 @@
     }),
     'entry_data': dict({
       'host': '**REDACTED**',
+      'ssl': False,
     }),
   })
 # ---

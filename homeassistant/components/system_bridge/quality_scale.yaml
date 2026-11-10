@@ -32,14 +32,8 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: Actions return the failed response instead of raising.
-  config-entry-unloading:
-    status: todo
-    comment: |
-      The legacy notify service is not removed on unload, so after a reload it
-      keeps using the old coordinator.
+  action-exceptions: done
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: The integration has no options flow.
@@ -67,9 +61,7 @@ rules:
     status: exempt
     comment: Each config entry is a single device.
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: The locked binary sensor has no device class.
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
