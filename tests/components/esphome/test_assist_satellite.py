@@ -31,6 +31,7 @@ from homeassistant.components import (
     assist_satellite,
     conversation,
     stt,
+    voice_support,
 )
 from homeassistant.components.assist_pipeline import (
     AudioSettings,
@@ -46,11 +47,11 @@ from homeassistant.components.assist_satellite import (
 )
 
 # pylint: disable-next=home-assistant-component-root-import
-from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.esphome.assist_satellite import (
-    EsphomeAssistSatellite,
-    VoiceAssistantUDPServer,
+from homeassistant.components.assist_satellite.entity import (
+    AssistSatelliteEntity,
+    AssistSatelliteState,
 )
+from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
 from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -60,6 +61,7 @@ from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import create_eager_task
@@ -2453,12 +2455,12 @@ async def test_multichannel_audio(
 
 
 @pytest.mark.parametrize(
-    ("request_wake_word_audio", "feature_flags", "expected_wake_word_audio"),
+    ("wanted", "feature_flags", "expected_wake_word_audio"),
     [
-        pytest.param(True, VoiceAssistantFeature.WAKE_WORD_AUDIO, True, id="requested"),
+        pytest.param(True, VoiceAssistantFeature.WAKE_WORD_AUDIO, True, id="wanted"),
         pytest.param(True, 0, False, id="not_supported"),
         pytest.param(
-            False, VoiceAssistantFeature.WAKE_WORD_AUDIO, False, id="not_requested"
+            False, VoiceAssistantFeature.WAKE_WORD_AUDIO, False, id="not_wanted"
         ),
     ],
 )
@@ -2466,13 +2468,13 @@ async def test_wake_word_audio_subscription(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    request_wake_word_audio: bool,
+    wanted: bool,
     feature_flags: VoiceAssistantFeature,
     expected_wake_word_audio: bool,
 ) -> None:
-    """Test wake word audio is only requested from devices that support it."""
+    """Test the audio is asked for only when the device can send it and something wants it."""
     with patch.object(
-        EsphomeAssistSatellite, "_request_wake_word_audio", request_wake_word_audio
+        AssistSatelliteEntity, "wake_word_audio_wanted", property(lambda _self: wanted)
     ):
         mock_device = await mock_esphome_device(
             mock_client=mock_client,
@@ -2485,6 +2487,44 @@ async def test_wake_word_audio_subscription(
         await hass.async_block_till_done()
 
     assert mock_device.voice_assistant_wake_word_audio == expected_wake_word_audio
+
+
+async def test_wake_word_audio_subscribed_again_when_the_answer_moves(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a device is told again when something starts wanting its audio.
+
+    The device is told once, in the handshake, so without this a person who
+    turns verification on waits for the device to reconnect.
+    """
+    wanted = False
+    with patch.object(
+        AssistSatelliteEntity,
+        "wake_word_audio_wanted",
+        property(lambda _self: wanted),
+    ):
+        mock_device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={
+                "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+                | VoiceAssistantFeature.API_AUDIO
+                | VoiceAssistantFeature.WAKE_WORD_AUDIO
+            },
+        )
+        await hass.async_block_till_done()
+        assert mock_device.voice_assistant_wake_word_audio is False
+
+        wanted = True
+        async_dispatcher_send(hass, voice_support.SIGNAL_WAKE_WORDS_CHANGED)
+        await hass.async_block_till_done()
+        assert mock_device.voice_assistant_wake_word_audio is True
+
+        # And nothing happens when it is sent but nothing moved
+        async_dispatcher_send(hass, voice_support.SIGNAL_WAKE_WORDS_CHANGED)
+        await hass.async_block_till_done()
+        assert mock_device.voice_assistant_wake_word_audio is True
 
 
 @pytest.mark.parametrize(

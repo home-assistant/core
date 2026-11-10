@@ -13,7 +13,7 @@ from hassil import Intents, recognize
 from hassil.expression import Expression, Group, ListReference
 from hassil.intents import WildcardSlotList
 
-from homeassistant.components import conversation, media_source, stt, tts
+from homeassistant.components import conversation, media_source, stt, tts, voice_support
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
@@ -30,6 +30,7 @@ from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import chat_session, entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityDescription
 
 from .const import DOMAIN, PREANNOUNCE_URL, AssistSatelliteEntityFeature
@@ -165,6 +166,50 @@ class AssistSatelliteEntity(entity.Entity):
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return self._attr_tts_options
+
+    @property
+    def wake_word_audio_wanted(self) -> bool:
+        """Whether this satellite's wake word audio is worth sending.
+
+        A satellite that sends it buffers the audio before a detection and
+        detects at a lower threshold, trusting something downstream to catch
+        what that lets through. So this is false unless something actually
+        will: it is a cost the device pays, not a feature it has.
+
+        The answer moves -- an app arrives or goes away, an update changes
+        the models it has, the person turns the preview feature off -- and
+        satellites are told once rather than per detection, so
+        ``_async_wake_word_audio_wanted_changed`` says when to ask again.
+        """
+        try:
+            config = self.async_get_configuration()
+        except NotImplementedError:
+            return False
+        return any(
+            voice_support.async_verifies_wake_word(self.hass, wake_word)
+            for wake_word in config.active_wake_words
+        )
+
+    @callback
+    def _async_wake_word_audio_wanted_changed(self) -> None:
+        """Whatever decides ``wake_word_audio_wanted`` has changed.
+
+        A satellite that told its device anything about this has to tell it
+        again. The default is to do nothing, for the satellites that never
+        asked for the audio in the first place.
+        """
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Follow what the satellite's wake words are worth."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                voice_support.SIGNAL_WAKE_WORDS_CHANGED,
+                self._async_wake_word_audio_wanted_changed,
+            )
+        )
 
     @callback
     @abstractmethod

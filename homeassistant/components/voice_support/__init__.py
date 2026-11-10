@@ -23,6 +23,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -43,11 +44,13 @@ from .const import CONF_INTEGRATION_CREATED_APP, DOMAIN
 # Internal, see the module docstring: not for other integrations to use
 __all__ = [
     "DOMAIN",
+    "SIGNAL_WAKE_WORDS_CHANGED",
     "AudioRun",
     "AudioRunRequest",
     "WakeWordAccepted",
     "WakeWordRejected",
     "async_start_run",
+    "async_verifies_wake_word",
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -55,6 +58,16 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PREVIEW_FEATURE_WAKE_WORD_VERIFICATION = "wake_word_verification"
 
 DATA_CLIENT: HassKey[VoiceSupportClient] = HassKey(DOMAIN)
+
+SIGNAL_WAKE_WORDS_CHANGED = f"{DOMAIN}_wake_words_changed"
+"""Sent when async_verifies_wake_word may answer differently than it did.
+
+A satellite asked for wake word audio buffers it and detects at a lower
+threshold, so it is told once rather than per detection -- which means it
+has to be told again when the answer moves: the app arriving or going
+away, an update changing the models it has, or the person turning the
+preview feature off.
+"""
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,12 +80,34 @@ def async_is_enabled(hass: HomeAssistant) -> bool:
     )
 
 
+@callback
+def async_verifies_wake_word(hass: HomeAssistant, wake_word: str) -> bool:
+    """Whether the app can second-guess this wake word right now.
+
+    False is the answer for every reason there might not be one: no app, an
+    app that has no model for this wake word, or a person who has not asked
+    for any of it.
+    """
+    if not async_is_enabled(hass):
+        return False
+    if (client := hass.data.get(DATA_CLIENT)) is None:
+        return False
+    return client.supports_wake_word(wake_word)
+
+
+@callback
+def _async_wake_words_changed(hass: HomeAssistant) -> None:
+    """Tell satellites the answer may have moved."""
+    async_dispatcher_send(hass, SIGNAL_WAKE_WORDS_CHANGED)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up voice support."""
 
     async def _async_preview_feature_updated(event_data: EventLabsUpdatedData) -> None:
         if event_data["enabled"]:
             _async_provision(hass)
+        _async_wake_words_changed(hass)
 
     async_subscribe_preview_feature(
         hass,
@@ -109,11 +144,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         ) from err
 
     hass.data[DATA_CLIENT] = client
+    entry.async_on_unload(
+        client.async_add_listener(lambda: _async_wake_words_changed(hass))
+    )
+    _async_wake_words_changed(hass)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload the entry."""
     hass.data.pop(DATA_CLIENT).async_close()
+    _async_wake_words_changed(hass)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
