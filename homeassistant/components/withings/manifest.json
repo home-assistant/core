@@ -19,5 +19,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aiowithings"],
-  "requirements": ["aiowithings==4.0.0"]
+  "requirements": ["aiowithings==4.0.1"]
 }
