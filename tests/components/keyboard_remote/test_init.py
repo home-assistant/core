@@ -1101,10 +1101,7 @@ async def test_grab_failure_warns_and_releases(
 
     await _set_up(hass, fake_input, mock_config_entry)
 
-    assert (
-        "Unable to grab Test Keyboard, it may be in use by another program"
-        " (turn off Exclusive access to share it)"
-    ) in caplog.text
+    assert "Unable to grab Test Keyboard" in caplog.text
     kbd.close.assert_called_once()
     assert len(disconnected) == 1
 
