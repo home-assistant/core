@@ -17,7 +17,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import area_registry as ar, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -981,15 +985,15 @@ async def test_target_entities_change(
 
 
 async def test_target_removed_on_unload(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
 ) -> None:
-    """Test registry changes are no longer tracked once the trigger is removed."""
+    """Test the registry listeners are removed with the trigger."""
     area = area_registry.async_create("Living room")
-    hallway = entity_registry.async_get_or_create("light", "test", "hallway")
-    hass.states.async_set(hallway.entity_id, "on")
+    registry_events = (
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        dr.EVENT_DEVICE_REGISTRY_UPDATED,
+        ar.EVENT_AREA_REGISTRY_UPDATED,
+    )
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -998,6 +1002,8 @@ async def test_target_removed_on_unload(
         ),
     )
     await hass.async_block_till_done()
+    listeners = hass.bus.async_listeners()
+    attached = {event: listeners.get(event, 0) for event in registry_events}
 
     await hass.services.async_call(
         automation.DOMAIN,
@@ -1005,10 +1011,11 @@ async def test_target_removed_on_unload(
         {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
         blocking=True,
     )
-    entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
-    await hass.async_block_till_done()
 
-    assert len(calls) == 0
+    listeners = hass.bus.async_listeners()
+    assert {event: listeners.get(event, 0) for event in registry_events} == {
+        event: count - 1 for event, count in attached.items()
+    }
 
 
 def test_invalid_target() -> None:
