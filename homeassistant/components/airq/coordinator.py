@@ -10,7 +10,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, MANUFACTURER, UPDATE_INTERVAL
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class AirQCoordinator(DataUpdateCoordinator):
+class AirQCoordinator(DataUpdateCoordinator[dict]):
     """Coordinator is responsible for querying the device at a specified route."""
 
     config_entry: AirQConfigEntry
@@ -57,7 +57,7 @@ class AirQCoordinator(DataUpdateCoordinator):
     @override
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
-        if self.device_info.name is UNDEFINED:
+        if self.device_info.name is Undefined:
             _LOGGER.debug(
                 "'name' not found in AirQCoordinator.device_info,"
                 " fetching from the device"

@@ -24,7 +24,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -271,7 +270,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
     def __init__(
         self,
         device: YeelightDevice,
-        entry: ConfigEntry,
+        entry: YeelightConfigEntry,
         custom_effects: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         """Initialize the Yeelight light."""

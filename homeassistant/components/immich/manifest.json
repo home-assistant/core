@@ -4,6 +4,7 @@
   "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/immich",
   "integration_type": "service",

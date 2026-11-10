@@ -6,6 +6,7 @@
     "presence_location.network_presence"
   ],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/aruba",
   "iot_class": "local_polling",
   "loggers": ["pexpect", "ptyprocess"],

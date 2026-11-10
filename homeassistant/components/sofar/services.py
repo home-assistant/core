@@ -1,12 +1,13 @@
 """Services for the Sofar integration."""
 
 from collections.abc import Awaitable
+from enum import StrEnum
 
 from modbus_connection import ModbusError
 import probatio
 from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_MODE
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -18,33 +19,49 @@ from homeassistant.helpers.service import (
 from .const import DOMAIN
 from .coordinator import SofarConfigEntry
 
-SERVICE_SET_ACTIVE_POWER_LIMIT = "set_active_power_limit"
-SERVICE_SET_FEED_IN_LIMIT = "set_feed_in_limit"
-SERVICE_SET_PASSIVE_MODE_POWER = "set_passive_mode_power"
-SERVICE_SET_PASSIVE_MODE_TIMEOUT = "set_passive_mode_timeout"
 
-ATTR_ACTION = "action"
-ATTR_BATTERY_POWER_MAX = "battery_power_max"
-ATTR_BATTERY_POWER_MIN = "battery_power_min"
-ATTR_ENABLED = "enabled"
-ATTR_GRID_POWER = "grid_power"
-ATTR_LIMIT = "limit"
-ATTR_MAX_POWER = "max_power"
-ATTR_TIMEOUT = "timeout"
+class SofarService(StrEnum):
+    """Store keys for Sofar services."""
 
-_ENTRY_SCHEMA = probatio.Schema({probatio.Required(ATTR_CONFIG_ENTRY_ID): str})
+    SET_ACTIVE_POWER_LIMIT = "set_active_power_limit"
+    SET_BATTERY_CUTOFFS = "set_battery_cutoffs"
+    SET_FEED_IN_LIMIT = "set_feed_in_limit"
+    SET_PASSIVE_MODE_POWER = "set_passive_mode_power"
+    SET_PASSIVE_MODE_TIMEOUT = "set_passive_mode_timeout"
+
+
+class SofarServiceArgument(StrEnum):
+    """Store keys for Sofar service arguments."""
+
+    ACTION = "action"
+    BATTERY_POWER_MAX = "battery_power_max"
+    BATTERY_POWER_MIN = "battery_power_min"
+    CHARGE_CUTOFF_SOC = "charge_cutoff_soc"
+    ENABLED = "enabled"
+    GRID_POWER = "grid_power"
+    LIMIT = "limit"
+    MAX_POWER = "max_power"
+    MODE = "mode"
+    OFF_GRID_DISCHARGE_CUTOFF_SOC = "off_grid_discharge_cutoff_soc"
+    OFF_GRID_RECOVERY_SOC = "off_grid_recovery_soc"
+    ON_GRID_DISCHARGE_CUTOFF_SOC = "on_grid_discharge_cutoff_soc"
+    TIMEOUT = "timeout"
+
+
+_ENTRY_SCHEMA = probatio.Schema(
+    {probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str}
+)
 
 # The selectors in services.yaml only bound the UI, not a scripted call.
 _POWER_RANGE = probatio.All(int, probatio.Range(min=-100000, max=100000))
 
 SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        probatio.Required(ATTR_MODE): probatio.In(
+        probatio.Required(SofarServiceArgument.MODE): probatio.In(
             [mode.name.lower() for mode in FeedinLimitationMode]
         ),
-        # Kept fractional so the multiple-of-100 check below sees the real
-        # value; cv.positive_int would truncate 3000.9 into a valid 3000.
-        probatio.Required(ATTR_MAX_POWER): probatio.All(
+        # Not cv.positive_int: it would let 3000.9 pass as 3000.
+        probatio.Required(SofarServiceArgument.MAX_POWER): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0, max=100000)
         ),
     }
@@ -52,8 +69,8 @@ SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
 
 SET_ACTIVE_POWER_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        probatio.Required(ATTR_ENABLED): cv.boolean,
-        probatio.Required(ATTR_LIMIT): probatio.All(
+        probatio.Required(SofarServiceArgument.ENABLED): cv.boolean,
+        probatio.Required(SofarServiceArgument.LIMIT): probatio.All(
             probatio.Coerce(float), probatio.Percentage()
         ),
     }
@@ -61,10 +78,10 @@ SET_ACTIVE_POWER_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
 
 SET_PASSIVE_MODE_TIMEOUT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        probatio.Required(ATTR_TIMEOUT): probatio.All(
+        probatio.Required(SofarServiceArgument.TIMEOUT): probatio.All(
             cv.positive_int, probatio.Range(max=65535)
         ),
-        probatio.Required(ATTR_ACTION): probatio.In(
+        probatio.Required(SofarServiceArgument.ACTION): probatio.In(
             [action.name.lower() for action in PassiveModeTimeoutAction]
         ),
     }
@@ -72,9 +89,26 @@ SET_PASSIVE_MODE_TIMEOUT_SCHEMA = _ENTRY_SCHEMA.extend(
 
 SET_PASSIVE_MODE_POWER_SCHEMA = _ENTRY_SCHEMA.extend(
     {
-        probatio.Required(ATTR_GRID_POWER): _POWER_RANGE,
-        probatio.Required(ATTR_BATTERY_POWER_MIN): _POWER_RANGE,
-        probatio.Required(ATTR_BATTERY_POWER_MAX): _POWER_RANGE,
+        probatio.Required(SofarServiceArgument.GRID_POWER): _POWER_RANGE,
+        probatio.Required(SofarServiceArgument.BATTERY_POWER_MIN): _POWER_RANGE,
+        probatio.Required(SofarServiceArgument.BATTERY_POWER_MAX): _POWER_RANGE,
+    }
+)
+
+SET_BATTERY_CUTOFFS_SCHEMA = _ENTRY_SCHEMA.extend(
+    {
+        probatio.Required(
+            SofarServiceArgument.ON_GRID_DISCHARGE_CUTOFF_SOC
+        ): probatio.All(int, probatio.Range(min=10, max=100)),
+        probatio.Required(
+            SofarServiceArgument.OFF_GRID_DISCHARGE_CUTOFF_SOC
+        ): probatio.All(int, probatio.Range(min=10, max=30)),
+        probatio.Required(SofarServiceArgument.OFF_GRID_RECOVERY_SOC): probatio.All(
+            int, probatio.Range(min=15, max=100)
+        ),
+        probatio.Optional(SofarServiceArgument.CHARGE_CUTOFF_SOC): probatio.All(
+            int, probatio.Range(min=60, max=100)
+        ),
     }
 )
 
@@ -84,7 +118,7 @@ def _get_entry(
 ) -> SofarConfigEntry:
     """Return a loaded entry whose inverter serves the needed registers."""
     entry: SofarConfigEntry = async_get_config_entry(
-        hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     if component not in entry.runtime_data.served_components:
         raise ServiceValidationError(
@@ -119,7 +153,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def _handle_set_feed_in_limit(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "feed_in")
         device = entry.runtime_data.readings.device
-        max_power = call.data[ATTR_MAX_POWER]
+        max_power = call.data[SofarServiceArgument.MAX_POWER]
         if max_power % 100:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -128,7 +162,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _write(
             entry,
             device.feed_in.async_write_limit(
-                FeedinLimitationMode[call.data[ATTR_MODE].upper()], int(max_power)
+                FeedinLimitationMode[call.data[SofarServiceArgument.MODE].upper()],
+                int(max_power),
             ),
         )
 
@@ -138,7 +173,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _write(
             entry,
             device.active_power_control.async_write_active_power_limit(
-                call.data[ATTR_ENABLED], call.data[ATTR_LIMIT]
+                call.data[SofarServiceArgument.ENABLED],
+                call.data[SofarServiceArgument.LIMIT],
             ),
         )
 
@@ -148,8 +184,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _write(
             entry,
             device.passive.async_write_timeout(
-                call.data[ATTR_TIMEOUT],
-                PassiveModeTimeoutAction[call.data[ATTR_ACTION].upper()],
+                call.data[SofarServiceArgument.TIMEOUT],
+                PassiveModeTimeoutAction[
+                    call.data[SofarServiceArgument.ACTION].upper()
+                ],
             ),
         )
 
@@ -159,37 +197,65 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _write(
             entry,
             device.passive.async_write_power(
-                call.data[ATTR_GRID_POWER],
-                call.data[ATTR_BATTERY_POWER_MIN],
-                call.data[ATTR_BATTERY_POWER_MAX],
+                call.data[SofarServiceArgument.GRID_POWER],
+                call.data[SofarServiceArgument.BATTERY_POWER_MIN],
+                call.data[SofarServiceArgument.BATTERY_POWER_MAX],
+            ),
+        )
+
+    async def _handle_set_battery_cutoffs(call: ServiceCall) -> None:
+        entry = _get_entry(hass, call, "battery_config")
+        if (
+            SofarServiceArgument.CHARGE_CUTOFF_SOC in call.data
+            and "battery_charge_cutoff" not in entry.runtime_data.served_components
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="charge_cutoff_unsupported",
+                translation_placeholders={"title": entry.title},
+            )
+        await _write(
+            entry,
+            entry.runtime_data.readings.device.async_write_battery_cutoffs(
+                call.data[SofarServiceArgument.ON_GRID_DISCHARGE_CUTOFF_SOC],
+                call.data[SofarServiceArgument.OFF_GRID_DISCHARGE_CUTOFF_SOC],
+                call.data[SofarServiceArgument.OFF_GRID_RECOVERY_SOC],
+                call.data.get(SofarServiceArgument.CHARGE_CUTOFF_SOC),
             ),
         )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_FEED_IN_LIMIT,
+        SofarService.SET_FEED_IN_LIMIT,
         _handle_set_feed_in_limit,
         schema=SET_FEED_IN_LIMIT_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_ACTIVE_POWER_LIMIT,
+        SofarService.SET_ACTIVE_POWER_LIMIT,
         _handle_set_active_power_limit,
         schema=SET_ACTIVE_POWER_LIMIT_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_PASSIVE_MODE_TIMEOUT,
+        SofarService.SET_PASSIVE_MODE_TIMEOUT,
         _handle_set_passive_mode_timeout,
         schema=SET_PASSIVE_MODE_TIMEOUT_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_PASSIVE_MODE_POWER,
+        SofarService.SET_PASSIVE_MODE_POWER,
         _handle_set_passive_mode_power,
         schema=SET_PASSIVE_MODE_POWER_SCHEMA,
+    )
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SofarService.SET_BATTERY_CUTOFFS,
+        _handle_set_battery_cutoffs,
+        schema=SET_BATTERY_CUTOFFS_SCHEMA,
     )

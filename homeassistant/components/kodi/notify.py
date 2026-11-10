@@ -15,7 +15,6 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
-    ATTR_ICON,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -47,6 +46,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 ATTR_DISPLAYTIME = "displaytime"
+ATTR_ICON = "icon"
 
 
 async def async_get_service(

@@ -21,11 +21,12 @@ from wyoming.tts import (
 )
 
 from homeassistant.components import tts
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SPEAKER, DOMAIN
+from .const import DOMAIN, WyomingTextToSpeechOption
 from .coordinator import WyomingInfoCoordinator
 from .data import WyomingService
 from .error import WyomingError, error_event_details
@@ -52,7 +53,11 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     """Wyoming text-to-speech provider."""
 
     _attr_default_options = {}
-    _attr_supported_options = [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE, ATTR_SPEAKER]
+    _attr_supported_options = [
+        TextToSpeechCommonOption.AUDIO_OUTPUT,
+        TextToSpeechCommonOption.VOICE,
+        WyomingTextToSpeechOption.SPEAKER,
+    ]
 
     def __init__(
         self,
@@ -135,8 +140,8 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     @override
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from TCP socket."""
-        voice_name: str | None = options.get(tts.ATTR_VOICE)
-        voice_speaker: str | None = options.get(ATTR_SPEAKER)
+        voice_name: str | None = options.get(TextToSpeechCommonOption.VOICE)
+        voice_speaker: str | None = options.get(WyomingTextToSpeechOption.SPEAKER)
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
@@ -199,8 +204,10 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self, request: tts.TTSAudioRequest
     ) -> tts.TTSAudioResponse:
         """Generate speech from an incoming message."""
-        voice_name: str | None = request.options.get(tts.ATTR_VOICE)
-        voice_speaker: str | None = request.options.get(ATTR_SPEAKER)
+        voice_name: str | None = request.options.get(TextToSpeechCommonOption.VOICE)
+        voice_speaker: str | None = request.options.get(
+            WyomingTextToSpeechOption.SPEAKER
+        )
         voice: SynthesizeVoice | None = None
         if voice_name is not None:
             voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)

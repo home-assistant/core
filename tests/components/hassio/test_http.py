@@ -3,9 +3,11 @@
 import asyncio
 from contextlib import suppress
 from http import HTTPStatus
+from pathlib import Path
 from unittest.mock import Mock, PropertyMock, patch
 
-from aiohttp import ClientError, StreamReader
+from aiohttp import ClientError, StreamReader, web
+from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.test_utils import TestClient
 import pytest
 from pytest_homeassistant.common import MockUser
@@ -268,6 +270,30 @@ async def test_forward_request_admin_post(
         "X-Hass-Source": "core.http",
         "Authorization": "Bearer 123456",
     }
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("addons/bl_b392/logo", id="no_auth_path"),
+        pytest.param("backups/1234abcd/info", id="admin_path"),
+    ],
+)
+async def test_forward_request_unix_socket(
+    hassio_unix_socket_client: TestClient,
+    supervisor_unix_socket: tuple[Path, list[web.Request]],
+    path: str,
+) -> None:
+    """Test forwarding over the Supervisor Unix socket sends no token."""
+    resp = await hassio_unix_socket_client.get(f"/api/hassio/{path}")
+
+    assert resp.status == HTTPStatus.OK
+    _, requests = supervisor_unix_socket
+    assert len(requests) == 1
+    assert requests[0].path == f"/{path}"
+    assert requests[0].host == "localhost"
+    assert AUTHORIZATION not in requests[0].headers
+    assert requests[0].headers["X-Hass-Source"] == "core.http"
 
 
 @pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])

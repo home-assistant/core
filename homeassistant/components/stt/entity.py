@@ -76,6 +76,13 @@ class SpeechToTextEntity(RestoreEntity):
         """Return required/preferred input audio processing settings."""
         return DEFAULT_AUDIO_PROCESSING
 
+    @callback
+    def async_get_audio_processing(
+        self, metadata: SpeechMetadata
+    ) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings for a request."""
+        return self.audio_processing
+
     @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the provider entity is added to hass."""

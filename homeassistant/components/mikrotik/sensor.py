@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -144,6 +145,15 @@ SENSORS: Final = (
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         type=RESOURCE,
+    ),
+    MikrotikSensorEntityDescription(
+        key="fan1-speed",
+        translation_key="fan_speed_with_index",
+        translation_placeholders={"index": "1"},
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        type=HEALTH,
     ),
 )
 

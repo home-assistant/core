@@ -8,6 +8,7 @@ from pyflic_ble import (
     FlicAuthenticationError,
     FlicClient,
     FlicProtocolError,
+    FlicState,
     PushTwistMode,
 )
 
@@ -17,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -25,6 +27,7 @@ from .const import (
     CONF_PUSH_TWIST_MODE,
     CONF_SERIAL_NUMBER,
     CONF_SIG_BITS,
+    DEVICE_TYPE_MODEL_NAMES,
     DOMAIN,
 )
 
@@ -39,7 +42,6 @@ class FlicButtonData:
     """Runtime data for a Flic Button config entry."""
 
     client: FlicClient
-    serial_number: str | None
 
 
 type FlicButtonConfigEntry = ConfigEntry[FlicButtonData]
@@ -71,11 +73,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         push_twist_mode=push_twist_mode,
     )
 
-    entry.runtime_data = FlicButtonData(
-        client=client,
+    entry.runtime_data = FlicButtonData(client=client)
+    entry.async_on_unload(client.stop)
+
+    # The firmware version is only known once the button is connected, so it is
+    # left out here to keep the version stored from an earlier connection
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, address)},
+        connections={(dr.CONNECTION_BLUETOOTH, address)},
+        manufacturer="Shortcut Labs",
+        model=DEVICE_TYPE_MODEL_NAMES[device_type],
         serial_number=serial_number,
     )
-    entry.async_on_unload(client.stop)
+
+    @callback
+    def _async_state_updated(state: FlicState) -> None:
+        """Store the firmware version when the button is connected."""
+        if state.connected and state.firmware_version is not None:
+            device_registry.async_update_device(
+                device.id, sw_version=str(state.firmware_version)
+            )
+
+    # Registered before start() so the first connection is handled as well
+    entry.async_on_unload(client.register_state_callback(_async_state_updated))
 
     if ble_device:
         try:
@@ -112,7 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Reload entry when options change (e.g. push_twist_mode)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
 

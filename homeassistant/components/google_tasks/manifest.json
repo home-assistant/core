@@ -4,6 +4,7 @@
   "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/google_tasks",
   "integration_type": "service",
