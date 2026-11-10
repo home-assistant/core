@@ -15,7 +15,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.util.json import JsonArrayType
 
-from .conftest import setup_bridge
+from .conftest import replace_resources, setup_bridge
 
 
 async def test_migrate_api_key(hass: HomeAssistant) -> None:
@@ -355,7 +355,25 @@ async def test_zigbee_connection_migration_shared_mac(
     await ar.async_load(hass)
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    # The bridge also reports the shared mac for the second device
+    await mock_bridge_v2.api.load_test_data(
+        replace_resources(
+            v2_resources_test_data,
+            [
+                {
+                    "id": "1987ba66-c21d-48d0-98fb-121d939a71f3",
+                    "id_v1": "/lights/29",
+                    "mac_address": zigbee_mac,
+                    "owner": {
+                        "rid": "0b216218-d811-4c95-8c55-bbcda50f9d50",
+                        "rtype": "device",
+                    },
+                    "status": "connected",
+                    "type": "zigbee_connectivity",
+                }
+            ],
+        )
+    )
     await setup_bridge(hass, mock_bridge_v2, config_entry)
 
     first = device_registry.async_get("first0000000000000000000000000000")
@@ -363,6 +381,5 @@ async def test_zigbee_connection_migration_shared_mac(
     assert first is not None
     assert second is not None
     assert first.connections == {(dr.CONNECTION_ZIGBEE, zigbee_mac)}
-    assert (dr.CONNECTION_ZIGBEE, zigbee_mac) not in second.connections
-    assert (dr.CONNECTION_NETWORK_MAC, zigbee_mac) not in second.connections
+    assert second.connections == set()
     assert config_entry.minor_version == 2
