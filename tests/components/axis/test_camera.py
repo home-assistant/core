@@ -5,16 +5,16 @@ from urllib.parse import unquote, urlsplit
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
-from homeassistant.components.axis.camera import AxisCamera
 from homeassistant.components.axis.const import (
     CONF_COMPANION,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
 )
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, async_get_image
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -22,8 +22,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -87,28 +85,26 @@ async def test_camera(
     )
 
 
-@pytest.mark.parametrize(
-    ("auth", "expected_authentication"),
-    [
-        pytest.param(None, HTTP_DIGEST_AUTHENTICATION, id="digest"),
-        pytest.param(object(), HTTP_BASIC_AUTHENTICATION, id="basic"),
-    ],
-)
-async def test_camera_uses_vapix_authentication(
+@pytest.mark.parametrize("basic_auth_challenge", [pytest.param(True, id="basic")])
+async def test_camera_uses_vapix_basic_authentication_for_snapshot(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     config_entry_factory: ConfigEntryFactoryType,
-    auth: object | None,
-    expected_authentication: str,
+    basic_auth_challenge: bool,
 ) -> None:
-    """Test the snapshot authentication follows VAPIX authentication."""
-    config_entry = await config_entry_factory()
+    """Test snapshot requests use the Basic auth resolved by VAPIX."""
+    assert basic_auth_challenge
+    await config_entry_factory()
 
-    with (
-        patch.object(config_entry.runtime_data.api.vapix, "auth", auth),
-        patch("homeassistant.components.axis.camera.MjpegCamera.__init__") as init,
-    ):
-        AxisCamera(config_entry.runtime_data)
+    entity_id = f"{CAMERA_DOMAIN}.{NAME}"
+    camera_entity = camera.helper.get_camera_from_entity_id(hass, entity_id)
+    image_bytes = b"image_bytes"
+    aioclient_mock.get(camera_entity.image_source, content=image_bytes)
 
-    assert init.call_args.kwargs["authentication"] == expected_authentication
+    image = await async_get_image(hass, entity_id)
+
+    assert image.content == image_bytes
+    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Basic cm9vdDpwYXNz"
 
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])
