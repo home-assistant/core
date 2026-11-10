@@ -47,6 +47,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
 
@@ -980,14 +981,16 @@ async def test_refresh_value(
 
     client.async_send_command.reset_mock()
 
-    # Test polling against an invalid entity raises MultipleInvalid
-    with pytest.raises(probatio.MultipleInvalid):
+    # Test polling against an invalid entity raises ServiceValidationError
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_VALUE,
             {ATTR_ENTITY_ID: "sensor.fake_entity_id"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_entities_found"
 
 
 async def test_set_value(
@@ -1746,6 +1749,7 @@ async def test_ping(
     climate_danfoss_lc_13,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test ping service."""
     device_radio_thermostat = device_registry.async_get_device_by_identifier(
@@ -1778,6 +1782,10 @@ async def test_ping(
     assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.ping"
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_ping_action")
+    assert issue
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"action": "zwave_js.ping"}
     assert (
         args["nodeId"]
         == climate_radio_thermostat_ct100_plus_different_endpoints.node_id

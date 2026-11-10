@@ -43,6 +43,31 @@ def test_deprecated_constant(
     )
 
 
+@pytest.mark.parametrize(
+    ("constant_name", "value"),
+    [
+        ("ATTR_CONFIGURATION_URL", "configuration_url"),
+        ("ATTR_CONNECTIONS", "connections"),
+        ("ATTR_DEFAULT_NAME", "default_name"),
+        ("ATTR_HW_VERSION", "hw_version"),
+        ("ATTR_IDENTIFIERS", "identifiers"),
+        ("ATTR_MANUFACTURER", "manufacturer"),
+        ("ATTR_MODEL", "model"),
+        ("ATTR_MODEL_ID", "model_id"),
+        ("ATTR_SERIAL_NUMBER", "serial_number"),
+        ("ATTR_SUGGESTED_AREA", "suggested_area"),
+        ("ATTR_SW_VERSION", "sw_version"),
+    ],
+)
+def test_deprecated_device_info_constant(
+    caplog: pytest.LogCaptureFixture, constant_name: str, value: str
+) -> None:
+    """Test the deprecated device info constants, which have no replacement."""
+    import_and_test_deprecated_constant(
+        caplog, const, constant_name, None, value, "2027.12"
+    )
+
+
 def test_deprecated_attr_via_device(caplog: pytest.LogCaptureFixture) -> None:
     """Test ATTR_VIA_DEVICE deprecation in favor of via_device_id."""
     import_and_test_deprecated_constant(

@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
+from powerfox import (
+    PowerfoxAuthenticationError,
+    PowerfoxConnectionError,
+    PowerfoxNoDataError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -28,13 +32,15 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize("exception", [PowerfoxConnectionError, PowerfoxNoDataError])
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
 ) -> None:
     """Test the Powerfox configuration entry not ready."""
-    mock_powerfox_client.all_devices.side_effect = PowerfoxConnectionError
+    mock_powerfox_client.all_devices.side_effect = exception
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

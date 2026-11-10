@@ -40,8 +40,17 @@
   },
   "entity": {
     "binary_sensor": {
+      "air_conditioning": {
+        "name": "Air conditioning"
+      },
+      "auxiliary_heating": {
+        "name": "Auxiliary heating"
+      },
       "bonnet": {
         "name": "Hood"
+      },
+      "charging_cable": {
+        "name": "Charging cable"
       },
       "doors": {
         "name": "Doors"
@@ -57,6 +66,11 @@
       },
       "windows": {
         "name": "Windows"
+      }
+    },
+    "number": {
+      "charge_limit": {
+        "name": "Charge limit"
       }
     },
     "sensor": {
@@ -136,6 +150,9 @@
     },
     "command_not_supported": {
       "message": "The vehicle does not support this command."
+    },
+    "invalid_step": {
+      "message": "The value {value} does not match the supported increment of {step}."
     },
     "rate_limit_exceeded": {
       "message": "The Škoda API rejected the command because the rate limit was reached or the vehicle's 12 V battery is low. Try again later."

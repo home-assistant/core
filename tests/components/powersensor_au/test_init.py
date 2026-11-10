@@ -155,6 +155,25 @@ async def test_devices_start_failure_retries_and_recovers(
     }
 
 
+async def test_discovery_is_stopped_if_forwarding_platforms_fails(
+    hass: HomeAssistant,
+    mock_devices: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Discovery starts before the platforms, so it must not outlive a failed setup."""
+    await _unload(hass, config_entry)
+    mock_devices.stop.reset_mock()
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups", side_effect=ImportError
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_devices.stop.assert_awaited_once()
+
+
 @pytest.mark.usefixtures("mock_async_zeroconf")
 @pytest.mark.parametrize(
     ("roles", "with_solar"),
@@ -324,6 +343,7 @@ async def test_device_can_be_deleted_while_unloaded_and_returns_on_load(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
     mac: str,
     device_type: str,
@@ -339,6 +359,10 @@ async def test_device_can_be_deleted_while_unloaded_and_returns_on_load(
         (DOMAIN, mac), config_entry.entry_id
     )
     assert device is not None
+    entities = {
+        e.unique_id for e in er.async_entries_for_device(entity_registry, device.id)
+    }
+    assert entities
     await _unload(hass, config_entry)
 
     assert await _delete_device(hass, hass_ws_client, device.id)
@@ -348,9 +372,13 @@ async def test_device_can_be_deleted_while_unloaded_and_returns_on_load(
     await hass.async_block_till_done()
     await fire(found)
     await hass.async_block_till_done()
-    assert device_registry.async_get_device_by_identifier(
+    returned = device_registry.async_get_device_by_identifier(
         (DOMAIN, mac), config_entry.entry_id
     )
+    assert returned is not None
+    assert {
+        e.unique_id for e in er.async_entries_for_device(entity_registry, returned.id)
+    } == entities
 
 
 async def test_returning_sensor_gets_entities_of_a_role_it_had_before(

@@ -348,7 +348,10 @@ async def test_media_player_shuffle_set_action(
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
-        "player_queues/shuffle", queue_id=mass_player_id, shuffle_enabled=True
+        "player_queues/shuffle",
+        queue_id=mass_player_id,
+        shuffle_enabled=True,
+        require_schema=None,
     )
 
 
@@ -373,7 +376,10 @@ async def test_media_player_repeat_set_action(
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
-        "player_queues/repeat", queue_id=mass_player_id, repeat_mode="one"
+        "player_queues/repeat",
+        queue_id=mass_player_id,
+        repeat_mode="one",
+        require_schema=None,
     )
 
 
@@ -462,7 +468,7 @@ async def test_media_player_clear_playlist_action(
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
-        "player_queues/clear", queue_id=mass_player_id
+        "player_queues/clear", queue_id=mass_player_id, require_schema=None
     )
 
 
@@ -500,8 +506,12 @@ async def test_media_player_play_media_action_legacy(
         option=None,
         radio_mode=False,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test simple play_media call with URI and enqueue specified
@@ -524,8 +534,12 @@ async def test_media_player_play_media_action_legacy(
         option=QueueOption.ADD,
         radio_mode=False,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test basic play_media call with URL and radio mode specified
@@ -548,8 +562,12 @@ async def test_media_player_play_media_action_legacy(
         option=None,
         radio_mode=True,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test play_media call with media id and media type specified
@@ -577,8 +595,12 @@ async def test_media_player_play_media_action_legacy(
         option=None,
         radio_mode=False,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test play_media call by name
@@ -611,8 +633,12 @@ async def test_media_player_play_media_action_legacy(
         option=None,
         radio_mode=False,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test with username
@@ -639,6 +665,11 @@ async def test_media_player_play_media_action_legacy(
         start_item=None,
         sort_by=None,
         username="user_user",
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
 
@@ -679,8 +710,12 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test simple play_media call with URI and enqueue specified
@@ -703,8 +738,12 @@ async def test_media_player_play_media_action(
         option=QueueOption.ADD,
         radio_mode=False,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test basic play_media call with URL and radio mode specified
@@ -727,8 +766,12 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=True,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test play_media call with media id and media type specified
@@ -756,6 +799,11 @@ async def test_media_player_play_media_action(
         start_item=None,
         sort_by=None,
         username="user_user",
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test play_media call by name as fallback if item uri is invalid
@@ -790,8 +838,12 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
     # test with username and valid item uris
@@ -819,6 +871,11 @@ async def test_media_player_play_media_action(
         start_item=None,
         sort_by=None,
         username="user_user",
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
 
@@ -858,6 +915,11 @@ async def test_media_player_play_media_default_user(
         start_item=None,
         sort_by=None,
         user={"provider": "homeassistant", "user_id": user.id, "required": False},
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
 
@@ -893,6 +955,11 @@ async def test_media_player_play_media_default_user_older_server(
         radio_mode=False,
         start_item=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
 
@@ -928,6 +995,11 @@ async def test_media_player_play_media_explicit_user_override(
         start_item=None,
         sort_by=None,
         user="user_admin",
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
 
@@ -1067,8 +1139,12 @@ async def test_media_player_play_media_start_item(
         option=None,
         radio_mode=False,
         start_item=expected_start_item,
-        username=None,
         sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
 
@@ -1091,6 +1167,46 @@ async def test_media_player_play_media_start_item_invalid(
             blocking=True,
         )
     assert music_assistant_client.send_command.call_count == 0
+
+
+@pytest.mark.parametrize("shuffle", [True, False])
+async def test_media_player_play_media_shuffle(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    shuffle: bool,
+) -> None:
+    """Test that an explicit shuffle option is forwarded to the server's play_media command."""
+    music_assistant_client.server_info.schema_version = 51
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://playlist/1234",
+            ATTR_MEDIA_SHUFFLE: shuffle,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://playlist/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=shuffle,
+        start_from_beginning=False,
+        require_schema=51,
+    )
 
 
 async def test_media_player_standard_play_media_default_user(
@@ -1125,6 +1241,11 @@ async def test_media_player_standard_play_media_default_user(
         start_item=None,
         sort_by=None,
         user={"provider": "homeassistant", "user_id": user.id, "required": False},
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
     )
 
 
@@ -1161,6 +1282,7 @@ async def test_media_player_play_announcement_action(
         pre_announce_url="http://blah.com/chime.mp3",
         message=None,
         tts_engine=None,
+        language=None,
     )
 
 
@@ -1211,6 +1333,7 @@ async def test_media_player_play_announcement_action_with_message(
         pre_announce_url=None,
         message=None,
         tts_engine=None,
+        language=None,
     )
 
 
