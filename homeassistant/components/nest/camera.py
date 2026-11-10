@@ -210,7 +210,6 @@ class NestRTSPEntity(NestCameraBaseEntity):
                     self._async_refresh_stream,
                 )
                 self._refresh_unsub = refresh.unsub
-        assert self._rtsp_stream
         if self._rtsp_stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
         return self._rtsp_stream.rtsp_stream_url
