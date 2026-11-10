@@ -201,6 +201,7 @@ DATA_CUSTOM_COMPONENTS: HassKey[
     dict[str, Integration] | asyncio.Future[dict[str, Integration]]
 ] = HassKey("custom_components")
 DATA_PRELOAD_PLATFORMS: HassKey[list[str]] = HassKey("preload_platforms")
+DATA_MARKETPLACE_DOMAINS: HassKey[set[str]] = HassKey("marketplace_domains")
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 MARKETPLACE_MARKER = ".marketplace"
@@ -405,6 +406,10 @@ async def async_get_custom_components(
             # Retrieve the exception even when there are no concurrent callers.
             future.exception()
             raise
+
+        for domain in hass.data.get(DATA_MARKETPLACE_DOMAINS, ()):
+            if integration := comps.get(domain):
+                integration.mark_marketplace()
 
         # A cache cleared during the scan asks for a newer scan, this one
         # must not put its older result back.
@@ -804,12 +809,19 @@ class Integration:
             # Avoid the listdir for virtual integrations
             # as they cannot have any platforms
             is_virtual = manifest.get("integration_type") == "virtual"
+            top_level_files = None if is_virtual else set(os.listdir(file_path))
+            if (
+                is_virtual
+                and root_module.__name__ == PACKAGE_CUSTOM_COMPONENTS
+                and (file_path / MARKETPLACE_MARKER).is_file()
+            ):
+                top_level_files = {MARKETPLACE_MARKER}
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 file_path,
                 manifest,
-                None if is_virtual else set(os.listdir(file_path)),
+                top_level_files,
             )
 
             if not integration.import_executor:
@@ -1535,7 +1547,11 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
 
 @callback
 def async_mark_marketplace_integration(hass: HomeAssistant, domain: str) -> None:
-    """Mark the resolved integrations of a domain as from the Marketplace."""
+    """Mark an integration as installed from the Marketplace.
+
+    The domain is remembered too, for a scan that is still running.
+    """
+    hass.data.setdefault(DATA_MARKETPLACE_DOMAINS, set()).add(domain)
     custom = hass.data.get(DATA_CUSTOM_COMPONENTS)
     for integration in (
         hass.data[DATA_INTEGRATIONS].get(domain),
