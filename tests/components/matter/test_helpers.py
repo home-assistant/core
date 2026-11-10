@@ -23,9 +23,16 @@ from .common import create_node_from_fixture, setup_integration_with_node_fixtur
     [
         # Root endpoint always maps to the node (parent) device.
         ("eve_energy_20ecn4101", 0, False),
-        # Each socket of the dual-socket plug (same device type) splits off.
+        # Each socket of the dual-socket plug (same device type) splits off,
+        # named from its vendor label.
         ("eve_energy_20ecn4101", 1, True),
         ("eve_energy_20ecn4101", 2, True),
+        ("tp_link_smart_outdoor_plug", 1, True),
+        # Each relay named from its Common Number semantic tag splits off.
+        ("lifx_switch_115", 41, True),
+        # Sockets without semantic tags or vendor labels naming them don't split.
+        ("tapo_smart_wi_fi_power_strip", 1, False),
+        ("dewenwils_3_zone_transformer", 1, False),
         # Endpoints sharing a primary attribute but of different device types are
         # the same physical unit, so they are not split.
         ("inovelli_vtm31", 1, False),
