@@ -196,6 +196,89 @@ async def test_start_run_unreachable(
     assert (client.info is not None) == still_usable
 
 
+@pytest.mark.parametrize(
+    ("request_", "run_start"),
+    [
+        pytest.param(
+            AudioRunRequest(
+                satellite_id="assist_satellite.kitchen",
+                wake_word_phrase="okay nabu",
+                wake_word_audio_ms=500,
+                silence_seconds=1.0,
+            ),
+            {
+                "type": "run-start",
+                "satellite_id": "assist_satellite.kitchen",
+                "wake_word_phrase": "okay nabu",
+                "wake_word_audio_ms": 500,
+                "silence_seconds": 1.0,
+            },
+            id="verify_and_endpoint",
+        ),
+        pytest.param(
+            AudioRunRequest(silence_seconds=1.0),
+            {
+                "type": "run-start",
+                "satellite_id": None,
+                "wake_word_phrase": None,
+                "wake_word_audio_ms": 0,
+                "silence_seconds": 1.0,
+            },
+            id="endpoint",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("app_info")
+async def test_start_run(
+    hass: HomeAssistant, request_: AudioRunRequest, run_start: dict[str, Any]
+) -> None:
+    """Test a run is opened with what the app needs to know about it."""
+    client = VoiceSupportClient(hass, HOST, PORT)
+    await client.async_update_info()
+    websocket = FakeWebsocket()
+    session = Mock(wraps=async_get_clientsession(hass))
+    session.ws_connect = AsyncMock(return_value=websocket)
+
+    with patch(
+        "homeassistant.components.voice_support.client.async_get_clientsession",
+        return_value=session,
+    ):
+        run = await client.async_start_run(request_, _audio(WAKE))
+
+    assert run is not None
+    assert str(session.ws_connect.call_args.args[0]) == f"http://{HOST}:{PORT}/run"
+    assert websocket.run_start == run_start
+    assert await _drain(run) == WAKE
+    await run.async_close()
+    assert websocket.closed
+
+
+@pytest.mark.usefixtures("app_info")
+async def test_start_run_asks_again_once(hass: HomeAssistant) -> None:
+    """Test failed runs lead to one question to the app, dropped on close."""
+    client = VoiceSupportClient(hass, HOST, PORT)
+    await client.async_update_info()
+    update_info = AsyncMock(side_effect=asyncio.Event().wait)
+    session = Mock(wraps=async_get_clientsession(hass))
+    session.ws_connect = AsyncMock(side_effect=aiohttp.ClientError)
+
+    with (
+        patch.object(client, "async_update_info", update_info),
+        patch(
+            "homeassistant.components.voice_support.client.async_get_clientsession",
+            return_value=session,
+        ),
+    ):
+        request = AudioRunRequest(silence_seconds=1.0)
+        assert await client.async_start_run(request, _no_audio()) is None
+        assert await client.async_start_run(request, _no_audio()) is None
+
+    assert update_info.await_count == 1
+    client.async_close()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert update_info.await_count == 1
+
+
 @pytest.mark.usefixtures("app_info")
 async def test_start_run_refused(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -334,6 +417,19 @@ async def test_run_app_goes_away(hass: HomeAssistant) -> None:
 
     assert await run.async_wake_word() is None
     assert not run.listening
+
+
+async def test_run_app_breaks_off(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an app whose answers cannot be read any more is given up on."""
+    caplog.set_level(logging.DEBUG)
+    websocket = FakeWebsocket([(0, aiohttp.ClientConnectionError("gone"))])
+    run = _run(hass, websocket, _audio(WAKE, COMMAND))
+
+    assert await run.async_wake_word() is None
+    assert not run.listening
+    assert "The app went away mid-run" in caplog.text
 
 
 async def test_run_app_unreachable(hass: HomeAssistant) -> None:

@@ -264,6 +264,55 @@ async def test_app_running(
     assert result["data"] == {CONF_HOST: APP_HOST, CONF_PORT: PORT}
 
 
+@pytest.mark.parametrize(
+    ("discovery_failure", "info_response", "reason"),
+    [
+        pytest.param(
+            SupervisorError(),
+            {"json": INFO},
+            "app_get_discovery_info_failed",
+            id="info",
+        ),
+        pytest.param(
+            None, {"exc": aiohttp.ClientError}, "cannot_connect", id="unreachable"
+        ),
+        pytest.param(
+            None,
+            {"json": {**INFO, "api_version": 2}},
+            "unsupported_version",
+            id="version",
+        ),
+    ],
+)
+@pytest.mark.usefixtures(
+    "supervisor",
+    "preview_feature_enabled",
+    "addon_running",
+    "install_addon",
+    "start_addon",
+)
+async def test_app_running_cannot_be_used(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_addon_discovery_info: AsyncMock,
+    discovery_failure: Exception | None,
+    info_response: dict[str, Any],
+    reason: str,
+) -> None:
+    """Test a running app that cannot be reached, or used, is reported."""
+    get_addon_discovery_info.side_effect = discovery_failure
+    aioclient_mock.get(APP_INFO_URL, **info_response)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
 @pytest.mark.usefixtures(
     "supervisor", "preview_feature_enabled", "addon_not_installed", "start_addon"
 )
@@ -304,6 +353,33 @@ async def test_app_start_failed(hass: HomeAssistant, start_addon: AsyncMock) -> 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "app_start_failed"
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "preview_feature_enabled",
+    "addon_installed",
+    "install_addon",
+    "start_addon",
+    "get_addon_discovery_info",
+)
+async def test_app_start_unsupported_version(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test an app that starts speaking another protocol version is reported."""
+    aioclient_mock.get(APP_INFO_URL, json={**INFO, "api_version": 2})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USE_APP: True}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_version"
 
 
 @pytest.mark.usefixtures(
@@ -378,6 +454,20 @@ async def test_system_flow(
         CONF_INTEGRATION_CREATED_APP: True,
     }
     assert not issue_registry.issues
+
+
+@pytest.mark.usefixtures("supervisor", "preview_feature_enabled")
+async def test_system_flow_with_an_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test nothing is set up behind the person's back when they have an app."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SYSTEM}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("supervisor", "labs")

@@ -6,8 +6,9 @@ from typing import Any
 
 import aiohttp
 
-type Answer = dict[str, Any] | aiohttp.WSMessage | None
-"""What the app says: JSON, a ready-made message, or None for going away."""
+type Answer = dict[str, Any] | aiohttp.WSMessage | Exception | None
+"""What the app says: JSON, a ready-made message, an error reading, or None
+for going away."""
 
 
 def accepted(wake_word_audio_ms: int) -> dict[str, Any]:
@@ -43,6 +44,7 @@ class FakeWebsocket:
     def __init__(self, answers: list[tuple[int, Answer]] | None = None) -> None:
         """Set up the app's end with its answers scripted."""
         self.audio = bytearray()
+        self.run_start: dict[str, Any] | None = None
         self.chunks = 0
         self.audio_ended = False
         self.closed = False
@@ -75,9 +77,12 @@ class FakeWebsocket:
         await asyncio.sleep(0)
 
     async def send_json(self, data: dict[str, Any]) -> None:
-        """Take the end of the audio."""
+        """Take the start of the run, or the end of the audio."""
         if self.unreachable:
             raise aiohttp.ClientConnectionError("gone")
+        if data["type"] == "run-start":
+            self.run_start = data
+            return
         assert data == {"type": "audio-end"}
         self.audio_ended = True
 
@@ -94,6 +99,8 @@ class FakeWebsocket:
         """The next answer, until there are no more."""
         if (message := await self._messages.get()) is None:
             raise StopAsyncIteration
+        if isinstance(message, Exception):
+            raise message
         if isinstance(message, aiohttp.WSMessage):
             return message
         return aiohttp.WSMessage(aiohttp.WSMsgType.TEXT, json.dumps(message), None)
