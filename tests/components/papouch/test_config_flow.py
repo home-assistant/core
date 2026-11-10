@@ -2,7 +2,11 @@
 
 from unittest.mock import patch
 
-from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
+from aiopapouch.exceptions import (
+    DeviceAuthError,
+    DeviceConnectionError,
+    DeviceParseError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -43,31 +47,38 @@ def mock_api_client():
         yield mock_fetch, mock_mode, mock_mac, mock_info
 
 
-async def test_user_success(
-    hass: HomeAssistant, mock_api_client, mock_setup_entry
+@pytest.mark.parametrize(
+    ("user_input_extra", "expected_password"),
+    [
+        ({"password": "admin", "port": 80}, "admin"),
+        ({"port": 80}, None),
+        ({"password": "", "port": 80}, ""),
+    ],
+)
+async def test_user_success_variants(
+    hass: HomeAssistant,
+    mock_api_client,
+    mock_setup_entry,
+    user_input_extra,
+    expected_password,
 ) -> None:
-    """Test successful manual setup of the integration."""
+    """Test successful manual setup with different password configurations."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-
     assert result["type"] is data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            "ip_address": "192.168.1.50",
-            "password": "admin",
-            "port": 80,
-        },
+        {"ip_address": "192.168.1.50", **user_input_extra},
     )
 
     assert result2["result"].unique_id == "00:11:22:33:44:55"
     assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Quido (Lab) - 192.168.1.50 - 00:11:22:33:44:55"
     assert result2["data"]["ip_address"] == "192.168.1.50"
-    assert result2["data"]["password"] == "admin"
+    assert result2["data"]["password"] == expected_password
     assert result2["data"]["device_name"] == "Quido (Lab)"
     assert result2["data"]["port"] == 80
     assert len(mock_setup_entry.mock_calls) == 1
@@ -96,37 +107,20 @@ async def test_invalid_ip_format(
     assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_user_connection_error(
-    hass: HomeAssistant, mock_api_client, mock_setup_entry
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (DeviceConnectionError, {"base": "cannot_connect"}),
+        (DeviceAuthError, {"base": "invalid_auth"}),
+        (DeviceParseError, {"base": "parsing_error"}),
+    ],
+)
+async def test_user_mode_errors(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry, side_effect, expected_error
 ) -> None:
-    """Test handling of connection errors during first step."""
+    """Test handling of various errors during device mode check."""
     _, mock_mode, _, _ = mock_api_client
-    mock_mode.side_effect = [DeviceConnectionError, WEB_MODE_INDEX]
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"ip_address": "192.168.1.50", "password": "supersecret"},
-    )
-
-    assert result2["type"] is data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {"ip_address": "192.168.1.50", "password": "supersecret"},
-    )
-    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-
-
-async def test_user_auth_error(
-    hass: HomeAssistant, mock_api_client, mock_setup_entry
-) -> None:
-    """Test handling of authentication errors during first step."""
-    _, mock_mode, _, _ = mock_api_client
-    mock_mode.side_effect = [DeviceAuthError, WEB_MODE_INDEX]
+    mock_mode.side_effect = [side_effect, WEB_MODE_INDEX]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -138,7 +132,7 @@ async def test_user_auth_error(
     )
 
     assert result2["type"] is data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == expected_error
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {"ip_address": "192.168.1.50", "password": "supersecret"},
@@ -146,10 +140,19 @@ async def test_user_auth_error(
     assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_user_mode_missing(hass: HomeAssistant, mock_api_client) -> None:
-    """Test config flow aborts when the device mode is missing."""
+@pytest.mark.parametrize(
+    ("mode_value", "expected_reason"),
+    [
+        (-1, "mode_is_missing"),
+        (1, "web_mode_required"),
+    ],
+)
+async def test_user_mode_aborts(
+    hass: HomeAssistant, mock_api_client, mode_value, expected_reason
+) -> None:
+    """Test config flow aborts for invalid device modes."""
     _, mock_mode, _, _ = mock_api_client
-    mock_mode.return_value = -1
+    mock_mode.return_value = mode_value
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -161,61 +164,23 @@ async def test_user_mode_missing(hass: HomeAssistant, mock_api_client) -> None:
     )
 
     assert result2["type"] is data_entry_flow.FlowResultType.ABORT
-    assert result2["reason"] == "mode_is_missing"
+    assert result2["reason"] == expected_reason
 
 
-async def test_user_web_mode_required(hass: HomeAssistant, mock_api_client) -> None:
-    """Test config flow aborts when the device is not in web mode."""
-    _, mock_mode, _, _ = mock_api_client
-    mock_mode.return_value = 1  # Using a mode other than WEB_MODE_INDEX
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"ip_address": "192.168.1.50"},
-    )
-
-    assert result2["type"] is data_entry_flow.FlowResultType.ABORT
-    assert result2["reason"] == "web_mode_required"
-
-
-async def test_user_mac_auth_error(
-    hass: HomeAssistant, mock_api_client, mock_setup_entry
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (DeviceAuthError, {"base": "invalid_auth"}),
+        (DeviceConnectionError, {"base": "cannot_connect"}),
+        (DeviceParseError, {"base": "parsing_error"}),
+    ],
+)
+async def test_user_mac_errors(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry, side_effect, expected_error
 ) -> None:
-    """Test auth error gracefully failing when retrieving MAC address."""
+    """Test manual flow aborts/errors if getting MAC address fails."""
     _, _, mock_mac, _ = mock_api_client
-    mock_mac.side_effect = [DeviceAuthError, "00:11:22:33:44:55"]
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            "ip_address": "192.168.1.50",
-            "password": "wrong_password",
-        },
-    )
-
-    assert result2["type"] is data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {"ip_address": "192.168.1.50", "password": "supersecret"},
-    )
-    assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-
-
-async def test_user_mac_connection_error(
-    hass: HomeAssistant, mock_api_client, mock_setup_entry
-) -> None:
-    """Test manual flow aborts if getting MAC address fails due to logic/connection error."""
-    _, _, mock_mac, _ = mock_api_client
-    mock_mac.side_effect = [DeviceConnectionError, "00:11:22:33:44:55"]
+    mock_mac.side_effect = [side_effect, "00:11:22:33:44:55"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -227,7 +192,7 @@ async def test_user_mac_connection_error(
     )
 
     assert result2["type"] is data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == expected_error
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {"ip_address": "192.168.1.50", "password": "supersecret"},
@@ -251,53 +216,3 @@ async def test_user_already_configured(hass: HomeAssistant, mock_api_client) -> 
 
     assert result2["type"] is data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-
-
-async def test_user_success_no_password(
-    hass: HomeAssistant, mock_api_client, mock_setup_entry
-) -> None:
-    """Test successful manual setup when no password is provided."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "ip_address": "192.168.1.50",
-            "port": 80,
-        },
-    )
-
-    assert result2["result"].unique_id == "00:11:22:33:44:55"
-    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Quido (Lab) - 192.168.1.50 - 00:11:22:33:44:55"
-    assert result2["data"]["ip_address"] == "192.168.1.50"
-    assert result2["data"]["password"] is None
-    assert result2["data"]["device_name"] == "Quido (Lab)"
-    assert result2["data"]["port"] == 80
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_success_empty_string_password(
-    hass: HomeAssistant, mock_api_client, mock_setup_entry
-) -> None:
-    """Test successful manual setup when password is an empty string."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "ip_address": "192.168.1.50",
-            "password": "",
-            "port": 80,
-        },
-    )
-
-    assert result2["result"].unique_id == "00:11:22:33:44:55"
-    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["data"]["password"] == ""

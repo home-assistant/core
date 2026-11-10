@@ -52,10 +52,10 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             mode_device = await client.get_device_mode()
         except DeviceAuthError:
             return {"base": "invalid_auth"}, None
-        except DeviceConnectionError, DeviceParseError:
-            # sometimes when there is no connection the client can receive
-            # invalid XML -> we need to catch DeviceParseError too
+        except DeviceConnectionError:
             return {"base": "cannot_connect"}, None
+        except DeviceParseError:
+            return {"base": "parsing_error"}, None
 
         return {}, mode_device
 
@@ -99,10 +99,10 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             mac_address = await client.get_device_mac()
         except DeviceAuthError:
             errors["base"] = "invalid_auth"
-        except DeviceConnectionError, DeviceParseError:
-            # sometimes when there is no connection the client can receive
-            # invalid XML -> we need to catch DeviceParseError too
+        except DeviceConnectionError:
             errors["base"] = "cannot_connect"
+        except DeviceParseError:
+            errors["base"] = "parsing_error"
 
         if errors:
             return errors, None

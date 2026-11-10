@@ -2,9 +2,12 @@
 
 from typing import TYPE_CHECKING
 
-import aiohttp
 from aiopapouch import PapouchHTTPClient, create_network_device
-from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
+from aiopapouch.exceptions import (
+    DeviceAuthError,
+    DeviceConnectionError,
+    DeviceParseError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, Platform
@@ -35,43 +38,69 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> N
         entry.data[CONF_IP_ADDRESS], session, password=password or "", web_port=web_port
     )
 
+    # note that now we will access name and location
+    # of the device , first right below
+    # and second in the create_network_device
+
+    # this is done so a user will know that the device
+    # he tried to create is unsupported and he will
+    # see its name and location
+
     try:
         name, location = await api_client.get_device_info()
-    except (DeviceConnectionError, DeviceAuthError) as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="cannot_connect"
-        ) from err
-
-    safe_name = name or UNKNOWN_NAME
-    safe_location = location or UNKNOWN_LOCATION
-
-    try:
-        device = await create_network_device(api_client)
-    except aiohttp.ClientResponseError as err:
+    except DeviceAuthError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
-            translation_placeholders={"name": safe_name, "location": safe_location},
         ) from err
-
-    except aiohttp.ClientError as err:
+    except DeviceConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect_device",
-            translation_placeholders={"name": safe_name, "location": safe_location},
+        ) from err
+    except DeviceParseError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="parsing_error",
+        ) from err
+
+    placeholders = {
+        "name": name or UNKNOWN_NAME,
+        "location": location or UNKNOWN_LOCATION,
+    }
+
+    try:
+        device = await create_network_device(api_client)
+    except DeviceAuthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth_with_info",
+            translation_placeholders=placeholders,
+        ) from err
+    except DeviceConnectionError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_device_with_info",
+            translation_placeholders=placeholders,
+        ) from err
+    except DeviceParseError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="parsing_error_with_info",
+            translation_placeholders=placeholders,
         ) from err
 
     if device is None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="unsupported_device",
-            translation_placeholders={"name": safe_name, "location": safe_location},
+            translation_placeholders=placeholders,
         )
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        # MAC address is stored in identifier field
+        # MAC address is stored in the identifier field
         connections={(dr.CONNECTION_NETWORK_MAC, device.conf.identifier)},
         identifiers={(DOMAIN, device.conf.identifier)},
         name=device.conf.name,

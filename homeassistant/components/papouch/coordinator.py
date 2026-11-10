@@ -5,7 +5,11 @@ import logging
 from typing import Any, override
 
 from aiopapouch import PapouchHTTPClient, PapouchNetworkDevice
-from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
+from aiopapouch.exceptions import (
+    DeviceAuthError,
+    DeviceConnectionError,
+    DeviceParseError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -40,6 +44,10 @@ class PapouchNetworkDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.api_client = api_client
         self.device = device
+        self.translation_placeholders = {
+            "name": device.conf.name,
+            "location": device.conf.location,
+        }
 
     def get_device(self) -> PapouchNetworkDevice:
         """Return the single network device as a list."""
@@ -55,20 +63,20 @@ class PapouchNetworkDataUpdateCoordinator(DataUpdateCoordinator):
         except DeviceAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={
-                    "name": self.device.conf.name,
-                    "location": self.device.conf.location,
-                },
+                translation_key="invalid_auth_with_info",
+                translation_placeholders=self.translation_placeholders,
             ) from err
         except DeviceConnectionError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect_device",
-                translation_placeholders={
-                    "name": self.device.conf.name,
-                    "location": self.device.conf.location,
-                },
+                translation_key="cannot_connect_device_with_info",
+                translation_placeholders=self.translation_placeholders,
+            ) from err
+        except DeviceParseError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="parsing_error_with_info",
+                translation_placeholders=self.translation_placeholders,
             ) from err
 
         return {self.device.conf.identifier: parsed_data}

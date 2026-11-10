@@ -1,12 +1,14 @@
 """Tests for the Papouch initialization and coordinator."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import aiohttp
-from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
-from pytest_homeassistant.common import MockConfigEntry
+from aiopapouch.exceptions import (
+    DeviceAuthError,
+    DeviceConnectionError,
+    DeviceParseError,
+)
+import pytest
 
-from homeassistant.components.papouch.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -32,95 +34,88 @@ async def test_setup_unload_and_reload(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_auth_error(
-    hass: HomeAssistant, mock_config_entry, mock_papouch_client
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (DeviceAuthError(), ConfigEntryState.SETUP_ERROR),
+        (DeviceParseError(), ConfigEntryState.SETUP_RETRY),
+        (DeviceConnectionError(), ConfigEntryState.SETUP_RETRY),
+        (
+            None,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+)
+async def test_setup_errors(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_papouch_client,
+    side_effect,
+    expected_state,
 ) -> None:
-    """Test setup fails due to invalid password (401)."""
+    """Test setup handles different errors and unknown device correctly."""
     _, mock_create, _ = mock_papouch_client
-    mock_create.side_effect = aiohttp.ClientResponseError(
-        request_info=MagicMock(), history=(), status=401, message="Unauthorized"
-    )
+
+    if side_effect is None:
+        mock_create.return_value = None
+    else:
+        mock_create.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected_state
 
 
-async def test_setup_connection_error(
-    hass: HomeAssistant, mock_config_entry, mock_papouch_client
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (DeviceAuthError(), ConfigEntryState.SETUP_ERROR),
+        (DeviceConnectionError(), ConfigEntryState.SETUP_RETRY),
+        (DeviceParseError(), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_coordinator_errors(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_papouch_client,
+    side_effect,
+    expected_state,
 ) -> None:
-    """Test setup retries due to connection error."""
-    _, mock_create, _ = mock_papouch_client
-    mock_create.side_effect = aiohttp.ClientError()
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_unknown_device(
-    hass: HomeAssistant, mock_config_entry, mock_papouch_client
-) -> None:
-    """Test setup retries if device is unknown."""
-    _, mock_create, _ = mock_papouch_client
-    mock_create.return_value = None
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_coordinator_auth_error(
-    hass: HomeAssistant, mock_config_entry, mock_papouch_client
-) -> None:
-    """Test coordinator handles auth errors during update."""
+    """Test coordinator handles different errors during update correctly."""
     _, _, mock_device = mock_papouch_client
-    mock_device.get_fresh_data.side_effect = DeviceAuthError()
+    mock_device.get_fresh_data.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected_state
 
 
-async def test_coordinator_connection_error(
-    hass: HomeAssistant, mock_config_entry, mock_papouch_client
-) -> None:
-    """Test coordinator handles connection errors during update."""
-    _, _, mock_device = mock_papouch_client
-    mock_device.get_fresh_data.side_effect = DeviceConnectionError()
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (DeviceConnectionError(), ConfigEntryState.SETUP_RETRY),
+        (DeviceAuthError(), ConfigEntryState.SETUP_ERROR),
+        (DeviceParseError(), ConfigEntryState.SETUP_RETRY),
+    ],
+)
 @patch("homeassistant.components.papouch.PapouchHTTPClient.get_device_info")
-async def test_setup_device_info_connection_error_no_password(
-    mock_get_device_info, hass: HomeAssistant
+async def test_setup_device_info_errors(
+    mock_get_device_info,
+    mock_config_entry,
+    hass: HomeAssistant,
+    side_effect,
+    expected_state,
 ) -> None:
-    """Test setup retries when get_device_info fails and no password is provided."""
-    mock_get_device_info.side_effect = DeviceConnectionError()
+    """Test setup handles different get_device_info errors correctly."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "ip_address": "192.168.1.50",
-            "port": 80,
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_get_device_info.side_effect = side_effect
+    mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state

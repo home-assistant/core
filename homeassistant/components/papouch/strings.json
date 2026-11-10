@@ -12,7 +12,8 @@
     "error": {
       "cannot_connect": "Failed to connect to the device.",
       "invalid_auth": "The admin password you provided is invalid, try a different one.",
-      "invalid_ip_format": "Invalid IPv4 address format."
+      "invalid_ip_format": "Invalid IPv4 address format.",
+      "parsing_error": "Error during XML parsing."
     },
     "flow_title": "{name}",
     "step": {
@@ -76,10 +77,22 @@
       "message": "Failed to connect to device."
     },
     "cannot_connect_device": {
-      "message": "Failed to connect to device {name} ({location})."
+      "message": "Failed to connect to the device."
+    },
+    "cannot_connect_device_with_info": {
+      "message": "Failed to connect to the device {name} ({location})."
     },
     "invalid_auth": {
-      "message": "Invalid admin password of device {name} ({location})"
+      "message": "Invalid admin password of the device."
+    },
+    "invalid_auth_with_info": {
+      "message": "Invalid admin password of the device {name} ({location})."
+    },
+    "parsing_error": {
+      "message": "Error during XML parsing."
+    },
+    "parsing_error_with_info": {
+      "message": "Error during XML parsing from the device {name} ({location})."
     },
     "unsupported_device": {
       "message": "Device {name} ({location}) is unsupported."
