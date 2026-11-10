@@ -64,7 +64,7 @@ def _base_schema(user_input: dict[str, Any]) -> VolDictType:
 class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a proximity config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def _user_form_schema(
         self, user_input: dict[str, Any] | None = None
@@ -114,7 +114,9 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
                 tries += 1
                 possible_title = f"{title} {tries}"
 
-            return self.async_create_entry(title=possible_title, data=user_input)
+            return self.async_create_entry(
+                title=possible_title, data={}, options=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -133,12 +135,11 @@ class ProximityOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data={**self.config_entry.data, **user_input}
+            return self.async_create_entry(
+                data={**self.config_entry.options, **user_input}
             )
-            return self.async_create_entry(title=self.config_entry.title, data={})
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self._user_form_schema(dict(self.config_entry.data)),
+            data_schema=self._user_form_schema(dict(self.config_entry.options)),
         )

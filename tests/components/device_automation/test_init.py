@@ -1402,7 +1402,7 @@ async def test_automation_with_bad_action(
         },
     )
 
-    assert expected_error.format(path="actions[0].") in caplog.text
+    assert expected_error.format(path="actions.") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1436,7 +1436,7 @@ async def test_automation_with_bad_condition_action(
         },
     )
 
-    assert expected_error.format(path="actions[0].") in caplog.text
+    assert expected_error.format(path="actions.") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1470,7 +1470,7 @@ async def test_automation_with_bad_condition(
         },
     )
 
-    assert expected_error.format(path="conditions[0].") in caplog.text
+    assert expected_error.format(path="conditions.") in caplog.text
 
 
 async def test_automation_with_sub_condition(
@@ -1636,7 +1636,7 @@ async def test_automation_with_bad_sub_condition(
         },
     )
 
-    path = "conditions[0].conditions[0]."
+    path = "conditions.conditions[0]."
     assert expected_error.format(path=path) in caplog.text
 
 

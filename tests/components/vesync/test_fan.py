@@ -1,11 +1,13 @@
 """Tests for the fan module."""
 
 from contextlib import nullcontext
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, _Call, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pyvesync.devices.vesyncfan import VeSyncTowerFan
+from pyvesync.utils.errors import ResponseInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -13,6 +15,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -32,6 +35,7 @@ from .common import (
 )
 
 NoException = nullcontext()
+DEVICE_ERROR = ResponseInfo(name="error", error_type="error", message="Device error")
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
@@ -353,6 +357,182 @@ async def test_oscillation_success(
         await hass.async_block_till_done()
         method_mock.assert_called_once()
         update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("details", "percentage", "expected_calls"),
+    [
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            0,
+            [call.turn_off()],
+            id="zero_turns_off",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            50,
+            [call.set_fan_speed(6)],
+            id="on_in_normal_mode",
+        ),
+        pytest.param(
+            {"powerSwitch": 0, "workMode": "normal"},
+            50,
+            [call.turn_on(), call.set_fan_speed(6)],
+            id="off_turns_on_first",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "auto"},
+            50,
+            [call.set_manual_mode(), call.set_fan_speed(6)],
+            id="preset_switches_to_manual_first",
+        ),
+    ],
+)
+async def test_set_percentage(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    details: dict[str, int | str],
+    percentage: int,
+    expected_calls: list[_Call],
+) -> None:
+    """Test setting the speed sends the required device commands in order."""
+    mock_devices_response(aioclient_mock, "SmartTowerFan", details_override=details)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = AsyncMock(
+        **{
+            f"{command}.return_value": True
+            for command in (
+                "turn_on",
+                "turn_off",
+                "set_manual_mode",
+                "set_fan_speed",
+            )
+        }
+    )
+    with patch.multiple(
+        "pyvesync.devices.vesyncfan.VeSyncTowerFan",
+        turn_on=device.turn_on,
+        turn_off=device.turn_off,
+        set_manual_mode=device.set_manual_mode,
+        set_fan_speed=device.set_fan_speed,
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: percentage},
+            blocking=True,
+        )
+
+    assert device.mock_calls == expected_calls
+
+
+@pytest.mark.parametrize(
+    ("details", "percentage", "command", "last_response", "message"),
+    [
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            0,
+            "turn_off",
+            DEVICE_ERROR,
+            "An error occurred while turning off: Device error",
+            id="turn_off_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            0,
+            "turn_off",
+            None,
+            "Failed to turn off fan, no response found.",
+            id="turn_off_no_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 0, "workMode": "normal"},
+            50,
+            "turn_on",
+            DEVICE_ERROR,
+            "An error occurred while turning on: Device error",
+            id="turn_on_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 0, "workMode": "normal"},
+            50,
+            "turn_on",
+            None,
+            "Failed to turn on fan, no response found.",
+            id="turn_on_no_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "auto"},
+            50,
+            "set_manual_mode",
+            DEVICE_ERROR,
+            "An error occurred while setting manual mode.Device error",
+            id="set_manual_mode_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "auto"},
+            50,
+            "set_manual_mode",
+            None,
+            "Failed to set manual mode, no response found.",
+            id="set_manual_mode_no_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            50,
+            "set_fan_speed",
+            DEVICE_ERROR,
+            "An error occurred while changing fan speed: Device error",
+            id="set_fan_speed_last_response",
+        ),
+        pytest.param(
+            {"powerSwitch": 1, "workMode": "normal"},
+            50,
+            "set_fan_speed",
+            None,
+            "Failed to set fan speed, no response found.",
+            id="set_fan_speed_no_last_response",
+        ),
+    ],
+)
+async def test_set_percentage_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    details: dict[str, int | str],
+    percentage: int,
+    command: str,
+    last_response: ResponseInfo | None,
+    message: str,
+) -> None:
+    """Test a failed device command while setting the speed raises an error."""
+    mock_devices_response(aioclient_mock, "SmartTowerFan", details_override=details)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def _fail_command(device: VeSyncTowerFan, *args: int) -> bool:
+        device.last_response = last_response
+        return False
+
+    with (
+        patch.object(
+            VeSyncTowerFan, command, autospec=True, side_effect=_fail_command
+        ) as command_mock,
+        pytest.raises(HomeAssistantError, match=message),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: percentage},
+            blocking=True,
+        )
+
+    command_mock.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
