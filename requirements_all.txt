@@ -2710,7 +2710,7 @@ pysmarty2==0.10.3
 pysmartyplants==0.2.1
 
 # homeassistant.components.smhi
-pysmhi==2.1.0
+pysmhi==3.0.0
 
 # homeassistant.components.edl21
 pysml==0.1.9
