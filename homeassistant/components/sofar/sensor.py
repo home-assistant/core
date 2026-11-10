@@ -79,7 +79,7 @@ async def async_setup_entry(
     entities: list[SofarSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and not _is_battery_string(description)
+        if description.component in served and _battery_string(description) is None
     ]
     entities.extend(
         SofarTotalSensor(runtime_data, description)
@@ -101,9 +101,7 @@ async def async_setup_entry(
         async_add_entities(
             SofarSensor(runtime_data, description)
             for description in SENSOR_DESCRIPTIONS
-            if (part := description.part) is not None
-            and part[0] == "battery"
-            and part[1] in new
+            if _battery_string(description) in new
         )
 
     _async_add_wired_battery_strings()
@@ -146,9 +144,11 @@ def _async_setup_battery_packs(
     )
 
 
-def _is_battery_string(description: SofarSensorDescription) -> bool:
-    """Whether a description belongs to one numbered battery string."""
-    return description.part is not None and description.part[0] == "battery"
+def _battery_string(description: SofarSensorDescription) -> int | None:
+    """Return the battery string a description belongs to, if any."""
+    if (part := description.part) is None or part[0] != "battery":
+        return None
+    return part[1]
 
 
 class SofarSensor(SofarEntity, SensorEntity):
