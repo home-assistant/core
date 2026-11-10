@@ -1073,7 +1073,8 @@ class ClimateKnxConfig:
             write=False,
             state_required=True,
             valid_dpt="9.001",
-            dpa_state=[dpa.FB321.TEMP_ROOM],
+            # the room temperature input of a controller carries the same value
+            dpa_state=[dpa.FB321.TEMP_ROOM, dpa.FB399.TEMP_ROOM],
         ),
     ]
     ga_humidity_current: Annotated[
@@ -1099,7 +1100,10 @@ class ClimateKnxConfig:
         ga(
             write=False,
             valid_dpt="5.001",
-            dpa_state=[dpa.FB399.ACT_TARGET_POS_HEAT_STAGE_A],
+            dpa_state=[
+                dpa.FB399.ACT_TARGET_POS_HEAT_STAGE_A,
+                dpa.FB399.ACT_TARGET_POS_COOL_STAGE_A,
+            ],
         ),
     ] = None
     section_operation_mode: Annotated[
@@ -1110,7 +1114,7 @@ class ClimateKnxConfig:
         ga(
             valid_dpt="20.102",
             dpa_write=[dpa.FB398.HVAC_MODE_USER],
-            dpa_state=[dpa.FB399.HVAC_MODE_ACT],
+            dpa_state=[dpa.FB399.HVAC_MODE_ACT, dpa.FB398.HVAC_MODE_EFF],
         ),
     ] = None
     ignore_auto_mode: Annotated[bool, selector.BooleanSelector()] = False
@@ -1134,7 +1138,11 @@ class ClimateKnxConfig:
     ] = None
     ga_heat_cool: Annotated[
         GroupAddressConfig | None,
-        ga(valid_dpt="1.100", dpa_state=[dpa.FB399.HEAT_COOL_MODE_ACT]),
+        ga(
+            valid_dpt="1.100",
+            dpa_write=[dpa.FB399.CHANGE_OVER_STATUS],
+            dpa_state=[dpa.FB399.HEAT_COOL_MODE_ACT],
+        ),
     ] = None
     section_on_off: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -1167,7 +1175,12 @@ class ClimateKnxConfig:
         None
     )
     ga_fan_speed: Annotated[
-        GroupAddressConfig | None, ga(dpt=ConfClimateFanSpeedMode)
+        GroupAddressConfig | None,
+        ga(
+            dpt=ConfClimateFanSpeedMode,
+            dpa_write=[dpa.FB399.FAN_SPEED_USER, dpa.FB399.FAN_STEP_USER],
+            dpa_state=[dpa.FB399.ACT_TARGET_FAN_SPEED],
+        ),
     ] = None
     fan_max_step: Annotated[
         int,

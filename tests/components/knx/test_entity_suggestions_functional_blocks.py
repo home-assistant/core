@@ -51,6 +51,7 @@ DPT_COLOR_RGBW = {"main": 251, "sub": 600}
 DPT_FAN_STAGE = {"main": 5, "sub": 10}
 DPT_TEMPERATURE = {"main": 9, "sub": 1}
 DPT_HVAC_MODE = {"main": 20, "sub": 102}
+DPT_HEAT_COOL = {"main": 1, "sub": 100}
 DPT_ACTIVE_ENERGY = {"main": 13, "sub": 10}
 DPT_POWER = {"main": 14, "sub": 56}
 
@@ -135,6 +136,9 @@ TEST_PROJECT: dict[str, Any] = {
         "7/7/5": _group_address("7/7/5", DPT_HVAC_MODE),
         "7/7/6": _group_address("7/7/6", DPT_PERCENT),
         "7/7/7": _group_address("7/7/7", {"main": 9, "sub": 2}),
+        "7/7/8": _group_address("7/7/8", DPT_HEAT_COOL),
+        "7/7/9": _group_address("7/7/9", DPT_PERCENT),
+        "7/7/10": _group_address("7/7/10", DPT_PERCENT),
         "7/6/1": _group_address("7/6/1", DPT_ACTIVE_ENERGY),
         "7/6/2": _group_address("7/6/2", DPT_POWER),
     },
@@ -250,6 +254,9 @@ TEST_PROJECT: dict[str, Any] = {
                         "co-174",
                         "co-175",
                         "co-176",
+                        "co-177",
+                        "co-178",
+                        "co-179",
                     ],
                 ),
             },
@@ -310,6 +317,9 @@ TEST_PROJECT: dict[str, Any] = {
         "co-174": _com_object(["399.100"], ["7/7/5"]),
         "co-175": _com_object(["399.102"], ["7/7/6"]),
         "co-176": _com_object(["398.57"], ["7/7/7"]),  # no config key for this DPA
+        "co-177": _com_object(["399.109"], ["7/7/8"]),
+        "co-178": _com_object(["399.74"], ["7/7/9"]),
+        "co-179": _com_object(["399.112"], ["7/7/10"]),
         "co-160": _com_object(["1104.147"], ["7/6/2"]),  # no config key for this DPA
         "co-161": _com_object(["1104.101"], ["7/6/1"]),
     },
@@ -776,8 +786,43 @@ def test_climate_suggestion() -> None:
         },
         "ga_operation_mode": {"write": "7/7/4", "state": "7/7/5"},
         "ga_valve": {"state": "7/7/6"},
+        "ga_heat_cool": {"state": "7/7/8"},
+        "ga_fan_speed": {"write": "7/7/9", "state": "7/7/10", "dpt": "5.001"},
     }
     assert suggestion["unmatched"] == ["398.57"]
+
+
+def test_climate_controller_temperature_input() -> None:
+    """Test the room temperature input of a controller as current temperature."""
+    project = _with_com_objects(**{"co-90": _com_object(["399.56"], ["7/7/1"])})
+    # no room temperature sensor functional block in the channel
+    channel = _channel("Regler", ["398", "399"], ["co-90", "co-171"])
+    suggestion = _build_platform_suggestion(project, channel, Platform.CLIMATE)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "ga_temperature_current": {"state": "7/7/1"},
+        "target_temperature": {"ga_temperature_target": {"write": "7/7/2"}},
+    }
+    assert suggestion["unmatched"] == []
+
+
+def test_climate_fan_step_and_change_over() -> None:
+    """Test fan speed in steps and a writable heat/cool address."""
+    project = _with_com_objects(
+        # 7/2/4 is DPT 5.010 - 7/7/10 is DPT 5.001, not the DPT of the write address
+        **{"co-90": _com_object(["399.75"], ["7/2/4"])},
+        **{"co-91": _com_object(["399.64"], ["7/7/8"])},
+    )
+    channel = _channel(
+        "Regler",
+        ["321", "398", "399"],
+        ["co-170", "co-171", "co-179", "co-90", "co-91"],
+    )
+    suggestion = _build_platform_suggestion(project, channel, Platform.CLIMATE)
+    assert suggestion is not None
+    assert suggestion["knx"]["ga_fan_speed"] == {"write": "7/2/4", "dpt": "5.010"}
+    assert suggestion["knx"]["ga_heat_cool"] == {"write": "7/7/8"}
+    assert suggestion["unmatched"] == ["399.112"]
 
 
 @pytest.mark.parametrize(
