@@ -56,8 +56,6 @@ PRIMARY_MATCH_KEYS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-_ROOT_DEVICE = "upnp:rootdevice"
-
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
 type SsdpHassJobCallback = HassJob[
     [_SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
@@ -323,15 +321,15 @@ class Scanner:
 
         assert self._description_cache
 
-        location = ssdp_device.location
+        location = _message_location(ssdp_device, dst)
         _, info_desc = self._description_cache.peek_description_dict(location)
-        if self._async_uncache_if_stale(ssdp_device, dst, location):
+        if self._async_uncache_if_stale(ssdp_device, location):
             info_desc = None
         if info_desc is None:
             # Fetch info desc in separate task and process from there.
             self.hass.async_create_background_task(
                 self._ssdp_listener_process_callback_with_lookup(
-                    ssdp_device, dst, source
+                    ssdp_device, dst, source, location
                 ),
                 name=f"ssdp_info_desc_lookup_{location}",
                 eager_start=True,
@@ -346,9 +344,9 @@ class Scanner:
         ssdp_device: SsdpDevice,
         dst: DeviceOrServiceType,
         source: SsdpSource,
+        location: str | None,
     ) -> None:
         """Handle a device/service change."""
-        location = ssdp_device.location
         self._ssdp_listener_process_callback(
             ssdp_device,
             dst,
@@ -429,12 +427,12 @@ class Scanner:
 
     @core_callback
     def _async_uncache_if_stale(
-        self, ssdp_device: SsdpDevice, dst: str, location: str | None
+        self, ssdp_device: SsdpDevice, location: str | None
     ) -> bool:
-        """Uncache the description if it belongs to another root device."""
+        """Uncache the description if it does not describe the device."""
         if TYPE_CHECKING:
             assert self._description_cache is not None
-        if location is None or dst != _ROOT_DEVICE:
+        if location is None:
             return False
         _, info_desc = self._description_cache.peek_description_dict(location)
         if info_desc is None or not _description_is_stale(ssdp_device, info_desc):
@@ -538,11 +536,7 @@ class Scanner:
             for ssdp_device in self._ssdp_devices:
                 if ssdp_device.udn != udn:
                     continue
-                if _ROOT_DEVICE in ssdp_device.all_combined_headers and (
-                    self._async_uncache_if_stale(
-                        ssdp_device, _ROOT_DEVICE, ssdp_device.location
-                    )
-                ):
+                if self._async_uncache_if_stale(ssdp_device, ssdp_device.location):
                     self.hass.async_create_background_task(
                         self._async_rediscover_with_lookup(ssdp_device),
                         name=f"ssdp_rediscover_lookup_{ssdp_device.location}",
@@ -594,14 +588,38 @@ def discovery_info_from_headers_and_description(
     )
 
 
+def _message_location(ssdp_device: SsdpDevice, dst: DeviceOrServiceType) -> str | None:
+    """Return the location the message was sent from.
+
+    The device's own location is only the first of every location it was seen at.
+    """
+    headers = ssdp_device.combined_headers(dst)
+    if headers and (location := headers.get("location")):
+        return location
+    return ssdp_device.location
+
+
+def _description_udns(description: Mapping[str, Any]) -> set[str]:
+    """Return the UDNs of the root device and its embedded devices, lowercased."""
+    udns: set[str] = set()
+    if udn := description.get(_ATTR_UPNP_UDN):
+        udns.add(str(udn).lower())
+    device_list = description.get("deviceList")
+    if isinstance(device_list, Mapping):
+        devices = device_list.get("device", [])
+        for device in devices if isinstance(devices, list) else [devices]:
+            if isinstance(device, Mapping):
+                udns |= _description_udns(device)
+    return udns
+
+
 def _description_is_stale(
     ssdp_device: SsdpDevice, info_desc: Mapping[str, Any]
 ) -> bool:
-    """Return if the cached description is for a different root device."""
-    cached_udn = info_desc.get(_ATTR_UPNP_UDN)
-    if not cached_udn or not ssdp_device.udn:
+    """Return if the description does not list the device that sent the message."""
+    if not ssdp_device.udn or not (udns := _description_udns(info_desc)):
         return False
-    return str(cached_udn).lower() != ssdp_device.udn.lower()
+    return ssdp_device.udn.lower() not in udns
 
 
 def _udn_from_usn(usn: str | None) -> str | None:
