@@ -1,10 +1,10 @@
 {
   "conditions": {
     "awning_is_closed": {
-      "condition": "mdi:storefront-outline"
+      "condition": "mdi:awning-outline"
     },
     "awning_is_open": {
-      "condition": "mdi:storefront-outline"
+      "condition": "mdi:awning"
     },
     "blind_is_closed": {
       "condition": "mdi:blinds-horizontal-closed"
@@ -33,11 +33,19 @@
   },
   "entity_component": {
     "_": {
-      "default": "mdi:window-open",
+      "default": "mdi:dock-top",
       "state": {
-        "closed": "mdi:window-closed",
+        "closed": "mdi:card",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
+      }
+    },
+    "awning": {
+      "default": "mdi:awning",
+      "state": {
+        "closed": "mdi:awning-outline",
+        "closing": "mdi:arrow-collapse-up",
+        "opening": "mdi:arrow-expand-down"
       }
     },
     "blind": {
@@ -65,7 +73,9 @@
     "door": {
       "default": "mdi:door-open",
       "state": {
-        "closed": "mdi:door-closed"
+        "closed": "mdi:door-closed",
+        "closing": "mdi:arrow-collapse-horizontal",
+        "opening": "mdi:arrow-split-vertical"
       }
     },
     "garage": {
@@ -80,8 +90,8 @@
       "default": "mdi:gate-open",
       "state": {
         "closed": "mdi:gate",
-        "closing": "mdi:arrow-right",
-        "opening": "mdi:arrow-right"
+        "closing": "mdi:arrow-collapse-horizontal",
+        "opening": "mdi:arrow-split-vertical"
       }
     },
     "shade": {
@@ -143,10 +153,10 @@
   },
   "triggers": {
     "awning_closed": {
-      "trigger": "mdi:storefront-outline"
+      "trigger": "mdi:awning-outline"
     },
     "awning_opened": {
-      "trigger": "mdi:storefront-outline"
+      "trigger": "mdi:awning"
     },
     "blind_closed": {
       "trigger": "mdi:blinds-horizontal-closed"
