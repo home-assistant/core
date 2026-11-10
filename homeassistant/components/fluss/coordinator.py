@@ -52,7 +52,13 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         except FlussDeviceOfflineError:
             return {"internetConnected": False}
         except FlussApiClientError as err:
-            raise UpdateFailed(f"Error fetching Fluss device status: {err}") from err
+            # A refused read must not take the entry down: status is only used for
+            # connectivity and the cover position, while the trigger buttons work
+            # without it. The API can refuse reads for account-level reasons that
+            # have nothing to do with the device - an exhausted quota answers
+            # 429 api_quota_exceeded, which is not documented for this endpoint.
+            LOGGER.warning("Error fetching status for %s: %s", device_id, err)
+            return {}
         return response["status"]
 
     @override
