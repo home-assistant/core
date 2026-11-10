@@ -92,7 +92,7 @@ async def _async_send_telemetry(call: ServiceCall) -> None:
     vehicle_id = next(
         (
             raw.vehicle_id
-            for raw, _ in entry.runtime_data.garage_coordinator.data
+            for raw in entry.runtime_data.garage_coordinator.data
             if (DOMAIN, f"{entry.unique_id}_{raw.vehicle_id}") in device.identifiers
         ),
         None,
