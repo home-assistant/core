@@ -2428,7 +2428,6 @@ async def test_log_blocking_events(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we log which task is blocking startup when debug logging is on."""
-    caplog.set_level(logging.DEBUG)
 
     async def _wait_a_bit_1():
         await asyncio.sleep(0.1)
@@ -2451,7 +2450,6 @@ async def test_chained_logging_hits_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we log which task is blocking startup on chain."""
-    caplog.set_level(logging.DEBUG)
 
     created = 0
 
@@ -2480,7 +2478,6 @@ async def test_chained_logging_misses_log_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure we do not log blocking task if no timeout hit."""
-    caplog.set_level(logging.DEBUG)
 
     created = 0
 

@@ -1010,7 +1010,6 @@ async def test_pb_service_write(
     }
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
-    caplog.set_level(logging.DEBUG)
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
@@ -1574,7 +1573,8 @@ async def test_integration_reload(
 ) -> None:
     """Run test for integration reload."""
 
-    caplog.set_level(logging.DEBUG)
+    # The mock_modbus fixture sets the caplog level to WARNING
+    caplog.set_level(logging.DEBUG)  # pylint: disable=home-assistant-tests-redundant-caplog-level
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
@@ -1634,7 +1634,6 @@ async def test_integration_reload_failed(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration connect failure on reload."""
-    caplog.set_level(logging.DEBUG)
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
@@ -1806,7 +1805,6 @@ async def test_pb_service_write_no_slave(
     }
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
-    caplog.set_level(logging.DEBUG)
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called

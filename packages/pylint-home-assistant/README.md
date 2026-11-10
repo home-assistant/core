@@ -124,6 +124,7 @@ Every check has a code following the
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
+| `R7406` | [`home-assistant-tests-redundant-caplog-level`](#r7406-home-assistant-tests-redundant-caplog-level) | Do not set the root `caplog` level to DEBUG, the fixture already does |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -1259,6 +1260,34 @@ are not flagged. Discovery flows (e.g. `SOURCE_ZEROCONF`, `SOURCE_DHCP`),
 dynamic source values (a variable rather than a known user source), and user
 flows without
 `data` are not flagged. The checker is scoped to test modules.
+
+
+## `home_assistant_tests_redundant_caplog_level` checker
+
+Detects tests that set the root `caplog` level to DEBUG. The `caplog`
+fixture of `pytest_homeassistant` already calls
+`caplog.set_level(logging.DEBUG)`, so every test that uses `caplog` captures
+all log records at DEBUG and above.
+
+### `R7406`: `home-assistant-tests-redundant-caplog-level`
+
+A `caplog.set_level(...)` or `caplog.at_level(...)` call sets the level to
+DEBUG without a `logger` argument. The level is recognized as
+`logging.DEBUG`, `DEBUG` imported from `logging`, or the string `"DEBUG"`:
+
+```python
+async def test_something(hass: HomeAssistant, caplog: pytest.LogCaptureFixture):
+    caplog.set_level(logging.DEBUG)  # <-- flagged
+    with caplog.at_level(logging.DEBUG):  # <-- flagged
+        ...
+```
+
+Calls with a `logger` argument are not flagged, as some code sets the level
+of its own loggers. A DEBUG call that follows `caplog.set_level` with another
+level in the same function, or that is inside a `with caplog.at_level(...)`
+block with another level, restores the DEBUG level and is not flagged
+either. Other levels, like INFO or WARNING, raise the level and are not
+checked. The checker is scoped to test modules.
 
 
 ## `home_assistant_test_determinism` checker

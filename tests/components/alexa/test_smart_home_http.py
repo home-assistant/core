@@ -2,7 +2,6 @@
 
 from http import HTTPStatus
 import json
-import logging
 from typing import Any
 
 from aiohttp import ClientResponse
@@ -53,10 +52,9 @@ async def test_http_api(
     config: dict[str, Any],
 ) -> None:
     """With `smart_home:` HTTP API is exposed and debug log is redacted."""
-    with caplog.at_level(logging.DEBUG):
-        response = await do_http_discovery(config, hass, hass_client)
-        response_data = await response.json()
-        assert "'correlationToken': '**REDACTED**'" in caplog.text
+    response = await do_http_discovery(config, hass, hass_client)
+    response_data = await response.json()
+    assert "'correlationToken': '**REDACTED**'" in caplog.text
 
     # Here we're testing just the HTTP view glue -- details of discovery are
     # covered in other tests.
@@ -92,13 +90,12 @@ async def test_http_api_logs_entity_id(
     request = get_new_request("Alexa.PowerController", "TurnOn", "light#kitchen")
     request["directive"]["endpoint"]["endpointId"] = endpoint_id
 
-    with caplog.at_level(logging.DEBUG):
-        response = await http_client.post(
-            smart_home.SMART_HOME_HTTP_ENDPOINT,
-            data=json.dumps(request),
-            headers={"content-type": CONTENT_TYPE_JSON},
-        )
-        response_data = await response.json()
+    response = await http_client.post(
+        smart_home.SMART_HOME_HTTP_ENDPOINT,
+        data=json.dumps(request),
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    response_data = await response.json()
 
     assert (
         f"Received Alexa Smart Home request for entity {logged_entity_id}:"
