@@ -23,6 +23,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.setup import async_setup_component
 
 from . import setup_platform
 
@@ -88,7 +89,6 @@ async def test_battery_data_survives_basic_refresh(
     mock_solarlog_connector: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    entity_registry: EntityRegistry,
 ) -> None:
     """Test battery data is preserved across a basic refresh and updated by a device refresh."""
 
@@ -102,8 +102,7 @@ async def test_battery_data_survives_basic_refresh(
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
 
     basic_coordinator = mock_config_entry.runtime_data.basic_data_coordinator
-    initial_data = basic_coordinator.data
-    assert initial_data is not None
+    assert basic_coordinator.data is not None
     assert hass.states.get("sensor.solarlog_charging_power").state == "50.0"
     assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
     assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
@@ -123,10 +122,18 @@ async def test_battery_data_survives_basic_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert basic_coordinator.data is not initial_data
-    assert hass.states.get("sensor.solarlog_charging_power").state == "50.0"
-    assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
-    assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
+    assert mock_solarlog_connector.update_basic_data.await_count == 2
+    assert basic_coordinator.data.battery_data == BatteryData(
+        charge_power=50.0,
+        discharge_power=0.0,
+        level=45.0,
+        voltage=50.0,
+    )
+    assert hass.states.get("sensor.solarlog_charging_power").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.solarlog_discharging_power").state == STATE_UNAVAILABLE
+    )
+    assert hass.states.get("sensor.solarlog_charge_level").state == STATE_UNAVAILABLE
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -135,6 +142,25 @@ async def test_battery_data_survives_basic_refresh(
     assert hass.states.get("sensor.solarlog_charging_power").state == "100.0"
     assert hass.states.get("sensor.solarlog_discharging_power").state == "25.0"
     assert hass.states.get("sensor.solarlog_charge_level").state == "80.0"
+
+    mock_solarlog_connector.update_battery_data.side_effect = None
+    mock_solarlog_connector.update_battery_data.return_value = BatteryData(
+        charge_power=150.0,
+        discharge_power=35.0,
+        level=90.0,
+        voltage=50.0,
+    )
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "sensor.solarlog_charging_power"},
+        blocking=True,
+    )
+
+    assert hass.states.get("sensor.solarlog_charging_power").state == "150.0"
+    assert hass.states.get("sensor.solarlog_discharging_power").state == "35.0"
+    assert hass.states.get("sensor.solarlog_charge_level").state == "90.0"
 
 
 @pytest.mark.usefixtures("mock_solarlog_connector")

@@ -458,6 +458,20 @@ class SolarLogBatterySensor(SolarLogBasicCoordinatorEntity, SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return if the basic and device coordinators are available."""
+        return super().available and self.device_coordinator.last_update_success
+
+    @override
+    async def async_update(self) -> None:
+        """Request a device data refresh."""
+        if not self.enabled:
+            return
+
+        await self.device_coordinator.async_request_refresh()
+
+    @property
+    @override
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
         basic_data = (
