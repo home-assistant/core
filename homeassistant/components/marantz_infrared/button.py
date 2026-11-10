@@ -35,6 +35,26 @@ BUTTON_DESCRIPTIONS: tuple[MarantzIrButtonEntityDescription, ...] = (
         command_code=MarantzAudioCode.SPEAKER_AB,
     ),
     MarantzIrButtonEntityDescription(
+        key="speaker_a_off",
+        translation_key="speaker_a_off",
+        command_code=MarantzAudioCode.SPEAKER_AB,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="speaker_a_on",
+        translation_key="speaker_a_on",
+        command_code=MarantzAudioCode.SPEAKER_AB,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="speaker_b_off",
+        translation_key="speaker_b_off",
+        command_code=MarantzAudioCode.SPEAKER_AB,
+    ),
+    MarantzIrButtonEntityDescription(
+        key="speaker_b_on",
+        translation_key="speaker_b_on",
+        command_code=MarantzAudioCode.SPEAKER_AB,
+    ),
+    MarantzIrButtonEntityDescription(
         key="source_direct",
         translation_key="source_direct",
         command_code=MarantzAudioCode.SOURCE_DIRECT,

@@ -17,6 +17,18 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
 
 BUTTON_ENTITY_ID_SPEAKER_AB = "button.marantz_pm6006_integrated_amplifier_speaker_a_b"
+BUTTON_ENTITY_ID_SPEAKER_A_OFF = (
+    "button.marantz_pm8006_integrated_amplifier_speaker_a_off"
+)
+BUTTON_ENTITY_ID_SPEAKER_A_ON = (
+    "button.marantz_pm8006_integrated_amplifier_speaker_a_on"
+)
+BUTTON_ENTITY_ID_SPEAKER_B_OFF = (
+    "button.marantz_pm8006_integrated_amplifier_speaker_b_off"
+)
+BUTTON_ENTITY_ID_SPEAKER_B_ON = (
+    "button.marantz_pm8006_integrated_amplifier_speaker_b_on"
+)
 BUTTON_ENTITY_ID_SOURCE_DIRECT = (
     "button.marantz_pm6006_integrated_amplifier_source_direct"
 )
@@ -92,6 +104,10 @@ async def test_button_press_sends_correct_code(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
+        (BUTTON_ENTITY_ID_SPEAKER_A_OFF, MarantzAudioCode.SPEAKER_B_OFF),
+        (BUTTON_ENTITY_ID_SPEAKER_A_ON, MarantzAudioCode.SPEAKER_B_ON),
+        (BUTTON_ENTITY_ID_SPEAKER_B_OFF, MarantzAudioCode.SPEAKER_A_OFF),
+        (BUTTON_ENTITY_ID_SPEAKER_B_ON, MarantzAudioCode.SPEAKER_A_ON),
         (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON, MarantzAudioCode.POWER_AMP_DIRECT_ON),
         (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF, MarantzAudioCode.POWER_AMP_DIRECT_OFF),
     ],

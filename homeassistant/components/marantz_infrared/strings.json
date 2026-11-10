@@ -25,16 +25,28 @@
         "name": "Loudness"
       },
       "power_amp_direct_off": {
-        "name": "Power Amp Direct Off"
+        "name": "Power AMP Direct Off"
       },
       "power_amp_direct_on": {
-        "name": "Power Amp Direct On"
+        "name": "Power AMP Direct On"
       },
       "source_direct": {
         "name": "Source direct"
       },
+      "speaker_a_off": {
+        "name": "Speaker A Off"
+      },
+      "speaker_a_on": {
+        "name": "Speaker A On"
+      },
       "speaker_ab": {
         "name": "Speaker A/B"
+      },
+      "speaker_b_off": {
+        "name": "Speaker B Off"
+      },
+      "speaker_b_on": {
+        "name": "Speaker B On"
       }
     },
     "media_player": {
@@ -42,6 +54,7 @@
         "state_attributes": {
           "source": {
             "state": {
+              "aux": "Aux",
               "cd": "CD",
               "coax": "Coax",
               "laserdisc": "LaserDisc",
