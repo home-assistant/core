@@ -1556,6 +1556,10 @@ async def test_get_history_service_max_records_exceeded(
         )
 
     assert exc_info.value.translation_key == "max_records_exceeded"
+    assert exc_info.value.translation_placeholders == {
+        "entity_id": "sensor.sensor",
+        "max_records": "3",
+    }
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -1607,6 +1611,10 @@ async def test_get_history_service_max_records_with_duplicate_states(
         )
 
     assert exc_info.value.translation_key == "max_records_exceeded"
+    assert exc_info.value.translation_placeholders == {
+        "entity_id": "sensor.sensor",
+        "max_records": "3",
+    }
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         result = await hass.services.async_call(
