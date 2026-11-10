@@ -10,6 +10,7 @@ from awesomeversion import AwesomeVersion
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.external_usb import SynoCoreExternalUSB
 from synology_dsm.api.core.hardware import SynoCoreHardware
+from synology_dsm.api.core.package import SynoCorePackage
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.system import SynoCoreSystem
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
@@ -75,6 +76,7 @@ class SynoApi:
         self.hardware: SynoCoreHardware | None = None
         self.information: SynoDSMInformation | None = None
         self.network: SynoDSMNetwork | None = None
+        self.package: SynoCorePackage | None = None
         self.photos: SynoPhotos | None = None
         self.security: SynoCoreSecurity | None = None
         self.storage: SynoStorage | None = None
@@ -89,6 +91,7 @@ class SynoApi:
         self._with_file_station = True
         self._with_hardware = True
         self._with_information = True
+        self._with_package = True
         self._with_photos = True
         self._with_security = True
         self._with_storage = True
@@ -174,6 +177,18 @@ class SynoApi:
             self._with_upgrade = False
             self.dsm.reset(SynoCoreUpgrade.API_KEY)
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
+
+        self._with_package = (
+            SynoCorePackage.API_KEY in self.dsm.apis
+            and SynoCorePackage.SERVER_API_KEY in self.dsm.apis
+        )
+        if self._with_package:
+            try:
+                await self.dsm.package.update()
+            except SYNOLOGY_CONNECTION_EXCEPTIONS as ex:
+                self._with_package = False
+                self.dsm.reset(SynoCorePackage.API_KEY)
+                LOGGER.debug("Disabled fetching package data during setup: %s", ex)
 
         # check if file station is used and permitted
         self._with_file_station = bool(
@@ -271,6 +286,7 @@ class SynoApi:
         self._with_storage = bool(self._fetching_entities.get(SynoStorage.API_KEY))
         self._with_photos = bool(self._fetching_entities.get(SynoStorage.API_KEY))
         self._with_upgrade = bool(self._fetching_entities.get(SynoCoreUpgrade.API_KEY))
+        self._with_package = bool(self._fetching_entities.get(SynoCorePackage.API_KEY))
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )
@@ -337,6 +353,14 @@ class SynoApi:
                 self.dsm.reset(self.upgrade)
             self.upgrade = None
 
+        if not self._with_package:
+            LOGGER.debug(
+                "Disable package api from being updated for '%s'", self._entry.unique_id
+            )
+            if self.package:
+                self.dsm.reset(self.package)
+            self.package = None
+
         if not self._with_utilisation:
             LOGGER.debug(
                 "Disable utilisation api from being updated for '%s'",
@@ -390,6 +414,10 @@ class SynoApi:
         if self._with_upgrade:
             LOGGER.debug("Enable upgrade api updates for '%s'", self._entry.unique_id)
             self.upgrade = self.dsm.upgrade
+
+        if self._with_package:
+            LOGGER.debug("Enable package api updates for '%s'", self._entry.unique_id)
+            self.package = self.dsm.package
 
         if self._with_system:
             LOGGER.debug("Enable system api updates for '%s'", self._entry.unique_id)
