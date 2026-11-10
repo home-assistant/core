@@ -379,12 +379,7 @@ async def test_uid_falls_back_to_the_entry(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("slug", "expected"),
     [
-        # Stored relative: the frontend resolves ``homeassistant://`` against
-        # whatever address the viewer is on, and ``configuration_url`` is
-        # stored once -- a resolved address could only ever match either the
-        # local network or a remote URL, never both.
-        ("habitron_smarthub", "homeassistant://habitron_smarthub/ingress?index=%2Fhub"),
-        # A standalone hub serves its own UI, and that address we do know.
+        ("habitron_smarthub", "homeassistant://app/habitron_smarthub?index=%2Fhub"),
         ("", f"http://{MOCK_HOST}:7780/hub"),
     ],
     ids=["add-on", "standalone"],

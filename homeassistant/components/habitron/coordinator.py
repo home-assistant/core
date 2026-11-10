@@ -249,7 +249,8 @@ class HbtnCoordinator(DataUpdateCoordinator[HbtnData]):
     def _resolve_base_url(self) -> str:
         """Return the base URL of the hub's own web UI."""
         if self.hub.is_addon:
-            return f"homeassistant://{self.hub.slug}/ingress"
+            # The app panel also works when the add-on is not in the sidebar.
+            return f"homeassistant://app/{self.hub.slug}"
         return f"http://{self.host}:{_WEB_PORT}"
 
     def _conf_url(self, path: str) -> str | None:
