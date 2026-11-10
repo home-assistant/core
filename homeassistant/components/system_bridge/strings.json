@@ -432,13 +432,21 @@
     "buttons": {
       "fields": {
         "id": {
-          "description": "Reported when the button is pressed. Can't be `default`, which is reported when the notification itself is clicked.",
+          "description": "Reported when the button is pressed. Can't be \"default\", which is reported when the notification itself is clicked.",
           "name": "ID"
         },
         "label": {
           "description": "Text shown on the button.",
           "name": "Label"
         }
+      }
+    },
+    "icon": {
+      "options": {
+        "dialog-error": "Error",
+        "dialog-information": "Information",
+        "dialog-question": "Question",
+        "dialog-warning": "Warning"
       }
     },
     "key": {
@@ -609,7 +617,7 @@
       "name": "Send keyboard keypress"
     },
     "send_message": {
-      "description": "Sends a notification to the computer, with options `notify.send_message` doesn't have. Only administrators can use it.",
+      "description": "Sends a notification to the computer, with options the standard notify action doesn't have. Only administrators can use it.",
       "fields": {
         "buttons": {
           "description": "Up to 3 buttons to show on the notification. Pressing one reports its ID. Linux and Windows only.",
@@ -620,7 +628,7 @@
           "name": "Duration"
         },
         "icon": {
-          "description": "Icon name or image path on the computer to show with the notification.",
+          "description": "Icon to show with the notification: an image path on the computer, or on Linux an icon name from the icon theme. Standard icon names: {icon_naming_url}.",
           "name": "Icon"
         },
         "message": {
