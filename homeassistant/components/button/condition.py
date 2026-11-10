@@ -49,8 +49,8 @@ class ButtonIsBeingHeldCondition(EntityConditionBase):
         """Return if this condition needs duration tracking.
 
         The state is the timestamp of the last event, so it changes on every event.
-        While held, the last event is long_press_start, so last_changed is when the
-        hold started.
+        While held, the last event is long_press_start, so last_changed is no earlier
+        than when the hold started.
         """
         return False
 
@@ -79,8 +79,12 @@ class ButtonIsBeingHeldCondition(EntityConditionBase):
         return (
             entity_state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
             == ButtonEventType.LONG_PRESS_START
-            # Like the held trigger, so a missed release doesn't keep it held.
-            and dt_util.utcnow() - entity_state.last_changed < HOLD_TIMEOUT
+            # Like the held trigger, so a missed release doesn't keep it held. Uses
+            # the earlier time: restores and availability changes set last_changed,
+            # and a clock going back puts the event time in the future.
+            and (event_time := dt_util.parse_datetime(entity_state.state)) is not None
+            and dt_util.utcnow() - min(event_time, entity_state.last_changed)
+            < HOLD_TIMEOUT
         )
 
 

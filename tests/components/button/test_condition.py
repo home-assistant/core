@@ -41,6 +41,7 @@ _ALL_BUTTON_EVENT_TYPES = [
     "multi_press",
 ]
 _EVENT_ENTITY_ID = "event.test_button"
+# Tests of held buttons freeze time here, as a hold times out after the event.
 _EVENT_TIMESTAMP = "2026-01-01T00:00:00.000+00:00"
 
 
@@ -147,6 +148,7 @@ _IS_BEING_HELD_EVENT_TYPES_STATES: dict[str, Any] = {
 }
 
 
+@pytest.mark.freeze_time(_EVENT_TIMESTAMP)
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("event"),
@@ -181,6 +183,7 @@ async def test_button_condition_behavior_any(
     )
 
 
+@pytest.mark.freeze_time(_EVENT_TIMESTAMP)
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("event"),
@@ -215,6 +218,7 @@ async def test_button_condition_behavior_all(
     )
 
 
+@pytest.mark.freeze_time(_EVENT_TIMESTAMP)
 @pytest.mark.parametrize("entity_id", ["button.test_button", "input_button.test"])
 async def test_button_is_being_held_condition_ignores_buttons(
     hass: HomeAssistant, entity_id: str
@@ -235,6 +239,7 @@ async def test_button_is_being_held_condition_ignores_buttons(
     assert cond.async_check() is False
 
 
+@pytest.mark.freeze_time(_EVENT_TIMESTAMP)
 async def test_button_is_being_held_condition_for(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -284,6 +289,7 @@ async def test_button_is_being_held_condition_for(
     assert cond.async_check() is False
 
 
+@pytest.mark.freeze_time(_EVENT_TIMESTAMP)
 @pytest.mark.parametrize(
     ("condition_options", "valid_at_hold_start"),
     [
@@ -320,4 +326,45 @@ async def test_button_is_being_held_condition_timeout(
 
     # Without a release, the hold ends after the timeout, like the held trigger.
     freezer.tick(timedelta(seconds=0.001))
+    assert cond.async_check() is False
+
+
+@pytest.mark.freeze_time(_EVENT_TIMESTAMP)
+@pytest.mark.parametrize(
+    ("written_after_event", "times_out_after"),
+    [
+        # Restored, or available again, with an event from before.
+        pytest.param(timedelta(seconds=10), timedelta(seconds=20), id="restored"),
+        # The clock went back after the event, so the event is in the future.
+        pytest.param(
+            timedelta(seconds=-10), timedelta(seconds=30), id="clock_went_back"
+        ),
+    ],
+)
+async def test_button_is_being_held_condition_timeout_start(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    written_after_event: timedelta,
+    times_out_after: timedelta,
+) -> None:
+    """Test the hold times out from the earlier of the event and the state change."""
+    state, attributes = _button_event("long_press_start", _ALL_BUTTON_EVENT_TYPES)
+    freezer.tick(written_after_event)
+    hass.states.async_set(
+        _EVENT_ENTITY_ID, state, attributes | {ATTR_DEVICE_CLASS: "button"}
+    )
+    await hass.async_block_till_done()
+
+    cond = await create_target_condition(
+        hass,
+        condition="button.is_being_held",
+        target={CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+        behavior="any",
+    )
+    assert cond.async_check() is True
+
+    freezer.tick(times_out_after - timedelta(milliseconds=1))
+    assert cond.async_check() is True
+
+    freezer.tick(timedelta(milliseconds=1))
     assert cond.async_check() is False
