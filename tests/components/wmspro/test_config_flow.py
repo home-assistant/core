@@ -4,17 +4,21 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.wmspro.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import remove_config_entry, setup_config_entry, unload_config_entry
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_config_flow(
@@ -24,8 +28,8 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -38,9 +42,10 @@ async def test_config_flow(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.2.3.4"
+    assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -56,8 +61,8 @@ async def test_config_flow_from_dhcp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -70,11 +75,12 @@ async def test_config_flow_from_dhcp(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.2.3.4"
+    assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
+    assert result["result"].unique_id == "00:11:22:33:44:55"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -87,8 +93,8 @@ async def test_config_flow_from_dhcp_add_mac(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -101,9 +107,9 @@ async def test_config_flow_from_dhcp_add_mac(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.2.3.4"
+    assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -115,8 +121,8 @@ async def test_config_flow_from_dhcp_add_mac(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
 
 
@@ -132,8 +138,8 @@ async def test_config_flow_from_dhcp_ip_update(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -146,9 +152,9 @@ async def test_config_flow_from_dhcp_ip_update(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.2.3.4"
+    assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -160,8 +166,8 @@ async def test_config_flow_from_dhcp_ip_update(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
     assert hass.config_entries.async_entries(DOMAIN)[0].data[CONF_HOST] == "5.6.7.8"
 
@@ -178,8 +184,8 @@ async def test_config_flow_from_dhcp_no_update(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -192,9 +198,9 @@ async def test_config_flow_from_dhcp_no_update(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "webcontrol"
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "webcontrol"
+    assert result.get("data") == {
         CONF_HOST: "webcontrol",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -206,10 +212,36 @@ async def test_config_flow_from_dhcp_no_update(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=info
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "00:11:22:33:44:55"
     assert hass.config_entries.async_entries(DOMAIN)[0].data[CONF_HOST] == "webcontrol"
+
+
+async def test_config_flow_from_dhcp_ignored_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hub_refresh: AsyncMock,
+) -> None:
+    """Test DHCP discovery aborts when the device was ignored."""
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IGNORE,
+        unique_id="00:11:22:33:44:55",
+        data={},
+    )
+    ignored_entry.add_to_hass(hass)
+
+    info = DhcpServiceInfo(
+        ip="1.2.3.4", hostname="webcontrol", macaddress="001122334455"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=info
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN)[0].data == {}
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_config_flow_ping_failed(
@@ -219,6 +251,7 @@ async def test_config_flow_ping_failed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result.get("type") is FlowResultType.FORM
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -231,8 +264,8 @@ async def test_config_flow_ping_failed(
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -245,9 +278,9 @@ async def test_config_flow_ping_failed(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.2.3.4"
+    assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -260,6 +293,7 @@ async def test_config_flow_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result.get("type") is FlowResultType.FORM
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -272,8 +306,8 @@ async def test_config_flow_cannot_connect(
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -286,9 +320,9 @@ async def test_config_flow_cannot_connect(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.2.3.4"
+    assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -301,6 +335,7 @@ async def test_config_flow_unknown_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result.get("type") is FlowResultType.FORM
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -313,8 +348,8 @@ async def test_config_flow_unknown_error(
             },
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "unknown"}
 
     with patch(
         "wmspro.webcontrol.WebControlPro.ping",
@@ -327,9 +362,9 @@ async def test_config_flow_unknown_error(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "1.2.3.4"
-    assert result["data"] == {
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "1.2.3.4"
+    assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -354,6 +389,7 @@ async def test_config_flow_duplicate_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result.get("type") is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -361,9 +397,8 @@ async def test_config_flow_duplicate_entries(
             CONF_HOST: "5.6.7.8",
         },
     )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -390,6 +425,7 @@ async def test_config_flow_multiple_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result.get("type") is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -397,10 +433,10 @@ async def test_config_flow_multiple_entries(
             CONF_HOST: "5.6.7.8",
         },
     )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "5.6.7.8"
-    assert result["data"] == {
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "5.6.7.8"
+    assert result.get("data") == {
         CONF_HOST: "5.6.7.8",
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2

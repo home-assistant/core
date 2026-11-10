@@ -10,10 +10,9 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import raise_contains_mocks
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import raise_contains_mocks
 
 _LOGGER = logging.getLogger(__name__)
 

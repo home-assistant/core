@@ -12,12 +12,14 @@ from homeassistant.components.conversation import (
     async_get_chat_log,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import Context
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
+from .evaluation import EvaluationTask, EvaluationTaskResult
 from .task import GenDataTask, GenDataTaskResult, GenImageTask, GenImageTaskResult
 
 
@@ -61,6 +63,7 @@ class AITaskEntity(RestoreEntity):
         self,
         session: ChatSession,
         task: GenDataTask | GenImageTask,
+        context: Context | None,
     ) -> AsyncGenerator[ChatLog]:
         """Context manager used to manage the ChatLog used during an AI Task."""
         user_llm_hass_api: llm.API | None = None
@@ -78,10 +81,11 @@ class AITaskEntity(RestoreEntity):
             await chat_log.async_provide_llm_data(
                 llm.LLMContext(
                     platform=self.platform.domain,
-                    context=None,
+                    context=context,
                     language=None,
                     assistant=DOMAIN,
                     device_id=None,
+                    agent_id=self.entity_id,
                 ),
                 user_llm_prompt=DEFAULT_SYSTEM_PROMPT,
                 user_llm_hass_api=user_llm_hass_api,
@@ -98,11 +102,14 @@ class AITaskEntity(RestoreEntity):
         self,
         session: ChatSession,
         task: GenDataTask,
+        context: Context | None = None,
     ) -> GenDataTaskResult:
         """Run a gen data task."""
+        if context is not None:
+            self.async_set_context(context)
         self.__last_activity = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        async with self._async_get_ai_task_chat_log(session, task) as chat_log:
+        async with self._async_get_ai_task_chat_log(session, task, context) as chat_log:
             return await self._async_generate_data(task, chat_log)
 
     async def _async_generate_data(
@@ -118,11 +125,14 @@ class AITaskEntity(RestoreEntity):
         self,
         session: ChatSession,
         task: GenImageTask,
+        context: Context | None = None,
     ) -> GenImageTaskResult:
         """Run a gen image task."""
+        if context is not None:
+            self.async_set_context(context)
         self.__last_activity = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        async with self._async_get_ai_task_chat_log(session, task) as chat_log:
+        async with self._async_get_ai_task_chat_log(session, task, context) as chat_log:
             return await self._async_generate_image(task, chat_log)
 
     async def _async_generate_image(
@@ -131,4 +141,19 @@ class AITaskEntity(RestoreEntity):
         chat_log: ChatLog,
     ) -> GenImageTaskResult:
         """Handle a gen image task."""
+        raise NotImplementedError
+
+    @final
+    async def internal_async_evaluate(
+        self, task: EvaluationTask, context: Context | None = None
+    ) -> EvaluationTaskResult:
+        """Run an evaluation task."""
+        if context is not None:
+            self.async_set_context(context)
+        self.__last_activity = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        return await self._async_evaluate(task)
+
+    async def _async_evaluate(self, task: EvaluationTask) -> EvaluationTaskResult:
+        """Handle an evaluation task."""
         raise NotImplementedError

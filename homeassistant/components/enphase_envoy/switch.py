@@ -11,6 +11,7 @@ from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -135,7 +136,11 @@ class EnvoyEnpowerSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             model="Enpower",
             name=f"Enpower {self._serial_number}",
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, self.envoy_serial_num),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             serial_number=self._serial_number,
         )
 
@@ -189,7 +194,11 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
             model="Dry contact relay",
             name=relay.load_name,
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, enpower.serial_number),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, enpower.serial_number),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @property
@@ -239,7 +248,11 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
                 model="Enpower",
                 name=f"Enpower {self._serial_number}",
                 sw_version=str(enpower.firmware_version),
-                via_device=(DOMAIN, self.envoy_serial_num),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, self.envoy_serial_num),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
                 serial_number=self._serial_number,
             )
         else:

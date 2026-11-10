@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.wallbox.coordinator import InsufficientRights
@@ -12,8 +13,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import http_403_error, http_404_error, http_429_error, setup_integration
 from .const import MOCK_LOCK_ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_wallbox_lock_class(

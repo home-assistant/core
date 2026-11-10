@@ -1,6 +1,6 @@
 """Repairs for LG ThinQ integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -40,7 +40,7 @@ class DeprecatedFanSpeedRepairFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=self._placeholders,
         )
 

@@ -8,8 +8,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BleBoxConfigEntry
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 from .util import blebox_command
 
@@ -21,6 +20,9 @@ BUTTON_TYPES: dict[str, ButtonEntityDescription] = {
     "fav": ButtonEntityDescription(key="fav", translation_key="fav"),
     "open": ButtonEntityDescription(key="open", translation_key="open"),
     "close": ButtonEntityDescription(key="close", translation_key="close"),
+    "second_output": ButtonEntityDescription(
+        key="second_output", translation_key="second_output"
+    ),
 }
 
 _DEFAULT_BUTTON = ButtonEntityDescription(key="button")
@@ -42,8 +44,6 @@ async def async_setup_entry(
 
 class BleBoxButtonEntity(BleBoxEntity[blebox_uniapi.button.Button], ButtonEntity):
     """Representation of BleBox buttons."""
-
-    _attr_name = None
 
     def __init__(
         self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.button.Button

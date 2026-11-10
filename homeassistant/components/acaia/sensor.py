@@ -4,8 +4,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from aioacaia.acaiascale import AcaiaDeviceState, AcaiaScale
+from aioacaia import AcaiaScale
 from aioacaia.const import UnitMass as AcaiaUnitOfMass
+from aioacaia.scale import AcaiaDeviceState
 
 from homeassistant.components.sensor import (
     RestoreSensor,

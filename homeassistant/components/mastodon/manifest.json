@@ -1,12 +1,14 @@
 {
   "domain": "mastodon",
   "name": "Mastodon",
+  "categories": ["news_social_media"],
   "codeowners": ["@fabaff", "@andrew-codechimp"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/mastodon",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["mastodon"],
   "quality_scale": "gold",
-  "requirements": ["Mastodon.py==2.2.1"]
+  "requirements": ["Mastodon.py==2.3.3"]
 }

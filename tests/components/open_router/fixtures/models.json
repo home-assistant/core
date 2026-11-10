@@ -88,6 +88,45 @@
         "structured_outputs",
         "response_format"
       ]
+    },
+    {
+      "id": "google/gemini-2.5-flash-image",
+      "canonical_slug": "google/gemini-2.5-flash-image",
+      "hugging_face_id": null,
+      "name": "Google: Gemini 2.5 Flash Image",
+      "created": 1700000000,
+      "description": "A multimodal model capable of generating images.",
+      "context_length": 32768,
+      "architecture": {
+        "modality": "text+image->text+image",
+        "input_modalities": ["text", "image"],
+        "output_modalities": ["text", "image"],
+        "tokenizer": "Gemini",
+        "instruct_type": null
+      },
+      "pricing": {
+        "prompt": "0.0000003",
+        "completion": "0.0000025",
+        "request": "0",
+        "image": "0",
+        "web_search": "0",
+        "internal_reasoning": "0"
+      },
+      "top_provider": {
+        "context_length": 32768,
+        "max_completion_tokens": 8192,
+        "is_moderated": false
+      },
+      "per_request_limits": null,
+      "supported_parameters": [
+        "max_tokens",
+        "temperature",
+        "top_p",
+        "tools",
+        "tool_choice",
+        "structured_outputs",
+        "response_format"
+      ]
     }
   ]
 }

@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyimouapi.ha_device import ImouHaDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.imou.const import CONF_APP_ID, DOMAIN
+from homeassistant.components.imou.const import CONF_APP_ID, DOMAIN, PLATFORMS
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_ENTRY_DATA, DEFAULT_MOCK_DEVICES
-
-from tests.common import MockConfigEntry
+from .const import CONFIG_ENTRY_DATA, default_mock_devices
 
 PATCH_IMOU_OPENAPI_CLIENT = "homeassistant.components.imou.ImouOpenApiClient"
 PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT = (
@@ -51,7 +51,10 @@ def mock_imou_openapi_client() -> Generator[AsyncMock]:
 @pytest.fixture
 def imou_mock_devices(request: pytest.FixtureRequest) -> list[ImouHaDevice]:
     """Devices returned by ImouHaDeviceManager.async_get_devices (override via indirect)."""
-    return getattr(request, "param", DEFAULT_MOCK_DEVICES)
+    factory = getattr(request, "param", default_mock_devices)
+    if callable(factory):
+        return factory()
+    return factory
 
 
 @pytest.fixture
@@ -62,6 +65,7 @@ def mock_imou_ha_device_manager(
     with patch(PATCH_IMOU_HA_DEVICE_MANAGER, autospec=True) as mock_manager:
         device_manager = mock_manager.return_value
         device_manager.async_get_devices.return_value = imou_mock_devices
+        device_manager.async_update_devices_status.return_value = set()
         yield device_manager
 
 
@@ -70,9 +74,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry so config flow tests do not load the full integration."""
     with patch(
         "homeassistant.components.imou.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def platforms(request: pytest.FixtureRequest) -> list[Platform]:
+    """Return the platforms to set up (default: the integration's full list)."""
+    return getattr(request, "param", PLATFORMS)
+
+
+@pytest.fixture
+def mock_camera_access_token() -> Generator[None]:
+    """Stabilize camera access tokens for snapshot tests."""
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        yield
 
 
 @pytest.fixture
@@ -81,24 +98,11 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_imou_openapi_client: AsyncMock,
     mock_imou_ha_device_manager: MagicMock,
-) -> MagicMock:
-    """Set up Imou with mocked library clients; returns the HA device manager mock."""
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up Imou with mocked library clients; returns the config entry."""
     mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_imou_ha_device_manager
-
-
-@pytest.fixture
-async def init_integration_stable_camera(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_openapi_client: AsyncMock,
-    mock_imou_ha_device_manager: MagicMock,
-) -> MagicMock:
-    """Set up Imou with stable camera access tokens for snapshot tests."""
-    mock_config_entry.add_to_hass(hass)
-    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+    with patch("homeassistant.components.imou.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-    return mock_imou_ha_device_manager
+    return mock_config_entry

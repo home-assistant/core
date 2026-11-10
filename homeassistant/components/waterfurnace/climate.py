@@ -86,7 +86,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_min_humidity = 15
     _attr_max_humidity = 95
 
@@ -113,7 +113,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current room temperature."""
         return self.coordinator.data.tstatroomtemp
 
@@ -137,7 +137,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature (single setpoint modes)."""
         if self.hvac_mode == HVACMode.COOL:
             return self.coordinator.data.tstatcoolingsetpoint
@@ -147,7 +147,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature (Heat/Cool mode)."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.coordinator.data.tstatcoolingsetpoint
@@ -155,7 +155,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature (Heat/Cool mode)."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.coordinator.data.tstatheatingsetpoint

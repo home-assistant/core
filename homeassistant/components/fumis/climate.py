@@ -61,7 +61,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 0.5
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: FumisDataUpdateCoordinator) -> None:
         """Initialize the Fumis climate entity."""
@@ -86,7 +86,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (temp := self.coordinator.data.controller.main_temperature) is None:
             return None
@@ -94,7 +94,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         if (temp := self.coordinator.data.controller.main_temperature) is None:
             return None

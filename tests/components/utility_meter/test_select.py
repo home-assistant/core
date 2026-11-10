@@ -1,11 +1,11 @@
 """The tests for the utility_meter select platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.utility_meter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_select_entity_name_config_entry(
@@ -90,7 +90,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     utility_meter_config_entry = MockConfigEntry(
         data={},
@@ -102,7 +102,7 @@ async def test_device_id(
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "tariffs": ["peak", "offpeak"],
         },
         title="Energy",

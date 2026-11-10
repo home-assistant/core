@@ -5,9 +5,10 @@ import logging
 import statistics
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -15,13 +16,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -36,18 +36,20 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import PLATFORMS
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+from .const import (
+    CONF_ENTITY_IDS,
+    CONF_ROUND_DIGITS,
+    DOMAIN,
+    MinMaxEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MIN_VALUE = "min_value"
-ATTR_MIN_ENTITY_ID = "min_entity_id"
 ATTR_MAX_VALUE = "max_value"
-ATTR_MAX_ENTITY_ID = "max_entity_id"
 ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
-ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
 
@@ -66,13 +68,13 @@ SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
-            cv.string, vol.In(SENSOR_TYPES.values())
-        ),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
-        vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(
+            CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]
+        ): probatio.All(cv.string, probatio.In(SENSOR_TYPES.values())),
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_IDS): cv.entity_ids,
+        probatio.Optional(CONF_ROUND_DIGITS, default=2): probatio.Coerce(int),
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -286,15 +288,15 @@ class MinMaxSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         attributes: dict[str, list[str] | str | None] = {
-            ATTR_ENTITY_ID: self._entity_ids
+            MinMaxEntityStateAttribute.ENTITY_ID: self._entity_ids
         }
 
         if self._sensor_type == "min":
-            attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
+            attributes[MinMaxEntityStateAttribute.MIN_ENTITY_ID] = self.min_entity_id
         elif self._sensor_type == "max":
-            attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
+            attributes[MinMaxEntityStateAttribute.MAX_ENTITY_ID] = self.max_entity_id
         elif self._sensor_type == "last":
-            attributes[ATTR_LAST_ENTITY_ID] = self.last_entity_id
+            attributes[MinMaxEntityStateAttribute.LAST_ENTITY_ID] = self.last_entity_id
 
         return attributes
 
@@ -325,11 +327,11 @@ class MinMaxSensor(SensorEntity):
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if self._unit_of_measurement != new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
         ):
             _LOGGER.warning(
                 "Units of measurement do not match for entity %s", self.entity_id
@@ -372,10 +374,15 @@ class MinMaxSensor(SensorEntity):
                 device_classes.append(None)
 
         # Only inherit device_class if all entities have the same non-None device_class
-        if device_classes and all(
-            dc is not None and dc == device_classes[0] for dc in device_classes
+        # and it allows the measurement state class, e.g. not energy
+        first = device_classes[0] if device_classes else None
+        if (
+            first is not None
+            and all(dc == first for dc in device_classes)
+            and SensorStateClass.MEASUREMENT
+            in DEVICE_CLASS_STATE_CLASSES.get(first, {SensorStateClass.MEASUREMENT})
         ):
-            self._attr_device_class = device_classes[0]
+            self._attr_device_class = first
 
     @callback
     def _calc_values(self) -> None:

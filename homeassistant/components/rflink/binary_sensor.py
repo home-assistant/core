@@ -2,12 +2,10 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -26,33 +24,27 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ALIASES
 from .entity import RflinkDevice
-from .utils import create_issue_yaml_migration
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
 
 RFLINK_PLATFORM = {
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                vol.Optional(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                probatio.Optional(
                     CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
                 ): cv.boolean,
-                vol.Optional(CONF_OFF_DELAY): cv.positive_int,
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_OFF_DELAY): cv.positive_int,
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )
     }
 }
-
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def devices_from_config(domain_config):
@@ -73,10 +65,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink platform."""
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-    else:
-        async_add_entities(devices_from_config(discovery_info))
+        return
+    async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):

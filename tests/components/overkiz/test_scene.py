@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pyoverkiz.converter import converter
 from pyoverkiz.models import PersistedActionGroup
 import pytest
+from pytest_homeassistant.common import load_json_array_fixture, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overkiz.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockOverkizClient, SetupOverkizIntegration
-
-from tests.common import load_json_array_fixture, snapshot_platform
 
 SCENARIO_FIXTURES = [
     "scenarios/cozytouch.json",

@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pymelcloud
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.melcloud.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
-
-from tests.common import MockConfigEntry
 
 MOCK_SERIAL = "ABC123456"
 MOCK_MAC = "AA:BB:CC:DD:EE:FF"
@@ -23,6 +22,13 @@ def _build_mock_zone(zone_index: int) -> MagicMock:
     zone.room_temperature = 21.5 + zone_index
     zone.zone_flow_temperature = 35.0 + zone_index
     zone.zone_return_temperature = 30.0 + zone_index
+    zone.status = "heat"
+    zone.operation_mode = "heat-flow"
+    zone.operation_modes = ["heat-thermostat", "heat-flow", "curve"]
+    zone.target_temperature = 21.0
+    zone.target_flow_temperature = 40.0
+    zone.set_operation_mode = AsyncMock()
+    zone.set_target_flow_temperature = AsyncMock()
     return zone
 
 
@@ -35,6 +41,10 @@ def _build_mock_atw_device() -> MagicMock:
     device.serial = MOCK_SERIAL
     device.name = "Ecodan"
     device.units = [{"model": "ATW-Unit", "serial": "unit-serial-1"}]
+    device.power = True
+    device.temperature_increment = 0.5
+    device.status = "heat_zones"
+    device.set = AsyncMock()
 
     # Binary sensor properties
     device.boiler_status = True

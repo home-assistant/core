@@ -25,9 +25,9 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    _LOGGER,
     BINARY_SENSOR_DEVICE_TYPES_ISY,
     BINARY_SENSOR_DEVICE_TYPES_ZWAVE,
+    LOGGER,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_DUSK_DAWN,
@@ -124,7 +124,7 @@ async def async_setup_entry(
         if device_class in DEVICE_PARENT_REQUIRED:
             parent_entity = entities_by_address.get(node.parent_node.address)
             if not parent_entity:
-                _LOGGER.error(
+                LOGGER.error(
                     (
                         "Node %s has a parent node %s, but no device "
                         "was created for the parent. Skipping"
@@ -150,7 +150,6 @@ async def async_setup_entry(
                 entity = ISYBinarySensorHeartbeat(
                     node, parent_entity, device_info=device_info
                 )
-                parent_entity.add_heartbeat_device(entity)
                 entities.append(entity)
             continue
         if (
@@ -292,11 +291,17 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         """Subscribe to the node and subnode event emitters."""
         await super().async_added_to_hass()
 
-        self._node.control_events.subscribe(self._async_positive_node_control_handler)
+        self.async_on_remove(
+            self._node.control_events.subscribe(
+                self._async_positive_node_control_handler
+            ).unsubscribe
+        )
 
         if self._negative_node is not None:
-            self._negative_node.control_events.subscribe(
-                self._async_negative_node_control_handler
+            self.async_on_remove(
+                self._negative_node.control_events.subscribe(
+                    self._async_negative_node_control_handler
+                ).unsubscribe
             )
 
     def add_heartbeat_device(self, entity: ISYBinarySensorHeartbeat | None) -> None:
@@ -337,7 +342,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
     def _async_negative_node_control_handler(self, event: NodeProperty) -> None:
         """Handle an "On" control event from the "negative" node."""
         if event.control == CMD_ON:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Sensor %s turning Off via the Negative node sending a DON command",
                 self.name,
             )
@@ -354,7 +359,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         events
         """
         if event.control == CMD_ON:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Sensor %s turning On via the Primary node sending a DON command",
                 self.name,
             )
@@ -362,7 +367,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             self.async_write_ha_state()
             self._async_heartbeat()
         if event.control == CMD_OFF:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Sensor %s turning Off via the Primary node sending a DOF command",
                 self.name,
             )
@@ -421,10 +426,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
     def __init__(
         self,
         node: Node,
-        parent_device: ISYInsteonBinarySensorEntity
-        | ISYBinarySensorEntity
-        | ISYBinarySensorHeartbeat
-        | ISYBinarySensorProgramEntity,
+        parent_device: ISYInsteonBinarySensorEntity,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the ISY binary sensor device.
@@ -448,10 +450,17 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         """Subscribe to the node and subnode event emitters."""
         await super().async_added_to_hass()
 
-        self._node.control_events.subscribe(self._heartbeat_node_control_handler)
+        self.async_on_remove(
+            self._node.control_events.subscribe(
+                self._heartbeat_node_control_handler
+            ).unsubscribe
+        )
+        self._parent_device.add_heartbeat_device(self)
+        self.async_on_remove(lambda: self._parent_device.add_heartbeat_device(None))
 
         # Start the timer on boot-up, so we can change from UNKNOWN to OFF
         self._restart_timer()
+        self.async_on_remove(self._cancel_timer)
 
         if (last_state := await self.async_get_last_state()) is not None:
             # Only restore the state if it was previously ON (Low Battery)
@@ -479,11 +488,15 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         self._restart_timer()
         self.async_write_ha_state()
 
-    def _restart_timer(self) -> None:
-        """Restart the 25 hour timer."""
+    def _cancel_timer(self) -> None:
+        """Cancel the 25 hour timer."""
         if self._heartbeat_timer is not None:
             self._heartbeat_timer()
             self._heartbeat_timer = None
+
+    def _restart_timer(self) -> None:
+        """Restart the 25 hour timer."""
+        self._cancel_timer()
 
         @callback
         def timer_elapsed(now: datetime) -> None:

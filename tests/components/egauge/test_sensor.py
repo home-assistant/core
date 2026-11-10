@@ -3,18 +3,21 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from egauge_async.exceptions import EgaugeAuthenticationError
+from egauge_async.exceptions import EgaugeParsingException
 from freezegun.api import FrozenDateTimeFactory
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.egauge.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -31,13 +34,15 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Verify main device created with hostname
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "ABC123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "ABC123456"), mock_config_entry.entry_id
+    )
     assert device_entry
     assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(
-    "exception", [EgaugeAuthenticationError, ConnectError("Connection failed")]
+    "exception", [EgaugeParsingException, ConnectError("Connection failed")]
 )
 @pytest.mark.freeze_time("2025-01-15T10:00:00+00:00")
 async def test_sensor_error(

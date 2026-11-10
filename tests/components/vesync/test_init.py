@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyvesync import VeSync
 from pyvesync.utils.errors import (
     VeSyncAPIResponseError,
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -58,6 +57,7 @@ async def test_async_setup_entry__no_devices(
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
             Platform.BINARY_SENSOR,
+            Platform.BUTTON,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
@@ -85,6 +85,7 @@ async def test_async_setup_entry__loads_fans(
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
             Platform.BINARY_SENSOR,
+            Platform.BUTTON,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,

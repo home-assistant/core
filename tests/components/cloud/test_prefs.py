@@ -132,6 +132,32 @@ async def test_setup_remove_cloud_user(
 
 
 @pytest.mark.parametrize(
+    ("user_name", "expected_name"),
+    [
+        pytest.param("Home Assistant Cloud", "Home Assistant Link", id="legacy"),
+        pytest.param("Custom name", "Custom name", id="custom"),
+    ],
+)
+async def test_get_cloud_user_renames_legacy_name(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    user_name: str,
+    expected_name: str,
+) -> None:
+    """Test the cloud user with the legacy default name is renamed."""
+    user = await hass.auth.async_create_system_user(
+        user_name, group_ids=[GROUP_ID_ADMIN], local_only=True
+    )
+    hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": user.id}}
+
+    prefs = CloudPreferences(hass)
+    await prefs.async_initialize()
+
+    assert await prefs.get_cloud_user() == user.id
+    assert user.name == expected_name
+
+
+@pytest.mark.parametrize(
     ("google_assistant_users", "google_connected"),
     [([], False), (["cloud-user"], True), (["other-user"], False)],
 )

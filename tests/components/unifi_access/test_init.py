@@ -5,6 +5,7 @@ import ssl
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from unifi_access_api import (
     ApiAuthError,
     ApiConnectionError,
@@ -29,8 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import _make_door
-
-from tests.common import MockConfigEntry
 
 FRONT_DOOR_BINARY_SENSOR = "binary_sensor.front_door"
 BACK_DOOR_BINARY_SENSOR = "binary_sensor.back_door"
@@ -447,8 +446,12 @@ async def test_stale_device_removed_on_refresh(
 ) -> None:
     """Test that stale devices are automatically removed on data refresh."""
     # Verify both doors exist after initial setup
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-001"), init_integration.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-002"), init_integration.entry_id
+    )
 
     # Simulate door-002 being removed from the hub
     mock_client.get_doors.return_value = [
@@ -464,8 +467,12 @@ async def test_stale_device_removed_on_refresh(
     await hass.async_block_till_done()
 
     # door-001 still exists, door-002 was removed
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-001"), init_integration.entry_id
+    )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-002"), init_integration.entry_id
+    )
 
 
 async def test_stale_device_removed_on_startup(
@@ -482,12 +489,20 @@ async def test_stale_device_removed_on_startup(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "door-003")},
     )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-003"), mock_config_entry.entry_id
+    )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Valid doors from the hub should exist, stale device should be removed
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-001")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "door-002")})
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "door-003")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-001"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-002"), mock_config_entry.entry_id
+    )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "door-003"), mock_config_entry.entry_id
+    )

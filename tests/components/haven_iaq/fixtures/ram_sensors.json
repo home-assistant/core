@@ -1,0 +1,18 @@
+{
+  "sensor_ready": true,
+  "temperature_c": 22.5,
+  "humidity_pct": 45,
+  "dew_point_c": 10,
+  "co2_ppm": 500,
+  "tvoc_index": 100,
+  "nox_index": 1,
+  "pm1_ugm3": 0.1,
+  "pm25_ugm3": 1,
+  "pm4_ugm3": 1,
+  "pm10_ugm3": 1,
+  "pm05_count_cm3": 0.7,
+  "pm1_count_cm3": 0.9,
+  "pm25_count_cm3": 0.9,
+  "pm4_count_cm3": 0.9,
+  "pm10_count_cm3": 0.9
+}

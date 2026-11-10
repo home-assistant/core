@@ -2,15 +2,20 @@
 
 from typing import TYPE_CHECKING, Final
 
+from aioesphomeapi import TemperatureUnit
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.assist_pipeline import indexed_select_key
 from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.const import UnitOfTemperature, __version__ as ha_version
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from .domain_data import DomainData
 
 DOMAIN = "esphome"
+
+CLIENT_INFO = f"Home Assistant {ha_version}"
 
 ESPHOME_DATA: HassKey[DomainData] = HassKey(DOMAIN)
 
@@ -37,6 +42,29 @@ STABLE_BLE_URL_VERSION = f"{STABLE_BLE_VERSION.major}.{STABLE_BLE_VERSION.minor}
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
 
 NO_WAKE_WORD: Final[str] = "no_wake_word"
+WAKE_WORD_SELECT_KEY: Final[str] = "wake_word"
 
 WAKE_WORDS_DIR_NAME = "custom_wake_words"
 WAKE_WORDS_API_PATH = "/api/esphome/wake_words"
+
+
+# Built from the device info, so a cleanup path has to name them.
+ASSIST_SATELLITE_KEY: Final[str] = "assist_satellite"
+VOICE_ASSISTANT_SELECT_COUNT: Final[int] = 2
+VOICE_ASSISTANT_SELECT_KEYS: Final[tuple[str, ...]] = (
+    *(
+        indexed_select_key("pipeline", index)
+        for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+    ),
+    "vad_sensitivity",
+    *(
+        indexed_select_key(WAKE_WORD_SELECT_KEY, index)
+        for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+    ),
+)
+
+TEMPERATURE_UNIT_MAP: dict[TemperatureUnit, UnitOfTemperature] = {
+    TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    TemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
+}

@@ -1,6 +1,6 @@
 """Support for Songpal-enabled (Sony) media devices."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -23,8 +23,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SET_SOUND_SETTING,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            vol.Required(PARAM_NAME): cv.string,
-            vol.Required(PARAM_VALUE): cv.string,
+            probatio.Required(PARAM_NAME): cv.string,
+            probatio.Required(PARAM_VALUE): cv.string,
         },
         func="async_set_sound_setting",
     )

@@ -19,8 +19,8 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
 from .const import UNIT_MAPPING
+from .coordinator import TPLinkConfigEntry
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 

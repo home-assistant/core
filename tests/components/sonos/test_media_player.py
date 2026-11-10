@@ -3,7 +3,7 @@
 from collections.abc import Generator
 import logging
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from freezegun import freeze_time
 import pytest
@@ -13,6 +13,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
+from soco.exceptions import SoCoUPnPException
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -43,6 +44,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     RepeatMode,
 )
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.sonos.const import (
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
@@ -104,8 +106,8 @@ async def test_device_registry(
     hass: HomeAssistant, device_registry: DeviceRegistry, async_autosetup_sonos, soco
 ) -> None:
     """Test sonos device registered in the device registry."""
-    reg_device = device_registry.async_get_device(
-        identifiers={("sonos", "RINCON_test")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("sonos", "RINCON_test"), hass.config_entries.async_entries("sonos")[0].entry_id
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
@@ -132,8 +134,8 @@ async def test_device_registry_not_portable(
     soco.get_battery_info.return_value = {}
     await async_setup_sonos()
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("sonos", "RINCON_test")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("sonos", "RINCON_test"), hass.config_entries.async_entries("sonos")[0].entry_id
     )
     assert reg_device is not None
     assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
@@ -326,6 +328,69 @@ async def test_play_media_library_content_error(
         )
 
 
+@pytest.mark.parametrize(
+    ("error", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            OSError("Network down"),
+            "call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "Network down",
+            },
+            id="generic-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 701 received", "701", ""),
+            "upnp_call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 701 received",
+                "error_code": "701",
+            },
+            id="upnp-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 800 received", "800", ""),
+            "upnp_call_failed_music_service_unavailable",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 800 received",
+                "error_code": "800",
+            },
+            id="upnp-error-800-music-service-unavailable",
+        ),
+    ],
+)
+async def test_play_media_error_translation(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    error: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test play_media surfaces translated error details for failures."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    soco_mock.play_uri.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "track",
+                ATTR_MEDIA_CONTENT_ID: _track_url,
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
+
+
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
 
 
@@ -436,6 +501,135 @@ async def test_play_media_lib_track_add(
     assert soco_mock.play_from_queue.call_count == 0
 
 
+@pytest.mark.parametrize(
+    (
+        "enqueue",
+        "expected_play_uri_calls",
+        "expected_add_uri_calls",
+        "expected_play_from_queue_calls",
+    ),
+    [
+        pytest.param(
+            MediaPlayerEnqueue.REPLACE,
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    force_radio=False,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            [],
+            id="replace",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.ADD,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            id="add",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.NEXT,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    position=1,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            id="next",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.PLAY,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    position=1,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [call(9)],
+            id="play",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_play_media_source_passes_mime_type(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    enqueue: MediaPlayerEnqueue,
+    expected_play_uri_calls: list[Any],
+    expected_add_uri_calls: list[Any],
+    expected_play_from_queue_calls: list[Any],
+) -> None:
+    """Test media source MIME type is passed to SoCo."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    with patch(
+        "homeassistant.components.sonos.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/audio/stream", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: "media-source://test/audio",
+                ATTR_MEDIA_ENQUEUE: enqueue,
+            },
+            blocking=True,
+        )
+
+    assert soco_mock.play_uri.call_args_list == expected_play_uri_calls
+    assert soco_mock.add_uri_to_queue.call_args_list == expected_add_uri_calls
+    assert soco_mock.play_from_queue.call_args_list == expected_play_from_queue_calls
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_play_radio_media_source_does_not_pass_mime_type(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test radio media source MIME type is not passed to SoCo."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    with patch(
+        "homeassistant.components.sonos.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/audio/stream", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: "media-source://radio_browser/station",
+            },
+            blocking=True,
+        )
+
+    soco_mock.play_uri.assert_called_once_with(
+        "http://example.com/audio/stream", force_radio=True
+    )
+
+
 _share_link: str = "spotify:playlist:abcdefghij0123456789XY"
 _share_link_title: str = "playlist title"
 
@@ -470,6 +664,28 @@ async def test_play_media_share_link_add(
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["dc_title"]
         == _share_link_title
+    )
+
+
+@pytest.mark.usefixtures("soco_factory", "async_autosetup_sonos")
+async def test_play_media_spotify_media_browser_url(
+    hass: HomeAssistant, soco_sharelink: MagicMock
+) -> None:
+    """Tests playing a Spotify media browser URL when Spotify is set up."""
+    hass.config.components.add("spotify")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "spotify://playlist",
+            ATTR_MEDIA_CONTENT_ID: f"spotify://01J5TX5A0FF6G5V0QJX6HBC94T/{_share_link}",
+        },
+        blocking=True,
+    )
+    assert soco_sharelink.add_share_link_to_queue.call_count == 1
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].args[0] == _share_link
     )
 
 
@@ -1294,7 +1510,8 @@ async def test_play_media_announce(
     sonos_websocket.play_clip.reset_mock()
     sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
     with pytest.raises(
-        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+        HomeAssistantError,
+        match="An error occurred while communicating with the Sonos speaker",
     ):
         await hass.services.async_call(
             MP_DOMAIN,

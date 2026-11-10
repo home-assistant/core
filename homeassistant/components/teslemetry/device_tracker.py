@@ -13,13 +13,13 @@ from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityDescription,
 )
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehiclePollingEntity, TeslemetryVehicleStreamEntity
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
@@ -46,8 +46,8 @@ DESCRIPTIONS: tuple[TeslemetryDeviceTrackerEntityDescription, ...] = (
     TeslemetryDeviceTrackerEntityDescription(
         key="route",
         polling_prefix="drive_state_active_route",
-        value_listener=lambda vehicle, callback: vehicle.listen_DestinationLocation(
-            callback
+        value_listener=lambda vehicle, callback: (
+            vehicle.listen_ActiveRouteDestinationLocation(callback)
         ),
         streaming_firmware="2024.26",
     ),
@@ -147,8 +147,8 @@ class TeslemetryStreamingDeviceTrackerEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            self._attr_latitude = state.attributes.get("latitude")
-            self._attr_longitude = state.attributes.get("longitude")
+            self._attr_latitude = state.attributes.get(EntityStateAttribute.LATITUDE)
+            self._attr_longitude = state.attributes.get(EntityStateAttribute.LONGITUDE)
         self.async_on_remove(
             self.entity_description.value_listener(
                 self.vehicle.stream_vehicle, self._location_callback

@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from typing import override
 
@@ -11,6 +12,7 @@ from asyncsleepiq import AsyncSleepIQ, SleepIQAPIException, SleepIQTimeoutExcept
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,11 +56,13 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except SleepIQTimeoutException as err:
             raise UpdateFailed(f"Timed out fetching SleepIQ data: {err}") from err
         except SleepIQAPIException as err:
+            if err.code == HTTPStatus.UNAUTHORIZED:
+                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(f"Failed to fetch SleepIQ data: {err}") from err
 
 
 class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
-    """SleepIQ pause update coordinator."""
+    """SleepIQ pause mode and favorite firmness update coordinator."""
 
     config_entry: SleepIQConfigEntry
 
@@ -82,12 +86,23 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         try:
             await asyncio.gather(
-                *[bed.fetch_pause_mode() for bed in self.client.beds.values()]
+                *[bed.fetch_pause_mode() for bed in self.client.beds.values()],
+                *[
+                    sleeper.fetch_favsleepnumber()
+                    for bed in self.client.beds.values()
+                    for sleeper in bed.sleepers
+                ],
             )
         except SleepIQTimeoutException as err:
-            raise UpdateFailed(f"Timed out fetching SleepIQ pause data: {err}") from err
+            raise UpdateFailed(
+                f"Timed out fetching SleepIQ pause and favorite data: {err}"
+            ) from err
         except SleepIQAPIException as err:
-            raise UpdateFailed(f"Failed to fetch SleepIQ pause data: {err}") from err
+            if err.code == HTTPStatus.UNAUTHORIZED:
+                raise ConfigEntryAuthFailed from err
+            raise UpdateFailed(
+                f"Failed to fetch SleepIQ pause and favorite data: {err}"
+            ) from err
 
 
 class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
@@ -125,6 +140,8 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
         except SleepIQTimeoutException as err:
             raise UpdateFailed(f"Timed out fetching SleepIQ sleep data: {err}") from err
         except SleepIQAPIException as err:
+            if err.code == HTTPStatus.UNAUTHORIZED:
+                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(f"Failed to fetch SleepIQ sleep data: {err}") from err
 
 

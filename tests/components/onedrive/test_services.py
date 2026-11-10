@@ -2,34 +2,37 @@
 
 from collections.abc import Generator
 from dataclasses import dataclass
+import glob
+from pathlib import Path
 import re
 from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from onedrive_personal_sdk.exceptions import OneDriveException
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.onedrive.const import CONF_DELETE_PERMANENTLY, DOMAIN
 from homeassistant.components.onedrive.services import (
-    CONF_CONFIG_ENTRY_ID,
-    CONF_DESTINATION_FOLDER,
-    CONF_DESTINATION_PATH,
-    DELETE_SERVICE,
-    UPLOAD_SERVICE,
+    OneDriveService,
+    OneDriveServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_FILENAME
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
-
 TEST_FILENAME = "doorbell_snapshot.jpg"
 TEST_DESTINATION_PATH = "photos/snapshots/image.jpg"
 DESTINATION_FOLDER = "TestFolder"
+
+
+def _is_file(path: Path) -> bool:
+    """Return True for concrete files, False for glob patterns."""
+    return not glob.has_magic(str(path))
 
 
 @dataclass
@@ -83,11 +86,11 @@ async def test_upload_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        UPLOAD_SERVICE,
+        OneDriveService.UPLOAD,
         {
-            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_FILENAME: TEST_FILENAME,
-            CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+            OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
         },
         blocking=True,
         return_response=True,
@@ -96,6 +99,151 @@ async def test_upload_service(
     assert response
     assert response["files"]
     assert cast(list[dict[str, Any]], response["files"])[0]["id"] == "metadata_id"
+
+
+async def test_upload_service_wildcard(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test service call to upload content using a wildcard pattern."""
+    await setup_integration(hass, mock_config_entry)
+
+    matched_files = ["image1.jpg", "image2.jpg"]
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+            return_value=matched_files,
+        ) as mock_glob,
+        patch(
+            "homeassistant.components.onedrive.services.Path.is_file",
+            autospec=True,
+            side_effect=_is_file,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            OneDriveService.UPLOAD,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: "/config/www/*.jpg",
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+
+    mock_glob.assert_called_once_with("*.jpg", root_dir="/config/www", recursive=True)
+    assert mock_onedrive_client.upload_file.call_count == len(matched_files)
+    uploaded_names = [
+        call.args[1] for call in mock_onedrive_client.upload_file.call_args_list
+    ]
+    assert uploaded_names == ["image1.jpg", "image2.jpg"]
+
+
+async def test_upload_service_wildcard_recursive(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test service call to upload content using a recursive wildcard pattern."""
+    await setup_integration(hass, mock_config_entry)
+
+    matched_files = ["image1.jpg", "sub/image2.jpg"]
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+            return_value=matched_files,
+        ) as mock_glob,
+        patch(
+            "homeassistant.components.onedrive.services.Path.is_file",
+            autospec=True,
+            side_effect=_is_file,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            OneDriveService.UPLOAD,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: "/config/www/**/*.jpg",
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+
+    mock_glob.assert_called_once_with(
+        "**/*.jpg", root_dir="/config/www", recursive=True
+    )
+    assert mock_onedrive_client.upload_file.call_count == len(matched_files)
+    # the "sub" subfolder is created under the destination folder
+    created_folders = [
+        call.args[1] for call in mock_onedrive_client.create_folder.call_args_list
+    ]
+    assert "sub" in created_folders
+    # the nested file keeps its base name and is routed through the subfolder
+    uploaded_names = [
+        call.args[1] for call in mock_onedrive_client.upload_file.call_args_list
+    ]
+    assert uploaded_names == ["image1.jpg", "image2.jpg"]
+
+
+async def test_upload_service_wildcard_no_match(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test upload service call with a wildcard pattern that matches no files."""
+    await setup_integration(hass, mock_config_entry)
+
+    pattern = "/config/www/*.jpg"
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+            return_value=[],
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            OneDriveService.UPLOAD,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: pattern,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_files_match_pattern"
+    assert pattern in exc_info.value.translation_placeholders["patterns"]
+
+
+@pytest.mark.parametrize("upload_file", [MockUploadFile(is_allowed_path=False)])
+async def test_upload_service_wildcard_base_not_allowed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a wildcard base directory outside the allowlist is rejected."""
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+        ) as mock_glob,
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            OneDriveService.UPLOAD,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: "/config/www/*.jpg",
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_access_to_path"
+    assert exc_info.value.translation_placeholders["filename"] == "/config/www"
+    # globbing must not run for a base directory outside the allowlist
+    mock_glob.assert_not_called()
 
 
 async def test_upload_service_no_response(
@@ -109,11 +257,11 @@ async def test_upload_service_no_response(
 
     response = await hass.services.async_call(
         DOMAIN,
-        UPLOAD_SERVICE,
+        OneDriveService.UPLOAD,
         {
-            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_FILENAME: TEST_FILENAME,
-            CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+            OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
         },
         blocking=True,
     )
@@ -130,11 +278,11 @@ async def test_upload_service_config_entry_not_found(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: "invalid-config-entry-id",
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -156,11 +304,11 @@ async def test_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -180,11 +328,11 @@ async def test_path_is_not_allowed(
     ):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -201,11 +349,11 @@ async def test_filename_does_not_exist(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -225,11 +373,11 @@ async def test_multiple_filenames_do_not_exist(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_FILENAME: [TEST_FILENAME, second_filename],
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: [TEST_FILENAME, second_filename],
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -251,11 +399,11 @@ async def test_upload_service_fails_upload(
     with pytest.raises(HomeAssistantError, match="Failed to upload"):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -275,11 +423,11 @@ async def test_upload_size_limit(
     ):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -300,11 +448,11 @@ async def test_create_album_failed(
     with pytest.raises(HomeAssistantError, match="Failed to create folder"):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            OneDriveService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -320,10 +468,10 @@ async def test_delete_service_config_entry_not_found(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CommonServiceArgument.CONFIG_ENTRY_ID: "invalid-config-entry-id",
+                OneDriveServiceArgument.DESTINATION_PATH: [TEST_DESTINATION_PATH],
             },
             blocking=True,
         )
@@ -344,10 +492,10 @@ async def test_delete_service_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.DESTINATION_PATH: [TEST_DESTINATION_PATH],
             },
             blocking=True,
         )
@@ -362,14 +510,14 @@ async def test_delete_service(
     """Test delete service call removes the remote file."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.services.has_service(DOMAIN, DELETE_SERVICE)
+    assert hass.services.has_service(DOMAIN, OneDriveService.DELETE)
 
     await hass.services.async_call(
         DOMAIN,
-        DELETE_SERVICE,
+        OneDriveService.DELETE,
         {
-            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OneDriveServiceArgument.DESTINATION_PATH: [TEST_DESTINATION_PATH],
         },
         blocking=True,
     )
@@ -393,10 +541,10 @@ async def test_delete_service_delete_permanently(
 
     await hass.services.async_call(
         DOMAIN,
-        DELETE_SERVICE,
+        OneDriveService.DELETE,
         {
-            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OneDriveServiceArgument.DESTINATION_PATH: [TEST_DESTINATION_PATH],
         },
         blocking=True,
     )
@@ -417,10 +565,13 @@ async def test_delete_service_multiple_files(
 
     await hass.services.async_call(
         DOMAIN,
-        DELETE_SERVICE,
+        OneDriveService.DELETE,
         {
-            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OneDriveServiceArgument.DESTINATION_PATH: [
+                TEST_DESTINATION_PATH,
+                second_path,
+            ],
         },
         blocking=True,
     )
@@ -447,10 +598,10 @@ async def test_delete_service_fails(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.DESTINATION_PATH: [TEST_DESTINATION_PATH],
             },
             blocking=True,
         )
@@ -474,10 +625,13 @@ async def test_delete_service_multiple_files_all_fail(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.DESTINATION_PATH: [
+                    TEST_DESTINATION_PATH,
+                    second_path,
+                ],
             },
             blocking=True,
         )
@@ -505,10 +659,13 @@ async def test_delete_service_multiple_files_partial_failure(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.DESTINATION_PATH: [
+                    TEST_DESTINATION_PATH,
+                    second_path,
+                ],
             },
             blocking=True,
         )
@@ -537,10 +694,10 @@ async def test_delete_service_get_approot_fails(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.DESTINATION_PATH: [TEST_DESTINATION_PATH],
             },
             blocking=True,
         )
@@ -554,13 +711,13 @@ async def test_delete_empty_destination_path(
     """Test delete service raises when destination_path is an empty list."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [],
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.DESTINATION_PATH: [],
             },
             blocking=True,
         )
@@ -588,10 +745,10 @@ async def test_delete_invalid_destination_path(
     with pytest.raises(HomeAssistantError, match="Invalid destination path"):
         await hass.services.async_call(
             DOMAIN,
-            DELETE_SERVICE,
+            OneDriveService.DELETE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: bad_path,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.DESTINATION_PATH: bad_path,
             },
             blocking=True,
         )

@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any, Final, cast
 
 from aiopyarr import exceptions
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -29,9 +29,9 @@ CONF_MAX_ITEMS = "max_items"
 # Default values - 0 means no limit
 DEFAULT_MAX_ITEMS = 0
 
-SERVICE_BASE_SCHEMA = vol.Schema(
+SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
@@ -41,8 +41,8 @@ SERVICE_GET_MOVIES_SCHEMA = SERVICE_BASE_SCHEMA
 
 SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=500)
+        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=500)
         ),
     }
 )

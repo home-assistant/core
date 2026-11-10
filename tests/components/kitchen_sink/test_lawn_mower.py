@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kitchen_sink import DOMAIN
@@ -11,13 +12,12 @@ from homeassistant.components.lawn_mower import (
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
+    SERVICE_STOP,
     LawnMowerActivity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events, async_mock_service
 
 MOWER_SERVICE_ENTITY = "lawn_mower.mower_can_dock"
 
@@ -78,6 +78,12 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
             LawnMowerActivity.RETURNING,
             LawnMowerActivity.DOCKED,
         ),
+        (
+            "lawn_mower.mower_can_stop",
+            SERVICE_STOP,
+            LawnMowerActivity.MOWING,
+            LawnMowerActivity.IDLE,
+        ),
     ],
 )
 async def test_mower(
@@ -109,6 +115,7 @@ async def test_mower(
         SERVICE_DOCK,
         SERVICE_START_MOWING,
         SERVICE_PAUSE,
+        SERVICE_STOP,
     ],
 )
 async def test_service_calls_mocked(hass: HomeAssistant, service_call) -> None:

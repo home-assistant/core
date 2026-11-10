@@ -4,14 +4,13 @@ from unittest.mock import MagicMock
 
 from peblar import PeblarAuthenticationError, PeblarConnectionError, PeblarError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -35,16 +34,35 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [PeblarConnectionError, PeblarError],
+    ("exception", "translation_key", "reason"),
+    [
+        (
+            PeblarConnectionError("Could not connect"),
+            "communication_error",
+            "An error occurred while communicating with the Peblar EV charger: "
+            "Could not connect",
+        ),
+        (
+            PeblarError("Unknown error"),
+            "unknown_error",
+            "An unknown error occurred while communicating with the Peblar EV "
+            "charger: Unknown error",
+        ),
+    ],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_peblar: MagicMock,
     exception: Exception,
+    translation_key: str,
+    reason: str,
 ) -> None:
-    """Test the Peblar configuration entry not ready."""
+    """Test the Peblar configuration entry not ready.
+
+    The reason reaches the user, so it comes from strings.json rather than
+    from a sentence typed into the raise.
+    """
     mock_peblar.login.side_effect = exception
 
     mock_config_entry.add_to_hass(hass)
@@ -53,6 +71,8 @@ async def test_config_entry_not_ready(
 
     assert len(mock_peblar.login.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.reason == reason
 
 
 async def test_config_entry_authentication_failed(
@@ -69,6 +89,7 @@ async def test_config_entry_authentication_failed(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "authentication_error"
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -85,12 +106,13 @@ async def test_config_entry_authentication_failed(
 @pytest.mark.usefixtures("init_integration")
 async def test_peblar_device_entry(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test authentication error, aborts setup."""
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, "23-45-A4O-MOF")}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "23-45-A4O-MOF"), mock_config_entry.entry_id
         )
     )
     assert device_entry == snapshot

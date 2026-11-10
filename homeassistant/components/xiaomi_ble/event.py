@@ -4,6 +4,7 @@ from dataclasses import replace
 from typing import override
 
 from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -193,7 +194,7 @@ async def async_setup_entry(
         # Matches logic in PassiveBluetoothProcessorEntity
         XiaomiEventEntity(address_event_class[0], address_event_class[2], None)
         for ent_reg_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-        if ent_reg_entry.domain == "event"
+        if ent_reg_entry.domain == EVENT_DOMAIN
         and (address_event_class := ent_reg_entry.unique_id.partition("-"))
     )
 

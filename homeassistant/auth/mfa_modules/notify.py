@@ -8,7 +8,7 @@ import logging
 from typing import Any, cast, override
 
 import attr
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
@@ -24,17 +24,23 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.9.0"]
+REQUIREMENTS = ["pyotp==2.10.0"]
 
 CONF_MESSAGE = "message"
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
     {
-        vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_MESSAGE, default="{} is your Home Assistant login code"): str,
+        probatio.Optional(CONF_INCLUDE): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_EXCLUDE): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(
+            CONF_MESSAGE, default="{} is your Home Assistant login code"
+        ): str,
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 STORAGE_VERSION = 1
@@ -108,9 +114,9 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     @property
     @override
-    def input_schema(self) -> vol.Schema:
+    def input_schema(self) -> probatio.Schema:
         """Validate login flow input data."""
-        return vol.Schema({vol.Required(INPUT_FIELD_CODE): str})
+        return probatio.Schema({probatio.Required(INPUT_FIELD_CODE): str})
 
     async def _async_load(self) -> None:
         """Load stored data."""
@@ -277,7 +283,7 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
     def __init__(
         self,
         auth_module: NotifyAuthModule,
-        setup_schema: vol.Schema,
+        setup_schema: probatio.Schema,
         user_id: str,
         available_notify_services: list[str],
     ) -> None:
@@ -308,10 +314,12 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         if not self._available_notify_services:
             return self.async_abort(reason="no_available_service")
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required("notify_service"): vol.In(self._available_notify_services),
-                vol.Optional("target"): str,
+                probatio.Required("notify_service"): probatio.In(
+                    self._available_notify_services
+                ),
+                probatio.Optional("target"): str,
             }
         )
 

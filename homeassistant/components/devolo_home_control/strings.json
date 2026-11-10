@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -65,6 +64,12 @@
     },
     "maintenance": {
       "message": "devolo Home Control is currently in maintenance mode."
+    },
+    "set_failed": {
+      "message": "The devolo Home Control central unit did not accept the command."
+    },
+    "switch_protected": {
+      "message": "Remote switching is disabled for this device. Please use the physical button."
     }
   }
 }

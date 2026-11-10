@@ -1,6 +1,6 @@
 """Services for Fritz integration."""
 
-import logging
+from enum import StrEnum
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -9,8 +9,9 @@ from fritzconnection.core.exceptions import (
     FritzServiceError,
 )
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
-import voluptuous as vol
+import probatio
 
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import (
@@ -18,25 +19,42 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import FritzConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 
-SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
-SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
+class FritzService(StrEnum):
+    """Store keys for FRITZ!Box Tools services."""
+
+    SET_GUEST_WIFI_PASSWORD = "set_guest_wifi_password"
+    DIAL = "dial"
+
+
+class FritzServiceArgument(StrEnum):
+    """Store keys for FRITZ!Box Tools service arguments."""
+
+    PASSWORD = "password"
+    LENGTH = "length"
+    NUMBER = "number"
+    MAX_RING_SECONDS = "max_ring_seconds"
+
+
+SERVICE_SCHEMA_SET_GUEST_WIFI_PW = probatio.Schema(
     {
-        vol.Required("device_id"): str,
-        vol.Optional("password"): vol.Length(min=8, max=63),
-        vol.Optional("length"): vol.Range(min=8, max=63),
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Optional(FritzServiceArgument.PASSWORD): probatio.Length(
+            min=8, max=63
+        ),
+        probatio.Optional(FritzServiceArgument.LENGTH): probatio.Range(min=8, max=63),
     }
 )
-SERVICE_DIAL = "dial"
-SERVICE_SCHEMA_DIAL = vol.Schema(
+SERVICE_SCHEMA_DIAL = probatio.Schema(
     {
-        vol.Required("device_id"): str,
-        vol.Required("number"): str,
-        vol.Required("max_ring_seconds"): vol.Range(min=1, max=300),
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+        probatio.Required(FritzServiceArgument.NUMBER): str,
+        probatio.Required(FritzServiceArgument.MAX_RING_SECONDS): probatio.Range(
+            min=1, max=300
+        ),
     }
 )
 
@@ -60,12 +78,14 @@ async def _async_set_guest_wifi_password(service_call: ServiceCall) -> None:
         )
 
     for target_entry in target_entries:
-        _LOGGER.debug("Executing service %s", service_call.service)
+        LOGGER.debug("Executing service %s", service_call.service)
         avm_wrapper = target_entry.runtime_data
         try:
             await avm_wrapper.async_trigger_set_guest_password(
-                service_call.data.get("password"),
-                service_call.data.get("length", DEFAULT_PASSWORD_LENGTH),
+                service_call.data.get(FritzServiceArgument.PASSWORD),
+                service_call.data.get(
+                    FritzServiceArgument.LENGTH, DEFAULT_PASSWORD_LENGTH
+                ),
             )
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError(
@@ -96,12 +116,14 @@ async def _async_dial(service_call: ServiceCall) -> None:
         )
 
     for target_entry in target_entries:
-        _LOGGER.debug("Executing service %s", service_call.service)
+        LOGGER.debug("Executing service %s", service_call.service)
         avm_wrapper = target_entry.runtime_data
         try:
             await avm_wrapper.async_trigger_dial(
-                service_call.data["number"],
-                max_ring_seconds=service_call.data["max_ring_seconds"],
+                service_call.data[FritzServiceArgument.NUMBER],
+                max_ring_seconds=service_call.data[
+                    FritzServiceArgument.MAX_RING_SECONDS
+                ],
             )
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError(
@@ -124,8 +146,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_GUEST_WIFI_PW,
+        FritzService.SET_GUEST_WIFI_PASSWORD,
         _async_set_guest_wifi_password,
         SERVICE_SCHEMA_SET_GUEST_WIFI_PW,
     )
-    hass.services.async_register(DOMAIN, SERVICE_DIAL, _async_dial, SERVICE_SCHEMA_DIAL)
+    hass.services.async_register(
+        DOMAIN, FritzService.DIAL, _async_dial, SERVICE_SCHEMA_DIAL
+    )

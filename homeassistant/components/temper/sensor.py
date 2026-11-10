@@ -2,8 +2,8 @@
 
 import logging
 
+import probatio
 from temperusb.temper import TemperHandler
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -26,9 +26,9 @@ CONF_SCALE = "scale"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): probatio.Coerce(str),
+        probatio.Optional(CONF_SCALE, default=1): probatio.Coerce(float),
+        probatio.Optional(CONF_OFFSET, default=0): probatio.Coerce(float),
     }
 )
 

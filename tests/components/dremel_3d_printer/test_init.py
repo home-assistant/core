@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests.exceptions import ConnectTimeout
 
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCKED_MODEL = "homeassistant.components.dremel_3d_printer.Dremel3DPrinter.get_model"
 
@@ -83,8 +82,8 @@ async def test_device_info(
     """Test device info."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert await async_setup_component(hass, DOMAIN, {})
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.unique_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry.unique_id), config_entry.entry_id
     )
 
     assert device.manufacturer == "Dremel"

@@ -1,9 +1,17 @@
 """Tests for the LG Infrared media player platform."""
 
+from infrared_protocols.codes.lg.home_theater import LGHomeTheaterCode
 from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lg_infrared.const import LGDeviceType
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -21,12 +29,8 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
-
 MEDIA_PLAYER_ENTITY_ID = "media_player.lg_tv"
+HOME_THEATER_MEDIA_PLAYER_ENTITY_ID = "media_player.lg_home_theater"
 
 
 @pytest.fixture
@@ -35,6 +39,7 @@ def platforms() -> list[Platform]:
     return [Platform.MEDIA_PLAYER]
 
 
+@pytest.mark.parametrize("device_type", [LGDeviceType.TV, LGDeviceType.HOME_THEATER])
 @pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
@@ -47,8 +52,8 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Verify entity belongs to the correct device
-    device_entry = device_registry.async_get_device(
-        identifiers={("lg_infrared", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("lg_infrared", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -99,5 +104,52 @@ async def test_media_player_availability_follows_ir_entity(
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, MEDIA_PLAYER_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, MEDIA_PLAYER_ENTITY_ID, [EMITTER_ENTITY_ID]
+    )
+
+
+@pytest.mark.parametrize("device_type", [LGDeviceType.HOME_THEATER])
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected_code"),
+    [
+        (SERVICE_TURN_ON, {}, LGHomeTheaterCode.POWER),
+        (SERVICE_TURN_OFF, {}, LGHomeTheaterCode.POWER),
+        (SERVICE_VOLUME_UP, {}, LGHomeTheaterCode.VOLUME_UP),
+        (SERVICE_VOLUME_DOWN, {}, LGHomeTheaterCode.VOLUME_DOWN),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, LGHomeTheaterCode.MUTE),
+        (SERVICE_MEDIA_NEXT_TRACK, {}, LGHomeTheaterCode.SKIP_FORWARD),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, LGHomeTheaterCode.SKIP_BACKWARD),
+        (SERVICE_MEDIA_PLAY, {}, LGHomeTheaterCode.PLAY),
+        (SERVICE_MEDIA_PAUSE, {}, LGHomeTheaterCode.PAUSE),
+        (SERVICE_MEDIA_STOP, {}, LGHomeTheaterCode.STOP),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_home_theater_media_player_action_sends_correct_code(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    service: str,
+    service_data: dict[str, bool],
+    expected_code: LGHomeTheaterCode,
+) -> None:
+    """Test each home theater media player action sends the correct IR code."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: HOME_THEATER_MEDIA_PLAYER_ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
+
+
+@pytest.mark.parametrize("device_type", [LGDeviceType.HOME_THEATER])
+@pytest.mark.usefixtures("init_integration")
+async def test_home_theater_media_player_availability_follows_ir_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test home theater media player becomes unavailable when IR entity is unavailable."""
+    await assert_availability_follows_source_entity(
+        hass, HOME_THEATER_MEDIA_PLAYER_ENTITY_ID, [EMITTER_ENTITY_ID]
     )

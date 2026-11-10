@@ -4,8 +4,8 @@ import logging
 from types import MappingProxyType
 from typing import Any, override
 
+import probatio
 from tololib import ToloClient, ToloCommunicationError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -20,9 +20,9 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -119,5 +119,5 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+            description_placeholders={"host": self._dhcp_discovery_info.ip},
         )

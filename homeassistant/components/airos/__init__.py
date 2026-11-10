@@ -58,7 +58,7 @@ _PLATFORMS: list[Platform] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> None:
     """Set up Ubiquiti airOS from a config entry."""
     owns_session = False
     verify_ssl = entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL]
@@ -152,10 +152,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> None:
     """Migrate old config entry."""
 
     # 1.1 Migrate config_entry to add additional ssl settings
@@ -184,8 +182,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         mac_adress = dr.format_mac(entry.unique_id)
 
         device_registry = dr.async_get(hass)
-        if device_entry := device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_adress)}
+        if device_entry := device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac_adress), entry.entry_id
         ):
             old_device_id = next(
                 (
@@ -234,14 +232,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
             minor_version=new_minor_version,
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> None:
     """Unload a config entry."""
-    unload_state = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
     # Clean up legacy session if needed
-    if unload_state and entry.runtime_data.owns_session:
+    if entry.runtime_data.owns_session:
         await entry.runtime_data.session.close()
-
-    return unload_state

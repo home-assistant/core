@@ -33,14 +33,22 @@ async def async_setup_entry(
         """Add a new device."""
         async_add_entities([ZWaveMeRGB(config_entry.runtime_data, new_device)])
 
-    async_dispatcher_connect(
-        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device
+        )
     )
-    async_dispatcher_connect(
-        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGBW_LIGHT.upper()}", add_new_device
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGBW_LIGHT.upper()}", add_new_device
+        )
     )
-    async_dispatcher_connect(
-        hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.BRIGHTNESS_LIGHT.upper()}", add_new_device
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"ZWAVE_ME_NEW_{ZWaveMePlatform.BRIGHTNESS_LIGHT.upper()}",
+            add_new_device,
+        )
     )
 
 
@@ -61,10 +69,21 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
             self._attr_supported_features = LightEntityFeature.TRANSITION
         self._attr_supported_color_modes: set[ColorMode] = {self._attr_color_mode}
 
+    @staticmethod
+    def _transition_to_duration(transition: float) -> int:
+        rounded_transition = round(transition)
+        if rounded_transition <= 127:
+            return rounded_transition
+        return min(127, round(rounded_transition / 60)) + 127
+
     @override
     def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        self.controller.zwave_api.send_command(self.device.id, "off")
+        """Turn the device off."""
+        command = "off"
+        transition = kwargs.get(ATTR_TRANSITION)
+        if transition is not None:
+            command = f"exactSmooth?level=0&duration={self._transition_to_duration(transition)}"
+        self.controller.zwave_api.send_command(self.device.id, command)
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
@@ -92,11 +111,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
         if transition is not None:
             command_id = "exactSmooth"
-            if transition < 127:
-                duration = round(transition)
-            else:
-                duration = min(127, round((transition) / 60)) + 127
-            command_args["duration"] = str(duration)
+            command_args["duration"] = str(self._transition_to_duration(transition))
 
         cmd = command_id
         if command_args:

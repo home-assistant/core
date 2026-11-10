@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pycasperglow import CasperGlowError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -13,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 PAUSE_ENTITY_ID = "button.jar_pause_dimming"
 RESUME_ENTITY_ID = "button.jar_resume_dimming"

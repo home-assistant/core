@@ -1,19 +1,44 @@
 """WebSocket API for the HTTP integration user config."""
 
-from typing import Any
+from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.homeassistant import (
     DOMAIN as HASS_DOMAIN,
     SERVICE_HOMEASSISTANT_RESTART,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .config import HTTP_STORAGE_SCHEMA, async_get_and_load_store
-from .const import ATTR_CONFIG
+from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
+from .const import (
+    ATTR_CONFIG,
+    CONF_SERVER_HOST,
+    CONF_SERVER_PORT,
+    CONF_TRUSTED_PROXIES,
+    CONF_USE_X_FORWARDED_FOR,
+)
+from .server import DEFAULT_BIND, async_verify_can_bind, async_verify_hosts_distinct
+
+ERR_BIND_FAILED: Final = "bind_failed"
+ERR_NOT_RUNNING: Final = "not_running"
+
+
+def _validate_trusted_proxies(config: ConfData) -> ConfData:
+    """Reject trusting X-Forwarded-For without a proxy to trust it from.
+
+    Forwarded requests are refused when no proxy is trusted, so the combination
+    breaks the very setup it is meant to enable.
+    """
+    if config.get(CONF_USE_X_FORWARDED_FOR) and not config.get(CONF_TRUSTED_PROXIES):
+        raise probatio.Invalid(
+            "at least one trusted proxy is required to use X-Forwarded-For",
+            path=[CONF_TRUSTED_PROXIES],
+        )
+
+    return config
 
 
 @callback
@@ -25,7 +50,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "http/config"})
+@websocket_api.websocket_command({probatio.Required("type"): "http/config"})
 @websocket_api.async_response
 async def websocket_get_config(
     hass: HomeAssistant,
@@ -36,8 +61,12 @@ async def websocket_get_config(
 
     ``stable`` is the confirmed-working config
     ``pending`` is an unconfirmed config awaiting promotion, or ``None``.
+    A pending config that failed its trial is kept with its ``error``
+    (and ``error_message``) recorded, but is never applied again.
     ``revert_at`` is when an unconfirmed pending config auto-reverts to
     stable, or ``None`` when no revert is scheduled.
+    ``active_config_type`` is the slot the running server was started with.
+    ``default`` is the built-in default config.
     """
     store = await async_get_and_load_store(hass)
     connection.send_result(
@@ -46,6 +75,8 @@ async def websocket_get_config(
             "stable": store.stable,
             "pending": store.pending,
             "revert_at": store.revert_deadline,
+            "active_config_type": store.active_config_type,
+            "default": store.default,
         },
     )
 
@@ -53,8 +84,10 @@ async def websocket_get_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "http/config/configure",
-        vol.Required(ATTR_CONFIG): vol.Any(None, HTTP_STORAGE_SCHEMA),
+        probatio.Required("type"): "http/config/configure",
+        probatio.Required(ATTR_CONFIG): probatio.Any(
+            None, probatio.All(HTTP_STORAGE_SCHEMA, _validate_trusted_proxies)
+        ),
     }
 )
 @websocket_api.async_response
@@ -65,13 +98,48 @@ async def websocket_set_config(
 ) -> None:
     """Store a new pending HTTP configuration and restart to apply it.
 
+    Only allowed while Home Assistant is running: applying a config means
+    restarting, and restarting a start that has not finished yet leaves
+    integrations that are still setting up in an undefined state.
+
+    A new config is first verified to be applicable by binding its
+    configured address, so an unusable config is rejected here instead of
+    being discovered after the restart. The check is skipped when the port
+    matches the currently bound one: the running server holds that port
+    until the restart releases it, so a probe would always fail against
+    ourselves.
+
     Restart whenever the pending slot changes, so the runtime config is
     refreshed. The result reports whether a restart was triggered via
     ``{"restart": bool}``.
     """
+    if hass.state is not CoreState.running:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_RUNNING,
+            "The HTTP configuration can only be changed while Home Assistant "
+            f"is running, current state: {hass.state.value}",
+        )
+        return
+
+    config: ConfData | None = msg[ATTR_CONFIG]
+    if config is not None:
+        hosts = config.get(CONF_SERVER_HOST, DEFAULT_BIND)
+        try:
+            if config[CONF_SERVER_PORT] != hass.http.server_port:
+                await async_verify_can_bind(hass, config)
+            elif hosts != hass.http.server_host:
+                # The running server holds the port, so only the hosts can be
+                # checked; a conflict on the port itself is caught when the
+                # restarted server binds and falls back to the stable config.
+                await async_verify_hosts_distinct(hass, hosts)
+        except HomeAssistantError as err:
+            connection.send_error(msg["id"], ERR_BIND_FAILED, str(err))
+            return
+
     store = await async_get_and_load_store(hass)
     previous_pending = store.pending
-    await store.async_set_pending(msg[ATTR_CONFIG])
+    await store.async_set_pending(config)
     restart = store.pending != previous_pending
     connection.send_result(msg["id"], {"restart": restart})
 
@@ -80,7 +148,7 @@ async def websocket_set_config(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "http/config/promote"})
+@websocket_api.websocket_command({probatio.Required("type"): "http/config/promote"})
 @websocket_api.async_response
 async def websocket_promote_config(
     hass: HomeAssistant,

@@ -6,6 +6,7 @@ from typing import Any, Literal, override
 
 from wyoming.asr import Transcript
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 from wyoming.handle import Handled, NotHandled
 from wyoming.info import HandleProgram, IntentProgram
 from wyoming.intent import Intent, IntentsStart, IntentsStop, NotRecognized
@@ -20,7 +21,7 @@ from homeassistant.util import ulid as ulid_util
 
 from .const import DOMAIN
 from .data import WyomingService
-from .error import WyomingError
+from .error import WyomingError, error_event_message
 from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,6 +94,7 @@ class WyomingConversationEntity(
                 )
 
         self._supported_languages = list(model_languages)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{config_entry.entry_id}-conversation"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
@@ -119,23 +121,27 @@ class WyomingConversationEntity(
             context["satellite_id"] = user_input.satellite_id
 
         try:
-            async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                await client.write_event(
-                    Transcript(
-                        user_input.text,
-                        context=context,
-                        language=user_input.language,
-                    ).event()
-                )
-                with (
-                    chat_session.async_get_chat_session(
-                        self.hass, user_input.conversation_id
-                    ) as session,
-                    conversation.async_get_chat_log(
-                        self.hass, session, user_input
-                    ) as chat_log,
-                ):
-                    intent_response = await self._async_process(
+            # Open the session and chat log first, so their checks run before
+            # the text leaves Home Assistant.
+            with (
+                chat_session.async_get_chat_session(
+                    self.hass, user_input.conversation_id, context=user_input.context
+                ) as session,
+                conversation.async_get_chat_log(
+                    self.hass, session, user_input
+                ) as chat_log,
+            ):
+                async with AsyncTcpClient(
+                    self.service.host, self.service.port
+                ) as client:
+                    await client.write_event(
+                        Transcript(
+                            user_input.text,
+                            context=context,
+                            language=user_input.language,
+                        ).event()
+                    )
+                    intent_response, continue_conversation = await self._async_process(
                         user_input, client, chat_log, intent_response
                     )
         except (OSError, WyomingError) as err:
@@ -161,7 +167,9 @@ class WyomingConversationEntity(
 
         # Success
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response,
+            conversation_id=conversation_id,
+            continue_conversation=continue_conversation,
         )
 
     async def _async_process(
@@ -170,15 +178,31 @@ class WyomingConversationEntity(
         client: AsyncTcpClient,
         chat_log: conversation.ChatLog,
         intent_response: intent.IntentResponse,
-    ) -> intent.IntentResponse:
-        """Process a sentence into an intent response."""
+    ) -> tuple[intent.IntentResponse, bool]:
+        """Process a sentence into an intent response.
+
+        Also returns whether the service expects a reply, so the client should
+        listen again without a wake word.
+        """
         has_intents_list = False
+        continue_conversation = False
         intents: list[Intent] = []
 
         while True:
             event = await client.read_event()
             if event is None:
                 raise WyomingError("Connection lost")
+
+            if Error.is_type(event.type):
+                message = error_event_message(Error.from_event(event))
+                _LOGGER.error(message)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN, message
+                )
+
+                # Don't process any intents that were already received
+                intents.clear()
+                break
 
             if IntentsStart.is_type(event.type):
                 # Multiple intents may be present
@@ -211,6 +235,7 @@ class WyomingConversationEntity(
                 # Success
                 handled = Handled.from_event(event)
                 intent_response.async_set_speech(handled.text or "")
+                continue_conversation = bool(handled.continue_conversation)
                 break
 
             if NotHandled.is_type(event.type):
@@ -223,7 +248,7 @@ class WyomingConversationEntity(
                 break
 
         if not intents:
-            return intent_response
+            return intent_response, continue_conversation
 
         # Process recognized intents with a task group.
         # If any intent fails to be handled, the rest are cancelled.
@@ -260,6 +285,7 @@ class WyomingConversationEntity(
                                     intent_slots,
                                     text_input=user_input.text,
                                     language=user_input.language,
+                                    assistant=conversation.DOMAIN,
                                     satellite_id=user_input.satellite_id,
                                     device_id=user_input.device_id,
                                 )
@@ -323,7 +349,7 @@ class WyomingConversationEntity(
             # language-dependent.
             intent_response.async_set_speech("\n".join(speech_texts))
 
-        return intent_response
+        return intent_response, False
 
     def _render_speech_template(
         self,

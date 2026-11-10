@@ -6,7 +6,7 @@ from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE, Platf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import _LOGGER, CONF_VEDO_PIN, DEFAULT_PORT, DOMAIN
+from .const import CONF_VEDO_PIN, DEFAULT_PORT, DOMAIN, LOGGER
 from .coordinator import (
     ComelitBaseCoordinator,
     ComelitConfigEntry,
@@ -40,7 +40,7 @@ VEDO_PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> None:
     """Set up Comelit platform."""
 
     coordinator: ComelitBaseCoordinator
@@ -79,12 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    return True
-
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ComelitConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
@@ -104,7 +102,7 @@ async def async_migrate_entry(
             ):
                 return None
 
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Migrating from version %s.%s",
                 config_entry.version,
                 config_entry.minor_version,
@@ -119,16 +117,14 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(config_entry, version=1, minor_version=2)
 
-        _LOGGER.info(
+        LOGGER.info(
             "Migration to version %s.%s successful",
             config_entry.version,
             config_entry.minor_version,
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> None:
     """Unload a config entry."""
 
     if entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
@@ -140,7 +136,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> 
         platforms = VEDO_PLATFORMS
 
     coordinator = entry.runtime_data
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        await coordinator.api.logout()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)
+    await coordinator.api.logout()

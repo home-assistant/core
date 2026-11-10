@@ -5,8 +5,8 @@ import logging
 from typing import Any, override
 import uuid
 
+import probatio
 from ring_doorbell import Auth, AuthenticationError, Requires2FAError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -14,13 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -32,12 +26,19 @@ from .const import CONF_2FA, CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 UNKNOWN_RING_ACCOUNT = "unknown_ring_account"
 
@@ -90,7 +91,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         if self.hass.config_entries.async_has_entries(DOMAIN):
             device_registry = dr.async_get(self.hass)
-            if device_registry.async_get_device(
+            if device_registry.async_get_devices(
                 identifiers={(DOMAIN, discovery_info.macaddress)}
             ):
                 return self.async_abort(reason="already_configured")
@@ -152,7 +153,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="2fa",
-            data_schema=vol.Schema({vol.Required(CONF_2FA): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_2FA): str}),
         )
 
     async def async_step_reauth(
@@ -186,20 +187,22 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                data = {
+                data_updates = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_TOKEN: token,
                     CONF_DEVICE_ID: self.hardware_id,
                 }
-                return self.async_update_reload_and_abort(reauth_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data_updates
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.data[CONF_USERNAME],
+                "username": reauth_entry.data[CONF_USERNAME],
+                "name": reauth_entry.data[CONF_USERNAME],
             },
         )
 
@@ -229,19 +232,21 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                data = {
+                data_updates = {
                     CONF_USERNAME: username,
                     CONF_TOKEN: token,
                     CONF_DEVICE_ID: self.hardware_id,
                 }
-                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data_updates
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: username,
+                "username": username,
             },
         )
 

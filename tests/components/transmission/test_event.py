@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.components.transmission.const import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_event_entity_setup(

@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'heat_pumps': list([
+      dict({
+        'energy': dict({
+          'heat_pump_id': '**REDACTED**',
+          't_water_in': 11,
+          'total_ein_heating': 12345,
+        }),
+        'info': dict({
+          'device_name': None,
+          'has_ch_boiler': False,
+          'has_dhw': True,
+          'model': 'Test Model',
+          'sn': '**REDACTED**',
+          'uuid': '**REDACTED**',
+        }),
+        'logs': dict({
+          'heat_pump_id': '**REDACTED**',
+          't_water_in': 11,
+          'total_ein_heating': 12345,
+        }),
+      }),
+    ]),
+  })
+# ---

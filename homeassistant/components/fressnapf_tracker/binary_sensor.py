@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FressnapfTrackerConfigEntry
+from .coordinator import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 
 # Coordinator is used to centralize the data updates

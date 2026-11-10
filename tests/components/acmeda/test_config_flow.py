@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 import aiopulse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DUMMY_HOST1 = "127.0.0.1"
 DUMMY_HOST2 = "127.0.0.2"
@@ -82,6 +81,7 @@ async def test_show_form_one_hub(hass: HomeAssistant, mock_hub_discover) -> None
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST1,
     }
+    assert result["result"].unique_id == dummy_hub_1.id
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
@@ -134,6 +134,7 @@ async def test_create_second_entry(hass: HomeAssistant, mock_hub_discover) -> No
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST2,
     }
+    assert result["result"].unique_id == dummy_hub_2.id
 
 
 async def test_already_configured(hass: HomeAssistant, mock_hub_discover) -> None:

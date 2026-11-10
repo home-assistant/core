@@ -1,5 +1,14 @@
 {
   "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:store",
+        "state": {
+          "off": "mdi:store-off",
+          "on": "mdi:store"
+        }
+      }
+    },
     "sensor": {
       "diesel": {
         "default": "mdi:gas-station"

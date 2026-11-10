@@ -1,9 +1,15 @@
 """Tests for the Alexa Devices integration."""
 
 import asyncio
+from collections.abc import Callable
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.api import SETTINGS_FILENAME
+from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
+from aioamazondevices.structures import AmazonListInfo, AmazonListType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import (
@@ -20,11 +26,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 
-from tests.common import MockConfigEntry
+OLD_SETTINGS_FILE = f"{DOMAIN}/{SETTINGS_FILENAME}"
+NEW_SETTINGS_FILE = f"{STORAGE_DIR}/{DOMAIN}/{SETTINGS_FILENAME}"
+OLD_SETTINGS = '{"default_device": "old"}'
+NEW_SETTINGS = '{"default_device": "new"}'
+
+
+def _fail_todo_list_items(client: AsyncMock, error: Exception) -> None:
+    """Make the todo list items sync fail."""
+    client.todo_lists = [
+        AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP)
+    ]
+    client.get_todo_list_items.side_effect = error
+
+
+def _fail_history_state(client: AsyncMock, error: Exception) -> None:
+    """Make the history state sync fail."""
+    client.sync_history_state.side_effect = error
 
 
 async def test_device_info(
@@ -36,8 +59,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -125,8 +148,108 @@ async def test_migrate_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 3
+    assert config_entry.minor_version == 4
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
+
+
+@pytest.mark.usefixtures("mock_amazon_devices_client")
+@pytest.mark.parametrize(
+    ("existing_files", "expected_new_settings", "old_dir_removed"),
+    [
+        pytest.param({OLD_SETTINGS_FILE: OLD_SETTINGS}, OLD_SETTINGS, True, id="moved"),
+        pytest.param(
+            {OLD_SETTINGS_FILE: OLD_SETTINGS, NEW_SETTINGS_FILE: NEW_SETTINGS},
+            NEW_SETTINGS,
+            False,
+            id="new_already_present",
+        ),
+    ],
+)
+async def test_migrate_settings_to_storage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    existing_files: dict[str, str],
+    expected_new_settings: str,
+    old_dir_removed: bool,
+) -> None:
+    """Test library settings are moved from the config root into .storage."""
+    hass.config.config_dir = str(tmp_path)
+    for relative_path, content in existing_files.items():
+        file = tmp_path / relative_path
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text(content)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id=TEST_USER_ID,
+        version=1,
+        minor_version=3,
+    )
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 4
+    assert (tmp_path / NEW_SETTINGS_FILE).read_text() == expected_new_settings
+    assert (tmp_path / DOMAIN).exists() is not old_dir_removed
+
+
+def _move_concurrently(source: Path, target: Path) -> None:
+    """Simulate another entry moving the settings file first."""
+    target.write_text(source.read_text())
+    raise FileNotFoundError
+
+
+def _vanish(source: Path, target: Path) -> None:
+    """Simulate the settings file disappearing without being moved."""
+    raise FileNotFoundError
+
+
+@pytest.mark.usefixtures("mock_amazon_devices_client")
+@pytest.mark.parametrize(
+    ("replace_side_effect", "expected_state", "expected_minor_version"),
+    [
+        pytest.param(
+            _move_concurrently,
+            ConfigEntryState.LOADED,
+            4,
+            id="moved_by_other_entry",
+        ),
+        pytest.param(
+            _vanish,
+            ConfigEntryState.MIGRATION_ERROR,
+            3,
+            id="vanished",
+        ),
+    ],
+)
+async def test_migrate_settings_to_storage_race(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    replace_side_effect: Callable[[Path, Path], None],
+    expected_state: ConfigEntryState,
+    expected_minor_version: int,
+) -> None:
+    """Test the settings file disappearing while being moved."""
+    hass.config.config_dir = str(tmp_path)
+    old_file = tmp_path / OLD_SETTINGS_FILE
+    old_file.parent.mkdir()
+    old_file.write_text(OLD_SETTINGS)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id=TEST_USER_ID,
+        version=1,
+        minor_version=3,
+    )
+    with patch.object(Path, "replace", autospec=True, side_effect=replace_side_effect):
+        await setup_integration(hass, config_entry)
+
+    assert config_entry.state is expected_state
+    assert config_entry.minor_version == expected_minor_version
 
 
 async def test_migrate_future_version_returns_false(
@@ -224,3 +347,94 @@ async def test_http2_stop_processing_called_on_shutdown(
     await hass.async_block_till_done()
 
     mock_amazon_devices_client.stop_http2_processing.assert_awaited_once()
+
+
+async def test_http2_client_per_entry(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test each config entry gets its own HTTP/2 client."""
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="second@example.com",
+        data=mock_config_entry.data,
+        unique_id="second_user_id",
+        version=mock_config_entry.version,
+        minor_version=mock_config_entry.minor_version,
+    )
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, second_entry)
+
+    first_client, second_client = (
+        call.args[0]
+        for call in mock_amazon_devices_client.start_http2_processing.call_args_list
+    )
+    # A shared connection would let each account's directives stream close the other
+    assert first_client is not second_client
+
+
+@pytest.mark.parametrize(
+    ("configure_failure", "invoked_method"),
+    [
+        (_fail_todo_list_items, "sync_todo_list_items"),
+        (_fail_history_state, "sync_history_state"),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            CannotConnect("429 - Too Many Requests"),
+            id="http_429_too_many_requests",
+        ),
+        pytest.param(
+            CannotRetrieveData("503 - Service Unavailable"),
+            id="http_503_service_unavailable",
+        ),
+    ],
+)
+async def test_initial_sync_amazon_api_failure_does_not_block_setup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    configure_failure: Callable[[AsyncMock, Exception], None],
+    invoked_method: str,
+    error: Exception,
+) -> None:
+    """Test a failing initial sync call is logged but does not block setup."""
+    configure_failure(mock_amazon_devices_client, error)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert f"Initial sync failed for {invoked_method}:" in caplog.text
+    assert str(error) in caplog.text
+    assert (
+        "Data may be missing or incomplete until updates are pushed by Amazon"
+        in caplog.text
+    )
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_initial_sync_failure_does_not_prevent_other_syncs(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failing initial sync call does not stop the remaining sync calls."""
+    mock_amazon_devices_client.todo_lists = [
+        AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP)
+    ]
+    mock_amazon_devices_client.get_todo_list_items.return_value = {}
+    mock_amazon_devices_client.sync_history_state.side_effect = CannotConnect(
+        "429 - Too Many Requests"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_amazon_devices_client.get_todo_list_items.assert_awaited_once()
+    mock_amazon_devices_client.sync_media_state.assert_awaited_once()
+    mock_amazon_devices_client.sync_dnd_state.assert_awaited_once()

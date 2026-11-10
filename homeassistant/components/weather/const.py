@@ -11,6 +11,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
@@ -22,7 +23,7 @@ from homeassistant.util.unit_conversion import (
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import WeatherEntity
+    from .entity import WeatherEntity
 
 
 class WeatherEntityFeature(IntFlag):
@@ -32,6 +33,49 @@ class WeatherEntityFeature(IntFlag):
     FORECAST_HOURLY = 2
     FORECAST_TWICE_DAILY = 4
 
+
+ATTR_CONDITION_CLASS = "condition_class"
+ATTR_CONDITION_CLEAR_NIGHT = "clear-night"
+ATTR_CONDITION_CLOUDY = "cloudy"
+ATTR_CONDITION_EXCEPTIONAL = "exceptional"
+ATTR_CONDITION_FOG = "fog"
+ATTR_CONDITION_HAIL = "hail"
+ATTR_CONDITION_LIGHTNING = "lightning"
+ATTR_CONDITION_LIGHTNING_RAINY = "lightning-rainy"
+ATTR_CONDITION_PARTLYCLOUDY = "partlycloudy"
+ATTR_CONDITION_POURING = "pouring"
+ATTR_CONDITION_RAINY = "rainy"
+ATTR_CONDITION_SNOWY = "snowy"
+ATTR_CONDITION_SNOWY_RAINY = "snowy-rainy"
+ATTR_CONDITION_SUNNY = "sunny"
+ATTR_CONDITION_WINDY = "windy"
+ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
+ATTR_FORECAST_IS_DAYTIME: Final = "is_daytime"
+ATTR_FORECAST_CONDITION: Final = "condition"
+ATTR_FORECAST_HUMIDITY: Final = "humidity"
+ATTR_FORECAST_NATIVE_PRECIPITATION: Final = "native_precipitation"
+ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
+ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
+ATTR_FORECAST_NATIVE_PRESSURE: Final = "native_pressure"
+ATTR_FORECAST_PRESSURE: Final = "pressure"
+ATTR_FORECAST_NATIVE_APPARENT_TEMP: Final = "native_apparent_temperature"
+ATTR_FORECAST_APPARENT_TEMP: Final = "apparent_temperature"
+ATTR_FORECAST_NATIVE_TEMP: Final = "native_temperature"
+ATTR_FORECAST_TEMP: Final = "temperature"
+ATTR_FORECAST_NATIVE_TEMP_LOW: Final = "native_templow"
+ATTR_FORECAST_TEMP_LOW: Final = "templow"
+ATTR_FORECAST_TIME: Final = "datetime"
+ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
+ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: Final = "native_wind_gust_speed"
+ATTR_FORECAST_WIND_GUST_SPEED: Final = "wind_gust_speed"
+ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
+ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
+ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
+ATTR_FORECAST_DEW_POINT: Final = "dew_point"
+ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
+ATTR_FORECAST_UV_INDEX: Final = "uv_index"
+
+ROUNDING_PRECISION = 2
 
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"
@@ -52,35 +96,72 @@ ATTR_WEATHER_CLOUD_COVERAGE = "cloud_coverage"
 ATTR_WEATHER_UV_INDEX = "uv_index"
 
 
-class WeatherEntityStateAttribute(StrEnum):
+class WeatherEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for weather entities."""
+
+    TEMPERATURE_UNIT = "temperature_unit"
+    PRESSURE_UNIT = "pressure_unit"
+    WIND_SPEED_UNIT = "wind_speed_unit"
+    VISIBILITY_UNIT = "visibility_unit"
+    PRECIPITATION_UNIT = "precipitation_unit"
+
+
+class WeatherEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "TEMPERATURE_UNIT": (
+            "WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT",
+            "2027.6.0",
+        ),
+        "PRESSURE_UNIT": ("WeatherEntityCapabilityAttribute.PRESSURE_UNIT", "2027.6.0"),
+        "WIND_SPEED_UNIT": (
+            "WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT",
+            "2027.6.0",
+        ),
+        "VISIBILITY_UNIT": (
+            "WeatherEntityCapabilityAttribute.VISIBILITY_UNIT",
+            "2027.6.0",
+        ),
+        "PRECIPITATION_UNIT": (
+            "WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT",
+            "2027.6.0",
+        ),
+    },
+):
     """State attributes for weather entities."""
 
     TEMPERATURE = "temperature"
     APPARENT_TEMPERATURE = "apparent_temperature"
     DEW_POINT = "dew_point"
-    TEMPERATURE_UNIT = "temperature_unit"
+    TEMPERATURE_UNIT = "temperature_unit"  # Deprecated, moved to capability attributes
     HUMIDITY = "humidity"
     OZONE = "ozone"
     CLOUD_COVERAGE = "cloud_coverage"
     UV_INDEX = "uv_index"
     PRESSURE = "pressure"
-    PRESSURE_UNIT = "pressure_unit"
+    PRESSURE_UNIT = "pressure_unit"  # Deprecated, moved to capability attributes
     WIND_BEARING = "wind_bearing"
     WIND_GUST_SPEED = "wind_gust_speed"
     WIND_SPEED = "wind_speed"
-    WIND_SPEED_UNIT = "wind_speed_unit"
+    WIND_SPEED_UNIT = "wind_speed_unit"  # Deprecated, moved to capability attributes
     VISIBILITY = "visibility"
-    VISIBILITY_UNIT = "visibility_unit"
-    PRECIPITATION_UNIT = "precipitation_unit"
+    VISIBILITY_UNIT = "visibility_unit"  # Deprecated, moved to capability attributes
+    PRECIPITATION_UNIT = (
+        "precipitation_unit"  # Deprecated, moved to capability attributes
+    )
 
 
 DOMAIN: Final = "weather"
+
+SERVICE_GET_FORECASTS: Final = "get_forecasts"
 DATA_COMPONENT: HassKey[EntityComponent[WeatherEntity]] = HassKey(DOMAIN)
 
 INTENT_GET_WEATHER = "HassGetWeather"
 
 VALID_UNITS_PRESSURE: set[str] = {
     UnitOfPressure.HPA,
+    UnitOfPressure.KPA,
     UnitOfPressure.MBAR,
     UnitOfPressure.INHG,
     UnitOfPressure.MMHG,
@@ -121,3 +202,15 @@ VALID_UNITS: dict[str, set[str]] = {
     ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
     ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
+
+
+class WeatherService(StrEnum):
+    """Store keys for weather services."""
+
+    GET_FORECASTS = "get_forecasts"
+
+
+class WeatherServiceArgument(StrEnum):
+    """Store keys for weather service arguments."""
+
+    TYPE = "type"

@@ -6,9 +6,9 @@ import logging
 from types import MappingProxyType
 from typing import Any, override
 
+import probatio
 from telegram import Bot, ChatFullInfo
 from telegram.error import BadRequest, InvalidToken, TelegramError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -32,11 +32,9 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import initialize_bot
-from .bot import TelegramBotConfigEntry, TelegramNotificationService
+from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
 from .const import (
     ATTR_PARSER,
-    BOT_NAME,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
@@ -69,9 +67,9 @@ DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
     "default_api_endpoint": DEFAULT_API_ENDPOINT,
 }
 
-STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
+STEP_USER_DATA_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): SelectSelector(
+        probatio.Required(CONF_PLATFORM): SelectSelector(
             SelectSelectorConfig(
                 options=[
                     PLATFORM_BROADCAST,
@@ -81,22 +79,22 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 translation_key="platforms",
             )
         ),
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             )
         ),
-        vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_ENDPOINT,
                         default=DEFAULT_API_ENDPOINT,
                     ): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
-                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                    probatio.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
                 },
@@ -105,9 +103,9 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         ),
     }
 )
-STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
+STEP_RECONFIGURE_USER_DATA_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(CONF_PLATFORM): SelectSelector(
+        probatio.Required(CONF_PLATFORM): SelectSelector(
             SelectSelectorConfig(
                 options=[
                     PLATFORM_BROADCAST,
@@ -117,16 +115,16 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 translation_key="platforms",
             )
         ),
-        vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_API_ENDPOINT,
                         default=DEFAULT_API_ENDPOINT,
                     ): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
-                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                    probatio.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
                 },
@@ -135,9 +133,9 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         ),
     }
 )
-STEP_REAUTH_DATA_SCHEMA: vol.Schema = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -145,18 +143,20 @@ STEP_REAUTH_DATA_SCHEMA: vol.Schema = vol.Schema(
         )
     }
 )
-STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
+STEP_WEBHOOKS_DATA_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Optional(CONF_URL): TextSelector(
+        probatio.Optional(CONF_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required(CONF_TRUSTED_NETWORKS): vol.Coerce(str),
+        probatio.Required(CONF_TRUSTED_NETWORKS): probatio.Coerce(str),
     }
 )
-SUBENTRY_SCHEMA: vol.Schema = vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
-OPTIONS_SCHEMA: vol.Schema = vol.Schema(
+SUBENTRY_SCHEMA: probatio.Schema = probatio.Schema(
+    {probatio.Required(CONF_CHAT_ID): probatio.Coerce(int)}
+)
+OPTIONS_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             ATTR_PARSER,
         ): SelectSelector(
             SelectSelectorConfig(
@@ -192,7 +192,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -353,7 +353,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {BOT_NAME: self._bot_name}
+        description_placeholders: dict[str, str] = {"telegram_bot": self._bot_name}
         self._validate_webhooks(user_input, errors, description_placeholders)
         if errors:
             return self.async_show_form(

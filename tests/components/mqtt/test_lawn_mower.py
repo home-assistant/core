@@ -6,21 +6,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import lawn_mower
-from homeassistant.components.lawn_mower import (
-    DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DOCK,
-    SERVICE_PAUSE,
-    SERVICE_START_MOWING,
-    LawnMowerEntityFeature,
-)
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message, mock_restore_cache
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -51,9 +38,21 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message, mock_restore_cache
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import lawn_mower
+from homeassistant.components.lawn_mower import (
+    DOMAIN as LAWN_MOWER_DOMAIN,
+    SERVICE_DOCK,
+    SERVICE_PAUSE,
+    SERVICE_START_MOWING,
+    SERVICE_STOP,
+    LawnMowerEntityFeature,
+)
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.lawn_mower import MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 
 ATTR_ACTIVITY = "activity"
 
@@ -61,6 +60,7 @@ DEFAULT_FEATURES = (
     LawnMowerEntityFeature.START_MOWING
     | LawnMowerEntityFeature.PAUSE
     | LawnMowerEntityFeature.DOCK
+    | LawnMowerEntityFeature.STOP
 )
 
 DEFAULT_CONFIG = {
@@ -70,6 +70,7 @@ DEFAULT_CONFIG = {
             "dock_command_topic": "dock-test-topic",
             "pause_command_topic": "pause-test-topic",
             "start_mowing_command_topic": "start_mowing-test-topic",
+            "stop_command_topic": "stop-test-topic",
         }
     }
 }
@@ -110,6 +111,13 @@ async def test_run_lawn_mower_setup_and_state_updates(
 
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "returning"
+
+    async_fire_mqtt_message(hass, "test/lawn_mower_stat", "idle")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "idle"
 
     async_fire_mqtt_message(hass, "test/lawn_mower_stat", "docked")
 
@@ -156,6 +164,17 @@ async def test_run_lawn_mower_setup_and_state_updates(
                 }
             },
             LawnMowerEntityFeature.START_MOWING | LawnMowerEntityFeature.DOCK,
+        ),
+        (
+            {
+                DOMAIN: {
+                    lawn_mower.DOMAIN: {
+                        "stop_command_topic": "stop-test-topic",
+                        "name": "test",
+                    }
+                }
+            },
+            LawnMowerEntityFeature.STOP,
         ),
     ],
 )
@@ -285,6 +304,20 @@ async def test_run_lawn_mower_service_optimistic(
     state = hass.states.get("lawn_mower.test")
     assert state.state == "docked"
 
+    await hass.services.async_call(
+        lawn_mower.DOMAIN,
+        SERVICE_STOP,
+        {ATTR_ENTITY_ID: "lawn_mower.test"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "stop-test-topic", "stop", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lawn_mower.test")
+    assert state.state == "idle"
+
 
 @pytest.mark.parametrize(
     "hass_config",
@@ -325,6 +358,8 @@ async def test_restore_lawn_mower_from_invalid_state(
                     "pause_command_template": '{"action": "{{ value }}"}',
                     "start_mowing_command_topic": "test/lawn_mower_start_mowing_cmd",
                     "start_mowing_command_template": '{"action": "{{ value }}"}',
+                    "stop_command_topic": "test/lawn_mower_stop_cmd",
+                    "stop_command_template": '{"action": "{{ value }}"}',
                 }
             }
         }
@@ -396,6 +431,24 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "docked"
+
+    await hass.services.async_call(
+        lawn_mower.DOMAIN,
+        SERVICE_STOP,
+        {ATTR_ENTITY_ID: "lawn_mower.test_lawn_mower"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test/lawn_mower_stop_cmd",
+        '{"action": "stop"}',
+        0,
+        False,
+        message_expiry_interval=None,
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "idle"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -675,6 +728,13 @@ async def test_entity_id_update_discovery_update(
             "test/lawn_mower_stat",
             "dock-test-topic",
         ),
+        (
+            SERVICE_STOP,
+            "stop",
+            "idle",
+            "test/lawn_mower_stat",
+            "stop-test-topic",
+        ),
     ],
 )
 async def test_entity_debug_info_message(
@@ -694,6 +754,7 @@ async def test_entity_debug_info_message(
                 "dock_command_topic": "dock-test-topic",
                 "pause_command_topic": "pause-test-topic",
                 "start_mowing_command_topic": "start_mowing-test-topic",
+                "stop_command_topic": "stop-test-topic",
                 "name": "test",
             }
         }
@@ -741,8 +802,8 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
 
     assert (
         "Invalid activity for lawn_mower.test_lawn_mower: 'painting' "
-        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning'])"
-        in caplog.text
+        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning', "
+        "'idle'])" in caplog.text
     )
 
 
@@ -769,6 +830,13 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
             {},
             "dock",
             "dock_command_template",
+        ),
+        (
+            SERVICE_STOP,
+            "stop_command_topic",
+            {},
+            "stop",
+            "stop_command_template",
         ),
     ],
 )
@@ -816,6 +884,7 @@ async def test_reloadable(
         ("activity_state_topic", "docked", None, "docked"),
         ("activity_state_topic", "returning", None, "returning"),
         ("activity_state_topic", "mowing", None, "mowing"),
+        ("activity_state_topic", "idle", None, "idle"),
     ],
 )
 async def test_encoding_subscribable_topics(

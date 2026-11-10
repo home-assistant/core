@@ -2,19 +2,18 @@
 
 from collections.abc import Iterable
 from datetime import timedelta
-import logging
 from typing import Any, override
 
 from directv import DIRECTV, DIRECTVError
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DirecTVConfigEntry
+from .const import DOMAIN
 from .entity import DIRECTVEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
@@ -30,7 +29,9 @@ async def async_setup_entry(
     async_add_entities(
         (
             DIRECTVRemote(
+                hass=hass,
                 dtv=dtv,
+                entry=entry,
                 name=str.title(location.name),
                 address=location.address,
             )
@@ -43,10 +44,20 @@ async def async_setup_entry(
 class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
     """Device that sends commands to a DirecTV receiver."""
 
-    def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
+    def __init__(
+        self,
+        *,
+        hass: HomeAssistant,
+        dtv: DIRECTV,
+        entry: DirecTVConfigEntry,
+        name: str,
+        address: str = "0",
+    ) -> None:
         """Initialize DirecTV remote."""
         super().__init__(
+            hass=hass,
             dtv=dtv,
+            entry=entry,
             name=name,
             address=address,
         )
@@ -93,10 +104,12 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
             for single_command in command:
                 try:
                     await self.dtv.remote(single_command, self._address)
-                # pylint: disable-next=home-assistant-action-swallowed-exception
-                except DIRECTVError:
-                    _LOGGER.exception(
-                        "Sending command %s to device %s failed",
-                        single_command,
-                        self._device_id,
-                    )
+                except DIRECTVError as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={
+                            "command": single_command,
+                            "device": self._device_id,
+                        },
+                    ) from err

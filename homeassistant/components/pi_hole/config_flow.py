@@ -4,21 +4,21 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+from hole import Hole
 from hole.exceptions import HoleError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_LOCATION,
-    CONF_NAME,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
 
-from . import Hole, api_by_version, determine_api_version
+from . import api_by_version, determine_api_version
 from .const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -28,6 +28,28 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT): probatio.Coerce(int),
+        probatio.Required(CONF_LOCATION): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL): bool,
+    }
+)
+
+
+def _config_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the config entry data for the user input."""
+    return {
+        CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+        CONF_LOCATION: user_input[CONF_LOCATION],
+        CONF_SSL: user_input[CONF_SSL],
+        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+        CONF_API_KEY: user_input[CONF_API_KEY],
+    }
 
 
 class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -47,14 +69,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._config = {
-                CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_LOCATION: user_input[CONF_LOCATION],
-                CONF_SSL: user_input[CONF_SSL],
-                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                CONF_API_KEY: user_input[CONF_API_KEY],
-            }
+            self._config = _config_from_user_input(user_input)
 
             self._async_abort_entries_match(
                 {
@@ -64,37 +79,32 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             if not (errors := await self._async_try_connect()):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=self._config
-                )
+                return self.async_create_entry(title=DEFAULT_NAME, data=self._config)
 
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-                    vol.Required(
-                        CONF_PORT, default=user_input.get(CONF_PORT, 80)
-                    ): vol.Coerce(int),
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                    probatio.Required(
+                        CONF_HOST, default=user_input.get(CONF_HOST, "")
                     ): str,
-                    vol.Required(
+                    probatio.Required(
+                        CONF_PORT, default=user_input.get(CONF_PORT, 80)
+                    ): probatio.Coerce(int),
+                    probatio.Required(
                         CONF_LOCATION,
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
-                    vol.Required(
-                        CONF_API_KEY,
+                    probatio.Required(
+                        probatio.Secret(CONF_API_KEY),
                         default=user_input.get(CONF_API_KEY),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_SSL,
                         default=user_input.get(CONF_SSL, DEFAULT_SSL),
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                     ): bool,
@@ -126,10 +136,52 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={
-                CONF_HOST: self._config[CONF_HOST],
-                CONF_LOCATION: self._config[CONF_LOCATION],
+                "host": self._config[CONF_HOST],
+                "location": self._config[CONF_LOCATION],
             },
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Pi-hole connection."""
+        entry = self._get_reconfigure_entry()
+        errors = {}
+
+        if user_input is not None:
+            config = _config_from_user_input(user_input)
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: config[CONF_HOST],
+                    CONF_LOCATION: config[CONF_LOCATION],
+                }
+            )
+            self._config = {**entry.data, **config}
+            if not (errors := await self._async_try_connect()):
+                return self.async_update_reload_and_abort(entry, data_updates=config)
+            suggested_values = user_input
+        else:
+            host, _, port = entry.data[CONF_HOST].rpartition(":")
+            if not port.isdigit():
+                # Older entries can store the host without a port
+                host = entry.data[CONF_HOST]
+                port = "443" if entry.data[CONF_SSL] else "80"
+            suggested_values = {**entry.data, CONF_HOST: host, CONF_PORT: int(port)}
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA,
+                {
+                    key: value
+                    for key, value in suggested_values.items()
+                    if key != CONF_API_KEY
+                },
+            ),
             errors=errors,
         )
 

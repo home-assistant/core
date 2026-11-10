@@ -20,6 +20,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -35,6 +36,8 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
 ]
 
 
@@ -53,7 +56,7 @@ class VistapoolData:
 type VistapoolConfigEntry = ConfigEntry[VistapoolData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> None:
     """Set up Vistapool from a config entry.
 
     One config entry represents a Hayward account; the account can contain
@@ -63,6 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
     session = async_get_clientsession(hass)
 
     auth = AquariteAuth(session, user_config[CONF_USERNAME], user_config[CONF_PASSWORD])
+    # Home Assistant runs these callbacks on a failed setup as well, so
+    # registering before authenticating releases the Firestore gRPC channels
+    # on every path out of this function.
+    entry.async_on_unload(auth.close)
     try:
         await auth.authenticate()
     except AuthenticationError as exc:
@@ -96,12 +103,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
             await coordinator.async_shutdown()
         raise
 
-    def _on_user_pools_snapshot(pool_ids: list[str]) -> None:
-        """Bridge the Firestore snapshot from the watch thread to the HA loop."""
-        hass.loop.call_soon_threadsafe(_schedule_reconcile, pool_ids)
+    # Catch pools removed from the account while Home Assistant was offline; the
+    # first live snapshot is a no-op so it wouldn't clean these up.
+    _async_remove_stale_devices(hass, entry, set(pools))
 
     @callback
-    def _schedule_reconcile(pool_ids: list[str]) -> None:
+    def _on_user_pools_snapshot(pool_ids: list[str]) -> None:
+        """Reconcile the pool list from a user-pools snapshot."""
         entry.async_create_background_task(
             hass,
             _async_reconcile_pools(hass, entry, pool_ids),
@@ -121,19 +129,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
     entry.async_on_unload(subscription.aclose)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> None:
     """Unload Vistapool config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        # Hold sync_lock so a reconcile background task can't mutate the
-        # coordinators dict while we shut it down.
-        async with entry.runtime_data.sync_lock:
-            for coordinator in entry.runtime_data.coordinators.values():
-                await coordinator.async_shutdown()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Hold sync_lock so a reconcile background task can't mutate the
+    # coordinators dict while we shut it down.
+    async with entry.runtime_data.sync_lock:
+        for coordinator in entry.runtime_data.coordinators.values():
+            await coordinator.async_shutdown()
+
+
+@callback
+def _async_remove_stale_devices(
+    hass: HomeAssistant, entry: VistapoolConfigEntry, valid_pool_ids: set[str]
+) -> None:
+    """Remove registry devices for pools no longer present on the account."""
+    device_registry = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        pool_id = next((i[1] for i in device.identifiers if i[0] == DOMAIN), None)
+        if pool_id is not None and pool_id not in valid_pool_ids:
+            device_registry.async_remove_device(device.id)
 
 
 async def _async_initial_refresh(
@@ -210,3 +227,8 @@ async def _async_reconcile_pools(
             async_dispatcher_send(
                 hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", coordinator
             )
+
+        if stale := current - fetched:
+            for pool_id in stale:
+                await entry.runtime_data.coordinators.pop(pool_id).async_shutdown()
+            _async_remove_stale_devices(hass, entry, fetched)

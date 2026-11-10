@@ -4,12 +4,15 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_mac_address": "The MAC address is missing from the Zeroconf record",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The provided connection settings belong to a different Synology NAS."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "insufficient_privilege": "The user has insufficient privileges. Make sure the user is a member of the administrators group.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "missing_data": "Missing data: please retry later or try a different configuration",
+      "otp_enforced": "Two-step authentication is enforced for this user but not yet set up. Log in to DSM with this user once to set it up.",
       "otp_failed": "Two-step authentication failed, retry with a new passcode",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -18,6 +21,9 @@
       "2sa": {
         "data": {
           "otp_code": "Code"
+        },
+        "data_description": {
+          "otp_code": "The current code from your two-step authentication app."
         },
         "title": "Synology DSM: two-step authentication"
       },
@@ -40,6 +46,13 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "password": "[%key:component::synology_dsm::config::step::user::data_description::password%]",
+          "port": "[%key:component::synology_dsm::config::step::user::data_description::port%]",
+          "ssl": "[%key:component::synology_dsm::config::step::user::data_description::ssl%]",
+          "username": "[%key:component::synology_dsm::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::synology_dsm::config::step::user::data_description::verify_ssl%]"
+        },
         "description": "Do you want to set up {name} ({host})?"
       },
       "reauth_confirm": {
@@ -47,7 +60,29 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::synology_dsm::config::step::user::data_description::password%]",
+          "username": "[%key:component::synology_dsm::config::step::user::data_description::username%]"
+        },
         "title": "Reauthenticate Synology DSM"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::synology_dsm::config::step::user::data_description::host%]",
+          "password": "[%key:component::synology_dsm::config::step::user::data_description::password%]",
+          "port": "[%key:component::synology_dsm::config::step::user::data_description::port%]",
+          "ssl": "[%key:component::synology_dsm::config::step::user::data_description::ssl%]",
+          "username": "[%key:component::synology_dsm::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::synology_dsm::config::step::user::data_description::verify_ssl%]"
+        }
       },
       "user": {
         "data": {
@@ -59,7 +94,12 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Synology NAS."
+          "host": "The hostname or IP address of your Synology NAS.",
+          "password": "The password of the DSM user.",
+          "port": "The port of the DSM web interface. Leave empty to use the default port (5000, or 5001 when using SSL).",
+          "ssl": "Connect to DSM over HTTPS.",
+          "username": "The DSM user Home Assistant uses to connect. The user must be a member of the administrators group.",
+          "verify_ssl": "Verify the SSL certificate of the NAS. Disable this when the NAS uses a self-signed certificate."
         }
       }
     }
@@ -126,9 +166,6 @@
       "disk_status": {
         "name": "Status"
       },
-      "disk_temp": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "memory_available_real": {
         "name": "Memory available (real)"
       },
@@ -165,9 +202,6 @@
       "partition_size_used": {
         "name": "Partition used space"
       },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "volume_disk_temp_avg": {
         "name": "Average disk temp"
       },
@@ -199,17 +233,30 @@
     }
   },
   "exceptions": {
+    "entry_not_loaded": {
+      "message": "DSM with serial {serial} is not loaded."
+    },
     "execution_error": {
       "message": "Execute {action} on DSM with serial {serial} not possible, because of {error}."
     },
     "missing_serial": {
       "message": "More than one DSM configured, must specify one of serials: {serials}."
     },
+    "reboot_failed": {
+      "message": "Reboot failed with {error}"
+    },
     "serial_not_found": {
       "message": "DSM with specified serial {serial} not found."
+    },
+    "shutdown_failed": {
+      "message": "Shutdown failed with {error}"
     }
   },
   "issues": {
+    "deprecated_action": {
+      "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Restart** or **Shut down** button entity of your NAS with the `button.press` action instead, and update any automations or scripts that use `{action}`.",
+      "title": "The `{action}` action is being removed"
+    },
     "missing_backup_setup": {
       "fix_flow": {
         "abort": {
@@ -241,6 +288,9 @@
     }
   },
   "options": {
+    "abort": {
+      "entry_not_loaded": "The integration is not loaded, so the shares to back up to cannot be listed."
+    },
     "step": {
       "init": {
         "data": {
@@ -250,7 +300,8 @@
         },
         "data_description": {
           "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]",
-          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]"
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
+          "snap_profile_type": "The quality of the snapshots taken from Surveillance Station cameras."
         }
       }
     }
@@ -264,7 +315,7 @@
           "name": "Serial"
         }
       },
-      "name": "Reboot"
+      "name": "[%key:common::action::reboot%]"
     },
     "shutdown": {
       "description": "Shuts down the NAS. This action is deprecated and will be removed in a future release. Please use the corresponding button entity.",

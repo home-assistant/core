@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any, Final, override
 
 from homeassistant.components.button import (
@@ -10,20 +9,17 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, LOGGER, MeshRoles
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import _is_tracked
 from .models import FritzDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 # Set a sane value to avoid too many updates
 PARALLEL_UPDATES = 5
@@ -38,14 +34,6 @@ class FritzButtonDescription(ButtonEntityDescription):
 
 BUTTONS: Final = [
     FritzButtonDescription(
-        key="firmware_update",
-        translation_key="firmware_update",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda avm_wrapper: avm_wrapper.async_trigger_firmware_update(),
-        entity_registry_enabled_default=False,
-    ),
-    FritzButtonDescription(
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
@@ -58,68 +46,7 @@ BUTTONS: Final = [
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_reconnect(),
     ),
-    FritzButtonDescription(
-        key="cleanup",
-        translation_key="cleanup",
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
-        entity_registry_enabled_default=False,
-    ),
 ]
-
-
-def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
-    """Repair issue for cleanup button."""
-    entity_registry = er.async_get(hass)
-
-    if (
-        (
-            entity_button := entity_registry.async_get_entity_id(
-                Platform.BUTTON, DOMAIN, f"{avm_wrapper.unique_id}-cleanup"
-            )
-        )
-        and (entity_entry := entity_registry.async_get(entity_button))
-        and not entity_entry.disabled
-    ):
-        # Deprecate the 'cleanup' button: create a Repairs issue for users
-        ir.async_create_issue(
-            hass,
-            domain=DOMAIN,
-            issue_id="deprecated_cleanup_button",
-            is_fixable=False,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_cleanup_button",
-            translation_placeholders={"removal_version": "2026.11.0"},
-            breaks_in_ha_version="2026.11.0",
-        )
-
-
-def repair_issue_firmware_update(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
-    """Repair issue for firmware update button."""
-    entity_registry = er.async_get(hass)
-
-    if (
-        (
-            entity_button := entity_registry.async_get_entity_id(
-                Platform.BUTTON, DOMAIN, f"{avm_wrapper.unique_id}-firmware_update"
-            )
-        )
-        and (entity_entry := entity_registry.async_get(entity_button))
-        and not entity_entry.disabled
-    ):
-        # Deprecate the 'firmware update' button: create a Repairs issue for users
-        ir.async_create_issue(
-            hass,
-            domain=DOMAIN,
-            issue_id="deprecated_firmware_update_button",
-            is_fixable=False,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_firmware_update_button",
-            translation_placeholders={"removal_version": "2026.11.0"},
-            breaks_in_ha_version="2026.11.0",
-        )
 
 
 async def async_setup_entry(
@@ -128,7 +55,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-    _LOGGER.debug("Setting up buttons")
+    LOGGER.debug("Setting up buttons")
     avm_wrapper = entry.runtime_data
 
     entities_list: list[ButtonEntity] = [
@@ -137,8 +64,6 @@ async def async_setup_entry(
 
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
         async_add_entities(entities_list)
-        repair_issue_cleanup(hass, avm_wrapper)
-        repair_issue_firmware_update(hass, avm_wrapper)
         return
 
     data_fritz = hass.data[FRITZ_DATA_KEY]
@@ -156,9 +81,6 @@ async def async_setup_entry(
             hass, avm_wrapper.signal_device_new, async_update_avm_device
         )
     )
-
-    repair_issue_cleanup(hass, avm_wrapper)
-    repair_issue_firmware_update(hass, avm_wrapper)
 
 
 class FritzButton(ButtonEntity):
@@ -187,24 +109,6 @@ class FritzButton(ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
-        if self.entity_description.key == "cleanup":
-            _LOGGER.warning(
-                "The 'cleanup' button is deprecated and will"
-                " be removed in Home Assistant Core"
-                " 2026.11.0. Please update your automations"
-                " and dashboards to remove any usage of"
-                " this button. The action is now performed"
-                " automatically at each data refresh",
-            )
-        elif self.entity_description.key == "firmware_update":
-            _LOGGER.warning(
-                "The 'firmware update' button is deprecated"
-                " and will be removed in Home Assistant"
-                " Core 2026.11.0. It has been superseded"
-                " by an update entity. Please update your"
-                " automations and dashboards to remove"
-                " any usage of this button",
-            )
         await self.entity_description.press_action(self.avm_wrapper)
 
 
@@ -214,17 +118,17 @@ def _async_wol_buttons_list(
     data_fritz: FritzData,
 ) -> list[FritzBoxWOLButton]:
     """Add new WOL button entities from the AVM device."""
-    _LOGGER.debug("Setting up %s buttons", BUTTON_TYPE_WOL)
+    LOGGER.debug("Setting up %s buttons", BUTTON_TYPE_WOL)
 
     new_wols: list[FritzBoxWOLButton] = []
 
     for mac, device in avm_wrapper.devices.items():
         if _is_tracked(mac, data_fritz.wol_buttons.values()):
-            _LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
+            LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
             continue
 
         if device.connection_type != CONNECTION_TYPE_LAN:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Skipping wol button creation for device %s, not connected via LAN",
                 device.hostname,
             )
@@ -233,7 +137,7 @@ def _async_wol_buttons_list(
         new_wols.append(FritzBoxWOLButton(avm_wrapper, device))
         data_fritz.wol_buttons[avm_wrapper.unique_id].add(mac)
 
-    _LOGGER.debug("Creating %s wol buttons", len(new_wols))
+    LOGGER.debug("Creating %s wol buttons", len(new_wols))
     return new_wols
 
 

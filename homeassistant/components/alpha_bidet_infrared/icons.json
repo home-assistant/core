@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "button": {
+      "dry": {
+        "default": "mdi:fan"
+      },
+      "easy_wash": {
+        "default": "mdi:shower-head"
+      },
+      "front": {
+        "default": "mdi:water"
+      },
+      "nozzle_down": {
+        "default": "mdi:arrow-down"
+      },
+      "nozzle_up": {
+        "default": "mdi:arrow-up"
+      },
+      "rear": {
+        "default": "mdi:water"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      },
+      "stop_hold": {
+        "default": "mdi:stop-circle"
+      },
+      "wash_and_dry": {
+        "default": "mdi:water-sync"
+      },
+      "water_dry_down": {
+        "default": "mdi:chevron-down"
+      },
+      "water_dry_up": {
+        "default": "mdi:chevron-up"
+      }
+    },
+    "select": {
+      "seat_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "water_temperature": {
+        "default": "mdi:thermometer-water"
+      }
+    }
+  }
+}

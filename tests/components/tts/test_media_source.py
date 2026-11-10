@@ -2,10 +2,10 @@
 
 from http import HTTPStatus
 from pathlib import Path
-import re
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError
@@ -25,8 +25,6 @@ from .common import (
     mock_setup,
     retrieve_media,
 )
-
-from tests.typing import ClientSessionGenerator
 
 
 class MSEntity(MockTTSEntity):
@@ -302,7 +300,7 @@ async def test_resolving_errors(hass: HomeAssistant, setup: str, engine: str) ->
     # Non-existing option
     with pytest.raises(
         media_source.Unresolvable,
-        match=re.escape("Invalid options found: ['non_existing_option']"),
+        match="Unsupported options: non_existing_option",
     ):
         await media_source.async_resolve_media(
             hass,

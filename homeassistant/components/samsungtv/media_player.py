@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -80,10 +80,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._app_list_event: asyncio.Event = asyncio.Event()
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
-        if self._mac:
-            # Deprecated: Implicit Wake-On-LAN, will be removed in 2026.8.0
-            # Triggers have not yet been registered so this is adjusted in the property
-            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
@@ -115,7 +111,9 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
 
-        self._bridge.register_app_list_callback(self._app_list_callback)
+        self.async_on_remove(
+            self._bridge.register_app_list_callback(self._app_list_callback)
+        )
         await self._async_extra_update()
         self.coordinator.async_extra_update = self._async_extra_update
 
@@ -300,8 +298,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
-        except vol.Invalid as err:
-            LOGGER.error("Media ID must be positive integer")
+        except probatio.Invalid as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="media_id_invalid",

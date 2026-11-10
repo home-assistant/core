@@ -1,8 +1,10 @@
 {
   "domain": "launch_library",
   "name": "Launch Library",
+  "categories": ["news_social_media"],
   "codeowners": ["@ludeeus", "@DurgNomis-drol"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/launch_library",
   "integration_type": "service",
   "iot_class": "cloud_polling",

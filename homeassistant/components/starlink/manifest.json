@@ -1,8 +1,10 @@
 {
   "domain": "starlink",
   "name": "Starlink",
+  "categories": ["computers_network.routers_network"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/starlink",
   "integration_type": "device",
   "iot_class": "local_polling",

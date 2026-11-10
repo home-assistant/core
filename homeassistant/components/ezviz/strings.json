@@ -3,14 +3,15 @@
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_camera_not_supported": "Only the EZVIZ cloud account can be reconfigured. To change the RTSP credentials of a camera, remove and re-add it.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "mfa_required": "2FA enabled on account, please disable and retry"
+      "mfa_required": "2FA enabled on account, please disable and retry",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{serial}",
     "step": {
@@ -29,6 +30,13 @@
         },
         "description": "Enter credentials to reauthenticate to EZVIZ cloud account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "description": "Update the password and region URL of EZVIZ cloud account {username}."
       },
       "user": {
         "data": {
@@ -184,27 +192,17 @@
     "step": {
       "init": {
         "data": {
+          "encryption_password": "Image encryption password",
           "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras",
           "timeout": "Request timeout (seconds)"
+        },
+        "data_description": {
+          "encryption_password": "Password used to decrypt motion pictures when it differs from the camera verification code. Leave empty to use the verification code."
         }
       }
     }
   },
   "services": {
-    "set_alarm_detection_sensibility": {
-      "description": "Changes the sensibility level of the motion detection.",
-      "fields": {
-        "level": {
-          "description": "Sensibility level. 1-6 for type 0 (normal camera), or 1-100 for type 3 (PIR sensor camera).",
-          "name": "Level"
-        },
-        "type_value": {
-          "description": "Detection type. 0 for normal camera, or 3 for PIR sensor camera.",
-          "name": "Type"
-        }
-      },
-      "name": "Set detection sensibility"
-    },
     "wake_device": {
       "description": "Wakes a camera from sleep mode. Especially useful for battery cameras.",
       "name": "Wake camera"

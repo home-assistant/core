@@ -3,9 +3,9 @@
 import logging
 from typing import cast
 
+import probatio
 from uiprotect import ProtectApiClient
 from uiprotect.exceptions import ClientError
-import voluptuous as vol
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -65,7 +65,7 @@ class CloudAccountRepair(ProtectRepair):
             placeholders = self._async_get_placeholders()
             return self.async_show_form(
                 step_id="confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
                 description_placeholders=placeholders,
             )
 
@@ -109,7 +109,7 @@ class RTSPRepair(ProtectRepair):
         if user_input is None:
             return self.async_show_form(
                 step_id="start",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
                 description_placeholders=self._async_get_placeholders(),
             )
 
@@ -143,7 +143,7 @@ class RTSPRepair(ProtectRepair):
         placeholders = self._async_get_placeholders()
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=placeholders,
         )
 
@@ -170,7 +170,7 @@ async def async_create_fix_flow(
         and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
     ):
         api = _async_get_or_create_api_client(hass, entry)
-        if issue_id == "cloud_user":
+        if issue_id == f"cloud_user_{entry.entry_id}":
             return CloudAccountRepair(api=api, entry=entry)
         if issue_id.startswith("rtsp_disabled_"):
             return RTSPRepair(

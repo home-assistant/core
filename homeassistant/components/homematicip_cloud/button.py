@@ -2,21 +2,22 @@
 
 from typing import override
 
+from homematicip.base.functionalChannels import (
+    AccessAuthorizationChannel,
+    DeviceBaseChannel,
+)
 from homematicip.device import WallMountedGarageDoorController
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import get_door_opener_authorization_channel, handle_errors
 
-
-def _is_full_flush_lock_controller(device: object) -> bool:
-    """Return whether the device is an HmIP-FLC."""
-    return getattr(device, "modelType", None) == "HmIP-FLC" and hasattr(
-        device, "send_start_impulse_async"
-    )
+DOOR_OPENER_MODELS = {"HmIP-FLC", "HmIP-FDC"}
 
 
 async def async_setup_entry(
@@ -33,9 +34,18 @@ async def async_setup_entry(
         if isinstance(device, WallMountedGarageDoorController)
     ]
     entities.extend(
-        HomematicipFullFlushLockControllerButton(hap, device)
+        HomematicipDoorOpenerButton(hap, device, auth_channel)
         for device in hap.home.devices
-        if _is_full_flush_lock_controller(device)
+        if getattr(device, "modelType", None) in DOOR_OPENER_MODELS
+        and (auth_channel := get_door_opener_authorization_channel(device)) is not None
+    )
+    entities.extend(
+        HomematicipIdentifyButton(hap, device)
+        for device in hap.home.devices
+        for channel in device.functionalChannels
+        if isinstance(channel, DeviceBaseChannel)
+        and channel.index == 0
+        and channel.identifySupported
     )
     async_add_entities(entities)
 
@@ -54,17 +64,51 @@ class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEnti
         await self._device.send_start_impulse_async()
 
 
-class HomematicipFullFlushLockControllerButton(HomematicipGenericEntity, ButtonEntity):
-    """Representation of the HomematicIP full flush lock controller opener."""
+class HomematicipDoorOpenerButton(HomematicipGenericEntity, ButtonEntity):
+    """Representation of a HomematicIP door opener (HmIP-FLC, HmIP-FDC)."""
 
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the full flush lock controller opener button."""
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device,
+        auth_channel: AccessAuthorizationChannel,
+    ) -> None:
+        """Initialize the door opener button."""
         super().__init__(
             hap, device, post="Door opener", feature_id="lock_opener_button"
         )
         self._attr_icon = "mdi:door-open"
+        self._auth_channel = auth_channel
 
+    @handle_errors
     @override
     async def async_press(self) -> None:
-        """Handle the button press."""
-        await self._device.send_start_impulse_async()
+        """Pull the latch via the access-authorization channel.
+
+        This is the only path non-admin clients may use; the door-switch
+        channel rejects them with CLIENT_ACCESS_DENIED.
+        """
+        return await self._auth_channel.async_pull_latch()
+
+
+class HomematicipIdentifyButton(HomematicipGenericEntity, ButtonEntity):
+    """Representation of the identify button of a HomematicIP device."""
+
+    _attr_device_class = ButtonDeviceClass.IDENTIFY
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the identify button."""
+        super().__init__(
+            hap,
+            device,
+            channel_real_index=0,
+            feature_id="identify",
+            use_description_name=True,
+        )
+
+    @handle_errors
+    @override
+    async def async_press(self) -> None:
+        """Make the device signal its location."""
+        return await self.get_channel_or_raise().async_set_identify()

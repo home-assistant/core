@@ -3,6 +3,11 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -10,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensor(
@@ -50,7 +53,7 @@ async def test_player_sensor_none_handling(
     assert state.state == "110"
     assert state.attributes["entity_picture"] == "http://localhost/image.png"
 
-    mock_nintendo_client.devices["testdevid"].players = {}
+    mock_nintendo_client.devices["testdevid"].players.remove_player("testplayerid")
     freezer.tick(60)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
