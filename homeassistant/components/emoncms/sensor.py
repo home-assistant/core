@@ -305,7 +305,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
         if data and data[self.idx][FEED_TAG] != self._tag:
-            # Device and stale cutoff are derived from the tag at setup
+            # The device is derived from the tag at setup
             self.hass.config_entries.async_schedule_reload(
                 self.coordinator.config_entry.entry_id
             )
