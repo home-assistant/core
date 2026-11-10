@@ -3,18 +3,18 @@
 from datetime import time
 from unittest.mock import patch
 
-from aiopowerwall import (
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+import probatio
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from tesla_fleet_api.tesla.powerwall import (
     PowerwallCommandError,
     PowerwallConnectionError,
     PowerwallError,
     PowerwallNotSupportedError,
     PowerwallProtocolError,
 )
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-import probatio
-import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
@@ -76,7 +76,7 @@ lon = 153.3726526
 
 SITE_ID = 123456
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -609,7 +609,9 @@ async def test_local_battery_services(
     )
     assert device
 
-    with patch(f"aiopowerwall.PowerwallClient.{method}") as mock_method:
+    with patch(
+        f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+    ) as mock_method:
         await hass.services.async_call(
             DOMAIN,
             service,
@@ -666,7 +668,10 @@ async def test_local_battery_services_errors(
     assert device
 
     with (
-        patch(f"aiopowerwall.PowerwallClient.{method}", side_effect=error),
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}",
+            side_effect=error,
+        ),
         patch(
             f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}"
         ) as mock_cloud,
@@ -697,7 +702,7 @@ async def test_dispatch_battery_power_out_of_range_message(
 
     with (
         patch(
-            "aiopowerwall.PowerwallClient.dispatch_battery_power",
+            "tesla_fleet_api.tesla.powerwall.PowerwallClient.dispatch_battery_power",
             side_effect=PowerwallCommandError(
                 "dispatch_battery_power",
                 11,
@@ -737,7 +742,7 @@ async def test_local_battery_services_unreachable_gateway(
 
     with (
         patch(
-            f"aiopowerwall.PowerwallClient.{method}",
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}",
             side_effect=PowerwallConnectionError("unreachable"),
         ) as mock_local,
         patch(
@@ -812,7 +817,9 @@ async def test_battery_services_cloud(
             f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}",
             return_value=COMMAND_OK,
         ) as mock_method,
-        patch(f"aiopowerwall.PowerwallClient.{method}") as mock_local,
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+        ) as mock_local,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -847,7 +854,9 @@ async def test_dispatch_battery_power_out_of_range(
     assert device
 
     with (
-        patch("aiopowerwall.PowerwallClient.dispatch_battery_power") as mock_method,
+        patch(
+            "tesla_fleet_api.tesla.powerwall.PowerwallClient.dispatch_battery_power"
+        ) as mock_method,
         pytest.raises(probatio.Invalid),
     ):
         await hass.services.async_call(
