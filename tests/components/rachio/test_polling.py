@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from requests.exceptions import Timeout
+from requests.exceptions import ConnectionError as RequestsConnectionError, Timeout
 
 from homeassistant.components.rachio.const import (
     CONF_MANUAL_RUN_MINS,
@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 CONTROLLER_ID = "controller-id"
@@ -152,7 +153,7 @@ async def test_poll_error_keeps_state(
 
 
 @pytest.mark.parametrize("mock_config_entry", [POLLING_OPTIONS], indirect=True)
-@pytest.mark.parametrize("error", [Timeout, ConnectionError])
+@pytest.mark.parametrize("error", [Timeout, RequestsConnectionError])
 @pytest.mark.usefixtures("init_integration")
 async def test_poll_connection_error(
     hass: HomeAssistant,
@@ -168,6 +169,8 @@ async def test_poll_connection_error(
     await _advance(hass, freezer, timedelta(minutes=1))
 
     assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.translation_key == "cannot_connect"
 
 
 @pytest.mark.parametrize("mock_config_entry", [POLLING_OPTIONS], indirect=True)
