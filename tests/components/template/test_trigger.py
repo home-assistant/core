@@ -1004,6 +1004,30 @@ async def test_triggered_when_changed_after_error(
     assert [call.data for call in calls] == [{"value": 21, "previous_value": 42}]
 
 
+async def test_triggered_when_changed_from_initial_error_to_none(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test a first successful None result fires after an initial error."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        _automation_config(
+            {
+                "value_template": (
+                    "{{ none if is_state('test.entity', 'world') else 1 / 0 }}"
+                ),
+                "triggered_when": "changed",
+            }
+        ),
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+
+    assert [call.data for call in calls] == [{"value": None, "previous_value": None}]
+
+
 async def test_triggered_when_changed_with_for(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls: list[ServiceCall]
 ) -> None:

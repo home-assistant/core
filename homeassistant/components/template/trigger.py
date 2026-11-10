@@ -63,9 +63,11 @@ async def async_attach_trigger(
     job = HassJob(action)
     armed = False
     last_value: Any = None
+    has_last_value = False
 
     try:
         last_value = value_template.async_render(variables)
+        has_last_value = True
     except exceptions.TemplateError as ex:
         _LOGGER.warning(
             "Error initializing 'template' trigger for '%s': %s",
@@ -82,7 +84,7 @@ async def async_attach_trigger(
         updates: list[TrackTemplateResult],
     ) -> None:
         """Listen for state changes and calls action."""
-        nonlocal delay_cancel, armed, last_value
+        nonlocal delay_cancel, armed, last_value, has_last_value
         result = updates.pop().result
 
         if isinstance(result, exceptions.TemplateError):
@@ -94,7 +96,7 @@ async def async_attach_trigger(
             return
 
         # The tracker reports a result again after an error, even if unchanged.
-        if fire_on_change and result == last_value:
+        if fire_on_change and has_last_value and result == last_value:
             return
 
         if delay_cancel:
@@ -103,6 +105,7 @@ async def async_attach_trigger(
 
         previous_value = last_value
         last_value = result
+        has_last_value = True
 
         if not fire_on_change:
             if not result_as_boolean(result):
