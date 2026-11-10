@@ -314,7 +314,7 @@ DISCOVERY_SCHEMAS = [
     # Fibaro Shutter Fibaro FGR222
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="shutter_tilt",
+        hint="blind_tilt",
         manufacturer_id={0x010F},
         product_id={0x1000, 0x1001},
         product_type={0x0301, 0x0302},
@@ -342,7 +342,7 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR222
-    # Operating mode (10) set to roller blind (0, 1) or venetian blind (2)
+    # Operating mode (10) set to roller blind (0, 1)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="shutter",
@@ -354,7 +354,24 @@ DISCOVERY_SCHEMAS = [
                 command_class={CommandClass.CONFIGURATION},
                 property={10},
                 endpoint={0},
-                value={0, 1, 2},
+                value={0, 1},
+            )
+        ],
+    ),
+    # Fibaro Shutter Fibaro FGR222
+    # Operating mode (10) set to venetian blind (2)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="blind",
+        manufacturer_id={0x010F},
+        product_type={0x0301, 0x0302},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={10},
+                endpoint={0},
+                value={2},
             )
         ],
     ),
@@ -376,11 +393,11 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR223
-    # Combine both switch_multilevel endpoints into shutter_tilt
+    # Combine both switch_multilevel endpoints into blind_tilt
     # if operating mode (151) is set to venetian blind (2)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="shutter_tilt",
+        hint="blind_tilt",
         manufacturer_id={0x010F},
         product_id={0x1000, 0x1001},
         product_type={0x0303},
@@ -412,7 +429,7 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Fibaro Shutter Fibaro FGR223
-    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as shutter_tilt
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as blind_tilt
     # or has no practical function. The value is consumed to block fallthrough to a
     # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel
@@ -475,11 +492,11 @@ DISCOVERY_SCHEMAS = [
         required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
     ),
     # Shelly Qubino Wave Shutter QNSH-001P10
-    # Combine both switch_multilevel endpoints into shutter_tilt
+    # Combine both switch_multilevel endpoints into blind_tilt
     # if operating mode (71) is set to venetian blind (1)
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="shutter_tilt",
+        hint="blind_tilt",
         manufacturer_id={0x0460},
         product_id={0x0082, 0x0083},
         product_type={0x0003},
@@ -511,7 +528,7 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # Shelly Qubino Wave Shutter QNSH-001P10
-    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as shutter_tilt
+    # Suppress endpoint 2 (slat): it is either combined with endpoint 1 as blind_tilt
     # or has no practical function. The value is consumed to block fallthrough to a
     # generic cover schema, but no entity is created.
     # CC: Switch_Multilevel

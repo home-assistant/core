@@ -280,7 +280,7 @@ async def test_fibaro_fgr222_shutter_cover(
     """Test tilt function of the Fibaro Shutter devices."""
     state = hass.states.get(FIBARO_FGR_222_SHUTTER_COVER_ENTITY)
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
 
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
@@ -384,7 +384,7 @@ async def test_fibaro_fgr223_shutter_cover(
     """Test tilt function of the Fibaro Shutter devices."""
     state = hass.states.get(FIBARO_FGR_223_SHUTTER_COVER_ENTITY)
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
 
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
@@ -484,7 +484,7 @@ async def test_shelly_wave_shutter_cover_with_tilt(
     """
     state = hass.states.get(SHELLY_WAVE_SHUTTER_COVER_ENTITY)
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
 
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
@@ -969,7 +969,7 @@ async def test_fibaro_fgr222_shutter_cover_no_tilt(
     [
         pytest.param(0, CoverDeviceClass.SHUTTER, id="roller_blind"),
         pytest.param(1, CoverDeviceClass.SHUTTER, id="roller_blind_positioning"),
-        pytest.param(2, CoverDeviceClass.SHUTTER, id="venetian_blind"),
+        pytest.param(2, CoverDeviceClass.BLIND, id="venetian_blind"),
         pytest.param(3, CoverDeviceClass.GATE, id="gate"),
         pytest.param(4, CoverDeviceClass.GATE, id="gate_positioning"),
     ],
