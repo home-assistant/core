@@ -74,8 +74,7 @@ class AbrpFlowHandler(
         binding the entry to an unverified account. A token without a
         refresh_token aborts as well: the entry could not outlive the access
         token, and the stream would retry it forever. On a new entry an empty
-        garage aborts too: the garage is only re-read at setup, so such an entry
-        would load green and stay empty until a manual reload.
+        garage aborts too, so a new entry always starts with a vehicle to show.
         """
         try:
             identity = parse_unverified_identity(data["token"].get("id_token"))
