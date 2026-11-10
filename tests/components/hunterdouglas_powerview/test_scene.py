@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
@@ -129,7 +129,7 @@ async def test_stale_scenes_removed_on_setup(
     entity_registry: er.EntityRegistry,
     api_version: int,
 ) -> None:
-    """Test a scene the hub no longer reports is removed during setup."""
+    """Test a scene the hub no longer reports is removed when set up again."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -146,21 +146,17 @@ async def test_stale_scenes_removed_on_setup(
         config_entry=entry,
         suggested_object_id="phantom_scene",
     )
-    await hass.async_block_till_done()
 
-    registry_events: list[er.EventEntityRegistryUpdatedData] = []
-    unsubscribe = hass.bus.async_listen(
-        er.EVENT_ENTITY_REGISTRY_UPDATED,
-        lambda event: registry_events.append(event.data),
-    )
+    events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
-    unsubscribe()
 
-    assert {"action": "remove", "entity_id": phantom.entity_id} in registry_events
+    removed = {
+        event.data["entity_id"] for event in events if event.data["action"] == "remove"
+    }
+    assert removed == {phantom.entity_id}
     assert entity_registry.async_get(phantom.entity_id) is None
     for entity_id in existing_entity_ids:
-        assert {"action": "remove", "entity_id": entity_id} not in registry_events
         assert entity_registry.async_is_registered(entity_id)
     assert hass.states.async_entity_ids_count(SCENE_DOMAIN) == 18
     assert entity_registry.async_is_registered(
