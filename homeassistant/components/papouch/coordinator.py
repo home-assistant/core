@@ -69,7 +69,7 @@ class PapouchNetworkDataUpdateCoordinator(DataUpdateCoordinator):
         except DeviceConnectionError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect_device_with_info",
+                translation_key="cannot_connect_with_info",
                 translation_placeholders=self.translation_placeholders,
             ) from err
         except DeviceParseError as err:

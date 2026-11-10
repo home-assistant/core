@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> N
     except DeviceConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_device",
+            translation_key="cannot_connect",
         ) from err
     except DeviceParseError as err:
         raise ConfigEntryNotReady(
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> N
     except DeviceConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect_device_with_info",
+            translation_key="cannot_connect_with_info",
             translation_placeholders=placeholders,
         ) from err
     except DeviceParseError as err:

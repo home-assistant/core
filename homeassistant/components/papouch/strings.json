@@ -74,12 +74,9 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Failed to connect to device."
-    },
-    "cannot_connect_device": {
       "message": "Failed to connect to the device."
     },
-    "cannot_connect_device_with_info": {
+    "cannot_connect_with_info": {
       "message": "Failed to connect to the device {name} ({location})."
     },
     "invalid_auth": {
