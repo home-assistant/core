@@ -1,6 +1,6 @@
 """Helpers for config validation using probatio."""
 
-from collections.abc import Callable, Hashable, Iterable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping
 import contextlib
 from contextvars import ContextVar
 from datetime import (
@@ -368,14 +368,16 @@ def entity_ids_or_uuids(value: str | list) -> list[str]:
 
 
 comp_entity_ids = probatio.Any(
-    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
+    # Any reports the deepest error, and the first option's error on a tie
     entity_ids,
+    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
 )
 
 
 comp_entity_ids_or_uuids = probatio.Any(
-    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
+    # Any reports the deepest error, and the first option's error on a tie
     entity_ids_or_uuids,
+    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
 )
 
 
@@ -743,13 +745,15 @@ def template_complex(value: Any) -> Any:
     if isinstance(value, list):
         return_list = value.copy()
         for idx, element in enumerate(return_list):
-            return_list[idx] = template_complex(element)
+            with prepend_validation_path(idx):
+                return_list[idx] = template_complex(element)
         return return_list
     if isinstance(value, dict):
-        return {
-            template_complex(key): template_complex(element)
-            for key, element in value.items()
-        }
+        return_dict = {}
+        for key, element in value.items():
+            with prepend_validation_path(key):
+                return_dict[template_complex(key)] = template_complex(element)
+        return return_dict
     if isinstance(value, str) and template_helper.is_template_string(value):
         return template(value)
 
@@ -1930,11 +1934,11 @@ _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
+def flatten_trigger_list(triggers: list[Any]) -> list[Any]:
     """Flatten trigger arrays with 'triggers:' sublists into one list."""
     flatlist = []
     for t in triggers:
-        if CONF_TRIGGERS in t and len(t) == 1:
+        if isinstance(t, dict) and CONF_TRIGGERS in t and len(t) == 1:
             triggerlist = ensure_list(t[CONF_TRIGGERS])
             flatlist.extend(triggerlist)
         else:
@@ -1950,11 +1954,9 @@ def _base_trigger_validator(value: Any) -> Any:
     return value
 
 
-TRIGGER_SCHEMA = probatio.All(
-    ensure_list,
-    _base_trigger_list_flatten,
-    [probatio.All(_trigger_pre_validator, _base_trigger_validator)],
-)
+TRIGGER_ITEM_SCHEMA = probatio.All(_trigger_pre_validator, _base_trigger_validator)
+
+TRIGGER_SCHEMA = probatio.All(ensure_list, flatten_trigger_list, [TRIGGER_ITEM_SCHEMA])
 
 _SCRIPT_DELAY_SCHEMA = probatio.Schema(
     {
@@ -2088,21 +2090,19 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
     }
 )
 
-_parallel_sequence_action = probatio.All(
-    # Wrap a shorthand sequences in a parallel action
-    SCRIPT_SCHEMA,
-    lambda config: {
-        CONF_SEQUENCE: config,
-    },
-)
+
+def _parallel_branch(value: Any) -> dict[str, Any]:
+    """Validate a parallel branch, wrapping shorthand actions in a sequence."""
+    if isinstance(value, dict) and CONF_SEQUENCE in value:
+        return cast(dict[str, Any], _SCRIPT_SEQUENCE_SCHEMA(value))
+    with prepend_validation_path(CONF_SEQUENCE):
+        return {CONF_SEQUENCE: SCRIPT_SCHEMA(value)}
+
 
 _SCRIPT_PARALLEL_SCHEMA = probatio.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        probatio.Required(CONF_PARALLEL): probatio.All(
-            ensure_list,
-            [probatio.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)],
-        ),
+        probatio.Required(CONF_PARALLEL): probatio.All(ensure_list, [_parallel_branch]),
     }
 )
 
@@ -2225,3 +2225,113 @@ def _validate_in_executor(
         return validator(value)
     finally:
         _hass.hass = None
+
+
+_VALIDATION_PATH_ATTR = "validation_path"
+_MORE_VALIDATION_ERRORS_ATTR = "more_validation_errors"
+
+
+def _prepend_path(err: Exception, segments: list[str | int]) -> None:
+    if isinstance(err, probatio.Invalid):
+        err.prepend(segments)
+    else:
+        setattr(
+            err,
+            _VALIDATION_PATH_ATTR,
+            [*segments, *getattr(err, _VALIDATION_PATH_ATTR, ())],
+        )
+    for more_err in getattr(err, _MORE_VALIDATION_ERRORS_ATTR, ()):
+        _prepend_path(more_err, segments)
+
+
+@contextlib.contextmanager
+def prepend_validation_path(*segments: str | int) -> Iterator[None]:
+    """Prepend path segments to validation errors raised in the block.
+
+    A HomeAssistantError keeps its type, because callers branch on it, so its
+    path is stored in an attribute instead.
+    """
+    try:
+        yield
+    except (probatio.Invalid, HomeAssistantError) as err:
+        _prepend_path(err, list(segments))
+        raise
+
+
+class ValidationErrorCollector:
+    """Collect validation errors of several blocks and raise them together.
+
+    The first error is raised with the others attached, so callers that
+    branch on its type keep working.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the collector."""
+        self._errors: list[Exception] = []
+
+    @contextlib.contextmanager
+    def collect(self, *segments: str | int) -> Iterator[None]:
+        """Collect a validation error raised in the block, at path segments."""
+        try:
+            with prepend_validation_path(*segments):
+                yield
+        except (probatio.Invalid, HomeAssistantError) as err:
+            self.add(err)
+
+    def add(self, err: probatio.Invalid | HomeAssistantError) -> None:
+        """Add a validation error and the errors attached to it."""
+        self._errors.append(err)
+        self._errors.extend(getattr(err, _MORE_VALIDATION_ERRORS_ATTR, ()))
+        setattr(err, _MORE_VALIDATION_ERRORS_ATTR, [])
+
+    def raise_errors(self) -> None:
+        """Raise the collected errors, if any."""
+        if not self._errors:
+            return
+        first, *more = self._errors
+        setattr(first, _MORE_VALIDATION_ERRORS_ATTR, more)
+        raise first
+
+
+def _normalize_path_segment(segment: Any) -> str | int:
+    """Normalize a path segment to a plain int or str."""
+    if isinstance(segment, int) and not isinstance(segment, bool):
+        return int(segment)
+    if isinstance(segment, str):
+        # Bypass subclass rendering, such as StrEnum or VirtualPathComponent
+        return str.__str__(segment)
+    return str(segment)
+
+
+def validation_errors_as_list(err: Exception) -> list[dict[str, Any]]:
+    """Return validation errors as a list of message, path and code dicts."""
+    return [
+        *_error_as_list(err),
+        *(
+            error
+            for more_err in getattr(err, _MORE_VALIDATION_ERRORS_ATTR, ())
+            for error in validation_errors_as_list(more_err)
+        ),
+    ]
+
+
+def _error_as_list(err: Exception) -> list[dict[str, Any]]:
+    if isinstance(err, probatio.MultipleInvalid) and err.errors:
+        return [
+            error for sub_error in err.errors for error in _error_as_list(sub_error)
+        ]
+    if isinstance(err, probatio.Invalid):
+        message, segments, code = err.error_message, err.path, err.code
+    else:
+        message, segments, code = (
+            str(err),
+            getattr(err, _VALIDATION_PATH_ATTR, []),
+            None,
+        )
+    return [
+        {
+            "message": message,
+            "path": [_normalize_path_segment(segment) for segment in segments],
+            "code": code,
+        }
+    ]

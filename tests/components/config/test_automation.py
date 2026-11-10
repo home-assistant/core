@@ -95,18 +95,224 @@ async def test_update_automation_config(
 
 @pytest.mark.parametrize("automation_config", [{}])
 @pytest.mark.parametrize(
-    ("updated_config", "validation_error"),
+    ("updated_config", "validation_error", "errors"),
     [
         (
             {"action": []},
             "required key not provided at 'triggers'",
+            [
+                {
+                    "message": "required key not provided",
+                    "path": ["triggers"],
+                    "code": "required",
+                }
+            ],
         ),
         (
             {
                 "trigger": {"trigger": "automation"},
                 "action": [],
             },
-            "Integration 'automation' does not provide trigger support",
+            "Integration 'automation' does not provide trigger support "
+            "at 'triggers[0]'",
+            [
+                {
+                    "message": "Integration 'automation' does not provide trigger support",
+                    "path": ["triggers", 0],
+                    "code": None,
+                }
+            ],
+        ),
+        (
+            {
+                "triggers": [
+                    {"trigger": "event", "event_type": "test_event"},
+                    {"trigger": "state", "entity_id": "light.kitchen", "for": "abc"},
+                ],
+                "actions": [],
+            },
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at 'triggers[1].for'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": ["triggers", 1, "for"],
+                    "code": None,
+                }
+            ],
+        ),
+        (
+            {
+                "triggers": [{"trigger": "event", "event_type": "test_event"}],
+                "actions": [
+                    {"delay": 1},
+                    {
+                        "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+                    },
+                ],
+            },
+            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+            [
+                {
+                    "message": "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+                    "path": ["actions", 1],
+                    "code": None,
+                }
+            ],
+        ),
+        (
+            {
+                "triggers": [{"trigger": "event", "event_type": "test_event"}],
+                "actions": [{"delay": "abc"}, {"non_existing": "test.automation"}],
+                "mode": "non_existing",
+            },
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at 'actions[0].delay'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": ["actions", 0, "delay"],
+                    "code": None,
+                },
+                {
+                    "message": "Unable to determine action",
+                    "path": ["actions", 1],
+                    "code": None,
+                },
+                {
+                    "message": "value must be one of "
+                    "['parallel', 'queued', 'restart', 'single']",
+                    "path": ["mode"],
+                    "code": "not_in_list",
+                },
+            ],
+        ),
+        (
+            {
+                "triggers": [
+                    {"trigger": "state", "entity_id": "light.kitchen", "for": "abc"},
+                    {"trigger": "state", "entity_id": "light.kitchen", "for": "xyz"},
+                ],
+                "conditions": [{"condition": "non_existing"}],
+                "actions": [
+                    {
+                        "if": [{"condition": "non_existing"}],
+                        "then": [{"wait_for_trigger": [{"trigger": "non_existing"}]}],
+                    },
+                ],
+            },
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at 'triggers[0].for'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": ["triggers", 0, "for"],
+                    "code": None,
+                },
+                {
+                    "message": "offset xyz should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": ["triggers", 1, "for"],
+                    "code": None,
+                },
+                {
+                    "message": 'Invalid condition "non_existing" specified',
+                    "path": ["conditions", 0],
+                    "code": None,
+                },
+                {
+                    "message": 'Invalid condition "non_existing" specified',
+                    "path": ["actions", 0, "if", 0],
+                    "code": None,
+                },
+                {
+                    "message": "Invalid trigger 'non_existing' specified",
+                    "path": ["actions", 0, "then", 0, "wait_for_trigger", 0],
+                    "code": None,
+                },
+            ],
+        ),
+        (
+            {
+                "triggers": [{"trigger": "event", "event_type": "test_event"}],
+                "actions": [
+                    {
+                        "action": "light.turn_on",
+                        "data": {"brightness_pct": "{{ 50 + "},
+                    }
+                ],
+            },
+            "invalid template (TemplateSyntaxError: unexpected 'end of template') "
+            "at 'actions[0].data.brightness_pct'",
+            [
+                {
+                    "message": "invalid template (TemplateSyntaxError: "
+                    "unexpected 'end of template')",
+                    "path": ["actions", 0, "data", "brightness_pct"],
+                    "code": None,
+                }
+            ],
+        ),
+        (
+            {
+                "triggers": [{"trigger": "device", "device_id": "", "domain": ""}],
+                "actions": [],
+            },
+            "required key not provided at 'triggers[0].device_id'",
+            [
+                {
+                    "message": "required key not provided",
+                    "path": ["triggers", 0, "device_id"],
+                    "code": "required",
+                }
+            ],
+        ),
+        (
+            {
+                "triggers": [{"trigger": "event", "event_type": "test_event"}],
+                "actions": [{"device_id": "abcd", "domain": ""}],
+            },
+            "required key not provided at 'actions[0].domain'",
+            [
+                {
+                    "message": "required key not provided",
+                    "path": ["actions", 0, "domain"],
+                    "code": "required",
+                }
+            ],
+        ),
+        (
+            {
+                "triggers": [{"trigger": "device", "device_id": "", "domain": ""}],
+                "conditions": [{"condition": "template", "value_template": "{{ "}],
+                "actions": [{"delay": 1}, {"device_id": "abcd", "domain": ""}],
+            },
+            "invalid template (TemplateSyntaxError: unexpected 'end of template') "
+            "at 'conditions[0].value_template'",
+            [
+                {
+                    "message": "invalid template (TemplateSyntaxError: "
+                    "unexpected 'end of template')",
+                    "path": ["conditions", 0, "value_template"],
+                    "code": None,
+                },
+                {
+                    "message": "required key not provided",
+                    "path": ["triggers", 0, "device_id"],
+                    "code": "required",
+                },
+                {
+                    "message": "required key not provided",
+                    "path": ["actions", 1, "domain"],
+                    "code": "required",
+                },
+            ],
         ),
         (
             {
@@ -119,7 +325,16 @@ async def test_update_automation_config(
                 },
                 "action": [],
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd "
+            "at 'conditions[0]'",
+            [
+                {
+                    "message": "Unknown entity registry entry "
+                    "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "path": ["conditions", 0],
+                    "code": None,
+                }
+            ],
         ),
         (
             {
@@ -131,13 +346,46 @@ async def test_update_automation_config(
                     "state": "blah",
                 },
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd "
+            "at 'actions[0]'",
+            [
+                {
+                    "message": "Unknown entity registry entry "
+                    "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "path": ["actions", 0],
+                    "code": None,
+                }
+            ],
+        ),
+        (
+            {"trigger": [], "triggers": [None], "actions": []},
+            "Cannot specify both 'trigger' and 'triggers'. Please use 'triggers' only.",
+            [
+                {
+                    "message": "Cannot specify both 'trigger' and 'triggers'. "
+                    "Please use 'triggers' only.",
+                    "path": [],
+                    "code": None,
+                },
+                {
+                    "message": "expected a mapping",
+                    "path": ["triggers", 0],
+                    "code": "not_a_dictionary",
+                },
+            ],
         ),
         (
             {
                 "use_blueprint": {"path": "test_event_service.yaml", "input": {}},
             },
             "Missing input a_number, service_to_call, trigger_event",
+            [
+                {
+                    "message": "Missing input a_number, service_to_call, trigger_event",
+                    "path": [],
+                    "code": None,
+                }
+            ],
         ),
     ],
 )
@@ -149,6 +397,7 @@ async def test_update_automation_config_with_error(
     caplog: pytest.LogCaptureFixture,
     updated_config: Any,
     validation_error: str,
+    errors: list[dict[str, Any]],
 ) -> None:
     """Test updating automation config with errors."""
     with patch.object(config, "SECTIONS", [automation]):
@@ -168,9 +417,12 @@ async def test_update_automation_config_with_error(
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == []
 
-    assert resp.status != HTTPStatus.OK
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
-    assert result == {"message": f"Message malformed: {validation_error}"}
+    assert result == {
+        "message": f"Message malformed: {validation_error}",
+        "errors": errors,
+    }
     # Assert the validation error is not logged
     assert validation_error not in caplog.text
 
@@ -225,9 +477,12 @@ async def test_update_automation_config_with_blueprint_substitution_error(
         await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == []
 
-    assert resp.status != HTTPStatus.OK
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
-    assert result == {"message": f"Message malformed: {validation_error}"}
+    assert result == {
+        "message": f"Message malformed: {validation_error}",
+        "errors": [{"message": validation_error, "path": [], "code": None}],
+    }
     # Assert the validation error is not logged
     assert validation_error not in caplog.text
 

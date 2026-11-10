@@ -506,25 +506,33 @@ async def async_validate_trigger_config(
 ) -> list[ConfigType]:
     """Validate triggers."""
     config = []
-    for conf in trigger_config:
-        trigger_key: str = conf[CONF_PLATFORM]
-        platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
-        if not await _async_is_legacy_trigger(hass, platform, trigger_key):
-            trigger_descriptors = await platform.async_get_triggers(hass)
-            relative_trigger_key = get_relative_description_key(
-                platform_domain, trigger_key
-            )
-            if not (trigger := trigger_descriptors.get(relative_trigger_key)):
-                raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_complete_config(hass, conf)
-        elif hasattr(platform, "async_validate_trigger_config"):
-            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
-            conf = await platform.async_validate_trigger_config(hass, conf)
-        else:
-            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
-            conf = platform.TRIGGER_SCHEMA(conf)
-        config.append(conf)
+    errors = cv.ValidationErrorCollector()
+    for index, conf in enumerate(trigger_config):
+        with errors.collect(index):
+            config.append(await async_validate_single_trigger_config(hass, conf))
+    errors.raise_errors()
     return config
+
+
+async def async_validate_single_trigger_config(
+    hass: HomeAssistant, conf: ConfigType
+) -> ConfigType:
+    """Validate a single trigger that passed the trigger schema."""
+    trigger_key: str = conf[CONF_PLATFORM]
+    platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
+    if not await _async_is_legacy_trigger(hass, platform, trigger_key):
+        trigger_descriptors = await platform.async_get_triggers(hass)
+        relative_trigger_key = get_relative_description_key(
+            platform_domain, trigger_key
+        )
+        if not (trigger := trigger_descriptors.get(relative_trigger_key)):
+            raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified")
+        return await trigger.async_validate_complete_config(hass, conf)
+    if hasattr(platform, "async_validate_trigger_config"):
+        conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
+        return await platform.async_validate_trigger_config(hass, conf)
+    conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
+    return cast(ConfigType, platform.TRIGGER_SCHEMA(conf))
 
 
 def _trigger_action_wrapper(

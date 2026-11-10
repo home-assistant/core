@@ -406,14 +406,16 @@ async def async_validate_config_section(
     validated_config = await _async_resolve_template_config(hass, config)
 
     if CONF_TRIGGERS in validated_config:
-        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
-        )
+        with cv.prepend_validation_path(CONF_TRIGGERS):
+            validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
+                hass, validated_config[CONF_TRIGGERS]
+            )
 
     if CONF_CONDITIONS in validated_config:
-        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-            hass, validated_config[CONF_CONDITIONS]
-        )
+        with cv.prepend_validation_path(CONF_CONDITIONS):
+            validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, validated_config[CONF_CONDITIONS]
+            )
 
     return validated_config
 

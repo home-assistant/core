@@ -1321,7 +1321,7 @@ async def test_automation_with_integration_without_device_trigger(
 BAD_AUTOMATIONS = [
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{path}entity_id'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1337,7 +1337,7 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{path}entity_id'",
     ),
     (
         {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
@@ -1670,7 +1670,7 @@ async def test_automation_with_bad_trigger(
         },
     )
 
-    assert expected_error.format(path="") in caplog.text
+    assert expected_error.format(path="triggers[0].") in caplog.text
 
 
 async def test_websocket_device_not_found(

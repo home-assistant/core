@@ -2784,7 +2784,7 @@ async def test_subscribe_trigger(
             {"platform": "nonexistent"},
             {
                 "code": "invalid_format",
-                "message": "Invalid trigger 'nonexistent' specified",
+                "message": "Invalid trigger 'nonexistent' specified at '[0]'",
             },
         ),
         # Missing mandatory config for the trigger platform
@@ -2792,7 +2792,7 @@ async def test_subscribe_trigger(
             {"platform": "numeric_state"},
             {
                 "code": "invalid_format",
-                "message": "required key not provided at 'entity_id'",
+                "message": "required key not provided at '[0].entity_id'",
             },
         ),
         # Unknown device, raised as a HomeAssistantError by the platform validator
@@ -3860,15 +3860,40 @@ async def test_validate_config_works(
 
 
 @pytest.mark.parametrize(
-    ("key", "config", "error"),
+    ("key", "config", "error", "errors"),
     [
         # Raises probatio.Invalid
         (
             "triggers",
             {"platform": "non_existing", "event_type": "hello"},
-            "Invalid trigger 'non_existing' specified",
+            "Invalid trigger 'non_existing' specified at '[0]'",
+            [
+                {
+                    "message": "Invalid trigger 'non_existing' specified",
+                    "path": [0],
+                    "code": None,
+                }
+            ],
         ),
-        # Raises probatio.Invalid
+        # Raises probatio.Invalid in the platform step of the second trigger
+        (
+            "triggers",
+            [
+                {"trigger": "event", "event_type": "hello"},
+                {"trigger": "state", "entity_id": "light.kitchen", "for": "abc"},
+            ],
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[1].for'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": [1, "for"],
+                    "code": None,
+                }
+            ],
+        ),
+        # Raises HomeAssistantError
         (
             "conditions",
             {
@@ -3877,6 +3902,13 @@ async def test_validate_config_works(
                 "state": "paulus",
             },
             'Invalid condition "non_existing" specified',
+            [
+                {
+                    "message": 'Invalid condition "non_existing" specified',
+                    "path": [0],
+                    "code": None,
+                }
+            ],
         ),
         # Raises HomeAssistantError
         (
@@ -3890,12 +3922,273 @@ async def test_validate_config_works(
                 "type": "is_carbon_dioxide",
             },
             "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+            [
+                {
+                    "message": "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+                    "path": [0],
+                    "code": None,
+                }
+            ],
+        ),
+        # Raises HomeAssistantError in a nested condition
+        (
+            "conditions",
+            [
+                {"condition": "state", "entity_id": "hello.world", "state": "on"},
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "state",
+                            "entity_id": "hello.world",
+                            "state": "on",
+                        },
+                        {"condition": "non_existing"},
+                    ],
+                },
+            ],
+            'Invalid condition "non_existing" specified',
+            [
+                {
+                    "message": 'Invalid condition "non_existing" specified',
+                    "path": [1, "conditions", 1],
+                    "code": None,
+                }
+            ],
         ),
         # Raises probatio.Invalid
         (
             "actions",
             {"non_existing": "domain_test.test_service"},
             "Unable to determine action at '[0]'",
+            [{"message": "Unable to determine action", "path": [0], "code": None}],
+        ),
+        # Several schema errors are all listed
+        (
+            "actions",
+            [{"delay": "abc"}, {"non_existing": "domain_test.test_service"}],
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].delay'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": [0, "delay"],
+                    "code": None,
+                },
+                {"message": "Unable to determine action", "path": [1], "code": None},
+            ],
+        ),
+        # Raises probatio.Invalid in the platform step of a nested trigger
+        (
+            "actions",
+            [
+                {"delay": 1},
+                {
+                    "if": [
+                        {
+                            "condition": "state",
+                            "entity_id": "hello.world",
+                            "state": "on",
+                        }
+                    ],
+                    "then": [
+                        {"delay": 1},
+                        {"wait_for_trigger": [{"trigger": "non_existing"}]},
+                    ],
+                },
+            ],
+            "Invalid trigger 'non_existing' specified at '[1].then[1].wait_for_trigger[0]'",
+            [
+                {
+                    "message": "Invalid trigger 'non_existing' specified",
+                    "path": [1, "then", 1, "wait_for_trigger", 0],
+                    "code": None,
+                }
+            ],
+        ),
+        # Raises HomeAssistantError in a choose condition
+        (
+            "actions",
+            {
+                "choose": [
+                    {"conditions": [], "sequence": [{"delay": 1}]},
+                    {
+                        "conditions": [{"condition": "non_existing"}],
+                        "sequence": [{"delay": 1}],
+                    },
+                ]
+            },
+            'Invalid condition "non_existing" specified',
+            [
+                {
+                    "message": 'Invalid condition "non_existing" specified',
+                    "path": [0, "choose", 1, "conditions", 0],
+                    "code": None,
+                }
+            ],
+        ),
+        # Raises HomeAssistantError in the second action of a parallel sequence
+        (
+            "actions",
+            [
+                {"delay": 1},
+                {
+                    "parallel": [
+                        {"delay": 1},
+                        {
+                            "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+                            "domain": "light",
+                            "type": "turn_on",
+                            "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+                        },
+                    ]
+                },
+            ],
+            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+            [
+                {
+                    "message": "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+                    # The parallel shorthand is wrapped in a sequence
+                    "path": [1, "parallel", 1, "sequence", 0],
+                    "code": None,
+                }
+            ],
+        ),
+        # Platform errors inside an action with a schema error are listed too
+        (
+            "actions",
+            [
+                {
+                    "if": [],
+                    "then": [{"delay": "abc"}, {"device_id": "abcd", "domain": ""}],
+                }
+            ],
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].then[0].delay'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": [0, "then", 0, "delay"],
+                    "code": None,
+                },
+                {
+                    "message": "required key not provided",
+                    "path": [0, "then", 1, "domain"],
+                    "code": "required",
+                },
+            ],
+        ),
+        # A single choose option is checked like a list of options
+        (
+            "actions",
+            [
+                {
+                    "choose": {
+                        "conditions": [],
+                        "sequence": [
+                            {"delay": "abc"},
+                            {"device_id": "abcd", "domain": ""},
+                        ],
+                    }
+                }
+            ],
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].choose[0].sequence[0].delay'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": [0, "choose", 0, "sequence", 0, "delay"],
+                    "code": None,
+                },
+                {
+                    "message": "required key not provided",
+                    "path": [0, "choose", 0, "sequence", 1, "domain"],
+                    "code": "required",
+                },
+            ],
+        ),
+        # Parallel shorthand and sequence branches report the same paths
+        (
+            "actions",
+            [
+                {
+                    "parallel": [
+                        {"sequence": [{"delay": "abc"}]},
+                        {
+                            "if": [],
+                            "then": [
+                                {"delay": "abc"},
+                                {"device_id": "abcd", "domain": ""},
+                            ],
+                        },
+                    ]
+                }
+            ],
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel[0].sequence[0].delay'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": [0, "parallel", 0, "sequence", 0, "delay"],
+                    "code": None,
+                },
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": [0, "parallel", 1, "sequence", 0, "then", 0, "delay"],
+                    "code": None,
+                },
+                {
+                    "message": "required key not provided",
+                    "path": [0, "parallel", 1, "sequence", 0, "then", 1, "domain"],
+                    "code": "required",
+                },
+            ],
+        ),
+        # Triggers next to one with a schema error are still checked
+        (
+            "triggers",
+            [
+                {"event_type": "hello"},
+                {"trigger": "device", "device_id": "abcd", "domain": ""},
+            ],
+            "required key not provided at '[0].trigger'",
+            [
+                {
+                    "message": "required key not provided",
+                    "path": [0, "trigger"],
+                    "code": None,
+                },
+                {
+                    "message": "required key not provided",
+                    "path": [1, "domain"],
+                    "code": "required",
+                },
+            ],
+        ),
+        # Platform errors of items the schema accepted are listed too
+        (
+            "actions",
+            [{"delay": "abc"}, {"device_id": "abcd", "domain": ""}],
+            "offset abc should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].delay'",
+            [
+                {
+                    "message": "offset abc should be format 'HH:MM', 'HH:MM:SS' "
+                    "or 'HH:MM:SS.F'",
+                    "path": [0, "delay"],
+                    "code": None,
+                },
+                {
+                    "message": "required key not provided",
+                    "path": [1, "domain"],
+                    "code": "required",
+                },
+            ],
         ),
     ],
 )
@@ -3904,6 +4197,7 @@ async def test_validate_config_invalid(
     key: str,
     config: dict[str, Any],
     error: str,
+    errors: list[dict[str, Any]],
 ) -> None:
     """Test config validation."""
     await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
@@ -3911,7 +4205,7 @@ async def test_validate_config_invalid(
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {key: {"valid": False, "error": error}}
+    assert msg["result"] == {key: {"valid": False, "error": error, "errors": errors}}
 
 
 async def test_message_coalescing(

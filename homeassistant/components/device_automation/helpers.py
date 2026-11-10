@@ -81,6 +81,13 @@ async def async_validate_device_automation_config(
     """Validate config."""
     validated_config: ConfigType = automation_schema(config)
 
+    # Without a domain nothing is picked yet, so name the missing field
+    if not validated_config[CONF_DOMAIN]:
+        missing = CONF_DOMAIN if validated_config[CONF_DEVICE_ID] else CONF_DEVICE_ID
+        raise probatio.Invalid(
+            "required key not provided", path=[missing], code="required"
+        )
+
     # A device automation may reference a pre-migration composite device id; resolve it
     # to the split device for its domain so the device and its entities exist and the
     # integration platform (validation and attach/call) receives a live device id

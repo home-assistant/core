@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache, partial
 import json
 import logging
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import probatio
 
@@ -1400,12 +1400,25 @@ async def handle_validate_config(
             continue
 
         try:
-            await validator(hass, schema(msg[key]))
+            try:
+                validated = schema(msg[key])
+            except probatio.Invalid as err:
+                await script.async_raise_schema_and_platform_errors(
+                    hass,
+                    msg[key],
+                    err,
+                    {None: cast(Literal["triggers", "conditions", "actions"], key)},
+                )
+            await validator(hass, validated)
         except (
             probatio.Invalid,
             HomeAssistantError,
         ) as err:
-            result[key] = {"valid": False, "error": str(err)}
+            result[key] = {
+                "valid": False,
+                "error": str(err),
+                "errors": cv.validation_errors_as_list(err),
+            }
         else:
             result[key] = {"valid": True, "error": None}
 

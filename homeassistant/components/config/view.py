@@ -13,6 +13,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_a
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util.file import write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
@@ -119,8 +120,12 @@ class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]
                 # We either have a data_schema or a data_validator, ignore mypy
                 self.data_schema(data)  # type: ignore[misc]
         except (probatio.Invalid, HomeAssistantError) as err:
-            return self.json_message(
-                f"Message malformed: {err}", HTTPStatus.BAD_REQUEST
+            return self.json(
+                {
+                    "message": f"Message malformed: {err}",
+                    "errors": cv.validation_errors_as_list(err),
+                },
+                HTTPStatus.BAD_REQUEST,
             )
 
         path = hass.config.path(self.path)
