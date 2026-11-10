@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import json
 import logging
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 from pytest_homeassistant.common import (
@@ -238,23 +238,29 @@ async def test_gravatar_and_picture(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.device_tracker.legacy.DeviceTracker.see")
-@patch("homeassistant.components.demo.device_tracker.setup_scanner", autospec=True)
-async def test_discover_platform(
-    mock_demo_setup_scanner, mock_see, hass: HomeAssistant
-) -> None:
-    """Test discovery of device_tracker demo platform."""
+async def test_discover_platform(mock_see: Mock, hass: HomeAssistant) -> None:
+    """Test discovery of a legacy device_tracker platform."""
+    mock_setup_scanner = Mock(return_value=True)
+    mocked_platform = MockPlatform()
+    mocked_platform.setup_scanner = mock_setup_scanner
+    mock_platform(hass, "test_scanner.device_tracker", mocked_platform)
+
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, device_tracker.DOMAIN, {})
     # async_block_till_done is intentionally missing here so we
     # can verify async_load_platform still works without it
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         await discovery.async_load_platform(
-            hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
+            hass,
+            device_tracker.DOMAIN,
+            "test_scanner",
+            {"test_key": "test_val"},
+            {"bla": {}},
         )
         await hass.async_block_till_done()
     assert device_tracker.DOMAIN in hass.config.components
-    assert mock_demo_setup_scanner.called
-    assert mock_demo_setup_scanner.call_args[0] == (
+    assert mock_setup_scanner.called
+    assert mock_setup_scanner.call_args[0] == (
         hass,
         {},
         mock_see,
