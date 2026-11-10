@@ -83,9 +83,7 @@ async def async_validate_device_automation_config(
 
     for key in (CONF_DEVICE_ID, CONF_DOMAIN):
         if not validated_config[key]:
-            raise probatio.Invalid(
-                "required value is empty", path=[key], code="required"
-            )
+            raise probatio.RequiredFieldInvalid("required value is empty", path=[key])
 
     # A device automation may reference a pre-migration composite device id; resolve it
     # to the split device for its domain so the device and its entities exist and the

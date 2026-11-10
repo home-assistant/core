@@ -2028,7 +2028,7 @@ async def test_validate_config_empty_device_id_or_domain(
     path: list[str],
 ) -> None:
     """Test an empty device ID or domain is reported as an empty required value."""
-    with pytest.raises(probatio.Invalid) as excinfo:
+    with pytest.raises(probatio.RequiredFieldInvalid) as excinfo:
         await validator(hass, base_config | config)
 
     assert excinfo.value.error_message == "required value is empty"
