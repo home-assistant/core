@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NFAndroidTVConfigEntry) 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="setup_connection_error",
-            translation_placeholders={CONF_NAME: entry.title},
+            translation_placeholders={"name": entry.title},
         ) from e
 
     entry.runtime_data = client

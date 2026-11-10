@@ -49,7 +49,7 @@ PARALLEL_UPDATES = 1
 
 
 type _WriteFn = Callable[
-    ["NeoPoolSwitch", NeoPoolModbusClient, bool], Awaitable[dict[str, Any]]
+    [NeoPoolSwitch, NeoPoolModbusClient, bool], Awaitable[dict[str, Any]]
 ]
 type _IsOnFn = Callable[[dict[str, Any]], bool]
 

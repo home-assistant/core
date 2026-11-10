@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
@@ -35,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import validators as tcv
+from .const import DEFAULT_NAMES
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -49,7 +51,7 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
-DEFAULT_NAME = "Template Binary Sensor"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.BINARY_SENSOR]
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"

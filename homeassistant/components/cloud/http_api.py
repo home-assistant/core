@@ -85,7 +85,7 @@ _CLOUD_ERRORS: dict[
 ] = {
     TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
-        "Unable to reach the Home Assistant Cloud.",
+        "Unable to reach Home Assistant Link.",
     ),
     auth.AuthTimeoutError: (
         HTTPStatus.GATEWAY_TIMEOUT,
@@ -1231,7 +1231,7 @@ async def google_assistant_get(
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
-            f"{entity_id} not supported by Google assistant",
+            f"{entity_id} not supported by Google Home",
         )
         return
 

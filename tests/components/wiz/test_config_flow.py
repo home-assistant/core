@@ -673,6 +673,8 @@ async def test_reconfigure_flow_loaded_entry(hass: HomeAssistant) -> None:
     """Test reconfiguring a loaded entry reloads it once."""
     bulb, entry = await async_setup_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
+    # The startup discovery would otherwise revert the reconfigured host
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await entry.start_reconfigure_flow(hass)
 

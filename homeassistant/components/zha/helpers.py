@@ -19,6 +19,8 @@ import probatio
 from zha.application import Platform as ZhaPlatform
 from zha.application.const import (
     ATTR_DEVICE_IEEE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
     CLUSTER_TYPE_IN,
@@ -107,8 +109,6 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NAME,
     Platform,
 )

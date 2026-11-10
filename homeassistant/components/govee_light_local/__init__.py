@@ -11,8 +11,9 @@ from homeassistant.components import network
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN
+from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -42,6 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     )
 
     async def await_cleanup() -> None:
+        # Wait for a running rebind, so cleanup() does not race a bind in flight.
+        await coordinator.async_wait_rebind()
         cleanup_complete_event = coordinator.cleanup()
         with suppress(TimeoutError):
             await asyncio.wait_for(cleanup_complete_event.wait(), 1)
@@ -70,6 +73,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             translation_key="bind_failed",
             translation_placeholders={"error": ex.strerror or str(ex)},
         ) from ex
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            coordinator.async_rebind_failed_addresses,
+            REBIND_INTERVAL,
+            name="Govee light local rebind",
+        )
+    )
 
     await coordinator.async_config_entry_first_refresh()
 

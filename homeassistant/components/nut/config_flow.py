@@ -7,7 +7,7 @@ from typing import Any, override
 from aionut import NUTError, NUTLoginError
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
@@ -21,6 +21,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import PyNUTData, _unique_id_from_status
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .coordinator import NutConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self.nut_config: dict[str, Any] = {}
         self.ups_list: dict[str, str] | None = None
         self.title: str | None = None
-        self.reauth_entry: ConfigEntry | None = None
+        self.reauth_entry: NutConfigEntry | None = None
 
     @override
     async def async_step_zeroconf(
@@ -340,8 +341,8 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         reauth_data = reauth_entry.data
         description_placeholders: dict[str, str] = {
-            CONF_HOST: reauth_data[CONF_HOST],
-            CONF_PORT: reauth_data[CONF_PORT],
+            "host": reauth_data[CONF_HOST],
+            "port": reauth_data[CONF_PORT],
         }
 
         if user_input is not None:

@@ -43,12 +43,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Coverage is above 95% for all modules, but the tests patch methods of
-      the library instead of using a mocked library client. They should be
-      rewritten to use a mock client.
+  test-coverage: done
 
   # Gold
   devices: done
@@ -69,8 +64,9 @@ rules:
   entity-device-class:
     status: done
     comment: |
-      The CAQI (Common Air Quality Index) sensors have no device class, there
-      is no device class that fits this index.
+      The CAQI (Common Air Quality Index) sensors have no device class. The
+      `aqi` device class is not used on purpose: CAQI and AQI are different
+      indices with different scales, so their values are not comparable.
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done

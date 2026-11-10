@@ -1,4 +1,14 @@
 {
+  "common": {
+    "baud_rate": "Baud rate",
+    "baud_rate_description": "Match the baud rate configured on the device.",
+    "modbus_tcp": "Modbus TCP",
+    "serial_port": "Serial port",
+    "serial_port_description": "Select a local serial port or a port shared over the network by a serial proxy.",
+    "serial_rtu": "Serial port (Modbus RTU)",
+    "tcp_host_description": "The hostname or IP address of the device or its Modbus TCP gateway.",
+    "tcp_port_description": "The Modbus TCP port to connect to."
+  },
   "exceptions": {
     "device_in_use": {
       "message": "Modbus device {endpoint} is already in use with different link settings: {existing_params} against {params}."

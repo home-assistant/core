@@ -19,7 +19,7 @@ from homeassistant.components.bluetooth import (
     async_process_advertisements,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 
 from .const import DOMAIN
 
@@ -87,18 +87,13 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
-            name = user_input[CONF_NAME]
-
-            discovered = self._discovered_devices[name]
-
-            assert discovered is not None
-
+            address = user_input[CONF_ADDRESS]
+            discovered = self._discovered_devices[address]
             self._discovery = discovered
 
             if not discovered.device.is_pairing:
                 return await self.async_step_wait_for_pairing_mode()
 
-            address = discovered.info.address
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self._create_snooz_entry(discovered)
@@ -111,8 +106,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             if address in configured_addresses:
                 continue
             if (device := parse_snooz_advertisement(info)) is not None:
-                discovered = DiscoveredSnooz(info, device)
-                self._discovered_devices[discovered.display_name] = discovered
+                self._discovered_devices[address] = DiscoveredSnooz(info, device)
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
@@ -121,10 +115,11 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    probatio.Required(CONF_NAME): probatio.In(
-                        [d.display_name for d in self._discovered_devices.values()]
+                    probatio.Required(CONF_ADDRESS): probatio.In(
+                        {
+                            address: discovered.display_name
+                            for address, discovered in self._discovered_devices.items()
+                        }
                     )
                 }
             ),

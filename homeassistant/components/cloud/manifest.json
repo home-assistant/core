@@ -1,6 +1,6 @@
 {
   "domain": "cloud",
-  "name": "Home Assistant Cloud",
+  "name": "Home Assistant Link",
   "after_dependencies": [
     "alexa",
     "assist_pipeline",

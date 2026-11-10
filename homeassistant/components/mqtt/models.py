@@ -22,11 +22,10 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
-    UNDEFINED,
     ConfigType,
     DiscoveryInfoType,
     TemplateVarsType,
-    UndefinedType,
+    Undefined,
     VolSchemaType,
 )
 from homeassistant.util.hass_dict import HassKey
@@ -369,17 +368,17 @@ class _LastPayloadJson:
 
     def __init__(self) -> None:
         self.payload: ReceivePayloadType | None = None
-        self.parsed: Any = UNDEFINED
+        self.parsed: Any = Undefined
 
-    def loads(self, payload: ReceivePayloadType) -> Any | UndefinedType:
-        """Return the payload parsed as JSON, UNDEFINED if it is not JSON."""
+    def loads(self, payload: ReceivePayloadType) -> Any | Undefined:
+        """Return the payload parsed as JSON, Undefined if it is not JSON."""
         if payload is self.payload:
             return self.parsed
         parsed: Any
         try:
             parsed = json_loads(payload)
         except JSON_DECODE_EXCEPTIONS:
-            parsed = UNDEFINED
+            parsed = Undefined
         # A bytearray can change in place, so it is never kept.
         if not isinstance(payload, bytearray):
             self.payload = payload
@@ -389,7 +388,7 @@ class _LastPayloadJson:
     def clear(self) -> None:
         """Drop the payload and its parse."""
         self.payload = None
-        self.parsed = UNDEFINED
+        self.parsed = Undefined
 
 
 LAST_PAYLOAD_JSON = _LastPayloadJson()
@@ -425,7 +424,7 @@ class MqttValueTemplate:
             return payload
 
         value_json = (
-            UNDEFINED
+            Undefined
             if self._value_template.is_static
             else LAST_PAYLOAD_JSON.loads(payload)
         )
