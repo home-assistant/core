@@ -1,0 +1,90 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unsupported_brand": "This is a {brand} gateway. Its code and error tables are not written yet, so it cannot be set up. See the intesis-gw-modbus library for how to contribute them.",
+      "unsupported_device": "The device on this port did not identify itself as a supported Intesis gateway."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}"
+    },
+    "step": {
+      "features": {
+        "data": {
+          "has_vane": "Unit has a swing vane"
+        },
+        "data_description": {
+          "has_vane": "The gateway cannot tell whether the indoor unit has a motorised vane, so this is pre-filled from what it last reported. Turn it off for a unit without one and the climate entity will not offer swing modes."
+        },
+        "description": "Confirm what the indoor unit behind the gateway can do."
+      },
+      "temperature_format": {
+        "data": {
+          "temperature_format": "Temperature format"
+        },
+        "data_description": {
+          "temperature_format": "How the gateway's SW4 DIP switches scale temperatures. It could not be detected, usually because the gateway is still starting up."
+        },
+        "description": "Pick the temperature format set on the gateway's SW4 DIP switches."
+      },
+      "user": {
+        "data": {
+          "baudrate": "[%key:component::modbus::common::baud_rate%]",
+          "device": "[%key:component::modbus::common::serial_port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "baudrate": "The speed set on the gateway's SW3/SW4 DIP switches. The Intesis default is 9600.",
+          "device": "[%key:component::modbus::common::serial_port_description%]",
+          "unit_id": "The gateway's Modbus slave address, set on its SW3 DIP switches. The Intesis default is 1."
+        },
+        "description": "Set up a gateway wired to a serial port over RS-485 (8 data bits, no parity, 2 stop bits). The gateway model is detected from its device ID."
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "powerful": "Powerful"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "position_1": "Position 1",
+              "position_2": "Position 2",
+              "position_3": "Position 3",
+              "position_4": "Position 4",
+              "swing": "Swing"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "Could not read the gateway."
+    },
+    "no_component_answered": {
+      "message": "The gateway answered none of the register blocks."
+    },
+    "write_failed": {
+      "message": "The gateway did not accept the command: {error}"
+    },
+    "wrong_model": {
+      "message": "The gateway on this port reports another device ID than the model this entry was set up as. Remove the entry and set the gateway up again."
+    }
+  },
+  "selector": {
+    "temperature_format": {
+      "options": {
+        "celsius": "Degrees Celsius (x1)",
+        "decicelsius": "Tenths of a degree Celsius (x10)",
+        "fahrenheit": "Degrees Fahrenheit"
+      }
+    }
+  }
+}

@@ -966,6 +966,8 @@ AGENTS.md @home-assistant/core
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/intent_script/ @arturpragacz
 /tests/components/intent_script/ @arturpragacz
+/homeassistant/components/intesis_modbus/ @TimoPtr
+/tests/components/intesis_modbus/ @TimoPtr
 /homeassistant/components/intesishome/ @jnimmo
 /tests/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs

@@ -9,6 +9,7 @@ SERIAL_PORT_SELECTOR_INTEGRATIONS = [
     "dsmr",
     "edl21",
     "flexit",
+    "intesis_modbus",
     "kaco_rs485",
     "landisgyr_heat_meter",
     "lg_tv_rs232",
