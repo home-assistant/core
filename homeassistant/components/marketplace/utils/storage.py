@@ -2,7 +2,7 @@
 
 import glob
 import os
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -34,6 +34,39 @@ LEGACY_REPOSITORY_STORAGE_DIRECTORY = "hacs"
 
 STORAGE_CACHE_KEY: HassKey[dict[str, Store[Any]]] = HassKey("marketplace_storage_cache")
 
+# Selections stored from this minor version on were checked to be part of the
+# repository
+REPOSITORIES_STORAGE_MINOR_VERSION = 2
+
+
+def hold_unchecked_selected_tags(repositories: dict[str, Any]) -> dict[str, Any]:
+    """Move the selected versions aside, until they are checked.
+
+    Any version used to be stored, also a pull request or a commit of a fork.
+    """
+    for repository in repositories.values():
+        if (
+            isinstance(repository, dict)
+            and (selected_tag := repository.pop("selected_tag", None)) is not None
+        ):
+            repository["unchecked_selected_tag"] = selected_tag
+    return repositories
+
+
+class RepositoriesStore(Store[Any]):
+    """Store of the repositories, which migrates the selected versions."""
+
+    @override
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: Any
+    ) -> Any:
+        """Migrate the stored repositories."""
+        if old_major_version != self.version:
+            raise NotImplementedError
+        if old_minor_version < 2 and isinstance(old_data, dict):
+            return hold_unchecked_selected_tags(old_data)
+        return old_data
+
 
 def get_storage_key(key: str) -> str:
     """Return the key to use with homeassistant.helpers.storage.Storage."""
@@ -48,15 +81,26 @@ def get_storage_for_key(hass: HomeAssistant, key: str) -> Store[Any]:
     """
     cache = hass.data.setdefault(STORAGE_CACHE_KEY, {})
     if key not in cache:
-        cache[key] = Store(
-            hass,
-            STORAGE_VERSION,
-            get_storage_key(key),
-            encoder=JSONEncoder,
-            atomic_writes=True,
-            # The repositories file is large, encoding it stays off the event loop
-            serialize_in_event_loop=False,
-        )
+        if key == "repositories":
+            cache[key] = RepositoriesStore(
+                hass,
+                STORAGE_VERSION,
+                get_storage_key(key),
+                minor_version=REPOSITORIES_STORAGE_MINOR_VERSION,
+                encoder=JSONEncoder,
+                atomic_writes=True,
+                # The file is large, encoding it stays off the event loop
+                serialize_in_event_loop=False,
+            )
+        else:
+            cache[key] = Store(
+                hass,
+                STORAGE_VERSION,
+                get_storage_key(key),
+                encoder=JSONEncoder,
+                atomic_writes=True,
+                serialize_in_event_loop=False,
+            )
     return cache[key]
 
 
@@ -128,6 +172,10 @@ async def _async_adopt_legacy_data(
 
     if not data:
         return None
+
+    # Saved in the current version, the migration does not see it
+    if key == "repositories" and isinstance(data, dict):
+        data = hold_unchecked_selected_tags(data)
 
     LOGGER.info("Adopting the data in '%s' as '%s'", legacy_key, get_storage_key(key))
     await store.async_save(data)

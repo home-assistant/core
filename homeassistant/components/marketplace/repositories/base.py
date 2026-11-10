@@ -2,13 +2,14 @@
 
 import asyncio
 from asyncio import Lock, sleep
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from functools import partial
 import io
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -42,6 +43,7 @@ from ..exceptions import (
     RepositoryArchivedError,
     RepositoryBusyError,
     RepositoryExistsError,
+    VersionNotInRepositoryError,
 )
 from ..types import DownloadableContent
 from ..utils.backup import Backup
@@ -129,6 +131,57 @@ TOPIC_FILTER = (
     "theme",
     "themes",
 )
+
+# A full or abbreviated commit SHA
+COMMIT_SHA = re.compile(r"^[0-9a-f]{7,40}$")
+
+# Only refs/heads and refs/tags are the versions of the repository, refs/pull
+# holds pull requests from forks too. A compare with a commit that does not
+# exist fails the whole query, the commit is resolved first.
+UPSTREAM_REF_QUERY = """
+query ($owner: String!, $name: String!, $ref: String!, $branch: String!, $tag: String!) {
+  repository(owner: $owner, name: $name) {
+    branch: ref(qualifiedName: $branch) { name }
+    tag: ref(qualifiedName: $tag) { name }
+    object(expression: $ref) { ... on Commit { oid } }
+  }
+}
+"""
+
+# The default branch holds most commits, it is compared before the others
+DEFAULT_BRANCH_COMMIT_QUERY = """
+query ($owner: String!, $name: String!, $ref: String!) {
+  repository(owner: $owner, name: $name) {
+    defaultBranchRef { compare(headRef: $ref) { status } }
+  }
+}
+"""
+
+UPSTREAM_COMMIT_QUERY = """
+query ($owner: String!, $name: String!, $ref: String!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    refs(refPrefix: "refs/heads/", first: 100, after: $cursor) {
+      pageInfo { hasNextPage endCursor }
+      nodes { compare(headRef: $ref) { status } }
+    }
+  }
+}
+"""
+
+# Compared with a branch, a commit the branch holds is behind it or the same
+CONTAINED_STATUSES = ("behind", "identical")
+
+# The most branches GitHub lists in one response
+BRANCHES_PER_PAGE = 100
+
+
+def branch_holds(comparison: dict[str, Any] | None) -> bool:
+    """Return if the branch of a comparison holds the commit compared with it.
+
+    GraphQL writes the status in capitals, REST in lowercase. GraphQL has no
+    comparison when it can not compare.
+    """
+    return comparison is not None and comparison["status"].lower() in CONTAINED_STATUSES
 
 
 # What a catalog entry leaves out is reset to these
@@ -332,6 +385,8 @@ class RepositoryData:
     releases: bool = False
     selected_tag: str | None = None
     show_beta: bool = False
+    # Stored before selections were checked, it is not used until checked
+    unchecked_selected_tag: str | None = None
     stargazers_count: int = 0
     topics: list[str] = attr.field(factory=list)
 
@@ -1179,6 +1234,7 @@ class Repository:
     def _end_install(self) -> None:
         """Forget the version picked for the install and end its progress."""
         self.data.selected_tag = None
+        self.data.unchecked_selected_tag = None
         self.force_branch = False
         # Clear it first, the panel asks for the page right after it hears of the end
         self._clear_readme_cache()
@@ -1227,8 +1283,19 @@ class Repository:
 
     async def _async_write_version(self, *, version: str | None = None) -> None:
         """Install a version through the GitHub API."""
-        force_update = version is None or (
-            self.data.last_version is not None and version != self.data.last_version
+        # A refresh answered from its etag keeps the tree read before, of
+        # whatever version that refresh picked
+        force_update = (
+            version is None
+            # Not known after the catalog gave up on its archive
+            or self.tree_ref is None
+            # By commit the refresh reads the default branch, not the version
+            or (
+                self.display_version_or_commit == "version" and version != self.tree_ref
+            )
+            or (
+                self.data.last_version is not None and version != self.data.last_version
+            )
         )
         await self.update_repository(force=force_update)
         if self.content.path.local is None:
@@ -2094,8 +2161,230 @@ class Repository:
         async with self._install_lock:
             return
 
+    async def async_ensure_repository_version(self, ref: str) -> str:
+        """Refuse a version that is not a branch, tag or commit of the repository.
+
+        GitHub serves pull requests, also those from forks, and every commit of
+        the fork network under the name of the repository. Return the version
+        to install, a commit by its full SHA. An abbreviated SHA could resolve
+        to another commit of the fork network when downloading. The newest
+        commit without releases stays as is, it installs from the default
+        branch.
+        """
+        # A stored selection was not validated, it ends up in the URLs asked
+        if not is_valid_ref(ref):
+            raise VersionNotInRepositoryError(self.data.full_name, ref)
+
+        if ref in (
+            self.data.default_branch,
+            self.data.last_version,
+            self.data.prerelease,
+            *self.data.published_tags,
+        ):
+            return ref
+
+        # Without releases the newest commit installs from the default branch,
+        # with them it is resolved like any other SHA
+        if self.data.last_version is None and ref == self.data.last_commit:
+            return ref
+
+        # Without a connected account GraphQL is not available
+        if self.marketplace.github_connected:
+            version = await self._async_graphql_resolve_ref(ref)
+        else:
+            version = await self._async_rest_resolve_ref(ref)
+
+        if version is None:
+            raise VersionNotInRepositoryError(self.data.full_name, ref)
+        return version
+
+    async def _async_graphql_resolve_ref(self, ref: str) -> str | None:
+        """Return the ref as a branch or tag, or a branch commit by its full SHA.
+
+        None when the ref is none of them.
+        """
+        owner, name = self.data.full_name.split("/")
+        response = await self.marketplace.async_github_api_method(
+            method=self.marketplace.githubapi.graphql,
+            query=UPSTREAM_REF_QUERY,
+            variables={
+                "owner": owner,
+                "name": name,
+                "ref": ref,
+                "branch": f"refs/heads/{ref}",
+                "tag": f"refs/tags/{ref}",
+            },
+        )
+        repository = response.data["data"]["repository"]
+        if repository["branch"] is not None or repository["tag"] is not None:
+            return ref
+        # Another object than a commit, like a tree, comes back without its oid
+        commit_object = repository["object"] or {}
+        if not COMMIT_SHA.match(ref) or "oid" not in commit_object:
+            return None
+
+        commit: str = commit_object["oid"]
+        response = await self.marketplace.async_github_api_method(
+            method=self.marketplace.githubapi.graphql,
+            query=DEFAULT_BRANCH_COMMIT_QUERY,
+            variables={"owner": owner, "name": name, "ref": commit},
+        )
+        default_branch = response.data["data"]["repository"]["defaultBranchRef"]
+        # An empty repository has no default branch
+        if default_branch is not None and branch_holds(default_branch["compare"]):
+            return commit
+
+        cursor: str | None = None
+        while True:
+            response = await self.marketplace.async_github_api_method(
+                method=self.marketplace.githubapi.graphql,
+                query=UPSTREAM_COMMIT_QUERY,
+                variables={
+                    "owner": owner,
+                    "name": name,
+                    "ref": commit,
+                    "cursor": cursor,
+                },
+            )
+            refs = response.data["data"]["repository"]["refs"]
+            if any(branch_holds(node["compare"]) for node in refs["nodes"]):
+                return commit
+            if not refs["pageInfo"]["hasNextPage"]:
+                return None
+            cursor = refs["pageInfo"]["endCursor"]
+
+    async def _async_rest_resolve_ref(self, ref: str) -> str | None:
+        """Return the ref as a branch or tag, or a branch commit by its full SHA.
+
+        None when the ref is none of them.
+        """
+        # Most refs that look like a commit are one, the branches are asked first
+        if COMMIT_SHA.match(ref) and (
+            commit := await self._async_rest_branch_commit(ref)
+        ):
+            # A tag or branch named like a commit stays a tag or branch
+            return commit if commit.startswith(ref) else ref
+
+        repository = self.data.full_name
+        for endpoint in (
+            f"/repos/{repository}/branches/{ref}",
+            f"/repos/{repository}/git/ref/tags/{ref}",
+        ):
+            if await self._async_github_get(endpoint) is not None:
+                return ref
+        return None
+
+    async def _async_rest_branch_commit(self, ref: str) -> str | None:
+        """Return the full SHA of the commit when a branch of the repository holds it.
+
+        None when no branch holds it. A branch or tag named like a commit is
+        compared as that ref, the SHA returned is the commit it points at.
+        """
+        async for branch in self._async_iter_branches():
+            # Only the status is needed, not the commits compared
+            comparison = await self._async_github_get(
+                f"/repos/{self.data.full_name}/compare/{branch}...{ref}",
+                params={"per_page": 1},
+            )
+            # GitHub has no comparison when the histories are unrelated, like
+            # with an orphan branch for a website. Unrelated to the default
+            # branch, the commit does not exist or is not worth comparing on.
+            if comparison is None:
+                if branch == self.data.default_branch:
+                    return None
+                continue
+            # The branch holds the commit, it is where the histories meet
+            if branch_holds(comparison):
+                commit: str = comparison["merge_base_commit"]["sha"]
+                return commit
+        return None
+
+    async def _async_iter_branches(self) -> AsyncIterator[str]:
+        """Yield the default branch, it holds most commits, then the others.
+
+        The others are listed only when they are asked for.
+        """
+        if default_branch := self.data.default_branch:
+            yield default_branch
+
+        page = 1
+        while True:
+            response = await self.marketplace.async_github_api_method(
+                method=self.marketplace.githubapi.generic,
+                endpoint=f"/repos/{self.data.full_name}/branches",
+                params={"per_page": BRANCHES_PER_PAGE, "page": page},
+            )
+            for branch in response.data:
+                if branch["name"] != default_branch:
+                    yield branch["name"]
+            if len(response.data) < BRANCHES_PER_PAGE:
+                return
+            page += 1
+
+    async def _async_github_get(
+        self, endpoint: str, params: dict[str, Any] | None = None
+    ) -> Any:
+        """Return what the GitHub API has at the endpoint, None when nothing."""
+        try:
+            response = await self.marketplace.async_github_api_method(
+                method=self.marketplace.githubapi.generic,
+                endpoint=endpoint,
+                params=params,
+            )
+        except MarketplaceError as exception:
+            if isinstance(exception.__cause__, GitHubNotFoundException):
+                return None
+            raise
+        return response.data
+
+    async def _async_drop_selected_tag_not_in_repository(
+        self, selected_tag: str
+    ) -> None:
+        """Forget a selected version that is not part of the repository.
+
+        Checked when it was picked, a commit can have left every branch since.
+        The install then goes on with the version it would pick without a
+        selection. That version needs no check, so a check GitHub fails does
+        not fail the install either.
+        """
+        try:
+            # A version on offer, also one released while installing, installs it
+            self.data.selected_tag = await self.async_ensure_repository_version(
+                selected_tag
+            )
+        except VersionNotInRepositoryError:
+            self.logger.warning(
+                "%s Selected version %s is not a branch, tag or commit of the "
+                "repository, installing without it",
+                self.string,
+                selected_tag,
+            )
+            self.data.selected_tag = None
+        except MarketplaceError as exception:
+            self.logger.warning(
+                "%s Selected version %s could not be checked, installing without "
+                "it: %s",
+                self.string,
+                selected_tag,
+                exception,
+            )
+            self.data.selected_tag = None
+
     async def _async_install_repository(self, ref: str | None) -> None:
         """Install a repository, one install at a time."""
+        if ref:
+            ref = await self.async_ensure_repository_version(ref)
+            # The install forgets the stored selection, the refresh before
+            # writing would read it
+            self.data.selected_tag = None
+        elif (selected_tag := self.data.selected_tag) is not None:
+            # By version the newest one is installed, the refresh before writing
+            # must not read the selection either
+            if self.display_version_or_commit == "version":
+                self.data.selected_tag = None
+            else:
+                await self._async_drop_selected_tag_not_in_repository(selected_tag)
+
         if (catalog_version := self._catalog_version(ref)) is not None:
             try:
                 await self._async_install_catalog_version(
@@ -2105,6 +2394,8 @@ class Repository:
                 self.logger.info(
                     "%s %s, installing through the GitHub API", self.string, exception
                 )
+                # The tree left is of the archive, not of the GitHub API
+                self.tree_ref = None
             else:
                 return
 
@@ -2306,15 +2597,17 @@ class Repository:
             self.data.installed_version = version
 
     async def async_get_releases(self) -> list[GitHubReleaseModel]:
-        """Get the last 30 releases of a repository."""
+        """Get the last 30 releases of a repository, the page GitHub serves."""
         response = await self.marketplace.async_github_api_method(
             method=self.marketplace.githubapi.repos.releases.list,
             repository=self.data.full_name,
-            kwargs={"per_page": 30},
         )
-        # A tag ends up in the URLs the version is installed by
+        # A draft is not published, and a tag ends up in the URLs the version
+        # is installed by
         releases: list[GitHubReleaseModel] = [
-            release for release in response.data if is_valid_ref(release.tag_name)
+            release
+            for release in response.data
+            if not release.draft and is_valid_ref(release.tag_name)
         ]
         return releases
 

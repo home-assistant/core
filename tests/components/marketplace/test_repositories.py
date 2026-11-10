@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import sys
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import zipfile
 
 from aiogithubapi import GitHubAuthenticationException, GitHubReleaseAssetModel
@@ -50,9 +50,13 @@ from homeassistant.components.marketplace.exceptions import (
     MarketplaceError,
     NotModifiedError,
     RepositoryArchivedError,
+    VersionNotInRepositoryError,
 )
 from homeassistant.components.marketplace.repositories import REPOSITORY_CLASSES
 from homeassistant.components.marketplace.repositories.base import (
+    DEFAULT_BRANCH_COMMIT_QUERY,
+    UPSTREAM_COMMIT_QUERY,
+    UPSTREAM_REF_QUERY,
     FileInformation,
     Repository,
     RepositoryData,
@@ -77,7 +81,15 @@ from . import (
     mocked_response,
 )
 from .conftest import MarketplaceResponses
-from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
+from .const import (
+    COMMIT_ON_FEATURE,
+    COMMIT_ON_FORK,
+    COMMIT_ON_MAIN,
+    NOT_UPSTREAM_VERSIONS,
+    REPOSITORY_INTEGRATION,
+    REPOSITORY_PLUGIN,
+    TOKEN,
+)
 
 RATE_LIMITED = {"message": "API rate limit exceeded for 127.0.0.1."}
 BIG_FILE = github_raw_file(repository="owner/repository", ref="main", path="big")
@@ -1221,6 +1233,7 @@ async def test_update_repository(
 
     repository.data.installed = True
     repository.data.installed_version = category_test_data["version_base"]
+    repository.data.published_tags = [category_test_data["version_update"]]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -1559,7 +1572,7 @@ async def test_repository_releases(
 async def test_releases_with_an_unusable_tag_are_left_out(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
-    """Test a release whose tag breaks the URLs it is installed by is not offered."""
+    """Test a draft, or a release whose tag breaks the URLs it is installed by, is not offered."""
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
     releases = [
@@ -1568,9 +1581,14 @@ async def test_releases_with_an_unusable_tag_are_left_out(
             "tag_name": tag,
             "published_at": "2019-02-26T15:02:39Z",
             "prerelease": False,
-            "draft": False,
+            "draft": draft,
         }
-        for tag in ("2.0.0#latest", "1.5%2F..", "1.0.0")
+        for tag, draft in (
+            ("3.0.0", True),
+            ("2.0.0#latest", False),
+            ("1.5%2F..", False),
+            ("1.0.0", False),
+        )
     ]
     response_mocker.add(url, mocked_response(url, json_content=releases), keep=True)
 
@@ -3599,3 +3617,783 @@ async def test_detect_integration_in_the_root(
 
     with patch.object(IntegrationRepository, "common_update_data", update_data):
         assert await marketplace.async_detect_categories("owner/in-root") == categories
+
+
+def _requests_made(
+    aioclient_mock: AiohttpClientMocker,
+) -> list[tuple[str, str, dict[str, Any] | None]]:
+    """Return the requests made, with the GraphQL variables."""
+    return [
+        (method, str(url), data["variables"] if url.path == "/graphql" else None)
+        for method, url, data, _ in aioclient_mock.mock_calls
+    ]
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize(
+    ("version", "resolved"),
+    [
+        pytest.param("main", "main", id="default_branch"),
+        pytest.param("feature", "feature", id="branch"),
+        pytest.param("2.0.0", "2.0.0", id="tag"),
+        # Named like a commit, they stay the tag or branch and not their commit
+        pytest.param("20240101", "20240101", id="tag_like_a_commit"),
+        # No branch holds it, it is found as a tag
+        pytest.param("20230101", "20230101", id="tag_like_a_commit_off_branches"),
+        pytest.param("deadbee", "deadbee", id="branch_like_a_commit"),
+        pytest.param(COMMIT_ON_MAIN, COMMIT_ON_MAIN, id="commit_on_default_branch"),
+        # The download asks for the commit checked, not what the SHA resolves to then
+        pytest.param(
+            COMMIT_ON_MAIN[:7], COMMIT_ON_MAIN, id="short_commit_on_default_branch"
+        ),
+        pytest.param(COMMIT_ON_FEATURE, COMMIT_ON_FEATURE, id="commit_on_branch"),
+        pytest.param(
+            COMMIT_ON_FEATURE[:7], COMMIT_ON_FEATURE, id="short_commit_on_branch"
+        ),
+    ],
+)
+async def test_ensure_repository_version_upstream(
+    marketplace: MarketplaceManager,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+    version: str,
+    resolved: str,
+) -> None:
+    """Test a branch, tag or branch commit of the repository is accepted."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    aioclient_mock.mock_calls.clear()
+
+    assert await repository.async_ensure_repository_version(version) == resolved
+
+    assert _requests_made(aioclient_mock) == snapshot
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize("version", NOT_UPSTREAM_VERSIONS)
+async def test_ensure_repository_version_not_upstream(
+    marketplace: MarketplaceManager,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+    version: str,
+) -> None:
+    """Test a version only a fork holds, or nothing holds, is refused."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    aioclient_mock.mock_calls.clear()
+
+    with pytest.raises(VersionNotInRepositoryError):
+        await repository.async_ensure_repository_version(version)
+
+    assert _requests_made(aioclient_mock) == snapshot
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+async def test_ensure_repository_version_prerelease(
+    marketplace: MarketplaceManager,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the pre-release the repository offers is accepted without asking GitHub."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.prerelease = "3.0.0"
+    aioclient_mock.mock_calls.clear()
+
+    assert await repository.async_ensure_repository_version("3.0.0") == "3.0.0"
+
+    assert aioclient_mock.mock_calls == []
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize(
+    ("last_version", "resolved", "checked"),
+    [
+        # The newest commit installs from the default branch, not by its SHA
+        pytest.param(None, COMMIT_ON_MAIN[:7], False, id="without_releases"),
+        pytest.param("1.0.0", COMMIT_ON_MAIN, True, id="with_releases"),
+    ],
+)
+async def test_ensure_repository_version_last_commit(
+    marketplace: MarketplaceManager,
+    aioclient_mock: AiohttpClientMocker,
+    last_version: str | None,
+    resolved: str,
+    checked: bool,
+) -> None:
+    """Test the newest commit is only resolved when it is downloaded by its SHA."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    repository.data.last_version = last_version
+    repository.data.last_commit = COMMIT_ON_MAIN[:7]
+    aioclient_mock.mock_calls.clear()
+
+    assert (
+        await repository.async_ensure_repository_version(COMMIT_ON_MAIN[:7]) == resolved
+    )
+
+    assert bool(aioclient_mock.mock_calls) is checked
+
+
+async def test_ensure_repository_version_graphql_not_a_commit(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a SHA that resolves to another object than a commit is refused."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    # GitHub leaves out the oid of another object than a commit, like a tree
+    refs = {"data": {"repository": {"branch": None, "tag": None, "object": {}}}}
+    graphql = AsyncMock(return_value=MagicMock(data=refs))
+
+    with (
+        patch.object(marketplace.githubapi, "graphql", graphql),
+        pytest.raises(VersionNotInRepositoryError),
+    ):
+        await repository.async_ensure_repository_version(COMMIT_ON_MAIN)
+
+    assert graphql.await_count == 1
+
+
+async def test_ensure_repository_version_graphql_pages(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the branches are compared page by page until one holds the commit."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    refs = {
+        "data": {
+            "repository": {
+                "branch": None,
+                "tag": None,
+                "object": {"oid": COMMIT_ON_FEATURE},
+            }
+        }
+    }
+    # Not a default branch to compare with first, like an empty repository
+    default_branch = {"data": {"repository": {"defaultBranchRef": None}}}
+    first_page = {
+        "data": {
+            "repository": {
+                "refs": {
+                    "pageInfo": {"hasNextPage": True, "endCursor": "page-1"},
+                    "nodes": [{"compare": {"status": "DIVERGED"}}],
+                }
+            }
+        }
+    }
+    second_page = {
+        "data": {
+            "repository": {
+                "refs": {
+                    "pageInfo": {"hasNextPage": False, "endCursor": "page-2"},
+                    "nodes": [{"compare": {"status": "BEHIND"}}],
+                }
+            }
+        }
+    }
+    graphql = AsyncMock(
+        side_effect=[
+            MagicMock(data=refs),
+            MagicMock(data=default_branch),
+            MagicMock(data=first_page),
+            MagicMock(data=second_page),
+        ]
+    )
+
+    with patch.object(marketplace.githubapi, "graphql", graphql):
+        assert (
+            await repository.async_ensure_repository_version(COMMIT_ON_FEATURE[:7])
+            == COMMIT_ON_FEATURE
+        )
+
+    # The branches are compared with the commit the abbreviated SHA resolved to
+    assert [
+        (
+            call.kwargs["query"],
+            call.kwargs["variables"]["ref"],
+            call.kwargs["variables"].get("cursor"),
+        )
+        for call in graphql.mock_calls
+    ] == [
+        (UPSTREAM_REF_QUERY, COMMIT_ON_FEATURE[:7], None),
+        (DEFAULT_BRANCH_COMMIT_QUERY, COMMIT_ON_FEATURE, None),
+        (UPSTREAM_COMMIT_QUERY, COMMIT_ON_FEATURE, None),
+        (UPSTREAM_COMMIT_QUERY, COMMIT_ON_FEATURE, "page-1"),
+    ]
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_ensure_repository_version_rest_pages(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the branches are listed page by page until one holds the commit."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    api = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}"
+    others = [f"other-{index}" for index in range(99)]
+    for page, names in ((1, ["main", *others]), (2, ["feature"])):
+        url = f"{api}/branches?per_page=100&page={page}"
+        response_mocker.add(
+            url, mocked_response(url, json_content=[{"name": name} for name in names])
+        )
+    for name in others:
+        url = f"{api}/compare/{name}...{COMMIT_ON_FEATURE}?per_page=1"
+        response_mocker.add(url, mocked_response(url, json_content={"status": "ahead"}))
+
+    assert (
+        await repository.async_ensure_repository_version(COMMIT_ON_FEATURE)
+        == COMMIT_ON_FEATURE
+    )
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("status", "content", "error"),
+    [
+        pytest.param(
+            HTTPStatus.FORBIDDEN,
+            RATE_LIMITED,
+            GitHubAnonymousRateLimitError,
+            id="rate_limited",
+        ),
+        # Only a missing comparison means the branch does not hold the commit
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            {"message": "Server Error"},
+            MarketplaceError,
+            id="server_error",
+        ),
+    ],
+)
+async def test_ensure_repository_version_check_fails(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    status: HTTPStatus,
+    content: dict[str, Any],
+    error: type[MarketplaceError],
+) -> None:
+    """Test a check GitHub fails accepts nothing, and does not refuse either."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    url = (
+        f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}"
+        f"/compare/main...{COMMIT_ON_FEATURE}?per_page=1"
+    )
+    response_mocker.add(url, mocked_response(url, status=status, json_content=content))
+
+    with pytest.raises(MarketplaceError) as exc_info:
+        await repository.async_ensure_repository_version(COMMIT_ON_FEATURE)
+
+    assert type(exc_info.value) is error
+
+
+@pytest.mark.parametrize(
+    ("releases", "stored_tag", "installed", "warnings", "checked"),
+    [
+        pytest.param(
+            False,
+            COMMIT_ON_FEATURE,
+            ("github", COMMIT_ON_FEATURE),
+            0,
+            True,
+            id="by_commit_upstream",
+        ),
+        # With a version on offer it would be installed, kept by its full SHA
+        pytest.param(
+            False,
+            COMMIT_ON_FEATURE[:7],
+            ("github", COMMIT_ON_FEATURE),
+            0,
+            True,
+            id="by_short_commit_upstream",
+        ),
+        # Without the selection the catalog version is installed
+        pytest.param(
+            False, COMMIT_ON_FORK, ("catalog", "1.0.0"), 1, True, id="by_commit_fork"
+        ),
+        # Its dot segments would collapse into the URLs of another repository
+        pytest.param(
+            False,
+            "x/../../../../other/repo/branches/main",
+            ("catalog", "1.0.0"),
+            1,
+            False,
+            id="by_commit_path",
+        ),
+        # By version the newest one is installed, the selection needs no check
+        pytest.param(
+            True, COMMIT_ON_FORK, ("catalog", "1.0.0"), 0, False, id="by_version_fork"
+        ),
+    ],
+)
+async def test_install_checks_the_stored_selected_tag(
+    marketplace: MarketplaceManager,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    releases: bool,
+    stored_tag: str,
+    installed: tuple[str, str | None],
+    warnings: int,
+    checked: bool,
+) -> None:
+    """Test an install without a version only keeps a stored version upstream holds."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    repository.data.releases = releases
+    repository.data.selected_tag = stored_tag
+    aioclient_mock.mock_calls.clear()
+    installs: list[tuple[str, str | None]] = []
+
+    # The stored version the install kept, by commit it installs the branch
+    async def install_via_github(*, version: str | None) -> None:
+        installs.append(("github", repository.data.selected_tag))
+
+    async def install_from_catalog(version: str, *, requested: str | None) -> None:
+        installs.append(("catalog", version))
+
+    with (
+        patch.object(repository, "_ensure_install_capabilities", AsyncMock()),
+        patch.object(repository, "update_repository", AsyncMock()),
+        patch.object(repository, "_async_install_via_github_api", install_via_github),
+        patch.object(
+            repository, "_async_install_catalog_version", install_from_catalog
+        ),
+    ):
+        await repository.async_install_repository()
+
+    assert installs == [installed]
+    assert bool(_requests_made(aioclient_mock)) is checked
+    assert (
+        len(
+            [
+                record
+                for record in caplog.records
+                if f"Selected version {stored_tag}" in record.getMessage()
+            ]
+        )
+        == warnings
+    )
+
+
+async def test_install_by_version_refreshes_without_the_stored_selected_tag(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the refresh before writing the newest version does not read a stored one."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.releases = True
+    repository.data.selected_tag = COMMIT_ON_FORK
+    refreshed: list[str | None] = []
+
+    # The refresh picks its version from the stored selection
+    async def update_repository(*, force: bool = False) -> None:
+        refreshed.append(repository.data.selected_tag)
+
+    # Outside the catalog the install refreshes through the GitHub API
+    with (
+        patch.object(marketplace.repositories, "is_default", return_value=False),
+        patch.object(repository, "_ensure_install_capabilities", AsyncMock()),
+        patch.object(repository, "update_repository", update_repository),
+        patch.object(repository, "_async_install_via_github_api", AsyncMock()),
+    ):
+        await repository.async_install_repository()
+
+    assert refreshed == [None]
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize(
+    ("stored_tag", "kept"),
+    [
+        pytest.param(COMMIT_ON_FEATURE[:7], COMMIT_ON_FEATURE, id="upstream"),
+        pytest.param(COMMIT_ON_FORK, None, id="fork"),
+    ],
+)
+async def test_install_by_commit_without_a_version_on_offer_checks_the_selection(
+    marketplace: MarketplaceManager, stored_tag: str, kept: str | None
+) -> None:
+    """Test a stored commit is checked even when no version on offer installs it."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    repository.data.releases = False
+    repository.data.last_version = None
+    repository.data.selected_tag = stored_tag
+    stored: list[str | None] = []
+
+    # A release found by the refresh before writing would install the selection
+    async def install_via_github(*, version: str | None) -> None:
+        stored.append(repository.data.selected_tag)
+
+    with (
+        patch.object(marketplace.repositories, "is_default", return_value=False),
+        patch.object(repository, "_ensure_install_capabilities", AsyncMock()),
+        patch.object(repository, "_async_install_via_github_api", install_via_github),
+    ):
+        await repository.async_install_repository()
+
+    assert stored == [kept]
+
+
+@pytest.mark.parametrize("github_token", [TOKEN, None], ids=["github", "anonymous"])
+@pytest.mark.parametrize(
+    ("unchecked", "selected", "warned"),
+    [
+        pytest.param("main", "main", False, id="default_branch"),
+        pytest.param(
+            COMMIT_ON_FEATURE[:7], COMMIT_ON_FEATURE, False, id="upstream_commit"
+        ),
+        pytest.param(COMMIT_ON_FORK, None, True, id="fork_commit"),
+        pytest.param("refs/pull/1/head", None, True, id="pull_request"),
+    ],
+)
+async def test_check_unchecked_selected_tags(
+    marketplace: MarketplaceManager,
+    caplog: pytest.LogCaptureFixture,
+    unchecked: str,
+    selected: str | None,
+    warned: bool,
+) -> None:
+    """Test a selection stored before checking is selected again only if upstream."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
+    repository.data.default_branch = "main"
+    repository.data.unchecked_selected_tag = unchecked
+
+    with patch.object(marketplace.data, "async_write") as async_write:
+        await marketplace.async_check_unchecked_selected_tags()
+
+    assert repository.data.selected_tag == selected
+    assert repository.data.unchecked_selected_tag is None
+    assert ("it is no longer selected" in caplog.text) is warned
+    async_write.assert_awaited_once()
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize(
+    ("status", "content"),
+    [
+        pytest.param(HTTPStatus.FORBIDDEN, RATE_LIMITED, id="rate_limited"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            {"message": "Server Error"},
+            id="server_error",
+        ),
+    ],
+)
+async def test_check_unchecked_selected_tags_later(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    status: HTTPStatus,
+    content: dict[str, Any],
+) -> None:
+    """Test a selection GitHub fails to check stays aside for a later check."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
+    repository.data.default_branch = "main"
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    url = (
+        f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}"
+        f"/compare/main...{COMMIT_ON_FEATURE}?per_page=1"
+    )
+    response_mocker.add(url, mocked_response(url, status=status, json_content=content))
+
+    with patch.object(marketplace.data, "async_write") as async_write:
+        await marketplace.async_check_unchecked_selected_tags()
+
+    assert repository.data.selected_tag is None
+    assert repository.data.unchecked_selected_tag == COMMIT_ON_FEATURE
+    async_write.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("installed", "result", "checks", "unchecked", "stopped"),
+    [
+        pytest.param(
+            True, {"return_value": COMMIT_ON_FEATURE}, 1, None, True, id="checked"
+        ),
+        pytest.param(
+            True,
+            {"side_effect": MarketplaceError("Nope")},
+            1,
+            COMMIT_ON_FEATURE,
+            False,
+            id="left",
+        ),
+        # Its install clears the selection, there is nothing to check
+        pytest.param(False, {}, 0, COMMIT_ON_FEATURE, True, id="not_installed"),
+    ],
+)
+async def test_check_unchecked_selected_tags_stops_when_done(
+    marketplace: MarketplaceManager,
+    installed: bool,
+    result: dict[str, Any],
+    checks: int,
+    unchecked: str | None,
+    stopped: bool,
+) -> None:
+    """Test the recurring check stops once no selection is left to check."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = installed
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    stop = MagicMock()
+    marketplace._stop_checking_selected_tags = stop
+    marketplace.recurring_tasks.append(stop)
+    ensure = AsyncMock(**result)
+
+    with patch.object(repository, "async_ensure_repository_version", ensure):
+        await marketplace.async_check_unchecked_selected_tags()
+
+    assert ensure.await_count == checks
+    assert repository.data.unchecked_selected_tag == unchecked
+    assert stop.called is stopped
+    assert (stop in marketplace.recurring_tasks) is not stopped
+    assert (marketplace._stop_checking_selected_tags is None) is stopped
+
+
+async def test_check_unchecked_selected_tags_stops_when_rate_limited(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the checks stop at a rate limit, the others would run out too."""
+    ensure = AsyncMock(side_effect=GitHubAnonymousRateLimitError)
+    for full_name in (REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN):
+        repository = marketplace.repositories.get_by_full_name(full_name)
+        repository.data.installed = True
+        repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    stop = MagicMock()
+    marketplace._stop_checking_selected_tags = stop
+
+    with patch.object(Repository, "async_ensure_repository_version", ensure):
+        await marketplace.async_check_unchecked_selected_tags()
+
+    assert ensure.await_count == 1
+    # Left for the next run
+    stop.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("installed", "installing"),
+    [
+        pytest.param(False, False, id="not_installed"),
+        pytest.param(True, True, id="installing"),
+    ],
+)
+async def test_check_unchecked_selected_tags_skips(
+    marketplace: MarketplaceManager, installed: bool, installing: bool
+) -> None:
+    """Test a selection is left for later when not installed, or while installing."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = installed
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    ensure = AsyncMock(return_value=COMMIT_ON_FEATURE)
+
+    with (
+        patch.object(repository, "async_ensure_repository_version", ensure),
+        patch.object(
+            type(repository), "installing", PropertyMock(return_value=installing)
+        ),
+        patch.object(marketplace.data, "async_write") as async_write,
+    ):
+        await marketplace.async_check_unchecked_selected_tags()
+
+    ensure.assert_not_awaited()
+    assert repository.data.unchecked_selected_tag == COMMIT_ON_FEATURE
+    async_write.assert_not_awaited()
+
+
+async def test_check_unchecked_selected_tags_after_a_new_pick(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a version picked while the stored one is checked is not replaced."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+
+    async def ensure(version: str) -> str:
+        # What the version command does while the check waits for GitHub
+        repository.data.selected_tag = "2.0.0"
+        repository.data.unchecked_selected_tag = None
+        return version
+
+    with (
+        patch.object(repository, "async_ensure_repository_version", ensure),
+        patch.object(marketplace.data, "async_write") as async_write,
+    ):
+        await marketplace.async_check_unchecked_selected_tags()
+
+    assert repository.data.selected_tag == "2.0.0"
+    async_write.assert_not_awaited()
+
+
+async def test_check_unchecked_selected_tags_during_an_install(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a check that ends during an install leaves the selection to it."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.installed = True
+    repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+    ensure = AsyncMock(return_value=COMMIT_ON_FEATURE)
+
+    # The install starts while the check waits for GitHub
+    with (
+        patch.object(repository, "async_ensure_repository_version", ensure),
+        patch.object(
+            type(repository), "installing", PropertyMock(side_effect=[False, True])
+        ),
+        patch.object(marketplace.data, "async_write") as async_write,
+    ):
+        await marketplace.async_check_unchecked_selected_tags()
+
+    assert repository.data.selected_tag is None
+    assert repository.data.unchecked_selected_tag == COMMIT_ON_FEATURE
+    async_write.assert_not_awaited()
+
+
+async def test_check_unchecked_selected_tags_stops_when_disabled(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the checks stop once the Marketplace gets disabled while they run."""
+    for full_name in (REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN):
+        repository = marketplace.repositories.get_by_full_name(full_name)
+        repository.data.installed = True
+        repository.data.unchecked_selected_tag = COMMIT_ON_FEATURE
+
+    # Like a GitHub account found invalid during the first check
+    async def ensure(version: str) -> str:
+        marketplace.system.disabled_reason = DisabledReason.INVALID_TOKEN
+        return version
+
+    stop = MagicMock()
+    marketplace._stop_checking_selected_tags = stop
+    ensure_mock = AsyncMock(side_effect=ensure)
+    with patch.object(Repository, "async_ensure_repository_version", ensure_mock):
+        await marketplace.async_check_unchecked_selected_tags()
+
+    assert ensure_mock.await_count == 1
+    # Left for the next run
+    stop.assert_not_called()
+
+
+class _RefreshDone(Exception):
+    """Stop an install once it refreshed."""
+
+
+@pytest.mark.parametrize(
+    ("releases", "last_version", "version", "tree_ref", "forced"),
+    [
+        pytest.param(True, "1.0.0", "1.0.0", "1.0.0", False, id="tree_of_the_version"),
+        # Read by a refresh of a stored selection, an etag would keep it
+        pytest.param(
+            True, "1.0.0", "1.0.0", "refs/pull/1/head", True, id="tree_of_another_ref"
+        ),
+        # Left by a catalog install that fell back to the GitHub API
+        pytest.param(False, None, COMMIT_ON_FEATURE, None, True, id="tree_not_known"),
+        # By commit the refresh reads the default branch, forcing it gains nothing
+        pytest.param(False, None, COMMIT_ON_FEATURE, "main", False, id="by_commit"),
+    ],
+)
+async def test_install_refreshes_a_tree_of_another_version(
+    marketplace: MarketplaceManager,
+    releases: bool,
+    last_version: str | None,
+    version: str,
+    tree_ref: str | None,
+    forced: bool,
+) -> None:
+    """Test when the install refreshes in full, an etag can keep a tree of another ref."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.releases = releases
+    repository.data.last_version = last_version
+    repository.tree_ref = tree_ref
+    update_repository = AsyncMock(side_effect=_RefreshDone)
+
+    with (
+        patch.object(repository, "update_repository", update_repository),
+        pytest.raises(_RefreshDone),
+    ):
+        await repository._async_write_version(version=version)
+
+    update_repository.assert_awaited_once_with(force=forced)
+
+
+async def test_install_from_the_catalog_falls_back_without_its_tree(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the GitHub API path does not take the tree of the archive as its own."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.tree_ref = "main"
+    tree_refs: list[str | None] = []
+
+    # Like an archive that leaves the content out, its tree is known by then
+    async def install_from_catalog(version: str, *, requested: str | None) -> None:
+        repository.tree_ref = version
+        raise CatalogContentUnresolvedError(
+            translation_domain=DOMAIN, translation_key="catalog_without_domain"
+        )
+
+    async def install_via_github(*, version: str | None) -> None:
+        tree_refs.append(repository.tree_ref)
+
+    catalog = AsyncMock(side_effect=install_from_catalog)
+    with (
+        patch.object(repository, "_async_install_catalog_version", catalog),
+        patch.object(repository, "_ensure_install_capabilities", AsyncMock()),
+        patch.object(repository, "_async_install_via_github_api", install_via_github),
+    ):
+        await repository.async_install_repository(ref="1.0.0")
+
+    catalog.assert_awaited_once_with("1.0.0", requested="1.0.0")
+    # Not known, the install refreshes it in full
+    assert tree_refs == [None]
+
+
+async def test_install_of_a_version_forgets_the_stored_selected_tag(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test a stored version plays no part in installing another one."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    repository.data.releases = False
+    repository.data.selected_tag = "refs/pull/1/head"
+    repository.data.unchecked_selected_tag = "refs/pull/2/head"
+    stored: list[str | None] = []
+
+    # The refresh before writing picks its version from the stored selection
+    async def install_via_github(*, version: str | None) -> None:
+        stored.append(repository.data.selected_tag)
+
+    with (
+        patch.object(repository, "_ensure_install_capabilities", AsyncMock()),
+        patch.object(repository, "_async_install_via_github_api", install_via_github),
+    ):
+        await repository.async_install_repository(ref=COMMIT_ON_FEATURE)
+
+    assert stored == [None]
+    # An install forgets the selection, also one waiting for its check
+    assert repository.data.unchecked_selected_tag is None
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_without_the_stored_selected_tag_it_can_not_check(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed check of a stored version installs without it, not fails."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    repository.data.default_branch = "main"
+    repository.data.releases = False
+    repository.data.selected_tag = COMMIT_ON_FEATURE
+    url = (
+        f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}"
+        f"/compare/main...{COMMIT_ON_FEATURE}?per_page=1"
+    )
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+    install_from_catalog = AsyncMock()
+
+    with patch.object(
+        repository, "_async_install_catalog_version", install_from_catalog
+    ):
+        await repository.async_install_repository()
+
+    install_from_catalog.assert_awaited_once_with("1.0.0", requested=None)
+    assert repository.data.selected_tag is None
+    assert f"Selected version {COMMIT_ON_FEATURE} could not be checked" in caplog.text

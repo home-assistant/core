@@ -18,6 +18,7 @@ from ..exceptions import (
     MarketplaceError,
     ReplacesBuiltInNotConfirmedError,
     RepositoryBusyError,
+    VersionNotInRepositoryError,
 )
 from ..utils.logger import LOGGER
 from ..utils.validate import valid_ref
@@ -52,6 +53,21 @@ def _send_repository_busy(
         "repository_busy",
         "repository_busy",
         {"repository": repository.data.full_name},
+    )
+
+
+def _send_version_not_in_repository(
+    connection: websocket_api.ActiveConnection,
+    msg_id: int,
+    exception: VersionNotInRepositoryError,
+) -> None:
+    """Answer that the version is not part of the repository, the user picked it."""
+    send_translated_error(
+        connection,
+        msg_id,
+        "version_not_in_repository",
+        "version_not_in_repository",
+        exception.translation_placeholders,
     )
 
 
@@ -190,20 +206,43 @@ async def marketplace_repository_version(
         send_repository_not_found(connection, msg["id"], msg["repository"])
         return
 
+    try:
+        version = await repository.async_ensure_repository_version(msg["version"])
+    except VersionNotInRepositoryError as exception:
+        _send_version_not_in_repository(connection, msg["id"], exception)
+        return
+    except GitHubAnonymousRateLimitError:
+        _send_rate_limited(connection, msg["id"])
+        return
+    except MarketplaceError as exception:
+        _send_refresh_failed(connection, msg["id"], repository, exception)
+        return
+
     selected_tag = repository.data.selected_tag
-    if msg["version"] == repository.data.default_branch:
+    unchecked_selected_tag = repository.data.unchecked_selected_tag
+    if version == repository.data.default_branch:
         repository.data.selected_tag = None
     else:
-        repository.data.selected_tag = msg["version"]
+        repository.data.selected_tag = version
+    # Picked again, a selection stored before checking is not wanted anymore.
+    # Forgotten before refreshing, its check can not take the place of this one.
+    repository.data.unchecked_selected_tag = None
+
+    def restore_selections() -> None:
+        repository.data.selected_tag = selected_tag
+        repository.data.unchecked_selected_tag = unchecked_selected_tag
+        # The check can have stopped meanwhile, none was left
+        if unchecked_selected_tag is not None:
+            marketplace.async_schedule_unchecked_selected_tags_check()
 
     try:
         await repository.update_repository(force=True)
     except GitHubAnonymousRateLimitError:
-        repository.data.selected_tag = selected_tag
+        restore_selections()
         _send_rate_limited(connection, msg["id"])
         return
     except MarketplaceError as exception:
-        repository.data.selected_tag = selected_tag
+        restore_selections()
         _send_refresh_failed(connection, msg["id"], repository, exception)
         return
 
@@ -287,6 +326,8 @@ async def marketplace_repository_install(
                 async_dispatcher_send(hass, SIGNAL_REPOSITORY_INSTALLED, repository)
 
         connection.send_message(websocket_api.result_message(msg["id"]))
+    except VersionNotInRepositoryError as exception:
+        _send_version_not_in_repository(connection, msg["id"], exception)
     except GitHubAnonymousRateLimitError:
         _send_rate_limited(connection, msg["id"])
     except ReplacesBuiltInNotConfirmedError as exception:
