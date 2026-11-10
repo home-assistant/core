@@ -10,6 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["zamg"],
   "quality_scale": "bronze",
-  "requirements": ["zamg==0.5.0"],
-  "single_config_entry": true
+  "requirements": ["zamg==0.5.0"]
 }

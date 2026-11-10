@@ -39,12 +39,8 @@ async def async_setup_entry(
     entry: GeoSphereAustriaForecastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add a weather entity for every configured location."""
-    for subentry_id, coordinator in entry.runtime_data.items():
-        async_add_entities(
-            [GeoSphereAustriaForecastWeather(coordinator, subentry_id)],
-            config_subentry_id=subentry_id,
-        )
+    """Add the weather entity for the location."""
+    async_add_entities([GeoSphereAustriaForecastWeather(entry.runtime_data)])
 
 
 def _record_at(
@@ -106,12 +102,10 @@ class GeoSphereAustriaForecastWeather(
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_supported_features = WeatherEntityFeature.FORECAST_HOURLY
 
-    def __init__(
-        self, coordinator: GeoSphereAustriaForecastCoordinator, subentry_id: str
-    ) -> None:
+    def __init__(self, coordinator: GeoSphereAustriaForecastCoordinator) -> None:
         """Initialize the weather entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = subentry_id
+        self._attr_unique_id = coordinator.config_entry.entry_id
         self._attr_device_info = coordinator.device_info
 
     @override

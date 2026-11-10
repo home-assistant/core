@@ -65,7 +65,9 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents a single location.
   entity-category:
     status: exempt
     comment: The weather entity is the primary entity and uses the default category.
@@ -86,7 +88,9 @@ rules:
   repair-issues:
     status: exempt
     comment: The integration has no issues the user can fix.
-  stale-devices: done
+  stale-devices:
+    status: exempt
+    comment: Each config entry represents a single location.
 
   # Platinum
   async-dependency: done

@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "outside_coverage": "The location is outside the area covered by the GeoSphere Austria forecast model.",
@@ -11,37 +14,9 @@
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "location": "The first location to get the forecast for"
+          "location": "The location to get the forecast for"
         },
-        "description": "Choose the first location for the forecast. You can add more locations later."
-      }
-    }
-  },
-  "config_subentries": {
-    "location": {
-      "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
-      },
-      "entry_type": "Location",
-      "error": {
-        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "outside_coverage": "[%key:component::geosphere_austria_forecast::config::error::outside_coverage%]",
-        "unknown": "[%key:common::config_flow::error::unknown%]"
-      },
-      "initiate_flow": {
-        "user": "Add location"
-      },
-      "step": {
-        "user": {
-          "data": {
-            "location": "[%key:common::config_flow::data::location%]",
-            "name": "[%key:common::config_flow::data::name%]"
-          },
-          "data_description": {
-            "location": "The location to get the forecast for",
-            "name": "The name of the location"
-          }
-        }
+        "description": "Choose the location for the forecast."
       }
     }
   }

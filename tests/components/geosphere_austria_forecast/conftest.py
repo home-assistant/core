@@ -9,20 +9,31 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from zamg import NwpForecast, NwpForecastRecord
 
-from homeassistant.components.geosphere_austria_forecast.const import (
-    DOMAIN,
-    SUBENTRY_TYPE_LOCATION,
-)
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.components.geosphere_austria_forecast.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-
-SUBENTRY_ID = "01JZ4Q1GE0SPHERE0LOCATION01"
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture(autouse=True)
 def frozen_time(freezer: FrozenDateTimeFactory) -> None:
     """Freeze the time between two forecast records."""
     freezer.move_to("2026-09-26T05:10:00+00:00")
+
+
+@pytest.fixture
+def request_slot_seconds() -> float:
+    """Return how long a request keeps its slot; no wait unless a test asks."""
+    return 0
+
+
+@pytest.fixture(autouse=True)
+def request_slot_hold(request_slot_seconds: float) -> Generator[None]:
+    """Hold a request slot as long as the test asks for."""
+    with patch(
+        "homeassistant.components.geosphere_austria_forecast.coordinator.SECONDS_PER_REQUEST_SLOT",
+        request_slot_seconds,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -76,20 +87,29 @@ def mock_nwp_client(forecast: NwpForecast) -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def six_locations(hass: HomeAssistant) -> list[MockConfigEntry]:
+    """Add config entries for six locations, one more than the request limit."""
+    entries = [
+        MockConfigEntry(
+            domain=DOMAIN,
+            title=f"Location {index}",
+            data={CONF_LATITUDE: 47.0 + index / 10, CONF_LONGITUDE: 15.0},
+            unique_id=f"location-{index}",
+        )
+        for index in range(6)
+    ]
+    for entry in entries:
+        entry.add_to_hass(hass)
+    return entries
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry with one location subentry."""
+    """Return a mock config entry for one location."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="GeoSphere Austria Forecast",
+        title="Pixendorf",
         entry_id="01JZ4Q1GE0SPHERE0000000000",
-        data={},
-        subentries_data=[
-            ConfigSubentryData(
-                data={CONF_LATITUDE: 48.2877, CONF_LONGITUDE: 15.98486},
-                subentry_id=SUBENTRY_ID,
-                subentry_type=SUBENTRY_TYPE_LOCATION,
-                title="Pixendorf",
-                unique_id="48.2850-15.9802",
-            )
-        ],
+        data={CONF_LATITUDE: 48.2877, CONF_LONGITUDE: 15.98486},
+        unique_id="48.2850-15.9802",
     )
