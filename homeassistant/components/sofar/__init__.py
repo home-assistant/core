@@ -101,10 +101,9 @@ def _async_store_served(
     hass: HomeAssistant, entry: SofarConfigEntry, served: frozenset[str]
 ) -> None:
     """Remember what the inverter serves for a setup it sleeps through."""
-    if (stored := sorted(served)) != entry.data.get(SERVED_COMPONENTS):
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, SERVED_COMPONENTS: stored}
-        )
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, SERVED_COMPONENTS: sorted(served)}
+    )
 
 
 async def _async_refresh_versions(hass: HomeAssistant, entry: SofarConfigEntry) -> None:

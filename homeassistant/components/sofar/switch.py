@@ -65,7 +65,7 @@ class SofarSwitch(SofarEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return whether the remote switch is on."""
         value = self.entity_description.value_fn(self.coordinator.device)
-        return None if value is None else bool(value)
+        return None if value is None else value is RemoteSwitchOnOff.ON
 
     async def _async_write(self, value: bool) -> None:
         """Write the switch state to the device."""

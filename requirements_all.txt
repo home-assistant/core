@@ -331,7 +331,7 @@ aioimaplib==2.0.3
 aioimmich==0.18.0
 
 # homeassistant.components.indi_allsky
-aioindiallsky==0.1.7
+aioindiallsky==0.1.8
 
 # homeassistant.components.ipp
 aioipp==0.20.0
@@ -722,7 +722,7 @@ bleak-smlight==1.1.0
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.9
+blebox-uniapi==2.5.10
 
 # homeassistant.components.blink
 blinkpy==0.25.9
@@ -1453,7 +1453,7 @@ insteon-frontend-home-assistant==0.7.0
 intellifire4py==4.5.6
 
 # homeassistant.components.iometer
-iometer==1.0.2
+iometer==1.0.3
 
 # homeassistant.components.iotty
 iottycloud==0.3.0
@@ -3027,7 +3027,7 @@ radiotherm==2.1.0
 rainbowminer-api-client==0.2.3
 
 # homeassistant.components.rapt_ble
-rapt-ble==2.0.0
+rapt-ble==2.0.1
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.9
@@ -3048,7 +3048,7 @@ renault-api==0.6.3
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.22.0
+reolink-aio==0.23.0
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3200,7 +3200,7 @@ snapcast==2.3.8
 soco==0.32.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.26.0
+sofar-modbus==0.27.0
 
 # homeassistant.components.solaredge
 solaredge-web==0.5.1
@@ -3459,7 +3459,7 @@ vegehub==0.1.26
 vehicle==3.0.0
 
 # homeassistant.components.velbus
-velbus-aio==2026.11.0
+velbus-aio==2026.11.3
 
 # homeassistant.components.venstar
 venstarcolortouch==0.22
