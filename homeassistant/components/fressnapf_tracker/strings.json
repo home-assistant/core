@@ -102,6 +102,11 @@
         "name": "Flashlight"
       }
     },
+    "sensor": {
+      "last_seen": {
+        "name": "Last seen"
+      }
+    },
     "switch": {
       "energy_saving": {
         "name": "Sleep mode"
