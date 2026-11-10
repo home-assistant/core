@@ -155,6 +155,7 @@ def mock_temperature() -> AsyncMock:
     channel.get_climate_preset.return_value = 1
     channel.get_climate_mode.return_value = "day"
     channel.get_cool_mode.return_value = "heat"
+    channel.get_sensor_types.return_value = ["temperature"]
     return channel
 
 
@@ -220,6 +221,7 @@ def mock_buttoncounter() -> AsyncMock:
     channel.get_counter_state.return_value = 100
     type(channel).energy = PropertyMock(return_value=100.0)
     channel.get_counter_unit.return_value = "kWh"
+    channel.get_sensor_types.return_value = ["power", "energy"]
     return channel
 
 
@@ -249,6 +251,7 @@ def mock_gascounter() -> AsyncMock:
     # A gas counter does not expose energy (kWh); energy is only valid for kWh.
     type(channel).energy = PropertyMock(return_value=None)
     channel.get_counter_unit.return_value = "m³/h"
+    channel.get_sensor_types.return_value = ["flow", "gas"]
     return channel
 
 
@@ -277,6 +280,7 @@ def mock_watercounter() -> AsyncMock:
     channel.get_counter_total.return_value = 5678.0
     type(channel).energy = PropertyMock(return_value=None)
     channel.get_counter_unit.return_value = "L/h"
+    channel.get_sensor_types.return_value = ["flow", "water"]
     return channel
 
 
@@ -298,6 +302,7 @@ def mock_sensornumber() -> AsyncMock:
     channel.is_temperature.return_value = False
     channel.get_unit.return_value = "m"
     channel.get_state.return_value = 10
+    channel.get_sensor_types.return_value = ["measurement"]
     return channel
 
 
@@ -321,6 +326,7 @@ def mock_lightsensor() -> AsyncMock:
     channel.is_temperature.return_value = False
     channel.get_unit.return_value = "illuminance"
     channel.get_state.return_value = 250
+    channel.get_sensor_types.return_value = ["measurement"]
     return channel
 
 
