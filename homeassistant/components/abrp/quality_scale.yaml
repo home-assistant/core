@@ -73,8 +73,8 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Deferred to a follow-up PR.
+    status: exempt
+    comment: The only setting is the ABRP account; reauthentication covers changing credentials.
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios.
