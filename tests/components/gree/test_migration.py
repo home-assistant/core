@@ -676,6 +676,7 @@ async def test_recover_missing_child_entry_after_registry_save(
 
     async with _restore(stored) as (restored, restored_devices, restored_entities):
         restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        assert async_get_legacy_identifiers(restored) == set(_CANONICAL[:2])
         assert await async_setup_component(restored, DOMAIN, {})
         await restored.async_block_till_done()
 
@@ -695,6 +696,77 @@ async def test_recover_missing_child_entry_after_registry_save(
         dr.async_cleanup(restored, restored_devices, restored_entities)
         _assert_records(
             restored_devices, restored_entities, *missing_records, child.entry_id
+        )
+
+
+@pytest.mark.parametrize(
+    ("flow_source", "reason"),
+    [
+        pytest.param(SOURCE_USER, "no_devices_found", id="manual"),
+        pytest.param(
+            SOURCE_INTEGRATION_DISCOVERY, "already_configured", id="discovery"
+        ),
+    ],
+)
+async def test_recoverable_orphan_reserved_until_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    discovery: MagicMock,
+    device: MagicMock,
+    flow_source: str,
+    reason: str,
+) -> None:
+    """Orphan reservations prevent enrollment without blocking their later recovery."""
+    source = _legacy(hass, disabled_by=ConfigEntryDisabler.USER)
+    representative = _records(device_registry, entity_registry, source, _IDENTIFIERS[0])
+    orphan_records = _records(device_registry, entity_registry, source, _IDENTIFIERS[1])
+    owner_id = _child_entry_id(source.entry_id, _CANONICAL[1])
+    stored = _stored_state(hass)
+    _assign_stored_owner(
+        stored,
+        source.entry_id,
+        owner_id,
+        _IDENTIFIERS[1],
+        device=True,
+        entities=True,
+    )
+    async with _restore(stored) as (restored, restored_devices, restored_entities):
+        assert await async_setup_component(restored, DOMAIN, {})
+        await restored.async_block_till_done()
+        restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        candidate = build_device_mock(identifier=_CANONICAL[1])
+        device.return_value = candidate
+        discovery.mock_devices = [candidate]
+        data = {
+            SOURCE_USER: None,
+            SOURCE_INTEGRATION_DISCOVERY: device_info_to_data(candidate.device_info),
+        }[flow_source]
+        result = await restored.config_entries.flow.async_init(
+            DOMAIN, context={"source": flow_source}, data=data
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == reason
+        assert restored.config_entries.async_entries(DOMAIN) == [restored_source]
+        assert restored_source.version == 1
+        assert restored_source.disabled_by is ConfigEntryDisabler.USER
+        candidate.bind.assert_not_awaited()
+        _assert_records(restored_devices, restored_entities, *orphan_records, owner_id)
+
+        await restored.config_entries.async_set_disabled_by(source.entry_id, None)
+        await restored.async_block_till_done()
+        child = restored.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, _CANONICAL[1]
+        )
+        assert child is not None
+        assert child.entry_id == owner_id
+        assert restored_source.version == 2
+        assert async_get_legacy_identifiers(restored) == set()
+        _assert_records(
+            restored_devices, restored_entities, *representative, source.entry_id
+        )
+        _assert_records(
+            restored_devices, restored_entities, *orphan_records, child.entry_id
         )
 
 
@@ -735,6 +807,7 @@ async def test_recover_device_only_orphan(
     discovery.mock_devices = []
 
     async with _restore(stored) as (restored, restored_devices, restored_entities):
+        assert async_get_legacy_identifiers(restored) == set(_CANONICAL[:2])
         assert await async_setup_component(restored, DOMAIN, {})
         await restored.async_block_till_done()
         child = restored.config_entries.async_entry_for_domain_unique_id(
@@ -778,6 +851,7 @@ async def test_recover_entity_only_orphan(
     discovery.mock_devices = []
 
     async with _restore(stored) as (restored, restored_devices, restored_entities):
+        assert async_get_legacy_identifiers(restored) == set(_CANONICAL[:2])
         assert await async_setup_component(restored, DOMAIN, {})
         await restored.async_block_till_done()
         child = restored.config_entries.async_entry_for_domain_unique_id(
@@ -887,6 +961,7 @@ async def test_do_not_adopt_unrelated_or_other_source_orphans(
 
     async with _restore(stored) as (restored, restored_devices, restored_entities):
         restored_source = restored.config_entries.async_get_known_entry(source.entry_id)
+        assert async_get_legacy_identifiers(restored) == {_CANONICAL[0]}
         assert await async_setup_component(restored, DOMAIN, {})
         await restored.async_block_till_done()
 

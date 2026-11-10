@@ -411,13 +411,16 @@ async def async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) ->
 
 @callback
 def async_get_legacy_identifiers(hass: HomeAssistant) -> set[str]:
-    """Reserve identities of all unmigrated entries, including disabled ones."""
+    """Reserve legacy and recoverable orphan identities, including disabled sources."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     normalized_identifiers: set[str] = set()
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.version != 1:
             continue
+        normalized_identifiers.update(
+            _orphan_identifiers(hass, entry.entry_id).values()
+        )
         for device in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
