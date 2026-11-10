@@ -1,6 +1,5 @@
 """Coordinators for the A Better Routeplanner integration."""
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -14,7 +13,6 @@ from aioabrp import (
     ConnectionEvent,
     ConnectionState,
     Telemetry,
-    VehicleModelDisplay,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,12 +38,10 @@ class AbrpData:
 type AbrpConfigEntry = ConfigEntry[AbrpData]
 
 
-async def async_fetch_garage(
-    client: AbrpClient,
-) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
-    """Fetch the garage, pairing each vehicle with its display."""
+async def async_fetch_garage(client: AbrpClient) -> list[AbrpVehicle]:
+    """Fetch the garage."""
     try:
-        raw_vehicles = await client.async_get_vehicles()
+        return await client.async_get_vehicles()
     except AbrpAuthError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -57,51 +53,8 @@ async def async_fetch_garage(
             translation_key="abrp_update_failed",
         ) from err
 
-    results = await asyncio.gather(
-        *(
-            client.async_get_vehicle_model_display(raw.vehicle_model)
-            for raw in raw_vehicles
-        ),
-        return_exceptions=True,
-    )
-    paired: list[tuple[AbrpVehicle, VehicleModelDisplay | None]] = []
-    for raw, result in zip(raw_vehicles, results, strict=True):
-        if isinstance(result, AbrpAuthError):
-            # Not fatal: the display lookup authenticates separately from the garage.
-            _LOGGER.warning(
-                "Display metadata for typecode %s rejected (%s); the device "
-                "falls back to the raw typecode",
-                raw.vehicle_model,
-                result,
-            )
-            paired.append((raw, None))
-            continue
-        if isinstance(result, (AbrpApiError, TimeoutError)):
-            _LOGGER.debug(
-                "Display metadata for typecode %s failed (%s); the device "
-                "falls back to the raw typecode",
-                raw.vehicle_model,
-                result,
-            )
-            paired.append((raw, None))
-            continue
-        if isinstance(result, BaseException):
-            if isinstance(result, Exception):
-                _LOGGER.warning(
-                    "Unexpected display-metadata failure for typecode %s: %s",
-                    raw.vehicle_model,
-                    result,
-                )
-                paired.append((raw, None))
-                continue
-            raise result
-        paired.append((raw, result))
-    return paired
 
-
-class AbrpGarageCoordinator(
-    DataUpdateCoordinator[list[tuple[AbrpVehicle, VehicleModelDisplay | None]]]
-):
+class AbrpGarageCoordinator(DataUpdateCoordinator[list[AbrpVehicle]]):
     """Polls the garage so vehicles added in ABRP appear without a reload."""
 
     config_entry: AbrpConfigEntry
@@ -120,9 +73,7 @@ class AbrpGarageCoordinator(
         self.client = client
 
     @override
-    async def _async_update_data(
-        self,
-    ) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
+    async def _async_update_data(self) -> list[AbrpVehicle]:
         """Fetch the garage."""
         return await async_fetch_garage(self.client)
 

@@ -21,7 +21,12 @@ from .discovery import (
 )
 from .services import async_setup_services
 
-PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = probatio.Schema(
     {

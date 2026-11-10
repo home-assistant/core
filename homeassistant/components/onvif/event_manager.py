@@ -572,6 +572,9 @@ class WebHookManager:
         )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
+        if self._webhook_url is None:
+            self.state = WebHookManagerState.FAILED
+            return False
         # Unload skips stopping events if no event subscription started.
         try:
             started = await self._async_start_webhook()
@@ -644,10 +647,10 @@ class WebHookManager:
         try:
             base_url = get_url(self._hass, prefer_external=False)
         except NoURLAvailableError:
-            try:
-                base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError:
-                return
+            LOGGER.debug(
+                "%s: No URL available, not using webhook for events", self._name
+            )
+            return
 
         webhook_id = self._webhook_unique_id
         self._async_unregister_webhook()
