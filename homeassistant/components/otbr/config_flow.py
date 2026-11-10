@@ -17,7 +17,6 @@ from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -236,7 +235,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_find_legacy_entry_by_host(self, host: str) -> ConfigEntry | None:
+    def _async_find_legacy_entry_by_host(self, host: str) -> OTBRConfigEntry | None:
         """Return an entry created by the first version of the integration.
 
         Those entries have no unique id, they can only be matched by host.

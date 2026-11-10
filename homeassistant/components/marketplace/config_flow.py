@@ -15,7 +15,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -29,6 +28,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from .base import MarketplaceConfigEntry
 from .const import CLIENT_ID, CLIENT_NAME, CONF_PROFILE, DOMAIN
 from .profiles import PROFILES, get_profile
 from .utils.logger import LOGGER
@@ -57,7 +57,9 @@ class MarketplaceConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> MarketplaceOptionsFlow:
+    def async_get_options_flow(
+        config_entry: MarketplaceConfigEntry,
+    ) -> MarketplaceOptionsFlow:
         """Get the options flow for this handler."""
         return MarketplaceOptionsFlow()
 

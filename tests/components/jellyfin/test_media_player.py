@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -311,7 +312,7 @@ async def test_services_shuffle(
         DOMAIN,
         "play_media_shuffle",
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
             "media_content_id": "ITEM-UUID",
         },
         blocking=True,

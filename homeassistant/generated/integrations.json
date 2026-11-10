@@ -2633,6 +2633,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -2646,7 +2649,7 @@
         "cloud",
         "serial"
       ],
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "currencylayer": {
@@ -3316,6 +3319,15 @@
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
+    },
+    "e3dc": {
+      "name": "E3/DC",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
@@ -4393,18 +4405,6 @@
       "integration_type": "service",
       "categories": [
         "ai_voice.speech"
-      ],
-      "connectivity": [
-        "cloud"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "fitbit": {
-      "name": "Fitbit",
-      "integration_type": "service",
-      "categories": [
-        "health_wellbeing"
       ],
       "connectivity": [
         "cloud"
@@ -16703,6 +16703,17 @@
       ],
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "wij_vergelijken_energie": {
+      "name": "Wij Vergelijken Energie",
+      "integration_type": "virtual",
+      "categories": [
+        "energy.meters_monitoring"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "earn_e_p1"
     },
     "wilight": {
       "name": "WiLight",

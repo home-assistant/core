@@ -17,7 +17,7 @@ from homeassistant.components.rflink import (
     TMP_ENTITY,
     RflinkCommand,
 )
-from homeassistant.components.rflink.services import SERVICE_SEND_COMMAND
+from homeassistant.components.rflink.services import RflinkService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -184,7 +184,7 @@ async def test_send_command(
 
     await hass.services.async_call(
         domain,
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "newkaku_0000c6c2_1", "command": "on"},
     )
     await hass.async_block_till_done()
@@ -204,16 +204,18 @@ async def test_send_command_invalid_arguments(
 
     # one argument missing
     with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {"command": "on"})
+        await hass.services.async_call(
+            domain, RflinkService.SEND_COMMAND, {"command": "on"}
+        )
 
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
-            domain, SERVICE_SEND_COMMAND, {"device_id": "newkaku_0000c6c2_1"}
+            domain, RflinkService.SEND_COMMAND, {"device_id": "newkaku_0000c6c2_1"}
         )
 
     # no arguments
     with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(domain, SERVICE_SEND_COMMAND, {})
+        await hass.services.async_call(domain, RflinkService.SEND_COMMAND, {})
 
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list == []
@@ -221,7 +223,7 @@ async def test_send_command_invalid_arguments(
     # bad command (no_command)
     success = await hass.services.async_call(
         domain,
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "newkaku_0000c6c2_1", "command": "no_command"},
     )
     assert not success, "send command should not succeed for unknown command"
@@ -251,7 +253,7 @@ async def test_send_command_event_propagation(
 
     await hass.services.async_call(
         "rflink",
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "protocol_0_1", "command": "on"},
         blocking=True,
     )
@@ -262,7 +264,7 @@ async def test_send_command_event_propagation(
 
     await hass.services.async_call(
         "rflink",
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "protocol_0_1", "command": "alloff"},
         blocking=True,
     )
@@ -381,7 +383,7 @@ async def test_async_send_command_error(
 
     success = await hass.services.async_call(
         domain,
-        SERVICE_SEND_COMMAND,
+        RflinkService.SEND_COMMAND,
         {"device_id": "newkaku_0000c6c2_1", "command": SERVICE_TURN_OFF},
     )
     await hass.async_block_till_done()

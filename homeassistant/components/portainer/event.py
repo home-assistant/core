@@ -5,7 +5,7 @@ from typing import override
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
@@ -70,6 +70,7 @@ class PortainerContainerEventEntity(PortainerContainerEntity, EventEntity):
     entity_description: EventEntityDescription
     coordinator: PortainerCoordinator
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Fire an event if the container reported a new Docker event."""

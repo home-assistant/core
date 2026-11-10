@@ -24,7 +24,7 @@ def build_remo_device_info(device: Device) -> DeviceInfo:
         configuration_url="https://home.nature.global/",
     )
     if device.mac_address:
-        device_info["connections"] = {(CONNECTION_NETWORK_MAC, device.mac_address)}
+        device_info.connections = {(CONNECTION_NETWORK_MAC, device.mac_address)}
     return device_info
 
 
@@ -45,7 +45,7 @@ def build_appliance_device_info(
         model=(model.name or model.remote_name) if model else None,
     )
     if via_device_id:
-        device_info["via_device_id"] = via_device_id
+        device_info.via_device_id = via_device_id
     return device_info
 
 

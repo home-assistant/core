@@ -42,11 +42,7 @@ class AutomaticBackupEvent(BackupManagerBaseEntity, EventEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            not (data := self.coordinator.data)
-            or (event := data.last_event) is None
-            or not isinstance(event, CreateBackupEvent)
-        ):
+        if not isinstance(event := self.coordinator.data.last_event, CreateBackupEvent):
             return
 
         self._trigger_event(

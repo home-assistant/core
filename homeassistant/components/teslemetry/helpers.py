@@ -39,9 +39,9 @@ class PowerwallKeyRejectedError(Exception):
     """Signal that the gateway refused a v1r-signed read with our RSA key."""
 
 
-def gateway_issue_id(site_id: int) -> str:
+def gateway_issue_id(entry_id: str, site_id: int) -> str:
     """Return the repair issue id for a site whose local gateway was not found."""
-    return f"{ISSUE_GATEWAY_NOT_FOUND}_{site_id}"
+    return f"{ISSUE_GATEWAY_NOT_FOUND}_{entry_id}_{site_id}"
 
 
 def cloud_energy_site(api: EnergySite | EnergySiteRouter) -> TeslemetryEnergySite:
@@ -139,10 +139,12 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
-async def handle_local_command(command: Awaitable[None]) -> None:
-    """Handle a command sent to a local Powerwall gateway."""
+async def handle_energy_site_command(
+    command: Awaitable[dict[str, Any]],
+) -> dict[str, Any]:
+    """Handle a command that a paired energy site may send to its local Powerwall gateway."""
     try:
-        await command
+        return await handle_command(command)
     except PowerwallNotSupportedError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

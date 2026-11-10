@@ -8,7 +8,6 @@ import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -49,6 +48,7 @@ from .const import (
     MAX_PLANES,
     SUBENTRY_TYPE_PLANE,
 )
+from .coordinator import ForecastSolarConfigEntry
 from .plane import SENSOR_KEYS, SensorUpdateFailed, plane_title, sensor_angle
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
@@ -229,7 +229,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ForecastSolarConfigEntry,
     ) -> ForecastSolarOptionFlowHandler:
         """Get the options flow for this handler."""
         return ForecastSolarOptionFlowHandler()
@@ -238,7 +238,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: ForecastSolarConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_PLANE: PlaneSubentryFlowHandler}
