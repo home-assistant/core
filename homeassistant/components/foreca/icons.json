@@ -1,5 +1,8 @@
 {
   "services": {
+    "get_3_hour_forecast": {
+      "service": "mdi:weather-partly-cloudy"
+    },
     "get_forecasts_extra": {
       "service": "mdi:weather-cloudy-clock"
     }
