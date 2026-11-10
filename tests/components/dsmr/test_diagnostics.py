@@ -34,9 +34,6 @@ async def test_diagnostics(
         "serial_id_gas": "5678",
         "encryption_key": "aabbccddeeff00112233445566778899",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -65,7 +62,7 @@ async def test_diagnostics(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)

@@ -52,9 +52,6 @@ async def test_migrate_gas_to_mbus(
             "serial_id": "1234",
             "serial_id_gas": "37464C4F32313139303333373331",
         },
-        options={
-            "time_between_update": 0,
-        },
     )
 
     mock_entry.add_to_hass(hass)
@@ -162,9 +159,6 @@ async def test_migrate_hourly_gas_to_mbus(
             "dsmr_version": "5",
             "serial_id": "1234",
             "serial_id_gas": "4730303738353635363037343639323231",
-        },
-        options={
-            "time_between_update": 0,
         },
     )
 
@@ -274,9 +268,6 @@ async def test_migrate_gas_with_devid_to_mbus(
             "serial_id": "1234",
             "serial_id_gas": "37464C4F32313139303333373331",
         },
-        options={
-            "time_between_update": 0,
-        },
     )
 
     mock_entry.add_to_hass(hass)
@@ -381,9 +372,6 @@ async def test_migrate_gas_to_mbus_exists(
             "dsmr_version": "5B",
             "serial_id": "1234",
             "serial_id_gas": "37464C4F32313139303333373331",
-        },
-        options={
-            "time_between_update": 0,
         },
     )
 
