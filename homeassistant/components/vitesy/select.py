@@ -1,7 +1,9 @@
 """Select platform for the Vitesy integration."""
 
+from collections.abc import Iterable
 from typing import override
 
+from aiovitesy.api import VitesyDevice
 from aiovitesy.const import SHELFY_MODES
 from aiovitesy.exceptions import VitesyError
 
@@ -12,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator, supports_mode
-from .entity import VitesyEntity
+from .entity import VitesyEntity, async_add_device_entities
 
 PARALLEL_UPDATES = 1
 
@@ -24,11 +26,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Vitesy selects from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        VitesyModeSelect(coordinator, device_id)
-        for device_id, device in coordinator.data.items()
-        if supports_mode(device)
-    )
+
+    def _entities(device_id: str, device: VitesyDevice) -> Iterable[VitesyModeSelect]:
+        if supports_mode(device):
+            yield VitesyModeSelect(coordinator, device_id)
+
+    async_add_device_entities(coordinator, async_add_entities, _entities)
 
 
 class VitesyModeSelect(VitesyEntity, SelectEntity):
