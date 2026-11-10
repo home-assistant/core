@@ -69,16 +69,15 @@ async def test_reauth_started_on_login_error(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a login error while polling starts a reauth flow."""
+    manager.devices.outlets.append(outlet)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # update_all_devices logs device errors, so update_energy is what can raise
     outlet.update_energy = AsyncMock(side_effect=VeSyncLoginError("Login failed"))
-    manager.devices.outlets.append(outlet)
     coordinator = config_entry.runtime_data
-    coordinator.async_add_listener(lambda: None)
 
-    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL_ENERGY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
