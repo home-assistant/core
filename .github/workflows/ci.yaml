@@ -836,7 +836,7 @@ jobs:
       - name: Test installed package outside the checkout
         working-directory: ${{ runner.temp }}
         run: |
-          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" \
+          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" -W error::DeprecationWarning \
             -c "${RUNNER_TEMP}/pytest-package-tests/pytest.ini" \
             "${RUNNER_TEMP}/pytest-package-tests/integration_tests/test_plugin.py"
       - name: Test optional helpers and fixtures
