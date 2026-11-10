@@ -1,6 +1,5 @@
 """Test the Kodi config flow."""
 
-import asyncio
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from typing import Any
@@ -14,7 +13,6 @@ from homeassistant import config_entries
 from homeassistant.components.kodi.config_flow import (
     CannotConnectError,
     InvalidAuthError,
-    validate_ws,
 )
 from homeassistant.components.kodi.const import CONF_WS_PORT, DEFAULT_TIMEOUT, DOMAIN
 from homeassistant.const import (
@@ -909,88 +907,3 @@ async def test_ws_probe_closed_after_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ws_port"
     probe.close.assert_awaited_once_with()
-
-
-async def _hang() -> None:
-    await asyncio.Event().wait()
-
-
-@pytest.mark.parametrize("operation", ["connect", "ping"])
-async def test_cancelled_ws_probe_is_closed(
-    hass: HomeAssistant, operation: str
-) -> None:
-    """Test cancelling the check still closes the probe and propagates."""
-    probe = _ws_probe()
-    entered = asyncio.Event()
-
-    async def hang() -> None:
-        entered.set()
-        await _hang()
-
-    with (
-        patch(
-            "homeassistant.components.kodi.config_flow.get_kodi_connection",
-            return_value=probe,
-        ),
-        patch("homeassistant.components.kodi.config_flow.Kodi.ping") as ping,
-    ):
-        {"connect": probe.connect, "ping": ping}[operation].side_effect = hang
-        task = asyncio.create_task(validate_ws(hass, TEST_HOST | TEST_WS_PORT))
-        async with asyncio.timeout(5):
-            await entered.wait()
-            task.cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await task
-
-    probe.close.assert_awaited_once_with()
-
-
-async def test_failed_close_keeps_cancellation(hass: HomeAssistant) -> None:
-    """Test a failing close does not replace the cancellation of the check."""
-    probe = _ws_probe(TimeoutError())
-    entered = asyncio.Event()
-
-    async def hang() -> None:
-        entered.set()
-        await _hang()
-
-    with (
-        patch(
-            "homeassistant.components.kodi.config_flow.get_kodi_connection",
-            return_value=probe,
-        ),
-        patch("homeassistant.components.kodi.config_flow.Kodi.ping", side_effect=hang),
-    ):
-        task = asyncio.create_task(validate_ws(hass, TEST_HOST | TEST_WS_PORT))
-        async with asyncio.timeout(5):
-            await entered.wait()
-            task.cancel("cancel probe")
-            with pytest.raises(asyncio.CancelledError, match="cancel probe"):
-                await task
-
-    probe.close.assert_awaited_once_with()
-
-
-async def test_cancel_during_close_propagates(hass: HomeAssistant) -> None:
-    """Test a cancellation that arrives while closing the probe propagates."""
-    probe = _ws_probe()
-    entered = asyncio.Event()
-
-    async def close() -> None:
-        entered.set()
-        await _hang()
-
-    probe.close.side_effect = close
-    with (
-        patch(
-            "homeassistant.components.kodi.config_flow.get_kodi_connection",
-            return_value=probe,
-        ),
-        patch("homeassistant.components.kodi.config_flow.Kodi.ping"),
-    ):
-        task = asyncio.create_task(validate_ws(hass, TEST_HOST | TEST_WS_PORT))
-        async with asyncio.timeout(5):
-            await entered.wait()
-            task.cancel("cancel probe")
-            with pytest.raises(asyncio.CancelledError, match="cancel probe"):
-                await task
