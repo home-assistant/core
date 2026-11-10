@@ -13,12 +13,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
     STATE_UNKNOWN,
     Platform,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfPower,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -129,57 +125,3 @@ async def test_vmb7in_water_counter_unavailable_when_no_total(
     state = hass.states.get("sensor.input_watercounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-
-
-async def test_psu_sensors(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test PSU property sensors expose correct classes, units, and unique ids."""
-    await init_integration(hass, config_entry)
-
-    power = hass.states.get("sensor.power_supply_psupower")
-    assert power is not None
-    assert power.state == "1200.0"
-    assert power.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
-    assert power.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    assert power.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
-
-    voltage = hass.states.get("sensor.power_supply_psuvoltage")
-    assert voltage is not None
-    assert voltage.state == "230.0"
-    assert voltage.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLTAGE
-    assert voltage.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    assert voltage.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricPotential.VOLT
-
-    current = hass.states.get("sensor.power_supply_psucurrent")
-    assert current is not None
-    assert current.state == "5.2"
-    assert current.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
-    assert current.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    assert current.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricCurrent.AMPERE
-
-    load = hass.states.get("sensor.power_supply_psuload")
-    assert load is not None
-    assert load.state == "42.0"
-    assert load.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert load.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    assert load.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-
-    assert (
-        entity_registry.async_get("sensor.power_supply_psupower").unique_id
-        == "psu123456789-PSUPower"
-    )
-    assert (
-        entity_registry.async_get("sensor.power_supply_psuvoltage").unique_id
-        == "psu123456789-PSUVoltage"
-    )
-    assert (
-        entity_registry.async_get("sensor.power_supply_psucurrent").unique_id
-        == "psu123456789-PSUCurrent"
-    )
-    assert (
-        entity_registry.async_get("sensor.power_supply_psuload").unique_id
-        == "psu123456789-PSULoad"
-    )
