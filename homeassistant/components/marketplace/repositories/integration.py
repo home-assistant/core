@@ -18,6 +18,7 @@ from homeassistant.loader import (
     PACKAGE_CUSTOM_COMPONENTS,
     IntegrationNotLoaded,
     async_clear_custom_components_cache,
+    async_forget_marketplace_integration,
     async_get_custom_components,
     async_get_loaded_integration,
     async_mark_marketplace_integration,
@@ -258,6 +259,10 @@ class IntegrationRepository(Repository):
         # Code this run loaded keeps running until a restart, and so does
         # an integration only set up from YAML
         loaded = self._known_to_the_loader()
+        if self.data.domain:
+            async_forget_marketplace_integration(
+                self.marketplace.hass, self.data.domain
+            )
         await self.reload_custom_components()
         self.pending_restart = loaded or not self.data.config_flow
 

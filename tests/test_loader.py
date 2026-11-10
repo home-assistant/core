@@ -768,6 +768,24 @@ async def test_mark_marketplace_integration_during_scan(hass: HomeAssistant) -> 
     )
 
 
+async def test_forget_marketplace_integration(hass: HomeAssistant) -> None:
+    """Test a forgotten domain is not applied to the scans that follow."""
+    integration = loader.Integration(
+        hass, "custom_components.hue", None, {"name": "Hue", "domain": "hue"}
+    )
+    loader.async_mark_marketplace_integration(hass, "hue")
+    loader.async_forget_marketplace_integration(hass, "hue")
+    loader.async_clear_custom_components_cache(hass)
+
+    with patch(
+        "homeassistant.loader._get_custom_components",
+        return_value={"hue": integration},
+    ):
+        result = await loader.async_get_custom_components(hass)
+
+    assert result["hue"].installation_type == "custom"
+
+
 async def test_integrations_only_once(hass: HomeAssistant) -> None:
     """Test that we load integrations only once."""
     int_1 = hass.async_create_task(loader.async_get_integration(hass, "hue"))

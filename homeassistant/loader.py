@@ -1561,6 +1561,15 @@ def async_mark_marketplace_integration(hass: HomeAssistant, domain: str) -> None
             integration.mark_marketplace()
 
 
+@callback
+def async_forget_marketplace_integration(hass: HomeAssistant, domain: str) -> None:
+    """Forget a domain was installed from the Marketplace.
+
+    Integrations that are already loaded keep what they were marked as.
+    """
+    hass.data.get(DATA_MARKETPLACE_DOMAINS, set()).discard(domain)
+
+
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     cache = hass.data[DATA_INTEGRATIONS]
