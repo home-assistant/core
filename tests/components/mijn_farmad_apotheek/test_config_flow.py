@@ -276,6 +276,66 @@ async def test_reauth_mfa(hass: HomeAssistant, mock_farmad_client: MagicMock) ->
 
 
 @pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            FarmadAuthenticationError("mock"),
+            {CONF_CODE: "wrong_code"},
+            id="wrong_code",
+        ),
+        pytest.param(
+            FarmadCommunicationError("mock"),
+            {"base": "cannot_connect"},
+            id="cannot_connect",
+        ),
+        pytest.param(RuntimeError("mock"), {"base": "unknown"}, id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_mfa_errors(
+    hass: HomeAssistant,
+    mock_farmad_client: MagicMock,
+    side_effect: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test the code step of a reauthentication shows the error and recovers."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=API_ACCOUNT_ID, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+    client = mock_farmad_client.return_value
+    client.access_token = "new-access-token"
+    client.refresh_token = "new-refresh-token"
+    client.async_login.side_effect = [FarmadMfaRequiredError("mock"), side_effect]
+
+    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: API_OTP}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"] == errors
+
+    client.async_login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: API_OTP_2}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == {
+        CONF_EMAIL: API_ACCOUNT_EMAIL,
+        CONF_ACCESS_TOKEN: "new-access-token",
+        CONF_REFRESH_TOKEN: "new-refresh-token",
+    }
+
+
+@pytest.mark.parametrize(
     ("side_effect", "error"),
     [
         pytest.param(

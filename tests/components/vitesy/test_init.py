@@ -137,3 +137,35 @@ async def test_removed_device_is_removed_from_registry(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
     )
+
+
+async def test_new_device_is_added(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_devices: dict[str, VitesyDevice],
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device added to the account gets its entities without a reload."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.living_room_shelfy_air_quality_score") is None
+
+    new_device_id = "80:65:99:34:F9:B5"
+    mock_devices[new_device_id] = replace(
+        mock_devices[DEVICE_ID], device_id=new_device_id, name="Living room Shelfy"
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_device_id), mock_config_entry.entry_id
+    )
+    for entity_id in (
+        "binary_sensor.living_room_shelfy_charging",
+        "button.living_room_shelfy_mark_filter_as_changed",
+        "select.living_room_shelfy_mode",
+        "sensor.living_room_shelfy_air_quality_score",
+    ):
+        assert hass.states.get(entity_id) is not None, entity_id

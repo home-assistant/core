@@ -57,6 +57,7 @@ from .entity import (
     async_remove_unserved_entities,
     battery_pack_identifier,
 )
+from .helpers import enum_options, option_slug
 
 PARALLEL_UPDATES = 0
 
@@ -79,7 +80,7 @@ async def async_setup_entry(
     entities: list[SofarSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and not _is_battery_string(description)
+        if description.component in served and _battery_string(description) is None
     ]
     entities.extend(
         SofarTotalSensor(runtime_data, description)
@@ -101,9 +102,7 @@ async def async_setup_entry(
         async_add_entities(
             SofarSensor(runtime_data, description)
             for description in SENSOR_DESCRIPTIONS
-            if (part := description.part) is not None
-            and part[0] == "battery"
-            and part[1] in new
+            if _battery_string(description) in new
         )
 
     _async_add_wired_battery_strings()
@@ -146,9 +145,11 @@ def _async_setup_battery_packs(
     )
 
 
-def _is_battery_string(description: SofarSensorDescription) -> bool:
-    """Whether a description belongs to one numbered battery string."""
-    return description.part is not None and description.part[0] == "battery"
+def _battery_string(description: SofarSensorDescription) -> int | None:
+    """Return the battery string a description belongs to, if any."""
+    if (part := description.part) is None or part[0] != "battery":
+        return None
+    return part[1]
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -162,7 +163,7 @@ class SofarSensor(SofarEntity, SensorEntity):
         value = self.entity_description.value_fn(self.coordinator.device)
         # IntEnum stringifies as the raw int; use the option slug.
         if isinstance(value, IntEnum):
-            return value.name.lower()
+            return option_slug(value)
         return value
 
 
@@ -403,21 +404,6 @@ def _part_value_fn(
     return lambda device: value_fn(device, number)
 
 
-def _discharge_cutoff_soc(depth: int | None) -> int | None:
-    """Return the charge left once the battery has discharged by depth."""
-    return None if depth is None else 100 - depth
-
-
-def _off_grid_recovery_soc(device: SofarInverter) -> int | None:
-    """Return the charge at which off-grid discharge resumes."""
-    config = device.battery_config
-    if (cutoff := _discharge_cutoff_soc(config.bat_config_end_of_discharge)) is None:
-        return None
-    if (buffer := config.bat_config_eps_buffer) is None:
-        return None
-    return cutoff + buffer
-
-
 SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     SofarSensorDescription(
         key="pv_power_total",
@@ -433,7 +419,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="state",
         translation_key="system_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[state.name.lower() for state in SystemState],
+        options=enum_options(SystemState),
         value_fn=lambda device: device.state.system_state,
     ),
     SofarSensorDescription(
@@ -1391,7 +1377,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="battery_config_id",
         translation_key="bat_config_protocol",
         device_class=SensorDeviceClass.ENUM,
-        options=[protocol.name.lower() for protocol in BatConfigProtocol],
+        options=enum_options(BatConfigProtocol),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config_id.bat_config_protocol,
@@ -1510,7 +1496,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="battery_config",
         translation_key="bat_config_cell_type",
         device_class=SensorDeviceClass.ENUM,
-        options=[cell_type.name.lower() for cell_type in BatConfigCellType],
+        options=enum_options(BatConfigCellType),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config.bat_config_cell_type,
@@ -1550,9 +1536,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: _discharge_cutoff_soc(
-            device.battery_config.bat_config_depth_of_discharge
-        ),
+        value_fn=lambda device: device.battery_config.on_grid_discharge_cutoff_soc,
     ),
     SofarSensorDescription(
         key="off_grid_discharge_cutoff_soc",
@@ -1561,9 +1545,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: _discharge_cutoff_soc(
-            device.battery_config.bat_config_end_of_discharge
-        ),
+        value_fn=lambda device: device.battery_config.off_grid_discharge_cutoff_soc,
     ),
     SofarSensorDescription(
         key="off_grid_recovery_soc",
@@ -1572,7 +1554,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=_off_grid_recovery_soc,
+        value_fn=lambda device: device.battery_config.off_grid_recovery_soc,
     ),
     SofarSensorDescription(
         key="bat_config_charge_cutoff_soc",
@@ -1590,7 +1572,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="rtc_sync",
         translation_key="sync_rtc_result",
         device_class=SensorDeviceClass.ENUM,
-        options=[result.name.lower() for result in SyncRtcResult],
+        options=enum_options(SyncRtcResult),
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.rtc_sync.sync_rtc_result,
     ),
@@ -1599,7 +1581,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="feed_in",
         translation_key="feedin_limitation_mode",
         device_class=SensorDeviceClass.ENUM,
-        options=[mode.name.lower() for mode in FeedinLimitationMode],
+        options=enum_options(FeedinLimitationMode),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.feed_in.feedin_limitation_mode,
@@ -1638,7 +1620,7 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="passive",
         translation_key="passive_mode_timeout_action",
         device_class=SensorDeviceClass.ENUM,
-        options=[action.name.lower() for action in PassiveModeTimeoutAction],
+        options=enum_options(PassiveModeTimeoutAction),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.passive.passive_mode_timeout_action,

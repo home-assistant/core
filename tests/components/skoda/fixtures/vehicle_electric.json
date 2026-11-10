@@ -39,6 +39,7 @@
         "chargePowerInKw": 11.0,
         "fullyChargedAt": "2024-01-15T14:30:00Z",
         "state": "CHARGING",
+        "plugConnectionState": "CONNECTED",
         "chargeType": "AC",
         "battery": {
           "remainingCruisingRangeInMeters": 513000,

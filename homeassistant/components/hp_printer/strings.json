@@ -14,6 +14,19 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your HP printer."
+        },
+        "sections": {
+          "advanced_settings": {
+            "data": {
+              "port": "[%key:common::config_flow::data::port%]",
+              "ssl": "[%key:common::config_flow::data::ssl%]"
+            },
+            "data_description": {
+              "port": "The port of the printer's web interface. Leave empty to use 80, or 443 with SSL.",
+              "ssl": "Connect to the printer's web interface over HTTPS."
+            },
+            "name": "Advanced settings"
+          }
         }
       }
     }
