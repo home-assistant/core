@@ -831,6 +831,8 @@ AGENTS.md @home-assistant/core
 /tests/components/homeassistant_hardware/ @home-assistant/core
 /homeassistant/components/homeassistant_sky_connect/ @home-assistant/core
 /tests/components/homeassistant_sky_connect/ @home-assistant/core
+/homeassistant/components/homeassistant_upgrade_check/ @home-assistant/core
+/tests/components/homeassistant_upgrade_check/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homee/ @Taraman17

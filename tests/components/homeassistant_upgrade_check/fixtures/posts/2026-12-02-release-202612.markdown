@@ -1,0 +1,16 @@
+---
+title: "2026.12: Past the target"
+---
+
+## Backward-incompatible changes
+
+{% details "MQTT" %}
+
+Newer than the version being upgraded to, so this is never shown.
+
+([@frenck] - [#5000]) ([MQTT documentation])
+
+[#5000]: https://github.com/home-assistant/core/pull/5000
+[MQTT documentation]: /integrations/mqtt/
+
+{% enddetails %}

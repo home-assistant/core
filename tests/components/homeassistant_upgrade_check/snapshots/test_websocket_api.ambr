@@ -1,0 +1,405 @@
+# serializer version: 1
+# name: test_digest
+  dict({
+    'categories': list([
+      dict({
+        'count': 5,
+        'items': list([
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'mqtt',
+            ]),
+            'prs': list([
+              dict({
+                'label': '#182045',
+                'url': 'https://github.com/home-assistant/core/pull/182045',
+              }),
+            ]),
+            'scope': 'domains',
+            'text': 'The `mqtt.publish` action now requires an admin account.',
+            'tier': None,
+            'title': 'MQTT',
+            'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+            'version': '2026.8',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+            ]),
+            'prs': list([
+              dict({
+                'label': 'frontend#4567',
+                'url': 'https://github.com/home-assistant/frontend/pull/4567',
+              }),
+            ]),
+            'scope': 'global',
+            'text': 'Every robot vacuum now reports its battery separately. Check Settings > Devices & services.',
+            'tier': None,
+            'title': 'Robot vacuums',
+            'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+            'version': '2026.8',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'old_thing',
+            ]),
+            'prs': list([
+              dict({
+                'label': '#1000',
+                'url': 'https://github.com/home-assistant/core/pull/1000',
+              }),
+            ]),
+            'scope': 'domains',
+            'text': 'Old Thing is gone; see the farewell section.',
+            'tier': None,
+            'title': 'Old Thing',
+            'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+            'version': '2026.8',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'hue',
+            ]),
+            'prs': list([
+              dict({
+                'label': '#3000',
+                'url': 'https://github.com/home-assistant/core/pull/3000',
+              }),
+            ]),
+            'scope': 'domains',
+            'text': 'Scenes are now entities of their own.',
+            'tier': None,
+            'title': 'Philips Hue',
+            'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+            'version': '2026.11',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'gardena_bluetooth',
+            ]),
+            'prs': list([
+              dict({
+                'label': '#4000',
+                'url': 'https://github.com/home-assistant/core/pull/4000',
+              }),
+            ]),
+            'scope': 'domains',
+            'text': "The valve's sensor now reports a fixed set of values.",
+            'tier': None,
+            'title': 'Gardena Bluetooth',
+            'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+            'version': '2026.11',
+          }),
+        ]),
+        'key': 'breaking',
+        'related': list([
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'hue',
+            ]),
+            'prs': list([
+              dict({
+                'label': '#2000',
+                'url': 'https://github.com/home-assistant/core/pull/2000',
+              }),
+            ]),
+            'scope': 'mentions',
+            'text': 'Groups that include a [Philips Hue](https://www.home-assistant.io/integrations/hue) light are now created differently.',
+            'tier': None,
+            'title': 'Zigbee Home Automation',
+            'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+            'version': '2026.8',
+          }),
+        ]),
+      }),
+      dict({
+        'count': 2,
+        'items': list([
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'mqtt',
+            ]),
+            'prs': list([
+            ]),
+            'scope': 'domains',
+            'text': '**[MQTT](https://www.home-assistant.io/integrations/mqtt)** can now publish to devices behind a [Philips Hue](https://www.home-assistant.io/integrations/hue) bridge.',
+            'tier': None,
+            'title': 'MQTT',
+            'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+            'version': '2026.8',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'hue',
+            ]),
+            'prs': list([
+            ]),
+            'scope': 'domains',
+            'text': '**[Philips Hue](https://www.home-assistant.io/integrations/hue)** now shows the bridge firmware.',
+            'tier': None,
+            'title': 'Philips Hue',
+            'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+            'version': '2026.11',
+          }),
+        ]),
+        'key': 'noteworthy',
+        'related': list([
+        ]),
+      }),
+      dict({
+        'count': 1,
+        'items': list([
+          dict({
+            'credits': list([
+              'dave',
+              'erin',
+            ]),
+            'domains': list([
+              'hue',
+            ]),
+            'prs': list([
+            ]),
+            'scope': 'domains',
+            'text': None,
+            'tier': 'gold',
+            'title': 'Philips Hue',
+            'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+            'version': '2026.11',
+          }),
+        ]),
+        'key': 'quality_scale',
+        'related': list([
+        ]),
+      }),
+      dict({
+        'count': 1,
+        'items': list([
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'old_thing',
+            ]),
+            'prs': list([
+            ]),
+            'scope': 'domains',
+            'text': '**Old Thing** has been removed. Use the [RESTful sensor](https://www.home-assistant.io/integrations/sensor.rest/) instead.',
+            'tier': None,
+            'title': 'Old Thing',
+            'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+            'version': '2026.8',
+          }),
+        ]),
+        'key': 'removed',
+        'related': list([
+        ]),
+      }),
+    ]),
+    'entity_id': 'update.home_assistant_core_mock',
+    'releases': list([
+      dict({
+        'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+        'version': '2026.8',
+      }),
+      dict({
+        'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+        'version': '2026.11',
+      }),
+    ]),
+    'running': '2026.7.0',
+    'target': '2026.11.0',
+  })
+# ---
+# name: test_digest[cache]
+  dict({
+    'indexes': list([
+      dict({
+        'breaking': list([
+          dict({
+            'domains': list([
+              'mqtt',
+            ]),
+            'global': False,
+            'mentions': list([
+            ]),
+            'prs': list([
+              '182045',
+            ]),
+            'text': 'The `mqtt.publish` action now requires an admin account.',
+            'title': 'MQTT',
+          }),
+          dict({
+            'domains': list([
+            ]),
+            'global': True,
+            'mentions': list([
+            ]),
+            'prs': list([
+              'frontend#4567',
+            ]),
+            'text': 'Every robot vacuum now reports its battery separately. Check Settings > Devices & services.',
+            'title': 'Robot vacuums',
+          }),
+          dict({
+            'domains': list([
+              'zha',
+            ]),
+            'global': False,
+            'mentions': list([
+              'hue',
+            ]),
+            'prs': list([
+              '2000',
+            ]),
+            'text': 'Groups that include a [Philips Hue](https://www.home-assistant.io/integrations/hue) light are now created differently.',
+            'title': 'Zigbee Home Automation',
+          }),
+          dict({
+            'domains': list([
+              'old_thing',
+            ]),
+            'global': False,
+            'mentions': list([
+            ]),
+            'prs': list([
+              '1000',
+            ]),
+            'text': 'Old Thing is gone; see the farewell section.',
+            'title': 'Old Thing',
+          }),
+        ]),
+        'noteworthy': list([
+          dict({
+            'domains': list([
+              'mqtt',
+            ]),
+            'mentions': list([
+              'hue',
+            ]),
+            'text': '**[MQTT](https://www.home-assistant.io/integrations/mqtt)** can now publish to devices behind a [Philips Hue](https://www.home-assistant.io/integrations/hue) bridge.',
+            'title': 'MQTT',
+          }),
+          dict({
+            'domains': list([
+              'shelly',
+            ]),
+            'mentions': list([
+            ]),
+            'text': '**[Shelly](https://www.home-assistant.io/integrations/shelly)** devices are found faster.',
+            'title': 'Shelly',
+          }),
+        ]),
+        'quality_scale': list([
+          dict({
+            'credits': list([
+              'dave',
+            ]),
+            'domains': list([
+              'hue',
+            ]),
+            'tier': 'silver',
+            'title': 'Philips Hue',
+          }),
+        ]),
+        'removed': list([
+          dict({
+            'domains': list([
+              'old_thing',
+            ]),
+            'replacements': list([
+              'rest',
+            ]),
+            'text': '**Old Thing** has been removed. Use the [RESTful sensor](https://www.home-assistant.io/integrations/sensor.rest/) instead.',
+            'title': 'Old Thing',
+          }),
+        ]),
+        'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
+        'version': '2026.8',
+      }),
+      dict({
+        'breaking': list([
+          dict({
+            'domains': list([
+              'hue',
+            ]),
+            'global': False,
+            'mentions': list([
+            ]),
+            'prs': list([
+              '3000',
+            ]),
+            'text': 'Scenes are now entities of their own.',
+            'title': 'Philips Hue',
+          }),
+          dict({
+            'domains': list([
+              'gardena_bluetooth',
+            ]),
+            'global': False,
+            'mentions': list([
+            ]),
+            'prs': list([
+              '4000',
+            ]),
+            'text': "The valve's sensor now reports a fixed set of values.",
+            'title': 'Gardena Bluetooth',
+          }),
+        ]),
+        'noteworthy': list([
+          dict({
+            'domains': list([
+              'hue',
+            ]),
+            'mentions': list([
+            ]),
+            'text': '**[Philips Hue](https://www.home-assistant.io/integrations/hue)** now shows the bridge firmware.',
+            'title': 'Philips Hue',
+          }),
+        ]),
+        'quality_scale': list([
+          dict({
+            'credits': list([
+              'dave',
+              'erin',
+            ]),
+            'domains': list([
+              'hue',
+            ]),
+            'tier': 'gold',
+            'title': 'Philips Hue',
+          }),
+          dict({
+            'credits': list([
+              'carol',
+            ]),
+            'domains': list([
+              'shelly',
+            ]),
+            'tier': 'gold',
+            'title': 'Shelly',
+          }),
+        ]),
+        'removed': list([
+        ]),
+        'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+        'version': '2026.11',
+      }),
+    ]),
+    'key': '2026.7.0..2026.11.0@6',
+  })
+# ---
