@@ -76,7 +76,8 @@ def _format_structured_output(
         type="json_schema",
         json_schema={
             "name": slugify(name)[:64] or "response",
-            "strict": True,
+            # Strict mode requires every field, but structure fields are optional
+            "strict": False,
             "schema": cast(dict[str, object], schema),
         },
     )
@@ -360,6 +361,11 @@ class LlamaCppBaseLLMEntity(Entity):
                             *files,
                         ]
                     break
+            else:
+                # A user message without text is not converted
+                messages.append(
+                    ChatCompletionUserMessageParam(role="user", content=files)
+                )
 
         client: AsyncOpenAI = self.entry.runtime_data
         streaming = bool(

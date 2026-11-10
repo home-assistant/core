@@ -254,7 +254,8 @@ async def test_generate_structured_data(
             {
                 probatio.Required("characters"): selector.selector(
                     {"text": {"multiple": True}}
-                )
+                ),
+                probatio.Optional("setting"): selector.selector({"text": {}}),
             }
         ),
     )
@@ -264,11 +265,12 @@ async def test_generate_structured_data(
         "type": "json_schema",
         "json_schema": {
             "name": schema_name,
-            "strict": True,
+            "strict": False,
             "schema": {
                 "type": "object",
                 "properties": {
-                    "characters": {"type": "array", "items": {"type": "string"}}
+                    "characters": {"type": "array", "items": {"type": "string"}},
+                    "setting": {"type": "string"},
                 },
                 "required": ["characters"],
                 "additionalProperties": False,
@@ -520,9 +522,22 @@ async def test_generate_invalid_structured_data(
         )
 
 
+@pytest.mark.parametrize(
+    ("instructions", "text_parts"),
+    [
+        pytest.param(
+            "Describe the image",
+            [{"type": "text", "text": "Describe the image"}],
+            id="with_instructions",
+        ),
+        pytest.param("", [], id="empty_instructions"),
+    ],
+)
 async def test_generate_data_with_attachments(
     hass: HomeAssistant,
     mock_completion: AsyncMock,
+    instructions: str,
+    text_parts: list[dict[str, str]],
 ) -> None:
     """Test image attachments are sent with the user message."""
     mock_completion.return_value = _completion("A person at the door")
@@ -543,7 +558,7 @@ async def test_generate_data_with_attachments(
             hass,
             task_name="Test Task",
             entity_id=ENTITY_ID,
-            instructions="Describe the image",
+            instructions=instructions,
             attachments=[
                 {"media_content_id": "media-source://media/doorbell_snapshot.jpg"}
             ],
@@ -555,7 +570,7 @@ async def test_generate_data_with_attachments(
     assert messages[1] == {
         "role": "user",
         "content": [
-            {"type": "text", "text": "Describe the image"},
+            *text_parts,
             {
                 "type": "image_url",
                 "image_url": {

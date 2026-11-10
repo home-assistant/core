@@ -316,6 +316,7 @@ class LlamaCppSubentryFlowHandler(ConfigSubentryFlow):
                     self._openai_client,
                     model=model,
                     stream=self._get_entry().data.get(CONF_STREAMING, False),
+                    with_tools=self._subentry_type == "conversation",
                 )
             except HomeAssistantError as err:
                 LOGGER.error("Model completion validation failed: %s", err)

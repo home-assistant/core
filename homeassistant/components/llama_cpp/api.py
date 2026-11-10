@@ -12,6 +12,7 @@ from typing import Any, cast
 
 import openai
 from openai._streaming import AsyncStream
+from openai._types import Omit
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
@@ -81,13 +82,14 @@ async def async_validate_completions(
     client: openai.AsyncOpenAI,
     model: str,
     stream: bool = False,
+    with_tools: bool = True,
 ) -> None:
     """Validate that we can speak to the model over the completions API."""
     with api_error_handler():
         result = await client.chat.completions.create(
             model=model,
             messages=_TEST_MESSAGES,
-            tools=_TEST_TOOLS,
+            tools=_TEST_TOOLS if with_tools else Omit(),
             max_tokens=_TEST_MAX_TOKENS,
             stream=stream,
         )

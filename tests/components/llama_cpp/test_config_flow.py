@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx2
 import openai
+from openai import Omit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -885,3 +886,36 @@ async def test_reconfiguring_ai_task_subentry(
     assert updated_subentry.title == "Gpt 4"
     assert updated_subentry.data[CONF_CHAT_MODEL] == "gpt-4"
     assert updated_subentry.data[CONF_TEMPERATURE] == 0.2
+
+
+@pytest.mark.parametrize(
+    ("subentry_type", "with_tools"),
+    [
+        pytest.param("conversation", True, id="conversation"),
+        pytest.param("ai_task_data", False, id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_subentry_validation_tools(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_completion: AsyncMock,
+    subentry_type: str,
+    with_tools: bool,
+) -> None:
+    """Test only conversation subentries require tool support from the model."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    mock_completion.reset_mock()
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_RECOMMENDED: True, CONF_CHAT_MODEL: "gpt-4"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        not isinstance(mock_completion.call_args.kwargs["tools"], Omit)
+    ) is with_tools
