@@ -602,6 +602,46 @@ async def test_set_temperature_with_invalid_operation_mode(
 
 
 @pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_WATER_HEATERS: [
+                {
+                    **BASE_CONFIG,
+                    CONF_ONOFF_REGISTER: ONOFF_ADDRESS,
+                    CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
+                },
+            ]
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "temperature",
+    [
+        pytest.param(39, id="below_min"),
+        pytest.param(100, id="above_max"),
+    ],
+)
+async def test_set_temperature_out_of_range(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock, temperature: float
+) -> None:
+    """Test a temperature outside the limits is rejected before anything is written."""
+    with pytest.raises(ServiceValidationError, match="Accepted range is 40"):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_TEMPERATURE: temperature,
+                ATTR_OPERATION_MODE: STATE_ECO,
+            },
+            blocking=True,
+        )
+    mock_modbus_ha.write_register.assert_not_called()
+    mock_modbus_ha.write_registers.assert_not_called()
+
+
+@pytest.mark.parametrize(
     ("do_config", "operation_mode", "register_calls", "coil_calls"),
     [
         pytest.param(

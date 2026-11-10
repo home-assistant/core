@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -60,6 +61,7 @@ from .const import (
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WATER_HEATERS,
     CONF_WRITE_REGISTERS,
+    DOMAIN,
 )
 from .entity import ModbusStructEntity
 from .modbus import ModbusHub
@@ -173,10 +175,21 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        temperature = float(kwargs[ATTR_TEMPERATURE])
+        if not self.min_temp <= temperature <= self.max_temp:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temp_out_of_range",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "min_temp": str(self.min_temp),
+                    "max_temp": str(self.max_temp),
+                },
+            )
         if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
             await self.async_handle_set_operation_mode(operation_mode)
         target_temperature = (
-            float(kwargs[ATTR_TEMPERATURE]) - self._target_temp_offset
+            temperature - self._target_temp_offset
         ) / self._target_temp_scale
         if self._value_is_int:
             target_temperature = round(target_temperature)
