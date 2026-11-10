@@ -409,7 +409,7 @@ aiopnsense==1.0.10
 aiopowerwall==0.10.0
 
 # homeassistant.components.ptdevices
-aioptdevices==2026.03.2
+aioptdevices==2026.11.1
 
 # homeassistant.components.acmeda
 aiopulse==0.4.7
