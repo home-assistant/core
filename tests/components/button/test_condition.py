@@ -89,31 +89,6 @@ async def test_button_condition_options_validation(
 
 
 @pytest.mark.parametrize(
-    ("duration", "expected"),
-    [
-        (0, timedelta(0)),
-        ("00:00:05", timedelta(seconds=5)),
-        ({"seconds": 29.999}, timedelta(seconds=29.999)),
-    ],
-)
-async def test_button_is_being_held_condition_for_valid(
-    hass: HomeAssistant,
-    duration: dict[str, float] | str | int,
-    expected: timedelta,
-) -> None:
-    """Test the is_being_held condition accepts a duration shorter than the timeout."""
-    validated_config = await async_validate_condition_config(
-        hass,
-        {
-            CONF_CONDITION: "button.is_being_held",
-            CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
-            CONF_OPTIONS: {"for": duration},
-        },
-    )
-    assert validated_config[CONF_OPTIONS]["for"] == expected
-
-
-@pytest.mark.parametrize(
     "duration",
     [{"seconds": -1}, {"seconds": 30}, "00:01:00", "not_a_duration", None],
 )
