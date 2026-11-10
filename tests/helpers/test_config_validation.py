@@ -2373,6 +2373,169 @@ def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> N
         cv.script_action(config)
 
 
+@pytest.mark.parametrize(
+    ("parallel", "expected"),
+    [
+        pytest.param(None, [], id="none"),
+        pytest.param([None], [{"sequence": []}], id="none_branch"),
+        pytest.param([[]], [{"sequence": []}], id="empty_list_branch"),
+        pytest.param(
+            {"delay": 1},
+            [{"sequence": [{"delay": timedelta(seconds=1)}]}],
+            id="single_action",
+        ),
+        pytest.param(
+            [{"delay": 1}, [{"delay": 1}, {"delay": 1}], {"sequence": [{"delay": 1}]}],
+            [
+                {"sequence": [{"delay": timedelta(seconds=1)}]},
+                {
+                    "sequence": [
+                        {"delay": timedelta(seconds=1)},
+                        {"delay": timedelta(seconds=1)},
+                    ]
+                },
+                {"sequence": [{"delay": timedelta(seconds=1)}]},
+            ],
+            id="action_list_and_sequence_branches",
+        ),
+        pytest.param(
+            [{"sequence": {"delay": 1}}],
+            [{"sequence": [{"delay": timedelta(seconds=1)}]}],
+            id="sequence_single_action",
+        ),
+        pytest.param(
+            [{"alias": "x", "sequence": [{"delay": 1}]}],
+            [{"alias": "x", "sequence": [{"delay": timedelta(seconds=1)}]}],
+            id="sequence_with_alias",
+        ),
+        # A branch with both an action key and a sequence key is that action
+        pytest.param(
+            [{"device_id": "x", "domain": "light", "sequence": [{"event": "foo"}]}],
+            [
+                {
+                    "sequence": [
+                        {
+                            "device_id": "x",
+                            "domain": "light",
+                            "sequence": [{"event": "foo"}],
+                        }
+                    ]
+                }
+            ],
+            id="device_action_with_sequence_key",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "device",
+                    "device_id": "x",
+                    "domain": "light",
+                    "sequence": [{"event": "foo"}],
+                }
+            ],
+            [
+                {
+                    "sequence": [
+                        {
+                            "condition": "device",
+                            "device_id": "x",
+                            "domain": "light",
+                            "sequence": [{"event": "foo"}],
+                        }
+                    ]
+                }
+            ],
+            id="device_condition_with_sequence_key",
+        ),
+    ],
+)
+def test_script_parallel_branches(
+    parallel: Any, expected: list[dict[str, Any]]
+) -> None:
+    """Test the branches of a parallel action are wrapped in sequences."""
+    assert cv.SCRIPT_SCHEMA([{"parallel": parallel}]) == [{"parallel": expected}]
+
+
+@pytest.mark.parametrize(
+    ("parallel", "error"),
+    [
+        pytest.param(
+            [{"delay": "garbage"}],
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel[0].delay'",
+            id="action",
+        ),
+        pytest.param(
+            {"delay": "garbage"},
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel.delay'",
+            id="single_action",
+        ),
+        pytest.param(
+            [[{"delay": 1}, {"delay": "garbage"}]],
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel[0][1].delay'",
+            id="action_list",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": "garbage"}]}],
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel[0].sequence[0].delay'",
+            id="sequence",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": 1}], "bogus": 1}],
+            "not a valid option at '[0].parallel[0].bogus'",
+            id="sequence_with_extra_key",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": 1}], "service": "a.b"}],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="service_with_sequence_key",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": 1}], "variables": {"a": 1}}],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="variables_with_sequence_key",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "state",
+                    "entity_id": "light.a",
+                    "state": "on",
+                    "sequence": [{"delay": 1}],
+                }
+            ],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="state_condition_with_sequence_key",
+        ),
+        pytest.param(
+            [{"delay": 1, "sequence": [{"delay": 1}]}],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="delay_with_sequence_key",
+        ),
+        pytest.param(
+            ["str"], "expected dictionary at '[0].parallel[0]'", id="string_branch"
+        ),
+        pytest.param(5, "expected dictionary at '[0].parallel'", id="not_a_list"),
+        pytest.param(
+            [{"foo": 1}],
+            "Unable to determine action at '[0].parallel[0]'",
+            id="unknown_action",
+        ),
+        pytest.param(
+            [{}], "Unable to determine action at '[0].parallel[0]'", id="empty_branch"
+        ),
+    ],
+)
+def test_script_parallel_branches_invalid(parallel: Any, error: str) -> None:
+    """Test the error of an invalid parallel branch has the path of the branch."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        cv.SCRIPT_SCHEMA([{"parallel": parallel}])
+    assert str(excinfo.value) == error
+
+
 def test_whitespace() -> None:
     """Test whitespace validation."""
     schema = probatio.Schema(cv.whitespace)
