@@ -203,6 +203,7 @@ DATA_CUSTOM_COMPONENTS: HassKey[
 DATA_PRELOAD_PLATFORMS: HassKey[list[str]] = HassKey("preload_platforms")
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
+MARKETPLACE_MARKER = ".marketplace"
 CUSTOM_WARNING = (
     "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
@@ -327,6 +328,7 @@ class Manifest(TypedDict, total=False):
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
+    installation_type: Literal["built_in", "marketplace", "custom"]
     overwrites_built_in: bool
     version: str
     codeowners: list[str]
@@ -546,6 +548,7 @@ async def async_get_integration_descriptions(
                 "single_config_entry", False
             ),
             "overwrites_built_in": integration.overwrites_built_in,
+            "installation_type": integration.installation_type,
         }
         custom_flows[integration_key][integration.domain] = metadata
 
@@ -915,6 +918,7 @@ class Integration:
         self._cache = hass.data[DATA_COMPONENTS]
         self._missing_platforms_cache = hass.data[DATA_MISSING_PLATFORMS]
         self._top_level_files = top_level_files or set()
+        manifest["installation_type"] = self.installation_type
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @cached_property
@@ -1088,6 +1092,21 @@ class Integration:
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
+
+    @property
+    def installation_type(self) -> Literal["built_in", "marketplace", "custom"]:
+        """Return how the integration was installed."""
+        if self.is_built_in:
+            return "built_in"
+        if MARKETPLACE_MARKER in self._top_level_files:
+            return "marketplace"
+        return "custom"
+
+    def mark_marketplace(self) -> None:
+        """Mark the integration as installed from the Marketplace."""
+        self._top_level_files.add(MARKETPLACE_MARKER)
+        self.manifest["installation_type"] = self.installation_type
+        self.__dict__.pop("manifest_json_fragment", None)
 
     @property
     def overwrites_built_in(self) -> bool:
@@ -1512,6 +1531,18 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
     if type(int_or_fut) is Integration:
         return int_or_fut
     raise IntegrationNotLoaded(domain)
+
+
+@callback
+def async_mark_marketplace_integration(hass: HomeAssistant, domain: str) -> None:
+    """Mark the resolved integrations of a domain as from the Marketplace."""
+    custom = hass.data.get(DATA_CUSTOM_COMPONENTS)
+    for integration in (
+        hass.data[DATA_INTEGRATIONS].get(domain),
+        custom.get(domain) if isinstance(custom, dict) else None,
+    ):
+        if type(integration) is Integration:
+            integration.mark_marketplace()
 
 
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:

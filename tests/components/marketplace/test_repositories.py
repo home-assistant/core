@@ -2879,6 +2879,12 @@ async def test_failed_version_lookup_ends_the_progress(
     ] == [10, False]
 
 
+INTEGRATION_FILES = [
+    "custom_components/example/.marketplace",
+    "custom_components/example/manifest.json",
+]
+
+
 def _archive_without_content(repository: str) -> bytes:
     """Return an archive that leaves the content out, like export-ignore does."""
     return _zip_bytes({f"{repository.split('/')[1]}-1.0.0/README.md": ""})
@@ -2892,7 +2898,7 @@ def _archive_without_content(repository: str) -> bytes:
             REPOSITORY_INTEGRATION,
             f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/hacs.json",
             {"status": HTTPStatus.NOT_FOUND},
-            ["custom_components/example/manifest.json"],
+            INTEGRATION_FILES,
             id="no-hacs-json",
         ),
         pytest.param(
@@ -2900,21 +2906,21 @@ def _archive_without_content(repository: str) -> bytes:
             f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0"
             "/custom_components/example/manifest.json",
             {"status": HTTPStatus.NOT_FOUND},
-            ["custom_components/example/manifest.json"],
+            INTEGRATION_FILES,
             id="no-manifest-json",
         ),
         pytest.param(
             REPOSITORY_INTEGRATION,
             f"https://github.com/{REPOSITORY_INTEGRATION}/archive/refs/tags/1.0.0.zip",
             {"content": b"not a zip archive"},
-            ["custom_components/example/manifest.json"],
+            INTEGRATION_FILES,
             id="broken-archive",
         ),
         pytest.param(
             REPOSITORY_INTEGRATION,
             f"https://github.com/{REPOSITORY_INTEGRATION}/archive/refs/tags/1.0.0.zip",
             {"content": _archive_without_content(REPOSITORY_INTEGRATION)},
-            ["custom_components/example/manifest.json"],
+            INTEGRATION_FILES,
             id="integration-not-in-archive",
         ),
         pytest.param(
@@ -2975,7 +2981,7 @@ async def test_install_from_the_catalog_archive_too_large(
 
     # The file by file download of the API path is all that is left
     assert github_api_calls(aioclient_mock)
-    assert _installed_files(config_dir) == ["custom_components/example/manifest.json"]
+    assert _installed_files(config_dir) == INTEGRATION_FILES
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -3136,9 +3142,25 @@ async def test_install_from_the_catalog_zip_release(
 
     assert not github_api_calls(aioclient_mock)
     assert _installed_files(config_dir) == [
+        "custom_components/example/.marketplace",
         "custom_components/example/__init__.py",
         "custom_components/example/manifest.json",
     ]
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_writes_the_marketplace_marker(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    config_dir: Path,
+) -> None:
+    """Test an installed integration is marked as coming from the Marketplace."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+
+    assert (await _install(hass, hass_ws_client, repository.data.id))["success"]
+
+    assert (config_dir / "custom_components/example/.marketplace").is_file()
 
 
 @pytest.mark.parametrize("github_token", [None])

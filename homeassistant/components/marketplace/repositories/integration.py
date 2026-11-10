@@ -14,11 +14,13 @@ from homeassistant import components
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.translation import async_invalidate_translations
 from homeassistant.loader import (
+    MARKETPLACE_MARKER,
     PACKAGE_CUSTOM_COMPONENTS,
     IntegrationNotLoaded,
     async_clear_custom_components_cache,
     async_get_custom_components,
     async_get_loaded_integration,
+    async_mark_marketplace_integration,
     async_mount_config_dir,
 )
 from homeassistant.util.json import json_loads_object
@@ -124,6 +126,12 @@ def _check_loadable_manifest(directory: Path, domain: str | None) -> None:
         )
 
 
+def write_marketplace_marker(directory: Path) -> None:
+    """Mark the integration as installed from the Marketplace."""
+    if directory.is_dir():
+        (directory / MARKETPLACE_MARKER).touch()
+
+
 class IntegrationRepository(Repository):
     """Integration repository."""
 
@@ -193,6 +201,10 @@ class IntegrationRepository(Repository):
         """Run post installation steps."""
         self.pending_restart = True
         found = await self.reload_custom_components()
+        await self.marketplace.hass.async_add_executor_job(
+            write_marketplace_marker, Path(self.content.path.local)
+        )
+        async_mark_marketplace_integration(self.marketplace.hass, str(self.data.domain))
         if self.data.config_flow:
             # Code new to this run is found like any other integration, code
             # the loader already knows keeps running until a restart.
