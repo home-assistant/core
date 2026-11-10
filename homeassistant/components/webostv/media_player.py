@@ -21,12 +21,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
     DOMAIN,
     LIVE_TV_APP_ID,
     LOGGER,
+    WebOsTvServiceArgument,
 )
 from .coordinator import WebOsTvConfigEntry
 from .entity import WebOsTvEntity, cmd
@@ -423,7 +423,9 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @cmd
     async def async_command(self, command: str, **kwargs: Any) -> ServiceResponse:
         """Send a command."""
-        return await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))
+        return await self._client.request(
+            command, payload=kwargs.get(WebOsTvServiceArgument.PAYLOAD)
+        )
 
     @override
     async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
