@@ -86,6 +86,11 @@
         }
       }
     },
+    "light": {
+      "motion_light": {
+        "name": "Orientation light"
+      }
+    },
     "number": {
       "bypass_timeout": {
         "name": "Break function timeout"
