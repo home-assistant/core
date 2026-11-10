@@ -6,7 +6,8 @@
       "unsupported_device": "The device on this port did not identify itself as a supported Intesis gateway."
     },
     "error": {
-      "cannot_connect": "Failed to connect: {error}"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_in_use": "The serial port is already in use with other settings. Use the same baud rate as the other devices on this line."
     },
     "step": {
       "features": {
@@ -72,7 +73,7 @@
       "message": "The gateway answered none of the register blocks."
     },
     "write_failed": {
-      "message": "The gateway did not accept the command: {error}"
+      "message": "The gateway did not accept the command."
     },
     "wrong_model": {
       "message": "The gateway on this port reports another device ID than the model this entry was set up as. Remove the entry and set the gateway up again."

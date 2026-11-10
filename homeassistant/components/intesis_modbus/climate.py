@@ -5,6 +5,7 @@ from typing import Any, Final, override
 from intesis_gw_modbus import FanSpeed, Mode, VanePosition
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -24,7 +25,7 @@ from .entity import IntesisEntity
 PARALLEL_UPDATES = 1
 
 MODE_TO_HVAC: Final = {
-    Mode.AUTO: HVACMode.AUTO,
+    Mode.AUTO: HVACMode.HEAT_COOL,
     Mode.HEAT: HVACMode.HEAT,
     Mode.DRY: HVACMode.DRY,
     Mode.FAN: HVACMode.FAN_ONLY,
@@ -141,16 +142,15 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        await self._async_write(lambda: self._async_apply_hvac_mode(hvac_mode))
+
+    async def _async_apply_hvac_mode(self, hvac_mode: HVACMode) -> None:
         if hvac_mode is HVACMode.OFF:
-            await self._async_write(lambda: self._ac.async_set_power(False))
+            await self._ac.async_set_power(False)
             return
-
-        async def _set_mode_and_power_on() -> None:
-            await self._ac.async_set_mode(HVAC_TO_MODE[hvac_mode])
-            if self._ac.power is not True:
-                await self._ac.async_set_power(True)
-
-        await self._async_write(_set_mode_and_power_on)
+        await self._ac.async_set_mode(HVAC_TO_MODE[hvac_mode])
+        # The power read at the last poll can be stale, so always turn on
+        await self._ac.async_set_power(True)
 
     @override
     async def async_turn_on(self) -> None:
@@ -173,4 +173,11 @@ class IntesisClimate(IntesisEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         temperature: float = kwargs[ATTR_TEMPERATURE]
-        await self._async_write(lambda: self._ac.async_set_setpoint(temperature))
+        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+
+        async def _set_mode_and_setpoint() -> None:
+            if hvac_mode is not None:
+                await self._async_apply_hvac_mode(hvac_mode)
+            await self._ac.async_set_setpoint(temperature)
+
+        await self._async_write(_set_mode_and_setpoint)

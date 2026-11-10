@@ -38,7 +38,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTESTINTESISSINGLE000000",
-        unique_id="/dev/ttyUSB0:1",
         data=MOCK_ENTRY_DATA,
         title="INMBSMHI001R000",
     )

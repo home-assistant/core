@@ -15,9 +15,14 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -33,6 +38,7 @@ from homeassistant.components.intesis_modbus.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -68,33 +74,6 @@ async def test_climate_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_climate_state(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """The entity reflects every register the gateway reports."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == HVACMode.HEAT
-    attrs = state.attributes
-    assert attrs["current_temperature"] == 20.3
-    assert attrs["temperature"] == 21.5
-    assert attrs["fan_mode"] == "medium"
-    assert attrs["swing_mode"] == "swing"
-    assert attrs["min_temp"] == 16
-    assert attrs["max_temp"] == 30
-    assert attrs["target_temp_step"] == 0.5
-    assert attrs["fan_modes"] == ["auto", "low", "medium", "high", "powerful"]
-    assert attrs["hvac_modes"] == ["off", "auto", "heat", "dry", "fan_only", "cool"]
-    assert attrs["swing_modes"] == [
-        "position_1",
-        "position_2",
-        "position_3",
-        "position_4",
-        "swing",
-    ]
-    assert "hvac_action" not in attrs
-
-
 async def test_fan_mode_powerful_not_offered_on_three_speed_unit(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -108,7 +87,7 @@ async def test_fan_mode_powerful_not_offered_on_three_speed_unit(
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes["fan_modes"] == ["auto", "low", "medium", "high"]
+    assert state.attributes[ATTR_FAN_MODES] == ["auto", "low", "medium", "high"]
 
 
 async def test_set_unsupported_fan_mode_raises(
@@ -183,7 +162,7 @@ async def test_set_hvac_mode_heat_while_on(
     init_integration: MockConfigEntry,
     mock_connection: MockModbusConnection,
 ) -> None:
-    """A mode change on a running unit does not rewrite the power register."""
+    """A mode change always writes power on, as the cached power can be stale."""
     writes: list[WriteEvent] = []
     mock_connection.for_unit(1).on_write(writes.append)
     await hass.services.async_call(
@@ -192,7 +171,7 @@ async def test_set_hvac_mode_heat_while_on(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.DRY},
         blocking=True,
     )
-    assert [(w.address, w.values[0]) for w in writes] == [(1, 2)]
+    assert [(w.address, w.values[0]) for w in writes] == [(1, 2), (0, 1)]
 
 
 async def test_set_temperature_fan_swing(
@@ -225,9 +204,57 @@ async def test_set_temperature_fan_swing(
     assert [(w.address, w.values[0]) for w in writes] == [(4, 245), (2, 3), (3, 2)]
     await _poll(hass, freezer)  # the refresh after a write is debounced
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes["temperature"] == 24.5
-    assert state.attributes["fan_mode"] == "high"
-    assert state.attributes["swing_mode"] == "position_2"
+    assert state.attributes[ATTR_TEMPERATURE] == 24.5
+    assert state.attributes[ATTR_FAN_MODE] == "high"
+    assert state.attributes[ATTR_SWING_MODE] == "position_2"
+
+
+async def test_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_unit: MagicMock,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A temperature sent together with a mode applies both on a unit that is off."""
+    unit = mock_connection.for_unit(1)
+    unit.holding[0] = 0
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    writes: list[WriteEvent] = []
+    unit.on_write(writes.append)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 22,
+            ATTR_HVAC_MODE: HVACMode.COOL,
+        },
+        blocking=True,
+    )
+    assert [(w.address, w.values[0]) for w in writes] == [(1, 4), (0, 1), (4, 220)]
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.COOL
+    assert state.attributes[ATTR_TEMPERATURE] == 22
+
+
+async def test_set_hvac_mode_heat_cool(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Heat/cool selects the automatic mode of the unit."""
+    writes: list[WriteEvent] = []
+    mock_connection.for_unit(1).on_write(writes.append)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        blocking=True,
+    )
+    assert [(w.address, w.values[0]) for w in writes] == [(1, 0), (0, 1)]
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT_COOL
 
 
 async def test_set_temperature_out_of_range_raises(
@@ -258,6 +285,8 @@ async def test_write_failure_raises_home_assistant_error(
             blocking=True,
         )
     assert not isinstance(err.value, ServiceValidationError)
+    assert err.value.translation_key == "write_failed"
+    assert err.value.translation_placeholders is None
 
 
 async def test_initialising_gateway_climate_unknown(
@@ -274,12 +303,12 @@ async def test_initialising_gateway_climate_unknown(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.attributes["current_temperature"] is None
-    assert state.attributes["temperature"] is None
-    assert state.attributes["min_temp"] == 16
-    assert state.attributes["max_temp"] == 30
-    assert state.attributes["fan_mode"] is None
-    assert state.attributes["swing_mode"] is None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes[ATTR_MIN_TEMP] == 16
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_FAN_MODE] is None
+    assert state.attributes[ATTR_SWING_MODE] is None
 
 
 async def test_unknown_mode_while_on_is_unknown(
@@ -344,6 +373,27 @@ async def test_control_subsystem_failing_makes_climate_unavailable(
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
+async def test_subsystem_failure_and_recovery_are_logged_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    init_integration: MockConfigEntry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """A failing block is logged when it fails and when it answers again."""
+    unit = mock_connection.for_unit(1)
+    unit.fail_read(0, IllegalDataAddressError())
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("control failed to refresh") == 1
+    assert "control is available again" not in caplog.text
+    unit.fail_read(0, None)
+    await _poll(hass, freezer)
+    await _poll(hass, freezer)
+    assert caplog.text.count("control is available again") == 1
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+
+
 async def test_every_subsystem_failing_is_an_update_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -384,7 +434,6 @@ async def test_unit_without_vane_has_no_swing(
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTESTINTESISNOVANE000000",
-        unique_id="/dev/ttyUSB0:1",
         data={**MOCK_ENTRY_DATA, CONF_HAS_VANE: False},
         title="INMBSMHI001R000",
     )
@@ -393,7 +442,9 @@ async def test_unit_without_vane_has_no_swing(
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert "swing_mode" not in state.attributes
-    assert "swing_modes" not in state.attributes
-    assert not state.attributes["supported_features"] & ClimateEntityFeature.SWING_MODE
-    assert state.attributes["fan_mode"] == "medium"
+    assert ATTR_SWING_MODE not in state.attributes
+    assert ATTR_SWING_MODES not in state.attributes
+    assert (
+        not state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.SWING_MODE
+    )
+    assert state.attributes[ATTR_FAN_MODE] == "medium"

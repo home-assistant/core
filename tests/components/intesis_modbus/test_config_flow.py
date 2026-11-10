@@ -8,6 +8,7 @@ from modbus_connection import (
     IllegalDataAddressError,
     ModbusSerialParams,
     ModbusTimeoutError,
+    ServerDeviceBusyError,
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
@@ -16,6 +17,7 @@ from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_va
 from homeassistant.components.intesis_modbus.const import (
     CONF_HAS_VANE,
     CONF_TEMPERATURE_FORMAT,
+    CONF_UNIT_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
@@ -109,7 +111,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "INMBSMHI001R000"
     assert result["data"] == MOCK_ENTRY_DATA
-    assert result["result"].unique_id == "/dev/ttyUSB0:1"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -127,7 +128,6 @@ async def test_initialising_gateway_asks_temperature_format(
     result = await _finish_features(hass, result, expected_default=False)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {**MOCK_ENTRY_DATA, CONF_TEMPERATURE_FORMAT: "celsius"}
-    assert result["result"].unique_id == "/dev/ttyUSB0:1"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -142,7 +142,6 @@ async def test_vane_at_init_value_defaults_to_no_vane(hass: HomeAssistant) -> No
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {**MOCK_ENTRY_DATA, CONF_HAS_VANE: False}
-    assert result["result"].unique_id == "/dev/ttyUSB0:1"
 
 
 @pytest.mark.parametrize(
@@ -191,6 +190,24 @@ async def test_refused_device_id_register_aborts(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_busy_gateway_can_be_retried(hass: HomeAssistant) -> None:
+    """A gateway that answers busy is a connection error, not another device."""
+    connection = _seeded()
+    connection.for_unit(1).fail_read(49, ServerDeviceBusyError())
+    with _patch_temporary_unit(connection):
+        result = await _submit_link(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+        connection.for_unit(1).fail_read(49, None)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT
+        )
+    result = await _finish_features(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == MOCK_ENTRY_DATA
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_cannot_connect(hass: HomeAssistant) -> None:
     """A silent gateway shows cannot_connect and the flow can be retried."""
     connection = _seeded()
@@ -206,7 +223,6 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_ENTRY_DATA
-    assert result["result"].unique_id == "/dev/ttyUSB0:1"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -217,7 +233,7 @@ async def test_serial_port_in_use_with_other_settings(hass: HomeAssistant) -> No
     ):
         result = await _submit_link(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "device_in_use"}
     with _patch_temporary_unit(_seeded()):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_USER_INPUT
@@ -225,7 +241,6 @@ async def test_serial_port_in_use_with_other_settings(hass: HomeAssistant) -> No
     result = await _finish_features(hass, result)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == MOCK_ENTRY_DATA
-    assert result["result"].unique_id == "/dev/ttyUSB0:1"
 
 
 async def test_duplicate_aborts(
@@ -237,3 +252,23 @@ async def test_duplicate_aborts(
         result = await _submit_link(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_second_gateway_on_same_port(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Another unit id on a port that is already set up is a new entry."""
+    mock_config_entry.add_to_hass(hass)
+    connection = MockModbusConnection()
+    seed_single_unit(connection.for_unit(2))
+    with _patch_temporary_unit(connection):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_USER_INPUT, CONF_UNIT_ID: 2}
+        )
+    result = await _finish_features(hass, result)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**MOCK_ENTRY_DATA, CONF_UNIT_ID: 2}

@@ -9,7 +9,12 @@ from intesis_gw_modbus import (
     detect_temperature_format,
     model_for_device_id,
 )
-from modbus_connection import ModbusError, ModbusExceptionError, ModbusUnit
+from modbus_connection import (
+    IllegalDataAddressError,
+    IllegalFunctionError,
+    ModbusError,
+    ModbusUnit,
+)
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -80,10 +85,10 @@ STEP_FEATURES_DATA_SCHEMA = probatio.Schema(
 
 
 async def _async_read_or_none(unit: ModbusUnit, address: int) -> int | None:
-    """Read one holding register, or None if the gateway refuses the address."""
+    """Read one holding register, or None if the gateway does not have it."""
     try:
         [value] = await unit.read_holding_registers(address, 1)
-    except ModbusExceptionError:
+    except IllegalDataAddressError, IllegalFunctionError:
         return None
     return value
 
@@ -105,12 +110,13 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for the serial link, then probe the gateway behind it."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_DEVICE]}:{user_input[CONF_UNIT_ID]}"
+            self._async_abort_entries_match(
+                {
+                    CONF_DEVICE: user_input[CONF_DEVICE],
+                    CONF_UNIT_ID: user_input[CONF_UNIT_ID],
+                }
             )
-            self._abort_if_unique_id_configured()
             try:
                 async with async_get_temporary_unit(
                     self.hass,
@@ -120,9 +126,10 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     device_id = await _async_read_or_none(unit, DEVICE_ID_REGISTER)
                     raw_setpoint = await _async_read_or_none(unit, SETPOINT_REGISTER)
                     self._raw_vane = await _async_read_or_none(unit, VANE_REGISTER)
-            except (ModbusError, HomeAssistantError) as err:
+            except HomeAssistantError:
+                errors["base"] = "device_in_use"
+            except ModbusError:
                 errors["base"] = "cannot_connect"
-                description_placeholders["error"] = str(err)
             else:
                 if (brand := KNOWN_DEVICE_IDS.get(device_id or -1)) is not None:
                     return self.async_abort(
@@ -144,7 +151,6 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
-            description_placeholders=description_placeholders,
         )
 
     async def async_step_temperature_format(

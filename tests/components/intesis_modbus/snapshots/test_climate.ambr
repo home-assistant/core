@@ -15,7 +15,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -78,7 +78,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'INMBSMHI001R000',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
-        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,

@@ -42,6 +42,7 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
+        self._failing: set[str] = set()
 
     @override
     async def _async_update_data(self) -> UpdateReport:
@@ -61,4 +62,20 @@ class IntesisCoordinator(DataUpdateCoordinator[UpdateReport]):
             ) from ExceptionGroup(
                 "every sub-system failed to refresh", list(report.failed.values())
             )
+        self._log_component_changes(report)
         return report
+
+    def _log_component_changes(self, report: UpdateReport) -> None:
+        """Log a sub-system's first failure and its recovery, once each."""
+        for name, cause in report.failed.items():
+            if name not in self._failing:
+                self._failing.add(name)
+                _LOGGER.warning(
+                    "%s: %s failed to refresh, its entities are unavailable: %s",
+                    self.name,
+                    name,
+                    cause,
+                )
+        for name in report.updated & self._failing:
+            self._failing.discard(name)
+            _LOGGER.info("%s: %s is available again", self.name, name)
