@@ -7,13 +7,17 @@ from matter_server.common.models import EventType
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.matter.adapter import get_clean_name
 from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
 from homeassistant.components.matter.helpers import get_child_device_id, get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import EVE_ENERGY_LIGHT_PART_ATTRIBUTES, create_node_from_fixture
+from .common import (
+    EVE_ENERGY_LIGHT_PART_ATTRIBUTES,
+    TAPO_STRIP_NUMBER_TAG_ATTRIBUTES,
+    create_node_from_fixture,
+    set_node_attribute,
+)
 
 
 def identifier_for(
@@ -30,7 +34,7 @@ def fire_endpoint_event(
     """Fire an endpoint added/removed event for a node endpoint."""
     callback = next(
         call.kwargs["callback"]
-        for call in matter_client.subscribe_events.call_args_list
+        for call in reversed(matter_client.subscribe_events.call_args_list)
         if call.kwargs["event_filter"] == event
     )
     callback(event, {"node_id": node.node_id, "endpoint_id": endpoint_id})
@@ -40,7 +44,7 @@ def fire_node_removed_event(matter_client: MagicMock, node: MatterNode) -> None:
     """Fire a node removed event for a node."""
     callback = next(
         call.kwargs["callback"]
-        for call in matter_client.subscribe_events.call_args_list
+        for call in reversed(matter_client.subscribe_events.call_args_list)
         if call.kwargs["event_filter"] == EventType.NODE_REMOVED
     )
     callback(EventType.NODE_REMOVED, node.node_id)
@@ -52,7 +56,7 @@ def fire_node_updated_event(matter_client: MagicMock, node: MatterNode) -> None:
     # the per-entity subscriptions that also listen for NODE_UPDATED.
     callback = next(
         call.kwargs["callback"]
-        for call in matter_client.subscribe_events.call_args_list
+        for call in reversed(matter_client.subscribe_events.call_args_list)
         if call.kwargs["event_filter"] == EventType.NODE_UPDATED
         and call.kwargs.get("node_filter") is None
     )
@@ -135,12 +139,12 @@ async def test_endpoint_child_devices(
     assert parent is not None
 
     children = dr.async_entries_for_parent_device(device_registry, parent.id)
-    assert {child.name for child in children} == {"top", "bottom"}
+    assert {child.name for child in children} == {"Top", "Bottom"}
     children_by_name = {child.name: child for child in children}
 
     for name, endpoint_id, switch_entity_id in (
-        ("top", 1, "switch.eve_energy_20ecn4101_top"),
-        ("bottom", 2, "switch.eve_energy_20ecn4101_bottom"),
+        ("Top", 1, "switch.eve_energy_20ecn4101_top"),
+        ("Bottom", 2, "switch.eve_energy_20ecn4101_bottom"),
     ):
         child = children_by_name[name]
         assert child.parent_device_id == parent.id
@@ -152,6 +156,39 @@ async def test_endpoint_child_devices(
         switch_entry = entity_registry.async_get(switch_entity_id)
         assert switch_entry is not None
         assert switch_entry.device_id == child.id
+
+
+@pytest.mark.parametrize("node_fixture", ["tp_link_smart_outdoor_plug"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "1/64/0": [{"0": "Position", "1": "Garden"}],
+            "2/64/0": [{"0": "Position", "1": "Patio"}],
+        }
+    ],
+)
+async def test_endpoint_child_devices_literal_names(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test vendor labels that aren't numbers or positions name child devices as is."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert {child.name for child in children} == {"Garden", "Patio"}
+    switch_entry = entity_registry.async_get("switch.smart_outdoor_plug_garden")
+    assert switch_entry is not None
+    assert switch_entry.device_id == next(
+        child.id for child in children if child.name == "Garden"
+    )
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
@@ -172,7 +209,7 @@ async def test_endpoint_child_device_removed(
     fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, matter_node, 1)
 
     children = dr.async_entries_for_parent_device(device_registry, parent.id)
-    assert {child.name for child in children} == {"bottom"}
+    assert {child.name for child in children} == {"Bottom"}
     # The parent node device is untouched.
     assert (
         device_registry.async_get_device_by_identifier(
@@ -250,6 +287,85 @@ async def test_endpoint_child_devices_pruned_on_setup(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_endpoint_child_devices_pruned_when_unnamed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a group that can no longer be named stops splitting on node update.
+
+    The config entry is reloaded, so the moved entities get the suffixed names
+    of endpoints that don't split.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    assert len(dr.async_entries_for_parent_device(device_registry, parent.id)) == 2
+
+    # Drop the orientation label of the bottom socket, so it can't be named.
+    set_node_attribute(matter_node, 2, 64, 0, [{"0": "id", "1": "2"}])
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    # Both child devices are pruned and both switches move to the node device.
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+    for entity_id, name in (
+        ("switch.eve_energy_20ecn4101_top", "Eve Energy 20ECN4101 Switch (top)"),
+        ("switch.eve_energy_20ecn4101_bottom", "Eve Energy 20ECN4101 Switch (2)"),
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.device_id == parent.id
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.name == name
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_endpoint_child_devices_pruned_on_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test stale child devices are pruned on setup without another reload."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entry_id = entry.entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert len(children) == 2
+    # An entity that setup doesn't add again stays on the child device until the
+    # child is pruned.
+    orphan = entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        "orphan",
+        config_entry=entry,
+        device_id=next(child.id for child in children if child.name == "Bottom"),
+    )
+
+    # Drop the orientation label of the bottom socket, so it can't be named.
+    set_node_attribute(matter_node, 2, 64, 0, [{"0": "id", "1": "2"}])
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        assert await hass.config_entries.async_reload(entry_id)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+    orphan_entry = entity_registry.async_get(orphan.entity_id)
+    assert orphan_entry is not None
+    assert orphan_entry.device_id == parent.id
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
 async def test_pruned_collapsed_child_preserves_disabled_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -277,6 +393,36 @@ async def test_pruned_collapsed_child_preserves_disabled_entities(
     assert migrated is not None
     assert migrated.device_id == parent.id
     assert migrated.disabled_by is er.RegistryEntryDisabler.USER
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_pruned_disabled_entities_dont_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test moving only disabled entities to the node device doesn't reload."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    for child in dr.async_entries_for_parent_device(device_registry, parent.id):
+        for entity_entry in er.async_entries_for_device(entity_registry, child.id):
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+
+    # Drop the orientation label of the bottom socket, so it can't be named.
+    set_node_attribute(matter_node, 2, 64, 0, [{"0": "id", "1": "2"}])
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        fire_node_updated_event(matter_client, matter_node)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
@@ -366,7 +512,7 @@ async def test_endpoint_child_device_readded_after_node_update(
     await hass.async_block_till_done()
 
     children = dr.async_entries_for_parent_device(device_registry, parent.id)
-    assert {child.name for child in children} == {"top", "bottom"}
+    assert {child.name for child in children} == {"Top", "Bottom"}
     for entity_id in (
         "switch.eve_energy_20ecn4101_top",
         "switch.eve_energy_20ecn4101_bottom",
@@ -377,10 +523,15 @@ async def test_endpoint_child_device_readded_after_node_update(
 
 
 @pytest.mark.parametrize(
-    ("node_fixture", "endpoint_id"),
+    ("node_fixture", "attributes", "endpoint_id"),
     [
-        pytest.param("eve_energy_20ecn4101", 1, id="split_endpoint"),
-        pytest.param("tapo_smart_wi_fi_power_strip", 7, id="power_topology"),
+        pytest.param("eve_energy_20ecn4101", {}, 1, id="split_endpoint"),
+        pytest.param(
+            "tapo_smart_wi_fi_power_strip",
+            TAPO_STRIP_NUMBER_TAG_ATTRIBUTES,
+            7,
+            id="power_topology",
+        ),
     ],
 )
 async def test_endpoint_added_without_placement_change_does_not_reload(
@@ -560,11 +711,12 @@ async def test_existing_endpoint_entities_move_to_child_devices(
     assert child_lock_entry.device_id == top.id
 
 
-TAPO_STRIP_SWITCH_1 = "switch.smart_wi_fi_power_strip_endpoint_1"
-TAPO_STRIP_POWER_1 = "sensor.smart_wi_fi_power_strip_endpoint_1_power"
+TAPO_STRIP_SWITCH_1 = "switch.smart_wi_fi_power_strip_channel_1"
+TAPO_STRIP_POWER_1 = "sensor.smart_wi_fi_power_strip_channel_1_power"
 
 
 @pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+@pytest.mark.parametrize("attributes", [TAPO_STRIP_NUMBER_TAG_ATTRIBUTES])
 async def test_power_topology_entities_on_measured_child_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -598,6 +750,7 @@ async def test_power_topology_entities_on_measured_child_device(
 
 
 @pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+@pytest.mark.parametrize("attributes", [TAPO_STRIP_NUMBER_TAG_ATTRIBUTES])
 async def test_power_topology_endpoint_removed_and_readded(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -636,6 +789,7 @@ async def test_power_topology_endpoint_removed_and_readded(
 
 
 @pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+@pytest.mark.parametrize("attributes", [TAPO_STRIP_NUMBER_TAG_ATTRIBUTES])
 async def test_power_topology_measured_endpoint_removed_and_readded(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -679,6 +833,7 @@ async def test_power_topology_measured_endpoint_removed_and_readded(
 
 
 @pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+@pytest.mark.parametrize("attributes", [TAPO_STRIP_NUMBER_TAG_ATTRIBUTES])
 async def test_power_topology_entities_rediscovered_when_outlet_gone(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -702,13 +857,14 @@ async def test_power_topology_entities_rediscovered_when_outlet_gone(
     await hass.async_block_till_done()
 
     power_entry = entity_registry.async_get(
-        "sensor.smart_wi_fi_power_strip_endpoint_2_power"
+        "sensor.smart_wi_fi_power_strip_channel_2_power"
     )
     assert power_entry is not None
     assert power_entry.device_id == parent.id
 
 
 @pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+@pytest.mark.parametrize("attributes", [TAPO_STRIP_NUMBER_TAG_ATTRIBUTES])
 async def test_power_topology_entities_follow_collapsed_child(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -1140,20 +1296,6 @@ async def test_device_registry_single_node_composed_device(
 ) -> None:
     """Test composed device in standalone node creates one device entry."""
     assert len(device_registry.devices) == 1
-
-
-async def test_get_clean_name() -> None:
-    """Test get_clean_name helper.
-
-    Test device names that are assigned to `null`
-    or have a trailing null char with spaces.
-    """
-    assert get_clean_name(None) is None
-    assert get_clean_name("\x00") is None
-    assert get_clean_name("   \x00") is None
-    assert get_clean_name("") is None
-    assert get_clean_name("Mock device") == "Mock device"
-    assert get_clean_name("Mock device                    \x00") == "Mock device"
 
 
 async def test_bad_node_not_crash_integration(
