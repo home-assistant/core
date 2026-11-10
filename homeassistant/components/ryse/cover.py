@@ -247,7 +247,11 @@ class RyseCoverEntity(CoverEntity):
         self._reconnect_failures += 1
         if self._reconnect_debouncer is None:
             return
-        delay = _RECONNECT_COOLDOWN * (2 ** (self._reconnect_failures - 1))
+        delay = (
+            _RECONNECT_COOLDOWN
+            if self._reconnect_failures == 1
+            else self._reconnect_debouncer.cooldown * 2
+        )
         self._reconnect_debouncer.cooldown = min(delay, _RECONNECT_COOLDOWN_MAX)
 
     def _note_reconnect_success(self) -> None:
