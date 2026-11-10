@@ -10,7 +10,7 @@ from aiohttp import ClientPayloadError
 from asyncssh.sftp import SFTPError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import get_fixture_path
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, async_get_manager
@@ -721,3 +721,13 @@ async def test_agents_download_aclosed_while_connecting(
     assert len(downloaded_files) == 1
     # One connection to find the archive, one to read it
     assert [conn.close.call_count for conn in ssh_connections] == [1, 1]
+
+
+async def test_client_sftp_not_open(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the SFTP client is not available before the connection is open."""
+    client = sftp_client.BackupAgentClient(config_entry, hass)
+
+    with pytest.raises(RuntimeError, match="The SFTP connection is not open"):
+        _ = client.sftp
