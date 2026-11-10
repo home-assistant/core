@@ -65,6 +65,7 @@ async def test_setup_fails_on_no_dir(
 
     assert not res
     assert "Folder python_scripts not found in configuration folder" in caplog.text
+    assert not hass.services.has_service(DOMAIN, "reload")
 
 
 async def test_execute_with_data(

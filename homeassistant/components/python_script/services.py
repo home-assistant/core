@@ -22,17 +22,18 @@ _LOGGER = logging.getLogger(__package__)
 CONF_FIELDS = "fields"
 
 
-def discover_scripts(hass: HomeAssistant) -> None:
+def _python_script_handler(call: ServiceCall) -> ServiceResponse:
+    """Handle python script service calls."""
+    return execute_script(call.hass, call.service, call.data, call.return_response)
+
+
+def _discover_scripts(hass: HomeAssistant) -> None:
     """Discover python scripts in folder."""
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
         return
-
-    def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
-        """Handle python script service calls."""
-        return execute_script(hass, call.service, call.data, call.return_response)
 
     existing = hass.services.services.get(DOMAIN, {}).keys()
     for existing_service in existing:
@@ -53,12 +54,10 @@ def discover_scripts(hass: HomeAssistant) -> None:
         if name.lower() == SERVICE_RELOAD:
             _LOGGER.warning("Skipping python_script '%s': name is reserved", name)
             continue
-        # Cannot be moved: action names come from the script files
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.register(
             DOMAIN,
             name,
-            python_script_service_handler,
+            _python_script_handler,
             supports_response=SupportsResponse.OPTIONAL,
         )
 
@@ -72,9 +71,10 @@ def discover_scripts(hass: HomeAssistant) -> None:
 
 def _reload_scripts_handler(call: ServiceCall) -> None:
     """Handle reload service calls."""
-    discover_scripts(call.hass)
+    _discover_scripts(call.hass)
 
 
 def setup_services(hass: HomeAssistant) -> None:
     """Register the Python script services."""
+    _discover_scripts(hass)
     hass.services.register(DOMAIN, SERVICE_RELOAD, _reload_scripts_handler)
