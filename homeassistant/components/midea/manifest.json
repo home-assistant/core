@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@chemelli74", "@rokam"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true
@@ -18,5 +19,5 @@
   "iot_class": "local_polling",
   "loggers": ["midealocal"],
   "quality_scale": "platinum",
-  "requirements": ["midea-local==15.0.0"]
+  "requirements": ["midea-local==15.1.0"]
 }

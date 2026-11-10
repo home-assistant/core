@@ -3,22 +3,27 @@
 import logging
 from typing import Any, override
 
+from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.notification import Notification
+from systembridgeconnector.models.response import Response
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
+    DOMAIN as NOTIFY_DOMAIN,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, CONF_HOST, CONF_PORT
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
@@ -28,10 +33,16 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIONS = "actions"
 ATTR_AUDIO = "audio"
+ATTR_ICON = "icon"
 ATTR_IMAGE = "image"
 ATTR_TIMEOUT = "timeout"
 
 PARALLEL_UPDATES = 0
+
+# Entries with the same hostname share a legacy action, by action name
+_LEGACY_SERVICES: HassKey[dict[str, list[SystemBridgeNotificationService]]] = HassKey(
+    f"{DOMAIN}_legacy_notify_services"
+)
 
 
 async def async_setup_entry(
@@ -48,6 +59,30 @@ async def async_setup_entry(
     )
 
 
+async def _async_send_notification(
+    coordinator: SystemBridgeDataUpdateCoordinator, notification: Notification
+) -> Response:
+    """Send a notification, raising if it isn't sent."""
+    try:
+        response = await coordinator.websocket_client.send_notification(notification)
+    except (ConnectionClosedException, ConnectionResetError) as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="send_message_failed",
+            translation_placeholders={
+                "title": coordinator.config_entry.title,
+                "host": coordinator.config_entry.data[CONF_HOST],
+            },
+        ) from e
+    if response.type == EventType.ERROR:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="notification_failed",
+            translation_placeholders={"error": response.message or ""},
+        )
+    return response
+
+
 class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
     """Representation of a notification entity."""
 
@@ -57,20 +92,12 @@ class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
-        notification = Notification(
-            message=message, title=ATTR_TITLE_DEFAULT if title is None else title
+        await _async_send_notification(
+            self.coordinator,
+            Notification(
+                message=message, title=ATTR_TITLE_DEFAULT if title is None else title
+            ),
         )
-        try:
-            await self.coordinator.websocket_client.send_notification(notification)
-        except ConnectionClosedException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="send_message_failed",
-                translation_placeholders={
-                    "title": self.coordinator.config_entry.title,
-                    "host": self.coordinator.config_entry.data[CONF_HOST],
-                },
-            ) from e
 
 
 async def async_get_service(
@@ -85,21 +112,64 @@ async def async_get_service(
     entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
         discovery_info[CONF_ENTITY_ID]
     )
-    if entry is None:
+    # Discovery can run after the entry has started to unload
+    if entry is None or entry.state not in (
+        ConfigEntryState.SETUP_IN_PROGRESS,
+        ConfigEntryState.LOADED,
+    ):
         return None
 
-    return SystemBridgeNotificationService(entry.runtime_data)
+    notification_service = SystemBridgeNotificationService(entry.runtime_data)
+    entry.async_on_unload(notification_service.async_entry_unloaded)
+    return notification_service
 
 
 class SystemBridgeNotificationService(BaseNotificationService):
     """Implement the notification service for System Bridge."""
 
-    def __init__(
-        self,
-        coordinator: SystemBridgeDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
         """Initialize the service."""
-        self._coordinator: SystemBridgeDataUpdateCoordinator = coordinator
+        self._coordinator = coordinator
+        self._owns_action = False
+        self._unloaded = False
+        # The loaded services that share this service's action name
+        self._registry: list[SystemBridgeNotificationService] | None = None
+
+    async def async_entry_unloaded(self) -> None:
+        """Remove the action with the entry, handing it to an entry that shares it."""
+        self._unloaded = True
+        if self._registry is None:
+            return
+        self._registry.remove(self)
+        if not self._owns_action:
+            return
+        await self.async_unregister_services()
+        if self._registry:
+            await self._registry[0].async_register_services()
+
+    @override
+    async def async_register_services(self) -> None:
+        """Register the action, unless the entry has unloaded or another has it."""
+        # The entry can unload while the notify platform sets this service up
+        if self._unloaded:
+            return
+        if self._registry is None:
+            self._registry = self.hass.data.setdefault(_LEGACY_SERVICES, {}).setdefault(
+                self._service_name, []
+            )
+            self._registry.append(self)
+        if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
+            return
+        self._owns_action = True
+        await super().async_register_services()
+
+    @override
+    async def async_unregister_services(self) -> None:
+        """Remove the action, only if this service registered it."""
+        if not self._owns_action:
+            return
+        self._owns_action = False
+        await super().async_unregister_services()
 
     @override
     async def async_send_message(
@@ -122,4 +192,4 @@ class SystemBridgeNotificationService(BaseNotificationService):
 
         _LOGGER.debug("Sending notification: %s", notification)
 
-        await self._coordinator.websocket_client.send_notification(notification)
+        await _async_send_notification(self._coordinator, notification)

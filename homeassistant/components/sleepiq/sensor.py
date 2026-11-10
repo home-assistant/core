@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, tzinfo
 from typing import override
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
@@ -15,8 +16,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PRESSURE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    BEDTIME,
     FALL_ASLEEP,
     HEART_RATE,
     HRV,
@@ -27,6 +30,7 @@ from .const import (
     SLEEP_DURATION,
     SLEEP_NUMBER,
     SLEEP_SCORE,
+    WAKE_TIME,
 )
 from .coordinator import (
     SleepIQConfigEntry,
@@ -40,7 +44,14 @@ from .entity import SleepIQSleeperEntity
 class SleepIQSensorEntityDescription(SensorEntityDescription):
     """Describes SleepIQ sensor entity."""
 
-    value_fn: Callable[[SleepIQSleeper], float | int | None]
+    value_fn: Callable[[SleepIQSleeper, tzinfo | None], float | int | datetime | None]
+
+
+def _session_time(value: str | None, time_zone: tzinfo | None) -> datetime | None:
+    """Return a session time, which the API reports in the bed's local time."""
+    if not value or time_zone is None:
+        return None
+    return datetime.fromisoformat(value).replace(tzinfo=time_zone)
 
 
 BED_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
@@ -48,13 +59,13 @@ BED_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         key=PRESSURE,
         translation_key="pressure",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda sleeper: sleeper.pressure,
+        value_fn=lambda sleeper, time_zone: sleeper.pressure,
     ),
     SleepIQSensorEntityDescription(
         key=SLEEP_NUMBER,
         translation_key="sleep_number",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda sleeper: sleeper.sleep_number,
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_number,
     ),
 )
 
@@ -64,9 +75,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         translation_key="sleep_score",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="score",
-        value_fn=lambda sleeper: (
-            sleeper.sleep_data.sleep_score if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.sleep_score,
     ),
     SleepIQSensorEntityDescription(
         key=SLEEP_DURATION,
@@ -75,9 +84,9 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
         suggested_display_precision=1,
-        value_fn=lambda sleeper: (
+        value_fn=lambda sleeper, time_zone: (
             round(sleeper.sleep_data.duration / 3600, 1)
-            if sleeper.sleep_data and sleeper.sleep_data.duration
+            if sleeper.sleep_data.duration
             else None
         ),
     ),
@@ -86,18 +95,14 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         translation_key="heart_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="bpm",
-        value_fn=lambda sleeper: (
-            sleeper.sleep_data.heart_rate if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.heart_rate,
     ),
     SleepIQSensorEntityDescription(
         key=RESPIRATORY_RATE,
         translation_key="respiratory_rate_avg",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="brpm",
-        value_fn=lambda sleeper: (
-            sleeper.sleep_data.respiratory_rate if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.respiratory_rate,
     ),
     SleepIQSensorEntityDescription(
         key=HRV,
@@ -105,7 +110,23 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        value_fn=lambda sleeper: sleeper.sleep_data.hrv if sleeper.sleep_data else None,
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.hrv,
+    ),
+    SleepIQSensorEntityDescription(
+        key=BEDTIME,
+        translation_key="bedtime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda sleeper, time_zone: _session_time(
+            sleeper.sleep_data.start_date, time_zone
+        ),
+    ),
+    SleepIQSensorEntityDescription(
+        key=WAKE_TIME,
+        translation_key="wake_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda sleeper, time_zone: _session_time(
+            sleeper.sleep_data.end_date, time_zone
+        ),
     ),
     SleepIQSensorEntityDescription(
         key=RESTFUL,
@@ -115,9 +136,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
-        value_fn=lambda sleeper: (
-            sleeper.sleep_data.restful if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.restful,
     ),
     SleepIQSensorEntityDescription(
         key=RESTLESS,
@@ -127,9 +146,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
-        value_fn=lambda sleeper: (
-            sleeper.sleep_data.restless if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.restless,
     ),
     SleepIQSensorEntityDescription(
         key=OUT_OF_BED,
@@ -139,9 +156,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
-        value_fn=lambda sleeper: (
-            sleeper.sleep_data.out_of_bed if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.out_of_bed,
     ),
     SleepIQSensorEntityDescription(
         key=FALL_ASLEEP,
@@ -151,9 +166,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
-        value_fn=lambda sleeper: (
-            sleeper.sleep_data.fall_asleep_period if sleeper.sleep_data else None
-        ),
+        value_fn=lambda sleeper, time_zone: sleeper.sleep_data.fall_asleep_period,
     ),
 )
 
@@ -165,18 +178,33 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SleepIQ bed sensors."""
     data = entry.runtime_data
+    # Resolved here because loading an uncached zone reads files.
+    time_zones = {
+        bed.id: await dt_util.async_get_time_zone(bed.timezone)
+        if bed.timezone
+        else None
+        for bed in data.client.beds.values()
+    }
 
     entities: list[SensorEntity] = []
 
     entities.extend(
-        SleepIQSensorEntity(data.data_coordinator, bed, sleeper, description)
+        SleepIQSensorEntity(
+            data.data_coordinator, bed, sleeper, description, time_zones[bed.id]
+        )
         for bed in data.client.beds.values()
         for sleeper in bed.sleepers
         for description in BED_SENSORS
     )
 
     entities.extend(
-        SleepIQSensorEntity(data.sleep_data_coordinator, bed, sleeper, description)
+        SleepIQSensorEntity(
+            data.sleep_data_coordinator,
+            bed,
+            sleeper,
+            description,
+            time_zones[bed.id],
+        )
         for bed in data.client.beds.values()
         for sleeper in bed.sleepers
         for description in SLEEP_HEALTH_SENSORS
@@ -201,13 +229,17 @@ class SleepIQSensorEntity(
         bed: SleepIQBed,
         sleeper: SleepIQSleeper,
         description: SleepIQSensorEntityDescription,
+        time_zone: tzinfo | None,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        self._time_zone = time_zone
         super().__init__(coordinator, bed, sleeper, description.key)
 
     @callback
     @override
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
-        self._attr_native_value = self.entity_description.value_fn(self.sleeper)
+        self._attr_native_value = self.entity_description.value_fn(
+            self.sleeper, self._time_zone
+        )

@@ -77,7 +77,9 @@ async def test_upload(
 ) -> None:
     """Test upload backup."""
     assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    # The config entry is set up from a background discovery flow; wait for it so
+    # loading its platforms' manifests doesn't hit the Path.open patch below.
+    await hass.async_block_till_done(wait_background_tasks=True)
     client = await hass_client()
     open_mock = mock_open()
 

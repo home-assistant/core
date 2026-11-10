@@ -5,6 +5,7 @@
   "categories": ["ai_voice.ai_models", "ai_voice.speech"],
   "codeowners": ["@Shulyaka"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/openai_conversation",
   "integration_type": "service",

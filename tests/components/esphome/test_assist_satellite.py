@@ -24,13 +24,13 @@ from aioesphomeapi import (
 import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components import (
-    assist_pipeline,
-    assist_satellite,
-    conversation,
-    tts,
+from homeassistant.components import assist_pipeline, assist_satellite, conversation
+from homeassistant.components.assist_pipeline import (
+    AudioSettings,
+    PipelineEvent,
+    PipelineEventType,
+    VadSensitivity,
 )
-from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_pipeline.pipeline import KEY_ASSIST_PIPELINE  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -46,6 +46,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
@@ -1012,24 +1013,26 @@ async def test_tts_format_from_media_player(
 
         # Should be ANNOUNCEMENT format from media player
         assert kwargs.get("tts_audio_output") == {
-            tts.ATTR_PREFERRED_FORMAT: "mp3",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            TextToSpeechCommonOption.PREFERRED_FORMAT: "mp3",
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 22050,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
+            TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
         }
 
 
 @pytest.mark.parametrize(
     ("sample_rate", "num_channels", "sample_bytes", "tts_audio_output"),
     [
-        pytest.param(0, 0, 0, {tts.ATTR_PREFERRED_FORMAT: "mp3"}, id="codec_only"),
+        pytest.param(
+            0, 0, 0, {TextToSpeechCommonOption.PREFERRED_FORMAT: "mp3"}, id="codec_only"
+        ),
         pytest.param(
             48000,
             0,
             0,
             {
-                tts.ATTR_PREFERRED_FORMAT: "mp3",
-                tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
+                TextToSpeechCommonOption.PREFERRED_FORMAT: "mp3",
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE: 48000,
             },
             id="rate_only",
         ),
@@ -1038,9 +1041,9 @@ async def test_tts_format_from_media_player(
             1,
             2,
             {
-                tts.ATTR_PREFERRED_FORMAT: "mp3",
-                tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-                tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+                TextToSpeechCommonOption.PREFERRED_FORMAT: "mp3",
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS: 1,
+                TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES: 2,
             },
             id="channels_and_width_only",
         ),
@@ -1110,6 +1113,47 @@ async def test_tts_partial_format_from_media_player(
 
         # Should be ANNOUNCEMENT format from media player
         assert kwargs.get("tts_audio_output") == tts_audio_output
+
+
+async def test_pipeline_audio_settings(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test audio settings from the device are passed to the pipeline."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+    ) as mock_pipeline_from_audio_stream:
+        await satellite.handle_pipeline_start(
+            conversation_id="",
+            flags=0,
+            audio_settings=VoiceAssistantAudioSettings(
+                noise_suppression_level=3, auto_gain=20, volume_multiplier=2.0
+            ),
+            wake_word_phrase=None,
+        )
+        await hass.async_block_till_done()
+
+    mock_pipeline_from_audio_stream.assert_called_once()
+    assert mock_pipeline_from_audio_stream.call_args.kwargs[
+        "audio_settings"
+    ] == AudioSettings(
+        noise_suppression_level=3,
+        auto_gain_dbfs=20,
+        volume_multiplier=2.0,
+        silence_seconds=VadSensitivity.to_seconds(VadSensitivity.DEFAULT),
+    )
 
 
 async def test_announce_message(

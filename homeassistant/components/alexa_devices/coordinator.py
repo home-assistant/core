@@ -38,6 +38,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
@@ -147,7 +148,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_PASSWORD],
             login_data=entry.data[CONF_LOGIN_DATA],
             save_data=AmazonSaveDataConfig(
-                path=Path(hass.config.path(DOMAIN)),
+                path=Path(hass.config.path(STORAGE_DIR, DOMAIN)),
             ),
         )
         device_registry = dr.async_get(hass)

@@ -48,6 +48,20 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "call_for_heat": {
+        "name": "Call for heat"
+      },
+      "schedule_override_active": {
+        "name": "Schedule override active"
+      },
+      "summer_mode": {
+        "name": "Heating break"
+      },
+      "ventilation_mode": {
+        "name": "Sustainable ventilation"
+      }
+    },
     "button": {
       "reset_tamper": {
         "name": "Reset tamper"
@@ -75,6 +89,9 @@
     "number": {
       "bypass_timeout": {
         "name": "Break function timeout"
+      },
+      "dimmer_speed": {
+        "name": "Dimming speed"
       },
       "display_brightness": {
         "name": "Display brightness"
@@ -105,6 +122,13 @@
           "normally_closed": "Normally closed",
           "normally_open": "Normally open",
           "unsupported": "Unsupported"
+        }
+      },
+      "dimmer_phase_control": {
+        "name": "Dimmer phase control",
+        "state": {
+          "leading": "Leading edge phase cut",
+          "trailing": "Trailing edge phase cut"
         }
       },
       "display_direction": {
@@ -251,6 +275,28 @@
       },
       "purity_rating": {
         "name": "Purity rating"
+      },
+      "siren_battery": {
+        "name": "Siren battery"
+      },
+      "siren_main_power": {
+        "name": "Siren power source",
+        "state": {
+          "battery": "Battery",
+          "solar": "Solar",
+          "unknown": "Unknown",
+          "v12": "12 V",
+          "v230": "230 V"
+        }
+      },
+      "siren_solar_charging": {
+        "name": "Siren solar charging",
+        "state": {
+          "bad": "Bad",
+          "good": "Good",
+          "medium": "Medium",
+          "unknown": "Unknown"
+        }
       },
       "temperature_rating": {
         "name": "Temperature rating"

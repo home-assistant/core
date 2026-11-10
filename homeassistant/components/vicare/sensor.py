@@ -61,6 +61,7 @@ from .utils import (
     get_condensers,
     get_evaporators,
     get_inverters,
+    get_rooms,
     is_supported,
     normalize_state,
 )
@@ -104,6 +105,23 @@ SUPPLY_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     )
+)
+
+
+ROOM_TEMPERATURE_SENSOR: ViCareSensorEntityDescription = ViCareSensorEntityDescription(
+    key="room_temperature",
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_getter=lambda api: api.getTemperature(),
+)
+
+ROOM_HUMIDITY_SENSOR: ViCareSensorEntityDescription = ViCareSensorEntityDescription(
+    key="room_humidity",
+    device_class=SensorDeviceClass.HUMIDITY,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_getter=lambda api: api.getHumidity(),
 )
 
 
@@ -981,13 +999,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         options=["ready", "production"],
         value_getter=lambda api: filter_state(api.getPhotovoltaicStatus()),
     ),
-    ViCareSensorEntityDescription(
-        key="room_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_getter=lambda api: api.getTemperature(),
-    ),
+    ROOM_TEMPERATURE_SENSOR,
     ViCareSensorEntityDescription(
         key="target_temperature",
         translation_key="target_temperature",
@@ -996,13 +1008,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getTargetTemperature(),
     ),
-    ViCareSensorEntityDescription(
-        key="room_humidity",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_getter=lambda api: api.getHumidity(),
-    ),
+    ROOM_HUMIDITY_SENSOR,
     ViCareSensorEntityDescription(
         key="ventilation_level",
         translation_key="ventilation_level",
@@ -1071,6 +1077,26 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="heating_rod_hours",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHeatingRodHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_runtime_level_one",
+        translation_key="heating_rod_runtime_level_one",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_getter=lambda api: api.getHeatingRodRuntimeLevelOne(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_runtime_level_two",
+        translation_key="heating_rod_runtime_level_two",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value_getter=lambda api: api.getHeatingRodRuntimeLevelTwo(),
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -1362,6 +1388,37 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
         value_getter=lambda api: _to_date(api.getHolidayAtHomeEnd()),
     ),
+    ViCareSensorEntityDescription(
+        key="salt_supply",
+        translation_key="salt_supply",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        value_getter=lambda api: api.getSaltDaysRemaining(),
+    ),
+    ViCareSensorEntityDescription(
+        key="water_consumption_total",
+        translation_key="water_consumption_total",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        value_getter=lambda api: api.getTotalConsumption(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="water_consumption_today",
+        translation_key="water_consumption_today",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        value_getter=lambda api: api.getCurrentDayConsumption(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="water_flow",
+        translation_key="water_flow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        value_getter=lambda api: api.getCurrentFlow(),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -1594,6 +1651,11 @@ INVERTER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
 )
 
+ROOM_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ROOM_TEMPERATURE_SENSOR,
+    ROOM_HUMIDITY_SENSOR,
+)
+
 
 def _build_entities(
     device_list: list[ViCareDevice],
@@ -1636,6 +1698,7 @@ def _build_entities(
             (get_condensers(device.api), CONDENSER_SENSORS),
             (get_evaporators(device.api), EVAPORATOR_SENSORS),
             (get_inverters(device.api), INVERTER_SENSORS),
+            (get_rooms(device.api), ROOM_SENSORS),
         ):
             entities.extend(
                 ViCareSensor(

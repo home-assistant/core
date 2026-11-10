@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .base import MarketplaceConfigEntry
 from .const import CONF_WARNING_ACCEPTED
+from .profiles import Endpoint
 
 
 async def async_get_config_entry_diagnostics(
@@ -26,6 +27,16 @@ async def async_get_config_entry_diagnostics(
             "version": marketplace.version,
             "disabled_reason": marketplace.system.disabled_reason,
             "github_connected": marketplace.github_connected,
+            "download_profile": {
+                "id": marketplace.endpoints.profile.id,
+                "endpoints": {
+                    "api": [marketplace.endpoints.profile.api],
+                    **{
+                        endpoint: marketplace.endpoints.bases(endpoint)
+                        for endpoint in Endpoint
+                    },
+                },
+            },
             "warning_accepted_users": len(warning_acceptances),
             "warning_last_accepted_at": (
                 max(warning_acceptances.values()).isoformat()

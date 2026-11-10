@@ -63,6 +63,7 @@ def mock_bed() -> MagicMock:
     bed.id = BED_ID
     bed.mac_addr = "12:34:56:78:AB:CD"
     bed.model = "C10"
+    bed.timezone = "America/Chicago"
     bed.paused = False
     sleeper_l = create_autospec(SleepIQSleeper)
     sleeper_r = create_autospec(SleepIQSleeper)
@@ -72,6 +73,7 @@ def mock_bed() -> MagicMock:
     sleeper_l.name = SLEEPER_L_NAME
     sleeper_l.in_bed = True
     sleeper_l.sleep_number = 40
+    sleeper_l.fav_sleep_number = 50
     sleeper_l.pressure = 1000
     sleeper_l.sleeper_id = SLEEPER_L_ID
     sleeper_l.sleep_data = SleepData(
@@ -84,12 +86,15 @@ def mock_bed() -> MagicMock:
         restless=1500,
         out_of_bed=300,
         fall_asleep_period=600,
+        start_date="2026-01-15T22:30:00",
+        end_date="2026-01-16T06:45:00",
     )
 
     sleeper_r.side = Side.RIGHT
     sleeper_r.name = SLEEPER_R_NAME
     sleeper_r.in_bed = False
     sleeper_r.sleep_number = 80
+    sleeper_r.fav_sleep_number = 65
     sleeper_r.pressure = 1400
     sleeper_r.sleeper_id = SLEEPER_R_ID
     sleeper_r.sleep_data = SleepData(
@@ -102,9 +107,21 @@ def mock_bed() -> MagicMock:
         restless=2700,
         out_of_bed=120,
         fall_asleep_period=1200,
+        start_date="2026-01-15T23:10:00",
+        end_date="2026-01-16T06:50:00",
     )
 
     bed.foundation = create_autospec(SleepIQFoundation)
+    bed.foundation.type = "splitKing"
+    bed.foundation.features = {
+        "boardIsASingle": False,
+        "hasMassageAndLight": False,
+        "hasFootControl": False,
+        "hasFootWarming": True,
+        "hasUnderbedLight": True,
+        "leftUnderbedLightPMW": False,
+        "rightUnderbedLightPMW": False,
+    }
     light_1 = create_autospec(SleepIQLight)
     light_1.outlet_id = 1
     light_1.is_on = False

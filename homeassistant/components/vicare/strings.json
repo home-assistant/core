@@ -21,6 +21,11 @@
       }
     }
   },
+  "device": {
+    "room": {
+      "name": "Room {room}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "burner": {
@@ -34,6 +39,9 @@
       },
       "compressor": {
         "name": "Compressor"
+      },
+      "condensation_risk": {
+        "name": "Condensation risk"
       },
       "domestic_hot_water_charging": {
         "name": "DHW charging"
@@ -156,6 +164,20 @@
           "efficient": "Efficient",
           "efficient_with_min_comfort": "Efficient with minimum comfort",
           "off": "[%key:common::state::off%]"
+        }
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "cooling": "[%key:component::vicare::entity::sensor::active_mode::state::cooling%]",
+          "dhw": "DHW only",
+          "dhw_and_heating": "DHW and heating",
+          "dhw_and_heating_cooling": "DHW, heating and cooling",
+          "forced_normal": "Permanently normal",
+          "forced_reduced": "Permanently reduced",
+          "heating": "[%key:component::vicare::entity::sensor::active_mode::state::heating%]",
+          "heating_cooling": "Heating and cooling",
+          "standby": "[%key:common::state::standby%]"
         }
       }
     },
@@ -448,6 +470,12 @@
       "heating_rod_hours": {
         "name": "Heating rod hours"
       },
+      "heating_rod_runtime_level_one": {
+        "name": "Heating rod runtime level 1"
+      },
+      "heating_rod_runtime_level_two": {
+        "name": "Heating rod runtime level 2"
+      },
       "heating_rod_starts": {
         "name": "Heating rod starts"
       },
@@ -596,6 +624,9 @@
       "return_temperature": {
         "name": "Return temperature"
       },
+      "salt_supply": {
+        "name": "Salt supply"
+      },
       "secondary_circuit_return_temperature": {
         "name": "Secondary circuit return temperature"
       },
@@ -683,6 +714,15 @@
       },
       "volumetric_flow": {
         "name": "Volumetric flow"
+      },
+      "water_consumption_today": {
+        "name": "Water consumption today"
+      },
+      "water_consumption_total": {
+        "name": "Water consumption"
+      },
+      "water_flow": {
+        "name": "Water flow"
       },
       "zigbee_signal_strength": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"

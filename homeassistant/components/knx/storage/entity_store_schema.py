@@ -11,14 +11,8 @@ from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.number import (
-    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
-    NumberMode,
-)
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
-    SensorDeviceClass,
-)
+from homeassistant.components.number import NumberMode
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -45,8 +39,8 @@ from ..validation import (
     validate_number_attributes,
     validate_sensor_attributes,
 )
+from . import dpa
 from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
-from .dpa import FB417, FB418, FB422, FB423, FB427, FB800
 from .knx_selector import (
     AllSerializeFirst,
     GroupAddressConfig,
@@ -221,16 +215,16 @@ class CoverKnxConfig:
 
     ga_up_down: Annotated[
         GroupAddressConfig | None,
-        ga(state=False, valid_dpt="1", dpa_write=[FB800.MOVE_UP_DOWN]),
+        ga(state=False, valid_dpt="1", dpa_write=[dpa.FB800.MOVE_UP_DOWN]),
     ] = None
     invert_updown: Annotated[bool, selector.BooleanSelector()] = False
     ga_stop: Annotated[
         GroupAddressConfig | None,
-        ga(state=False, valid_dpt="1", dpa_write=[FB800.DEDICATED_STOP]),
+        ga(state=False, valid_dpt="1", dpa_write=[dpa.FB800.DEDICATED_STOP]),
     ] = None
     ga_step: Annotated[
         GroupAddressConfig | None,
-        ga(state=False, valid_dpt="1", dpa_write=[FB800.STOP_STEP_UP_DOWN]),
+        ga(state=False, valid_dpt="1", dpa_write=[dpa.FB800.STOP_STEP_UP_DOWN]),
     ] = None
     section_position_control: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -238,7 +232,9 @@ class CoverKnxConfig:
     ga_position_set: Annotated[
         GroupAddressConfig | None,
         ga(
-            state=False, valid_dpt="5.001", dpa_write=[FB800.SET_ABS_POS_BLINDS_PERCENT]
+            state=False,
+            valid_dpt="5.001",
+            dpa_write=[dpa.FB800.SET_ABS_POS_BLINDS_PERCENT],
         ),
     ] = None
     ga_position_state: Annotated[
@@ -246,7 +242,7 @@ class CoverKnxConfig:
         ga(
             write=False,
             valid_dpt="5.001",
-            dpa_state=[FB800.CURRENT_ABS_POS_BLINDS_PERCENT],
+            dpa_state=[dpa.FB800.CURRENT_ABS_POS_BLINDS_PERCENT],
         ),
     ] = None
     invert_position: Annotated[bool, selector.BooleanSelector()] = False
@@ -257,8 +253,8 @@ class CoverKnxConfig:
         GroupAddressConfig | None,
         ga(
             valid_dpt="5.001",
-            dpa_write=[FB800.SET_ABS_POS_SLATS_PERCENT],
-            dpa_state=[FB800.CURRENT_ABS_POS_SLATS_PERCENT],
+            dpa_write=[dpa.FB800.SET_ABS_POS_SLATS_PERCENT],
+            dpa_state=[dpa.FB800.CURRENT_ABS_POS_SLATS_PERCENT],
         ),
     ] = None
     invert_angle: Annotated[bool, selector.BooleanSelector()] = False
@@ -322,7 +318,15 @@ DATETIME_KNX_SCHEMA = probatio.DataclassSchema(DatetimeKnxConfig)
 class FanSpeedPercentage:
     """Fan speed controlled in percent."""
 
-    ga_speed: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="5.001")]
+    ga_speed: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[dpa.FB372.ACT_TARGET_FAN_SPEED],
+            dpa_state=[dpa.FB372.ACT_CURR_FAN_SPEED],
+        ),
+    ]
 
 
 @dataclass(kw_only=True, slots=True)
@@ -402,14 +406,14 @@ class LightColorSingleAddress:
             write_required=True,
             dpt=LightColorMode,
             dpa_write=[
-                FB422.COLOUR_SET_XYY,
-                FB423.COLOUR_SET_RGB,
-                FB423.COLOUR_SET_RGBW,
+                dpa.FB422.COLOUR_SET_XYY,
+                dpa.FB423.COLOUR_SET_RGB,
+                dpa.FB423.COLOUR_SET_RGBW,
             ],
             dpa_state=[
-                FB422.CURRENT_COLOUR_XYY,
-                FB423.CURRENT_COLOUR_RGB,
-                FB423.CURRENT_COLOUR_RGBW,
+                dpa.FB422.CURRENT_COLOUR_XYY,
+                dpa.FB423.CURRENT_COLOUR_RGB,
+                dpa.FB423.CURRENT_COLOUR_RGBW,
             ],
         ),
     ] = None
@@ -421,54 +425,68 @@ class LightColorIndividualAddresses:
 
     ga_red_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_RED]),
+        ga(
+            write_required=False, valid_dpt="1", dpa_write=[dpa.FB423.SWITCH_ON_OFF_RED]
+        ),
     ] = None
     ga_red_brightness: Annotated[
         GroupAddressConfig,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_RED],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_RED],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_RED],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_RED],
         ),
     ]
     ga_green_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_GREEN]),
+        ga(
+            write_required=False,
+            valid_dpt="1",
+            dpa_write=[dpa.FB423.SWITCH_ON_OFF_GREEN],
+        ),
     ] = None
     ga_green_brightness: Annotated[
         GroupAddressConfig,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_GREEN],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_GREEN],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_GREEN],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_GREEN],
         ),
     ]
     ga_blue_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_BLUE]),
+        ga(
+            write_required=False,
+            valid_dpt="1",
+            dpa_write=[dpa.FB423.SWITCH_ON_OFF_BLUE],
+        ),
     ] = None
     ga_blue_brightness: Annotated[
         GroupAddressConfig,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_BLUE],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_BLUE],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_BLUE],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_BLUE],
         ),
     ]
     ga_white_switch: Annotated[
         GroupAddressConfig | None,
-        ga(write_required=False, valid_dpt="1", dpa_write=[FB423.SWITCH_ON_OFF_WHITE]),
+        ga(
+            write_required=False,
+            valid_dpt="1",
+            dpa_write=[dpa.FB423.SWITCH_ON_OFF_WHITE],
+        ),
     ] = None
     ga_white_brightness: Annotated[
         GroupAddressConfig | None,
         ga(
             write_required=True,
             valid_dpt="5.001",
-            dpa_write=[FB423.ABS_SETVALUE_CONTROL_WHITE],
-            dpa_state=[FB423.ACTUAL_DIMMING_VALUE_WHITE],
+            dpa_write=[dpa.FB423.ABS_SETVALUE_CONTROL_WHITE],
+            dpa_state=[dpa.FB423.ACTUAL_DIMMING_VALUE_WHITE],
         ),
     ] = None
 
@@ -498,18 +516,18 @@ class LightKnxConfig:
             write_required=True,
             valid_dpt="1",
             dpa_write=[
-                FB417.SWITCH_ON_OFF,
-                FB418.SWITCH_ON_OFF,
-                FB422.SWITCH_ON_OFF,
-                FB423.COMBINED_SWITCH_ON_OFF,
-                FB427.SWITCH_ON_OFF,
+                dpa.FB417.SWITCH_ON_OFF,
+                dpa.FB418.SWITCH_ON_OFF,
+                dpa.FB422.SWITCH_ON_OFF,
+                dpa.FB423.COMBINED_SWITCH_ON_OFF,
+                dpa.FB427.SWITCH_ON_OFF,
             ],
             dpa_state=[
-                FB417.INFO_ON_OFF,
-                FB418.INFO_ON_OFF,
-                FB422.INFO_ON_OFF,
-                FB423.COMBINED_INFO_ON_OFF,
-                FB427.INFO_ON_OFF,
+                dpa.FB417.INFO_ON_OFF,
+                dpa.FB418.INFO_ON_OFF,
+                dpa.FB422.INFO_ON_OFF,
+                dpa.FB423.COMBINED_INFO_ON_OFF,
+                dpa.FB427.INFO_ON_OFF,
             ],
         ),
     ] = None
@@ -519,14 +537,14 @@ class LightKnxConfig:
             write_required=True,
             valid_dpt="5.001",
             dpa_write=[
-                FB418.ABS_SETVALUE_CONTROL,
-                FB422.ABS_SETVALUE_CONTROL,
-                FB427.ABS_SETVALUE_CONTROL,
+                dpa.FB418.ABS_SETVALUE_CONTROL,
+                dpa.FB422.ABS_SETVALUE_CONTROL,
+                dpa.FB427.ABS_SETVALUE_CONTROL,
             ],
             dpa_state=[
-                FB418.ACTUAL_DIMMING_VALUE,
-                FB422.ACTUAL_DIMMING_VALUE,
-                FB427.ACTUAL_DIMMING_VALUE,
+                dpa.FB418.ACTUAL_DIMMING_VALUE,
+                dpa.FB422.ACTUAL_DIMMING_VALUE,
+                dpa.FB427.ACTUAL_DIMMING_VALUE,
             ],
         ),
     ] = None
@@ -538,8 +556,8 @@ class LightKnxConfig:
         ga(
             write_required=True,
             dpt=ColorTempModes,
-            dpa_write=[FB427.ABS_COLOUR_TEMPERATURE_CONTROL],
-            dpa_state=[FB427.CURRENT_COLOUR_TEMPERATURE],
+            dpa_write=[dpa.FB427.ABS_COLOUR_TEMPERATURE_CONTROL],
+            dpa_state=[dpa.FB427.CURRENT_COLOUR_TEMPERATURE],
         ),
     ] = None
     color_temp_min: Annotated[
@@ -641,30 +659,21 @@ class NumberKnxConfig:
             )
         ),
     ] = None
-    unit_of_measurement: Annotated[
-        str | None,
-        probatio.Maybe(
-            selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=sorted(
-                        {
-                            str(unit)
-                            for units in NUMBER_DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    custom_value=True,
-                ),
-            )
-        ),
-    ] = None
     device_class: Annotated[
         str | None,
         probatio.Maybe(
             selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.NUMBER)
+            )
+        ),
+    ] = None
+    unit_of_measurement: Annotated[
+        str | None,
+        probatio.Maybe(
+            selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={"filter_device_class": "device_class"}
+                ),
             )
         ),
     ] = None
@@ -890,8 +899,8 @@ class SwitchKnxConfig:
         ga(
             write_required=True,
             valid_dpt="1",
-            dpa_write=[FB417.SWITCH_ON_OFF],
-            dpa_state=[FB417.INFO_ON_OFF],
+            dpa_write=[dpa.FB417.SWITCH_ON_OFF],
+            dpa_state=[dpa.FB417.INFO_ON_OFF],
         ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
@@ -1153,19 +1162,12 @@ class SensorKnxConfig:
     unit_of_measurement: Annotated[
         str | None,
         probatio.Maybe(
-            selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=sorted(
-                        {
-                            str(unit)
-                            for units in SENSOR_DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="component.knx.selector.sensor_unit_of_measurement",
-                    custom_value=True,
+            selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={
+                        "filter_device_class": "device_class",
+                        "filter_state_class": "state_class",
+                    }
                 ),
             )
         ),

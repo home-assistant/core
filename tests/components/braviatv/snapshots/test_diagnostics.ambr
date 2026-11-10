@@ -3,7 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'host': 'localhost',
+        'host': 'bravia-host',
         'mac': '**REDACTED**',
         'pin': '**REDACTED**',
         'use_psk': True,
@@ -37,7 +37,10 @@
       'region': 'XEU',
       'serial': 'serial_number',
     }),
-    'remote_command_list': list([
-    ]),
+    'remote_command_list': dict({
+      'Num1': 'AAAAAQAAAAEAAAAAAw==',
+      'Power': 'AAAAAQAAAAEAAAAVAw==',
+      'VolumeUp': 'AAAAAQAAAAEAAAASAw==',
+    }),
   })
 # ---

@@ -39,6 +39,7 @@ class LuciCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=SCAN_INTERVAL,
         )
         self.router = router
+        self.tracked_macs: set[str] = set()
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:

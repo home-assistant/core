@@ -43,10 +43,20 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in HpDeviceStatus],
+        # The printer's own "unknown" status maps to Home Assistant's unknown state.
+        options=[
+            status.value
+            for status in HpDeviceStatus
+            if status is not HpDeviceStatus.UNKNOWN
+        ],
         # Unknown statuses are reported as None, which must not hide the sensor.
         always_create=True,
-        value_fn=lambda data: data.status.status if data.status else None,
+        value_fn=lambda data: (
+            status
+            if data.status
+            and (status := data.status.status) is not HpDeviceStatus.UNKNOWN
+            else None
+        ),
     ),
     HpPrinterSensorEntityDescription(
         key="total_pages",

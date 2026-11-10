@@ -5,6 +5,7 @@
   "categories": ["finance"],
   "codeowners": ["@jakemartin-icl"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/monzo",
   "integration_type": "service",

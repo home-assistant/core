@@ -1,6 +1,7 @@
 """Tests for TP-Link Omada sensor entities."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -133,3 +134,65 @@ async def _remove_test_device(
 
     mock_omada_site_client.get_devices.reset_mock()
     mock_omada_site_client.get_devices.return_value = devices
+
+
+async def test_gateway_port_disappears_from_port_status_becomes_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    mock_omada_site_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a port vanishing from port_status makes its sensor unavailable."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "binary_sensor.test_router_port_1_lan_status"
+    assert hass.states.get(entity_id) is not None
+
+    # The gateway reboots and reports one fewer port in portStats
+    gateway = mock_omada_site_client.get_gateway.return_value
+    gateway.raw_data["portStats"] = [
+        p for p in gateway.raw_data["portStats"] if p.get("port") != 1
+    ]
+
+    with caplog.at_level(logging.ERROR):
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The port 1 sensor exists and becomes unavailable, without errors from
+    # the gateway coordinator
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "unavailable"
+    errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
+    assert not any("Omada API Data - Gateway" in msg for msg in errors)
+
+
+async def test_gateway_disappearing_from_coordinator_is_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test the gateway vanishing from coordinator data makes its sensors unavailable."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = "binary_sensor.test_router_port_1_lan_status"
+    assert hass.states.get(entity_id) is not None
+
+    # The controller stops reporting the gateway at all, so the sensor must
+    # become unavailable instead of raising KeyError on the coordinator data.
+    gateway_coordinator = mock_config_entry.runtime_data.gateway_coordinator
+    assert gateway_coordinator is not None
+    gateway_coordinator.async_set_updated_data({})
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "unavailable"

@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "bedtime": {
+        "default": "mdi:bed-clock"
+      },
       "fall_asleep": {
         "default": "mdi:timer-sand"
       },
@@ -33,6 +36,9 @@
       },
       "sleep_score": {
         "default": "mdi:sleep"
+      },
+      "wake_time": {
+        "default": "mdi:alarm"
       }
     }
   }

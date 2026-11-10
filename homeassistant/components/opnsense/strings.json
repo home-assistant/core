@@ -2,16 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "import_failed_missing_interfaces": "The following OPNsense tracker interfaces were not found: {missing}. Found interfaces were: {found}. Please manually set up a config entry and remove the YAML config",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_url": "URL is invalid or unreachable",
-      "invalid_version": "Unsupported OPNsense firmware version",
-      "no_unique_id": "Could not determine a unique identifier for this OPNsense router. Please ensure the API key has sufficient privileges, and your OPNsense instance has physical ports with a MAC address.",
-      "privilege_missing": "The API key used does not have sufficient privileges. Please check the integration documentation for required permissions",
-      "ssl_error": "SSL certificate verification failed",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_version": "The OPNsense firmware version is unknown. Please ensure you are running a supported version of OPNsense and the user has the correct permissions."
+      "no_unique_id": "Could not determine a unique identifier for this OPNsense router. Please ensure the API key has sufficient privileges, and your OPNsense instance has physical ports with a MAC address."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,7 +10,7 @@
       "invalid_interface": "Interface(s) do not exist",
       "invalid_url": "URL is invalid or unreachable",
       "invalid_version": "Unsupported OPNsense firmware version",
-      "privilege_missing": "[%key:component::opnsense::config::abort::privilege_missing%]",
+      "privilege_missing": "The API key used does not have sufficient privileges. Please check the integration documentation for required permissions",
       "ssl_error": "SSL certificate verification failed",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_version": "The OPNsense firmware version is unknown. Please ensure you are running a supported version of OPNsense and the user has the correct permissions."
@@ -69,48 +60,6 @@
     },
     "unknown_firmware": {
       "message": "Could not determine the OPNsense firmware version at {url}"
-    }
-  },
-  "issues": {
-    "import_failed_cannot_connect": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_invalid_auth": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an authentication error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_invalid_url": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the URL provided is invalid or unreachable. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_invalid_version": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the OPNsense firmware version is unsupported. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_missing_interfaces": {
-      "description": "The following OPNsense tracker interfaces were not found: {missing}. Found interfaces were: {found}. Please manually set up a config entry and remove the YAML config",
-      "title": "The {integration_title} YAML import failed: Missing tracker interfaces"
-    },
-    "import_failed_no_unique_id": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a unique identifier for the router could not be determined. Please ensure the API key has sufficient privileges, and your OPNsense instance has physical ports with a MAC address.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_privilege_missing": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the API key used does not have sufficient privileges. Please check the integration documentation for required permissions, correct your YAML configuration, and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_ssl_error": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_unknown": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unknown error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "import_failed_unknown_version": {
-      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the OPNsense firmware version is unknown. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
     }
   }
 }

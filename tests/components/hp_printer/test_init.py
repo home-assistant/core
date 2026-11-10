@@ -13,12 +13,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.hp_printer.const import DOMAIN
 from homeassistant.components.hp_printer.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, CONF_SSL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .conftest import SERIAL_NUMBER
+from .conftest import HOST, SERIAL_NUMBER, TITLE
 
 STATUS = "sensor.hp_officejet_pro_9020_series_status"
 
@@ -115,3 +115,20 @@ async def test_entities_unavailable(
 
     assert (state := hass.states.get(STATUS))
     assert state.state == "in_power_save"
+
+
+@pytest.mark.usefixtures("mock_hp_printer")
+async def test_migrate_entry_minor_version_1(hass: HomeAssistant) -> None:
+    """Test a version 1.1 entry is migrated to plain HTTP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        data={CONF_HOST: HOST},
+        unique_id=SERIAL_NUMBER,
+        minor_version=1,
+    )
+
+    await setup_integration(hass, entry)
+
+    assert entry.minor_version == 2
+    assert entry.data == {CONF_HOST: HOST, CONF_SSL: False}
