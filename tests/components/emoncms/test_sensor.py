@@ -124,6 +124,38 @@ async def test_feeds_grouped_by_tag(
     assert hass.states.get("sensor.tag_parameter_3").name == "tag parameter 3"
 
 
+async def test_retagged_feed_moves_device(
+    hass: HomeAssistant,
+    config_single_feed: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    emoncms_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a feed moves to the new tag's device when its tag changes."""
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [{**get_feed(1, unit="°C"), "tag": "garage"}],
+    }
+    await setup_integration(hass, config_single_feed)
+
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [{**get_feed(1, unit="°C"), "tag": "kitchen"}],
+    }
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = entity_registry.async_get("sensor.garage_temperature_parameter_1")
+    (device,) = dr.async_entries_for_config_entry(
+        device_registry, config_single_feed.entry_id
+    )
+    assert device.id == entity.device_id
+    assert device.name == "kitchen"
+    assert hass.states.get(entity.entity_id).name == "kitchen Temperature parameter 1"
+
+
 async def test_upgrade_prefixes_custom_name_with_tag(
     hass: HomeAssistant,
     config_entry_unique_id: MockConfigEntry,

@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -228,6 +229,16 @@ async def async_setup_entry(
         )
     async_add_entities(sensors)
 
+    device_registry = dr.async_get(hass)
+    current = {
+        (DOMAIN, f"{unique_id}-{elem[FEED_TAG]}")
+        for elem in elems
+        if elem[FEED_ID] in include_only_feeds
+    }
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if not device.identifiers & current:
+            device_registry.async_remove_device(device.id)
+
 
 class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     """Implementation of an Emoncms sensor."""
@@ -252,6 +263,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             "emoncms_details": elem[FEED_NAME],
         }
         self._attr_unique_id = f"{unique_id}-{elem[FEED_ID]}"
+        self._tag = elem[FEED_TAG]
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{unique_id}-{elem[FEED_TAG]}")},
@@ -292,6 +304,12 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
+        if data and data[self.idx][FEED_TAG] != self._tag:
+            # Device and stale cutoff are derived from the tag at setup
+            self.hass.config_entries.async_schedule_reload(
+                self.coordinator.config_entry.entry_id
+            )
+            return
         if data:
             self._update_attributes(data[self.idx])
         super()._handle_coordinator_update()
