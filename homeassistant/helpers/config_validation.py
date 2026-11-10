@@ -2083,10 +2083,12 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
 
 def _parallel_branch(value: Any) -> dict[str, Any]:
     """Validate a parallel branch, wrapping shorthand actions in a sequence."""
-    if isinstance(value, dict):
-        with contextlib.suppress(ValueError):
-            if determine_script_action(value) == SCRIPT_ACTION_SEQUENCE:
-                return cast(dict[str, Any], _SCRIPT_SEQUENCE_SCHEMA(value))
+    if (
+        isinstance(value, dict)
+        and CONF_SEQUENCE in value
+        and determine_script_action(value) == SCRIPT_ACTION_SEQUENCE
+    ):
+        return cast(dict[str, Any], _SCRIPT_SEQUENCE_SCHEMA(value))
     return {CONF_SEQUENCE: SCRIPT_SCHEMA(value)}
 
 
