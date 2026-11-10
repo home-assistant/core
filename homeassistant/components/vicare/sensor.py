@@ -1388,6 +1388,37 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
         value_getter=lambda api: _to_date(api.getHolidayAtHomeEnd()),
     ),
+    ViCareSensorEntityDescription(
+        key="salt_supply",
+        translation_key="salt_supply",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        value_getter=lambda api: api.getSaltDaysRemaining(),
+    ),
+    ViCareSensorEntityDescription(
+        key="water_consumption_total",
+        translation_key="water_consumption_total",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        value_getter=lambda api: api.getTotalConsumption(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="water_consumption_today",
+        translation_key="water_consumption_today",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        value_getter=lambda api: api.getCurrentDayConsumption(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="water_flow",
+        translation_key="water_flow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        value_getter=lambda api: api.getCurrentFlow(),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (

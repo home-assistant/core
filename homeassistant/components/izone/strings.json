@@ -51,6 +51,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "damper_fault": {
+        "name": "Damper fault"
+      },
+      "sensor_fault": {
+        "name": "Sensor fault"
+      }
+    },
     "number": {
       "damper_max": {
         "name": "Damper maximum"
