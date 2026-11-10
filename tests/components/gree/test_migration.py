@@ -34,6 +34,7 @@ from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
     ConfigSubentry,
+    OperationNotAllowed,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -145,6 +146,25 @@ def _records(
     return device, entities
 
 
+def _enabled_records(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entry: ConfigEntry,
+    identifier: str,
+) -> tuple[dr.DeviceEntry, list[er.RegistryEntry]]:
+    """Create enabled records for entry-disable race tests."""
+    device, entities = _records(device_registry, entity_registry, entry, identifier)
+    device = device_registry.async_update_device(device.id, disabled_by=None)
+    assert device is not None
+    entities = [
+        entity_registry.async_update_entity(entity.entity_id, disabled_by=None)
+        for entity in entities
+    ]
+    assert device.disabled_by is None
+    assert all(entity.disabled_by is None for entity in entities)
+    return device, entities
+
+
 def _child(
     hass: HomeAssistant, source: ConfigEntry, identifier: str, raw_identifier: str
 ) -> MockConfigEntry:
@@ -214,6 +234,23 @@ def _assert_records(
             "options",
         ):
             assert getattr(current, field) == getattr(entity, field)
+
+
+def _assert_record_owners(
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    records: tuple[dr.DeviceEntry, list[er.RegistryEntry]],
+    owner: str,
+) -> None:
+    """Assert ownership without requiring enabled registry records."""
+    device, entities = records
+    current_device = device_registry.async_get(device.id)
+    assert current_device is not None
+    assert current_device.config_entry_id == owner
+    for entity in entities:
+        current_entity = entity_registry.async_get(entity.entity_id)
+        assert current_entity is not None
+        assert current_entity.config_entry_id == owner
 
 
 async def test_split_offline_preserves_records(
@@ -992,6 +1029,219 @@ async def test_disabled_source_waiting_for_migration_lock_is_unchanged(
         _assert_records(
             device_registry, entity_registry, old_device, entities, source.entry_id
         )
+
+
+async def test_disable_during_migration_disables_only_new_children(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A source disable reaches new children, but not existing independent entries."""
+    source = _legacy(hass)
+    representative = _enabled_records(
+        device_registry, entity_registry, source, _IDENTIFIERS[0]
+    )
+    new_child_records = [
+        _enabled_records(device_registry, entity_registry, source, identifier)
+        for identifier in _IDENTIFIERS[1:]
+    ]
+    independent_child = _child(hass, source, "aabbcc000004", "AA:BB:CC:00:00:04")
+    independent_records = _enabled_records(
+        device_registry, entity_registry, independent_child, "AA:BB:CC:00:00:04"
+    )
+    original_add = hass.config_entries.async_add
+    disable_task: asyncio.Task[bool] | None = None
+
+    async def add_then_disable(child: ConfigEntry) -> None:
+        nonlocal disable_task
+        await original_add(child)
+        assert hass.config_entries.async_get_entry(child.entry_id) is child
+        if disable_task is not None:
+            return
+        disable_task = asyncio.create_task(
+            hass.config_entries.async_set_disabled_by(
+                source.entry_id, ConfigEntryDisabler.USER
+            )
+        )
+        await asyncio.sleep(0)
+
+    with patch.object(hass.config_entries, "async_add", side_effect=add_then_disable):
+        assert not await hass.config_entries.async_setup(source.entry_id)
+
+    assert disable_task is not None
+    await disable_task
+    await hass.async_block_till_done()
+    assert source.version == 2
+    assert source.disabled_by is ConfigEntryDisabler.USER
+    assert source.state is ConfigEntryState.NOT_LOADED
+    assert independent_child.disabled_by is None
+    assert independent_child.state is ConfigEntryState.NOT_LOADED
+    _assert_record_owners(
+        device_registry, entity_registry, representative, source.entry_id
+    )
+    new_children: list[ConfigEntry] = []
+    for identifier, records in zip(_CANONICAL[1:], new_child_records, strict=True):
+        new_child = hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, identifier
+        )
+        assert new_child is not None
+        new_children.append(new_child)
+        assert new_child.disabled_by is ConfigEntryDisabler.USER
+        assert new_child.state is ConfigEntryState.NOT_LOADED
+        _assert_record_owners(
+            device_registry, entity_registry, records, new_child.entry_id
+        )
+        assert (
+            device_registry.async_get(records[0].id).disabled_by
+            is dr.DeviceEntryDisabler.CONFIG_ENTRY
+        )
+        for entity in records[1]:
+            assert (
+                entity_registry.async_get(entity.entity_id).disabled_by
+                is er.RegistryEntryDisabler.CONFIG_ENTRY
+            )
+    _assert_records(
+        device_registry,
+        entity_registry,
+        *independent_records,
+        independent_child.entry_id,
+    )
+
+    assert not await hass.config_entries.async_set_disabled_by(source.entry_id, None)
+    assert source.disabled_by is None
+    assert source.state is ConfigEntryState.SETUP_RETRY
+    assert all(child.disabled_by is ConfigEntryDisabler.USER for child in new_children)
+    assert await hass.config_entries.async_set_disabled_by(
+        source.entry_id, ConfigEntryDisabler.USER
+    )
+    assert source.disabled_by is ConfigEntryDisabler.USER
+    assert source.state is ConfigEntryState.NOT_LOADED
+    assert independent_child.disabled_by is None
+    assert independent_child.state is ConfigEntryState.NOT_LOADED
+    _assert_records(
+        device_registry,
+        entity_registry,
+        *independent_records,
+        independent_child.entry_id,
+    )
+
+
+@pytest.mark.parametrize(
+    "failure_type",
+    [
+        pytest.param(asyncio.CancelledError, id="cancelled"),
+        pytest.param(RuntimeError, id="error"),
+    ],
+)
+async def test_disable_after_registered_add_interruption(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    failure_type: type[BaseException],
+) -> None:
+    """A registered child is disabled if source migration fails immediately after add."""
+    source = _legacy(hass)
+    representative = _enabled_records(
+        device_registry, entity_registry, source, _IDENTIFIERS[0]
+    )
+    new_child_records = _enabled_records(
+        device_registry, entity_registry, source, _IDENTIFIERS[1]
+    )
+    original_add = hass.config_entries.async_add
+    disable_task: asyncio.Task[bool] | None = None
+
+    async def interrupt_after_add(child: ConfigEntry) -> None:
+        nonlocal disable_task
+        await original_add(child)
+        assert hass.config_entries.async_get_entry(child.entry_id) is child
+        disable_task = asyncio.create_task(
+            hass.config_entries.async_set_disabled_by(
+                source.entry_id, ConfigEntryDisabler.USER
+            )
+        )
+        await asyncio.sleep(0)
+        raise failure_type("interrupted after child registration")
+
+    with patch.object(
+        hass.config_entries, "async_add", side_effect=interrupt_after_add
+    ):
+        assert not await hass.config_entries.async_setup(source.entry_id)
+
+    assert disable_task is not None
+    with pytest.raises(OperationNotAllowed):
+        await disable_task
+    await hass.async_block_till_done()
+    new_child = hass.config_entries.async_entry_for_domain_unique_id(
+        DOMAIN, _CANONICAL[1]
+    )
+    assert new_child is not None
+    assert source.version == 1
+    assert source.disabled_by is ConfigEntryDisabler.USER
+    assert source.state is ConfigEntryState.MIGRATION_ERROR
+    assert new_child.disabled_by is ConfigEntryDisabler.USER
+    assert new_child.state is ConfigEntryState.NOT_LOADED
+    _assert_record_owners(
+        device_registry, entity_registry, representative, source.entry_id
+    )
+    _assert_record_owners(
+        device_registry, entity_registry, new_child_records, new_child.entry_id
+    )
+    assert (
+        device_registry.async_get(new_child_records[0].id).disabled_by
+        is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    )
+    for entity in new_child_records[1]:
+        assert (
+            entity_registry.async_get(entity.entity_id).disabled_by
+            is er.RegistryEntryDisabler.CONFIG_ENTRY
+        )
+
+
+async def test_disable_after_add_failure_before_registration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failed unregistered child is not sent to config-entry disable APIs."""
+    source = _legacy(hass)
+    records = [
+        _enabled_records(device_registry, entity_registry, source, identifier)
+        for identifier in _IDENTIFIERS[:2]
+    ]
+    disable_task: asyncio.Task[bool] | None = None
+    caplog.clear()
+
+    async def fail_before_registration(child: ConfigEntry) -> None:
+        nonlocal disable_task
+        assert hass.config_entries.async_get_entry(child.entry_id) is None
+        disable_task = asyncio.create_task(
+            hass.config_entries.async_set_disabled_by(
+                source.entry_id, ConfigEntryDisabler.USER
+            )
+        )
+        await asyncio.sleep(0)
+        raise RuntimeError("injected failure before child registration")
+
+    with patch.object(
+        hass.config_entries, "async_add", side_effect=fail_before_registration
+    ):
+        assert not await hass.config_entries.async_setup(source.entry_id)
+
+    assert disable_task is not None
+    with pytest.raises(OperationNotAllowed):
+        await disable_task
+    assert source.version == 1
+    assert source.disabled_by is ConfigEntryDisabler.USER
+    assert source.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, _CANONICAL[1])
+        is None
+    )
+    _assert_records(device_registry, entity_registry, *records[0], source.entry_id)
+    _assert_records(device_registry, entity_registry, *records[1], source.entry_id)
+    assert "injected failure before child registration" in caplog.text
+    assert "UnknownEntry" not in caplog.text
 
 
 async def test_add_reconciles_before_setup_or_await(

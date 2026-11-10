@@ -324,7 +324,7 @@ def _entry_data(group: _Group) -> dict[str, Any]:
 
 
 async def async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Preflight and split a shared entry, preserving its representative."""
+    """Split offline ownership and preserve source disable intent."""
     lock = hass.data.setdefault(_MIGRATION_LOCK, asyncio.Lock())
     async with lock:
         if entry.version != 1 or entry.disabled_by is not None:
@@ -362,39 +362,51 @@ async def async_migrate_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) ->
                     raise HomeAssistantError(
                         f"Gree migration child entry ID is already in use: {child_id}"
                     )
-        for identifier in sorted(groups):
-            if identifier == representative:
-                continue
-            group = groups[identifier]
-            child = group.child
-            if child is None:
-                device = group.devices[0] if group.devices else None
-                child = ConfigEntry(
-                    entry_id=_child_entry_id(entry.entry_id, identifier),
-                    domain=DOMAIN,
-                    version=2,
-                    minor_version=1,
-                    unique_id=identifier,
-                    source=SOURCE_IMPORT,
-                    title=(device.name_by_user or device.name or group.raw_identifier)
-                    if device
-                    else group.raw_identifier,
-                    data={**_entry_data(group), _SOURCE: entry.entry_id},
-                    options=entry.options,
-                    pref_disable_new_entities=entry.pref_disable_new_entities,
-                    pref_disable_polling=entry.pref_disable_polling,
-                    discovery_keys=MappingProxyType({}),
-                    subentries_data=(),
-                )
-                await hass.config_entries.async_add(child)
-            async_reconcile_migrated_entry(hass, child)
-        hass.config_entries.async_update_entry(
-            entry,
-            version=2,
-            minor_version=1,
-            unique_id=representative,
-            data=_entry_data(groups[representative]),
-        )
+        created_children: list[ConfigEntry] = []
+        try:
+            for identifier in sorted(groups):
+                if identifier == representative:
+                    continue
+                group = groups[identifier]
+                child = group.child
+                if child is None:
+                    device = group.devices[0] if group.devices else None
+                    child = ConfigEntry(
+                        entry_id=_child_entry_id(entry.entry_id, identifier),
+                        domain=DOMAIN,
+                        version=2,
+                        minor_version=1,
+                        unique_id=identifier,
+                        source=SOURCE_IMPORT,
+                        title=(
+                            device.name_by_user or device.name or group.raw_identifier
+                        )
+                        if device
+                        else group.raw_identifier,
+                        data={**_entry_data(group), _SOURCE: entry.entry_id},
+                        options=entry.options,
+                        pref_disable_new_entities=entry.pref_disable_new_entities,
+                        pref_disable_polling=entry.pref_disable_polling,
+                        discovery_keys=MappingProxyType({}),
+                        subentries_data=(),
+                    )
+                    created_children.append(child)
+                    await hass.config_entries.async_add(child)
+                async_reconcile_migrated_entry(hass, child)
+            hass.config_entries.async_update_entry(
+                entry,
+                version=2,
+                minor_version=1,
+                unique_id=representative,
+                data=_entry_data(groups[representative]),
+            )
+        finally:
+            if (disabled_by := entry.disabled_by) is not None:
+                for child in created_children:
+                    if hass.config_entries.async_get_entry(child.entry_id) is child:
+                        await hass.config_entries.async_set_disabled_by(
+                            child.entry_id, disabled_by
+                        )
 
 
 @callback
