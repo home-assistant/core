@@ -5,7 +5,7 @@ from typing import Any, cast, override
 
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_COUNTRY_CODE,
     CONF_LATITUDE,
@@ -21,6 +21,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
+from . import BuienRadarConfigEntry
 from .const import (
     CONF_DELTA,
     CONF_TIMEFRAME,
@@ -84,7 +85,7 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: BuienRadarConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

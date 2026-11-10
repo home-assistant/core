@@ -8,7 +8,7 @@ from pypjlink import Projector
 from pypjlink.projector import ProjectorError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -67,32 +67,3 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-
-        host: str = import_config[CONF_HOST]
-        port: int = import_config.get(CONF_PORT, DEFAULT_PORT)
-        password: str | None = import_config.get(CONF_PASSWORD)
-
-        self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
-        try:
-            projector_name = await self.hass.async_add_executor_job(
-                validate_projector_connection, host, port, password
-            )
-        except TimeoutError, OSError:
-            return self.async_abort(reason="cannot_connect")
-        except RuntimeError, ProjectorError:
-            return self.async_abort(reason="invalid_auth")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-        else:
-            import_data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
-            if password:
-                import_data[CONF_PASSWORD] = password
-            return self.async_create_entry(
-                title=import_config.get(CONF_NAME, projector_name), data=import_data
-            )

@@ -10,7 +10,15 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from satel_integra.satel_integra import AlarmState
+from satel_integra import (
+    AlarmState,
+    SatelCommandRejectedError,
+    SatelCommandResult,
+    SatelNoResponseError,
+    SatelResultCode,
+)
+from satel_integra.commands import SatelWriteCommand
+from satel_integra.exceptions import SatelCommandExpiredError, SatelNotConnectedError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
@@ -28,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -188,7 +196,7 @@ async def test_alarm_control_panel_arming(
         blocking=True,
     )
 
-    mock_satel.arm.assert_awaited_once_with(MOCK_CODE, [1], 1)
+    mock_satel.arm.assert_awaited_once_with(MOCK_CODE, [1], 1, wait_for_result=True)
 
     mock_satel.arm.reset_mock()
 
@@ -200,7 +208,7 @@ async def test_alarm_control_panel_arming(
         blocking=True,
     )
 
-    mock_satel.arm.assert_awaited_once_with(MOCK_CODE, [1])
+    mock_satel.arm.assert_awaited_once_with(MOCK_CODE, [1], wait_for_result=True)
 
 
 async def test_alarm_control_panel_disarming(
@@ -220,9 +228,153 @@ async def test_alarm_control_panel_disarming(
         blocking=True,
     )
 
-    mock_satel.disarm.assert_awaited_once_with(MOCK_CODE, [1])
+    mock_satel.disarm.assert_awaited_once_with(MOCK_CODE, [1], wait_for_result=True)
 
-    mock_satel.clear_alarm.assert_awaited_once_with(MOCK_CODE, [1])
+    mock_satel.clear_alarm.assert_awaited_once_with(
+        MOCK_CODE, [1], wait_for_result=True
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        (SERVICE_ALARM_ARM_HOME, "arm"),
+        (SERVICE_ALARM_ARM_AWAY, "arm"),
+        (SERVICE_ALARM_DISARM, "disarm"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("result_code", "translation_key"),
+    [
+        (
+            SatelResultCode.USER_CODE_NOT_FOUND,
+            "command_invalid_access_code",
+        ),
+        (SatelResultCode.NO_ACCESS, "command_no_access"),
+    ],
+)
+async def test_alarm_command_validation_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    service: str,
+    method: str,
+    result_code: SatelResultCode,
+    translation_key: str,
+) -> None:
+    """Test alarm actions report validation errors."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    getattr(mock_satel, method).side_effect = SatelCommandRejectedError(
+        SatelWriteCommand.PARTITIONS_ARM_MODE_0,
+        SatelCommandResult(result_code),
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        (SERVICE_ALARM_ARM_HOME, "arm"),
+        (SERVICE_ALARM_ARM_AWAY, "arm"),
+        (SERVICE_ALARM_DISARM, "disarm"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            SatelCommandRejectedError(
+                SatelWriteCommand.PARTITIONS_ARM_MODE_0,
+                SatelCommandResult(0x8A),
+            ),
+            "command_rejected",
+            {"result_code": "0x8A"},
+            id="rejected",
+        ),
+        pytest.param(
+            SatelNoResponseError(),
+            "command_outcome_unknown",
+            None,
+            id="outcome-unknown",
+        ),
+        pytest.param(
+            SatelCommandExpiredError(),
+            "command_not_sent",
+            None,
+            id="expired",
+        ),
+        pytest.param(
+            SatelNotConnectedError(),
+            "command_not_sent",
+            None,
+            id="not-connected",
+        ),
+    ],
+)
+async def test_alarm_command_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    service: str,
+    method: str,
+    exception: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test alarm actions report command errors."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    getattr(mock_satel, method).side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+    assert type(err.value) is HomeAssistantError
+    assert err.value.translation_placeholders == translation_placeholders
+
+
+async def test_clear_alarm_command_rejected(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test a rejected clear-alarm command is reported."""
+    mock_satel.state.partition_states = {AlarmState.TRIGGERED: [1]}
+    mock_satel.clear_alarm.side_effect = SatelCommandRejectedError(
+        SatelWriteCommand.PARTITIONS_CLEAR_ALARM,
+        SatelCommandResult(SatelResultCode.NO_ACCESS),
+    )
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_DISARM,
+            {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "command_no_access"
 
 
 async def test_alarm_control_panel_disarming_requires_code(

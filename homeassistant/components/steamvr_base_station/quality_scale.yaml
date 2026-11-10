@@ -56,13 +56,13 @@ rules:
     status: exempt
     comment: The Bluetooth address is the unique identifier and does not change.
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Each config entry represents one station.
@@ -87,4 +87,4 @@ rules:
   inject-websession:
     status: exempt
     comment: The library communicates over Bluetooth and does not use HTTP.
-  strict-typing: todo
+  strict-typing: done

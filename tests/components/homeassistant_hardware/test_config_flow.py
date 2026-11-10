@@ -507,7 +507,6 @@ async def test_config_flow_zigbee_custom_zha(hass: HomeAssistant) -> None:
     assert flows == [
         {
             "context": {
-                "confirm_only": True,
                 "source": "hardware",
                 "title_placeholders": {
                     "name": "Some Hardware Name",

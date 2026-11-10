@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
-from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.components.min_max.const import DOMAIN, MinMaxEntityStateAttribute
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     SERVICE_RELOAD,
@@ -64,8 +63,10 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.min_sensor")
 
     assert str(float(MIN_VALUE)) == state.state
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
+    assert entity_ids[2] == state.attributes.get(
+        MinMaxEntityStateAttribute.MIN_ENTITY_ID
+    )
+    assert state.attributes.get(MinMaxEntityStateAttribute.ENTITY_ID) == entity_ids
 
 
 async def test_min_sensor(
@@ -94,7 +95,9 @@ async def test_min_sensor(
     state = hass.states.get("sensor.test_min")
 
     assert str(float(MIN_VALUE)) == state.state
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
+    assert entity_ids[2] == state.attributes.get(
+        MinMaxEntityStateAttribute.MIN_ENTITY_ID
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entity = entity_registry.async_get("sensor.test_min")
@@ -124,7 +127,9 @@ async def test_max_sensor(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_max")
 
     assert str(float(MAX_VALUE)) == state.state
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert entity_ids[1] == state.attributes.get(
+        MinMaxEntityStateAttribute.MAX_ENTITY_ID
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
@@ -305,9 +310,9 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("min_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MIN_ENTITY_ID) is None
     assert state.attributes.get("min_value") is None
-    assert state.attributes.get("max_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MAX_ENTITY_ID) is None
     assert state.attributes.get("max_value") is None
     assert state.attributes.get("median") is None
 
@@ -316,23 +321,27 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_max")
     assert state.state != STATE_UNKNOWN
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert entity_ids[1] == state.attributes.get(
+        MinMaxEntityStateAttribute.MAX_ENTITY_ID
+    )
 
     hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert state.state != STATE_UNKNOWN
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert entity_ids[1] == state.attributes.get(
+        MinMaxEntityStateAttribute.MAX_ENTITY_ID
+    )
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("min_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MIN_ENTITY_ID) is None
     assert state.attributes.get("min_value") is None
-    assert state.attributes.get("max_entity_id") is None
+    assert state.attributes.get(MinMaxEntityStateAttribute.MAX_ENTITY_ID) is None
     assert state.attributes.get("max_value") is None
 
 
@@ -498,7 +507,9 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_last")
         assert str(float(value)) == state.state
-        assert entity_id == state.attributes.get("last_entity_id")
+        assert entity_id == state.attributes.get(
+            MinMaxEntityStateAttribute.LAST_ENTITY_ID
+        )
         assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 

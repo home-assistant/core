@@ -26,6 +26,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.statistics import DOMAIN
+from homeassistant.components.statistics.const import StatisticsEntityStateAttribute
 from homeassistant.components.statistics.sensor import (
     CONF_KEEP_LAST_SAMPLE,
     CONF_PERCENTILE,
@@ -121,9 +122,13 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
-    assert state.attributes.get("source_value_valid") is True
-    assert "age_coverage_ratio" not in state.attributes
+    assert state.attributes.get(
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+    ) == round(9 / 20, 2)
+    assert (
+        state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID) is True
+    )
+    assert StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO not in state.attributes
     # Source sensor turns unavailable, then available with valid value,
     # statistics sensor should follow
     state = hass.states.get("sensor.test")
@@ -135,7 +140,10 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
     new_state = hass.states.get("sensor.test")
     assert new_state is not None
     assert new_state.state == STATE_UNAVAILABLE
-    assert new_state.attributes.get("source_value_valid") is None
+    assert (
+        new_state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID)
+        is None
+    )
     hass.states.async_set(
         "sensor.test_monitored",
         "0",
@@ -149,8 +157,13 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
     assert (
         new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     )
-    assert new_state.attributes.get("buffer_usage_ratio") == round(10 / 20, 2)
-    assert new_state.attributes.get("source_value_valid") is True
+    assert new_state.attributes.get(
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+    ) == round(10 / 20, 2)
+    assert (
+        new_state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID)
+        is True
+    )
 
     # Source sensor has a nonnumerical state, unit and state should not change
     state = hass.states.get("sensor.test")
@@ -162,7 +175,10 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
     assert (
         new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     )
-    assert new_state.attributes.get("source_value_valid") is False
+    assert (
+        new_state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID)
+        is False
+    )
 
     # Source sensor has the STATE_UNKNOWN state, unit and state should not change
     state = hass.states.get("sensor.test")
@@ -174,7 +190,10 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
     assert (
         new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     )
-    assert new_state.attributes.get("source_value_valid") is False
+    assert (
+        new_state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID)
+        is False
+    )
 
     # Source sensor is removed, unit and state should not change
     # This is equal to a None value being published
@@ -186,7 +205,10 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
     assert (
         new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     )
-    assert new_state.attributes.get("source_value_valid") is False
+    assert (
+        new_state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID)
+        is False
+    )
 
 
 @pytest.mark.parametrize(
@@ -213,9 +235,13 @@ async def test_sensor_loaded_from_config_entry(
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
-    assert state.attributes.get("source_value_valid") is True
-    assert "age_coverage_ratio" not in state.attributes
+    assert state.attributes.get(
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+    ) == round(9 / 20, 2)
+    assert (
+        state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID) is True
+    )
+    assert StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO not in state.attributes
 
 
 async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
@@ -250,9 +276,13 @@ async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
     assert state.state == str(len(VALUES_BINARY))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
-    assert state.attributes.get("source_value_valid") is True
-    assert "age_coverage_ratio" not in state.attributes
+    assert state.attributes.get(
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+    ) == round(9 / 20, 2)
+    assert (
+        state.attributes.get(StatisticsEntityStateAttribute.SOURCE_VALUE_VALID) is True
+    )
+    assert StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO not in state.attributes
 
 
 @pytest.mark.parametrize("force_update", [True, False])
@@ -309,7 +339,9 @@ async def test_sensor_state_updated_reported(
     state = hass.states.get("sensor.test_normal")
     assert state
     assert state.state == str(round(sum(values) / 9, 2))
-    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+    assert state.attributes.get(
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+    ) == round(9 / 20, 2)
 
 
 async def test_sampling_boundaries_given(hass: HomeAssistant) -> None:
@@ -461,7 +493,9 @@ async def test_sampling_size_reduced(hass: HomeAssistant) -> None:
     new_mean = round(sum(VALUES_NUMERIC[-5:]) / len(VALUES_NUMERIC[-5:]), 2)
     assert state is not None
     assert state.state == str(new_mean)
-    assert state.attributes.get("buffer_usage_ratio") == round(5 / 5, 2)
+    assert state.attributes.get(
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+    ) == round(5 / 5, 2)
 
 
 async def test_sampling_size_1(hass: HomeAssistant) -> None:
@@ -495,7 +529,9 @@ async def test_sampling_size_1(hass: HomeAssistant) -> None:
     new_mean = float(VALUES_NUMERIC[-1])
     assert state is not None
     assert state.state == str(new_mean)
-    assert state.attributes.get("buffer_usage_ratio") == round(1 / 1, 2)
+    assert state.attributes.get(
+        StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+    ) == round(1 / 1, 2)
 
 
 async def test_scheduled_update_cancelled_on_remove(hass: HomeAssistant) -> None:
@@ -570,8 +606,13 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         new_mean = round(sum(VALUES_NUMERIC[-5:]) / len(VALUES_NUMERIC[-5:]), 2)
         assert state is not None
         assert state.state == str(new_mean)
-        assert state.attributes.get("buffer_usage_ratio") == round(5 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 1.0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(5 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO)
+            == 1.0
+        )
 
         # Values expire over time. Only two are left
 
@@ -584,8 +625,13 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         new_mean = round(sum(VALUES_NUMERIC[-2:]) / len(VALUES_NUMERIC[-2:]), 2)
         assert state is not None
         assert state.state == str(new_mean)
-        assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 1 / 4
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(2 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO)
+            == 1 / 4
+        )
 
         # Values expire over time. Only one is left
 
@@ -598,8 +644,12 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         new_mean = float(VALUES_NUMERIC[-1])
         assert state is not None
         assert state.state == str(new_mean)
-        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(1 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO) == 0
+        )
 
         # Values expire over time. Buffer is empty
 
@@ -611,8 +661,12 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.state == STATE_UNKNOWN
-        assert state.attributes.get("buffer_usage_ratio") == round(0 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(0 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO) == 0
+        )
 
 
 async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> None:
@@ -657,8 +711,13 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         new_mean = round(sum(VALUES_NUMERIC[-5:]) / len(VALUES_NUMERIC[-5:]), 2)
         assert state is not None
         assert state.state == str(new_mean)
-        assert state.attributes.get("buffer_usage_ratio") == round(5 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 1.0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(5 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO)
+            == 1.0
+        )
 
         # Values expire over time. Only two are left
 
@@ -671,8 +730,13 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         new_mean = round(sum(VALUES_NUMERIC[-2:]) / len(VALUES_NUMERIC[-2:]), 2)
         assert state is not None
         assert state.state == str(new_mean)
-        assert state.attributes.get("buffer_usage_ratio") == round(2 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 1 / 4
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(2 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO)
+            == 1 / 4
+        )
 
         # Values expire over time. Only one is left
 
@@ -685,8 +749,12 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         new_mean = float(VALUES_NUMERIC[-1])
         assert state is not None
         assert state.state == str(new_mean)
-        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(1 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO) == 0
+        )
 
         # Values expire over time. All values expired, but preserve expired last value
 
@@ -698,8 +766,12 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.state == str(float(VALUES_NUMERIC[-1]))
-        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(1 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO) == 0
+        )
 
         # Indefinitely preserve expired last value
 
@@ -711,8 +783,12 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.state == str(float(VALUES_NUMERIC[-1]))
-        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(1 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO) == 0
+        )
 
         # New sensor value within max_age, preserved expired value should be dropped
         last_update_val = 123.0
@@ -729,8 +805,12 @@ async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> No
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.state == str(last_update_val)
-        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
-        assert state.attributes.get("age_coverage_ratio") == 0
+        assert state.attributes.get(
+            StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO
+        ) == round(1 / 20, 2)
+        assert (
+            state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO) == 0
+        )
 
 
 async def test_precision(hass: HomeAssistant) -> None:
@@ -1677,7 +1757,10 @@ async def test_initialize_from_database_with_maxage(
 
     state = hass.states.get("sensor.test")
     assert state is not None
-    assert state.attributes.get("age_coverage_ratio") == age_coverage_ratio
+    assert (
+        state.attributes.get(StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO)
+        == age_coverage_ratio
+    )
     # The max_age timestamp should be 1 hour before what we have right
     # now in mock_data['return_time'].
     assert current_time == datetime.strptime(
@@ -2276,10 +2359,10 @@ async def test_attributes_remains(recorder_mock: Recorder, hass: HomeAssistant) 
         assert state is not None
         assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
         assert state.attributes == {
-            "age_coverage_ratio": 0.0,
+            StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO: 0.0,
             "friendly_name": "test",
             "icon": "mdi:calculator",
-            "source_value_valid": True,
+            StatisticsEntityStateAttribute.SOURCE_VALUE_VALID: True,
             "state_class": SensorStateClass.MEASUREMENT,
             "unit_of_measurement": "°C",
         }
@@ -2291,10 +2374,10 @@ async def test_attributes_remains(recorder_mock: Recorder, hass: HomeAssistant) 
         assert state is not None
         assert state.state == STATE_UNKNOWN
         assert state.attributes == {
-            "age_coverage_ratio": 0,
+            StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO: 0,
             "friendly_name": "test",
             "icon": "mdi:calculator",
-            "source_value_valid": True,
+            StatisticsEntityStateAttribute.SOURCE_VALUE_VALID: True,
             "state_class": SensorStateClass.MEASUREMENT,
             "unit_of_measurement": "°C",
         }

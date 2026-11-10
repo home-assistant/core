@@ -309,6 +309,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_DISCOVERY_CONFIRM_DATA_SCHEMA,
                 suggested_values=user_input,
             ),
-            description_placeholders={CONF_HOST: self._data[CONF_HOST]},
+            description_placeholders={"host": self._data[CONF_HOST]},
             errors=errors,
         )

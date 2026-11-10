@@ -57,8 +57,8 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
 
 
 # DeviceEntry attributes that are internal bookkeeping and must not be exposed in
-# diagnostics. Underscore attributes (_cache, _suggested_area, and the transient
-# _pending_move / _composite_subentries) are excluded separately by _device_entry_filter.
+# diagnostics. Underscore attributes (_cache and the transient _pending_move /
+# _composite_subentries) are excluded separately by _device_entry_filter.
 # The composite-device migration attributes below can be removed in HA Core 2027.8.
 _INTERNAL_DEVICE_ENTRY_ATTRIBUTES = (
     "composite_device_id",

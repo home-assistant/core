@@ -61,7 +61,12 @@ from .const import (
     ENTITY_PLATFORMS,
     SUPPORTED_COMPONENTS,
 )
-from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
+from .util import (
+    valid_encoding,
+    valid_publish_topic,
+    valid_qos_schema,
+    valid_subscribe_topic,
+)
 
 # Device discovery options that are also available at entity component level
 SHARED_OPTIONS = [
@@ -277,7 +282,7 @@ DEVICE_DISCOVERY_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
         probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         probatio.Optional(CONF_MESSAGE_EXPIRY_INTERVAL): valid_message_expiry_interval,
         probatio.Optional(CONF_QOS): valid_qos_schema,
-        probatio.Optional(CONF_ENCODING): cv.string,
+        probatio.Optional(CONF_ENCODING): valid_encoding,
     }
 )
 

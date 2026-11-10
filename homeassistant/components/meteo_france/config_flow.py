@@ -6,8 +6,9 @@ from typing import Any, override
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import Place
 import probatio
+from requests import RequestException
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 
@@ -64,9 +65,13 @@ class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if not latitude:
             client = MeteoFranceClient()
-            self.places = await self.hass.async_add_executor_job(
-                client.search_places, city
-            )
+            try:
+                self.places = await self.hass.async_add_executor_job(
+                    client.search_places, city
+                )
+            except RequestException:
+                errors["base"] = "cannot_connect"
+                return self._show_setup_form(user_input, errors)
             _LOGGER.debug("Places search result: %s", self.places)
             if not self.places:
                 errors[CONF_CITY] = "empty"
@@ -88,7 +93,7 @@ class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step where the user choose the city from the API search results."""
         if not user_input:
-            if len(self.places) > 1 and self.source != SOURCE_IMPORT:
+            if len(self.places) > 1:
                 places_for_form: dict[str, str] = {}
                 for place in self.places:
                     places_for_form[_build_place_key(place)] = f"{place}"

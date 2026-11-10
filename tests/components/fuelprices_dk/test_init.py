@@ -1,13 +1,17 @@
 """Test initialization for Fuelprices.dk."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, MagicMock, call
 
-from aiohttp import ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
 from pybraendstofpriser import Flist
-from pybraendstofpriser.exceptions import ProductNotFoundError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 
+from homeassistant.components.fuelprices_dk.const import DOMAIN
 from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigSubentry,
@@ -17,25 +21,15 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import client_error, setup_integration
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_PRICES, TEST_STATION
-
-
-def _client_error(status: int) -> ClientResponseError:
-    """Create an aiohttp client response error with a specific status code."""
-    return ClientResponseError(
-        request_info=Mock(),
-        history=(),
-        status=status,
-        message="error",
-        headers=None,
-    )
 
 
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_braendstofpriser: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the config entry is set up and unloaded correctly."""
     await setup_integration(hass, mock_config_entry)
@@ -46,6 +40,11 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_braendstofpriser.get_prices_bulk.reset_mock()
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_braendstofpriser.get_prices_bulk.assert_not_called()
 
 
 async def test_reload_on_subentry_added(
@@ -62,7 +61,10 @@ async def test_reload_on_subentry_added(
     )
     assert len(entities) == len(TEST_PRICES)
 
-    mock_braendstofpriser.get_prices.reset_mock()
+    mock_braendstofpriser.get_prices_bulk.reset_mock()
+    mock_braendstofpriser.get_prices_bulk.return_value = (
+        await async_load_json_array_fixture(hass, "bulk_prices.json", DOMAIN)
+    )
 
     new_station = {"id": 4321, "name": "Aarhus N"}
     hass.config_entries.async_add_subentry(
@@ -80,7 +82,7 @@ async def test_reload_on_subentry_added(
         entity_registry, mock_config_entry.entry_id
     )
     assert len(entities) == len(TEST_PRICES) * 2
-    assert mock_braendstofpriser.get_prices.await_count == 2
+    mock_braendstofpriser.get_prices_bulk.assert_awaited_once_with([1234, 4321])
 
 
 async def test_skips_non_station_subentries(
@@ -106,7 +108,7 @@ async def test_skips_non_station_subentries(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    mock_braendstofpriser.get_prices.assert_not_called()
+    mock_braendstofpriser.get_prices_bulk.assert_not_called()
 
 
 async def test_stations_use_flist(
@@ -125,11 +127,10 @@ async def test_stations_use_flist(
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [
-        (_client_error(401), ConfigEntryState.SETUP_ERROR),
-        (_client_error(500), ConfigEntryState.SETUP_ERROR),
-        (ProductNotFoundError("missing"), ConfigEntryState.SETUP_ERROR),
+        (client_error(401), ConfigEntryState.SETUP_ERROR),
+        (client_error(500), ConfigEntryState.SETUP_RETRY),
     ],
-    ids=["auth_failed", "cannot_connect", "product_not_found"],
+    ids=["auth_failed", "cannot_connect"],
 )
 async def test_setup_error_handling(
     hass: HomeAssistant,
@@ -139,8 +140,112 @@ async def test_setup_error_handling(
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup handles API errors during the first refresh."""
-    mock_braendstofpriser.get_prices.side_effect = side_effect
+    mock_braendstofpriser.get_prices_bulk.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    ("mock_config_entry", "expected_requests", "entity_count"),
+    [
+        pytest.param(1, [], 0, id="last_station"),
+        pytest.param(2, [[4321]], 3, id="one_station_remaining"),
+    ],
+    indirect=["mock_config_entry"],
+)
+async def test_remove_station(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    expected_requests: list[list[int]],
+    entity_count: int,
+) -> None:
+    """Test removing a station updates the selection without leaving old polling."""
+    data = await async_load_json_array_fixture(hass, "bulk_prices.json", DOMAIN)
+    mock_braendstofpriser.get_prices_bulk.return_value = data
+    await setup_integration(hass, mock_config_entry)
+
+    mock_braendstofpriser.get_prices_bulk.reset_mock()
+    mock_braendstofpriser.get_prices_bulk.return_value = data[1:]
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_remove_subentry(mock_config_entry, subentry.subentry_id)
+    await hass.async_block_till_done()
+
+    assert mock_braendstofpriser.get_prices_bulk.await_args_list == [
+        call(station_ids) for station_ids in expected_requests
+    ]
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == entity_count
+    )
+
+    mock_braendstofpriser.get_prices_bulk.reset_mock()
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_braendstofpriser.get_prices_bulk.await_args_list == [
+        call(station_ids) for station_ids in expected_requests
+    ]
+
+
+async def test_api_keys_update_independently(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    mock_braendstofpriser_class: MagicMock,
+    mock_other_braendstofpriser: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test separate API keys have their own station selections and updates."""
+    data = await async_load_json_array_fixture(hass, "bulk_prices.json", DOMAIN)
+    mock_braendstofpriser_class.side_effect = {
+        TEST_API_KEY: mock_braendstofpriser,
+        "other-api-key": mock_other_braendstofpriser,
+    }.__getitem__
+    mock_braendstofpriser.get_prices_bulk.return_value = data[:1]
+    mock_other_braendstofpriser.get_prices_bulk.return_value = data[1:]
+    await setup_integration(hass, mock_config_entry)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "other-api-key"},
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type="station",
+                title="Uno-X - Aarhus N",
+                unique_id="Uno-X_4321",
+                data={"company": "Uno-X", "station": data[1]["station"]},
+            )
+        ],
+    )
+    await setup_integration(hass, other_entry)
+
+    assert mock_braendstofpriser_class.call_args_list == [
+        call(TEST_API_KEY),
+        call("other-api-key"),
+    ]
+    mock_braendstofpriser.get_prices_bulk.assert_awaited_once_with([1234])
+    mock_other_braendstofpriser.get_prices_bulk.assert_awaited_once_with([4321])
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == "14.29"
+    assert hass.states.get("sensor.aarhus_n_blyfri95").state == "15.29"
+
+    mock_braendstofpriser.get_prices_bulk.reset_mock()
+    mock_other_braendstofpriser.get_prices_bulk.reset_mock()
+    data[0]["prices"]["Blyfri95"] = "16.29"
+    data[1]["prices"]["Blyfri95"] = "17.29"
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_braendstofpriser.get_prices_bulk.assert_awaited_once_with([1234])
+    mock_other_braendstofpriser.get_prices_bulk.assert_awaited_once_with([4321])
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == "16.29"
+    assert hass.states.get("sensor.aarhus_n_blyfri95").state == "17.29"

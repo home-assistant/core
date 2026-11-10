@@ -1,11 +1,27 @@
 {
   "entity": {
+    "number": {
+      "salt_output_level": {
+        "default": "mdi:shaker-outline"
+      }
+    },
     "select": {
       "heating_mode": {
         "default": "mdi:radiator"
       },
       "jet": {
         "default": "mdi:pump"
+      }
+    },
+    "sensor": {
+      "freshwater_iq_chlorine": {
+        "default": "mdi:flask"
+      },
+      "freshwater_iq_orp": {
+        "default": "mdi:water-check"
+      },
+      "freshwater_iq_sensor_life": {
+        "default": "mdi:progress-clock"
       }
     }
   }

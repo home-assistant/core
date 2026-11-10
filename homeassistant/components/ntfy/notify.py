@@ -25,17 +25,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, NtfyServiceArgument
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
-from .services import (
-    ACTIONS_MAP,
-    ATTR_ACTION,
-    ATTR_ACTIONS,
-    ATTR_ATTACH_FILE,
-    ATTR_FILENAME,
-    ATTR_SEQUENCE_ID,
-)
+from .services import ACTIONS_MAP, ATTR_ACTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,20 +72,20 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
         """Shared internal helper to publish a message to a topic."""
         attachment = None
         params: dict[str, Any] = kwargs
-        delay: timedelta | None = params.get("delay")
+        delay: timedelta | None = params.get(NtfyServiceArgument.DELAY)
         if delay:
-            params["delay"] = f"{delay.total_seconds()}s"
-            if params.get("email"):
+            params[NtfyServiceArgument.DELAY] = f"{delay.total_seconds()}s"
+            if params.get(NtfyServiceArgument.EMAIL):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="delay_no_email",
                 )
-            if params.get("call"):
+            if params.get(NtfyServiceArgument.CALL):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="delay_no_call",
                 )
-        if file := params.pop(ATTR_ATTACH_FILE, None):
+        if file := params.pop(NtfyServiceArgument.ATTACH_FILE, None):
             media_content_id: str = file["media_content_id"]
             if media_content_id.startswith("media-source://tts/"):
                 _, attachment = await tts.async_get_media_source_audio(
@@ -117,11 +110,11 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     media.path.read_bytes
                 )
 
-                params.setdefault(ATTR_FILENAME, media.path.name)
+                params.setdefault(NtfyServiceArgument.FILENAME, media.path.name)
 
-        actions: list[dict[str, Any]] | None = params.get(ATTR_ACTIONS)
+        actions: list[dict[str, Any]] | None = params.get(NtfyServiceArgument.ACTIONS)
         if actions:
-            params["actions"] = [
+            params[NtfyServiceArgument.ACTIONS] = [
                 ACTIONS_MAP[action[ATTR_ACTION]](
                     **{k: v for k, v in action.items() if k != ATTR_ACTION}
                 )
@@ -155,7 +148,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
         params: dict[str, Any] = kwargs
 
         try:
-            await self.ntfy.clear(self.topic, params[ATTR_SEQUENCE_ID])
+            await self.ntfy.clear(self.topic, params[NtfyServiceArgument.SEQUENCE_ID])
         except NtfyUnauthorizedAuthenticationError as e:
             self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -175,7 +168,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
         params: dict[str, Any] = kwargs
 
         try:
-            await self.ntfy.delete(self.topic, params[ATTR_SEQUENCE_ID])
+            await self.ntfy.delete(self.topic, params[NtfyServiceArgument.SEQUENCE_ID])
         except NtfyUnauthorizedAuthenticationError as e:
             self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
