@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
+import aiohttp
 from aioindiallsky import (
     ExposureData,
     IndiAllSkyAuthError,
@@ -26,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -71,7 +72,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             ),
             username=entry.data.get(CONF_USERNAME),
             password=entry.data.get(CONF_PASSWORD),
-            session=async_get_clientsession(hass),
+            session=async_create_clientsession(
+                hass,
+                verify_ssl=entry.data[CONF_VERIFY_SSL],
+                cookie_jar=aiohttp.CookieJar(unsafe=True),
+            ),
         )
         self.latest_exposure: ExposureData | None = None
         self.latest_keogram: MediaData | None = None
