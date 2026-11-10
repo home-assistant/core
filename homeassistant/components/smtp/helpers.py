@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.os_error import os_read_error
 
-from .const import ATTR_HTML, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -199,7 +199,7 @@ def _build_html_msg(
     msg = MIMEMultipart("related")
     alternative = MIMEMultipart("alternative")
     alternative.attach(MIMEText(text, _charset="utf-8"))
-    alternative.attach(MIMEText(html, ATTR_HTML, _charset="utf-8"))
+    alternative.attach(MIMEText(html, "html", _charset="utf-8"))
     msg.attach(alternative)
 
     for atch_name in images:

@@ -67,11 +67,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
     @callback
     def _async_add_new_vehicles() -> None:
         """Create a device per garage vehicle, then subscribe the stream to new ones."""
-        for raw, display in garage_coordinator.data:
+        for raw in garage_coordinator.data:
             scope = f"{entry.unique_id}_{raw.vehicle_id}"
             manufacturer: str | Undefined | None = Undefined
             model: str | Undefined | None = Undefined
-            if display is not None:
+            if (display := raw.display) is not None:
                 manufacturer, model = display.manufacturer, display.model_name
             elif raw.vehicle_id not in known:
                 # A known vehicle keeps what an earlier poll resolved.
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
                 ),
             )
         # Add-only: vehicles that leave the garage stay until the entry reloads.
-        known.update(raw.vehicle_id for raw, _ in garage_coordinator.data)
+        known.update(raw.vehicle_id for raw in garage_coordinator.data)
         stream.set_vehicle_ids(known)
 
     _async_add_new_vehicles()

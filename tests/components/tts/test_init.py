@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable
+import errno
 from http import HTTPStatus
 import io
 from pathlib import Path
@@ -3152,3 +3153,101 @@ async def test_cache_message_unknown_provider(hass: HomeAssistant) -> None:
     assert exc_info.value.translation_domain == tts.DOMAIN
     assert exc_info.value.translation_key == "provider_not_found"
     assert exc_info.value.translation_placeholders == {"engine": "non-existing"}
+
+
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        (errno.EACCES, "os_write_permission_denied"),
+        (errno.ENOSPC, "os_write_no_space"),
+        (errno.EROFS, "os_write_read_only"),
+        (errno.ENOENT, "os_write_dir_not_found"),
+        (errno.EIO, "os_write_error"),
+    ],
+)
+async def test_init_cache_dir_error(
+    hass: HomeAssistant, error_no: int, translation_key: str
+) -> None:
+    """Test a failure to create the cache folder raises a translated error."""
+    manager = tts.SpeechManager(hass, True, "tts", DEFAULT_TIME_MEMORY)
+
+    with (
+        patch(
+            "homeassistant.components.tts._init_tts_cache_dir",
+            side_effect=OSError(error_no, "error"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        manager._init_cache()
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": hass.config.path("tts")}
+
+
+@pytest.mark.parametrize(
+    ("error_no", "translation_key", "error_type"),
+    [
+        (errno.ENOENT, "os_read_not_found", ServiceValidationError),
+        (errno.EACCES, "os_read_permission_denied", HomeAssistantError),
+        (errno.EISDIR, "os_read_is_directory", HomeAssistantError),
+        (errno.EIO, "os_read_error", HomeAssistantError),
+    ],
+)
+async def test_init_cache_read_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    error_no: int,
+    translation_key: str,
+    error_type: type[HomeAssistantError],
+) -> None:
+    """Test a failure to list the cache folder raises a translated error."""
+    manager = tts.SpeechManager(hass, True, str(tmp_path), DEFAULT_TIME_MEMORY)
+
+    with (
+        patch(
+            "homeassistant.components.tts._get_cache_files",
+            side_effect=OSError(error_no, "error"),
+        ),
+        pytest.raises(error_type) as exc_info,
+    ):
+        manager._init_cache()
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": str(tmp_path)}
+
+
+@pytest.mark.parametrize(
+    ("error_no", "translation_key", "error_type"),
+    [
+        (errno.ENOENT, "os_read_not_found", ServiceValidationError),
+        (errno.EACCES, "os_read_permission_denied", HomeAssistantError),
+        (errno.EISDIR, "os_read_is_directory", HomeAssistantError),
+        (errno.EIO, "os_read_error", HomeAssistantError),
+    ],
+)
+async def test_load_cache_file_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    error_no: int,
+    translation_key: str,
+    error_type: type[HomeAssistantError],
+) -> None:
+    """Test a failure to read a cached file raises a translated error."""
+    manager = tts.SpeechManager(hass, True, str(tmp_path), DEFAULT_TIME_MEMORY)
+    manager.file_cache["key"] = "speech.mp3"
+
+    with (
+        patch(
+            "homeassistant.components.tts.open",
+            side_effect=OSError(error_no, "error"),
+        ),
+        pytest.raises(error_type) as exc_info,
+    ):
+        async for _ in manager._async_load_file("key"):
+            pass
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {
+        "path": str(tmp_path / "speech.mp3")
+    }
+    assert "key" not in manager.file_cache

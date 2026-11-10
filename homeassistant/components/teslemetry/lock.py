@@ -14,7 +14,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .const import DOMAIN
 from .entity import (
     TeslemetryRootEntity,
@@ -22,7 +21,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 ENGAGED = "Engaged"
 
