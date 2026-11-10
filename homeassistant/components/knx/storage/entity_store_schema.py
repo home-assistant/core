@@ -648,7 +648,15 @@ NOTIFY_KNX_SCHEMA = probatio.DataclassSchema(NotifyKnxConfig)
 class NumberKnxConfig:
     """UI configuration of a KNX number entity."""
 
-    ga_sensor: Annotated[GroupAddressConfig, ga(write_required=True, dpt=["numeric"])]
+    ga_sensor: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            dpt=["numeric"],
+            dpa_write=[dpa.FB1019.ANALOG_OUT_SETP],
+            dpa_state=[dpa.FB1019.STATUS_ANALOG_OUTPUT],
+        ),
+    ]
     respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
     section_advanced_options: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)

@@ -309,6 +309,13 @@ class FB1018(StrEnum):
     STATUS_DIGITAL_OUTPUT = "1018.52"
 
 
+class FB1019(StrEnum):
+    """FB 1019 General Purpose Analog Output."""
+
+    ANALOG_OUT_SETP = "1019.51"
+    STATUS_ANALOG_OUTPUT = "1019.52"
+
+
 class FB1021(StrEnum):
     """FB 1021 Lock Sensor."""
 

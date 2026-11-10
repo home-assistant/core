@@ -125,6 +125,8 @@ TEST_PROJECT: dict[str, Any] = {
         "7/4/3": _group_address("7/4/3", DPT_PERCENT),
         "7/4/4": _group_address("7/4/4", None),
         "7/4/5": _group_address("7/4/5", {"main": 255, "sub": 1}),
+        "7/5/1": _group_address("7/5/1", DPT_PERCENT),
+        "7/5/2": _group_address("7/5/2", DPT_PERCENT),
         "7/6/1": _group_address("7/6/1", DPT_ACTIVE_ENERGY),
         "7/6/2": _group_address("7/6/2", DPT_POWER),
     },
@@ -220,6 +222,12 @@ TEST_PROJECT: dict[str, Any] = {
                 "CH-1": _channel("Raumtemperatur", ["321"], ["co-140"]),
             },
         },
+        "1.3.6": {
+            "name": "Analogaktor",
+            "channels": {
+                "CH-1": _channel("Analogausgang", ["1019"], ["co-150", "co-151"]),
+            },
+        },
         "1.3.7": {
             "name": "Energiezähler",
             "channels": {
@@ -267,6 +275,8 @@ TEST_PROJECT: dict[str, Any] = {
         "co-122": _com_object(["372.54"], ["7/2/3"]),  # no config key for this DPA
         "co-123": _com_object(["372.56"], ["7/2/4"]),  # no config key for this DPA
         "co-140": _com_object(["321.51"], ["7/4/1", "7/4/3", "7/4/2"]),
+        "co-150": _com_object(["1019.51"], ["7/5/1"]),
+        "co-151": _com_object(["1019.52"], ["7/5/2"]),
         "co-160": _com_object(["1104.147"], ["7/6/2"]),  # no config key for this DPA
         "co-161": _com_object(["1104.101"], ["7/6/1"]),
     },
@@ -379,6 +389,7 @@ def test_functional_block_platforms() -> None:
         "1013": [Platform.SENSOR],
         "1015": [Platform.SENSOR],
         "1016": [Platform.SENSOR],
+        "1019": [Platform.NUMBER],
         "1101": [Platform.SENSOR],
         "1102": [Platform.SENSOR],
         "1103": [Platform.SENSOR],
@@ -688,6 +699,36 @@ def test_sensor_unsupported_dpt_dropped(group_address: str) -> None:
     assert _build_platform_suggestion(project, channel, Platform.SENSOR) is None
 
 
+def test_number_suggestion() -> None:
+    """Test FB 1019 suggestion."""
+    channel = _test_channel("1.3.6", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.NUMBER)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "ga_sensor": {"write": "7/5/1", "state": "7/5/2", "dpt": "5.001"}
+    }
+    assert suggestion["unmatched"] == []
+
+
+def test_number_state_with_other_dpt_dropped() -> None:
+    """Test that a state address is dropped if its DPT differs from the write address."""
+    # 7/4/1 is DPT 9.001 - numeric, but not the DPT of the write address
+    project = _with_com_objects(**{"co-90": _com_object(["1019.52"], ["7/4/1"])})
+    channel = _channel("Analogausgang", ["1019"], ["co-90", "co-150"])
+    suggestion = _build_platform_suggestion(project, channel, Platform.NUMBER)
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_sensor": {"write": "7/5/1", "dpt": "5.001"}}
+    assert suggestion["unmatched"] == ["1019.52"]
+
+
+def test_number_non_numeric_dpt_dropped() -> None:
+    """Test that a write address with a non-numeric DPT yields no suggestion."""
+    # 1/0/1 is DPT 1.001
+    project = _with_com_objects(**{"co-90": _com_object(["1019.51"], ["1/0/1"])})
+    channel = _channel("Analogausgang", ["1019"], ["co-90"])
+    assert _build_platform_suggestion(project, channel, Platform.NUMBER) is None
+
+
 def test_meter_suggestion() -> None:
     """Test FB 1104 suggestion of the consumption value."""
     channel = _test_channel("1.3.7", "CH-1")
@@ -733,6 +774,7 @@ async def test_ws_get_entity_suggestions(
         "functional_blocks_found": [
             "1014",
             "1018",
+            "1019",
             "1104",
             "321",
             "372",
@@ -755,6 +797,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.3.2_CH-1",
         "fb_1.3.3_CH-1",
         "fb_1.3.5_CH-1",
+        "fb_1.3.6_CH-1",
         "fb_1.3.7_CH-1",
     ]
 
@@ -780,6 +823,7 @@ async def test_ws_get_entity_suggestions(
     assert suggestions["fb_1.3.1_CH-1"]["platform_options"] == ["binary_sensor"]
     assert suggestions["fb_1.3.2_CH-1"]["platform_options"] == ["switch"]
     assert suggestions["fb_1.3.3_CH-1"]["platform_options"] == ["fan"]
+    assert suggestions["fb_1.3.6_CH-1"]["platform_options"] == ["number"]
     assert suggestions["fb_1.3.5_CH-1"]["suggestions"]["sensor"]["knx"] == {
         "ga_sensor": {"state": "7/4/1", "dpt": "9.001", "passive": ["7/4/2"]}
     }
