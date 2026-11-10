@@ -1,7 +1,6 @@
 """Service calls for the Teslemetry integration."""
 
 import logging
-from typing import TYPE_CHECKING
 
 import probatio
 
@@ -24,10 +23,7 @@ from homeassistant.helpers import (
 
 from .const import DOMAIN
 from .helpers import handle_command, handle_energy_site_command, handle_vehicle_command
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
-
-if TYPE_CHECKING:
-    from . import TeslemetryConfigEntry
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 _LOGGER = logging.getLogger(__name__)
 
