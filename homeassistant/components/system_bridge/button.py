@@ -102,8 +102,7 @@ async def async_setup_entry(
         """Add a button for each new saved command and remove those deleted."""
         if (commands := coordinator.data.commands) is None:
             return
-        current = {command.id for command in commands}
-        if new_ids := current - known:
+        if new_ids := commands.keys() - known:
             known.update(new_ids)
             async_add_entities(
                 SystemBridgeCommandButton(coordinator, api_port, command_id)
@@ -117,7 +116,7 @@ async def async_setup_entry(
                 registry_entry.domain == BUTTON_DOMAIN
                 and registry_entry.unique_id.startswith(command_prefix)
                 and (command_id := registry_entry.unique_id[len(command_prefix) :])
-                not in current
+                not in commands
             ):
                 known.discard(command_id)
                 entity_registry.async_remove(registry_entry.entity_id)
@@ -185,14 +184,7 @@ class SystemBridgeCommandButton(SystemBridgeEntity, ButtonEntity):
     @property
     def _command(self) -> SettingsCommandDefinition | None:
         """Return the saved command, if it is still in the allowlist."""
-        return next(
-            (
-                command
-                for command in self.coordinator.data.commands or []
-                if command.id == self._command_id
-            ),
-            None,
-        )
+        return (self.coordinator.data.commands or {}).get(self._command_id)
 
     @property
     @override

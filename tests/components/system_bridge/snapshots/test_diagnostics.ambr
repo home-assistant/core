@@ -82,8 +82,8 @@
         'time_remaining': 12,
         'voltage': 12.6,
       }),
-      'commands': list([
-        dict({
+      'commands': dict({
+        'backup': dict({
           'arguments': '**REDACTED**',
           'command': '**REDACTED**',
           'id': 'backup',
@@ -91,7 +91,7 @@
           'prefab': '',
           'workingDir': '**REDACTED**',
         }),
-      ]),
+      }),
       'cpu': dict({
         'count': 4,
         'family': 'family',

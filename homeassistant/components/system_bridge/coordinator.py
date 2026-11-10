@@ -175,7 +175,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
 
     async def async_handle_settings(self, settings: Settings) -> None:
         """Follow the saved commands when any client changes the settings."""
-        self.data.commands = settings.commands.allowlist
+        self.data.commands = {
+            command.id: command for command in settings.commands.allowlist
+        }
         self.async_set_updated_data(self.data)
 
     async def _async_update_commands(self) -> None:
@@ -191,7 +193,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 "Could not get the saved commands for %s: %s", self.title, exception
             )
             return
-        self.data.commands = commands.allowlist
+        self.data.commands = {command.id: command for command in commands.allowlist}
 
     async def async_handle_power_state(self, event: PowerStateEvent) -> None:
         """Go unavailable as soon as the host says it's sleeping or shutting down."""
