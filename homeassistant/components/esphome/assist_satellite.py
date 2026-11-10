@@ -273,6 +273,10 @@ class EsphomeAssistSatellite(
         # Inform listeners that config has been updated
         self._entry_data.async_assist_satellite_config_updated(self._satellite_config)
 
+        # Which wake words are active is half of whether the audio is wanted,
+        # and a device is subscribed before its configuration arrives.
+        self._async_wake_word_audio_wanted_changed()
+
     @callback
     def _async_subscribe_voice_assistant(self) -> None:
         """Tell the device how to talk to us, and whether to send pre-roll."""

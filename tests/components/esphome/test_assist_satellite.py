@@ -3052,3 +3052,45 @@ async def test_stream_tts_audio_trailing_metadata(
     stream = _ChunkedMockResultStream(hass, "wav", [wav_with_trailing])
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_called_once_with(audio_payload)
+
+
+async def test_wake_word_audio_waits_for_the_satellite_configuration(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the audio is asked for once the device says what it listens for.
+
+    A device is subscribed before its configuration arrives, so at that
+    moment it has no wake words and nothing can be verified. Asking again
+    when the configuration lands is what makes this work at all.
+    """
+    mock_client.get_voice_assistant_configuration.return_value = (
+        AssistSatelliteConfiguration(
+            available_wake_words=[
+                AssistSatelliteWakeWord(
+                    id="okay_nabu", wake_word="okay nabu", trained_languages=["en"]
+                )
+            ],
+            active_wake_words=["okay_nabu"],
+            max_active_wake_words=1,
+        )
+    )
+
+    with patch.object(
+        voice_support,
+        "async_verifies_wake_word",
+        lambda _hass, wake_word: wake_word == "okay_nabu",
+    ):
+        mock_device = await mock_esphome_device(
+            mock_client=mock_client,
+            device_info={
+                "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+                | VoiceAssistantFeature.API_AUDIO
+                | VoiceAssistantFeature.ANNOUNCE
+                | VoiceAssistantFeature.WAKE_WORD_AUDIO
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert mock_device.voice_assistant_wake_word_audio is True
