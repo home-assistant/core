@@ -425,12 +425,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values={CONF_HOST: host},
             )
 
-        if endpoint is None:
-            return self._async_show_manual_host_form(
-                errors={"base": "cannot_connect"},
-                suggested_values={CONF_HOST: host},
-            )
-
         if endpoint.uid in izone_discovery.yaml_excluded_uids(self.hass):
             return self._async_show_manual_host_form(
                 errors={"base": "no_devices_found"},

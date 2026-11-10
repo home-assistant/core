@@ -9,6 +9,7 @@ from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
@@ -165,7 +166,7 @@ async def test_bad_entry(hass: HomeAssistant, entry_id: str) -> None:
             f"{URI_SCHEME}{DOMAIN}/{entry_id}~~baddirectory",
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(Unresolvable):
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/{entry_id}~~baddirectory/badfile.txt~~text/plain",

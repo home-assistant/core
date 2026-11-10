@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, Final, cast, override
+from typing import Any, Final, cast, override
 
 from fronius_solarapi import (
     CommonInverterData,
@@ -62,9 +62,7 @@ from .entity import (
     ModbusValues,
     async_add_entities_for_seen_keys,
 )
-
-if TYPE_CHECKING:
-    from . import FroniusConfigEntry
+from .solar_net import FroniusConfigEntry
 
 _LOGGER: Final = logging.getLogger(__name__)
 

@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 LEGACY_HACS_DOMAIN = "hacs"
 
 # The China fork of the custom integration writes this into the options of its
-# entry, the original never does. Its users chose the China mirrors, the
+# entry, the original never does. Its users chose the China relays, the
 # download profile that has them.
 LEGACY_HACS_CHINA_OPTION = "use_shared"
 LEGACY_HACS_CHINA_PROFILE = "hasscn"
@@ -140,12 +140,12 @@ def _async_adopt_options(hass: HomeAssistant, entry: MarketplaceConfigEntry) -> 
 
     if LEGACY_HACS_CHINA_OPTION in entry.options:
         options.setdefault(CONF_PROFILE, LEGACY_HACS_CHINA_PROFILE)
-        # A shared token came from a pool on the mirrors, it belongs to
+        # A shared token came from a pool on the relays, it belongs to
         # someone else
         if entry.options[LEGACY_HACS_CHINA_OPTION]:
             data.pop(CONF_TOKEN, None)
         LOGGER.info(
-            "Switched to the %s download profile, the previous install used the China mirrors",
+            "Switched to the %s download profile, the previous install used the China relays",
             LEGACY_HACS_CHINA_PROFILE,
         )
 

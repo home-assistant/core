@@ -23,7 +23,6 @@ from synology_dsm.exceptions import (
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -503,7 +502,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             {**self.saved_user_input, **user_input}, step_id="user"
         )
 
-    def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
+    def _async_get_existing_entry(
+        self, discovered_mac: str
+    ) -> SynologyDSMConfigEntry | None:
         """See if we already have a configured NAS with this MAC address."""
         for entry in self._async_current_entries():
             if discovered_mac in [
