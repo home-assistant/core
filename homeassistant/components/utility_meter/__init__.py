@@ -91,11 +91,11 @@ def period_or_cron(config: ConfigType) -> ConfigType:
     return config
 
 
-def max_28_days(config: timedelta) -> timedelta:
-    """Check that time period does not include more than 28 days."""
+def max_27_days(config: timedelta) -> timedelta:
+    """Check that time period does not include more than 27 days."""
     if config.days > MAX_METER_OFFSET_DAYS:
         raise probatio.Invalid(
-            "Unsupported offset of more than 28 days, please use a cron pattern."
+            "Unsupported offset of more than 27 days, please use a cron pattern."
         )
 
     return config
@@ -109,7 +109,7 @@ METER_CONFIG_SCHEMA = probatio.Schema(
             probatio.Optional(CONF_UNIQUE_ID): cv.string,
             probatio.Optional(CONF_METER_TYPE): probatio.In(METER_TYPES),
             probatio.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): probatio.All(
-                cv.time_period, cv.positive_timedelta, max_28_days
+                cv.time_period, cv.positive_timedelta, max_27_days
             ),
             probatio.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             probatio.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
