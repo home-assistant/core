@@ -5,6 +5,8 @@ from typing import Final
 
 DOMAIN: Final = "smtp"
 
+ATTR_IMAGES: Final = "images"  # optional embedded image file attachments
+ATTR_HTML: Final = "html"
 CONF_ENCRYPTION: Final = "encryption"
 CONF_SERVER: Final = "server"
 CONF_SENDER_NAME: Final = "sender_name"
@@ -35,12 +37,16 @@ class SMTPService(StrEnum):
 class SMTPServiceArgument(StrEnum):
     """Store keys for SMTP service arguments."""
 
+    TITLE = "title"
+    MESSAGE = "message"
     HTML = "html"
     ATTACHMENTS = "attachments"
+    PRIORITY = "priority"
+
+
+class SMTPServiceAttachment(StrEnum):
+    """Store keys for SMTP service attachments argument."""
+
     MEDIA_SOURCE = "media_source"
     FILENAME = "filename"
     CONTENT_ID = "content_id"
-    PRIORITY = "priority"
-
-    # legacy notify action arguments
-    IMAGES = "images"

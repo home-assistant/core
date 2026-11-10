@@ -2,20 +2,17 @@
 
 import probatio
 
-from homeassistant.components.notify import (
-    DOMAIN as NOTIFY_DOMAIN,
-    NotifyServiceArgument,
-)
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import MediaSelector
 
-from .const import DOMAIN, SMTPService, SMTPServiceArgument
+from .const import DOMAIN, SMTPService, SMTPServiceArgument, SMTPServiceAttachment
 
 SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
-        probatio.Optional(NotifyServiceArgument.TITLE): cv.string,
-        probatio.Required(NotifyServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(SMTPServiceArgument.TITLE): cv.string,
+        probatio.Required(SMTPServiceArgument.MESSAGE): cv.string,
         probatio.Optional(SMTPServiceArgument.HTML): cv.string,
         probatio.Optional(SMTPServiceArgument.ATTACHMENTS): probatio.All(
             probatio.EnsureList(),
@@ -23,10 +20,10 @@ SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
                 probatio.Schema(
                     {
                         probatio.Required(
-                            SMTPServiceArgument.MEDIA_SOURCE
+                            SMTPServiceAttachment.MEDIA_SOURCE
                         ): MediaSelector({"accept": ["*"]}),
-                        probatio.Optional(SMTPServiceArgument.FILENAME): cv.string,
-                        probatio.Optional(SMTPServiceArgument.CONTENT_ID): cv.string,
+                        probatio.Optional(SMTPServiceAttachment.FILENAME): cv.string,
+                        probatio.Optional(SMTPServiceAttachment.CONTENT_ID): cv.string,
                     }
                 )
             ],

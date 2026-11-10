@@ -48,6 +48,8 @@ from homeassistant.util.ssl import create_client_context
 
 from . import SmtpConfigEntry
 from .const import (
+    ATTR_HTML,
+    ATTR_IMAGES,
     CONF_ENCRYPTION,
     CONF_ENTRY,
     CONF_REPLY_TO,
@@ -62,6 +64,7 @@ from .const import (
     DOMAIN,
     ENCRYPTION_OPTIONS,
     SMTPServiceArgument,
+    SMTPServiceAttachment,
 )
 from .helpers import (
     SmtpClient,
@@ -236,7 +239,7 @@ class MailNotifyEntity(NotifyEntity):
 
         resolved = await asyncio.gather(
             *(
-                _resolve_media(self.hass, file[SMTPServiceArgument.MEDIA_SOURCE])
+                _resolve_media(self.hass, file[SMTPServiceAttachment.MEDIA_SOURCE])
                 for file in attachments
             )
         )
@@ -251,19 +254,19 @@ class MailNotifyEntity(NotifyEntity):
             )
 
             if not (
-                target_filename := file.get(SMTPServiceArgument.FILENAME, filename)
+                target_filename := file.get(SMTPServiceAttachment.FILENAME, filename)
             ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="media_source_missing_filename",
                     translation_placeholders={
-                        "media_content_id": file[SMTPServiceArgument.MEDIA_SOURCE][
+                        "media_content_id": file[SMTPServiceAttachment.MEDIA_SOURCE][
                             "media_content_id"
                         ]
                     },
                 )
             if (html_part := msg.get_body(("related", "html"))) and (
-                cid := file.get(SMTPServiceArgument.CONTENT_ID)
+                cid := file.get(SMTPServiceAttachment.CONTENT_ID)
             ):
                 html_part.add_related(
                     content,
@@ -372,16 +375,16 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
 
         msg: MIMEMultipart | MIMEText
         if data := kwargs.get(NotifyServiceArgument.DATA):
-            if SMTPServiceArgument.HTML in data:
+            if ATTR_HTML in data:
                 msg = _build_html_msg(
                     self.hass,
                     message,
-                    data[SMTPServiceArgument.HTML],
-                    images=data.get(SMTPServiceArgument.IMAGES, []),
+                    data[ATTR_HTML],
+                    images=data.get(ATTR_IMAGES, []),
                 )
             else:
                 msg = _build_multipart_msg(
-                    self.hass, message, images=data.get(SMTPServiceArgument.IMAGES, [])
+                    self.hass, message, images=data.get(ATTR_IMAGES, [])
                 )
         else:
             msg = _build_text_msg(message)
