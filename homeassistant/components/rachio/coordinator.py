@@ -211,6 +211,7 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="polling_paused",
+                    retry_after=self._seconds_until_resume(),
                     translation_placeholders={
                         "remaining": str(self._calls_remaining),
                         "resume": dt_util.as_local(self._resume_polling_at).isoformat(
@@ -239,9 +240,16 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="api_error",
                 translation_placeholders={"status": str(status)},
+                retry_after=self._seconds_until_resume(),
             )
         data: dict[str, Any] = response[1] or {}
         return data
+
+    def _seconds_until_resume(self) -> float | None:
+        """Return the seconds until polling resumes, or None if not paused."""
+        if self._resume_polling_at is None:
+            return None
+        return max((self._resume_polling_at - dt_util.utcnow()).total_seconds(), 0)
 
     @callback
     def _pause_if_calls_running_out(self, headers: dict[str, str]) -> None:

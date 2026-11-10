@@ -309,6 +309,7 @@ async def test_polling_pauses_after_the_limit_is_exhausted(
     )
     await _advance(hass, freezer, timedelta(minutes=1))
     assert not coordinator.last_update_success
+    assert coordinator.last_exception.retry_after == pytest.approx(7200 - 60)
     calls = mock_rachio.device.current_schedule.call_count
 
     await _advance(hass, freezer, timedelta(minutes=1))
