@@ -1,5 +1,7 @@
 """Services for the Switcher integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
@@ -7,19 +9,28 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    CONF_AUTO_OFF,
-    CONF_TIMER_MINUTES,
-    DOMAIN,
-    SERVICE_SET_AUTO_OFF_NAME,
-    SERVICE_TURN_ON_WITH_TIMER_NAME,
-)
+from .const import DOMAIN
+
+
+class SwitcherService(StrEnum):
+    """Store keys for Switcher services."""
+
+    SET_AUTO_OFF = "set_auto_off"
+    TURN_ON_WITH_TIMER = "turn_on_with_timer"
+
+
+class SwitcherServiceArgument(StrEnum):
+    """Store keys for Switcher service arguments."""
+
+    AUTO_OFF = "auto_off"
+    TIMER_MINUTES = "timer_minutes"
+
 
 SERVICE_SET_AUTO_OFF_SCHEMA: VolDictType = {
-    probatio.Required(CONF_AUTO_OFF): cv.time_period_str,
+    probatio.Required(SwitcherServiceArgument.AUTO_OFF): cv.time_period_str,
 }
 SERVICE_TURN_ON_WITH_TIMER_SCHEMA: VolDictType = {
-    probatio.Required(CONF_TIMER_MINUTES): probatio.All(
+    probatio.Required(SwitcherServiceArgument.TIMER_MINUTES): probatio.All(
         cv.positive_int, probatio.Range(min=1, max=150)
     ),
 }
@@ -32,7 +43,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_AUTO_OFF_NAME,
+        SwitcherService.SET_AUTO_OFF,
         entity_domain=SWITCH_DOMAIN,
         schema=SERVICE_SET_AUTO_OFF_SCHEMA,
         func="async_set_auto_off_service",
@@ -42,7 +53,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_TURN_ON_WITH_TIMER_NAME,
+        SwitcherService.TURN_ON_WITH_TIMER,
         entity_domain=SWITCH_DOMAIN,
         schema=SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
         func="async_turn_on_with_timer_service",

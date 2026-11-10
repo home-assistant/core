@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -192,6 +192,17 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             self.hass,
             self.websocket_client.close(),
             "System Bridge WebSocket close",
+        )
+
+    @callback
+    def async_reconnect_now(self) -> None:
+        """Reconnect without waiting out the backoff, as the host is back."""
+        self._reconnect_delay = UPDATE_INTERVAL
+        self._reconnect_after = None
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.async_request_refresh(),
+            "System Bridge reconnect",
         )
 
     async def async_handle_notification_event(self, event: NotificationEvent) -> None:

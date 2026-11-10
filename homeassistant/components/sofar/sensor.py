@@ -137,6 +137,7 @@ def _async_setup_battery_packs(
             SofarPackSensor(runtime_data, description, pack)
             for pack in new.values()
             for description in PACK_SENSOR_DESCRIPTIONS
+            if description.exists_fn(pack)
         )
 
     _async_add_answered_packs()
@@ -261,6 +262,7 @@ class SofarTotalSensorDescription(SensorEntityDescription, SofarEntityDescriptio
 class SofarPackSensorDescription(SensorEntityDescription, SofarEntityDescription):
     """Describe a Sofar BTS battery pack sensor."""
 
+    exists_fn: Callable[[BatteryPack], bool] = lambda _: True
     value_fn: Callable[[BatteryPack], StateType]
 
 
@@ -1815,6 +1817,42 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
 )
 
 
+def _cell_voltage(cell: int) -> SofarPackSensorDescription:
+    """Describe one cell's voltage, shown only for cells the pack has."""
+    return SofarPackSensorDescription(
+        key=f"cell_voltage_{cell}",
+        component=BATTERY_PACKS,
+        translation_key="cell_voltage",
+        translation_placeholders={"cell": str(cell)},
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        exists_fn=lambda pack: (
+            pack.cells_in_pack is not None and cell <= pack.cells_in_pack
+        ),
+        value_fn=lambda pack: pack.cell_voltages[cell - 1],
+    )
+
+
+def _cell_temperature(sensor: int) -> SofarPackSensorDescription:
+    """Describe one of the pack's four cell temperature sensors."""
+    return SofarPackSensorDescription(
+        key=f"cell_temperature_{sensor}",
+        component=BATTERY_PACKS,
+        translation_key="cell_temperature",
+        translation_placeholders={"sensor": str(sensor)},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda pack: pack.cell_temperatures[sensor - 1],
+    )
+
+
 PACK_SENSOR_DESCRIPTIONS: tuple[SofarPackSensorDescription, ...] = (
     SofarPackSensorDescription(
         key="remaining_capacity",
@@ -1885,4 +1923,6 @@ PACK_SENSOR_DESCRIPTIONS: tuple[SofarPackSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda pack: pack.pack_temperature_env,
     ),
+    *(_cell_temperature(sensor) for sensor in range(1, 5)),
+    *(_cell_voltage(cell) for cell in range(1, 25)),
 )
