@@ -3,8 +3,9 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from gatus_api import GatusClientError
+from gatus_api import GatusAuthError, GatusClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.gatus.coordinator import GatusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_gatus_client")
@@ -46,6 +45,21 @@ async def test_setup_failure_retry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_failure_auth(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an authentication failure places the entry in SETUP_ERROR state."""
+    mock_gatus_client.get_endpoints_statuses.side_effect = GatusAuthError(
+        "401 Unauthorized"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.usefixtures("mock_gatus_client")

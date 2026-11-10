@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.emulated_hue import DOMAIN
 from homeassistant.components.emulated_hue.config import (
@@ -18,8 +19,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
-
-from tests.common import async_fire_time_changed
 
 
 async def test_config_google_home_entity_id_to_number(

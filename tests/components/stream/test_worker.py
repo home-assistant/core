@@ -14,6 +14,7 @@ failure modes or corner cases like how out of order packets are handled.
 """
 
 import asyncio
+from collections.abc import Callable, Iterator
 import fractions
 import io
 import logging
@@ -311,7 +312,7 @@ def run_worker(
         stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
         stream_state,
         KeyFrameConverter(hass, stream_settings, dynamic_stream_settings()),
-        threading.Event(),
+        stream._thread_quit,
     )
 
 
@@ -505,6 +506,42 @@ async def test_discard_old_packets(hass: HomeAssistant) -> None:
     assert all(s.duration == SEGMENT_DURATION for s in complete_segments)
     assert len(decoded_stream.video_packets) == OUT_OF_ORDER_PACKET_INDEX
     assert len(decoded_stream.audio_packets) == 0
+
+
+@pytest.mark.parametrize(
+    "stop_index",
+    [
+        pytest.param(0, id="before_first_keyframe"),
+        pytest.param(OUT_OF_ORDER_PACKET_INDEX, id="while_discarding_old_packets"),
+    ],
+)
+async def test_stop_while_reading_packets(hass: HomeAssistant, stop_index: int) -> None:
+    """Test the worker stops reading packets when it is asked to stop."""
+    packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    # Packets after this one are considered out of order
+    packets[OUT_OF_ORDER_PACKET_INDEX - 1].dts = round(
+        TEST_SEQUENCE_LENGTH / VIDEO_FRAME_RATE / VIDEO_TIME_BASE
+    )
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+
+    def packet_source() -> Iterator:
+        yield from packets[:stop_index]
+        stream._thread_quit.set()
+        yield from packets[stop_index:]
+
+    source = packet_source()
+    py_av = MockPyAv()
+    py_av.container.packets = source
+    with patch("av.open", new=py_av.open):
+        run_worker(hass, stream, STREAM_SOURCE)
+    # Only one packet was read after the stop request
+    assert next(source, None) is packets[stop_index + 1]
 
 
 async def test_packet_overflow(hass: HomeAssistant) -> None:
@@ -1050,7 +1087,7 @@ async def test_h265_video_is_hvc1(hass: HomeAssistant, worker_finished_stream) -
     segment = complete_segments[0]
     part = segment.parts[0]
     av_part = av.open(io.BytesIO(segment.init + part.data))
-    assert av_part.streams.video[0].codec_tag == "hev1"
+    assert av_part.streams.video[0].codec_tag == "hvc1"
     av_part.close()
 
     await stream.stop()
@@ -1140,6 +1177,26 @@ async def test_get_image_rotated(hass: HomeAssistant, h264_video, filename) -> N
         for orientation in (Orientation.NO_TRANSFORM, Orientation.ROTATE_RIGHT):
             stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
             stream.dynamic_stream_settings.orientation = orientation
+
+            # Both recordings must capture the same frame for the comparison
+            # below to hold, so drop every keyframe after the first. Each frame
+            # of the test video has different content, and the worker keeps
+            # stashing keyframes while the recording task is awaited.
+            keyframe_converter = stream._keyframe_converter
+            stash_keyframe_packet = keyframe_converter.stash_keyframe_packet
+            first_keyframe_stashed = threading.Event()
+
+            def stash_first_keyframe_packet(
+                packet: av.Packet,
+                stash: Callable[[av.Packet], None] = stash_keyframe_packet,
+                stashed: threading.Event = first_keyframe_stashed,
+            ) -> None:
+                if stashed.is_set():
+                    return
+                stashed.set()
+                stash(packet)
+
+            keyframe_converter.stash_keyframe_packet = stash_first_keyframe_packet
 
             with patch.object(hass.config, "is_allowed_path", return_value=True):
                 make_recording = hass.async_create_task(stream.async_record(filename))

@@ -1,13 +1,13 @@
 """Test the Home Assistant SkyConnect hardware platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 CONFIG_ENTRY_DATA = {
     "device": (

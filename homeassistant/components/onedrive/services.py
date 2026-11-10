@@ -2,14 +2,15 @@
 
 import asyncio
 from dataclasses import asdict
+from enum import StrEnum
 import glob
 from pathlib import Path, PurePosixPath
 from typing import cast
 
 from onedrive_personal_sdk.exceptions import OneDriveException
-import voluptuous as vol
+import probatio
 
-from homeassistant.const import CONF_FILENAME
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -23,25 +24,37 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import CONF_DELETE_PERMANENTLY, DOMAIN
 from .coordinator import OneDriveConfigEntry
 
-CONF_CONFIG_ENTRY_ID = "config_entry_id"
-CONF_DESTINATION_FOLDER = "destination_folder"
-CONF_DESTINATION_PATH = "destination_path"
 
-UPLOAD_SERVICE = "upload"
-UPLOAD_SERVICE_SCHEMA = vol.Schema(
+class OneDriveService(StrEnum):
+    """Store keys for OneDrive services."""
+
+    DELETE = "delete"
+    UPLOAD = "upload"
+
+
+class OneDriveServiceArgument(StrEnum):
+    """Store keys for OneDrive service arguments."""
+
+    DESTINATION_FOLDER = "destination_folder"
+    DESTINATION_PATH = "destination_path"
+    FILENAME = "filename"
+
+
+UPLOAD_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_DESTINATION_FOLDER): cv.string,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(OneDriveServiceArgument.FILENAME): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Required(OneDriveServiceArgument.DESTINATION_FOLDER): cv.string,
     }
 )
 
-DELETE_SERVICE = "delete"
-DELETE_SERVICE_SCHEMA = vol.Schema(
+DELETE_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_DESTINATION_PATH): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(OneDriveServiceArgument.DESTINATION_PATH): probatio.All(
+            probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
         ),
     }
 )
@@ -181,11 +194,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_handle_upload(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
         config_entry: OneDriveConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[CONF_CONFIG_ENTRY_ID]
+            hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         client = config_entry.runtime_data.client
         file_results = await hass.async_add_executor_job(
-            _read_file_contents, hass, call.data[CONF_FILENAME]
+            _read_file_contents, hass, call.data[OneDriveServiceArgument.FILENAME]
         )
 
         # make sure the destination folders exist, preserving subfolder structure
@@ -193,7 +206,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         try:
             base_folder_id = (await client.get_approot()).id
             for folder in (
-                cast(str, call.data[CONF_DESTINATION_FOLDER]).strip("/").split("/")
+                cast(str, call.data[OneDriveServiceArgument.DESTINATION_FOLDER])
+                .strip("/")
+                .split("/")
             ):
                 base_folder_id = (await client.create_folder(base_folder_id, folder)).id
             folder_ids[""] = base_folder_id
@@ -240,13 +255,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_handle_delete(call: ServiceCall) -> None:
         """Delete one or more files from OneDrive."""
         config_entry: OneDriveConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[CONF_CONFIG_ENTRY_ID]
+            hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         client = config_entry.runtime_data.client
         delete_permanently = config_entry.options.get(CONF_DELETE_PERMANENTLY, False)
         file_paths = [
             _validate_destination_path(p)
-            for p in cast(list[str], call.data[CONF_DESTINATION_PATH])
+            for p in cast(
+                list[str], call.data[OneDriveServiceArgument.DESTINATION_PATH]
+            )
         ]
 
         try:
@@ -283,7 +300,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        UPLOAD_SERVICE,
+        OneDriveService.UPLOAD,
         async_handle_upload,
         schema=UPLOAD_SERVICE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
@@ -292,7 +309,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        DELETE_SERVICE,
+        OneDriveService.DELETE,
         async_handle_delete,
         schema=DELETE_SERVICE_SCHEMA,
     )

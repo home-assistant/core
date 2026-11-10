@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.event import (
-    ButtonEventType,
+    DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -17,11 +17,6 @@ from . import OpenDisplayConfigEntry
 from .entity import OpenDisplayEntity
 
 PARALLEL_UPDATES = 0
-
-_EVENT_TYPE_MAP = {
-    "button_down": ButtonEventType.PRESS_START,
-    "button_up": ButtonEventType.PRESS_END,
-}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,8 +47,7 @@ async def async_setup_entry(
                         translation_key="button",
                         translation_placeholders={"number": str(button_number)},
                         device_class=EventDeviceClass.BUTTON,
-                        # Non-standard event types are deprecated; can be removed on 2027.1
-                        event_types=[*_EVENT_TYPE_MAP, *_EVENT_TYPE_MAP.values()],
+                        event_types=["button_down", "button_up"],
                         byte_index=bi.button_data_byte_index,
                         button_id=button_id,
                     )
@@ -66,7 +60,7 @@ async def async_setup_entry(
         entity_registry, entry.entry_id
     ):
         if (
-            entity_entry.domain == "event"
+            entity_entry.domain == EVENT_DOMAIN
             and entity_entry.unique_id.startswith(button_unique_id_prefix)
             and entity_entry.unique_id not in active_unique_ids
         ):
@@ -89,15 +83,12 @@ class OpenDisplayEventEntity(OpenDisplayEntity, EventEntity):
         """Fire events for button transitions reported by this coordinator update."""
         data = self.coordinator.data
         if data is not None and data is not self._last_processed_data:
-            self._last_processed_data = data
             for event in data.button_events:
                 if (
                     event.byte_index == self.entity_description.byte_index
                     and event.button_id == self.entity_description.button_id
-                    and event.event_type in _EVENT_TYPE_MAP
+                    and event.event_type in self.event_types
                 ):
-                    # Non-standard event types are deprecated; can be removed on 2027.1
                     self._trigger_event(event.event_type)
-                    self.async_write_ha_state()
-                    self._trigger_event(_EVENT_TYPE_MAP[event.event_type])
-                    self.async_write_ha_state()
+            self._last_processed_data = data
+            self.async_write_ha_state()

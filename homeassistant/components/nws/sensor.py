@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -118,7 +117,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     NWSSensorEntityDescription(
         key="barometricPressure",
         name="Barometric Pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.PA,
         unit_convert=UnitOfPressure.INHG,
@@ -126,7 +125,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     NWSSensorEntityDescription(
         key="seaLevelPressure",
         name="Sea Level Pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.PA,
         unit_convert=UnitOfPressure.INHG,
@@ -176,7 +175,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: NWSConfigEntry,
         nws_data: NWSData,
         description: NWSSensorEntityDescription,
     ) -> None:

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rabbitair import Quality
 
 from homeassistant.components.rabbitair.const import DOMAIN
@@ -18,8 +19,6 @@ from .test_config_flow import (
     TEST_UNIQUE_ID,
     get_mock_state,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_async_zeroconf")
 

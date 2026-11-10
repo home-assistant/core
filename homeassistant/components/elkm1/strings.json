@@ -3,7 +3,6 @@
     "abort": {
       "address_already_configured": "An Elk-M1 with this address is already configured",
       "already_configured": "An Elk-M1 with this prefix is already configured",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "reconfigure_successful": "Successfully reconfigured Elk-M1 integration",
@@ -56,6 +55,14 @@
         "description": "Choose a discovered system or 'Manual Entry' if no devices have been discovered.",
         "title": "Connect to Elk-M1 Control"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_config_item": {
+      "message": "Invalid configuration for {item}"
+    },
+    "login_failed": {
+      "message": "ElkM1 login failed for {host}"
     }
   },
   "issues": {

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from twentemilieu import TwenteMilieuConnectionError, TwenteMilieuError
 
 from homeassistant.components.twentemilieu.const import (
@@ -15,8 +16,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_twentemilieu")

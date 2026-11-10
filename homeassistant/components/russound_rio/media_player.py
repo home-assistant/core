@@ -51,7 +51,9 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        RussoundZoneDevice(controller, zone_id, sources, zone_source_exclusion)
+        RussoundZoneDevice(
+            hass, controller, entry, zone_id, sources, zone_source_exclusion
+        )
         for controller in client.controllers.values()
         for zone_id in controller.zones
     )
@@ -88,13 +90,15 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         controller: Controller,
+        entry: RussoundConfigEntry,
         zone_id: int,
         sources: dict[int, Source],
         zone_source_exclusion: bool,
     ) -> None:
         """Initialize the zone device."""
-        super().__init__(controller, zone_id)
+        super().__init__(hass, controller, entry, zone_id)
         _zone = self._zone
         self._sources = sources
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"

@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aioacaia.discovery import is_new_scale
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -82,9 +82,9 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): SelectSelector(
+                    probatio.Required(CONF_ADDRESS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -141,10 +141,9 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self.context["title_placeholders"] = placeholders = {
-            CONF_NAME: self._discovered[CONF_NAME]
+            "name": self._discovered[CONF_NAME]
         }
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=placeholders,

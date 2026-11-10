@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "invalid_discovery_topic": "Invalid discovery topic prefix."
     },
@@ -18,6 +15,14 @@
       "confirm": {
         "description": "Do you want to set up Tasmota?"
       }
+    }
+  },
+  "exceptions": {
+    "camera_image_error": {
+      "message": "An error occurred while getting a new camera image from {entity_id}"
+    },
+    "camera_image_timeout": {
+      "message": "Timeout getting camera image from {entity_id}"
     }
   },
   "issues": {

@@ -24,9 +24,9 @@ async def async_setup_entry(
     entities: list[VeluxOnOffLight] = []
     for node in pyvlx.nodes:
         if isinstance(node, Light):
-            entities.append(VeluxDimmableLight(node, config_entry.entry_id))
+            entities.append(VeluxDimmableLight(hass, node, config_entry.entry_id))
         elif isinstance(node, OnOffLight):
-            entities.append(VeluxOnOffLight(node, config_entry.entry_id))
+            entities.append(VeluxOnOffLight(hass, node, config_entry.entry_id))
     async_add_entities(entities)
 
 

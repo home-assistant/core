@@ -7,7 +7,9 @@ from pyHomee.const import AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 from websockets.exceptions import ConnectionClosed
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -26,7 +28,9 @@ class HomeeEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, attribute: HomeeAttribute, entry: HomeeConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, attribute: HomeeAttribute, entry: HomeeConfigEntry
+    ) -> None:
         """Initialize the wrapper using a HomeeAttribute and target entity."""
         self._attribute = attribute
         self._attr_unique_id = (
@@ -43,11 +47,18 @@ class HomeeEntity(Entity):
         else:
             self._attr_device_info = DeviceInfo(
                 identifiers={
-                    (DOMAIN, f"{entry.runtime_data.settings.uid}-{attribute.node_id}")
+                    (
+                        DOMAIN,
+                        f"{entry.runtime_data.settings.uid}-{attribute.node_id}",
+                    )
                 },
                 name=node.name,
                 model=get_name_for_enum(NodeProfile, node.profile),
-                via_device=(DOMAIN, entry.runtime_data.settings.uid),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, entry.runtime_data.settings.uid),
+                    config_entry_id=entry.entry_id,
+                ),
             )
         if attribute.name:
             self._attr_name = attribute.name
@@ -106,7 +117,9 @@ class HomeeNodeEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, node: HomeeNode, entry: HomeeConfigEntry
+    ) -> None:
         """Initialize the wrapper using a HomeeNode and target entity."""
         self._node = node
         self._attr_unique_id = f"{entry.unique_id}-{node.id}"
@@ -123,7 +136,11 @@ class HomeeNodeEntity(Entity):
                 name=node.name,
                 model=get_name_for_enum(NodeProfile, node.profile),
                 sw_version=self._get_software_version(),
-                via_device=(DOMAIN, entry.runtime_data.settings.uid),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, entry.runtime_data.settings.uid),
+                    config_entry_id=entry.entry_id,
+                ),
             )
 
         self._host_connected = entry.runtime_data.connected

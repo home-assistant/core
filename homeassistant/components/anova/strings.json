@@ -61,5 +61,10 @@
         "name": "Water temperature"
       }
     }
+  },
+  "exceptions": {
+    "invalid_login": {
+      "message": "Login to Anova failed, the username or password is incorrect"
+    }
   }
 }

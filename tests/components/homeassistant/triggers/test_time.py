@@ -4,8 +4,13 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_component,
+)
 
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import time
@@ -19,8 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed, mock_component
 
 
 @pytest.fixture(autouse=True)
@@ -370,13 +373,17 @@ async def test_if_action_before(
     before_10 = dt_util.now().replace(hour=8)
     after_10 = dt_util.now().replace(hour=14)
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=before_10):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=before_10
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
     assert len(service_calls) == 1
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=after_10):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=after_10
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -403,13 +410,17 @@ async def test_if_action_after(
     before_10 = dt_util.now().replace(hour=8)
     after_10 = dt_util.now().replace(hour=14)
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=before_10):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=before_10
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
     assert len(service_calls) == 0
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=after_10):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=after_10
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -437,13 +448,17 @@ async def test_if_action_one_weekday(
     monday = dt_util.now() - timedelta(days=days_past_monday)
     tuesday = monday + timedelta(days=1)
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=monday):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=monday
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
     assert len(service_calls) == 1
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=tuesday
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -472,19 +487,25 @@ async def test_if_action_list_weekday(
     tuesday = monday + timedelta(days=1)
     wednesday = tuesday + timedelta(days=1)
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=monday):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=monday
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
     assert len(service_calls) == 1
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=tuesday
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
     assert len(service_calls) == 2
 
-    with patch("homeassistant.helpers.condition.dt_util.now", return_value=wednesday):
+    with patch(
+        "homeassistant.helpers.condition.conditions.dt_util.now", return_value=wednesday
+    ):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -810,7 +831,7 @@ def test_schema_valid(conf) -> None:
 )
 def test_schema_invalid(conf) -> None:
     """Make sure we don't accept number for 'at' value."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         time.TRIGGER_SCHEMA(conf)
 
 
@@ -1145,7 +1166,7 @@ def test_weekday_validation() -> None:
 
     # Invalid weekday
     invalid_config = {"platform": "time", "at": "5:00:00", "weekday": "invalid"}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         time.TRIGGER_SCHEMA(invalid_config)
 
     # Invalid weekday in list
@@ -1154,5 +1175,5 @@ def test_weekday_validation() -> None:
         "at": "5:00:00",
         "weekday": ["mon", "invalid"],
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         time.TRIGGER_SCHEMA(invalid_config)

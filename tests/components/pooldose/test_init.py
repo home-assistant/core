@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.pooldose.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import RequestStatus
-
-from tests.common import MockConfigEntry
 
 
 async def test_devices(
@@ -27,7 +26,9 @@ async def test_devices(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "TEST123456789")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "TEST123456789"), mock_config_entry.entry_id
+    )
 
     assert device is not None
     assert device == snapshot

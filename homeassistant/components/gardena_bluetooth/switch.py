@@ -5,7 +5,7 @@ from typing import Any, override
 from gardena_bluetooth.const import Valve
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -44,13 +44,14 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(
-            coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
+            coordinator, {Valve.state.unique_id, Valve.manual_watering_time.unique_id}
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.unique_id}"
         self._attr_translation_key = "state"
         self._attr_is_on = None
         self._attr_entity_registry_enabled_default = False
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self.coordinator.get_cached(Valve.state)
@@ -59,10 +60,10 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if not (data := self.coordinator.data.get(Valve.manual_watering_time.uuid)):
+        value = self.coordinator.get_cached(Valve.manual_watering_time)
+        if value is None:
             raise HomeAssistantError("Unable to get manual activation time.")
 
-        value = Valve.manual_watering_time.decode(data)
         await self.coordinator.write(Valve.remaining_open_time, value)
         self._attr_is_on = True
         self.async_write_ha_state()

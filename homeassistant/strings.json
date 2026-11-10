@@ -8,6 +8,7 @@
       "enable": "Enable",
       "open": "Open",
       "pause": "Pause",
+      "reboot": "Reboot",
       "reload": "Reload",
       "restart": "Restart",
       "start": "Start",
@@ -22,7 +23,7 @@
         "already_configured_device": "Device is already configured",
         "already_configured_location": "Location is already configured",
         "already_configured_service": "Service is already configured",
-        "already_in_progress": "Configuration flow is already in progress",
+        "already_in_progress": "This is already being configured. Finish the existing configuration before starting again.",
         "cloud_not_connected": "Not connected to Home Assistant Cloud.",
         "no_compatible_radio_frequency_transmitters": "No radio frequency transmitter supports {frequency} {modulation} transmissions. Please add a compatible transmitter first.",
         "no_devices_found": "No devices found on the network",
@@ -63,7 +64,7 @@
         "ip": "IP address",
         "language": "Language",
         "latitude": "Latitude",
-        "llm_hass_api": "Control Home Assistant",
+        "llm_hass_api": "AI tools",
         "location": "Location",
         "longitude": "Longitude",
         "mode": "Mode",
@@ -82,6 +83,7 @@
       },
       "data_description": {
         "infrared_entity_id": "The infrared emitter entity to use for sending commands.",
+        "llm_hass_api": "**Device control** only accesses the entities you expose to voice assistants. **Home Assistant** accesses everything and only works for administrators, not voice assistant devices.",
         "radio_frequency_transmitter": "The radio frequency transmitter to use for sending commands."
       },
       "description": {

@@ -5,6 +5,8 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from waterfurnace.waterfurnace import (
     WFCredentialError,
     WFEnergyData,
@@ -27,9 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import SEED_STATISTIC_METADATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 STATISTIC_ID = f"{DOMAIN}:test_gwid_12345_energy"
 

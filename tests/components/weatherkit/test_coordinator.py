@@ -5,13 +5,12 @@ from unittest.mock import patch
 
 from apple_weatherkit.client import WeatherKitApiClientError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import init_integration, mock_weather_response
-
-from tests.common import async_fire_time_changed
 
 
 async def test_update_uses_stale_data_before_threshold(

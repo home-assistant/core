@@ -4,19 +4,18 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyyardian import OperationInfo, YardianDeviceState
 
 from homeassistant.components.yardian.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, Platform
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.yardian.async_setup_entry", return_value=True
+        "homeassistant.components.yardian.async_setup_entry", return_value=None
     ) as patched_setup_entry:
         yield patched_setup_entry
 
@@ -81,8 +80,18 @@ def sensor_platform_only() -> Generator[None]:
         yield
 
 
+@pytest.fixture
+def switch_platform_only() -> Generator[None]:
+    """Limit the integration setup to the switch (child-only) platform."""
+    with patch("homeassistant.components.yardian.PLATFORMS", [Platform.SWITCH]):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def mock_ui_refresh_delay() -> Generator[None]:
     """Patch the Switch refresh delay to 0 seconds to speed up tests."""
-    with patch("homeassistant.components.yardian.switch.SWITCH_REFRESH_DELAY", 0):
+    with (
+        patch("homeassistant.components.yardian.switch.SWITCH_ON_REFRESH_DELAY", 0),
+        patch("homeassistant.components.yardian.switch.SWITCH_OFF_REFRESH_DELAY", 0),
+    ):
         yield

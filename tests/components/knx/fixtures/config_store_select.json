@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "minor_version": 4,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "select": {
+        "knx_es_01KCXYT0WEJEQQ13SGCY1NHCYS": {
+          "entity": {
+            "name": "test",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "options_source": {
+              "ga_custom": {
+                "write": "1/1/1",
+                "state": "2/2/2",
+                "passive": []
+              },
+              "custom_options": [
+                {
+                  "option": "No control",
+                  "payload": "0x0",
+                  "payload_length": 0
+                },
+                {
+                  "option": "Control - Off",
+                  "payload": "0x2",
+                  "payload_length": 0
+                },
+                {
+                  "option": "Control - On",
+                  "payload": "0x3",
+                  "payload_length": 0
+                }
+              ]
+            },
+            "respond_to_read": false,
+            "sync_state": true
+          }
+        },
+        "knx_es_01KCXYT0WEJEQQ13SGCY1NHCYT": {
+          "entity": {
+            "name": "from dpt",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "options_source": {
+              "ga_enum": {
+                "write": "3/3/3",
+                "state": "4/4/4",
+                "passive": [],
+                "dpt": "20.102"
+              }
+            },
+            "respond_to_read": false,
+            "sync_state": true
+          }
+        }
+      }
+    },
+    "expose": {},
+    "time_server": {}
+  }
+}

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_REQUIRED
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_device_without_mac_address(
@@ -30,7 +29,12 @@ async def test_device_without_mac_address(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.unique_id == "123456"
-    assert device_registry.async_get_device({(DOMAIN, entry.unique_id)}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.unique_id), entry.entry_id
+        )
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("openwebif_device_mock")

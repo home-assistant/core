@@ -1,6 +1,7 @@
 """The tests for LG webOS TV device triggers."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -17,16 +18,16 @@ from homeassistant.setup import async_setup_component
 from . import setup_webostv
 from .const import ENTITY_ID, FAKE_UUID
 
-from tests.common import MockConfigEntry, async_get_device_automations
-
 
 async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, client
 ) -> None:
     """Test we get the expected triggers."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
 
     turn_on_trigger = {
         "platform": "device",
@@ -49,9 +50,11 @@ async def test_if_fires_on_turn_on_request(
     client,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
 
     assert await async_setup_component(
         hass,

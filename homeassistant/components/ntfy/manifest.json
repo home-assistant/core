@@ -1,12 +1,14 @@
 {
   "domain": "ntfy",
   "name": "ntfy",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/ntfy",
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["aiontfy"],
   "quality_scale": "platinum",
-  "requirements": ["aiontfy==0.8.5"]
+  "requirements": ["aiontfy==0.8.6"]
 }

@@ -1,6 +1,7 @@
 """Init tests for the Telegram Bot integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_migration_error(
@@ -158,8 +157,8 @@ async def test_migrate_entry_to_per_chat_devices(
     # even a chat whose notify entity was deleted before the migration ran. A surviving
     # notify entity is moved onto its chat's device.
     for subentry_id, chat_id in zip(subentry_ids, chat_ids, strict=True):
-        chat_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{bot_id}_{chat_id}")}
+        chat_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{bot_id}_{chat_id}"), config_entry.entry_id
         )
         assert chat_device is not None
         assert chat_device.config_subentry_id == subentry_id
@@ -190,13 +189,15 @@ async def test_per_chat_devices(
     await hass.async_block_till_done()
 
     # The bot device belongs to the config entry (no subentry) and holds the event entity
-    bot_device = device_registry.async_get_device(identifiers={(DOMAIN, "123456")})
+    bot_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), mock_broadcast_config_entry.entry_id
+    )
     assert bot_device is not None
     assert bot_device.config_subentry_id is None
 
     for chat_id in (123456, 654321):
-        chat_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"123456_{chat_id}")}
+        chat_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"123456_{chat_id}"), mock_broadcast_config_entry.entry_id
         )
         assert chat_device is not None
         assert chat_device.config_subentry_id is not None
@@ -225,7 +226,9 @@ async def test_remove_chat_subentry_removes_per_chat_device(
         for sid, subentry in mock_broadcast_config_entry.subentries.items()
         if subentry.data[CONF_CHAT_ID] == 123456
     )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "123456_123456")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456_123456"), mock_broadcast_config_entry.entry_id
+    )
     assert entity_registry.async_get_entity_id("notify", DOMAIN, "123456_123456")
 
     hass.config_entries.async_remove_subentry(mock_broadcast_config_entry, subentry_id)
@@ -233,7 +236,13 @@ async def test_remove_chat_subentry_removes_per_chat_device(
 
     # The removed chat's device and notify entity are gone; the other chat and the bot
     # device remain
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "123456_123456")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456_123456"), mock_broadcast_config_entry.entry_id
+    )
     assert not entity_registry.async_get_entity_id("notify", DOMAIN, "123456_123456")
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "123456_654321")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "123456")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456_654321"), mock_broadcast_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "123456"), mock_broadcast_config_entry.entry_id
+    )

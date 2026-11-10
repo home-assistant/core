@@ -1,10 +1,11 @@
 """The lock tests for the yale platform."""
 
-import datetime
+import datetime as dt
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 
@@ -32,18 +33,16 @@ from .mocks import (
     async_setup_component,
 )
 
-from tests.common import async_fire_time_changed
-
 
 async def test_lock_device_registry(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     lock_one = await _mock_doorsense_enabled_yale_lock_detail(hass)
-    await _create_yale_with_devices(hass, [lock_one])
+    entry, _ = await _create_yale_with_devices(hass, [lock_one])
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("yale", "online_with_doorsense")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("yale", "online_with_doorsense"), entry.entry_id
     )
     assert reg_device == snapshot
 
@@ -196,7 +195,7 @@ async def test_open_lock_operation_socketio_connected(
     listener = list(socketio._listeners)[0]
     listener(
         lock_with_unlatch.device_id,
-        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        dt_util.utcnow() + dt.timedelta(seconds=2),
         {
             "status": "kAugLockState_Unlocked",
         },
@@ -240,7 +239,7 @@ async def test_one_lock_operation_socketio_connected(
     listener = list(socketio._listeners)[0]
     listener(
         lock_one.device_id,
-        dt_util.utcnow() + datetime.timedelta(seconds=1),
+        dt_util.utcnow() + dt.timedelta(seconds=1),
         {
             "status": "kAugLockState_Unlocked",
         },
@@ -260,7 +259,7 @@ async def test_one_lock_operation_socketio_connected(
 
     listener(
         lock_one.device_id,
-        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        dt_util.utcnow() + dt.timedelta(seconds=2),
         {
             "status": "kAugLockState_Locked",
         },
@@ -289,7 +288,7 @@ async def test_one_lock_operation_socketio_connected(
 
     listener(
         lock_one.device_id,
-        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        dt_util.utcnow() + dt.timedelta(seconds=2),
         {
             "status": "kAugLockState_Unlocked",
         },
@@ -461,7 +460,7 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
         == LockState.LOCKING
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state
@@ -469,7 +468,7 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
     )
 
     socketio.connected = True
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state
@@ -477,7 +476,7 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
     )
 
     # Ensure socketio status is always preserved
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
     await hass.async_block_till_done()
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state
@@ -486,7 +485,7 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
 
     listener(
         lock_one.device_id,
-        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        dt_util.utcnow() + dt.timedelta(seconds=2),
         {
             "status": "kAugLockState_Unlocking",
         },
@@ -500,7 +499,7 @@ async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
         == LockState.UNLOCKING
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
     await hass.async_block_till_done()
     assert (
         states.get("lock.online_with_doorsense_name_online_with_doorsense_name").state

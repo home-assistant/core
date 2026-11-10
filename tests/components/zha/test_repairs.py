@@ -1,9 +1,13 @@
 """Test ZHA repairs."""
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
@@ -14,6 +18,7 @@ from homeassistant.components.homeassistant_sky_connect.const import (  # pylint
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.zha.const import DOMAIN
+from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.components.zha.repairs.network_settings_inconsistent import (
     ISSUE_INCONSISTENT_NETWORK_SETTINGS,
 )
@@ -23,14 +28,11 @@ from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
     _detect_radio_hardware,
     warn_on_wrong_silabs_firmware,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 SKYCONNECT_DEVICE = (
     "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0"
@@ -162,6 +164,7 @@ async def test_multipan_firmware_repair(
     # The issue is created when we fail to probe
     assert issue is not None
     assert issue.translation_placeholders["firmware_type"] == "CPC"
+    assert issue.config_entry_id == config_entry.entry_id
 
     # If ZHA manages to start up normally after this, the issue will be deleted
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -244,6 +247,135 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     assert issue is None
 
 
+async def _detect_wrong_firmware(
+    hass: HomeAssistant,
+    probe_side_effect: Callable[..., Awaitable[ApplicationType]] | None = None,
+) -> None:
+    """Run radio type detection as a flow would, probing multi-PAN firmware."""
+    radio_manager = ZhaRadioManager()
+    radio_manager.hass = hass
+    radio_manager.device_path = SKYCONNECT_DEVICE
+
+    with (
+        patch("homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()),
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware.probe_silabs_firmware_type",
+            return_value=ApplicationType.CPC,
+            side_effect=probe_side_effect,
+        ),
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware._detect_radio_hardware",
+            return_value=HardwareType.SKYCONNECT,
+        ),
+    ):
+        assert (
+            await radio_manager.detect_radio_type()
+            == ProbeResult.WRONG_FIRMWARE_INSTALLED
+        )
+
+
+async def test_wrong_firmware_flow_issue_linked_to_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the flow's wrong firmware issue is linked to and removed with the entry."""
+    config_entry.add_to_hass(hass)
+
+    await _detect_wrong_firmware(hass)
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
+    )
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED)
+        is None
+    )
+
+
+@pytest.mark.parametrize(
+    "change_entry",
+    [
+        pytest.param(
+            lambda hass, entry: hass.config_entries.async_remove(entry.entry_id),
+            id="removed",
+        ),
+        pytest.param(
+            lambda hass, entry: hass.config_entries.async_set_disabled_by(
+                entry.entry_id, ConfigEntryDisabler.USER
+            ),
+            id="disabled",
+        ),
+    ],
+)
+async def test_wrong_firmware_flow_entry_changed_while_probing(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    change_entry: Callable[[HomeAssistant, MockConfigEntry], Awaitable[Any]],
+) -> None:
+    """Test the flow's issue is unlinked if the entry is removed or disabled."""
+    config_entry.add_to_hass(hass)
+
+    async def change_entry_and_probe(*args: Any, **kwargs: Any) -> ApplicationType:
+        await change_entry(hass, config_entry)
+        return ApplicationType.CPC
+
+    await _detect_wrong_firmware(hass, change_entry_and_probe)
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
+    )
+    assert issue is not None
+    assert issue.config_entry_id is None
+    assert not issue_registry.async_is_hidden(issue)
+
+
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param([], id="no_entry"),
+        pytest.param([ConfigEntryDisabler.USER], id="disabled_entry"),
+    ],
+)
+async def test_wrong_firmware_flow_issue_unlinked(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    disabled_by: list[ConfigEntryDisabler],
+) -> None:
+    """Test the flow's wrong firmware issue is unlinked without an enabled entry."""
+    for disabler in disabled_by:
+        MockConfigEntry(domain=DOMAIN, disabled_by=disabler).add_to_hass(hass)
+
+    await _detect_wrong_firmware(hass)
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
+    )
+    assert issue is not None
+    assert issue.config_entry_id is None
+
+
+async def test_no_warn_on_ziggurat_firmware(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that OpenThread RCP firmware with Ziggurat is not reported as wrong."""
+    with patch(
+        "homeassistant.components.zha.repairs.wrong_silabs_firmware.probe_silabs_firmware_type",
+        return_value=ApplicationType.SPINEL_ZIGGURAT,
+    ):
+        assert not await warn_on_wrong_silabs_firmware(hass, device=SKYCONNECT_DEVICE)
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
+    )
+    assert issue is None
+
+
 async def test_no_warn_on_socket(hass: HomeAssistant) -> None:
     """Test that no warning is issued when the device is a socket."""
     with patch(
@@ -295,6 +427,7 @@ async def test_inconsistent_settings_keep_new(
 
     # The issue is created
     assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
 
     client = await hass_client()
     resp = await client.post(

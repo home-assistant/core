@@ -76,6 +76,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo Presence camera light."""
         super().__init__(netatmo_device)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._signal_name = f"{HOME}-{self.home.entity_id}"
@@ -124,7 +125,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     @override
     def available(self) -> bool:
         """If the webhook is not established, mark as unavailable."""
-        return super().available and bool(self.data_handler.webhook)
+        return super().available and self.data_handler.webhook_delivering
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -157,6 +158,7 @@ class NetatmoLight(NetatmoReachabilityEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo light."""
         super().__init__(netatmo_device)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         if self.device.brightness is not None:
@@ -183,6 +185,7 @@ class NetatmoLight(NetatmoReachabilityEntity, LightEntity):
             await self.device.async_set_brightness(
                 round(kwargs[ATTR_BRIGHTNESS] / 2.55)
             )
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
 
         else:
             await self.device.async_on()

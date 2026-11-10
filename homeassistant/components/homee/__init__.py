@@ -36,7 +36,7 @@ PLATFORMS = [
 type HomeeConfigEntry = ConfigEntry[Homee]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> None:
     """Set up homee from a config entry."""
     # Create the Homee api object using host, user,
     # password & pyHomee instance from the config
@@ -117,19 +117,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
         )
         if device:
             _LOGGER.info("Removing device %s", device.name)
-            device_registry.async_update_device(
-                device_id=device.id,
-                remove_config_entry_id=entry.entry_id,
-            )
+            device_registry.async_remove_device(device.id)
 
     homee.add_nodes_listener(_remove_node_callback)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> None:
     """Unload a homee config entry."""
     # Unload platforms
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

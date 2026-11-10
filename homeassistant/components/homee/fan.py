@@ -25,13 +25,14 @@ PARALLEL_UPDATES = 0
 
 
 async def add_fan_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee fan entities."""
     async_add_entities(
-        HomeeFan(node, config_entry)
+        HomeeFan(hass, node, config_entry)
         for node in nodes
         if node.profile == NodeProfile.VENTILATION_CONTROL
     )
@@ -44,7 +45,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Homee fan platform."""
 
-    await setup_homee_platform(add_fan_entities, async_add_entities, config_entry)
+    await setup_homee_platform(hass, add_fan_entities, async_add_entities, config_entry)
 
 
 class HomeeFan(HomeeNodeEntity, FanEntity):
@@ -56,9 +57,11 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
     speed_range = (1, 8)
     _attr_speed_count = int_states_in_range(speed_range)
 
-    def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, node: HomeeNode, entry: HomeeConfigEntry
+    ) -> None:
         """Initialize a Homee fan entity."""
-        super().__init__(node, entry)
+        super().__init__(hass, node, entry)
         self._speed_attribute: HomeeAttribute = cast(
             HomeeAttribute, node.get_attribute_by_type(AttributeType.VENTILATION_LEVEL)
         )

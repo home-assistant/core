@@ -7,7 +7,7 @@ import math
 from typing import TYPE_CHECKING, Any, NamedTuple, override
 from uuid import UUID
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -30,7 +30,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -65,7 +69,11 @@ from .const import (
     PLATFORMS,
 )
 from .helpers import Observation
-from .issues import raise_mirrored_entries, raise_no_prob_given_false
+from .issues import (
+    raise_mirrored_entries,
+    raise_mirrored_observations,
+    raise_no_prob_given_false,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +95,7 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
                 " must be specified",
                 config[CONF_ENTITY_ID],
             )
-            raise vol.Invalid("above_or_below")
+            raise probatio.Invalid("above_or_below")
         if above is not None and below is not None:
             if above > below:
                 _LOGGER.error(
@@ -96,19 +104,19 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
                     above,
                     below,
                 )
-                raise vol.Invalid("above_below")
+                raise probatio.Invalid("above_below")
     return config
 
 
-NUMERIC_STATE_SCHEMA = vol.All(
-    vol.Schema(
+NUMERIC_STATE_SCHEMA = probatio.All(
+    probatio.Schema(
         {
             CONF_PLATFORM: CONF_NUMERIC_STATE,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_ABOVE): vol.Coerce(float),
-            vol.Optional(CONF_BELOW): vol.Coerce(float),
-            vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-            vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Optional(CONF_ABOVE): probatio.Coerce(float),
+            probatio.Optional(CONF_BELOW): probatio.Coerce(float),
+            probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+            probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
         },
         required=True,
     ),
@@ -155,49 +163,58 @@ def no_overlapping(configs: list[dict]) -> list[dict]:
                     intervals[i + 1].above,
                     intervals[i + 1].below,
                 )
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "overlapping_ranges",
                 )
     return configs
 
 
-STATE_SCHEMA = vol.Schema(
+STATE_SCHEMA = probatio.Schema(
     {
         CONF_PLATFORM: CONF_STATE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TO_STATE): cv.string,
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Required(CONF_TO_STATE): cv.string,
+        probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
 
-TEMPLATE_SCHEMA = vol.Schema(
+TEMPLATE_SCHEMA = probatio.Schema(
     {
         CONF_PLATFORM: CONF_TEMPLATE,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        probatio.Required(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Required(CONF_P_GIVEN_T): probatio.Coerce(float),
+        probatio.Optional(CONF_P_GIVEN_F): probatio.Coerce(float),
     },
     required=True,
 )
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        vol.Required(CONF_OBSERVATIONS): vol.Schema(
-            vol.All(
-                cv.ensure_list,
-                [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): cv.string,
+        probatio.Required(CONF_OBSERVATIONS): probatio.Schema(
+            probatio.All(
+                probatio.EnsureList(),
+                [
+                    probatio.TaggedUnion(
+                        CONF_PLATFORM,
+                        {
+                            CONF_TEMPLATE: TEMPLATE_SCHEMA,
+                            CONF_STATE: STATE_SCHEMA,
+                            CONF_NUMERIC_STATE: NUMERIC_STATE_SCHEMA,
+                        },
+                    )
+                ],
                 no_overlapping,
             )
         ),
-        vol.Required(CONF_PRIOR): vol.Coerce(float),
-        vol.Optional(
+        probatio.Required(CONF_PRIOR): probatio.Coerce(float),
+        probatio.Optional(
             CONF_PROBABILITY_THRESHOLD, default=DEFAULT_PROBABILITY_THRESHOLD
-        ): vol.Coerce(float),
+        ): probatio.Coerce(float),
     }
 )
 
@@ -318,6 +335,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = unique_id and f"bayesian-{unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
         self._observations = [
@@ -446,21 +464,37 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.probability = self._calculate_new_probability()
         self._attr_is_on = self.probability >= self._probability_threshold
 
-        # detect mirrored entries
-        for entity, observations in self.observations_by_entity.items():
-            raise_mirrored_entries(
-                self.hass, observations, text=f"{self._attr_name}/{entity}"
-            )
-
         all_template_observations: list[Observation] = [
             observations[0] for observations in self.observations_by_template.values()
         ]
-        if len(all_template_observations) == 2:
-            raise_mirrored_entries(
-                self.hass,
-                all_template_observations,
-                text=f"{self._attr_name}/{all_template_observations[0].value_template}",
-            )
+        if (config_entry := self.platform.config_entry) is None:
+            for entity, observations in self.observations_by_entity.items():
+                raise_mirrored_entries(
+                    self.hass, observations, text=f"{self._attr_name}/{entity}"
+                )
+            if len(all_template_observations) == 2:
+                raise_mirrored_entries(
+                    self.hass,
+                    all_template_observations,
+                    text=f"{self._attr_name}/{all_template_observations[0].value_template}",
+                )
+            return
+
+        with ir.async_refresh_issues(
+            self.hass, DOMAIN, config_entry_id=config_entry.entry_id
+        ):
+            for entity, observations in self.observations_by_entity.items():
+                raise_mirrored_observations(
+                    self.hass, config_entry, observations, entity, entity
+                )
+            if len(all_template_observations) == 2:
+                raise_mirrored_observations(
+                    self.hass,
+                    config_entry,
+                    all_template_observations,
+                    "template",
+                    next(iter(self.observations_by_template)).template,
+                )
 
     @callback
     def _recalculate_and_write_state(self) -> None:

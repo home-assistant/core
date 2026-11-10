@@ -492,9 +492,13 @@ async def get_lock_users(
 
     users: list[LockUserData] = []
     current_index = 1
+    # nextUserIndex skips over unoccupied slots, but some locks always report it
+    # as null. A null only ends the walk once the lock has reported a forward
+    # index, which is what shows it implements the field at all; otherwise the
+    # whole table is walked.
+    reports_next_index = False
 
-    # Iterate through users using next_user_index for efficiency
-    while current_index is not None and current_index <= max_users:
+    while current_index <= max_users:
         get_user_response = await matter_client.send_device_command(
             node_id=node.node_id,
             endpoint_id=lock_endpoint.endpoint_id,
@@ -507,11 +511,16 @@ async def get_lock_users(
         if user_data is not None:
             users.append(user_data)
 
-        # Move to next user index
         next_index = _get_attr(get_user_response, "nextUserIndex")
-        if next_index is None or next_index <= current_index:
+        if next_index is not None and next_index > current_index:
+            reports_next_index = True
+            current_index = next_index
+        elif next_index is None and reports_next_index:
             break
-        current_index = next_index
+        else:
+            # A null from a lock that has never reported a forward index, or an
+            # index that would not advance the walk.
+            current_index += 1
 
     return GetLockUsersResult(
         max_users=max_users,

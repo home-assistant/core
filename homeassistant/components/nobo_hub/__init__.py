@@ -6,13 +6,12 @@ from pynobo import PynoboConnectionError, nobo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_NAME,
     CONF_IP_ADDRESS,
     CONF_MAC,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -29,12 +28,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 type NoboHubConfigEntry = ConfigEntry[nobo]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> None:
     """Set up Nobø Ecohub from a config entry."""
 
     serial = entry.data[CONF_SERIAL]
@@ -77,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
                 entry, data={**entry.data, CONF_IP_ADDRESS: new_ip}
             )
 
-    async def _async_close(event):
+    async def _async_close(event: Event) -> None:
         """Close the Nobø Ecohub socket connection when HA stops."""
         await hub.stop()
 
@@ -107,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
         identifiers={(DOMAIN, hub.hub_serial)},
         connections=connections,
         serial_number=hub.hub_serial,
-        name=hub.hub_info[ATTR_NAME],
+        name=hub.hub_info["name"],
         manufacturer=NOBO_MANUFACTURER,
         model="Nobø Ecohub",
         sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
@@ -145,19 +144,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
 
     await hub.start()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> None:
     """Unload a config entry."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.stop()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.stop()
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> None:
     """Migrate old entry."""
     if entry.version == 1 and entry.minor_version < 2:
         # Lowercase override_type to match translation keys.
@@ -176,5 +171,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) ->
         hass.config_entries.async_update_entry(
             entry, data=new_data, version=1, minor_version=3
         )
-
-    return True

@@ -5,13 +5,13 @@ import logging
 from typing import Any, override
 
 import aiohttp
+import probatio
 from viaggiatreno_ha.trainline import (
     TrainLine,
     TrainLineStatus,
     TrainState,
     Viaggiatreno,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -54,9 +54,9 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_TRAIN_ID): cv.string,
-        vol.Required(CONF_STATION_ID): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_TRAIN_ID): cv.string,
+        probatio.Required(CONF_STATION_ID): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 

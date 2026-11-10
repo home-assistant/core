@@ -1,6 +1,6 @@
 """LG webOS TV services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_COMMAND
@@ -16,12 +16,12 @@ SERVICE_BUTTON = "button"
 SERVICE_COMMAND = "command"
 SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 
-BUTTON_SCHEMA: VolDictType = {vol.Required(ATTR_BUTTON): cv.string}
+BUTTON_SCHEMA: VolDictType = {probatio.Required(ATTR_BUTTON): cv.string}
 COMMAND_SCHEMA: VolDictType = {
-    vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PAYLOAD): dict,
+    probatio.Required(ATTR_COMMAND): cv.string,
+    probatio.Optional(ATTR_PAYLOAD): dict,
 }
-SOUND_OUTPUT_SCHEMA: VolDictType = {vol.Required(ATTR_SOUND_OUTPUT): cv.string}
+SOUND_OUTPUT_SCHEMA: VolDictType = {probatio.Required(ATTR_SOUND_OUTPUT): cv.string}
 
 SERVICES = (
     (

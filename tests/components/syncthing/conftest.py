@@ -4,13 +4,12 @@ from collections.abc import AsyncIterator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.syncthing.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_ENTRY, SERVER_ID, create_mock_syncthing_client
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -1,17 +1,28 @@
 """Service registration for System Bridge integration."""
 
+from collections.abc import Awaitable
 from dataclasses import asdict
 import logging
 from typing import Any
 
+import probatio
+from systembridgeconnector.const import EventType
+from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.keyboard_key import KeyboardKey
 from systembridgeconnector.models.keyboard_text import KeyboardText
 from systembridgeconnector.models.modules.processes import Process
 from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
-import voluptuous as vol
+from systembridgeconnector.models.response import Response
 
-from homeassistant.const import CONF_COMMAND, CONF_ID, CONF_NAME, CONF_PATH, CONF_URL
+from homeassistant.const import (
+    CONF_COMMAND,
+    CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
+    CONF_PATH,
+    CONF_URL,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,12 +30,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    service,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
@@ -53,10 +60,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "get_process_by_id",
         handle_get_process_by_id,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_ID): cv.positive_int,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_ID): cv.positive_int,
             },
         ),
         supports_response=SupportsResponse.ONLY,
@@ -66,81 +73,86 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "get_processes_by_name",
         handle_get_processes_by_name,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_NAME): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_NAME): cv.string,
             },
         ),
         supports_response=SupportsResponse.ONLY,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "open_path",
         handle_open_path,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_PATH): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_PATH): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "power_command",
         handle_power_command,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_COMMAND): probatio.In(POWER_COMMAND_MAP),
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "open_url",
         handle_open_url,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_URL): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_URL): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "send_keypress",
         handle_send_keypress,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_KEY): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_KEY): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
         description_placeholders={
             "syntax_keys_documentation_url": "https://robotjs.dev/docs/syntax#keys"
         },
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "send_text",
         handle_send_text,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_TEXT): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_TEXT): cv.string,
             },
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 
@@ -148,31 +160,8 @@ def _get_coordinator(
     hass: HomeAssistant, device_id: str
 ) -> SystemBridgeDataUpdateCoordinator:
     """Return the coordinator for a device id."""
-
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
-
-    if device_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"device": device_id},
-        )
-    try:
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
-        )
-    except StopIteration as e:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"device": device_id},
-        ) from e
-    entry: SystemBridgeConfigEntry = service.async_get_config_entry(
-        hass, DOMAIN, entry_id
-    )
+    entry: SystemBridgeConfigEntry
+    _, entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     return entry.runtime_data
 
 
@@ -220,50 +209,92 @@ async def handle_get_processes_by_name(
     }
 
 
+async def _async_send_command(
+    coordinator: SystemBridgeDataUpdateCoordinator,
+    action: str,
+    command: Awaitable[Response],
+) -> ServiceResponse:
+    """Send a command to the bridge, raising on a closed connection or an error."""
+    try:
+        response = await command
+    except (ConnectionClosedException, ConnectionResetError) as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": coordinator.config_entry.title,
+                "host": coordinator.config_entry.data[CONF_HOST],
+            },
+        ) from e
+    if response.type == EventType.ERROR:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_failed",
+            translation_placeholders={
+                "action": action,
+                "error": response.message or "",
+            },
+        )
+    return asdict(response)
+
+
 async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
     """Handle the open path service call."""
     _LOGGER.debug("Open path: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.open_path(
-        OpenPath(path=service_call.data[CONF_PATH])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.open_path(
+            OpenPath(path=service_call.data[CONF_PATH])
+        ),
     )
-    return asdict(response)
 
 
 async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
     """Handle the power command service call."""
     _LOGGER.debug("Power command: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await getattr(
-        coordinator.websocket_client,
-        POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
-    )()
-    return asdict(response)
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        getattr(
+            coordinator.websocket_client,
+            POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
+        )(),
+    )
 
 
 async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
     """Handle the open url service call."""
     _LOGGER.debug("Open URL: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.open_url(
-        OpenUrl(url=service_call.data[CONF_URL])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.open_url(OpenUrl(url=service_call.data[CONF_URL])),
     )
-    return asdict(response)
 
 
 async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
     """Handle the send_keypress service call."""
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.keyboard_keypress(
-        KeyboardKey(key=service_call.data[CONF_KEY])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=service_call.data[CONF_KEY])
+        ),
     )
-    return asdict(response)
 
 
 async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
     """Handle the send_text service call."""
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.keyboard_text(
-        KeyboardText(text=service_call.data[CONF_TEXT])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=service_call.data[CONF_TEXT])
+        ),
     )
-    return asdict(response)

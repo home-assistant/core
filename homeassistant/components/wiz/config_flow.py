@@ -3,10 +3,10 @@
 import logging
 from typing import Any, override
 
-from pywizlight import wizlight
+import probatio
+from pywizlight import BulbType, wizlight
 from pywizlight.discovery import DiscoveredBulb
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
-import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -98,7 +98,6 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: ip_address},
             )
 
-        self._set_confirm_only()
         placeholders = {"name": self._name, "host": ip_address}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -147,7 +146,9 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(devices_name)}
+            ),
         )
 
     @override
@@ -155,41 +156,79 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
-            if not is_ip_address(user_input[CONF_HOST]):
-                errors["base"] = "no_ip"
-            else:
-                bulb = wizlight(host)
-                try:
-                    bulbtype = await bulb.get_bulbtype()
-                    mac = await bulb.getMac()
-                except WizLightTimeOutError:
-                    errors["base"] = "bulb_time_out"
-                except ConnectionRefusedError:
-                    errors["base"] = "cannot_connect"
-                except WizLightConnectionError:
-                    errors["base"] = "no_wiz_light"
-                except Exception:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-                else:
-                    await self.async_set_unique_id(mac, raise_on_progress=False)
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: user_input[CONF_HOST]}
-                    )
-                    name = name_from_bulb_type_and_mac(bulbtype, mac)
-                    return self.async_create_entry(
-                        title=name,
-                        data=user_input,
-                    )
-                finally:
-                    await bulb.async_close()
+            bulb_info, errors = await self._async_validate_host(host)
+            if bulb_info is not None:
+                bulbtype, mac = bulb_info
+                await self.async_set_unique_id(mac, raise_on_progress=False)
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+                name = name_from_bulb_type_and_mac(bulbtype, mac)
+                return self.async_create_entry(
+                    title=name,
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(CONF_HOST, default=""): str}
+            ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device IP address."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            bulb_info, errors = await self._async_validate_host(user_input[CONF_HOST])
+            if bulb_info is not None:
+                await self.async_set_unique_id(bulb_info[1])
+                self._abort_if_unique_id_mismatch()
+                # The update listener is only registered after a successful setup
+                if reconfigure_entry.update_listeners:
+                    return self.async_update_and_abort(
+                        reconfigure_entry, data_updates=user_input
+                    )
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
+
+    async def _async_validate_host(
+        self, host: str
+    ) -> tuple[tuple[BulbType, str] | None, dict[str, str]]:
+        """Connect to the bulb and return its type and MAC, or the errors."""
+        if not is_ip_address(host):
+            return None, {"base": "no_ip"}
+        bulb = wizlight(host)
+        try:
+            bulbtype = await bulb.get_bulbtype()
+            mac = await bulb.getMac()
+        except WizLightTimeOutError:
+            return None, {"base": "bulb_time_out"}
+        except ConnectionRefusedError:
+            return None, {"base": "cannot_connect"}
+        except WizLightConnectionError:
+            return None, {"base": "no_wiz_light"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return None, {"base": "unknown"}
+        finally:
+            await bulb.async_close()
+        return (bulbtype, mac), {}

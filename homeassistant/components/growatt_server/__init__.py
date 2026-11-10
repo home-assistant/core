@@ -23,10 +23,9 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Mapping
-import datetime
+import datetime as dt
 from json import JSONDecodeError
 import logging
 
@@ -49,7 +48,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
-    CACHED_API_KEY,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
@@ -70,6 +68,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+# Temporary handoff of authenticated Classic API sessions from async_migrate_entry
+# to async_setup_entry. Avoids a second login() during the same startup, which
+# would hit Growatt's 5-minute per-endpoint rate limit. Popped after first use.
+_CACHED_APIS: dict[str, growattServer.GrowattApi] = {}
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Growatt Server integration."""
@@ -80,7 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entries.
 
     Migration from version 1.0 to 1.1:
@@ -141,11 +144,10 @@ async def async_migrate_entry(
             # (plant selection happens in config flow)
             # If it does, this indicates a corrupted config entry
             if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
-                _LOGGER.error(
-                    "V1 API config entry has DEFAULT_PLANT_ID, which indicates a "
-                    "corrupted configuration. Please reconfigure the integration"
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="migration_invalid_plant_id",
                 )
-                return False
 
             # Classic API with DEFAULT_PLANT_ID - resolve to actual plant_id
             if config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
@@ -154,11 +156,10 @@ async def async_migrate_entry(
                 url = config.get(CONF_URL, DEFAULT_URL)
 
                 if not username or not password:
-                    # Credentials missing - cannot migrate
-                    _LOGGER.error(
-                        "Cannot migrate DEFAULT_PLANT_ID due to missing credentials"
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_missing_credentials",
                     )
-                    return False
 
                 try:
                     # Create API instance and login
@@ -171,20 +172,20 @@ async def async_migrate_entry(
                         api.plant_list, login_response["user"]["id"]
                     )
                 except (ConfigEntryError, RequestException, JSONDecodeError) as ex:
-                    # API failure during migration - return False to retry later
-                    _LOGGER.error(
-                        "Failed to resolve plant_id during migration: %s. "
-                        "Migration will retry on next restart",
-                        ex,
-                    )
-                    return False
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_plant_id_failed",
+                    ) from ex
 
-                if not plant_info or "data" not in plant_info or not plant_info["data"]:
-                    _LOGGER.error(
-                        "No plants found for this account. "
-                        "Migration will retry on next restart"
+                # plant_list() is annotated as list, but the classic API returns
+                # {"data": [...]}. Remove once the annotation is fixed upstream:
+                # https://github.com/indykoning/PyPi_GrowattServer/issues/157
+                if not isinstance(plant_info, dict) or not plant_info.get("data"):
+                    raise ConfigEntryError(
+                        translation_domain=DOMAIN,
+                        translation_key="migration_no_plants",
+                        translation_placeholders={"username": username},
                     )
-                    return False
 
                 first_plant_id = plant_info["data"][0]["plantId"]
 
@@ -196,8 +197,7 @@ async def async_migrate_entry(
                 )
 
                 # Cache the logged-in API instance for reuse in async_setup_entry()
-                hass.data.setdefault(DOMAIN, {})
-                hass.data[DOMAIN][f"{CACHED_API_KEY}{config_entry.entry_id}"] = api
+                _CACHED_APIS[config_entry.entry_id] = api
 
                 _LOGGER.info(
                     "Migrated config entry to use specific plant_id '%s'",
@@ -208,8 +208,6 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, minor_version=1)
 
         _LOGGER.debug("Migration completed to version %s.%s", config_entry.version, 1)
-
-    return True
 
 
 async def _create_api_and_login(
@@ -316,7 +314,7 @@ def get_device_list_v1(
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Set up Growatt from a config entry."""
 
     config = config_entry.data
@@ -331,6 +329,7 @@ async def async_setup_entry(
 
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
+    api: growattServer.GrowattApi
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
@@ -347,9 +346,7 @@ async def async_setup_entry(
         # Check if migration cached an authenticated API instance for us to reuse.
         # This avoids calling login() twice (once in migration, once here) which
         # would trigger rate limiting.
-        cached_api = hass.data.get(DOMAIN, {}).pop(
-            f"{CACHED_API_KEY}{config_entry.entry_id}", None
-        )
+        cached_api = _CACHED_APIS.pop(config_entry.entry_id, None)
 
         if cached_api:
             # Reuse the logged-in API instance from migration (rate limit optimization)
@@ -406,7 +403,7 @@ async def async_setup_entry(
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
+    async def _async_scan_for_new_devices(_now: dt.datetime) -> None:
         """Scan for new or removed devices and update HA accordingly."""
         # Fetch current config (in case it was updated via reauth or options)
         current_plant_id = config_entry.data[CONF_PLANT_ID]
@@ -493,11 +490,9 @@ async def async_setup_entry(
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

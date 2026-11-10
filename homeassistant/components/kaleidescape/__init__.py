@@ -16,7 +16,7 @@ type KaleidescapeConfigEntry = ConfigEntry[KaleidescapeDevice]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: KaleidescapeConfigEntry
-) -> bool:
+) -> None:
     """Set up Kaleidescape from a config entry."""
     device = KaleidescapeDevice(
         entry.data[CONF_HOST], timeout=5, reconnect=True, reconnect_delay=5
@@ -42,14 +42,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: KaleidescapeConfigEntry
-) -> bool:
+) -> None:
     """Unload config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @dataclass

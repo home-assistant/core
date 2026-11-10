@@ -34,11 +34,11 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
 
     _attr_operation_list = OPERATION_LIST
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self.coordinator.atag.dhw.temperature
 
@@ -57,7 +57,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the setpoint if water demand, otherwise base temp."""
         return self.coordinator.atag.dhw.target_temperature
 

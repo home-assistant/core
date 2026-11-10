@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import User
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
@@ -29,15 +31,12 @@ from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, pytest
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.telegram_bot.async_setup_entry", return_value=True
+        "homeassistant.components.telegram_bot.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -473,6 +472,7 @@ async def test_create_webhook_entry(
     assert result["data"][CONF_API_ENDPOINT] == api_endpoint
     assert result["data"][CONF_URL] == webhook_url
     assert result["data"][CONF_TRUSTED_NETWORKS] == ["149.154.160.0/20"]
+    assert result["result"].unique_id == "mock api key"
 
 
 async def test_reauth_flow(
@@ -633,6 +633,7 @@ async def test_subentry_flow_chat_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "chat_not_found"
 
     # test: chat id already configured
@@ -786,9 +787,15 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         # test: import first entry success
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=data,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
         )
         await hass.async_block_till_done()
 
@@ -797,13 +804,20 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         assert result["data"][CONF_API_KEY] == "mock api key"
         assert result["data"][CONF_API_ENDPOINT] == "http://mock_api_endpoint"
         assert result["options"][ATTR_PARSER] == PARSER_MD
+        assert result["result"].unique_id == "mock api key"
 
         # test: import 2nd entry failed due to duplicate
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=data,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
         )
         await hass.async_block_till_done()
 

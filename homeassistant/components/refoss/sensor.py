@@ -23,8 +23,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .bridge import RefossConfigEntry, RefossDataUpdateCoordinator
+from .bridge import RefossConfigEntry
 from .const import CHANNEL_DISPLAY_NAME, DISPATCH_DEVICE_DISCOVERED, LOGGER, SENSOR_EM
+from .coordinator import RefossDataUpdateCoordinator
 from .entity import RefossEntity
 
 

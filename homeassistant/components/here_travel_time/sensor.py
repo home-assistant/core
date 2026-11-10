@@ -46,7 +46,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
     """Construct SensorEntityDescriptions."""
     return (
         SensorEntityDescription(
-            translation_key="duration",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
@@ -64,7 +63,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             suggested_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
-            translation_key="distance",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,

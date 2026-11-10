@@ -1,6 +1,7 @@
 """Test the eurotronic_cometblue number platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -14,8 +15,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import FIXTURE_MAC
 from .conftest import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _number_entity_id(entity_registry: er.EntityRegistry, key: str) -> str:

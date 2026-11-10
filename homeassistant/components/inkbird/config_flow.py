@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from inkbird_ble import INKBIRDBluetoothDeviceData as DeviceData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -56,7 +56,6 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_DEVICE_TYPE: str(self._discovered_device.device_type)},
             )
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -95,7 +94,7 @@ class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(self._discovered_devices)}
             ),
         )

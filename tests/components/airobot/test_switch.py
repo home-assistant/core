@@ -2,10 +2,17 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyairobotrest.exceptions import AirobotError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.airobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,8 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -88,7 +93,7 @@ async def test_switch_state_updates(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
     mock_settings,
-    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch state updates when coordinator refreshes."""
     # Initial state - both switches off
@@ -107,9 +112,9 @@ async def test_switch_state_updates(
     mock_settings.setting_flags.actuator_exercise_disabled = True
     mock_airobot_client.get_settings.return_value = mock_settings
 
-    # Trigger coordinator update
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify states updated
     child_lock = hass.states.get("switch.test_thermostat_child_lock")

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from verisure import (
     AuthenticationError,
     CookieReadError,
@@ -16,6 +17,7 @@ from verisure import (
 )
 
 from homeassistant.components.verisure.const import (
+    CONF_GIID,
     COOKIE_REFRESH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -24,9 +26,7 @@ from homeassistant.components.verisure.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import update_coordinator
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from homeassistant.helpers import device_registry as dr, update_coordinator
 
 ALARM_ENTITY_ID = "alarm_control_panel.verisure_alarm"
 
@@ -67,6 +67,30 @@ async def test_setup_success(
     mock_verisure.login_cookie.assert_called_once()
     mock_verisure.set_giid.assert_called_once()
     assert hass.states.get(ALARM_ENTITY_ID).state == "disarmed"
+
+
+@pytest.mark.usefixtures("mock_verisure")
+async def test_child_device_links_to_alarm_via_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Child devices link to the alarm (VBox) device via via_device_id."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.verisure.PLATFORMS", [Platform.SWITCH]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    giid = mock_config_entry.data[CONF_GIID]
+    alarm_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, giid), mock_config_entry.entry_id
+    )
+    plug_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "plug-1"), mock_config_entry.entry_id
+    )
+    assert alarm_device is not None
+    assert plug_device is not None
+    assert plug_device.via_device_id == alarm_device.id
 
 
 @pytest.mark.parametrize(

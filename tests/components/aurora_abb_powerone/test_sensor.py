@@ -5,20 +5,21 @@ from unittest.mock import patch
 from aurorapy.client import AuroraError, AuroraTimeoutError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aurora_abb_powerone.const import (
-    ATTR_DEVICE_NAME,
-    ATTR_FIRMWARE,
+    CONF_DEVICE_NAME,
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
     SCAN_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_CONFIG = {
     "sensor": {
@@ -58,10 +59,10 @@ def _mock_config_entry():
         data={
             CONF_PORT: "/dev/usb999",
             CONF_ADDRESS: 3,
-            ATTR_DEVICE_NAME: "mydevicename",
-            ATTR_MODEL: "mymodel",
-            ATTR_SERIAL_NUMBER: "123456",
-            ATTR_FIRMWARE: "1.2.3.4",
+            CONF_DEVICE_NAME: "mydevicename",
+            CONF_MODEL: "mymodel",
+            CONF_SERIAL_NUMBER: "123456",
+            CONF_FIRMWARE: "1.2.3.4",
         },
         source="dummysource",
         entry_id="13579",
@@ -278,6 +279,7 @@ async def test_sensor_unknown_error(
         await hass.async_block_till_done()
 
     with (
+        patch("homeassistant.components.aurora_abb_powerone.coordinator.sleep"),
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
         patch(
             "aurorapy.client.AuroraSerialClient.measure",

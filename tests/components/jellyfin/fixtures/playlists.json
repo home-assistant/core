@@ -1,0 +1,12 @@
+{
+  "Items": [
+    {
+      "Id": "PLAYLIST-UUID",
+      "ImageTags": {},
+      "IsFolder": true,
+      "Name": "PLAYLIST",
+      "ServerId": "string",
+      "Type": "Playlist"
+    }
+  ]
+}

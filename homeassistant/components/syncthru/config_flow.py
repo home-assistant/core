@@ -4,9 +4,9 @@ import re
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
+import probatio
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 from url_normalize import url_normalize
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_URL
@@ -70,7 +70,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             # Remove trailing " (ip)" if present for consistency with user driven config
             self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
 
-        self.context["title_placeholders"] = {CONF_NAME: self.name}
+        self.context["title_placeholders"] = {"name": self.name}
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -91,12 +91,16 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
+                    probatio.Required(
+                        CONF_URL, default=user_input.get(CONF_URL, "")
+                    ): str,
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
+                    probatio.Optional(
+                        CONF_NAME, default=user_input.get(CONF_NAME, "")
+                    ): str,
                 }
             ),
             errors=errors or {},

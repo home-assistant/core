@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientError
 from ha_xthings_cloud import XthingsCloudApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceCandidateInit
 
@@ -21,8 +22,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def setup_camera_integration(
@@ -41,7 +40,9 @@ async def test_cameras(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test camera entities are created correctly."""
-    with patch("homeassistant.components.camera._RND.getrandbits", return_value=1):
+    with patch(
+        "homeassistant.components.camera.entity._RND.getrandbits", return_value=1
+    ):
         await setup_camera_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

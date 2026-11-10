@@ -4,6 +4,7 @@ from datetime import time
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import snapshot_platform
 
 ENTITY_TIME = "time.fakespa_"
 

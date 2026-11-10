@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CART_DATA, DOMAIN
 from .coordinator import PicnicConfigEntry, PicnicUpdateCoordinator
 from .services import product_search
 
@@ -62,17 +62,18 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
         if self.coordinator.data is None:
             return None
 
-        _LOGGER.debug(self.coordinator.data["cart_data"]["items"])
+        cart = self.coordinator.data[CART_DATA]
+        _LOGGER.debug(cart.items)
 
         return [
             TodoItem(
-                summary=f"{article['name']} ({article['unit_quantity']})",
-                uid=f"{item['id']}-{article['id']}",
+                summary=f"{article.name} ({article.unit_quantity})",
+                uid=f"{line.id}-{article.id}",
                 # We set 'NEEDS_ACTION' so they count as state
                 status=TodoItemStatus.NEEDS_ACTION,
             )
-            for item in self.coordinator.data["cart_data"]["items"]
-            for article in item["items"]
+            for line in cart.items
+            for article in line.items
         ]
 
     @override

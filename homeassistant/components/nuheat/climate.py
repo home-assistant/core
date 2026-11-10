@@ -92,7 +92,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self._temperature_unit == "C":
             return UnitOfTemperature.CELSIUS
@@ -101,7 +101,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int | None:
+    def native_current_temperature(self) -> int | None:
         """Return the current temperature."""
         if self._temperature_unit == "C":
             return self._thermostat.celsius
@@ -156,7 +156,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> int:
+    def native_target_temperature(self) -> int:
         """Return the currently programmed temperature."""
         if self._temperature_unit == "C":
             return nuheat_to_celsius(self._target_temperature)
@@ -213,7 +213,7 @@ class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         _LOGGER.debug(
             "Setting NuHeat thermostat temperature to %s %s and schedule mode: %s",
             temperature,
-            self.temperature_unit,
+            self.native_temperature_unit,
             target_schedule_mode,
         )
 

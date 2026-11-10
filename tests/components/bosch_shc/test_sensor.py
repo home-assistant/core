@@ -1,0 +1,329 @@
+"""Tests for the Bosch SHC sensor platform."""
+
+from collections.abc import Generator
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
+
+from boschshcpy import SHCRoomThermostat2, TerminalConfiguration
+from boschshcpy.services_impl import OutdoorSirenPowerSupplyService, ValveTappetService
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.util import dt as dt_util
+
+from .conftest import (
+    outdoor_siren_device,
+    setup_integration,
+    thermostat_device,
+    thermostat_gen2_device,
+    twinguard_device,
+)
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> Generator[None]:
+    """Restrict bosch_shc setup to the sensor platform."""
+    with patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.SENSOR]):
+        yield
+
+
+@pytest.mark.usefixtures("mock_session")
+async def test_open_windows_doors_sensor(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """The whole-home open-doors/open-windows summary is exposed and polled."""
+    mock_session.api.get_open_windows.return_value = {
+        "openDoors": [{"name": "Front Door"}],
+        "openWindows": [{"name": "Kitchen Window"}, {"name": "Bedroom Window"}],
+        "openOthers": [{"name": "Cat Flap"}],
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.mock_title_open_doors_and_windows"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "4"
+    assert state.attributes["open_doors"] == ["Front Door"]
+    assert state.attributes["open_windows"] == ["Kitchen Window", "Bedroom Window"]
+    assert state.attributes["open_others"] == ["Cat Flap"]
+
+    hub_device = device_registry.async_get_device_by_identifier(
+        ("bosch_shc", "test-mac"), mock_config_entry.entry_id
+    )
+    assert hub_device is not None
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.device_id == hub_device.id
+
+    mock_session.api.get_open_windows.return_value = {
+        "openDoors": [],
+        "openWindows": [],
+        "openOthers": [],
+    }
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_device(valvestate=ValveTappetService.State.VALVE_TOO_TIGHT)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_valve_tappet_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A thermostat's valve motor status is exposed as an ENUM sensor."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.thermostat_valve_motor_status")
+    assert state is not None
+    assert state.state == "valve_too_tight"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_valvetappet_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The raw valve tappet percentage sensor stays opt-in, superseded by the valve entity."""
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get("sensor.thermostat_valvetappet")
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_device(valvestate=ValveTappetService.State.VALVE_TOO_TIGHT)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_valvetappet_state_attribute_preserved(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Enabling the legacy percentage sensor still surfaces its valve_tappet_state attribute."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch("homeassistant.config_entries.RELOAD_AFTER_UPDATE_DELAY", 1):
+        entity_registry.async_update_entity(
+            "sensor.thermostat_valvetappet", disabled_by=None
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.thermostat_valvetappet")
+    assert state is not None
+    assert state.attributes["valve_tappet_state"] == "VALVE_TOO_TIGHT"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    temperature=22.5,
+                    humidity=45.0,
+                    terminal_type=TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED,
+                    terminal_temperature=28.5,
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A Room Thermostat II exposes room temperature, humidity and floor temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.room_thermostat_2_temperature").state == "22.5"
+    humidity = hass.states.get("sensor.room_thermostat_2_humidity")
+    assert humidity.state == "45.0"
+    assert humidity.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert hass.states.get("sensor.room_thermostat_2_floor_temperature").state == "28.5"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_optional_sensors_absent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Humidity and floor temperature are skipped when the device has none."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.room_thermostat_2_temperature") is not None
+    assert hass.states.get("sensor.room_thermostat_2_humidity") is None
+    assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    device_id="hdm:ZigBee:roomthermostat2_1",
+                    name="Room Thermostat 2",
+                    terminal_type=TerminalConfiguration.Type.OUTDOOR_SENSOR_CONNECTED,
+                    terminal_temperature=5.0,
+                    spec=SHCRoomThermostat2,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_no_floor_temperature_for_other_probe(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A terminal reading from a non-floor probe is not labeled as floor temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
+
+
+def _twinguard_with_readings() -> MagicMock:
+    """Build a Twinguard double with climate readings and ratings."""
+    device = twinguard_device()
+    device.temperature = 21.5
+    device.humidity = 48.0
+    device.purity = 750
+    device.description = "Good air"
+    for rating in (
+        "combined_rating",
+        "temperature_rating",
+        "humidity_rating",
+        "purity_rating",
+    ):
+        value = MagicMock()
+        value.name = "GOOD"
+        setattr(device, rating, value)
+    return device
+
+
+def _siren_power_supply() -> MagicMock:
+    """Build an outdoor siren power-supply service double."""
+    power_supply = MagicMock(spec=OutdoorSirenPowerSupplyService)
+    power_supply.battery_percentage_remaining = 80
+    power_supply.main_power_supply = (
+        OutdoorSirenPowerSupplyService.MainPowerSupply.SOLAR
+    )
+    power_supply.solar_charging_score = (
+        OutdoorSirenPowerSupplyService.SolarChargingScore.GOOD
+    )
+    return power_supply
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"twinguards": [_twinguard_with_readings()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_twinguard_humidity_is_measurement(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Twinguard humidity is a measurement so long-term statistics are kept."""
+    await setup_integration(hass, mock_config_entry)
+
+    humidity = hass.states.get("sensor.twinguard_humidity")
+    assert humidity is not None
+    assert humidity.state == "48.0"
+    assert humidity.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"outdoor_sirens": [outdoor_siren_device(power_supply=_siren_power_supply())]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_power_supply_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The siren reports battery level, power source and solar charging."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.outdoor_siren_siren_battery").state == "80"
+    assert hass.states.get("sensor.outdoor_siren_siren_power_source").state == "solar"
+    assert hass.states.get("sensor.outdoor_siren_siren_solar_charging").state == "good"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"outdoor_sirens": [outdoor_siren_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_without_power_supply(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No power-supply sensors are created without power-supply support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.outdoor_siren_siren_battery") is None

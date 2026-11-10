@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor.models import AddonState, InstalledAddonComplete
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -14,9 +16,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 

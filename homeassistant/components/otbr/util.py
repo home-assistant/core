@@ -1,4 +1,4 @@
-"""Utility functions for the Open Thread Border Router integration."""
+"""Utility functions for the OpenThread Border Router integration."""
 
 from collections.abc import Callable, Coroutine
 import dataclasses
@@ -26,7 +26,7 @@ from homeassistant.helpers import issue_registry as ir
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,9 @@ def _handle_otbr_error[**_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
-            raise HomeAssistantError("Failed to call OTBR API") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from exc
 
     return _func
 
@@ -204,6 +206,7 @@ async def _warn_on_channel_collision(
         hass,
         DOMAIN,
         f"otbr_zha_channel_collision_{otbrdata.entry_id}",
+        config_entry_id=otbrdata.entry_id,
         is_fixable=False,
         is_persistent=False,
         severity=ir.IssueSeverity.WARNING,
@@ -245,6 +248,7 @@ def _warn_on_default_network_settings(
             hass,
             DOMAIN,
             f"insecure_thread_network_{otbrdata.entry_id}",
+            config_entry_id=otbrdata.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,

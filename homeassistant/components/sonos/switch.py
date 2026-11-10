@@ -1,13 +1,13 @@
 """Entity representing a Sonos Alarm."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, cast, override
 
 from soco.alarms import Alarm
 from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_TIME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -442,7 +442,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self._attr_unique_id = f"alarm-{speaker.household_id}:{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
-        self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -456,7 +455,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             )
         )
 
-        async def async_write_state_daily(now: datetime.datetime) -> None:
+        async def async_write_state_daily(now: dt.datetime) -> None:
             """Update alarm state attributes each calendar day."""
             _LOGGER.debug("Updating state attributes for %s", self.name)
             self.async_write_ha_state()
@@ -547,7 +546,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def _is_today(self) -> bool:
         """Return whether this alarm is scheduled for today."""
         recurrence = self.alarm.recurrence
-        daynum = int(datetime.datetime.today().strftime("%w"))
+        daynum = int(dt.datetime.today().strftime("%w"))
         return (
             recurrence in ("DAILY", "ONCE")
             or (recurrence == "WEEKENDS" and daynum in WEEKEND_DAYS)

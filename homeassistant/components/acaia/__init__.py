@@ -12,7 +12,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AcaiaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AcaiaConfigEntry) -> None:
     """Set up acaia as config entry."""
 
     coordinator = AcaiaCoordinator(hass, entry)
@@ -22,10 +22,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AcaiaConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AcaiaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AcaiaConfigEntry) -> None:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

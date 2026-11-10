@@ -8,14 +8,13 @@ from unittest.mock import AsyncMock, patch
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .utils import LongPollingMock
-
-from tests.common import MockConfigEntry
 
 
 @dataclass
@@ -128,7 +127,7 @@ class PlayerMocks:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.bluesound.async_setup_entry", return_value=True
+        "homeassistant.components.bluesound.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -156,6 +155,23 @@ def config_entry_secondary() -> MockConfigEntry:
             CONF_PORT: 11000,
         },
         unique_id="ff:ff:02:02:02:02-11000",
+    )
+
+
+@pytest.fixture
+def config_entry_non_default_port() -> MockConfigEntry:
+    """Return a mocked config entry for a non-default-port player.
+
+    Shares its mac (via player_mocks) with the leader `config_entry` at the
+    default port.
+    """
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.2",
+            CONF_PORT: 11001,
+        },
+        unique_id="ff:ff:01:01:01:01-11001",
     )
 
 

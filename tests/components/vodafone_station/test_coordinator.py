@@ -9,6 +9,7 @@ from aiovodafone.api import VodafoneStationDevice
 from aiovodafone.exceptions import VodafoneError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -17,8 +18,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import DEVICE_1_HOST, DEVICE_1_MAC, DEVICE_2_HOST, DEVICE_2_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -66,7 +65,10 @@ async def test_coordinator_device_cleanup(
     assert f"Skipping entity {DEVICE_2_HOST}" in caplog.text
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_1_MAC)}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, DEVICE_1_MAC), mock_config_entry.entry_id
+        )
+        is None
     )
     assert f"Removing device: {DEVICE_1_HOST}" in caplog.text
 
