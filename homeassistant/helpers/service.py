@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache, partial
 import inspect
@@ -25,14 +26,19 @@ from homeassistant.const import (
     CONF_TARGET,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
+    EVENT_SERVICE_REGISTERED,
+    EVENT_SERVICE_REMOVED,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
     EntityServiceResponse,
+    Event,
     HassJob,
     HassJobType,
     HomeAssistant,
+    Service,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
@@ -50,7 +56,6 @@ from homeassistant.loader import Integration, async_get_integrations
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
-from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
     config_validation as cv,
@@ -70,12 +75,40 @@ CONF_SERVICE_ENTITY_ID = "entity_id"
 
 _LOGGER = logging.getLogger(__name__)
 
+YAML_SERVICE_DESCRIPTIONS_CACHE: HassKey[dict[str, dict[str, dict[str, Any]]]] = (
+    HassKey("yaml_service_descriptions_cache")
+)
 SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]] = (
     HassKey("service_description_cache")
 )
-ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
+REGISTERED_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
+] = HassKey("registered_service_descriptions_cache")
+ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
+    tuple[
+        dict[str, dict[str, Any]],
+        dict[str, dict[str, dict[str, Any]]],
+        dict[str, dict[str, Any]],
+    ]
 ] = HassKey("all_service_descriptions_cache")
+
+type ServiceEventListener = Callable[
+    [dict[str, dict[str, Any]], dict[str, set[str]]], Coroutine[Any, Any, None]
+]
+
+
+@dataclass(slots=True)
+class _ServiceEventState:
+    """State of the service description event subscriptions."""
+
+    listeners: list[ServiceEventListener] = field(default_factory=list)
+    awaiting_snapshot: list[ServiceEventListener] = field(default_factory=list)
+    last_descriptions: dict[str, dict[str, Any]] | None = None
+    dirty: bool = False
+    running: bool = False
+
+
+SERVICE_EVENT_STATE: HassKey[_ServiceEventState] = HassKey("service_event_state")
 
 
 @cache
@@ -460,11 +493,11 @@ async def async_extract_config_entry_ids(
     return config_entry_ids
 
 
-def _load_services_file(integration: Integration) -> JSON_TYPE:
+def _load_services_file(integration: Integration) -> dict[str, Any]:
     """Load services file for an integration."""
     try:
         return cast(
-            JSON_TYPE,
+            dict[str, Any],
             _SERVICES_SCHEMA(
                 load_yaml_dict(str(integration.file_path / "services.yaml"))
             ),
@@ -483,7 +516,9 @@ def _load_services_file(integration: Integration) -> JSON_TYPE:
         return {}
 
 
-def _load_services_files(integrations: Iterable[Integration]) -> dict[str, JSON_TYPE]:
+def _load_services_files(
+    integrations: Iterable[Integration],
+) -> dict[str, dict[str, Any]]:
     """Load service files for multiple integrations."""
     return {
         integration.domain: _load_services_file(integration)
@@ -499,10 +534,75 @@ def async_get_cached_service_description(
     return hass.data.get(SERVICE_DESCRIPTION_CACHE, {}).get((domain, service))
 
 
-async def async_get_all_descriptions(
+def _build_description(yaml_description: dict[str, Any] | None) -> dict[str, Any]:
+    """Build the description of a service from its YAML."""
+    if yaml_description is None:
+        yaml_description = {}
+    description: dict[str, Any] = {"fields": yaml_description.get("fields", {})}
+    for item in ("description", "name", "target"):
+        if item in yaml_description:
+            description[item] = yaml_description[item]
+    description["response"] = None
+    description["description_placeholders"] = None
+    return description
+
+
+def _add_registration(description: dict[str, Any], service: Service) -> dict[str, Any]:
+    """Return the description completed with what the registration knows."""
+    description = {
+        key: value for key, value in description.items() if value is not None
+    }
+    response = service.supports_response
+    if response is not SupportsResponse.NONE:
+        description["response"] = {"optional": response is SupportsResponse.OPTIONAL}
+    if (placeholders := service.description_placeholders) is not None:
+        description["description_placeholders"] = placeholders
+    return description
+
+
+async def _async_load_services_yaml(hass: HomeAssistant, domains: set[str]) -> None:
+    """Load and cache the services.yaml of the domains not cached yet."""
+    yaml_descriptions = hass.data.setdefault(YAML_SERVICE_DESCRIPTIONS_CACHE, {})
+    if not (domains := domains.difference(yaml_descriptions)):
+        return
+
+    ints_or_excs = await async_get_integrations(hass, domains)
+    integrations: list[Integration] = []
+    loaded: dict[str, dict[str, Any]] = {}
+    for domain, int_or_exc in ints_or_excs.items():
+        if type(int_or_exc) is Integration and int_or_exc.has_services:
+            integrations.append(int_or_exc)
+            continue
+        _LOGGER.error(
+            "Failed to load services.yaml for integration: %s",
+            domain,
+            exc_info=None if isinstance(int_or_exc, Integration) else int_or_exc,
+        )
+        loaded[domain] = {}
+
+    if integrations:
+        loaded.update(
+            await hass.async_add_executor_job(_load_services_files, integrations)
+        )
+
+    # Replace instead of mutating so caches can compare the dict identity
+    yaml_descriptions = hass.data[YAML_SERVICE_DESCRIPTIONS_CACHE]
+    hass.data[YAML_SERVICE_DESCRIPTIONS_CACHE] = {
+        **yaml_descriptions,
+        **{
+            domain: {
+                service: _build_description(yaml_description)
+                for service, yaml_description in domain_yaml.items()
+            }
+            for domain, domain_yaml in loaded.items()
+        },
+    }
+
+
+async def _async_get_registered_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
-    """Return descriptions (i.e. user documentation) for all service calls."""
+    """Return descriptions for all registered services."""
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     # We don't mutate services here so we avoid calling
@@ -518,98 +618,189 @@ async def async_get_all_descriptions(
         for service_name in services_by_domain
     }
     # If we have a complete cache, check if it is still valid
-    if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
+    if (all_cache := hass.data.get(REGISTERED_SERVICE_DESCRIPTIONS_CACHE)) is not None:
         previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
         if previous_all_services == all_services:
             return previous_descriptions_cache
 
-    # Files we loaded for missing descriptions
-    loaded: dict[str, JSON_TYPE] = {}
     # We try to avoid making a copy in the event the cache is good,
     # but now we must make a copy in case new services get added
     # while we are loading the missing ones so we do not
     # add the new ones to the cache without their descriptions
     services = {domain: service.copy() for domain, service in services.items()}
 
-    if domains_with_missing_services := {
-        domain for domain, _ in all_services.difference(descriptions_cache)
-    }:
-        ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
-        integrations: list[Integration] = []
-        for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration and int_or_exc.has_services:
-                integrations.append(int_or_exc)
-                continue
-            if TYPE_CHECKING:
-                assert isinstance(int_or_exc, Exception)
-            _LOGGER.error(
-                "Failed to load services.yaml for integration: %s",
-                domain,
-                exc_info=int_or_exc,
-            )
-
-        if integrations:
-            loaded = await hass.async_add_executor_job(
-                _load_services_files, integrations
-            )
-
-    # Build response
-    descriptions: dict[str, dict[str, Any]] = {}
-    for domain, services_map in services.items():
-        descriptions[domain] = {}
-        domain_descriptions = descriptions[domain]
-
-        for service_name, service in services_map.items():
+    if missing := all_services.difference(descriptions_cache):
+        await _async_load_services_yaml(hass, {domain for domain, _ in missing})
+        yaml_descriptions = hass.data[YAML_SERVICE_DESCRIPTIONS_CACHE]
+        for domain, service_name in missing:
             cache_key = (domain, service_name)
-            description = descriptions_cache.get(cache_key)
-            if description is not None:
-                domain_descriptions[service_name] = description
+            # The description may have been set while loading
+            if cache_key in descriptions_cache:
                 continue
-
-            # Cache missing descriptions
-            domain_yaml = loaded.get(domain) or {}
-            # The YAML may be empty for dynamically defined
-            # services (e.g. shell_command) that never call
-            # service.async_set_service_schema for the dynamic
-            # service
-
-            yaml_description = (
-                domain_yaml.get(service_name) or {}  # type: ignore[union-attr]
+            # The YAML may not describe dynamically defined services
+            # (e.g. shell_command) that never call async_set_service_schema
+            yaml_description = yaml_descriptions[domain].get(service_name)
+            if yaml_description is None:
+                yaml_description = _build_description(None)
+            descriptions_cache[cache_key] = _add_registration(
+                yaml_description, services[domain][service_name]
             )
 
-            # Don't warn for missing services, because it triggers false
-            # positives for things like scripts, that register as a service
-            description = {"fields": yaml_description.get("fields", {})}
-            if description_placeholders := service.description_placeholders:
-                description["description_placeholders"] = description_placeholders
+    descriptions: dict[str, dict[str, Any]] = {
+        domain: {
+            service_name: descriptions_cache[(domain, service_name)]
+            for service_name in services_map
+        }
+        for domain, services_map in services.items()
+    }
 
-            for item in ("description", "name", "target"):
-                if item in yaml_description:
-                    description[item] = yaml_description[item]
-
-            response = service.supports_response
-            if response is not SupportsResponse.NONE:
-                description["response"] = {
-                    "optional": response is SupportsResponse.OPTIONAL,
-                }
-
-            descriptions_cache[cache_key] = description
-
-            domain_descriptions[service_name] = description
-
-    hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (all_services, descriptions)
+    hass.data[REGISTERED_SERVICE_DESCRIPTIONS_CACHE] = (all_services, descriptions)
     return descriptions
 
 
-@callback
-def remove_entity_service_fields(call: ServiceCall) -> dict[Any, Any]:
-    """Remove entity service fields."""
-    return {
-        key: val
-        for key, val in call.data.items()
-        if key not in cv.ENTITY_SERVICE_FIELDS
+async def async_get_all_descriptions(
+    hass: HomeAssistant, *, registered_only: bool = True
+) -> dict[str, dict[str, Any]]:
+    """Return descriptions for all services.
+
+    With registered_only False, all services in a loaded services.yaml are
+    included, already registered or not.
+    """
+    registered_descriptions = await _async_get_registered_descriptions(hass)
+    if registered_only:
+        return registered_descriptions
+
+    yaml_descriptions = hass.data.setdefault(YAML_SERVICE_DESCRIPTIONS_CACHE, {})
+    if (all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE)) is not None:
+        cached_registered_descriptions, cached_yaml_descriptions, all_descriptions = (
+            all_cache
+        )
+        if (
+            cached_registered_descriptions is registered_descriptions
+            and cached_yaml_descriptions is yaml_descriptions
+        ):
+            return all_descriptions
+
+    descriptions_cache = hass.data[SERVICE_DESCRIPTION_CACHE]
+    all_descriptions = {
+        domain: domain_descriptions.copy()
+        for domain, domain_descriptions in registered_descriptions.items()
     }
+    for domain, domain_yaml_descriptions in yaml_descriptions.items():
+        if not domain_yaml_descriptions:
+            continue
+        domain_descriptions = all_descriptions.setdefault(domain, {})
+        for service_name, yaml_description in domain_yaml_descriptions.items():
+            if service_name in domain_descriptions:
+                continue
+            # A service that was registered before keeps what was learnt then
+            registered_description = descriptions_cache.get((domain, service_name))
+            domain_descriptions[service_name] = (
+                yaml_description
+                if registered_description is None
+                else registered_description
+            )
+
+    hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (
+        registered_descriptions,
+        yaml_descriptions,
+        all_descriptions,
+    )
+    return all_descriptions
+
+
+@callback
+def async_subscribe_service_events(
+    hass: HomeAssistant, on_event: ServiceEventListener
+) -> CALLBACK_TYPE:
+    """Subscribe to the service descriptions.
+
+    The listener first gets all descriptions, then the changed descriptions
+    and the removed services, by domain.
+    """
+    if (event_state := hass.data.get(SERVICE_EVENT_STATE)) is None:
+        event_state = hass.data[SERVICE_EVENT_STATE] = _ServiceEventState()
+
+        @callback
+        def _schedule(_: Event) -> None:
+            _async_schedule_service_events(hass)
+
+        hass.bus.async_listen(EVENT_SERVICE_REGISTERED, _schedule)
+        hass.bus.async_listen(EVENT_SERVICE_REMOVED, _schedule)
+
+    event_state.listeners.append(on_event)
+    event_state.awaiting_snapshot.append(on_event)
+    _async_schedule_service_events(hass)
+
+    def remove_subscription() -> None:
+        event_state.listeners.remove(on_event)
+        if on_event in event_state.awaiting_snapshot:
+            event_state.awaiting_snapshot.remove(on_event)
+
+    return remove_subscription
+
+
+@callback
+def _async_schedule_service_events(hass: HomeAssistant) -> None:
+    """Deliver the service description changes to the listeners, coalescing bursts."""
+    if (
+        event_state := hass.data.get(SERVICE_EVENT_STATE)
+    ) is None or not event_state.listeners:
+        return
+    event_state.dirty = True
+    if event_state.running:
+        return
+    event_state.running = True
+    hass.async_create_task(
+        _async_notify_service_events(hass), "service events", eager_start=False
+    )
+
+
+async def _async_notify_service_events(hass: HomeAssistant) -> None:
+    """Send the listeners the difference since the descriptions last sent."""
+    event_state = hass.data[SERVICE_EVENT_STATE]
+    while event_state.dirty:
+        event_state.dirty = False
+        descriptions = await async_get_all_descriptions(hass, registered_only=False)
+        last_descriptions = event_state.last_descriptions
+        event_state.last_descriptions = descriptions
+
+        changed: dict[str, dict[str, Any]] = {}
+        removed: dict[str, set[str]] = {}
+        if last_descriptions is not None:
+            for domain, domain_descriptions in descriptions.items():
+                last_domain_descriptions = last_descriptions.get(domain, {})
+                if domain_changed := {
+                    service: description
+                    for service, description in domain_descriptions.items()
+                    if last_domain_descriptions.get(service) is not description
+                }:
+                    changed[domain] = domain_changed
+            for domain, last_domain_descriptions in last_descriptions.items():
+                if domain_removed := set(last_domain_descriptions).difference(
+                    descriptions.get(domain, {})
+                ):
+                    removed[domain] = domain_removed
+
+        awaiting_snapshot = event_state.awaiting_snapshot
+        event_state.awaiting_snapshot = []
+        no_removed: dict[str, set[str]] = {}
+        for listener in event_state.listeners.copy():
+            try:
+                if listener in awaiting_snapshot:
+                    await listener(descriptions, no_removed)
+                elif changed or removed:
+                    await listener(changed, removed)
+            except Exception:
+                _LOGGER.exception("Error while notifying service event listener")
+    event_state.running = False
+
+
+async def async_declare_service(hass: HomeAssistant, service: str) -> None:
+    """Ensure a referenced service is described even if it is not registered."""
+    await _async_load_services_yaml(hass, {service.split(".", 1)[0]})
+    _async_schedule_service_events(hass)
 
 
 @callback
@@ -647,8 +838,19 @@ def async_set_service_schema(
             "optional": response == SupportsResponse.OPTIONAL,
         }
 
-    hass.data.pop(ALL_SERVICE_DESCRIPTIONS_CACHE, None)
+    hass.data.pop(REGISTERED_SERVICE_DESCRIPTIONS_CACHE, None)
     descriptions_cache[(domain, service)] = description
+    _async_schedule_service_events(hass)
+
+
+@callback
+def remove_entity_service_fields(call: ServiceCall) -> dict[Any, Any]:
+    """Remove entity service fields."""
+    return {
+        key: val
+        for key, val in call.data.items()
+        if key not in cv.ENTITY_SERVICE_FIELDS
+    }
 
 
 def _get_permissible_entity_candidates(

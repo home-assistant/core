@@ -70,6 +70,7 @@ from homeassistant.helpers.json import (
 )
 from homeassistant.helpers.service import (
     async_get_all_descriptions as async_get_all_service_descriptions,
+    async_subscribe_service_events,
 )
 from homeassistant.helpers.trigger import (
     async_get_all_descriptions as async_get_all_trigger_descriptions,
@@ -89,6 +90,7 @@ from homeassistant.setup import (
     async_wait_component,
 )
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -101,7 +103,12 @@ from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
 
 ALL_CONDITION_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_condition_descriptions_json"
-ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE: HassKey[
+    tuple[dict[str, dict[str, Any]], bytes]
+] = HassKey("websocket_api_registered_service_descriptions_json")
+SERVICE_EVENT_JSON_CACHE: HassKey[
+    tuple[dict[str, dict[str, Any]], dict[str, set[str]], bytes]
+] = HassKey("websocket_api_service_event_json")
 ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_trigger_descriptions_json"
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,6 +142,7 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
+    async_reg(hass, handle_subscribe_services)
     async_reg(hass, handle_subscribe_system_state)
     async_reg(hass, handle_dismiss_system_state)
     async_reg(hass, handle_subscribe_trigger)
@@ -629,18 +637,16 @@ async def handle_subscribe_condition_platforms(
     connection.send_message(construct_event_message(msg["id"], conditions_json))
 
 
-async def _async_get_all_service_descriptions_json(hass: HomeAssistant) -> bytes:
-    """Return JSON of descriptions (i.e. user documentation) for all service calls."""
+async def _async_get_registered_service_descriptions_json(hass: HomeAssistant) -> bytes:
+    """Return JSON of descriptions for registered services."""
     descriptions = await async_get_all_service_descriptions(hass)
-    if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
-        cached_descriptions, cached_json_payload = hass.data[
-            ALL_SERVICE_DESCRIPTIONS_JSON_CACHE
-        ]
+    if (cache := hass.data.get(REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE)) is not None:
+        cached_descriptions, cached_json_payload = cache
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
-            return cast(bytes, cached_json_payload)
+            return cached_json_payload
     json_payload = cached_json_bytes(descriptions)
-    hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    hass.data[REGISTERED_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 
 
@@ -650,8 +656,53 @@ async def handle_get_services(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get services command."""
-    payload = await _async_get_all_service_descriptions_json(hass)
+    payload = await _async_get_registered_service_descriptions_json(hass)
     connection.send_message(construct_result_message(msg["id"], payload))
+
+
+def _service_event_json(
+    hass: HomeAssistant,
+    changed: dict[str, dict[str, Any]],
+    removed: dict[str, set[str]],
+) -> bytes:
+    """Return the JSON of a services/subscribe event, shared by all subscribers."""
+    if (cache := hass.data.get(SERVICE_EVENT_JSON_CACHE)) is not None:
+        cached_changed, cached_removed, cached_json_payload = cache
+        if cached_changed is changed and cached_removed is removed:
+            return cached_json_payload
+
+    event: dict[str, Any] = {}
+    if changed:
+        event["services"] = changed
+    if removed:
+        event["removed"] = removed
+
+    json_payload = cached_json_bytes(event)
+    hass.data[SERVICE_EVENT_JSON_CACHE] = (changed, removed, json_payload)
+    return json_payload
+
+
+@callback
+@decorators.websocket_command({probatio.Required("type"): "services/subscribe"})
+def handle_subscribe_services(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe services command."""
+
+    async def on_service_event(
+        changed: dict[str, dict[str, Any]], removed: dict[str, set[str]]
+    ) -> None:
+        """Forward changed and removed services to websocket."""
+        connection.send_message(
+            construct_event_message(
+                msg["id"], _service_event_json(hass, changed, removed)
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = async_subscribe_service_events(
+        hass, on_service_event
+    )
+    connection.send_result(msg["id"])
 
 
 async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes:
