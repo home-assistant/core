@@ -74,49 +74,52 @@ class BusyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, step_id: str, api_key: str | None = None
     ) -> ConfigFlowResult:
         """Check access and identity before issuing a token."""
-        errors: dict[str, str] = {}
-        try:
-            async with AsyncBusyBar(
-                self._host,
-                token=api_key,
-                transport=AiohttpTransport(async_get_clientsession(self.hass)),
-                timeout=10,
-            ) as client:
+        async with AsyncBusyBar(
+            self._host,
+            token=api_key,
+            transport=AiohttpTransport(async_get_clientsession(self.hass)),
+            timeout=10,
+        ) as client:
+            try:
                 mode = (await client.access()).mode
-                if mode == "disabled":
-                    return self.async_abort(reason="http_api_disabled")
-                if mode == "key" and api_key is None:
-                    return await self.async_step_key()
-                if self.source == SOURCE_USER:
+            except (BusyBarError, ValueError) as err:
+                return self._async_show_pair_form(step_id, _pair_error(err))
+            if mode == "disabled":
+                return self.async_abort(reason="http_api_disabled")
+            if mode == "key" and api_key is None:
+                return await self.async_step_key()
+            if self.source == SOURCE_USER:
+                try:
                     device = await client.status_device()
-                    await self.async_set_unique_id(
-                        (device.usb_mac or "").replace(":", "").lower(),
-                        raise_on_progress=False,
-                    )
-                self._abort_if_unique_id_configured()
+                except (BusyBarError, ValueError) as err:
+                    return self._async_show_pair_form(step_id, _pair_error(err))
+                await self.async_set_unique_id(
+                    (device.usb_mac or "").replace(":", "").lower(),
+                    raise_on_progress=False,
+                )
+            self._abort_if_unique_id_configured()
+            try:
                 issued = await client.access_token_mint(
                     f"Home Assistant {self.hass.config.location_name}"
                 )
-                token = issued.token
-        except BusyBarAPIError as err:
-            errors["base"] = (
-                "invalid_auth" if err.status_code in (401, 403) else "cannot_connect"
-            )
-        except BusyBarError, ValueError:
-            errors["base"] = "cannot_connect"
-        else:
-            return self.async_create_entry(
-                title=self._name, data={CONF_HOST: self._host, CONF_TOKEN: token}
-            )
+            except (BusyBarError, ValueError) as err:
+                return self._async_show_pair_form(step_id, _pair_error(err))
+        return self.async_create_entry(
+            title=self._name, data={CONF_HOST: self._host, CONF_TOKEN: issued.token}
+        )
+
+    def _async_show_pair_form(self, step_id: str, error: str) -> ConfigFlowResult:
+        """Show the step's form again with a pairing error."""
         return self.async_show_form(
             step_id=step_id,
-            data_schema=(
-                USER_SCHEMA
-                if step_id == "user"
-                else KEY_SCHEMA
-                if step_id == "key"
-                else None
-            ),
-            errors=errors,
+            data_schema={"user": USER_SCHEMA, "key": KEY_SCHEMA}.get(step_id),
+            errors={"base": error},
             description_placeholders={"name": self._name},
         )
+
+
+def _pair_error(err: Exception) -> str:
+    """Tell a refused key from a bar that cannot be reached."""
+    if isinstance(err, BusyBarAPIError) and err.status_code in (401, 403):
+        return "invalid_auth"
+    return "cannot_connect"
