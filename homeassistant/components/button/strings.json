@@ -39,6 +39,10 @@
       },
       "name": "Button held"
     },
+    "hold_ended": {
+      "description": "Triggers when one or more buttons are released after being held.",
+      "name": "Button hold ended"
+    },
     "pressed": {
       "description": "Triggers when one or more buttons are pressed.",
       "name": "Button pressed"

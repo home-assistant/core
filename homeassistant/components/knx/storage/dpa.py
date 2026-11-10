@@ -144,6 +144,13 @@ class FB348(StrEnum):
     SUN_INTENSITY = "348.51"
 
 
+class FB372(StrEnum):
+    """FB 372 Fan Actuator."""
+
+    ACT_TARGET_FAN_SPEED = "372.51"
+    ACT_CURR_FAN_SPEED = "372.55"
+
+
 class FB409(StrEnum):
     """FB 409 Indoor Brightness Sensor."""
 
