@@ -1159,7 +1159,46 @@ class SensorKnxConfig:
 
     ga_sensor: Annotated[
         GroupAddressConfig,
-        ga(write=False, state_required=True, dpt=["numeric", "string"]),
+        ga(
+            write=False,
+            state_required=True,
+            dpt=["numeric", "string"],
+            dpa_state=[
+                dpa.FB180.TEMP_DHW,
+                dpa.FB187.TEMP_COLLECTOR,
+                dpa.FB320.TEMP_OUTSIDE,
+                dpa.FB321.TEMP_ROOM,
+                dpa.FB322.TEMP_SUPPLY_AIR,
+                dpa.FB323.TEMP_RETURN_AIR,
+                dpa.FB324.TEMP_FLOW_WATER,
+                dpa.FB325.TEMP_RETURN_WATER,
+                dpa.FB326.TEMP_FLOW_WATER_COND,
+                dpa.FB327.TEMP_RETURN_WATER_COND,
+                dpa.FB328.TEMP_DISCHARGE_AIR,
+                dpa.FB329.TEMP_FLOOR,
+                dpa.FB330.AQ_OUTSIDE,
+                dpa.FB331.AQ_ROOM,
+                dpa.FB332.AQ_SUPPLY_AIR,
+                dpa.FB333.AQ_RETURN_AIR,
+                dpa.FB336.HUM_REL_OUTSIDE,
+                dpa.FB337.HUM_REL_ROOM,
+                dpa.FB338.HUM_REL_SUPPLY_AIR,
+                dpa.FB339.HUM_REL_RETURN_AIR,
+                dpa.FB348.SUN_INTENSITY,
+                dpa.FB409.ROOM_ILLUMINATION,
+                dpa.FB410.INDOOR_LUMINANCE,
+                dpa.FB1013.ATMOSPHERIC_PRESSURE_ABS,
+                dpa.FB1015.ANALOG_INPUT_VALUE,
+                dpa.FB1016.TEMP_VALUE,
+                # meters: the consumption is the main value of the channel
+                dpa.FB1101.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1102.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1103.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1104.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1105.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1110.CURRENT_ENERGY_CONSUMPTION,
+            ],
+        ),
     ]
     section_advanced_options: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
