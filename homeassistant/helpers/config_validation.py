@@ -313,6 +313,26 @@ def isdir(value: Any) -> str:
 ensure_list = probatio.EnsureList()
 
 
+def _list_of(item_validator: Callable[[Any], Any]) -> Callable[[Any], list[Any]]:
+    """Validate a list of items, or a single item which is wrapped in a list.
+
+    Unlike All(ensure_list, [item_validator]), errors of a single item have no
+    list index in their path, so the path is valid in the config as written.
+    """
+    list_schema = probatio.Schema([item_validator])
+    # A schema, to raise MultipleInvalid like the list schema does
+    item_schema = probatio.Schema(item_validator)
+
+    def validate(value: Any) -> list[Any]:
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return cast(list[Any], list_schema(value))
+        return [item_schema(value)]
+
+    return validate
+
+
 def entity_id(value: Any) -> str:
     """Validate Entity ID."""
     str_value = string(value).lower()
@@ -1484,7 +1504,7 @@ def script_action(value: Any) -> dict:
     return ACTION_TYPE_SCHEMAS[action](value)
 
 
-SCRIPT_SCHEMA = probatio.All(ensure_list, [script_action])
+SCRIPT_SCHEMA = _list_of(script_action)
 
 SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     probatio.Optional(CONF_ALIAS): string,
@@ -1676,10 +1696,9 @@ AND_CONDITION_SCHEMA = probatio.Schema(
     {
         **CONDITION_BASE_SCHEMA,
         probatio.Required(CONF_CONDITION): "and",
-        probatio.Required(CONF_CONDITIONS): probatio.All(
-            ensure_list,
+        probatio.Required(CONF_CONDITIONS): _list_of(
             # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+            lambda value: CONDITION_SCHEMA(value)
         ),
     }
 )
@@ -1687,10 +1706,9 @@ AND_CONDITION_SCHEMA = probatio.Schema(
 AND_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        probatio.Required("and"): probatio.All(
-            ensure_list,
+        probatio.Required("and"): _list_of(
             # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+            lambda value: CONDITION_SCHEMA(value)
         ),
     }
 )
@@ -1699,10 +1717,9 @@ OR_CONDITION_SCHEMA = probatio.Schema(
     {
         **CONDITION_BASE_SCHEMA,
         probatio.Required(CONF_CONDITION): "or",
-        probatio.Required(CONF_CONDITIONS): probatio.All(
-            ensure_list,
+        probatio.Required(CONF_CONDITIONS): _list_of(
             # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+            lambda value: CONDITION_SCHEMA(value)
         ),
     }
 )
@@ -1710,10 +1727,9 @@ OR_CONDITION_SCHEMA = probatio.Schema(
 OR_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        probatio.Required("or"): probatio.All(
-            ensure_list,
+        probatio.Required("or"): _list_of(
             # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+            lambda value: CONDITION_SCHEMA(value)
         ),
     }
 )
@@ -1722,10 +1738,9 @@ NOT_CONDITION_SCHEMA = probatio.Schema(
     {
         **CONDITION_BASE_SCHEMA,
         probatio.Required(CONF_CONDITION): "not",
-        probatio.Required(CONF_CONDITIONS): probatio.All(
-            ensure_list,
+        probatio.Required(CONF_CONDITIONS): _list_of(
             # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+            lambda value: CONDITION_SCHEMA(value)
         ),
     }
 )
@@ -1733,10 +1748,9 @@ NOT_CONDITION_SCHEMA = probatio.Schema(
 NOT_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        probatio.Required("not"): probatio.All(
-            ensure_list,
+        probatio.Required("not"): _list_of(
             # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+            lambda value: CONDITION_SCHEMA(value)
         ),
     }
 )
@@ -1803,10 +1817,9 @@ dynamic_template_condition = probatio.All(
 CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): probatio.All(
-            ensure_list,
+        probatio.Required(CONF_CONDITION): _list_of(
             # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+            lambda value: CONDITION_SCHEMA(value)
         ),
     }
 )
@@ -1855,7 +1868,7 @@ CONDITION_SCHEMA: probatio.Schema = probatio.Schema(
     )
 )
 
-CONDITIONS_SCHEMA = probatio.All(ensure_list, [CONDITION_SCHEMA])
+CONDITIONS_SCHEMA = _list_of(CONDITION_SCHEMA)
 
 dynamic_template_condition_action = probatio.All(
     # Wrap a shorthand template condition action in a template condition
@@ -1930,8 +1943,14 @@ _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
+def _base_trigger_list_flatten(triggers: Any) -> Any:
     """Flatten trigger arrays with 'triggers:' sublists into one list."""
+    if isinstance(triggers, dict) and CONF_TRIGGERS in triggers and len(triggers) == 1:
+        triggers = [triggers]
+    elif not isinstance(triggers, list):
+        # A single trigger is not wrapped, to keep its error paths free of an index
+        return triggers
+
     flatlist = []
     for t in triggers:
         if CONF_TRIGGERS in t and len(t) == 1:
@@ -1951,9 +1970,8 @@ def _base_trigger_validator(value: Any) -> Any:
 
 
 TRIGGER_SCHEMA = probatio.All(
-    ensure_list,
     _base_trigger_list_flatten,
-    [probatio.All(_trigger_pre_validator, _base_trigger_validator)],
+    _list_of(probatio.All(_trigger_pre_validator, _base_trigger_validator)),
 )
 
 _SCRIPT_DELAY_SCHEMA = probatio.Schema(
@@ -2010,16 +2028,15 @@ _SCRIPT_REPEAT_SCHEMA = probatio.Schema(
 _SCRIPT_CHOOSE_SCHEMA = probatio.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        probatio.Required(CONF_CHOOSE): probatio.All(
-            ensure_list,
-            [
+        probatio.Required(CONF_CHOOSE): _list_of(
+            probatio.Schema(
                 {
                     probatio.Optional(CONF_ALIAS): string,
                     probatio.Remove(CONF_NOTE): str,  # Is only used in frontend
                     probatio.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     probatio.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
-            ],
+            )
         ),
         probatio.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
     }
@@ -2090,7 +2107,7 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
 
 _parallel_sequence_action = probatio.All(
     # Wrap a shorthand sequences in a parallel action
-    SCRIPT_SCHEMA,
+    probatio.All(ensure_list, [script_action]),
     lambda config: {
         CONF_SEQUENCE: config,
     },

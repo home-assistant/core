@@ -3895,7 +3895,7 @@ async def test_validate_config_works(
         (
             "actions",
             {"non_existing": "domain_test.test_service"},
-            "Unable to determine action at '[0]'",
+            "Unable to determine action",
         ),
     ],
 )
