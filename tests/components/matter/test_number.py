@@ -578,6 +578,58 @@ async def test_thermostat_unoccupied_setpoint_limits(
     assert state.attributes["max"] == expected_max
 
 
+@pytest.mark.parametrize(
+    ("attributes", "entity_id", "limit_ids", "abs_limit_ids", "expected"),
+    [
+        pytest.param(
+            {"1/513/21": 1000, "1/513/22": 2500, "1/513/3": 500, "1/513/4": 3500},
+            UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID,
+            (21, 22),
+            (3, 4),
+            [(10.0, 25.0), (5.0, 35.0), (7.0, 30.0)],
+            id="heating",
+        ),
+        pytest.param(
+            {"1/513/23": 1800, "1/513/24": 3000, "1/513/5": 1500, "1/513/6": 3500},
+            UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID,
+            (23, 24),
+            (5, 6),
+            [(18.0, 30.0), (15.0, 35.0), (16.0, 32.0)],
+            id="cooling",
+        ),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_unoccupied_setpoint_limits_removed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    limit_ids: tuple[int, int],
+    abs_limit_ids: tuple[int, int],
+    expected: list[tuple[float, float]],
+) -> None:
+    """Test unoccupied setpoint limits fall back when no longer reported."""
+    limits, abs_limits, spec_defaults = expected
+    state = hass.states.get(entity_id)
+    assert state
+    assert (state.attributes["min"], state.attributes["max"]) == limits
+
+    for attribute_id in limit_ids:
+        set_node_attribute(matter_node, 1, 513, attribute_id, None)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert (state.attributes["min"], state.attributes["max"]) == abs_limits
+
+    for attribute_id in abs_limit_ids:
+        set_node_attribute(matter_node, 1, 513, attribute_id, None)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert (state.attributes["min"], state.attributes["max"]) == spec_defaults
+
+
 # The fixture's FeatureMap (423) without the Occupancy bit (4)
 @pytest.mark.parametrize("attributes", [{"1/513/65532": 419}])
 @pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
