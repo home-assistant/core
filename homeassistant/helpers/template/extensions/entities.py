@@ -113,24 +113,24 @@ class EntityExtension(BaseTemplateExtension):
         if not target_selection.has_any_target:
             return []
 
-        if (
-            expand_group
-            and (render_info := render_info_cv.get()) is not None
-            and render_info.collecting
-        ):
-            entity_ids = [target_selection.entity_ids]
-            if target_selection.exclude is not None:
-                entity_ids.append(target_selection.exclude.entity_ids)
-            group_entity_ids = group.get_group_entities(self.hass)
-            for target_entity_ids in entity_ids:
-                for entity_id in group.expand_entity_ids(
-                    self.hass, target_entity_ids, include_groups=True
-                ):
-                    if (
-                        entity_id.startswith(group.ENTITY_PREFIX)
-                        or entity_id in group_entity_ids
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
+            if target_config.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
+                render_info.all_states_lifecycle = True
+
+            if expand_group:
+                entity_ids = [target_selection.entity_ids]
+                if target_selection.exclude is not None:
+                    entity_ids.append(target_selection.exclude.entity_ids)
+                group_entity_ids = group.get_group_entities(self.hass)
+                for target_entity_ids in entity_ids:
+                    for entity_id in group.expand_entity_ids(
+                        self.hass, target_entity_ids, include_groups=True
                     ):
-                        render_info.entities.add(entity_id)  # type: ignore[attr-defined]
+                        if (
+                            entity_id.startswith(group.ENTITY_PREFIX)
+                            or entity_id in group_entity_ids
+                        ):
+                            render_info.entities.add(entity_id)  # type: ignore[attr-defined]
 
         if target_config.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
             excluded = target.async_extract_excluded_entity_ids(

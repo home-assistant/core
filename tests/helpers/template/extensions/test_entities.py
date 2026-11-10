@@ -4,13 +4,19 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockEntity, MockEntityPlatform
 
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.event import (
+    TrackTemplate,
+    TrackTemplateResult,
+    async_track_template_result,
+)
 from homeassistant.helpers.group import GenericGroup
+from homeassistant.helpers.template import Template
 
 from tests.helpers.template.helpers import render, render_to_info
 
@@ -296,6 +302,44 @@ async def test_resolve_target_all(
         )
         == expected
     )
+
+
+@pytest.mark.parametrize("expand_group", [True, False])
+async def test_resolve_target_all_tracks_entity_lifecycle(
+    hass: HomeAssistant, expand_group: bool
+) -> None:
+    """Test entity creation and removal trigger updates for an all target."""
+    hass.states.async_set("sensor.initial", "on")
+    template = Template(
+        "{{ resolve_target({'entity_id': 'all'}, expand_group=expand_group) | count }}",
+        hass,
+    )
+    results: list[int] = []
+
+    @callback
+    def handle_result(
+        event: Event[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
+        results.extend(int(update.result) for update in updates)
+
+    tracker = async_track_template_result(
+        hass,
+        [TrackTemplate(template, {"expand_group": expand_group})],
+        handle_result,
+    )
+    await hass.async_block_till_done()
+    assert results == []
+
+    hass.states.async_set("sensor.created", "on")
+    await hass.async_block_till_done()
+    assert results == [2]
+
+    hass.states.async_remove("sensor.initial")
+    await hass.async_block_till_done()
+    assert results == [2, 1]
+
+    tracker.async_remove()
 
 
 async def test_resolve_target_primary_entities_only(
