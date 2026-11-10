@@ -73,9 +73,7 @@
     "door": {
       "default": "mdi:door-open",
       "state": {
-        "closed": "mdi:door-closed",
-        "closing": "mdi:arrow-collapse-horizontal",
-        "opening": "mdi:arrow-split-vertical"
+        "closed": "mdi:door-closed"
       }
     },
     "garage": {
