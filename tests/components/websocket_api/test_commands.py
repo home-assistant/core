@@ -3869,6 +3869,8 @@ async def test_validate_config_works(
             "Invalid trigger 'non_existing' specified",
         ),
         # Raises probatio.Invalid
+        ("triggers", [5], "expected a mapping at '[0]'"),
+        # Raises probatio.Invalid
         (
             "conditions",
             {
@@ -3902,7 +3904,7 @@ async def test_validate_config_works(
 async def test_validate_config_invalid(
     websocket_client: MockHAClientWebSocket,
     key: str,
-    config: dict[str, Any],
+    config: dict[str, Any] | list[Any],
     error: str,
 ) -> None:
     """Test config validation."""

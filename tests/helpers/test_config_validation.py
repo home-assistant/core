@@ -2788,6 +2788,174 @@ async def test_nested_trigger_list_extra() -> None:
     ]
 
 
+_VALID_TRIGGER = {"trigger": "event", "event_type": "x"}
+_VALIDATED_TRIGGER = {"platform": "event", "event_type": "x"}
+
+
+@pytest.mark.parametrize(
+    ("config", "expected"),
+    [
+        pytest.param(None, [], id="none"),
+        pytest.param([], [], id="empty"),
+        pytest.param(_VALID_TRIGGER, [_VALIDATED_TRIGGER], id="single"),
+        pytest.param(
+            [{"platform": "event", "event_type": "x"}],
+            [_VALIDATED_TRIGGER],
+            id="platform_key",
+        ),
+        pytest.param(
+            [
+                {"triggers": [_VALID_TRIGGER, _VALID_TRIGGER]},
+                _VALID_TRIGGER,
+                {"triggers": _VALID_TRIGGER},
+            ],
+            [_VALIDATED_TRIGGER] * 4,
+            id="sublists",
+        ),
+        pytest.param(
+            {"triggers": [_VALID_TRIGGER, _VALID_TRIGGER]},
+            [_VALIDATED_TRIGGER] * 2,
+            id="single_sublist",
+        ),
+        pytest.param({"triggers": None}, [], id="single_sublist_none"),
+        pytest.param([{"triggers": []}], [], id="sublist_empty"),
+        pytest.param([{"triggers": None}], [], id="sublist_none"),
+    ],
+)
+def test_trigger_schema_valid(config: Any, expected: list[dict[str, Any]]) -> None:
+    """Test the validated output of the trigger schema."""
+    assert TRIGGER_SCHEMA(config) == expected
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_errors"),
+    [
+        pytest.param(
+            _INVALID_TRIGGER, [(["alias"], "expected str", "type")], id="single"
+        ),
+        pytest.param(
+            [_VALID_TRIGGER, _INVALID_TRIGGER],
+            [([1, "alias"], "expected str", "type")],
+            id="list",
+        ),
+        pytest.param(
+            [{"triggers": [_VALID_TRIGGER, _VALID_TRIGGER]}, _INVALID_TRIGGER],
+            [([1, "alias"], "expected str", "type")],
+            id="after_sublist",
+        ),
+        pytest.param(
+            [_VALID_TRIGGER, {"triggers": [_VALID_TRIGGER, _INVALID_TRIGGER]}],
+            [([1, "triggers", 1, "alias"], "expected str", "type")],
+            id="in_sublist",
+        ),
+        pytest.param(
+            [{"triggers": _INVALID_TRIGGER}],
+            [([0, "triggers", "alias"], "expected str", "type")],
+            id="sublist_single",
+        ),
+        pytest.param(
+            {"triggers": [_VALID_TRIGGER, _INVALID_TRIGGER]},
+            [(["triggers", 1, "alias"], "expected str", "type")],
+            id="single_sublist",
+        ),
+        pytest.param(
+            {"triggers": _INVALID_TRIGGER},
+            [(["triggers", "alias"], "expected str", "type")],
+            id="single_sublist_single",
+        ),
+        pytest.param(
+            [{"triggers": [{"triggers": [_VALID_TRIGGER]}]}],
+            [([0, "triggers", 0, "trigger"], "required key not provided", "required")],
+            id="sublist_in_sublist",
+        ),
+        pytest.param(
+            [{"triggers": [_VALID_TRIGGER], "alias": "x"}],
+            [([0, "trigger"], "required key not provided", "required")],
+            id="sublist_extra_key",
+        ),
+        pytest.param(
+            [{"triggers": [5]}],
+            [([0, "triggers", 0], "expected a mapping", "not_a_dictionary")],
+            id="sublist_non_dict_item",
+        ),
+        pytest.param(
+            [{"triggers": 5}],
+            [([0, "triggers"], "expected a mapping", "not_a_dictionary")],
+            id="sublist_non_dict",
+        ),
+        pytest.param(
+            5, [([], "expected a mapping", "not_a_dictionary")], id="non_dict"
+        ),
+        pytest.param(
+            [5], [([0], "expected a mapping", "not_a_dictionary")], id="non_dict_item"
+        ),
+        pytest.param(
+            [None], [([0], "expected a mapping", "not_a_dictionary")], id="none_item"
+        ),
+        pytest.param(
+            [["triggers"]],
+            [([0], "expected a mapping", "not_a_dictionary")],
+            id="list_item",
+        ),
+        pytest.param(
+            ["triggers"],
+            [([0], "expected a mapping", "not_a_dictionary")],
+            id="string_item",
+        ),
+        pytest.param(
+            [{"event_type": "x"}],
+            [([0, "trigger"], "required key not provided", "required")],
+            id="missing_trigger",
+        ),
+        pytest.param(
+            [{"trigger": 5}],
+            [([0, "platform"], "expected str", "type")],
+            id="trigger_not_string",
+        ),
+        pytest.param(
+            [{"trigger": "event", "platform": "event"}],
+            [
+                (
+                    [0],
+                    "Cannot specify both 'platform' and 'trigger'."
+                    " Please use 'trigger' only.",
+                    None,
+                )
+            ],
+            id="trigger_and_platform",
+        ),
+        pytest.param(
+            [
+                _INVALID_TRIGGER,
+                {"triggers": [_INVALID_TRIGGER, {"event_type": "x"}]},
+                5,
+            ],
+            [
+                ([0, "alias"], "expected str", "type"),
+                ([1, "triggers", 0, "alias"], "expected str", "type"),
+                (
+                    [1, "triggers", 1, "trigger"],
+                    "required key not provided",
+                    "required",
+                ),
+                ([2], "expected a mapping", "not_a_dictionary"),
+            ],
+            id="several_errors",
+        ),
+    ],
+)
+def test_trigger_schema_invalid(
+    config: Any, expected_errors: list[tuple[list[str | int], str, str | None]]
+) -> None:
+    """Test the errors of the trigger schema index the config as written."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        TRIGGER_SCHEMA(config)
+
+    assert [
+        (err.path, err.error_message, err.code) for err in exc_info.value.errors
+    ] == expected_errors
+
+
 async def test_trigger_backwards_compatibility() -> None:
     """Test triggers with backwards compatibility."""
 
