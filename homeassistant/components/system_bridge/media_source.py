@@ -7,6 +7,7 @@ from systembridgeconnector.helpers import media_file_url
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles
+from yarl import URL
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
@@ -151,9 +152,14 @@ def _build_file_url(entry: SystemBridgeConfigEntry, base: str, path: str) -> str
         # The URL goes to players such as cast devices, so it's signed for
         # this file rather than carrying the API token
         return media_file_url(host, port, token, base, path)
-    return (
-        f"http://{host}:{port}/api/media/file/data"
-        f"?token={token}&base={base}&path={path}"
+    return str(
+        URL.build(
+            scheme="http",
+            host=host,
+            port=int(port),
+            path="/api/media/file/data",
+            query={"token": token, "base": base, "path": path},
+        )
     )
 
 
