@@ -6,8 +6,8 @@ from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.components.shelly.services import (
+from homeassistant.components.shelly.const import (
+    DOMAIN,
     ShellyService,
     ShellyServiceArgument,
 )
@@ -68,9 +68,7 @@ async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None
 
     assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert exc_info.value.translation_key == "service_device_not_found"
-    assert exc_info.value.translation_placeholders == {
-        CommonServiceArgument.DEVICE_ID: "invalid_device_id"
-    }
+    assert exc_info.value.translation_placeholders == {"device_id": "invalid_device_id"}
 
 
 async def test_service_get_kvs_value_block_device(
