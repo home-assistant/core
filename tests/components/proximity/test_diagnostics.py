@@ -48,7 +48,8 @@ async def test_entry_diagnostics(
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         title="home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: [
                 "device_tracker.test1",
@@ -90,7 +91,8 @@ async def test_entry_diagnostics_renamed_entity(
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         title="home",
-        data={
+        version=2,
+        options={
             CONF_ZONE: "zone.home",
             CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
             CONF_IGNORED_ZONES: [],

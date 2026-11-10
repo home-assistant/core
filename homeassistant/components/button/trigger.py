@@ -300,9 +300,42 @@ class ButtonHeldTrigger(StatelessEntityTriggerBase):
         return async_remove
 
 
+class ButtonHoldEndedTrigger(StatelessEntityTriggerBase):
+    """Trigger for the release of held buttons."""
+
+    _domain_specs = {EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.BUTTON)}
+
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
+        """Check if the state is the end of a button hold."""
+        event_types = state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES)
+        # Requires both, as the held trigger fires on long_press_end for entities
+        # that don't declare long_press_start.
+        if (
+            not event_types
+            or ButtonEventType.LONG_PRESS_START not in event_types
+            or ButtonEventType.LONG_PRESS_END not in event_types
+        ):
+            report_not_triggered(
+                "entity_event_types_not_supported",
+                entity_id=state.entity_id,
+                event_types=event_types,
+            )
+            return False
+        return (
+            state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
+            == ButtonEventType.LONG_PRESS_END
+        )
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "pressed": ButtonPressedTrigger,
     "held": ButtonHeldTrigger,
+    "hold_ended": ButtonHoldEndedTrigger,
 }
 
 
