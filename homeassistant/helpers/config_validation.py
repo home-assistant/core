@@ -1929,7 +1929,7 @@ def _trigger_pre_validator(value: Any | None) -> Any:
         value = dict(value)
         value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
     elif CONF_PLATFORM not in value:
-        raise probatio.Invalid("required key not provided", [CONF_TRIGGER])
+        raise probatio.RequiredFieldInvalid("required key not provided", [CONF_TRIGGER])
 
     return value
 
@@ -1951,25 +1951,6 @@ _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def _base_trigger_list_flatten(triggers: Any) -> Any:
-    """Flatten trigger arrays with 'triggers:' sublists into one list."""
-    if isinstance(triggers, dict) and CONF_TRIGGERS in triggers and len(triggers) == 1:
-        triggers = [triggers]
-    elif not isinstance(triggers, list):
-        # A single trigger is not wrapped, to keep its error paths free of an index
-        return triggers
-
-    flatlist = []
-    for t in triggers:
-        if CONF_TRIGGERS in t and len(t) == 1:
-            triggerlist = ensure_list(t[CONF_TRIGGERS])
-            flatlist.extend(triggerlist)
-        else:
-            flatlist.append(t)
-
-    return flatlist
-
-
 # This is first round of validation, we don't want to mutate the config here already,
 # just ensure basics as platform and ID are there.
 def _base_trigger_validator(value: Any) -> Any:
@@ -1977,10 +1958,28 @@ def _base_trigger_validator(value: Any) -> Any:
     return value
 
 
-TRIGGER_SCHEMA = probatio.All(
-    _base_trigger_list_flatten,
-    _list_of(probatio.All(_trigger_pre_validator, _base_trigger_validator)),
+_TRIGGER_ITEM_SCHEMA = probatio.All(_trigger_pre_validator, _base_trigger_validator)
+
+_TRIGGER_SUBLIST_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_TRIGGERS): _list_of(_TRIGGER_ITEM_SCHEMA)}
 )
+
+
+def _trigger_list_item(value: Any) -> list[Any]:
+    """Validate an item of a trigger list, a 'triggers:' sublist gives several."""
+    if isinstance(value, dict) and CONF_TRIGGERS in value and len(value) == 1:
+        return cast(list[Any], _TRIGGER_SUBLIST_SCHEMA(value)[CONF_TRIGGERS])
+    return [_TRIGGER_ITEM_SCHEMA(value)]
+
+
+def _flatten_trigger_lists(triggers: list[list[Any]]) -> list[Any]:
+    """Flatten the lists of triggers given by the items of a trigger list."""
+    return [trigger for sublist in triggers for trigger in sublist]
+
+
+# Sublists are validated before they are flattened, so that the path of an error
+# is the position of the trigger in the config as written.
+TRIGGER_SCHEMA = probatio.All(_list_of(_trigger_list_item), _flatten_trigger_lists)
 
 _SCRIPT_DELAY_SCHEMA = probatio.Schema(
     {
