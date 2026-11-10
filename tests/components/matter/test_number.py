@@ -630,16 +630,25 @@ async def test_thermostat_unoccupied_setpoint_limits_removed(
     assert (state.attributes["min"], state.attributes["max"]) == spec_defaults
 
 
-# The fixture's FeatureMap (423) without the Occupancy bit (4)
-@pytest.mark.parametrize("attributes", [{"1/513/65532": 419}])
+# The fixture's FeatureMap is 423: Heating (1), Cooling (2) and Occupancy (4)
+@pytest.mark.parametrize(
+    ("attributes", "heating", "cooling"),
+    [
+        pytest.param({"1/513/65532": 419}, False, False, id="no_occupancy"),
+        pytest.param({"1/513/65532": 422}, False, True, id="no_heating"),
+        pytest.param({"1/513/65532": 421}, True, False, id="no_cooling"),
+    ],
+)
 @pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
 @pytest.mark.usefixtures("matter_node")
-async def test_thermostat_unoccupied_setpoint_needs_occupancy_feature(
+async def test_thermostat_unoccupied_setpoint_needs_features(
     hass: HomeAssistant,
+    heating: bool,
+    cooling: bool,
 ) -> None:
-    """Test no unoccupied setpoint entities without the Occupancy feature."""
-    assert not hass.states.get(UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID)
-    assert not hass.states.get(UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID)
+    """Test each unoccupied setpoint needs Occupancy and its Heating/Cooling feature."""
+    assert bool(hass.states.get(UNOCCUPIED_HEATING_SETPOINT_ENTITY_ID)) is heating
+    assert bool(hass.states.get(UNOCCUPIED_COOLING_SETPOINT_ENTITY_ID)) is cooling
 
 
 @pytest.mark.parametrize(

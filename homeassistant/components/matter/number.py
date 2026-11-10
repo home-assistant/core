@@ -500,7 +500,10 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
             clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
         ),
-        featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kOccupancy,
+        featuremap_contains=(
+            clusters.Thermostat.Bitmaps.Feature.kOccupancy
+            | clusters.Thermostat.Bitmaps.Feature.kHeating
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -532,7 +535,10 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit,
             clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit,
         ),
-        featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kOccupancy,
+        featuremap_contains=(
+            clusters.Thermostat.Bitmaps.Feature.kOccupancy
+            | clusters.Thermostat.Bitmaps.Feature.kCooling
+        ),
     ),
     # Matter 1.3 and earlier (ClusterRevision <= 6) limit LocalTemperatureCalibration
     # to ±2.5°C; this schema also matches when ClusterRevision is unreadable.

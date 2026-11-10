@@ -165,9 +165,10 @@ def async_discover_entities(
         ):
             continue
 
-        # check for required value in cluster featuremap
-        if schema.featuremap_contains is not None and (
-            not bool(
+        # check for required features in cluster featuremap (all must be set)
+        if (
+            schema.featuremap_contains is not None
+            and (
                 int(
                     endpoint.get_attribute_value(
                         primary_attribute.cluster_id, FEATUREMAP_ATTRIBUTE_ID
@@ -175,6 +176,7 @@ def async_discover_entities(
                 )
                 & schema.featuremap_contains
             )
+            != schema.featuremap_contains
         ):
             continue
 

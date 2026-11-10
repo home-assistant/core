@@ -122,7 +122,8 @@ class MatterDiscoverySchema:
     optional_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None
 
     # [optional] the primary attribute's cluster featuremap must contain this value
-    # for example for the DoorSensor on a DoorLock Cluster
+    # for example for the DoorSensor on a DoorLock Cluster.
+    # Combine features with | to require all of them.
     featuremap_contains: int | None = None
 
     # [optional] the primary attribute's cluster ClusterRevision
