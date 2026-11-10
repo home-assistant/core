@@ -6,6 +6,7 @@ from xmlrpc.client import Fault
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.webmin.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_USER_INPUT
-
-from tests.common import async_load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

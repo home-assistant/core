@@ -66,11 +66,11 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: todo
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration doesn't create repair issues.

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
@@ -14,8 +15,6 @@ from homeassistant.util import dt as dt_util
 
 from . import MockYouTube
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor(

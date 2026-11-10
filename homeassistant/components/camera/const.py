@@ -8,11 +8,16 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import Camera
+    from .entity import Camera
     from .prefs import CameraPreferences
 
 DOMAIN: Final = "camera"
 DATA_COMPONENT: HassKey[EntityComponent[Camera]] = HassKey(DOMAIN)
+
+DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
+ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
+
+MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
 DATA_CAMERA_PREFS: HassKey[CameraPreferences] = HassKey("camera_prefs")
 
@@ -34,6 +39,8 @@ CONF_DURATION: Final = "duration"
 
 CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
+
+PREVIEW_FEATURE_TWO_WAY_AUDIO: Final = "two_way_audio"
 
 
 class CameraEntityStateAttribute(StrEnum):
@@ -73,3 +80,25 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
+
+
+class CameraService(StrEnum):
+    """Store keys for camera services."""
+
+    DISABLE_MOTION_DETECTION = "disable_motion_detection"
+    ENABLE_MOTION_DETECTION = "enable_motion_detection"
+    PLAY_STREAM = "play_stream"
+    RECORD = "record"
+    SNAPSHOT = "snapshot"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class CameraServiceArgument(StrEnum):
+    """Store keys for camera service arguments."""
+
+    DURATION = "duration"
+    FILENAME = "filename"
+    FORMAT = "format"
+    LOOKBACK = "lookback"
+    MEDIA_PLAYER = "media_player"

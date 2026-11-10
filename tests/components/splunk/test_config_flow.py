@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.splunk.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -16,8 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

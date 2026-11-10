@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from b2sdk.v2 import exception
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backblaze_b2.const import (
     CONF_APPLICATION_KEY,
@@ -16,8 +17,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import BackblazeFixture
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def _async_start_flow(

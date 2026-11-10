@@ -1,6 +1,7 @@
 {
   "domain": "mcp_server",
   "name": "Model Context Protocol",
+  "categories": ["ai_voice.ai_models", "other_ecosystems"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["http", "conversation"],
@@ -8,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["mcp==1.28.1", "aiohttp_sse==2.2.0", "anyio==4.15.1"],
+  "requirements": ["mcp==2.3.0", "aiohttp_sse==2.2.0", "anyio==4.15.1"],
   "single_config_entry": true
 }

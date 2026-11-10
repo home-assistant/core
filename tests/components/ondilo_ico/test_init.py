@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from ondilo import OndiloError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ondilo_ico.const import DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_devices(

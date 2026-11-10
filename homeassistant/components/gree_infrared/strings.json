@@ -8,6 +8,20 @@
       "no_hvac_modes": "Select at least one supported mode."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "hvac_modes": "[%key:component::gree_infrared::config::step::user::data::hvac_modes%]",
+          "infrared_emitter_entity_id": "[%key:component::gree_infrared::config::step::user::data::infrared_emitter_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
+          "hvac_modes": "[%key:component::gree_infrared::config::step::user::data_description::hvac_modes%]",
+          "infrared_emitter_entity_id": "[%key:component::gree_infrared::config::step::user::data_description::infrared_emitter_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::gree_infrared::config::step::user::data_description::infrared_receiver_entity_id%]"
+        },
+        "description": "Change the infrared entities and the supported modes of your Gree AC.",
+        "title": "Reconfigure Gree AC"
+      },
       "user": {
         "data": {
           "hvac_modes": "Supported modes",
@@ -21,6 +35,19 @@
         },
         "description": "Select an infrared emitter and the modes your Gree AC supports.",
         "title": "Set up Gree AC"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "light": {
+        "name": "Panel light"
+      },
+      "turbo": {
+        "name": "Turbo"
+      },
+      "xfan": {
+        "name": "Xtra fan"
       }
     }
   },

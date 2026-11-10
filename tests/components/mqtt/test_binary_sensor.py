@@ -10,22 +10,12 @@ from unittest.mock import patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components import binary_sensor
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import (
-    EVENT_STATE_CHANGED,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
+from pytest_homeassistant.common import (
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache,
 )
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -56,13 +46,21 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import (
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache,
+from homeassistant.components import binary_sensor
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 DEFAULT_CONFIG = {
     DOMAIN: {

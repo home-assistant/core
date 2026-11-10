@@ -537,6 +537,7 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="range_remaining",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
@@ -990,7 +991,7 @@ class TibberRtEntityCreator:
             self._async_add_entities(new_entities)
 
 
-class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-assistant-enforce-class-module
+class TibberRtDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=home-assistant-enforce-class-module
     """Handle Tibber realtime data."""
 
     def __init__(

@@ -9,9 +9,14 @@ from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
-from homeassistant.components.axis.const import DOMAIN
+from homeassistant.components.axis.const import CONF_COMPANION, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -43,9 +48,6 @@ from .const import (
     VIEW_AREAS_RESPONSE,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-
 type ConfigEntryFactoryType = Callable[[], Coroutine[Any, Any, MockConfigEntry]]
 type RtspStateType = Callable[[bool], None]
 
@@ -75,7 +77,7 @@ class _RtspClientMock(Protocol):
 def fixture_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True
+        "homeassistant.components.axis.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -116,6 +118,7 @@ def fixture_config_entry_data() -> MappingProxyType[str, Any]:
         CONF_PORT: 80,
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
+        CONF_COMPANION: False,
     }
 
 
@@ -138,7 +141,9 @@ def reset_mock_requests(aioclient_mock: AiohttpClientMocker) -> Generator[None]:
 @pytest.fixture(name="mock_requests")
 def fixture_request(
     aioclient_mock: AiohttpClientMocker,
+    basic_device_info_payload: dict[str, Any],
     port_management_payload: dict[str, Any],
+    param_brand_payload: str,
     param_properties_payload: str,
     param_properties_status_code: int,
     param_ports_payload: str,
@@ -166,7 +171,7 @@ def fixture_request(
         ) -> AiohttpClientMockResponse:
             group = (data or {}).get("group")
             if group == "root.Brand":
-                return _text_response(url, BRAND_RESPONSE)
+                return _text_response(url, param_brand_payload)
             if group == "root.Image":
                 return _text_response(url, IMAGE_RESPONSE)
             if group == "root.Input":
@@ -192,7 +197,7 @@ def fixture_request(
             )
         aioclient_mock.post(
             _url_pattern("/axis-cgi/basicdeviceinfo.cgi"),
-            json=BASIC_DEVICE_INFO_RESPONSE,
+            json=basic_device_info_payload,
         )
         aioclient_mock.post(
             _url_pattern("/axis-cgi/io/portmanagement.cgi"),
@@ -264,10 +269,22 @@ def fixture_api_discovery(
     )
 
 
+@pytest.fixture(name="basic_device_info_payload")
+def fixture_basic_device_info_data() -> dict[str, Any]:
+    """Basic device information data."""
+    return BASIC_DEVICE_INFO_RESPONSE
+
+
 @pytest.fixture(name="port_management_payload")
 def fixture_io_port_management_data() -> dict[str, Any]:
     """Property parameter data."""
     return PORT_MANAGEMENT_RESPONSE
+
+
+@pytest.fixture(name="param_brand_payload")
+def fixture_param_brand_data() -> str:
+    """Brand parameter data."""
+    return BRAND_RESPONSE
 
 
 @pytest.fixture(name="param_properties_payload")

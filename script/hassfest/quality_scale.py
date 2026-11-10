@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from hassfest.model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 import probatio
 from probatio.humanize import humanize_error
 
@@ -9,7 +10,6 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
     config_flow,
@@ -103,13 +103,12 @@ VALIDATORS = {rule.name: rule.validator for rule in ALL_RULES if rule.validator}
 
 RULE_URL = (
     "Please check the documentation at "
-    "https://developers.home-assistant.io/docs/core/"
-    "integration-quality-scale/rules/{rule_name}/"
+    "https://contributors.home-assistant.io/core/"
+    "quality-scale/{rule_name}/"
 )
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -190,14 +189,12 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "blockchain",
     "blue_current",
     "bluemaestro",
-    "bluesound",
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
     "bmw_connected_drive",
     "bond",
     "bosch_shc",
-    "braviatv",
     "broadlink",
     "brottsplatskartan",
     "browser",
@@ -337,6 +334,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -425,7 +423,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hive",
     "hko",
     "hlk_sw16",
-    "holiday",
     "homekit",
     "homekit_controller",
     "homematic",
@@ -472,7 +469,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "isy994",
     "itach",
     "itunes",
-    "izone",
     "jellyfin",
     "joaoapps_join",
     "juicenet",
@@ -601,7 +597,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mystrom",
     "mythicbeastsdns",
     "nad",
-    "nam",
     "nanoleaf",
     "nasweb",
     "neato",
@@ -734,7 +729,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "recswitch",
     "reddit",
     "refoss",
-    "rejseplanen",
     "remember_the_milk",
     "remote_rpi_gpio",
     "renson",
@@ -796,7 +790,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "simulated",
     "sinch",
     "sisyphus",
-    "sky_hub",
     "sky_remote",
     "skybeacon",
     "skybell",
@@ -808,7 +801,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "smappee",
     "smart_meter_texas",
     "smarty",
-    "smhi",
     "sms",
     "snapcast",
     "snmp",
@@ -852,7 +844,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "synology_chat",
     "synology_srm",
     "syslog",
-    "system_bridge",
     "systemmonitor",
     "tado",
     "tailscale",
@@ -896,10 +887,8 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "traccar",
     "traccar_server",
     "tradfri",
-    "trafikverket_camera",
     "trafikverket_ferry",
     "trafikverket_train",
-    "trafikverket_weatherstation",
     "transport_nsw",
     "trend",
     "triggercmd",
@@ -925,7 +914,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "utility_meter",
     "uvc",
     "v2c",
-    "vallox",
     "vasttrafik",
     "venstar",
     "vera",
@@ -1004,7 +992,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
 
 INTEGRATIONS_WITHOUT_SCALE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -1090,14 +1077,12 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "blockchain",
     "blue_current",
     "bluemaestro",
-    "bluesound",
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
     "bmw_connected_drive",
     "bond",
     "bosch_shc",
-    "braviatv",
     "broadlink",
     "brottsplatskartan",
     "browser",
@@ -1240,10 +1225,10 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "file",
     "filesize",
     "filter",
-    "fitbit",
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -1336,7 +1321,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hive",
     "hko",
     "hlk_sw16",
-    "holiday",
     "homekit",
     "homekit_controller",
     "homematic",
@@ -1388,7 +1372,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "isy994",
     "itach",
     "itunes",
-    "izone",
     "jellyfin",
     "jewish_calendar",
     "joaoapps_join",
@@ -1500,7 +1483,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "modern_forms",
     "moehlenhoff_alpha2",
     "mold_indicator",
-    "monarch_money",
     "monoprice",
     "moon",
     "mopeka",
@@ -1521,7 +1503,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "mystrom",
     "mythicbeastsdns",
     "nad",
-    "nam",
     "nanoleaf",
     "nasweb",
     "neato",
@@ -1662,7 +1643,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "recswitch",
     "reddit",
     "refoss",
-    "rejseplanen",
     "remember_the_milk",
     "remote_rpi_gpio",
     "renson",
@@ -1739,7 +1719,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "smart_meter_texas",
     "smarttub",
     "smarty",
-    "smhi",
     "sms",
     "snapcast",
     "snmp",
@@ -1789,7 +1768,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "synology_dsm",
     "synology_srm",
     "syslog",
-    "system_bridge",
     "systemmonitor",
     "tado",
     "tailscale",
@@ -1835,10 +1813,8 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "traccar",
     "traccar_server",
     "tradfri",
-    "trafikverket_camera",
     "trafikverket_ferry",
     "trafikverket_train",
-    "trafikverket_weatherstation",
     "transport_nsw",
     "trend",
     "triggercmd",
@@ -1956,6 +1932,7 @@ NO_QUALITY_SCALE = [
     "config",
     "configurator",
     "counter",
+    "debug_console",
     "default_config",
     "device_automation",
     "device_tracker",

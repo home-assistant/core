@@ -4,14 +4,13 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_snoo.containers import SnooData
 
 from homeassistant.components.snoo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def create_entry(

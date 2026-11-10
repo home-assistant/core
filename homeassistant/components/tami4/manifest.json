@@ -1,8 +1,10 @@
 {
   "domain": "tami4",
   "name": "Tami4 Edge / Edge+",
+  "categories": ["water.water_treatment", "appliances_cleaning.cooking"],
   "codeowners": ["@Guy293"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/tami4",
   "integration_type": "device",
   "iot_class": "cloud_polling",

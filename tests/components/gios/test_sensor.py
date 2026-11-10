@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from gios import ApiError
 from gios.model import GiosSensors
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gios.const import DOMAIN, SCAN_INTERVAL
@@ -15,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

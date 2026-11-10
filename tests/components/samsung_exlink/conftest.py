@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from samsung_exlink import MODELS, InputSource, PowerState, SamsungTV, TVModel, TVState
 
 from homeassistant.components.samsung_exlink.const import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.const import CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE, MOCK_MODEL
-
-from tests.common import MockConfigEntry
 
 
 class MockSamsungTV(SamsungTV):

@@ -8,14 +8,13 @@ import aiohttp
 from nexia.const import BRAND_ASAIR, BRAND_NEXIA
 from nexia.home import NexiaHome
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nexia.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_BRAND: BRAND_NEXIA,
@@ -33,7 +32,7 @@ def _patch_success() -> Generator[None]:
             return_value="myhouse",
         ),
         patch("homeassistant.components.nexia.config_flow.NexiaHome.login"),
-        patch("homeassistant.components.nexia.async_setup_entry", return_value=True),
+        patch("homeassistant.components.nexia.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -59,7 +58,7 @@ async def test_form(hass: HomeAssistant, brand) -> None:
         ),
         patch(
             "homeassistant.components.nexia.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -273,7 +272,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
             return_value="myhouse",
         ),
-        patch("homeassistant.components.nexia.async_setup_entry", return_value=True),
+        patch("homeassistant.components.nexia.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "new_password"}
@@ -334,7 +333,7 @@ async def test_reauth_errors(
             "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
             return_value="myhouse",
         ),
-        patch("homeassistant.components.nexia.async_setup_entry", return_value=True),
+        patch("homeassistant.components.nexia.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "new_password"}

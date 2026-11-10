@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from xknx.io import (
     DEFAULT_MCAST_GRP,
     DEFAULT_MCAST_PORT,
@@ -56,8 +57,6 @@ from homeassistant.core import HomeAssistant
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -385,7 +384,7 @@ async def test_async_migrate_entry_v1_to_v2(hass: HomeAssistant) -> None:
 
     assert config_entry.version == 1
 
-    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.knx.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.version == 2
@@ -420,7 +419,7 @@ async def test_async_migrate_entry_already_v2(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.knx.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.version == 2
@@ -437,7 +436,7 @@ async def test_async_migrate_entry_future_version(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.knx.async_setup_entry", return_value=None):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
@@ -457,7 +456,7 @@ async def test_async_migrate_entry_v2_to_v2_2(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.knx.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.knx.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.version == 2

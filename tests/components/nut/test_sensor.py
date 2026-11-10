@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -29,8 +30,6 @@ from .util import (
     _test_sensor_and_attributes,
     async_init_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -186,6 +185,49 @@ async def test_state_sensors(hass: HomeAssistant) -> None:
         state2 = hass.states.get("sensor.ups1_status_data")
         assert state1.state == "Online"
         assert state2.state == "OL"
+
+
+async def test_alarm_sensor_updates_when_alarm_appears_later(
+    hass: HomeAssistant,
+) -> None:
+    """Test an alarm sensor when no alarm is reported during setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
+    )
+    entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_nutclient(
+        list_ups={"ups1": "UPS 1"}, list_vars={"ups.status": "OL"}
+    )
+
+    with patch(
+        "homeassistant.components.nut.AIONUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        alarm = hass.states.get("sensor.ups1_alarms")
+        assert alarm.state == STATE_UNKNOWN
+
+        mock_pynut.list_vars.return_value = {
+            "ups.alarm": "UTILITY_FAIL UPS_ON_BATTERY",
+            "ups.status": "ALARM OB",
+        }
+        now = dt_util.utcnow()
+        async_fire_time_changed(hass, now + timedelta(seconds=61))
+        await hass.async_block_till_done()
+
+        assert (
+            hass.states.get("sensor.ups1_alarms").state == "UTILITY_FAIL UPS_ON_BATTERY"
+        )
+
+        mock_pynut.list_vars.return_value = {"ups.status": "OL"}
+        async_fire_time_changed(hass, now + timedelta(seconds=122))
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.ups1_alarms").state == STATE_UNKNOWN
 
 
 async def test_unknown_state_sensors(hass: HomeAssistant) -> None:

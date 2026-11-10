@@ -166,13 +166,21 @@ class SynologyDSMBackupAgent(BackupAgent):
         """
 
         (filename_tar, filename_meta) = suggested_filenames(backup)
+        stream = await open_stream()
+
+        async def stream_with_progress() -> AsyncIterator[bytes]:
+            bytes_uploaded = 0
+            async for chunk in stream:
+                bytes_uploaded += len(chunk)
+                on_progress(bytes_uploaded=bytes_uploaded)
+                yield chunk
 
         # upload backup.tar file first
         try:
             await self._file_station.upload_file(
                 path=self.path,
                 filename=filename_tar,
-                source=await open_stream(),
+                source=stream_with_progress(),
                 create_parents=True,
             )
         except SynologyDSMAPIErrorException as err:

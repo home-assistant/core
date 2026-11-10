@@ -9,6 +9,13 @@ from freezegun.api import FrozenDateTimeFactory
 from jsonrpc_base.jsonrpc import TransportError
 from pykodi import CannotConnectError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -35,14 +42,6 @@ from homeassistant.util import dt as dt_util
 
 from . import AUDIO_PLAYER, VIDEO_PLAYER, set_idle, set_playing, setup_integration
 from .util import UUID
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 ENTITY_ID = "media_player.name"
 ATTR_DYNAMIC_RANGE = "dynamic_range"

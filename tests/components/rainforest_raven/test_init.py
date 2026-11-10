@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aioraven.data import DeviceInfo as RAVenDeviceInfo
 from aioraven.device import RAVEnConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainforest_raven.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import create_mock_entry
 from .const import DEVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

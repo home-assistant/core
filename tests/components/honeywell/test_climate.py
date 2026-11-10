@@ -1,12 +1,13 @@
 """Test the Honeywell climate domain."""
 
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
 import aiosomecomfort
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -49,8 +50,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import init_integration, reset_mock
-
-from tests.common import async_fire_time_changed
 
 FAN_ACTION = "fan_action"
 
@@ -465,7 +464,7 @@ async def test_service_calls_cool_mode(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
         blocking=True,
     )
-    device.set_hold_cool.assert_called_once_with(datetime.time(2, 30), 15)
+    device.set_hold_cool.assert_called_once_with(dt.time(2, 30), 15)
     device.set_hold_cool.reset_mock()
 
     await hass.services.async_call(
@@ -677,7 +676,7 @@ async def test_service_calls_heat_mode(
         {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
         blocking=True,
     )
-    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 25)
+    device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
     device.set_hold_heat.reset_mock()
 
     device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
@@ -688,7 +687,7 @@ async def test_service_calls_heat_mode(
             {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 25)
+    device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
     device.set_hold_heat.reset_mock()
     assert exc_info.value.translation_key == "temp_failed_value"
 
@@ -700,7 +699,7 @@ async def test_service_calls_heat_mode(
             {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-    device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 25)
+    device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
     device.set_hold_heat.reset_mock()
 
     await hass.services.async_call(

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from total_connect_client.exceptions import AuthenticationError
 
 from homeassistant.components.totalconnect.const import (
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .const import LOCATION_ID, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

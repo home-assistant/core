@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from sofar_modbus.modern.faults import FaultCategory
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, seed_pv_inverter
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

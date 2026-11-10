@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import calendar, llm as llm_component
 from homeassistant.components.calendar import llm as calendar_llm
@@ -13,8 +14,6 @@ from homeassistant.core import Context, HomeAssistant, SupportsResponse
 from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_mock_service
 
 ENTITY_ID = "calendar.test_calendar"
 

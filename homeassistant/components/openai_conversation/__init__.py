@@ -4,6 +4,11 @@ from types import MappingProxyType
 
 import openai
 
+# The client imports its responses and audio resources lazily on first use,
+# which would happen inside the event loop. Import them with the integration.
+from openai.resources.audio import AsyncAudio  # noqa: F401
+from openai.resources.responses import AsyncResponses  # noqa: F401
+
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
@@ -14,18 +19,20 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .const import (
     CONF_CHAT_MODEL,
     CONF_REASONING_SUMMARY,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
@@ -150,7 +157,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             # Device and entity registries will set the disabled_by flag to None
             # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
             # config entry, but we want to set it to USER instead,
-            device_disabled_by: dr.DeviceEntryDisabler | UndefinedType = UNDEFINED
+            device_disabled_by: dr.DeviceEntryDisabler | Undefined = Undefined
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
@@ -249,6 +256,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
                         entry, subentry, data=data
                     )
         hass.config_entries.async_update_entry(entry, minor_version=7)
+
+    if entry.version == 2 and entry.minor_version == 7:
+        if not any(
+            subentry.subentry_type == "ai_task_evaluate"
+            for subentry in entry.subentries.values()
+        ):
+            hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_EVALUATION_OPTIONS),
+                    subentry_type="ai_task_evaluate",
+                    title=DEFAULT_EVALUATION_NAME,
+                    unique_id=None,
+                ),
+            )
+        hass.config_entries.async_update_entry(entry, minor_version=8)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

@@ -5,6 +5,7 @@ from typing import Any, override
 
 import probatio
 from requests import RequestException
+from schluter.thermostat import Thermostat
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -25,7 +26,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
+from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
@@ -49,7 +51,7 @@ async def async_setup_platform(
     session_id = hass.data[DOMAIN][DATA_SCHLUTER_SESSION]
     api = hass.data[DOMAIN][DATA_SCHLUTER_API]
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Thermostat]:
         try:
             thermostats = await hass.async_add_executor_job(
                 api.get_thermostats, session_id
@@ -79,7 +81,9 @@ async def async_setup_platform(
     )
 
 
-class SchluterThermostat(CoordinatorEntity, ClimateEntity):
+class SchluterThermostat(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, Thermostat]]], ClimateEntity
+):
     """Representation of a Schluter thermostat."""
 
     _attr_hvac_mode = HVACMode.HEAT

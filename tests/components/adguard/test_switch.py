@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from adguardhome import AdGuardHomeAuthenticationError, AdGuardHomeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.adguard.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from nyt_games import NYTGamesError, WordleStats
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nyt_games.const import DOMAIN
@@ -14,13 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -1,6 +1,9 @@
 """Test bang_olufsen config entry diagnostics."""
 
 from mozart_api.models import BatteryState, BeolinkSelf
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -14,10 +17,6 @@ from .const import (
     TEST_JID_4,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
 )
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_async_get_config_entry_diagnostics(

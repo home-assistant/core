@@ -18,6 +18,12 @@ from asyncsleepiq import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    RegistryEntryWithDefaults,
+    async_fire_time_changed,
+    mock_registry,
+)
 
 from homeassistant.components.sleepiq import _deduplicate_sleepers
 from homeassistant.components.sleepiq.const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
@@ -42,13 +48,6 @@ from .conftest import (
     SLEEPER_R_NAME,
     SLEEPIQ_CONFIG,
     setup_platform,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    RegistryEntryWithDefaults,
-    async_fire_time_changed,
-    mock_registry,
 )
 
 ENTITY_IS_IN_BED = f"sensor.sleepnumber_{BED_ID}_{SLEEPER_L_NAME_LOWER}_{IS_IN_BED}"
@@ -135,6 +134,12 @@ async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
             "switch",
             LONGER_UPDATE_INTERVAL,
             id="pause_mode",
+        ),
+        pytest.param(
+            lambda client, bed: bed.sleepers[0].fetch_favsleepnumber,
+            "number",
+            LONGER_UPDATE_INTERVAL,
+            id="favorite_firmness",
         ),
         pytest.param(
             lambda client, bed: bed.sleepers[0].fetch_sleep_data,

@@ -1,7 +1,9 @@
 {
   "domain": "gitlab_ci",
   "name": "GitLab-CI",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": [],
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/gitlab_ci",
   "iot_class": "cloud_polling",
   "loggers": ["gitlab"],

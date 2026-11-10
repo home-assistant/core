@@ -7,6 +7,7 @@ from unittest.mock import patch
 from modbus_connection import ModbusTimeoutError, ModbusUnit, ServerDeviceFailureError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from solaredged import SolarEdge
 
 from homeassistant.components.solaredge_modbus.config_flow import SECTION_MORE_OPTIONS
@@ -26,8 +27,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import HOST, PORT, SERIAL_NUMBER, UNIT_ID, async_seed_unit, tcp_data
-
-from tests.common import MockConfigEntry
 
 TITLE = "SolarEdge SE10000H"
 SERIAL_PORT = "/dev/ttyUSB0"

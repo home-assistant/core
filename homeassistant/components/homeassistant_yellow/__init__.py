@@ -49,6 +49,11 @@ _LOGGER = logging.getLogger(__name__)
 
 type HomeAssistantYellowConfigEntry = ConfigEntry[HomeAssistantYellowData]
 
+__all__ = [
+    "DOMAIN",
+    "RADIO_DEVICE",
+]
+
 
 @dataclass
 class HomeAssistantYellowData:

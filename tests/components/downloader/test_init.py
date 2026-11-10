@@ -3,13 +3,12 @@
 from pathlib import Path
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.downloader.const import CONF_DOWNLOAD_DIR, DOMAIN
 from homeassistant.components.downloader.services import DownloaderService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

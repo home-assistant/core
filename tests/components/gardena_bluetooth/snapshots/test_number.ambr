@@ -234,7 +234,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mock_title_open_for',

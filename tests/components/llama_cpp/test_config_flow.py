@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx2
 import openai
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.llama_cpp.const import (
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import llm
 
-from tests.common import MockConfigEntry
-
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
@@ -38,7 +37,7 @@ RECOMMENDED_OPTIONS = {
 def mock_setup(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock the setup of the integration."""
     with patch(
-        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
+        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -246,9 +245,15 @@ async def test_creating_conversation_subentry(
     assert result["step_id"] == "init"
     assert not result["errors"]
 
+    # Advanced options are hidden when recommended and must not be saved
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        RECOMMENDED_OPTIONS,
+        {
+            **RECOMMENDED_OPTIONS,
+            CONF_MAX_TOKENS: 500,
+            CONF_TEMPERATURE: 0.5,
+            CONF_TOP_P: 0.9,
+        },
     )
     await hass.async_block_till_done()
 
@@ -310,21 +315,8 @@ async def test_creating_conversation_subentry_advanced(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    # Toggle recommended to False to show advanced options
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {
-            CONF_RECOMMENDED: False,
-            CONF_CHAT_MODEL: "gpt-4",
-            CONF_PROMPT: "Custom instructions",
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "init"
-
-    # Now configure the advanced options
-    result3 = await hass.config_entries.subentries.async_configure(
-        result2["flow_id"],
         {
             CONF_RECOMMENDED: False,
             CONF_CHAT_MODEL: "gpt-4",
@@ -336,9 +328,9 @@ async def test_creating_conversation_subentry_advanced(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Gpt 4"
-    assert result3["data"] == {
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Gpt 4"
+    assert result2["data"] == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4",
         CONF_PROMPT: "Custom instructions",

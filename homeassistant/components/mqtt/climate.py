@@ -10,9 +10,6 @@ import probatio
 
 from homeassistant.components import climate
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     FAN_AUTO,
@@ -26,12 +23,12 @@ from homeassistant.components.climate import (
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
@@ -48,16 +45,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    UndefinedType,
-    VolSchemaType,
-)
+from homeassistant.helpers.typing import ConfigType, Undefined, VolSchemaType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import subscription
-from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
+from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_ACTION_TEMPLATE,
     CONF_ACTION_TOPIC,
@@ -118,6 +110,7 @@ from .const import (
     CONF_TEMP_STEP,
     DEFAULT_CLIMATE_INITIAL_TEMPERATURE,
     DEFAULT_OPTIMISTIC,
+    DEFAULT_RETAIN,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
@@ -417,22 +410,22 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     @callback
     def _parse_float_payload(
         self, msg: ReceiveMessage, template_name: str, name: str
-    ) -> float | UndefinedType | None:
-        """Render and parse a numeric payload, UNDEFINED means ignore the update."""
+    ) -> float | Undefined | None:
+        """Render and parse a numeric payload, Undefined means ignore the update."""
         payload = self.render_template(msg, template_name)
         if not payload:
             _LOGGER.debug(
                 "Invalid empty payload for %s, ignoring update",
                 name,
             )
-            return UNDEFINED
+            return Undefined
         if payload == PAYLOAD_NONE:
             return None
         try:
             return float(payload)
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
-            return UNDEFINED
+            return Undefined
 
     @callback
     def _handle_current_temperature_received(self, msg: ReceiveMessage) -> None:
@@ -441,7 +434,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
             value := self._parse_float_payload(
                 msg, CONF_CURRENT_TEMP_TEMPLATE, "current temperature"
             )
-        ) is not UNDEFINED:
+        ) is not Undefined:
             self._attr_native_current_temperature = value
 
     @override
@@ -676,7 +669,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_STATE_TEMPLATE, "target temperature"
             )
-        ) is UNDEFINED:
+        ) is Undefined:
             return
         self._attr_native_target_temperature = value
         if value is not None:
@@ -689,7 +682,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_LOW_STATE_TEMPLATE, "target temperature low"
             )
-        ) is UNDEFINED:
+        ) is Undefined:
             return
         self._attr_native_target_temperature_low = value
         if value is not None:
@@ -702,7 +695,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "target temperature high"
             )
-        ) is UNDEFINED:
+        ) is Undefined:
             return
         self._attr_native_target_temperature_high = value
         if value is not None:
@@ -715,7 +708,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "current humidity"
             )
-        ) is not UNDEFINED:
+        ) is not Undefined:
             self._attr_current_humidity = value
 
     @callback
@@ -725,7 +718,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_HUMIDITY_STATE_TEMPLATE, "target humidity"
             )
-        ) is not UNDEFINED:
+        ) is not Undefined:
             self._attr_target_humidity = value
 
     @callback
@@ -822,12 +815,12 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         operation_mode: HVACMode | None
-        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+        if (operation_mode := kwargs.get(ClimateServiceArgument.HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(operation_mode)
 
         optimistic_update = False
         temperature: float | None
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+        if (temperature := kwargs.get(ClimateServiceArgument.TEMPERATURE)) is not None:
             if self._optimistic or self._topic[CONF_TEMP_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_native_target_temperature = temperature
@@ -839,7 +832,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self._publish(CONF_TEMP_COMMAND_TOPIC, mqtt_payload)
 
         target_temp_low: float | None
-        if (target_temp_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
+        if (
+            target_temp_low := kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        ) is not None:
             if self._optimistic or self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_native_target_temperature_low = target_temp_low
@@ -851,7 +846,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self._publish(CONF_TEMP_LOW_COMMAND_TOPIC, mqtt_payload)
 
         target_temp_high: float | None
-        if (target_temp_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
+        if (
+            target_temp_high := kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
+        ) is not None:
             if self._optimistic or self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_native_target_temperature_high = target_temp_high

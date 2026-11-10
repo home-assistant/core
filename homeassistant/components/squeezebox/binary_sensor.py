@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SqueezeboxConfigEntry, SqueezeBoxPlayerUpdateCoordinator
+from . import SqueezeboxConfigEntry
 from .const import (
     PLAYER_SENSOR_ALARM_ACTIVE,
     PLAYER_SENSOR_ALARM_SNOOZE,
@@ -23,6 +23,7 @@ from .const import (
     STATUS_SENSOR_NEEDSRESTART,
     STATUS_SENSOR_RESCAN,
 )
+from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import LMSStatusEntity, SqueezeboxEntity
 
 # Coordinator is used to centralize the data updates

@@ -15,6 +15,7 @@ from lorawan_connection import (
     UplinkEvent,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lorawan import DeviceManager
 from homeassistant.components.lorawan.connection import (
@@ -30,8 +31,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
 from .helpers import DESCRIPTOR, ExampleCoordinator, ExampleDevices
-
-from tests.common import MockConfigEntry
 
 
 async def test_multiple_connections_reconnect(
@@ -426,7 +425,7 @@ async def test_disconnect_while_vendor_subscribes() -> None:
         return stop_events
 
     backend = Mock(async_subscribe=AsyncMock(side_effect=replay))
-    await connection.attach(RegisteredConnection(backend, Mock()))
+    await connection.attach(Mock(spec=RegisteredConnection, connection=backend))
     stop_events.assert_called_once_with()
     listener.assert_called_once()
     assert connection.registration is None
@@ -578,7 +577,7 @@ async def test_reconnect_during_initial_setup(
         assert await task
         await hass.async_block_till_done()
 
-    assert not original_backend._subscribers
+    original_backend.emit(UpdatedEvent(descriptor=replace(DESCRIPTOR, name="Stale")))
     coordinator = entry.runtime_data.coordinators[("network", DESCRIPTOR.dev_eui)]
     assert coordinator.data.descriptor.name == "Replacement"
     assert coordinator.last_update_success
@@ -590,4 +589,5 @@ async def test_reconnect_during_initial_setup(
     assert coordinator.data.descriptor.name == "Updated"
     await hass.config_entries.async_unload(entry.entry_id)
     unregister_replacement()
-    assert not backend._subscribers
+    backend.emit(UpdatedEvent(descriptor=replace(DESCRIPTOR, name="After unload")))
+    assert coordinator.data.descriptor.name == "Updated"

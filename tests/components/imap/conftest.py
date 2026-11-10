@@ -13,9 +13,9 @@ from .const import EMPTY_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with (
-        patch("homeassistant.components.imap.async_unload_entry", return_value=True),
+        patch("homeassistant.components.imap.async_unload_entry", return_value=None),
         patch(
-            "homeassistant.components.imap.async_setup_entry", return_value=True
+            "homeassistant.components.imap.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         yield mock_setup_entry

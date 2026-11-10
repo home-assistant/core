@@ -7,6 +7,8 @@ from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
 from aioshelly.const import MODEL_25
 from aioshelly.exceptions import DeviceConnectionError
 import pytest
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.shelly.const import (
@@ -19,9 +21,6 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration, inject_rpc_device_event
 from .conftest import MOCK_STATUS_COAP
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 RELAY_BLOCK_ID = 0
 

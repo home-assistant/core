@@ -14,12 +14,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 0
 
@@ -85,18 +85,25 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sofar binary sensor platform."""
+    async_remove_unserved_entities(
+        hass,
+        entry,
+        Platform.BINARY_SENSOR,
+        FAULT_SENSOR_DESCRIPTIONS + FLAG_SENSOR_DESCRIPTIONS,
+    )
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
-    async_add_entities(
+    entities: list[SofarFaultBinarySensor | SofarFlagBinarySensor] = [
         SofarFaultBinarySensor(runtime_data, description)
         for description in FAULT_SENSOR_DESCRIPTIONS
         if description.component in served
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         SofarFlagBinarySensor(runtime_data, description)
         for description in FLAG_SENSOR_DESCRIPTIONS
         if description.component in served
     )
+    async_add_entities(entities)
 
 
 class SofarFaultBinarySensor(SofarEntity, BinarySensorEntity):

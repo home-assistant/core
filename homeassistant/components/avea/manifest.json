@@ -7,8 +7,10 @@
       "service_uuid": "f815e810-456c-6761-746f-4d756e696368"
     }
   ],
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@pattyland"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/avea",
   "integration_type": "device",

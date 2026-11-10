@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
 from httpx2 import ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.egauge.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow(hass: HomeAssistant) -> None:

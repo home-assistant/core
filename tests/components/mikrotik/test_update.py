@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
@@ -14,8 +15,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .const import ROUTERBOARD_DATA, TEST_FIRMWARE, TEST_INSTALLED_VERSION, UPDATE_DATA
-
-from tests.common import snapshot_platform
 
 FW_UPDATE_ENTITY_ID = "update.mikrotik_routeros"
 ROUTERBOARD_UPDATE_ENTITY_ID = "update.mikrotik_routerboard"

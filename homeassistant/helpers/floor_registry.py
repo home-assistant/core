@@ -8,7 +8,7 @@ from datetime import datetime
 import math
 from typing import Any, Literal, TypedDict, override
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -21,7 +21,7 @@ from .normalized_name_base_registry import (
 from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 DATA_REGISTRY: HassKey[FloorRegistry] = HassKey("floor_registry")
 EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventType(
@@ -194,6 +194,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         return self.floors.generate_id_from_name(name)
 
     @callback
+    @verify_event_loop_thread("floor_registry.async_create")
     def async_create(
         self,
         name: str,
@@ -203,8 +204,6 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         level: int | None = None,
     ) -> FloorEntry:
         """Create a new floor."""
-        self.hass.verify_event_loop_thread("floor_registry.async_create")
-
         if floor := self.async_get_floor_by_name(name):
             raise ValueError(
                 f"The name {name} ({floor.normalized_name}) is already in use"
@@ -230,9 +229,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         return floor
 
     @callback
+    @verify_event_loop_thread("floor_registry.async_delete")
     def async_delete(self, floor_id: str) -> None:
         """Delete floor."""
-        self.hass.verify_event_loop_thread("floor_registry.async_delete")
         del self.floors[floor_id]
         self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
@@ -244,14 +243,15 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("floor_registry.async_update")
     def async_update(
         self,
         floor_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
-        icon: str | UndefinedType | None = UNDEFINED,
-        level: int | UndefinedType = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
+        aliases: set[str] | Undefined = Undefined,
+        icon: str | Undefined | None = Undefined,
+        level: int | Undefined = Undefined,
+        name: str | Undefined = Undefined,
     ) -> FloorEntry:
         """Update name of the floor."""
         old = self.floors[floor_id]
@@ -262,9 +262,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
                 ("icon", icon),
                 ("level", level),
             )
-            if value is not UNDEFINED and value != getattr(old, attr_name)
+            if value is not Undefined and value != getattr(old, attr_name)
         }
-        if name is not UNDEFINED and name != old.name:
+        if name is not Undefined and name != old.name:
             changes["name"] = name
 
         if not changes:
@@ -272,7 +272,6 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
 
         changes["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("floor_registry.async_update")
         new = self.floors[floor_id] = dataclasses.replace(old, **changes)
 
         self.async_schedule_save()
@@ -287,10 +286,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         return new
 
     @callback
+    @verify_event_loop_thread("floor_registry.async_reorder")
     def async_reorder(self, floor_ids: list[str]) -> None:
         """Reorder floors."""
-        self.hass.verify_event_loop_thread("floor_registry.async_reorder")
-
         if set(floor_ids) != set(self.floors.data.keys()):
             raise ValueError(
                 "The floor_ids list must contain all existing floor IDs exactly once"

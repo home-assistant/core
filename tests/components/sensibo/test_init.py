@@ -8,6 +8,8 @@ from freezegun.api import FrozenDateTimeFactory
 from pysensibo.exceptions import AuthenticationError
 from pysensibo.model import SensiboData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoDevicesError, NoUsernameError
@@ -17,9 +19,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_load_unload_entry(hass: HomeAssistant, mock_client: MagicMock) -> None:

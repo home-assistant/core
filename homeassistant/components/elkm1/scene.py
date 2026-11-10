@@ -8,8 +8,8 @@ from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
+from .models import ElkM1ConfigEntry
 
 
 async def async_setup_entry(

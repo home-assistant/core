@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aemet_opendata.exceptions import AemetTimeout
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aemet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .util import mock_api_call
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_NAME: "aemet",

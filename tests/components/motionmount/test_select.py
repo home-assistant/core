@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import motionmount
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -14,8 +15,6 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 PRESET_ENTITY_ID = "select.my_motionmount_preset"
 

@@ -21,8 +21,9 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
 from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yoto_api import AuthenticationError, Device, YotoAPIError, YotoError, YotoPlayer
 
 from homeassistant.components.yoto import coordinator
@@ -27,8 +28,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_integration
 from .conftest import PLAYER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 

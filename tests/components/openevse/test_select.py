@@ -11,6 +11,11 @@ from openevsehttp.exceptions import (
     UnsupportedFeature,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openevse.const import DOMAIN
@@ -28,8 +33,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

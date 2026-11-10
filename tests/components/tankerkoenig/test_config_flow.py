@@ -9,6 +9,7 @@ from aiotankerkoenig.exceptions import (
     TankerkoenigInvalidKeyError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tankerkoenig.const import CONF_STATIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -26,8 +27,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .const import NEARBY_STATIONS
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = {
     CONF_NAME: "Home",
@@ -63,7 +62,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
@@ -157,7 +156,7 @@ async def test_user_errors(
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
@@ -197,7 +196,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
@@ -249,7 +248,7 @@ async def test_reauth(
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",

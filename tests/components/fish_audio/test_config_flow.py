@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from fishaudio import AuthenticationError, FishAudioError
 from fishaudio.types.account import Credits
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fish_audio.const import (
     CONF_BACKEND,
@@ -21,8 +22,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

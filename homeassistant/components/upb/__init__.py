@@ -80,7 +80,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) 
     config_entry.runtime_data.disconnect()
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: UpbConfigEntry) -> None:
     """Migrate entry."""
 
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)

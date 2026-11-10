@@ -30,6 +30,7 @@ from aiohomeconnect.model import (
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
 from aiohomeconnect.model.program import EnumerateProgram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -43,8 +44,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_AVAILABLE_COMMANDS, MOCK_PROGRAMS, MOCK_SETTINGS, MOCK_STATUS
-
-from tests.common import MockConfigEntry, load_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -149,6 +148,10 @@ async def mock_integration_setup(
     config_entry.add_to_hass(hass)
 
     async def run(client: MagicMock) -> bool:
+        def init_side_effect(auth) -> MagicMock:
+            client._auth = auth
+            return client
+
         assert config_entry.state is ConfigEntryState.NOT_LOADED
         with (
             patch("homeassistant.components.home_connect.PLATFORMS", platforms),
@@ -156,7 +159,7 @@ async def mock_integration_setup(
                 "homeassistant.components.home_connect.HomeConnectClient"
             ) as client_mock,
         ):
-            client_mock.return_value = client
+            client_mock.side_effect = init_side_effect
             result = await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
         return result
@@ -328,16 +331,16 @@ def mock_client(
         autospec=HomeConnectClient,
     )
 
-    event_queue: asyncio.Queue[list[EventMessage | Exception]] = asyncio.Queue()
+    event_queue: asyncio.Queue[list[EventMessage | Exception | None]] = asyncio.Queue()
 
-    async def add_events(events: list[EventMessage | Exception]) -> None:
+    async def add_events(events: list[EventMessage | Exception | None]) -> None:
         await event_queue.put(events)
 
     mock.add_events = add_events
 
     appliances = [appliance] if appliance else appliances
 
-    async def stream_all_events() -> AsyncGenerator[EventMessage]:
+    async def stream_all_events() -> AsyncGenerator[EventMessage | None]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():
@@ -462,7 +465,7 @@ def mock_client_with_exception(
 
     event_queue: asyncio.Queue[list[EventMessage]] = asyncio.Queue()
 
-    async def stream_all_events() -> AsyncGenerator[EventMessage]:
+    async def stream_all_events() -> AsyncGenerator[EventMessage | None]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():

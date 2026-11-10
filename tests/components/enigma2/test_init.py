@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_REQUIRED
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_device_without_mac_address(

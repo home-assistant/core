@@ -6,6 +6,7 @@ from unittest.mock import patch
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -24,8 +25,6 @@ from . import (
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _setup(

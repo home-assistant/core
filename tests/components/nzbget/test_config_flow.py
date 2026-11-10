@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nzbget.const import CONF_MORE_OPTIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -18,8 +19,6 @@ from . import (
     _patch_status,
     _patch_version,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant) -> None:

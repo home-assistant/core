@@ -7,14 +7,17 @@ from egauge_async.exceptions import EgaugeParsingException
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import ConnectError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.egauge.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 

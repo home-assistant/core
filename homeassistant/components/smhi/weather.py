@@ -56,6 +56,8 @@ from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
 from .coordinator import SMHIConfigEntry
 from .entity import SmhiWeatherEntity
 
+PARALLEL_UPDATES = 0
+
 # Used to map condition from API results
 CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_CLOUDY: [5, 6],
@@ -199,16 +201,19 @@ class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
 
         return data
 
+    @callback
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Service to retrieve the daily forecast."""
         return self._get_forecast_data(self.coordinator.data.daily, "daily")
 
+    @callback
     @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Service to retrieve the hourly forecast."""
         return self._get_forecast_data(self.coordinator.data.hourly, "hourly")
 
+    @callback
     @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Service to retrieve the twice daily forecast."""

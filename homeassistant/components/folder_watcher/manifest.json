@@ -1,6 +1,7 @@
 {
   "domain": "folder_watcher",
   "name": "Folder watcher",
+  "categories": ["computers_network.monitoring"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/folder_watcher",

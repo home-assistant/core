@@ -1,8 +1,9 @@
 """Tests for switch platform."""
 
-import datetime
+import datetime as dt
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from pywizlight.exceptions import WizLightConnectionError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -20,8 +21,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import FAKE_MAC, FAKE_SOCKET, async_push_update, async_setup_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_switch_operation(
@@ -80,7 +79,7 @@ async def test_update_fails(
 
     switch.updateState.side_effect = OSError
 
-    async_fire_time_changed(hass, utcnow() + datetime.timedelta(seconds=15))
+    async_fire_time_changed(hass, utcnow() + dt.timedelta(seconds=15))
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

@@ -17,6 +17,7 @@ from kasa import (
 )
 from kasa.iot import IotStrip
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import (
@@ -71,8 +72,6 @@ from .const import (
     MAC_ADDRESS3,
     MODEL,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_configuring_tplink_causes_discovery(

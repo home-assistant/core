@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import aiohttp
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ukraine_alarm.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from . import REGIONS
-
-from tests.common import MockConfigEntry
 
 
 async def test_migration_v1_to_v2_state_without_districts(

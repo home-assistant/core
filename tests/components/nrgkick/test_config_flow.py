@@ -11,6 +11,7 @@ from nrgkick_api import (
     NRGkickInvalidResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -18,8 +19,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.101"),
@@ -125,7 +124,39 @@ async def test_user_flow_with_credentials(
     mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.parametrize("url", ["http://", ""])
+@pytest.mark.parametrize(
+    ("host", "expected_host"),
+    [
+        ("192.168.1.100", "192.168.1.100"),
+        ("192.168.1.100:80", "192.168.1.100:80"),
+        ("192.168.1.100/", "192.168.1.100"),
+        ("http://192.168.1.100", "192.168.1.100"),
+        ("http://192.168.1.100:80", "192.168.1.100:80"),
+        ("http://192.168.1.100:8080/path", "192.168.1.100:8080"),
+        ("https://nrgkick.local/", "nrgkick.local"),
+        ("https://nrgkick.local:443/", "nrgkick.local:443"),
+        ("http://[fe80::1]:8080", "[fe80::1]:8080"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_host_input(
+    hass: HomeAssistant, mock_nrgkick_api: AsyncMock, host: str, expected_host: str
+) -> None:
+    """Test the host input is reduced to the host and an explicitly given port."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: host}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: expected_host}
+    assert result["result"].unique_id == "TEST123456"
+
+
+@pytest.mark.parametrize("url", ["http://", "", "http://[::1", "http://."])
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_invalid_host_input(
     hass: HomeAssistant, mock_nrgkick_api: AsyncMock, url: str
@@ -567,6 +598,7 @@ async def test_zeroconf_json_api_disabled_with_credentials(
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
     }
+    assert result["result"].unique_id == "TEST123456"
 
 
 @pytest.mark.parametrize(

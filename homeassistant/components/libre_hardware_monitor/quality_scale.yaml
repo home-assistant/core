@@ -70,11 +70,11 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: done
   repair-issues:

@@ -7,7 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, KebaHandler
+from . import KebaHandler
+from .const import DOMAIN
 
 
 async def async_setup_platform(

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_config_entry(

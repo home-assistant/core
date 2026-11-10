@@ -4,7 +4,7 @@ This sets up a demo environment of features which are obscure or which represent
 incorrect behavior, and are thus not wanted in the demo integration.
 """
 
-import datetime
+import datetime as dt
 from functools import partial
 from random import random
 
@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
 
     # Create issues
-    _create_issues(hass)
+    _create_issues(hass, entry)
 
     # Insert some external statistics
     if "recorder" in hass.config.components:
@@ -186,12 +186,13 @@ async def _notify_backup_listeners(hass: HomeAssistant) -> None:
         listener()
 
 
-def _create_issues(hass: HomeAssistant) -> None:
+def _create_issues(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Create some issue registry issues."""
     async_create_issue(
         hass,
         DOMAIN,
         "transmogrifier_deprecated",
+        config_entry_id=entry.entry_id,
         breaks_in_ha_version="2023.1.1",
         is_fixable=False,
         learn_more_url="https://en.wiktionary.org/wiki/transmogrifier",
@@ -203,6 +204,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "out_of_blinker_fluid",
+        config_entry_id=entry.entry_id,
         breaks_in_ha_version="2023.1.1",
         is_fixable=True,
         learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
@@ -214,6 +216,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "unfixable_problem",
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         learn_more_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         severity=IssueSeverity.WARNING,
@@ -224,6 +227,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "bad_psu",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
         severity=IssueSeverity.CRITICAL,
@@ -234,6 +238,7 @@ def _create_issues(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         "cold_tea",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         severity=IssueSeverity.WARNING,
         translation_key="cold_tea",
@@ -241,7 +246,7 @@ def _create_issues(hass: HomeAssistant) -> None:
 
 
 def _generate_mean_statistics(
-    start: datetime.datetime, end: datetime.datetime, init_value: float, max_diff: float
+    start: dt.datetime, end: dt.datetime, init_value: float, max_diff: float
 ) -> list[StatisticData]:
     statistics: list[StatisticData] = []
     mean = init_value
@@ -256,7 +261,7 @@ def _generate_mean_statistics(
                 "max": mean + random() * max_diff,
             }
         )
-        now = now + datetime.timedelta(hours=1)
+        now = now + dt.timedelta(hours=1)
 
     return statistics
 
@@ -264,8 +269,8 @@ def _generate_mean_statistics(
 async def _insert_sum_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
-    start: datetime.datetime,
-    end: datetime.datetime,
+    start: dt.datetime,
+    end: dt.datetime,
     max_diff: float,
 ) -> None:
     statistics: list[StatisticData] = []
@@ -286,7 +291,7 @@ async def _insert_sum_statistics(
                 "sum": sum_,
             }
         )
-        now = now + datetime.timedelta(hours=1)
+        now = now + dt.timedelta(hours=1)
 
     async_add_external_statistics(hass, metadata, statistics)
 
@@ -294,9 +299,9 @@ async def _insert_sum_statistics(
 async def _insert_statistics(hass: HomeAssistant) -> None:
     """Insert some fake statistics."""
     now = dt_util.now()
-    yesterday = now - datetime.timedelta(days=1)
+    yesterday = now - dt.timedelta(days=1)
     yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_midnight = yesterday_midnight + datetime.timedelta(days=1)
+    today_midnight = yesterday_midnight + dt.timedelta(days=1)
 
     # Fake yesterday's temperatures
     metadata: StatisticMetaData = {
@@ -424,9 +429,9 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
 async def _insert_wrong_wind_direction_statistics(hass: HomeAssistant) -> None:
     """Insert some fake wind direction statistics."""
     now = dt_util.now()
-    yesterday = now - datetime.timedelta(days=1)
+    yesterday = now - dt.timedelta(days=1)
     yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_midnight = yesterday_midnight + datetime.timedelta(days=1)
+    today_midnight = yesterday_midnight + dt.timedelta(days=1)
 
     # Add some statistics required to raise the mean_type_changed issue later
     metadata: StatisticMetaData = {

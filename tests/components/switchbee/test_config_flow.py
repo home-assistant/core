@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.switchbee.config_flow import SwitchBeeError
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_FAILED_TO_LOGIN_MSG, MOCK_INVALID_TOKEN_MGS
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 USER_INPUT = {
     CONF_HOST: "1.1.1.1",
@@ -37,7 +36,7 @@ async def _patch_success(hass: HomeAssistant) -> AsyncGenerator[None]:
         ),
         patch(
             "homeassistant.components.switchbee.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
@@ -76,7 +75,7 @@ async def test_form(
         ),
         patch(
             "homeassistant.components.switchbee.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "switchbee.api.polling.CentralUnitPolling.fetch_states", return_value=None
@@ -219,7 +218,7 @@ async def test_form_entry_exists(hass: HomeAssistant) -> None:
         patch("switchbee.api.polling.CentralUnitPolling._login", return_value=None),
         patch(
             "homeassistant.components.switchbee.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "switchbee.api.polling.CentralUnitPolling.get_configuration",

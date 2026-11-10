@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TelegramBotConfigEntry
-from .const import ATTR_TITLE, CONF_CHAT_ID, DOMAIN
+from .bot import TelegramBotConfigEntry
+from .const import CONF_CHAT_ID, DOMAIN, TelegramBotServiceArgument
 from .entity import TelegramBotEntity
 
 
@@ -61,5 +61,5 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
-        kwargs: dict[str, Any] = {ATTR_TITLE: title}
+        kwargs: dict[str, Any] = {TelegramBotServiceArgument.TITLE: title}
         await self.service.send_message(message, self.chat_id, self._context, **kwargs)

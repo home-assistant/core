@@ -5,11 +5,10 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

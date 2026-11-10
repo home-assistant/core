@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 
 from aiortm import AioRTMError, AuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remember_the_milk import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -13,8 +14,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .const import PROFILE
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     "name": f"{PROFILE}",

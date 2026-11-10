@@ -2,15 +2,14 @@
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_component
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import owntracks
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.owntracks import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, mock_component
-from tests.typing import ClientSessionGenerator
 
 MINIMAL_LOCATION_MESSAGE = {
     "_type": "location",

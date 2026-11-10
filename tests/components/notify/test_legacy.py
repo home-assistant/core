@@ -8,6 +8,14 @@ from unittest.mock import MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 import yaml
 
 from homeassistant import config as hass_config
@@ -25,15 +33,6 @@ from .test_init import (
     MockNotifyEntity,
     help_async_setup_entry_init,
     help_async_unload_entry,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
 )
 
 

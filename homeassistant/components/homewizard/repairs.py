@@ -7,18 +7,18 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .config_flow import async_request_token
 from .const import ISSUE_BATTERY_MODE_CLOUD_DISABLED
+from .coordinator import HomeWizardConfigEntry
 
 
 class MigrateToV2ApiRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: HomeWizardConfigEntry) -> None:
         """Create flow."""
         self.entry = entry
 
@@ -69,7 +69,7 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 class BatteryModeCloudDisabledRepairFlow(RepairsFlow):
     """Handler for a battery mode/cloud incompatibility fix flow."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: HomeWizardConfigEntry) -> None:
         """Create flow."""
         self.entry = entry
 

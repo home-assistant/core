@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from theben_conexa_smgw import ConexaSMGW
 
 from homeassistant import config_entries
@@ -12,8 +13,6 @@ from homeassistant.components.theben_conexa.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_CONFIG_DATA = {
     CONF_HOST: "1.1.1.1",

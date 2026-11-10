@@ -1,6 +1,7 @@
 """Test the UniFi Protect utils."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.unifiprotect.const import (
     CONF_CONNECTION_MODE,
@@ -23,8 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture
-
-from tests.common import MockConfigEntry
 
 
 async def test_session_client_is_full_access_for_api_key_only_entry(

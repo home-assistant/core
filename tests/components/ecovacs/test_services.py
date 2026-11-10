@@ -8,8 +8,8 @@ from deebot_client.device import Device
 import pytest
 
 from homeassistant.components.ecovacs.const import DOMAIN
-from homeassistant.components.ecovacs.services import SERVICE_RAW_GET_POSITIONS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.ecovacs.services import EcovacsService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 pytestmark = [pytest.mark.usefixtures("init_integration")]
@@ -80,8 +80,8 @@ async def test_get_positions_service(
 
     assert await hass.services.async_call(
         DOMAIN,
-        SERVICE_RAW_GET_POSITIONS,
-        {ATTR_ENTITY_ID: entity_id},
+        EcovacsService.RAW_GET_POSITIONS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
     ) == {entity_id: mock_device_execute_response}

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from pizone import ControllerEndpoint, DiscoveryService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.izone import discovery as izone_discovery
@@ -18,8 +19,6 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import async_load_yaml_exclude, create_mock_endpoint
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 def _mock_pizone_service() -> Mock:
     """Return a mock pizone DiscoveryService."""
@@ -28,7 +27,6 @@ def _mock_pizone_service() -> Mock:
     service.close = AsyncMock()
     service.discover_all = AsyncMock(return_value=[])
     service.discover_by_uid = AsyncMock(return_value=None)
-    service.discover_by_host = AsyncMock(return_value=None)
     return service
 
 

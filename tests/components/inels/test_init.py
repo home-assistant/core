@@ -2,14 +2,14 @@
 
 from unittest.mock import ANY, AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import HA_INELS_PATH
 from .common import DOMAIN
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 
 async def test_ha_mqtt_publish(

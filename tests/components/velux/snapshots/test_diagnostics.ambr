@@ -33,9 +33,8 @@
                 'is_closed': False,
                 'supported_features': 271,
                 'supported_speeds': list([
-                  'silent',
+                  'slow',
                   'fast',
-                  'default',
                 ]),
               }),
               'entity_id': 'cover.test_window',

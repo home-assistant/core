@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareInternalServerError,
@@ -22,8 +23,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_WATER_HEATER = "water_heater.model0_domestic_hot_water"
 CIRCULATION_SCHEDULE_FIXTURES = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]

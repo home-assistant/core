@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from knx_telegram_store.connection import ConnectionCheckResult, ConnectionErrorKind
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 from xknx.exceptions import XKNXException
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
@@ -64,8 +65,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, get_fixture_path
-
 FIXTURE_KNXKEYS_PASSWORD = "test"
 FIXTURE_KEYRING = sync_load_keyring(
     get_fixture_path("fixture.knxkeys", DOMAIN), FIXTURE_KNXKEYS_PASSWORD
@@ -98,7 +97,7 @@ async def fixture_knx_setup(hass: HomeAssistant):
     with (
         patch("homeassistant.components.knx.async_setup", return_value=True),
         patch(
-            "homeassistant.components.knx.async_setup_entry", return_value=True
+            "homeassistant.components.knx.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         yield mock_async_setup_entry

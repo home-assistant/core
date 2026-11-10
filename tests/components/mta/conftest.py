@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pymta import Arrival
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mta.const import (
     CONF_LINE,
@@ -19,8 +20,6 @@ from homeassistant.components.mta.const import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry
 
 MOCK_SUBWAY_ARRIVALS = [
     Arrival(
@@ -206,7 +205,7 @@ def mock_config_entry_with_bus_subentry(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.mta.async_setup_entry", return_value=True
+        "homeassistant.components.mta.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

@@ -12,6 +12,7 @@ from psnawp_api.core import (
     PSNAWPServerError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.playstation_network.const import DOMAIN
 from homeassistant.components.playstation_network.coordinator import (
@@ -19,8 +20,6 @@ from homeassistant.components.playstation_network.coordinator import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
