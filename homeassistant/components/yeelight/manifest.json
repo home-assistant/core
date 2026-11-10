@@ -5,6 +5,7 @@
   "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@shenxn", "@starkillerOG", "@alexyao2015"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "dhcp": [
     {

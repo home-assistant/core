@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -130,5 +130,5 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(CONF_URL, default=entry.data[CONF_URL]): cv.string},
             ),
-            description_placeholders={CONF_NAME: entry.title},
+            description_placeholders={"name": entry.title},
         )

@@ -4,6 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@g4bri3lDev"],
   "config_flow": true,
+  "connectivity": ["serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/kaco_rs485",
   "integration_type": "hub",

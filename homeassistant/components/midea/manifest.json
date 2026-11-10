@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@chemelli74", "@rokam"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@tl-sl"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["bluetooth"],
   "dhcp": [
     {

@@ -47,8 +47,12 @@ class SwitcherDataUpdateCoordinator(
     async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for"
-            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
+            translation_domain=DOMAIN,
+            translation_key="device_update_timeout",
+            translation_placeholders={
+                "device": self.name,
+                "seconds": str(MAX_UPDATE_INTERVAL_SEC),
+            },
         )
 
     @property

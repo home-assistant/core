@@ -40,6 +40,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -60,7 +61,10 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.Ceiling"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "light.Ceiling"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -70,7 +74,10 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.Bowl"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "light.Bowl"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -80,7 +87,10 @@ async def test_toggle(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TOGGLE)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "light.Bowl"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: "light.Bowl"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -371,7 +381,7 @@ async def test_turn_on_exclude(hass: HomeAssistant) -> None:
         ha.DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: ["light.ceiling", "light.kitchen"],
+            CommonServiceArgument.ENTITY_ID: ["light.ceiling", "light.kitchen"],
             CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.kitchen"},
         },
         blocking=True,
@@ -401,7 +411,10 @@ async def test_turn_on_off_toggle_invalid_exclude(
         await hass.services.async_call(
             ha.DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ["light.ceiling", "light.kitchen"], CONF_EXCLUDE: exclude},
+            {
+                CommonServiceArgument.ENTITY_ID: ["light.ceiling", "light.kitchen"],
+                CONF_EXCLUDE: exclude,
+            },
             blocking=True,
         )
     assert not calls

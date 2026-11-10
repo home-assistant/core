@@ -6,16 +6,10 @@ from datetime import UTC, datetime
 from typing import Any, override
 
 from homematicip.base.enums import FunctionalChannelType, ValveState
-from homematicip.base.functionalChannels import (
-    FloorTerminalBlockMechanicChannel,
-    FunctionalChannel,
-)
+from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import (
     Device,
     EnergySensorsInterface,
-    FloorTerminalBlock6,
-    FloorTerminalBlock10,
-    FloorTerminalBlock12,
     HeatingThermostat,
     HeatingThermostatCompact,
     HeatingThermostatEvo,
@@ -41,7 +35,6 @@ from homematicip.device import (
     WeatherSensor,
     WeatherSensorPlus,
     WeatherSensorPro,
-    WiredFloorTerminalBlock12,
 )
 
 from homeassistant.components.sensor import (
@@ -173,6 +166,12 @@ ATTR_ESI_TYPE = "type"
 CARBON_DIOXIDE_CHANNELS = (
     FunctionalChannelType.CARBON_DIOXIDE_SENSOR_CHANNEL,
     FunctionalChannelType.WALL_MOUNTED_THERMOSTAT_WITH_CARBON_CHANNEL,
+)
+
+FLOOR_TERMINAL_BLOCK_VALVE_CHANNELS = (
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL,
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_CHANNEL,
+    FunctionalChannelType.FLOOR_TERMINAL_BLOCK_LOCAL_PUMP_CHANNEL,
 )
 
 ESI_TYPE_UNKNOWN = "UNKNOWN"
@@ -653,21 +652,13 @@ async def async_setup_entry(
             if isinstance(device, device_class):
                 entities.extend(handler(device))
 
-    # Handle floor terminal blocks separately
-    floor_terminal_blocks = (
-        FloorTerminalBlock6,
-        FloorTerminalBlock10,
-        FloorTerminalBlock12,
-        WiredFloorTerminalBlock12,
-    )
     entities.extend(
         HomematicipFloorTerminalBlockMechanicChannelValve(
             hap, device, channel=channel.index
         )
         for device in hap.home.devices
-        if isinstance(device, floor_terminal_blocks)
         for channel in device.functionalChannels
-        if isinstance(channel, FloorTerminalBlockMechanicChannel)
+        if channel.functionalChannelType in FLOOR_TERMINAL_BLOCK_VALVE_CHANNELS
         and getattr(channel, "valvePosition", None) is not None
     )
 
@@ -879,7 +870,10 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
             device,
             channel=channel,
             is_multi_channel=is_multi_channel,
-            post="Valve Position",
+            # the channels are listed as 0, 1, 10, 11, 12, 2, ...
+            channel_real_index=channel,
+            # only used for channels without a label, which would share one name
+            post=f"Valve Position {channel}",
             feature_id="ftb_valve_position",
         )
 
@@ -889,12 +883,7 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         """Return the icon."""
         if super().icon:
             return super().icon
-        channel = next(
-            channel
-            for channel in self._device.functionalChannels
-            if channel.index == self._channel
-        )
-        if channel.valveState != ValveState.ADAPTION_DONE:
+        if self._adaption_pending():
             return "mdi:alert"
         return "mdi:heating-coil"
 
@@ -902,14 +891,21 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
     @override
     def native_value(self) -> int | None:
         """Return the floor terminal block valve position."""
-        channel = next(
+        if self._adaption_pending():
+            return None
+        return round(self._valve_channel().valvePosition * 100)
+
+    def _valve_channel(self) -> FunctionalChannel:
+        return next(
             channel
             for channel in self._device.functionalChannels
             if channel.index == self._channel
         )
-        if channel.valveState != ValveState.ADAPTION_DONE:
-            return None
-        return round(channel.valvePosition * 100)
+
+    def _adaption_pending(self) -> bool:
+        # thermal actuator channels report no valveState, they need no adaption
+        valve_state = getattr(self._valve_channel(), "valveState", None)
+        return valve_state is not None and valve_state != ValveState.ADAPTION_DONE
 
 
 class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):

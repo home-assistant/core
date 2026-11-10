@@ -63,3 +63,9 @@ class SkodaDeviceTracker(SkodaEntity, TrackerEntity):
         """Return the longitude of the parked vehicle."""
         coordinates = self._gps_coordinates
         return coordinates.longitude if coordinates else None
+
+    @property
+    @override
+    def entity_picture(self) -> str | None:
+        """Return the vehicle render URL."""
+        return self.open_api_vehicle.render_url

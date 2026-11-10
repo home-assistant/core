@@ -3,6 +3,7 @@
   "name": "rTorrent",
   "categories": ["computers_network.nas_servers"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/rtorrent",
   "iot_class": "local_polling",
   "quality_scale": "legacy"

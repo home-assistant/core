@@ -86,7 +86,7 @@ class EcobeeData:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: EcobeeConfigEntry,
         api_key: str | None = None,
         username: str | None = None,
         password: str | None = None,

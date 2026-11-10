@@ -3,6 +3,7 @@
 from aioseafile import (
     SeafileAuthenticationError,
     SeafileConnectionError,
+    SeafileNotFoundError,
     SeafilePermissionError,
     SeafileTimeoutError,
 )
@@ -27,6 +28,7 @@ async def test_handle_seafile_errors_returns_result() -> None:
     ("exception", "translation_key"),
     [
         pytest.param(SeafileAuthenticationError, "invalid_auth", id="auth"),
+        pytest.param(SeafileNotFoundError, "library_not_found", id="not_found"),
         pytest.param(SeafilePermissionError, "permission_denied", id="not_allowed"),
         pytest.param(SeafileTimeoutError, "timeout_connect", id="timeout"),
         pytest.param(SeafileConnectionError, "api_error", id="failed"),

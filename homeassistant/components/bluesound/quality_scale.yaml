@@ -66,7 +66,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: The integration does not define custom entity icons.
@@ -81,6 +81,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: The unload callback does not use the typed config entry alias.
+  strict-typing: done

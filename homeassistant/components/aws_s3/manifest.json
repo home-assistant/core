@@ -4,6 +4,7 @@
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@tomasbedrich"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["backup"],
   "documentation": "https://www.home-assistant.io/integrations/aws_s3",
   "integration_type": "service",

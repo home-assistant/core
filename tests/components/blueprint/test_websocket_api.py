@@ -286,7 +286,6 @@ async def test_save_blueprint(
             "      selector:\n"
             "        number:\n"
             "          mode: box\n"
-            "          step: 1.0\n"
             "  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\n"
             "triggers:\n"
             "  trigger: event\n"
@@ -309,7 +308,6 @@ async def test_save_blueprint(
             "      selector:\n"
             "        number:\n"
             "          mode: box\n"
-            "          step: 1.0\n"
             "  source_url: https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml\n"
             "triggers:\n"
             "  trigger: event\n"
@@ -373,7 +371,6 @@ async def test_save_existing_file_override(
             "name": "name",
             "domain": "automation",
             "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/test_event_service.yaml",
-            "input": {},
         }
     }
 

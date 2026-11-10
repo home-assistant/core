@@ -19,7 +19,6 @@ from bring_api import (
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -102,7 +101,7 @@ class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={CONF_EMAIL: self.bring.mail},
+                translation_placeholders={"email": self.bring.mail},
             ) from e
 
         if self.previous_lists - (
@@ -159,7 +158,7 @@ class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={CONF_EMAIL: self.bring.mail},
+                translation_placeholders={"email": self.bring.mail},
             ) from e
         self._purge_deleted_lists()
 
@@ -220,7 +219,7 @@ class BringActivityCoordinator(BringBaseCoordinator[dict[str, BringActivityData]
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="setup_authentication_exception",
-                    translation_placeholders={CONF_EMAIL: self.coordinator.bring.mail},
+                    translation_placeholders={"email": self.coordinator.bring.mail},
                 ) from e
             except BringRequestException as e:
                 raise UpdateFailed(

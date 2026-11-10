@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
@@ -76,7 +77,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         save_data=AmazonSaveDataConfig(
-            path=Path(hass.config.path(DOMAIN)),
+            path=Path(hass.config.path(STORAGE_DIR, DOMAIN)),
         ),
     )
 
@@ -87,7 +88,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alexa Devices."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     _login_data: dict[str, Any]
 
@@ -160,7 +161,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth flow."""
-        self.context["title_placeholders"] = {CONF_USERNAME: entry_data[CONF_USERNAME]}
+        self.context["title_placeholders"] = {"username": entry_data[CONF_USERNAME]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -196,7 +197,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_USERNAME: entry_data[CONF_USERNAME]},
+            description_placeholders={"username": entry_data[CONF_USERNAME]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )

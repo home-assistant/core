@@ -3,6 +3,7 @@
   "name": "Ubiquiti UniFi Video",
   "categories": ["security_safety.cameras"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/uvc",
   "iot_class": "local_polling",
   "loggers": ["uvcclient"],

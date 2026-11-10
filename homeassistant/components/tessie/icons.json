@@ -117,6 +117,17 @@
         }
       }
     },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "default": "mdi:ev-plug-ccs2"
+      },
+      "vehicle_state_ft": {
+        "default": "mdi:car"
+      },
+      "vehicle_state_rt": {
+        "default": "mdi:car-back"
+      }
+    },
     "device_tracker": {
       "location": {
         "default": "mdi:car",
