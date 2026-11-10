@@ -107,7 +107,7 @@ async def test_with_invalid_credentials(
         ),
         patch(
             "homeassistant.components.iaqualink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -155,7 +155,7 @@ async def test_cannot_connect_exception(
         ),
         patch(
             "homeassistant.components.iaqualink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -183,7 +183,7 @@ async def test_user_flow(hass: HomeAssistant, config_data: dict[str, str]) -> No
         ),
         patch(
             "homeassistant.components.iaqualink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
