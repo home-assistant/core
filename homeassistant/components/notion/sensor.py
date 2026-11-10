@@ -54,14 +54,13 @@ async def async_setup_entry(
             NotionSensor(
                 coordinator,
                 listener_id,
-                sensor.uuid,
-                sensor.bridge.id,
+                coordinator.data.sensors[listener.sensor_id].uuid,
+                coordinator.data.sensors[listener.sensor_id].bridge.id,
                 description,
             )
             for listener_id, listener in coordinator.data.listeners.items()
             for description in SENSOR_DESCRIPTIONS
             if description.listener_kind.value == listener.definition_id
-            and (sensor := coordinator.data.sensors[listener.sensor_id])
         ]
     )
 
@@ -85,8 +84,6 @@ class NotionSensor(NotionEntity, SensorEntity):
     @override
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
-        if not self.listener.status_localized:
-            return None
         if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
             # The Notion API only returns a localized string for temperature (e.g.
             # "70°"); we simply remove the degree symbol:
