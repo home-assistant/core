@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.components.common import (
     ConditionStateDescription,
@@ -21,8 +22,15 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.button.condition import CONDITIONS
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONF_CONDITION,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 _ALL_BUTTON_EVENT_TYPES = [
     "press_start",
@@ -78,6 +86,50 @@ async def test_button_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+@pytest.mark.parametrize(
+    ("duration", "expected"),
+    [
+        (0, timedelta(0)),
+        ("00:00:05", timedelta(seconds=5)),
+        ({"seconds": 29.999}, timedelta(seconds=29.999)),
+    ],
+)
+async def test_button_is_being_held_condition_for_valid(
+    hass: HomeAssistant,
+    duration: dict[str, float] | str | int,
+    expected: timedelta,
+) -> None:
+    """Test the is_being_held condition accepts a duration shorter than the timeout."""
+    validated_config = await async_validate_condition_config(
+        hass,
+        {
+            CONF_CONDITION: "button.is_being_held",
+            CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+            CONF_OPTIONS: {"for": duration},
+        },
+    )
+    assert validated_config[CONF_OPTIONS]["for"] == expected
+
+
+@pytest.mark.parametrize(
+    "duration",
+    [{"seconds": -1}, {"seconds": 30}, "00:01:00", "not_a_duration", None],
+)
+async def test_button_is_being_held_condition_for_invalid(
+    hass: HomeAssistant, duration: dict[str, int] | str | None
+) -> None:
+    """Test the is_being_held condition rejects a duration that could never pass."""
+    with pytest.raises(probatio.Invalid):
+        await async_validate_condition_config(
+            hass,
+            {
+                CONF_CONDITION: "button.is_being_held",
+                CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                CONF_OPTIONS: {"for": duration},
+            },
+        )
 
 
 def test_condition_target_support() -> None:

@@ -2,6 +2,8 @@
 
 from typing import override
 
+import probatio
+
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     ButtonEventType,
@@ -9,18 +11,37 @@ from homeassistant.components.event import (
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
 )
+from homeassistant.const import CONF_FOR, CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.condition import Condition, EntityConditionBase
+from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
+    Condition,
+    EntityConditionBase,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import HOLD_TIMEOUT
+
+IS_BEING_HELD_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        probatio.Required(CONF_OPTIONS, default={}): {
+            # A hold times out, so a longer duration could never pass.
+            probatio.Optional(CONF_FOR): probatio.All(
+                cv.positive_time_period,
+                probatio.Range(max=HOLD_TIMEOUT, max_included=False),
+            ),
+        },
+    }
+)
 
 
 class ButtonIsBeingHeldCondition(EntityConditionBase):
     """Condition for buttons being held."""
 
     _domain_specs = {EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.BUTTON)}
+    _schema = IS_BEING_HELD_CONDITION_SCHEMA
 
     @property
     @override
