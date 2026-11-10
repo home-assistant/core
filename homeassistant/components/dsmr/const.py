@@ -10,7 +10,6 @@ LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
-CONF_TIME_BETWEEN_UPDATE = "time_between_update"
 CONF_ENCRYPTION_KEY = "encryption_key"
 
 CONF_SERIAL_ID = "serial_id"
@@ -20,7 +19,6 @@ DEFAULT_DSMR_VERSION = "2.2"
 DEFAULT_PORT = "/dev/ttyUSB0"
 DEFAULT_PRECISION = 3
 DEFAULT_RECONNECT_INTERVAL = 30
-DEFAULT_TIME_BETWEEN_UPDATE = 30
 
 DEVICE_NAME_ELECTRICITY = "Electricity Meter"
 DEVICE_NAME_GAS = "Gas Meter"
