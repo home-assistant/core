@@ -1,12 +1,18 @@
 """The Model Context Protocol integration."""
 
 from dataclasses import dataclass
+import logging
 from typing import cast, override
 
+from aiohasupervisor import SupervisorError
+
 from homeassistant.components.application_credentials import AuthorizationServer
+from homeassistant.components.hassio import get_supervisor_client
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
+from homeassistant.helpers.hassio import is_hassio
 
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
@@ -19,6 +25,8 @@ from .coordinator import (
 __all__ = [
     "DOMAIN",
 ]
+
+_LOGGER = logging.getLogger(__name__)
 
 API_PROMPT = "The following tools are available from a remote server named {name}."
 
@@ -80,6 +88,30 @@ async def _create_token_manager(
     return token_manager
 
 
+async def _async_requires_admin(
+    hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
+) -> bool:
+    """Return if only admin users may use the tools of the server.
+
+    A server provided by an app is limited to admin users when the app's panel
+    is, so its tools reach no more users than the app itself. When that can't be
+    determined, it is limited to admin users. A server added by hand is
+    available to every user.
+    """
+    if entry.source != SOURCE_HASSIO:
+        return False
+    if (slug := entry.data.get(CONF_SLUG)) is None or not is_hassio(hass):
+        return True
+    try:
+        panels = await get_supervisor_client(hass).ingress.panels()
+    except SupervisorError as err:
+        _LOGGER.debug("Error getting the panel of app %s: %s", slug, err)
+        return True
+    if (panel := panels.get(slug)) is None:
+        return True
+    return panel.admin
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
 ) -> None:
@@ -96,6 +128,7 @@ async def async_setup_entry(
             hass=hass,
             id=api_id,
             name=entry.title,
+            requires_admin=await _async_requires_admin(hass, entry),
             coordinator=coordinator,
         ),
     )

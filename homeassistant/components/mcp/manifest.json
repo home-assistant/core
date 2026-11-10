@@ -1,6 +1,7 @@
 {
   "domain": "mcp",
   "name": "Model Context Protocol Client",
+  "after_dependencies": ["hassio"],
   "categories": ["ai_voice.ai_models"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
