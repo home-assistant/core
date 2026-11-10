@@ -6,9 +6,16 @@ from greencell_client.access import GreencellAccess
 from greencell_client.utils import GreencellUtils
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, GREENCELL_HABU_DEN, GREENCELL_OTHER_DEVICE, MANUFACTURER
+from .const import (
+    DOMAIN,
+    GREENCELL_HABU_DEN,
+    GREENCELL_OTHER_DEVICE,
+    MANUFACTURER,
+    SIGNAL_ACCESS_CHANGED,
+)
 
 
 class GreencellEntity(Entity):
@@ -43,8 +50,10 @@ class GreencellEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register the entity with Home Assistant."""
-        self._access.register_listener(self._schedule_update)
-
-    def _schedule_update(self) -> None:
-        """Schedule an update for the entity."""
-        self.async_schedule_update_ha_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_ACCESS_CHANGED.format(self._serial_number),
+                self.async_write_ha_state,
+            )
+        )
