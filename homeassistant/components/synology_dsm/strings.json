@@ -253,6 +253,10 @@
     }
   },
   "issues": {
+    "deprecated_action": {
+      "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Restart** or **Shut down** button entity of your NAS with the `button.press` action instead, and update any automations or scripts that use `{action}`.",
+      "title": "The `{action}` action is being removed"
+    },
     "missing_backup_setup": {
       "fix_flow": {
         "abort": {
