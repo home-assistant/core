@@ -1627,11 +1627,18 @@ async def test_registered_service_declares_domain(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("top_level_files", "yaml_cache"),
+    ("top_level_files", "yaml_cache", "log_message"),
     [
         # Not cached, so the lookup is retried once the integration is installed
-        pytest.param(None, {}, id="unknown_integration"),
-        pytest.param(set(), {"test_domain": {}}, id="no_services_yaml"),
+        pytest.param(
+            None, {}, "Integration not found: test_domain", id="unknown_integration"
+        ),
+        pytest.param(
+            set(),
+            {"test_domain": {}},
+            "Failed to load services.yaml for integration: test_domain",
+            id="no_services_yaml",
+        ),
     ],
 )
 async def test_async_declare_service_without_descriptions(
@@ -1639,6 +1646,7 @@ async def test_async_declare_service_without_descriptions(
     caplog: pytest.LogCaptureFixture,
     top_level_files: set[str] | None,
     yaml_cache: dict[str, dict[str, Any]],
+    log_message: str,
 ) -> None:
     """Test declaring services of an integration without services.yaml."""
     domain = "test_domain"
@@ -1651,7 +1659,7 @@ async def test_async_declare_service_without_descriptions(
 
     assert await service.async_get_all_descriptions(hass, registered_only=False) == {}
     assert hass.data[service.YAML_SERVICE_DESCRIPTIONS_CACHE] == yaml_cache
-    assert "Failed to load services.yaml for integration: test_domain" in caplog.text
+    assert log_message in caplog.text
 
 
 async def test_async_declare_service_installed_later(hass: HomeAssistant) -> None:

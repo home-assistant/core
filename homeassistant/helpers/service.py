@@ -53,7 +53,11 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.loader import Integration, async_get_integrations
+from homeassistant.loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integrations,
+)
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
@@ -579,6 +583,9 @@ async def _async_load_services_yaml(hass: HomeAssistant, domains: set[str]) -> N
             loaded[domain] = {}
             continue
         # Not cached, so the lookup is retried once the integration is installed
+        if isinstance(int_or_exc, IntegrationNotFound):
+            _LOGGER.debug("Integration not found: %s", domain)
+            continue
         _LOGGER.error(
             "Failed to load services.yaml for integration: %s",
             domain,
