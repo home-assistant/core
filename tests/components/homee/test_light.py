@@ -146,25 +146,31 @@ async def test_toggle(
     mock_homee.set_value.assert_called_once_with(1, 1, 1)
 
 
+@pytest.mark.parametrize(
+    ("homee_mode", "expected_color_mode", "expected_color_temp"),
+    [
+        pytest.param(0.0, ColorMode.HS, None, id="hue_saturation"),
+        pytest.param(1.0, ColorMode.XY, None, id="xy"),
+        pytest.param(2.0, ColorMode.COLOR_TEMP, 366, id="color_temp"),
+    ],
+)
 async def test_light_color_mode_attribute(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
+    homee_mode: float,
+    expected_color_mode: ColorMode,
+    expected_color_temp: int | None,
 ) -> None:
     """Test that the color mode follows the COLOR_MODE attribute."""
     await setup_mock_light(hass, mock_homee, mock_config_entry, "lights.json")
-
-    state = hass.states.get("light.test_light_light_1")
-    assert state is not None
-    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
-    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
 
     color_mode_attribute = next(
         attribute
         for attribute in mock_homee.nodes[0].attributes
         if attribute.type == AttributeType.COLOR_MODE
     )
-    color_mode_attribute.current_value = 2.0
+    color_mode_attribute.current_value = homee_mode
     mock_homee.nodes[0].add_on_changed_listener.call_args_list[0][0][0](
         mock_homee.nodes[0]
     )
@@ -172,20 +178,8 @@ async def test_light_color_mode_attribute(
 
     state = hass.states.get("light.test_light_light_1")
     assert state is not None
-    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
-    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 366
-
-    for mode in (0.0, 1.0):
-        color_mode_attribute.current_value = mode
-        mock_homee.nodes[0].add_on_changed_listener.call_args_list[0][0][0](
-            mock_homee.nodes[0]
-        )
-        await hass.async_block_till_done()
-
-        state = hass.states.get("light.test_light_light_1")
-        assert state is not None
-        assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
-        assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
+    assert state.attributes[ATTR_COLOR_MODE] == expected_color_mode
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == expected_color_temp
 
 
 async def test_light_snapshot(
