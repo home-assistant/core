@@ -1,7 +1,7 @@
 """Support for interface with an Samsung TV."""
 
 import asyncio
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 
@@ -80,10 +80,17 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._app_list_event: asyncio.Event = asyncio.Event()
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
+        self._dmr: SamsungTVDmrDevice | None = None
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
-
-        self._dmr: SamsungTVDmrDevice | None = None
+            if TYPE_CHECKING:
+                assert self._host is not None
+            self._dmr = SamsungTVDmrDevice(
+                hass=coordinator.hass,
+                ssdp_rendering_control_location=self._ssdp_rendering_control_location,
+                host=self._host,
+                on_event_callback=self._on_dmr_event_callback,
+            )
 
     @property
     @override
@@ -144,7 +151,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     async def _async_extra_update(self) -> None:
         """Update state of device."""
         if not self.coordinator.is_on:
-            if self._dmr and self._dmr.is_subscribed:
+            if self._dmr:
                 await self._dmr.async_unsubscribe()
             return
 
@@ -153,18 +160,8 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         if not self._app_list_event.is_set():
             startup_tasks.append(create_eager_task(self._async_startup_app_list()))
 
-        if not self._dmr and self._ssdp_rendering_control_location:
-            self._dmr = SamsungTVDmrDevice(
-                hass=self.hass,
-                ssdp_rendering_control_location=self._ssdp_rendering_control_location,
-                host=self._host,
-                on_event_callback=self._on_dmr_event_callback,
-            )
         if self._dmr:
-            if self._dmr.device and not self._dmr.is_subscribed:
-                startup_tasks.append(create_eager_task(self._dmr.async_resubscribe()))
-            elif not self._dmr.device:
-                startup_tasks.append(create_eager_task(self._dmr.async_startup()))
+            startup_tasks.append(create_eager_task(self._dmr.async_ensure_subscribed()))
 
         if startup_tasks:
             await asyncio.gather(*startup_tasks)
@@ -210,6 +207,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     @callback
     def _on_dmr_event_callback(self) -> None:
         """Handle UPnP state variable changes from DMR device."""
+        # Events can arrive before the entity has been added to hass
         if self._update_from_upnp() and self.entity_id:
             self.async_write_ha_state()
 
