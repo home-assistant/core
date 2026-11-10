@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from electrasmart.device import OperationMode
 from electrasmart.device.const import Feature
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -16,13 +17,15 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 
-@pytest.fixture(name="mock_device")
-def mock_device_fixture() -> Mock:
+def _mock_device(mac: str, name: str) -> Mock:
     """Return a mocked Electra AC device."""
     device = Mock(
-        mac="a8032ab12345",
+        mac=mac,
         model="Electra A/C",
         manufactor="Electra",
+        serial_number="J4B60300391",
+        fm_version="611V4-C20",
+        hw_version="1.0",
         features=[Feature.V_SWING, Feature.H_SWING],
         is_disconnected=Mock(return_value=False),
         is_on=Mock(return_value=False),
@@ -43,8 +46,20 @@ def mock_device_fixture() -> Mock:
         set_vertical_swing=Mock(return_value=None),
     )
     # `name` is a reserved Mock kwarg, so it must be set after construction.
-    device.name = "Living Room"
+    device.name = name
     return device
+
+
+@pytest.fixture(name="mock_device")
+def mock_device_fixture() -> Mock:
+    """Return a mocked Electra AC device."""
+    return _mock_device("a8032ab12345", "Living Room")
+
+
+@pytest.fixture(name="second_device")
+def second_device_fixture() -> Mock:
+    """Return a second mocked AC on the same account."""
+    return _mock_device("a8032ab67890", "Bedroom")
 
 
 @pytest.fixture(name="mock_api")
@@ -74,9 +89,17 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture(name="setup_integration")
 async def setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_api: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_api: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Set up the integration with a single mocked AC."""
+    """Set up the integration with a single mocked AC.
+
+    Takes the freezer so that the integration is set up with a frozen clock:
+    the coordinator schedules its polls against the event loop's clock, so a
+    test that freezes only after setup would see a first poll immediately.
+    """
     config_entry.add_to_hass(hass)
 
     with patch(
