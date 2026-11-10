@@ -234,6 +234,95 @@ async def test_vehicle_target_temperature_change(
     assert state.attributes[ATTR_TEMPERATURE] == 19.0
 
 
+async def test_target_temperature_kept_without_vehicle_target(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a chosen target temperature survives a poll without a vehicle target."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENYAQ, ATTR_TEMPERATURE: 23},
+        blocking=True,
+    )
+
+    air_conditioning = (
+        mock_skoda_client.get_vehicle.return_value.vehicle.air_conditioning
+    )
+    reported_target = air_conditioning.target_temperature
+    air_conditioning.target_temperature = None
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    air_conditioning.target_temperature = reported_target
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENYAQ))
+    assert state.attributes[ATTR_TEMPERATURE] == 23
+
+
+@pytest.mark.parametrize(
+    (
+        "vehicle_fixture",
+        "entity_id",
+        "hvac_mode",
+        "sent_command",
+        "skipped_command",
+        "expected_mode",
+    ),
+    [
+        (
+            "vehicle_electric.json",
+            ENYAQ,
+            HVACMode.HEAT_COOL,
+            "start_air_conditioning",
+            "stop_air_conditioning",
+            HVACMode.HEAT_COOL,
+        ),
+        (
+            "vehicle_hybrid.json",
+            SUPERB,
+            HVACMode.OFF,
+            "stop_air_conditioning",
+            "start_air_conditioning",
+            HVACMode.OFF,
+        ),
+    ],
+)
+async def test_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+    entity_id: str,
+    hvac_mode: HVACMode,
+    sent_command: str,
+    skipped_command: str,
+    expected_mode: HVACMode,
+) -> None:
+    """Test setting the temperature together with a mode applies the mode too."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 23, ATTR_HVAC_MODE: hvac_mode},
+        blocking=True,
+    )
+
+    getattr(mock_skoda_client, sent_command).assert_awaited_once()
+    getattr(mock_skoda_client, skipped_command).assert_not_awaited()
+    assert (state := hass.states.get(entity_id))
+    assert state.state == expected_mode
+    assert state.attributes[ATTR_TEMPERATURE] == 23
+
+
 @pytest.mark.parametrize(
     ("air_conditioning_state", "expected_mode", "expected_action"),
     [

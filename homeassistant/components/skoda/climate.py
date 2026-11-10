@@ -10,6 +10,7 @@ from skoda_public_api.models.enums import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -124,9 +125,9 @@ class SkodaClimate(SkodaEntity, ClimateEntity):
         self._attr_hvac_mode = _HVAC_MODE_MAP.get(action) if action else None
 
         # Keep a target temperature chosen in Home Assistant until the vehicle
-        # reports a different one.
+        # reports a different one. A poll without a target does not count.
         reported = self._vehicle_target_temperature()
-        if reported != self._reported_target_temperature:
+        if reported is not None and reported != self._reported_target_temperature:
             self._reported_target_temperature = reported
             self._attr_native_target_temperature = reported
 
@@ -144,16 +145,20 @@ class SkodaClimate(SkodaEntity, ClimateEntity):
         )
         self._attr_hvac_mode = HVACMode.HEAT_COOL
 
+    async def _async_stop(self) -> None:
+        """Stop the air conditioning."""
+        await self.async_send_command(
+            self.coordinator.openapi.stop_air_conditioning(self.vin)
+        )
+        self._attr_hvac_mode = HVACMode.OFF
+
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Start or stop the air conditioning."""
         if hvac_mode == HVACMode.HEAT_COOL:
             await self._async_start(self.native_target_temperature)
         else:
-            await self.async_send_command(
-                self.coordinator.openapi.stop_air_conditioning(self.vin)
-            )
-            self._attr_hvac_mode = HVACMode.OFF
+            await self._async_stop()
         self.async_write_ha_state()
 
     @override
@@ -168,9 +173,12 @@ class SkodaClimate(SkodaEntity, ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set the target temperature, restarting the air conditioning if running."""
+        """Set the target temperature, applying a requested HVAC mode as well."""
         temperature: float = kwargs[ATTR_TEMPERATURE]
-        if self.hvac_mode == HVACMode.HEAT_COOL:
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE, self.hvac_mode)
+        if hvac_mode == HVACMode.HEAT_COOL:
             await self._async_start(temperature)
+        elif hvac_mode == HVACMode.OFF and self.hvac_mode != HVACMode.OFF:
+            await self._async_stop()
         self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
