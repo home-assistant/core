@@ -82,7 +82,7 @@ async def async_validate_trigger_config(
     trigger = config[CONF_TYPE]
 
     if (
-        not device  # type: ignore[truthy-bool]
+        not device
         or device.model not in DEVICES
         or trigger not in DEVICES[device.model]
     ):

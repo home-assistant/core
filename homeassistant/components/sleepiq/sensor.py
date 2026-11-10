@@ -72,7 +72,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="score",
         value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.sleep_score if sleeper.sleep_data else None  # type: ignore[truthy-bool]
+            sleeper.sleep_data.sleep_score if sleeper.sleep_data else None
         ),
     ),
     SleepIQSensorEntityDescription(
@@ -84,7 +84,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda sleeper, time_zone: (
             round(sleeper.sleep_data.duration / 3600, 1)
-            if sleeper.sleep_data and sleeper.sleep_data.duration  # type: ignore[truthy-bool]
+            if sleeper.sleep_data and sleeper.sleep_data.duration
             else None
         ),
     ),
@@ -94,7 +94,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="bpm",
         value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.heart_rate if sleeper.sleep_data else None  # type: ignore[truthy-bool]
+            sleeper.sleep_data.heart_rate if sleeper.sleep_data else None
         ),
     ),
     SleepIQSensorEntityDescription(
@@ -103,7 +103,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="brpm",
         value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.respiratory_rate if sleeper.sleep_data else None  # type: ignore[truthy-bool]
+            sleeper.sleep_data.respiratory_rate if sleeper.sleep_data else None
         ),
     ),
     SleepIQSensorEntityDescription(
@@ -113,7 +113,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=lambda sleeper, time_zone: (
-            sleeper.sleep_data.hrv if sleeper.sleep_data else None  # type: ignore[truthy-bool]
+            sleeper.sleep_data.hrv if sleeper.sleep_data else None
         ),
     ),
     SleepIQSensorEntityDescription(
@@ -122,7 +122,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda sleeper, time_zone: (
             _session_time(sleeper.sleep_data.start_date, time_zone)
-            if sleeper.sleep_data  # type: ignore[truthy-bool]
+            if sleeper.sleep_data
             else None
         ),
     ),
@@ -132,7 +132,7 @@ SLEEP_HEALTH_SENSORS: tuple[SleepIQSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda sleeper, time_zone: (
             _session_time(sleeper.sleep_data.end_date, time_zone)
-            if sleeper.sleep_data  # type: ignore[truthy-bool]
+            if sleeper.sleep_data
             else None
         ),
     ),

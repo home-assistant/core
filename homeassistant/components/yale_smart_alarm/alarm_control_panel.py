@@ -66,7 +66,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
     async def async_set_alarm(self, command: str, code: str | None = None) -> None:
         """Set alarm."""
         if TYPE_CHECKING:
-            assert self.coordinator.yale, "Connection to API is missing"  # type: ignore[truthy-bool]
+            assert self.coordinator.yale, "Connection to API is missing"
 
         try:
             if command == YALE_STATE_ARM_FULL:

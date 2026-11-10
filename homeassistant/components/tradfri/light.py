@@ -107,7 +107,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return true if light is on."""
-        if not self._device_data:  # type: ignore[truthy-bool]
+        if not self._device_data:
             return False
         return self._device_data.state
 
@@ -125,7 +125,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        if not self._device_data:  # type: ignore[truthy-bool]
+        if not self._device_data:
             return None
         return cast(int, self._device_data.dimmer)
 
@@ -133,7 +133,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        if not self._device_data or not (color_temp := self._device_data.color_temp):  # type: ignore[truthy-bool]
+        if not self._device_data or not (color_temp := self._device_data.color_temp):
             return None
         return color_util.color_temperature_mired_to_kelvin(color_temp)
 

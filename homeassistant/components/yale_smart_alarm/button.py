@@ -53,7 +53,7 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         if TYPE_CHECKING:
-            assert self.coordinator.yale, "Connection to API is missing"  # type: ignore[truthy-bool]
+            assert self.coordinator.yale, "Connection to API is missing"
 
         try:
             await self.hass.async_add_executor_job(
