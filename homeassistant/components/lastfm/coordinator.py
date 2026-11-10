@@ -69,7 +69,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
     def _get_user_data(self, username: str) -> LastFMUserData | None:
         user = self._client.get_user(username)
         try:
-            play_count = user.get_playcount()
+            play_count = int(user.get_playcount())
             image = user.get_image()
             top_tracks = user.get_top_tracks(limit=1)
         except PyLastError as exc:

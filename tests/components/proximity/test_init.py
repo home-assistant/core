@@ -1089,8 +1089,6 @@ async def test_removed_tracked_entity_issue_deleted_when_untracked(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    # The options flow changes data only, so it does not trigger a reload
-    assert await hass.config_entries.async_reload(home_entry.entry_id)
     await hass.async_block_till_done()
 
     assert not issue_registry.async_get_issue(DOMAIN, home_issue_id)

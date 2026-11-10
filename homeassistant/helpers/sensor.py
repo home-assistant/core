@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 _READ_ONLY = (
     "The device info returned by sensor_device_info_to_hass_device_info is shared"
-    " and cannot be modified; copy it first with DeviceInfo(**device_info)"
+    " and cannot be modified; copy it first with copy.copy(device_info)"
 )
 
 
@@ -35,11 +35,11 @@ class _SharedDeviceInfo(DeviceInfo):
 
     def __copy__(self) -> DeviceInfo:
         """Return a copy which can be modified."""
-        return DeviceInfo(**self)
+        return DeviceInfo(**self.as_dict())
 
     def __deepcopy__(self, memo: dict[int, Any]) -> DeviceInfo:
         """Return a copy which can be modified; the cached values are strings."""
-        return DeviceInfo(**self)
+        return DeviceInfo(**self.as_dict())
 
 
 def sensor_device_info_to_hass_device_info(
