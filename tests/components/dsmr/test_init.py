@@ -100,9 +100,6 @@ async def test_migrate_unique_id(
             "serial_id": "1234",
             "serial_id_gas": "5678",
         },
-        options={
-            "time_between_update": 0,
-        },
     )
 
     mock_entry.add_to_hass(hass)
