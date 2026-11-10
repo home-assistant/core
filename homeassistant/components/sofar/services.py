@@ -18,6 +18,7 @@ from homeassistant.helpers.service import (
 
 from .const import DOMAIN
 from .coordinator import SofarConfigEntry
+from .helpers import enum_member, enum_options
 
 
 class SofarService(StrEnum):
@@ -58,7 +59,7 @@ _POWER_RANGE = probatio.All(int, probatio.Range(min=-100000, max=100000))
 SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
     {
         probatio.Required(SofarServiceArgument.MODE): probatio.In(
-            [mode.name.lower() for mode in FeedinLimitationMode]
+            enum_options(FeedinLimitationMode)
         ),
         # Not cv.positive_int: it would let 3000.9 pass as 3000.
         probatio.Required(SofarServiceArgument.MAX_POWER): probatio.All(
@@ -82,7 +83,7 @@ SET_PASSIVE_MODE_TIMEOUT_SCHEMA = _ENTRY_SCHEMA.extend(
             cv.positive_int, probatio.Range(max=65535)
         ),
         probatio.Required(SofarServiceArgument.ACTION): probatio.In(
-            [action.name.lower() for action in PassiveModeTimeoutAction]
+            enum_options(PassiveModeTimeoutAction)
         ),
     }
 )
@@ -162,7 +163,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         await _write(
             entry,
             device.feed_in.async_write_limit(
-                FeedinLimitationMode[call.data[SofarServiceArgument.MODE].upper()],
+                enum_member(FeedinLimitationMode, call.data[SofarServiceArgument.MODE]),
                 int(max_power),
             ),
         )
@@ -185,9 +186,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             entry,
             device.passive.async_write_timeout(
                 call.data[SofarServiceArgument.TIMEOUT],
-                PassiveModeTimeoutAction[
-                    call.data[SofarServiceArgument.ACTION].upper()
-                ],
+                enum_member(
+                    PassiveModeTimeoutAction, call.data[SofarServiceArgument.ACTION]
+                ),
             ),
         )
 

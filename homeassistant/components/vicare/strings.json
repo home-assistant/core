@@ -624,6 +624,9 @@
       "return_temperature": {
         "name": "Return temperature"
       },
+      "salt_supply": {
+        "name": "Salt supply"
+      },
       "secondary_circuit_return_temperature": {
         "name": "Secondary circuit return temperature"
       },
@@ -711,6 +714,15 @@
       },
       "volumetric_flow": {
         "name": "Volumetric flow"
+      },
+      "water_consumption_today": {
+        "name": "Water consumption today"
+      },
+      "water_consumption_total": {
+        "name": "Water consumption"
+      },
+      "water_flow": {
+        "name": "Water flow"
       },
       "zigbee_signal_strength": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"

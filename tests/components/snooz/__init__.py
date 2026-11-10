@@ -31,6 +31,20 @@ NOT_SNOOZ_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+TEST_BREEZ_ADDRESS = "00:00:00:00:0B:FA"
+TEST_BREEZ_DISPLAY_NAME = "Breez 0BFA"
+
+# A Breez advertises its name and manufacturer data but no service UUIDs
+BREEZ_SERVICE_INFO = BluetoothServiceInfo(
+    name="Breez-0BFA",
+    address=TEST_BREEZ_ADDRESS,
+    rssi=-63,
+    manufacturer_data={65552: bytes([0x14]) + bytes([0] * 8)},
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
 SNOOZ_SERVICE_INFO_PAIRING = BluetoothServiceInfo(
     name=TEST_SNOOZ_LOCAL_NAME,
     address=TEST_ADDRESS,
