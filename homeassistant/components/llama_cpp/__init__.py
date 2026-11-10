@@ -16,7 +16,7 @@ from homeassistant.exceptions import (
 from .api import async_create_client, async_list_models
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = (Platform.CONVERSATION,)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 
 type LlamaCppConfigEntry = ConfigEntry[openai.AsyncOpenAI]
 

@@ -91,6 +91,13 @@ def mock_config_entry_fixture(
                 title=DEFAULT_CONVERSATION_NAME,
                 unique_id=None,
             ),
+            ConfigSubentryData(
+                data={},
+                subentry_id="ai_task_subentry_id",
+                subentry_type="ai_task_data",
+                title="Gpt 3.5 Turbo",
+                unique_id=None,
+            ),
         ],
     )
     config_entry.add_to_hass(hass)
