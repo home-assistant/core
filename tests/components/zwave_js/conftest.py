@@ -1168,7 +1168,7 @@ def simon_io_700_roller_blind_fixture(
     client: MagicMock, simon_io_700_roller_blind_state: NodeDataType
 ) -> Node:
     """Mock a Simon IO 700 series roller blind node."""
-    node = Node(client, copy.deepcopy(simon_io_700_roller_blind_state))
+    node = Node(client, simon_io_700_roller_blind_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
