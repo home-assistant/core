@@ -999,7 +999,7 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
-        {"entity_id": "switch.block_client_1_blocked"},
+        {"entity_id": "switch.block_client_1_network_access"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
@@ -1011,7 +1011,7 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {"entity_id": "switch.block_client_1_blocked"},
+        {"entity_id": "switch.block_client_1_network_access"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 2
@@ -1059,7 +1059,7 @@ async def test_remove_switches(
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
-    assert hass.states.get("switch.block_client_2_blocked") is not None
+    assert hass.states.get("switch.block_client_2_network_access") is not None
     assert hass.states.get("switch.unifi_network_block_media_streaming") is not None
 
     mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[UNBLOCKED])
@@ -1067,7 +1067,7 @@ async def test_remove_switches(
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    assert hass.states.get("switch.block_client_2_blocked") is None
+    assert hass.states.get("switch.block_client_2_network_access") is None
     assert hass.states.get("switch.unifi_network_block_media_streaming") is not None
 
     mock_websocket_message(data=DPI_GROUP_REMOVED_EVENT)
@@ -1098,11 +1098,11 @@ async def test_block_switches(
     """Test the update_items function with some clients."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
-    blocked = hass.states.get("switch.block_client_1_blocked")
+    blocked = hass.states.get("switch.block_client_1_network_access")
     assert blocked is not None
     assert blocked.state == "off"
 
-    unblocked = hass.states.get("switch.block_client_2_blocked")
+    unblocked = hass.states.get("switch.block_client_2_network_access")
     assert unblocked is not None
     assert unblocked.state == "on"
 
@@ -1112,7 +1112,7 @@ async def test_block_switches(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    blocked = hass.states.get("switch.block_client_1_blocked")
+    blocked = hass.states.get("switch.block_client_1_network_access")
     assert blocked is not None
     assert blocked.state == "on"
 
@@ -1120,7 +1120,7 @@ async def test_block_switches(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    blocked = hass.states.get("switch.block_client_1_blocked")
+    blocked = hass.states.get("switch.block_client_1_network_access")
     assert blocked is not None
     assert blocked.state == "off"
 
@@ -1133,7 +1133,7 @@ async def test_block_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
-        {"entity_id": "switch.block_client_1_blocked"},
+        {"entity_id": "switch.block_client_1_network_access"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
@@ -1145,7 +1145,7 @@ async def test_block_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {"entity_id": "switch.block_client_1_blocked"},
+        {"entity_id": "switch.block_client_1_network_access"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 2
@@ -1592,13 +1592,13 @@ async def test_new_client_discovered_on_block_control(
 ) -> None:
     """Test if 2nd update has a new client."""
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
-    assert hass.states.get("switch.block_client_1_blocked") is None
+    assert hass.states.get("switch.block_client_1_network_access") is None
 
     mock_websocket_message(message=MessageKey.CLIENT, data=BLOCKED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
-    assert hass.states.get("switch.block_client_1_blocked") is not None
+    assert hass.states.get("switch.block_client_1_network_access") is not None
 
 
 @pytest.mark.parametrize(
@@ -1887,7 +1887,7 @@ async def test_hub_state_change(
 ) -> None:
     """Verify entities state reflect on hub connection becoming unavailable."""
     entity_ids = (
-        "switch.block_client_2_blocked",
+        "switch.block_client_2_network_access",
         "switch.mock_name_port_1_poe",
         "switch.mock_name_port_1",
         "switch.plug_outlet_1",
@@ -2034,7 +2034,7 @@ async def test_switch_turn_on_request_failed(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.block_client_1_blocked"},
+            {ATTR_ENTITY_ID: "switch.block_client_1_network_access"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN
@@ -2061,7 +2061,7 @@ async def test_switch_turn_off_request_failed(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.block_client_1_blocked"},
+            {ATTR_ENTITY_ID: "switch.block_client_1_network_access"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN

@@ -539,8 +539,8 @@ async def test_coordinator_update_only_refreshes_changed_entity(
     mock_websocket_message: WebsocketMessageMock,
 ) -> None:
     """Ensure a coordinator update for one object does not refresh unrelated entities."""
-    changed_entity_id = "switch.client_1_blocked"
-    other_entity_id = "switch.client_2_blocked"
+    changed_entity_id = "switch.client_1_network_access"
+    other_entity_id = "switch.client_2_network_access"
     assert hass.states.get(changed_entity_id) is not None
     assert hass.states.get(other_entity_id) is not None
 
