@@ -115,7 +115,15 @@ async def test_invalid_object_id(
         "message": (
             "Message malformed: A script's object_id must not be one of "
             "reload, toggle, turn_off, turn_on"
-        )
+        ),
+        "errors": [
+            {
+                "message": "A script's object_id must not be one of "
+                "reload, toggle, turn_off, turn_on",
+                "path": [],
+                "code": "in_list",
+            }
+        ],
     }
 
     new_data = hass_config_store["scripts.yaml"]
@@ -124,9 +132,19 @@ async def test_invalid_object_id(
 
 @pytest.mark.parametrize("script_config", [{}])
 @pytest.mark.parametrize(
-    ("updated_config", "validation_error"),
+    ("updated_config", "validation_error", "errors"),
     [
-        ({}, "required key not provided at 'sequence'"),
+        (
+            {},
+            "required key not provided at 'sequence'",
+            [
+                {
+                    "message": "required key not provided",
+                    "path": ["sequence"],
+                    "code": "required",
+                }
+            ],
+        ),
         (
             {
                 "sequence": {
@@ -136,7 +154,58 @@ async def test_invalid_object_id(
                     "state": "blah",
                 }
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd "
+            "at 'sequence[0]'",
+            [
+                {
+                    "message": "Unknown entity registry entry "
+                    "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "path": ["sequence", 0],
+                    "code": None,
+                }
+            ],
+        ),
+        (
+            {
+                "sequence": [
+                    {"delay": 1},
+                    {
+                        "if": [{"condition": "template", "value_template": "true"}],
+                        "then": [{"delay": 1}, {"wait_template": "{{ x"}],
+                    },
+                ]
+            },
+            "invalid template (TemplateSyntaxError: unexpected end of template, "
+            "expected 'end of print statement'.) at 'sequence[1].then[1].wait_template'",
+            [
+                {
+                    "message": "invalid template (TemplateSyntaxError: unexpected "
+                    "end of template, expected 'end of print statement'.)",
+                    "path": ["sequence", 1, "then", 1, "wait_template"],
+                    "code": None,
+                }
+            ],
+        ),
+        (
+            {
+                "sequence": [
+                    {"delay": 1},
+                    {
+                        "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+                        "domain": "light",
+                        "type": "turn_on",
+                        "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+                    },
+                ]
+            },
+            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+            [
+                {
+                    "message": "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+                    "path": ["sequence", 1],
+                    "code": None,
+                }
+            ],
         ),
         (
             {
@@ -146,6 +215,13 @@ async def test_invalid_object_id(
                 },
             },
             "Missing input service_to_call",
+            [
+                {
+                    "message": "Missing input service_to_call",
+                    "path": [],
+                    "code": None,
+                }
+            ],
         ),
     ],
 )
@@ -156,6 +232,7 @@ async def test_update_script_config_with_error(
     caplog: pytest.LogCaptureFixture,
     updated_config: Any,
     validation_error: str,
+    errors: list[dict[str, Any]],
 ) -> None:
     """Test updating script config with errors."""
     with patch.object(config, "SECTIONS", [script]):
@@ -175,9 +252,12 @@ async def test_update_script_config_with_error(
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("script")) == []
 
-    assert resp.status != HTTPStatus.OK
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
-    assert result == {"message": f"Message malformed: {validation_error}"}
+    assert result == {
+        "message": f"Message malformed: {validation_error}",
+        "errors": errors,
+    }
     # Assert the validation error is not logged
     assert validation_error not in caplog.text
 
@@ -229,9 +309,12 @@ async def test_update_script_config_with_blueprint_substitution_error(
         await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("script")) == []
 
-    assert resp.status != HTTPStatus.OK
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
-    assert result == {"message": f"Message malformed: {validation_error}"}
+    assert result == {
+        "message": f"Message malformed: {validation_error}",
+        "errors": [{"message": validation_error, "path": [], "code": None}],
+    }
     # Assert the validation error is not logged
     assert validation_error not in caplog.text
 

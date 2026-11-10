@@ -2524,3 +2524,82 @@ def test_choose_option_rejects_invalid_note(invalid_note: Any) -> None:
         cv.script_action(
             {"choose": [{**_CHOOSE_OPTION_BASE_CONFIG, "note": invalid_note}]}
         )
+
+
+def test_validation_errors_as_list() -> None:
+    """Test validation errors are flattened and their paths normalized."""
+
+    class Key(enum.StrEnum):
+        ENTITY_ID = "entity_id"
+
+    error = probatio.MultipleInvalid(
+        [
+            probatio.RequiredFieldInvalid("required key not provided", [Key.ENTITY_ID]),
+            probatio.Invalid(
+                "bad value", [probatio.VirtualPathComponent("group"), True]
+            ),
+        ]
+    )
+    with (
+        pytest.raises(probatio.MultipleInvalid) as exc_info,
+        cv.prepend_validation_path("actions", 1),
+    ):
+        raise error
+    assert cv.validation_errors_as_list(exc_info.value) == [
+        {
+            "message": "required key not provided",
+            "path": ["actions", 1, "entity_id"],
+            "code": "required",
+        },
+        {
+            "message": "bad value",
+            "path": ["actions", 1, "group", "True"],
+            "code": None,
+        },
+    ]
+
+    with (
+        pytest.raises(HomeAssistantError) as exc_info,
+        cv.prepend_validation_path("actions"),
+        cv.prepend_validation_path(0, "sequence", 2),
+    ):
+        raise HomeAssistantError("Unknown device")
+    assert type(exc_info.value) is HomeAssistantError
+    assert cv.validation_errors_as_list(exc_info.value) == [
+        {
+            "message": "Unknown device",
+            "path": ["actions", 0, "sequence", 2],
+            "code": None,
+        }
+    ]
+    assert cv.validation_errors_as_list(HomeAssistantError("boom")) == [
+        {"message": "boom", "path": [], "code": None}
+    ]
+
+
+def test_validation_error_collector() -> None:
+    """Test collected errors are raised together as the first one."""
+    inner = cv.ValidationErrorCollector()
+    with inner.collect(0):
+        raise HomeAssistantError("Unknown device")
+    with inner.collect(1, "delay"):
+        raise probatio.Invalid("bad delay")
+
+    outer = cv.ValidationErrorCollector()
+    with outer.collect("actions"):
+        inner.raise_errors()
+    with outer.collect("mode"):
+        raise probatio.Invalid("bad mode")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        outer.raise_errors()
+    assert type(exc_info.value) is HomeAssistantError
+    assert str(exc_info.value) == "Unknown device"
+    assert cv.validation_errors_as_list(exc_info.value) == [
+        {"message": "Unknown device", "path": ["actions", 0], "code": None},
+        {"message": "bad delay", "path": ["actions", 1, "delay"], "code": None},
+        {"message": "bad mode", "path": ["mode"], "code": None},
+    ]
+
+    # Nothing collected, nothing raised
+    cv.ValidationErrorCollector().raise_errors()

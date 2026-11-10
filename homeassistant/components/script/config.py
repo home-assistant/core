@@ -29,6 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
+    async_raise_schema_and_platform_errors,
     async_validate_actions_config,
     make_script_schema,
 )
@@ -221,7 +222,9 @@ async def _async_validate_config_item(
     except probatio.Invalid as err:
         _log_invalid_script(err, script_name, "could not be validated", config)
         if raise_on_errors:
-            raise
+            await async_raise_schema_and_platform_errors(
+                hass, config, err, {CONF_SEQUENCE: "actions"}
+            )
         return _minimal_config(ValidationStatus.FAILED_SCHEMA, err, config)
 
     script_config = ScriptConfig(validated_config)
@@ -229,9 +232,10 @@ async def _async_validate_config_item(
     script_config.raw_config = raw_config
 
     try:
-        script_config[CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, validated_config[CONF_SEQUENCE]
-        )
+        with cv.prepend_validation_path(CONF_SEQUENCE):
+            script_config[CONF_SEQUENCE] = await async_validate_actions_config(
+                hass, validated_config[CONF_SEQUENCE]
+            )
     except (
         probatio.Invalid,
         HomeAssistantError,

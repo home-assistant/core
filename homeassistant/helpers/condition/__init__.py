@@ -607,9 +607,11 @@ async def async_validate_condition_config(
 
     if condition_key in ("and", "not", "or"):
         conditions = []
-        for sub_cond in config["conditions"]:
-            sub_cond = await async_validate_condition_config(hass, sub_cond)
-            conditions.append(sub_cond)
+        errors = cv.ValidationErrorCollector()
+        for index, sub_cond in enumerate(config["conditions"]):
+            with errors.collect("conditions", index):
+                conditions.append(await async_validate_condition_config(hass, sub_cond))
+        errors.raise_errors()
         config["conditions"] = conditions
         return config
 
@@ -644,7 +646,13 @@ async def async_validate_conditions_config(
     """Validate config."""
     # No gather here because async_validate_condition_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_condition_config(hass, cond) for cond in conditions]
+    validated: list[ConfigType | Template] = []
+    errors = cv.ValidationErrorCollector()
+    for index, cond in enumerate(conditions):
+        with errors.collect(index):
+            validated.append(await async_validate_condition_config(hass, cond))
+    errors.raise_errors()
+    return validated
 
 
 async def async_conditions_from_config(

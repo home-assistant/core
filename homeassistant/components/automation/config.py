@@ -88,7 +88,7 @@ AUTOMATION_BLUEPRINT_SCHEMA = probatio.All(
 )
 
 
-async def _async_validate_config_item(  # noqa: C901
+async def _async_validate_config_item(
     hass: HomeAssistant,
     config: ConfigType,
     raise_on_errors: bool,
@@ -207,71 +207,61 @@ async def _async_validate_config_item(  # noqa: C901
     except probatio.Invalid as err:
         _log_invalid_automation(err, automation_name, "could not be validated", config)
         if raise_on_errors:
-            raise
+            with suppress(probatio.Invalid):
+                config = _backward_compat_schema(config)
+            await script.async_raise_schema_and_platform_errors(
+                hass,
+                config,
+                err,
+                {
+                    CONF_TRIGGERS: "triggers",
+                    CONF_CONDITIONS: "conditions",
+                    CONF_ACTIONS: "actions",
+                },
+            )
         return _minimal_config(ValidationStatus.FAILED_SCHEMA, err, config)
 
     automation_config = AutomationConfig(validated_config)
     automation_config.raw_blueprint_inputs = raw_blueprint_inputs
     automation_config.raw_config = raw_config
 
-    try:
-        automation_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
-        )
-    except (
-        probatio.Invalid,
-        HomeAssistantError,
-    ) as err:
-        _log_invalid_automation(
-            err, automation_name, "failed to setup triggers", validated_config
-        )
-        if raise_on_errors:
-            raise
-        _set_validation_status(
-            automation_config, ValidationStatus.FAILED_TRIGGERS, err, validated_config
-        )
-        return automation_config
-
-    if CONF_CONDITIONS in validated_config:
+    errors = cv.ValidationErrorCollector()
+    for key, validator, problem, status in (
+        (
+            CONF_TRIGGERS,
+            async_validate_trigger_config,
+            "failed to setup triggers",
+            ValidationStatus.FAILED_TRIGGERS,
+        ),
+        (
+            CONF_CONDITIONS,
+            async_validate_conditions_config,
+            "failed to setup conditions",
+            ValidationStatus.FAILED_CONDITIONS,
+        ),
+        (
+            CONF_ACTIONS,
+            script.async_validate_actions_config,
+            "failed to setup actions",
+            ValidationStatus.FAILED_ACTIONS,
+        ),
+    ):
+        if key not in validated_config:
+            continue
         try:
-            automation_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-                hass, validated_config[CONF_CONDITIONS]
-            )
+            with cv.prepend_validation_path(key):
+                automation_config[key] = await validator(hass, validated_config[key])
         except (
             probatio.Invalid,
             HomeAssistantError,
         ) as err:
-            _log_invalid_automation(
-                err, automation_name, "failed to setup conditions", validated_config
-            )
-            if raise_on_errors:
-                raise
-            _set_validation_status(
-                automation_config,
-                ValidationStatus.FAILED_CONDITIONS,
-                err,
-                validated_config,
-            )
-            return automation_config
+            _log_invalid_automation(err, automation_name, problem, validated_config)
+            if not raise_on_errors:
+                _set_validation_status(automation_config, status, err, validated_config)
+                return automation_config
+            errors.add(err)
 
-    try:
-        automation_config[CONF_ACTIONS] = await script.async_validate_actions_config(
-            hass, validated_config[CONF_ACTIONS]
-        )
-    except (
-        probatio.Invalid,
-        HomeAssistantError,
-    ) as err:
-        _log_invalid_automation(
-            err, automation_name, "failed to setup actions", validated_config
-        )
-        if raise_on_errors:
-            raise
-        _set_validation_status(
-            automation_config, ValidationStatus.FAILED_ACTIONS, err, validated_config
-        )
-        return automation_config
-
+    errors.raise_errors()
     return automation_config
 
 

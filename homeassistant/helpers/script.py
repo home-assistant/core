@@ -1,7 +1,7 @@
 """Helpers to execute scripts."""
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from typing import Any, Literal, TypedDict, cast, overload, override
+from typing import Any, Literal, NoReturn, TypedDict, cast, overload, override
 
 import async_interrupt
 import probatio
@@ -340,7 +340,124 @@ async def async_validate_actions_config(
     """Validate a list of actions."""
     # No gather here because async_validate_action_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_action_config(hass, action) for action in actions]
+    validated: list[ConfigType] = []
+    errors = cv.ValidationErrorCollector()
+    for index, action in enumerate(actions):
+        with errors.collect(index):
+            validated.append(await async_validate_action_config(hass, action))
+    errors.raise_errors()
+    return validated
+
+
+type _ValidationKind = Literal["triggers", "conditions", "actions"]
+
+
+def _nested_validation_parts(
+    kind: _ValidationKind, item: Mapping[str, Any]
+) -> Iterator[tuple[_ValidationKind, Any, tuple[str | int, ...]]]:
+    """Yield the lists inside a condition or action that validate on their own."""
+    if kind == "conditions":
+        if CONF_CONDITIONS in item:
+            yield "conditions", item[CONF_CONDITIONS], (CONF_CONDITIONS,)
+        return
+    for key in (CONF_THEN, CONF_ELSE, CONF_SEQUENCE, CONF_DEFAULT):
+        if key in item:
+            yield "actions", item[key], (key,)
+    if CONF_PARALLEL in item:
+        for index, branch in enumerate(probatio.EnsureList()(item[CONF_PARALLEL])):
+            # Like the schema, shorthand actions count as a sequence
+            if isinstance(branch, Mapping) and CONF_SEQUENCE in branch:
+                branch = branch[CONF_SEQUENCE]
+            yield "actions", branch, (CONF_PARALLEL, index, CONF_SEQUENCE)
+    if CONF_IF in item:
+        yield "conditions", item[CONF_IF], (CONF_IF,)
+    if CONF_CONDITIONS in item:
+        yield "conditions", item[CONF_CONDITIONS], (CONF_CONDITIONS,)
+    if CONF_WAIT_FOR_TRIGGER in item:
+        yield "triggers", item[CONF_WAIT_FOR_TRIGGER], (CONF_WAIT_FOR_TRIGGER,)
+    if isinstance(repeat := item.get(CONF_REPEAT), Mapping):
+        if CONF_SEQUENCE in repeat:
+            yield "actions", repeat[CONF_SEQUENCE], (CONF_REPEAT, CONF_SEQUENCE)
+        for key in (CONF_WHILE, CONF_UNTIL):
+            if key in repeat:
+                yield "conditions", repeat[key], (CONF_REPEAT, key)
+    if CONF_CHOOSE in item:
+        for index, option in enumerate(probatio.EnsureList()(item[CONF_CHOOSE])):
+            if not isinstance(option, Mapping):
+                continue
+            if CONF_CONDITIONS in option:
+                yield (
+                    "conditions",
+                    option[CONF_CONDITIONS],
+                    (CONF_CHOOSE, index, CONF_CONDITIONS),
+                )
+            if CONF_SEQUENCE in option:
+                yield (
+                    "actions",
+                    option[CONF_SEQUENCE],
+                    (CONF_CHOOSE, index, CONF_SEQUENCE),
+                )
+
+
+async def async_raise_schema_and_platform_errors(
+    hass: HomeAssistant,
+    config: Any,
+    schema_error: probatio.Invalid,
+    sections: Mapping[str | None, _ValidationKind],
+) -> NoReturn:
+    """Raise a schema error with the platform errors of what the schema accepted.
+
+    `sections` maps a config key to what it holds; `None` stands for `config`.
+    """
+    errors = cv.ValidationErrorCollector()
+    errors.add(schema_error)
+    failed = [error["path"] for error in cv.validation_errors_as_list(schema_error)]
+
+    def has_error(path: tuple[str | int, ...]) -> bool:
+        return any(failed_path[: len(path)] == list(path) for failed_path in failed)
+
+    async def collect(
+        kind: _ValidationKind, value: Any, path: tuple[str | int, ...]
+    ) -> None:
+        if list(path) in failed:
+            return
+        if kind == "triggers":
+            # Schema error indexes count the flattened list of triggers
+            for index, item in enumerate(
+                cv.flatten_trigger_list(probatio.EnsureList()(value))
+            ):
+                if has_error((*path, index)):
+                    continue
+                with errors.collect(*path, index):
+                    await trigger_helper.async_validate_single_trigger_config(
+                        hass, cv.TRIGGER_ITEM_SCHEMA(item)
+                    )
+            return
+        for index, item in enumerate(probatio.EnsureList()(value)):
+            item_path = (*path, index)
+            if has_error(item_path):
+                if isinstance(item, Mapping):
+                    for sub_kind, sub_value, sub_path in _nested_validation_parts(
+                        kind, item
+                    ):
+                        await collect(sub_kind, sub_value, (*item_path, *sub_path))
+                continue
+            with errors.collect(*item_path):
+                if kind == "conditions":
+                    await condition.async_validate_condition_config(
+                        hass, cv.CONDITION_SCHEMA(item)
+                    )
+                else:
+                    await async_validate_action_config(hass, cv.script_action(item))
+
+    for key, kind in sections.items():
+        if key is None:
+            await collect(kind, config, ())
+        elif isinstance(config, Mapping) and key in config:
+            await collect(kind, config[key], (key,))
+
+    errors.raise_errors()
+    raise schema_error
 
 
 async def async_validate_action_config(
@@ -348,6 +465,7 @@ async def async_validate_action_config(
 ) -> ConfigType:
     """Validate config."""
     action_type = cv.determine_script_action(config)
+    errors = cv.ValidationErrorCollector()
 
     if action_type in STATIC_VALIDATION_ACTION_TYPES:
         pass
@@ -359,66 +477,77 @@ async def async_validate_action_config(
         config = await condition.async_validate_condition_config(hass, config)
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
-        config[
-            CONF_WAIT_FOR_TRIGGER
-        ] = await trigger_helper.async_validate_trigger_config(
-            hass, config[CONF_WAIT_FOR_TRIGGER]
-        )
+        with errors.collect(CONF_WAIT_FOR_TRIGGER):
+            config[
+                CONF_WAIT_FOR_TRIGGER
+            ] = await trigger_helper.async_validate_trigger_config(
+                hass, config[CONF_WAIT_FOR_TRIGGER]
+            )
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
-        if CONF_UNTIL in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_UNTIL]
+        repeat_conf = config[CONF_REPEAT]
+        for key in (CONF_UNTIL, CONF_WHILE):
+            if key in repeat_conf:
+                with errors.collect(CONF_REPEAT, key):
+                    repeat_conf[key] = await condition.async_validate_conditions_config(
+                        hass, repeat_conf[key]
+                    )
+        with errors.collect(CONF_REPEAT, CONF_SEQUENCE):
+            repeat_conf[CONF_SEQUENCE] = await async_validate_actions_config(
+                hass, repeat_conf[CONF_SEQUENCE]
             )
-            config[CONF_REPEAT][CONF_UNTIL] = conditions
-        if CONF_WHILE in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_WHILE]
-            )
-            config[CONF_REPEAT][CONF_WHILE] = conditions
-        config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_REPEAT][CONF_SEQUENCE]
-        )
 
     elif action_type == cv.SCRIPT_ACTION_CHOOSE:
         if CONF_DEFAULT in config:
-            config[CONF_DEFAULT] = await async_validate_actions_config(
-                hass, config[CONF_DEFAULT]
-            )
+            with errors.collect(CONF_DEFAULT):
+                config[CONF_DEFAULT] = await async_validate_actions_config(
+                    hass, config[CONF_DEFAULT]
+                )
 
-        for choose_conf in config[CONF_CHOOSE]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, choose_conf[CONF_CONDITIONS]
-            )
-            choose_conf[CONF_CONDITIONS] = conditions
-            choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, choose_conf[CONF_SEQUENCE]
-            )
+        for index, choose_conf in enumerate(config[CONF_CHOOSE]):
+            with errors.collect(CONF_CHOOSE, index, CONF_CONDITIONS):
+                choose_conf[
+                    CONF_CONDITIONS
+                ] = await condition.async_validate_conditions_config(
+                    hass, choose_conf[CONF_CONDITIONS]
+                )
+            with errors.collect(CONF_CHOOSE, index, CONF_SEQUENCE):
+                choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
+                    hass, choose_conf[CONF_SEQUENCE]
+                )
 
     elif action_type == cv.SCRIPT_ACTION_IF:
-        config[CONF_IF] = await condition.async_validate_conditions_config(
-            hass, config[CONF_IF]
-        )
-        config[CONF_THEN] = await async_validate_actions_config(hass, config[CONF_THEN])
-        if CONF_ELSE in config:
-            config[CONF_ELSE] = await async_validate_actions_config(
-                hass, config[CONF_ELSE]
+        with errors.collect(CONF_IF):
+            config[CONF_IF] = await condition.async_validate_conditions_config(
+                hass, config[CONF_IF]
             )
+        with errors.collect(CONF_THEN):
+            config[CONF_THEN] = await async_validate_actions_config(
+                hass, config[CONF_THEN]
+            )
+        if CONF_ELSE in config:
+            with errors.collect(CONF_ELSE):
+                config[CONF_ELSE] = await async_validate_actions_config(
+                    hass, config[CONF_ELSE]
+                )
 
     elif action_type == cv.SCRIPT_ACTION_PARALLEL:
-        for parallel_conf in config[CONF_PARALLEL]:
-            parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, parallel_conf[CONF_SEQUENCE]
-            )
+        for index, parallel_conf in enumerate(config[CONF_PARALLEL]):
+            with errors.collect(CONF_PARALLEL, index, CONF_SEQUENCE):
+                parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
+                    hass, parallel_conf[CONF_SEQUENCE]
+                )
 
     elif action_type == cv.SCRIPT_ACTION_SEQUENCE:
-        config[CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_SEQUENCE]
-        )
+        with errors.collect(CONF_SEQUENCE):
+            config[CONF_SEQUENCE] = await async_validate_actions_config(
+                hass, config[CONF_SEQUENCE]
+            )
 
     else:
         raise ValueError(f"No validation for {action_type}")
 
+    errors.raise_errors()
     return config
 
 
