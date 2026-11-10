@@ -20,6 +20,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import (
     CLIENT_ID,
+    CLIENT_SECRET,
     REDIRECT_URI,
     USER_SUB,
     build_id_token,
@@ -90,6 +91,12 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+    _method, _url, data, _headers = aioclient_mock.mock_calls[0]
+    assert data["client_id"] == CLIENT_ID
+    assert data["client_secret"] == CLIENT_SECRET
+    assert data["grant_type"] == "authorization_code"
+    assert data["code"] == "abcd"
 
 
 async def test_no_cloud(hass: HomeAssistant) -> None:
