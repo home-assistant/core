@@ -176,10 +176,15 @@ class AssistSatelliteEntity(entity.Entity):
         what that lets through. So this is false unless something actually
         will: it is a cost the device pays, not a feature it has.
 
-        The answer moves -- an app arrives or goes away, an update changes
-        the models it has, the person turns the preview feature off -- and
-        satellites are told once rather than per detection, so
-        ``_async_wake_word_audio_wanted_changed`` says when to ask again.
+        The answer moves -- an app arrives or goes away, the person turns
+        the preview feature off -- and satellites are told once rather than
+        per detection, so ``_async_wake_word_audio_wanted_changed`` says
+        when to ask again.
+
+        One answer for the whole satellite, which is right while the thing
+        verifying knows every wake word a device can hear. When that stops
+        being true, what a device should be told is which of its wake words
+        are covered, and the threshold it lowers is the one for those.
         """
         try:
             config = self.async_get_configuration()

@@ -65,8 +65,9 @@ SIGNAL_WAKE_WORDS_CHANGED = f"{DOMAIN}_wake_words_changed"
 A satellite asked for wake word audio buffers it and detects at a lower
 threshold, so it is told once rather than per detection -- which means it
 has to be told again when the answer moves: the app arriving or going
-away, an update changing the models it has, or the person turning the
-preview feature off.
+away, or the person turning the preview feature off. Not when an app
+update changes the models it has, which would need the client to say so
+and is the rarest of the three by a long way.
 """
 
 _LOGGER = logging.getLogger(__name__)
@@ -144,9 +145,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         ) from err
 
     hass.data[DATA_CLIENT] = client
-    entry.async_on_unload(
-        client.async_add_listener(lambda: _async_wake_words_changed(hass))
-    )
     _async_wake_words_changed(hass)
 
 

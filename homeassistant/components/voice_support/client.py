@@ -270,7 +270,6 @@ class VoiceSupportClient:
         self.info: AppInfo | None = None
         self._stop_refresh: CALLBACK_TYPE | None = None
         self._refresh_task: asyncio.Task[None] | None = None
-        self._listeners: list[CALLBACK_TYPE] = []
 
     async def async_connect(self) -> None:
         """Ask the app what it is, and keep asking now and then.
@@ -313,39 +312,12 @@ class VoiceSupportClient:
             if was_usable:
                 _LOGGER.warning("%s: nothing will be verified", err)
 
-    @callback
-    def async_add_listener(self, listener: CALLBACK_TYPE) -> CALLBACK_TYPE:
-        """Follow what the app can verify, and return how to stop.
-
-        Whether to ask a satellite for wake word audio is decided once, not
-        per detection, so a change in the app's models has to be announced
-        rather than discovered at the next one.
-        """
-        self._listeners.append(listener)
-
-        @callback
-        def _remove() -> None:
-            self._listeners.remove(listener)
-
-        return _remove
-
-    @callback
-    def _async_wake_words_changed(self, before: AppInfo | None) -> None:
-        """Tell anyone following, if what can be verified actually moved."""
-        was = set(before.wake_words) if before is not None else set()
-        now = set(self.info.wake_words) if self.info is not None else set()
-        if was == now:
-            return
-        for listener in list(self._listeners):
-            listener()
-
     async def async_update_info(self) -> AppInfo:
         """Ask the app what it is and what it can verify.
 
         Raises UnsupportedVersionError, besides CONNECT_ERRORS, for an app
         that cannot be used.
         """
-        before = self.info
         session = async_get_clientsession(self.hass)
         try:
             async with session.get(
@@ -355,16 +327,13 @@ class VoiceSupportClient:
                 info = AppInfo.from_json(await response.json())
         except CONNECT_ERRORS:
             self.info = None
-            self._async_wake_words_changed(before)
             raise
 
         if info.api_version != API_VERSION:
             self.info = None
-            self._async_wake_words_changed(before)
             raise UnsupportedVersionError(info)
 
         self.info = info
-        self._async_wake_words_changed(before)
         _LOGGER.debug(
             "%s %s verifies: %s",
             info.name,
