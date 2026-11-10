@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from niluclient import (
     CO,
@@ -190,7 +190,7 @@ class NiluSensor(AirQualityEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
         return self._attrs
 
