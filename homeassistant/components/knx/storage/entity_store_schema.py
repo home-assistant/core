@@ -334,7 +334,15 @@ DATETIME_KNX_SCHEMA = probatio.DataclassSchema(DatetimeKnxConfig)
 class FanSpeedPercentage:
     """Fan speed controlled in percent."""
 
-    ga_speed: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="5.001")]
+    ga_speed: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            valid_dpt="5.001",
+            dpa_write=[dpa.FB372.ACT_TARGET_FAN_SPEED],
+            dpa_state=[dpa.FB372.ACT_CURR_FAN_SPEED],
+        ),
+    ]
 
 
 @dataclass(kw_only=True, slots=True)

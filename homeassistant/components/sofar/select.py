@@ -15,22 +15,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
+from .helpers import enum_member, enum_options, option_slug
 
 PARALLEL_UPDATES = 1
-
-
-def _enum_options(enum_type: type[IntEnum]) -> list[str]:
-    """The select options a device enum maps to."""
-    return [member.name.lower() for member in enum_type]
 
 
 @dataclass(frozen=True, kw_only=True)
 class SofarSelectEntityDescription(SelectEntityDescription, SofarEntityDescription):
     """Describe a Sofar select entity."""
 
-    options_enum: type[IntEnum]
     value_fn: Callable[[SofarInverter], IntEnum | None]
-    write_fn: Callable[[SofarInverter, int], Awaitable[None]]
+    write_fn: Callable[[SofarInverter, str], Awaitable[None]]
 
 
 SELECT_DESCRIPTIONS: tuple[SofarSelectEntityDescription, ...] = (
@@ -38,22 +33,20 @@ SELECT_DESCRIPTIONS: tuple[SofarSelectEntityDescription, ...] = (
         key="charger_use_mode",
         component="charger",
         translation_key="charger_use_mode",
-        options=_enum_options(ChargerUseMode),
-        options_enum=ChargerUseMode,
+        options=enum_options(ChargerUseMode),
         value_fn=lambda device: device.charger.charger_use_mode,
-        write_fn=lambda device, value: device.charger.async_write_mode(
-            ChargerUseMode(value)
+        write_fn=lambda device, option: device.charger.async_write_mode(
+            enum_member(ChargerUseMode, option)
         ),
     ),
     SofarSelectEntityDescription(
         key="eps_control",
         component="eps",
         translation_key="eps_control",
-        options=_enum_options(EpsControlMode),
-        options_enum=EpsControlMode,
+        options=enum_options(EpsControlMode),
         value_fn=lambda device: device.eps.eps_control,
-        write_fn=lambda device, value: device.eps.async_write_control(
-            EpsControlMode(value)
+        write_fn=lambda device, option: device.eps.async_write_control(
+            enum_member(EpsControlMode, option)
         ),
     ),
 )
@@ -85,11 +78,10 @@ class SofarSelect(SofarEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         value = self.entity_description.value_fn(self.coordinator.device)
-        return value.name.lower() if value is not None else None
+        return option_slug(value) if value is not None else None
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Write the selected option to the device."""
-        value = self.entity_description.options_enum[option.upper()]
-        await self.entity_description.write_fn(self.coordinator.device, value.value)
+        await self.entity_description.write_fn(self.coordinator.device, option)
         await self.coordinator.async_request_refresh()

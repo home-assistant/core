@@ -42,6 +42,7 @@ DPT_PERCENT = {"main": 5, "sub": 1}
 DPT_COLOR_TEMP_ABS = {"main": 7, "sub": 600}
 DPT_COLOR_RGB = {"main": 232, "sub": 600}
 DPT_COLOR_RGBW = {"main": 251, "sub": 600}
+DPT_FAN_STAGE = {"main": 5, "sub": 10}
 
 
 def _channel(
@@ -103,6 +104,10 @@ TEST_PROJECT: dict[str, Any] = {
         "7/0/1": _group_address("7/0/1", DPT_SWITCH),
         "7/0/2": _group_address("7/0/2", DPT_SWITCH),
         "7/0/3": _group_address("7/0/3", None),
+        "7/2/1": _group_address("7/2/1", DPT_PERCENT),
+        "7/2/2": _group_address("7/2/2", DPT_PERCENT),
+        "7/2/3": _group_address("7/2/3", DPT_SWITCH),
+        "7/2/4": _group_address("7/2/4", DPT_FAN_STAGE),
     },
     "devices": {
         "1.1.1": {
@@ -174,6 +179,14 @@ TEST_PROJECT: dict[str, Any] = {
                 "CH-1": _channel("Eingang 1", ["1014"], ["co-100", "co-101"]),
             },
         },
+        "1.3.3": {
+            "name": "Lüftungsaktor",
+            "channels": {
+                "CH-1": _channel(
+                    "Lüfter", ["372"], ["co-120", "co-121", "co-122", "co-123"]
+                ),
+            },
+        },
     },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
@@ -207,6 +220,10 @@ TEST_PROJECT: dict[str, Any] = {
         "co-75": _com_object(["423.85"], ["6/1/6"]),
         "co-100": _com_object(["1014.51"], ["7/0/1", "7/0/2"]),
         "co-101": _com_object(["1014.52"], ["7/0/3"]),  # no config key for this DPA
+        "co-120": _com_object(["372.51"], ["7/2/1"]),
+        "co-121": _com_object(["372.55"], ["7/2/2"]),
+        "co-122": _com_object(["372.54"], ["7/2/3"]),  # no config key for this DPA
+        "co-123": _com_object(["372.56"], ["7/2/4"]),  # no config key for this DPA
     },
 }
 
@@ -276,6 +293,7 @@ def test_functional_block_platforms() -> None:
         "343": [Platform.BINARY_SENSOR],
         "344": [Platform.BINARY_SENSOR],
         "345": [Platform.BINARY_SENSOR],
+        "372": [Platform.FAN],
         # light is the default for FB 417
         "417": [Platform.LIGHT, Platform.SWITCH],
         "418": [Platform.LIGHT],
@@ -525,6 +543,31 @@ def test_binary_sensor_invalid_dpt_dropped() -> None:
     assert _build_platform_suggestion(project, channel, Platform.BINARY_SENSOR) is None
 
 
+def test_fan_suggestion() -> None:
+    """Test FB 372 suggestion using the percentage speed option."""
+    channel = _test_channel("1.3.3", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.FAN)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "speed": {"ga_speed": {"write": "7/2/1", "state": "7/2/2"}}
+    }
+    assert suggestion["unmatched"] == ["372.54", "372.56"]
+
+
+def test_fan_without_write_address_dropped() -> None:
+    """Test that a fan without a speed write address yields no suggestion."""
+    channel = _channel("Lüfter Status", ["372"], ["co-121", "co-123"])
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.FAN) is None
+
+
+def test_fan_invalid_dpt_dropped() -> None:
+    """Test that a speed GA with non-matching DPT yields no suggestion."""
+    # 7/2/4 is DPT 5.010 - not valid for the percentage speed address
+    project = _with_com_objects(**{"co-90": _com_object(["372.51"], ["7/2/4"])})
+    channel = _channel("Lüfter Stufen", ["372"], ["co-90"])
+    assert _build_platform_suggestion(project, channel, Platform.FAN) is None
+
+
 async def test_ws_get_entity_suggestions(
     knx: KNXTestKit,
     get_entity_suggestions: KnxSuggestionGetter,
@@ -537,7 +580,7 @@ async def test_ws_get_entity_suggestions(
 
     assert result["providers"]["fb"] == {
         "state": "ok",
-        "functional_blocks_found": ["1014", "417", "423", "427", "800", "999"],
+        "functional_blocks_found": ["1014", "372", "417", "423", "427", "800", "999"],
     }
     suggestions = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
     assert sorted(suggestions) == [
@@ -548,6 +591,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
         "fb_1.3.1_CH-1",
+        "fb_1.3.3_CH-1",
     ]
 
     switch_actuator = suggestions["fb_1.1.1_CH-1"]
@@ -570,6 +614,7 @@ async def test_ws_get_entity_suggestions(
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
     assert suggestions["fb_1.3.1_CH-1"]["platform_options"] == ["binary_sensor"]
+    assert suggestions["fb_1.3.3_CH-1"]["platform_options"] == ["fan"]
 
 
 async def test_ws_get_entity_suggestions_duplicates(
