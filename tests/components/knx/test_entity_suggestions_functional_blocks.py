@@ -106,6 +106,9 @@ TEST_PROJECT: dict[str, Any] = {
         "7/0/1": _group_address("7/0/1", DPT_SWITCH),
         "7/0/2": _group_address("7/0/2", DPT_SWITCH),
         "7/0/3": _group_address("7/0/3", None),
+        "7/1/1": _group_address("7/1/1", DPT_SWITCH),
+        "7/1/2": _group_address("7/1/2", DPT_SWITCH),
+        "7/1/3": _group_address("7/1/3", DPT_SWITCH),
         "7/2/1": _group_address("7/2/1", DPT_PERCENT),
         "7/2/2": _group_address("7/2/2", DPT_PERCENT),
         "7/2/3": _group_address("7/2/3", DPT_SWITCH),
@@ -193,6 +196,14 @@ TEST_PROJECT: dict[str, Any] = {
                 "CH-1": _channel("Eingang 1", ["1014"], ["co-100", "co-101"]),
             },
         },
+        "1.3.2": {
+            "name": "Binärausgang",
+            "channels": {
+                "CH-1": _channel(
+                    "Digitalausgang", ["1018"], ["co-110", "co-111", "co-112"]
+                ),
+            },
+        },
         "1.3.3": {
             "name": "Lüftungsaktor",
             "channels": {
@@ -258,6 +269,9 @@ TEST_PROJECT: dict[str, Any] = {
         "co-75": _com_object(["423.85"], ["6/1/6"]),
         "co-100": _com_object(["1014.51"], ["7/0/1", "7/0/2"]),
         "co-101": _com_object(["1014.52"], ["7/0/3"]),  # no config key for this DPA
+        "co-110": _com_object(["1018.51"], ["7/1/1"]),
+        "co-111": _com_object(["1018.52"], ["7/1/2"]),
+        "co-112": _com_object(["1018.54"], ["7/1/3"]),  # no config key for this DPA
         "co-120": _com_object(["372.51"], ["7/2/1"]),
         "co-121": _com_object(["372.55"], ["7/2/2"]),
         "co-122": _com_object(["372.54"], ["7/2/3"]),  # no config key for this DPA
@@ -353,6 +367,7 @@ def test_functional_block_platforms() -> None:
         "1002": [Platform.BINARY_SENSOR],
         "1014": [Platform.BINARY_SENSOR],
         "1021": [Platform.BINARY_SENSOR],
+        "1018": [Platform.SWITCH],
         "180": [Platform.SENSOR],
         "187": [Platform.SENSOR],
         "320": [Platform.SENSOR],
@@ -617,6 +632,17 @@ def test_binary_sensor_invalid_dpt_dropped() -> None:
     assert _build_platform_suggestion(project, channel, Platform.BINARY_SENSOR) is None
 
 
+def test_digital_output_suggestion() -> None:
+    """Test FB 1018 suggestion."""
+    channel = _test_channel("1.3.2", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.SWITCH)
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_switch": {"write": "7/1/1", "state": "7/1/2"}}
+    assert suggestion["unmatched"] == ["1018.54"]
+    # FB 1018 is not representable as light
+    assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
+
+
 def test_fan_suggestion() -> None:
     """Test FB 372 suggestion using the percentage speed option."""
     channel = _test_channel("1.3.3", "CH-1")
@@ -718,6 +744,7 @@ async def test_ws_get_entity_suggestions(
         "state": "ok",
         "functional_blocks_found": [
             "1014",
+            "1018",
             "321",
             "372",
             "398",
@@ -738,6 +765,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.2.1_CH-1",
         "fb_1.2.2_CH-1",
         "fb_1.3.1_CH-1",
+        "fb_1.3.2_CH-1",
         "fb_1.3.3_CH-1",
         "fb_1.3.5_CH-1",
         "fb_1.3.8_CH-1",
@@ -763,6 +791,7 @@ async def test_ws_get_entity_suggestions(
 
     assert suggestions["fb_1.1.2_CH-1"]["platform_options"] == ["cover"]
     assert suggestions["fb_1.3.1_CH-1"]["platform_options"] == ["binary_sensor"]
+    assert suggestions["fb_1.3.2_CH-1"]["platform_options"] == ["switch"]
     assert suggestions["fb_1.3.3_CH-1"]["platform_options"] == ["fan"]
     # a room temperature sensor is only suggested as climate with a controller
     assert suggestions["fb_1.3.5_CH-1"]["platform_options"] == ["sensor"]
