@@ -480,25 +480,31 @@ class KodiEntity(MediaPlayerEntity):
     @override
     def media_series_title(self):
         """Title of series of current playing media, TV show only."""
-        return self._item.get("showtitle")
+        return self._item.get("showtitle") or None
 
     @property
     @override
     def media_season(self):
         """Season of current playing media, TV show only."""
-        return self._item.get("season")
+        # Kodi reports a negative number (-1) when the item has none
+        if (season := self._item.get("season")) is not None and season < 0:
+            return None
+        return season
 
     @property
     @override
     def media_episode(self):
         """Episode of current playing media, TV show only."""
-        return self._item.get("episode")
+        # Kodi reports a negative number (-1) when the item has none
+        if (episode := self._item.get("episode")) is not None and episode < 0:
+            return None
+        return episode
 
     @property
     @override
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._item.get("album")
+        return self._item.get("album") or None
 
     @property
     @override
