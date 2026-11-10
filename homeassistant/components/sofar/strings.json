@@ -720,6 +720,12 @@
       "battery_state_of_health_total": {
         "name": "Battery state of health total"
       },
+      "cell_temperature": {
+        "name": "Cell temperature {sensor}"
+      },
+      "cell_voltage": {
+        "name": "Cell voltage {cell}"
+      },
       "cell_voltage_max": {
         "name": "Highest cell voltage"
       },

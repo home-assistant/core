@@ -21,8 +21,11 @@ from homeassistant.components.homematic.const import (
     SERVICE_RECONNECT,
     SERVICE_SET_DEVICE_VALUE,
     SERVICE_SET_INSTALL_MODE,
+    SERVICE_SET_VARIABLE_VALUE,
     SERVICE_VIRTUALKEY,
 )
+from homeassistant.components.homematic.entity import HMHub
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
@@ -241,3 +244,45 @@ async def test_set_device_value_unknown_device(
     )
     assert "UNKNOWN not found!" in caplog.text
     hm_device.setValue.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "extra_data",
+    [
+        pytest.param({}, id="all_hubs"),
+        pytest.param({ATTR_ENTITY_ID: "homematic.ccu2"}, id="entity_id"),
+    ],
+)
+@pytest.mark.usefixtures("setup_homematic")
+async def test_set_variable_value(
+    hass: HomeAssistant, extra_data: dict[str, str]
+) -> None:
+    """Test the set_variable_value action."""
+    with patch.object(HMHub, "hm_set_variable") as mock_set_variable:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VARIABLE_VALUE,
+            {ATTR_NAME: "my_variable", ATTR_VALUE: 1, **extra_data},
+            blocking=True,
+        )
+    mock_set_variable.assert_called_once_with("my_variable", 1)
+
+
+@pytest.mark.usefixtures("setup_homematic")
+async def test_set_variable_value_unknown_hub(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the set_variable_value action logs an error without a matching hub."""
+    with patch.object(HMHub, "hm_set_variable") as mock_set_variable:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VARIABLE_VALUE,
+            {
+                ATTR_NAME: "my_variable",
+                ATTR_VALUE: 1,
+                ATTR_ENTITY_ID: "homematic.other",
+            },
+            blocking=True,
+        )
+    assert "No HomeMatic hubs available" in caplog.text
+    mock_set_variable.assert_not_called()

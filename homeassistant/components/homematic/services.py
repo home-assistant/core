@@ -6,7 +6,7 @@ from typing import Any
 
 import probatio
 
-from homeassistant.const import ATTR_MODE, ATTR_TIME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, ATTR_NAME, ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
@@ -23,11 +23,13 @@ from .const import (
     ATTR_VALUE,
     ATTR_VALUE_TYPE,
     DATA_HOMEMATIC,
+    DATA_HUBS,
     DOMAIN,
     SERVICE_PUT_PARAMSET,
     SERVICE_RECONNECT,
     SERVICE_SET_DEVICE_VALUE,
     SERVICE_SET_INSTALL_MODE,
+    SERVICE_SET_VARIABLE_VALUE,
     SERVICE_VIRTUALKEY,
 )
 
@@ -39,6 +41,14 @@ SCHEMA_SERVICE_VIRTUALKEY = probatio.Schema(
         probatio.Required(ATTR_CHANNEL): probatio.Coerce(int),
         probatio.Required(ATTR_PARAM): cv.string,
         probatio.Optional(ATTR_INTERFACE): cv.string,
+    }
+)
+
+SCHEMA_SERVICE_SET_VARIABLE_VALUE = probatio.Schema(
+    {
+        probatio.Required(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_VALUE): cv.match_all,
+        probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     }
 )
 
@@ -123,6 +133,26 @@ def _hm_service_virtualkey(service: ServiceCall) -> None:
     hmdevice.actionNodeData(param, True, channel)
 
 
+def _service_handle_value(service: ServiceCall) -> None:
+    """Service to call setValue method for HomeMatic system variable."""
+    entity_hubs = service.hass.data[DATA_HUBS]
+    entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
+    name = service.data[ATTR_NAME]
+    value = service.data[ATTR_VALUE]
+
+    if entity_ids:
+        entities = [entity for entity in entity_hubs if entity.entity_id in entity_ids]
+    else:
+        entities = entity_hubs
+
+    if not entities:
+        _LOGGER.error("No HomeMatic hubs available")
+        return
+
+    for hub in entities:
+        hub.hm_set_variable(name, value)
+
+
 def _service_handle_device(service: ServiceCall) -> None:
     """Service to call setValue method for HomeMatic devices."""
     address = service.data[ATTR_ADDRESS]
@@ -203,6 +233,13 @@ def setup_services(hass: HomeAssistant) -> None:
         SERVICE_VIRTUALKEY,
         _hm_service_virtualkey,
         schema=SCHEMA_SERVICE_VIRTUALKEY,
+    )
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_VARIABLE_VALUE,
+        _service_handle_value,
+        schema=SCHEMA_SERVICE_SET_VARIABLE_VALUE,
     )
 
     hass.services.register(
