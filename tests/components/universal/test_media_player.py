@@ -621,6 +621,40 @@ async def test_entity_picture_children_and_attr(
     assert ump.sound_mode_list == "/local/other_picture.png"
 
 
+async def test_navigation_forwarded_to_active_child(hass: HomeAssistant) -> None:
+    """Test supported navigation and navigate are taken from the active child."""
+    calls = async_mock_service(hass, media_player.DOMAIN, "navigate")
+    ump = universal.UniversalMediaPlayer(
+        hass,
+        validate_config(
+            {"platform": "universal", "name": "ump", "children": ["media_player.tv"]}
+        ),
+    )
+
+    hass.states.async_set("media_player.tv", STATE_OFF)
+    await ump.async_update()
+    assert ump.supported_navigation == list(media_player.MediaPlayerNavigation)
+
+    hass.states.async_set(
+        "media_player.tv",
+        "playing",
+        {
+            "supported_features": MediaPlayerEntityFeature.NAVIGATE,
+            "supported_navigation": ["up", "select"],
+        },
+    )
+    await ump.async_update()
+    assert ump.supported_features & MediaPlayerEntityFeature.NAVIGATE
+    assert ump.supported_navigation == [
+        media_player.MediaPlayerNavigation.UP,
+        media_player.MediaPlayerNavigation.SELECT,
+    ]
+
+    await ump.async_navigate(media_player.MediaPlayerNavigation.UP)
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "media_player.tv", "direction": "up"}
+
+
 async def test_source_list_children_and_attr(
     hass: HomeAssistant, config_children_and_attr, mock_states
 ) -> None:
