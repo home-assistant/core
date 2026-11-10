@@ -823,8 +823,8 @@ async def test_ws_get_entity_suggestions(
         "fb_1.3.2_CH-1",
         "fb_1.3.3_CH-1",
         "fb_1.3.5_CH-1",
-        "fb_1.3.8_CH-1",
         "fb_1.3.7_CH-1",
+        "fb_1.3.8_CH-1",
     ]
 
     switch_actuator = suggestions["fb_1.1.1_CH-1"]
