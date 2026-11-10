@@ -307,6 +307,7 @@ async def _async_handle_get_history_service(
 
     start_ts = start_time.timestamp()
     formatted_result: JsonObjectType = {}
+    truncated_entities: JsonArrayType = []
     for entity_id, states in result.items():
         # The start time state is clamped to start_time, in-window states are later
         in_window_count = sum(
@@ -323,6 +324,7 @@ async def _async_handle_get_history_service(
                         "max_records": str(MAX_GET_HISTORY_RECORDS_PER_ENTITY),
                     },
                 )
+            truncated_entities.append(entity_id)
             # The extra state was only fetched to detect truncation
             cutoff = dt_util.utc_from_timestamp(states[-1].last_updated_timestamp)
             states = states[:-1]
@@ -357,7 +359,10 @@ async def _async_handle_get_history_service(
 
         formatted_result[entity_id] = formatted_history_states
 
-    return {"history": formatted_result}
+    response: JsonObjectType = {"history": formatted_result}
+    if allow_truncation:
+        response["truncated"] = truncated_entities
+    return response
 
 
 @callback

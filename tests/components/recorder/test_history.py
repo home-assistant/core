@@ -1634,7 +1634,8 @@ async def test_get_history_service_max_records_with_duplicate_states(
                         "state": "0.0",
                     },
                 ]
-            }
+            },
+            "truncated": ["sensor.sensor"],
         }
 
 
@@ -1683,7 +1684,8 @@ async def test_get_history_service_truncated_identical_states(
                     "state": "1.0",
                 },
             ]
-        }
+        },
+        "truncated": ["sensor.sensor"],
     }
 
 
@@ -1722,7 +1724,8 @@ async def test_get_history_service_truncated_identical_states(
                             "state": "2.0",
                         },
                     ],
-                }
+                },
+                "truncated": ["sensor.sensor"],
             },
             id="with_start_time_state_truncated",
         ),
@@ -1788,7 +1791,8 @@ async def test_get_history_service_truncated_identical_states(
                             "state": "1.0",
                         },
                     ],
-                }
+                },
+                "truncated": ["sensor.sensor"],
             },
             id="without_start_time_state_truncated",
         ),
@@ -1853,6 +1857,38 @@ async def test_get_history_service_truncated_identical_states(
             },
             id="exact_max_records_without_start_time_state",
         ),
+        pytest.param(
+            {
+                "start_time": "2023-05-08 08:30:00Z",
+                "entity_id": [
+                    "sensor.sensor",
+                ],
+                "allow_truncation": True,
+            },
+            {
+                "history": {
+                    "sensor.sensor": [
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:30:00+00:00",
+                            "state": "1.0",
+                        },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                },
+                "truncated": [],
+            },
+            id="exact_max_records_with_allow_truncation_not_truncated",
+        ),
     ],
 )
 @pytest.mark.usefixtures("recorder_mock")
@@ -1899,3 +1935,73 @@ async def test_get_history_service_max_records(
             "recorder", "get_history", service_args, return_response=True, blocking=True
         )
         assert result == expected_result
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_allow_truncation_multiple_entities(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test truncation list only includes entities that were actually truncated."""
+    monkeypatch.setattr(
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS_PER_ENTITY",
+        2,
+    )
+
+    # sensor.truncated gets 4 in-window states (limit is 2)
+    for hour in range(1, 5):
+        hass.states.async_set(
+            entity_id="sensor.truncated",
+            new_state=str(hour),
+            timestamp=dt_util.parse_datetime(f"2023-05-08 0{hour}:00:00Z").timestamp(),
+            force_update=True,
+        )
+
+    # sensor.not_truncated gets only 1 in-window state
+    hass.states.async_set(
+        entity_id="sensor.not_truncated",
+        new_state="active",
+        timestamp=dt_util.parse_datetime("2023-05-08 01:00:00Z").timestamp(),
+        force_update=True,
+    )
+
+    await async_recorder_block_till_done(hass)
+
+    now = dt_util.parse_datetime("2023-05-08 06:00:00Z")
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_history",
+            {
+                "start_time": "2023-05-08 00:00:00Z",
+                "entity_id": ["sensor.truncated", "sensor.not_truncated"],
+                "allow_truncation": True,
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+    assert result == {
+        "history": {
+            "sensor.truncated": [
+                {
+                    "start": "2023-05-08T01:00:00+00:00",
+                    "end": "2023-05-08T02:00:00+00:00",
+                    "state": "1",
+                },
+                {
+                    "start": "2023-05-08T02:00:00+00:00",
+                    "end": "2023-05-08T03:00:00+00:00",
+                    "state": "2",
+                },
+            ],
+            "sensor.not_truncated": [
+                {
+                    "start": "2023-05-08T01:00:00+00:00",
+                    "end": "2023-05-08T06:00:00+00:00",
+                    "state": "active",
+                },
+            ],
+        },
+        "truncated": ["sensor.truncated"],
+    }

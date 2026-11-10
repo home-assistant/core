@@ -4,7 +4,7 @@
       "message": "End time must be greater than or equal to start time"
     },
     "max_records_exceeded": {
-      "message": "Query for `{entity_id}` exceeded the maximum of {max_records} records"
+      "message": "More than {max_records} state changes were recorded for {entity_id} in the requested period. Use a shorter period or set allow truncation."
     },
     "start_time_in_future": {
       "message": "Start time must be in the past"
@@ -41,7 +41,7 @@
       "description": "Retrieves history data for entities within a specific time period.",
       "fields": {
         "allow_truncation": {
-          "description": "Truncate the returned history to the first 1,000 records per entity instead of raising an error when the limit is exceeded.",
+          "description": "Truncate the returned history instead of raising an error when an entity exceeds the limit of recorded state changes. The limit applies to recorded state changes, not returned segments.",
           "name": "Allow truncation"
         },
         "end_time": {
