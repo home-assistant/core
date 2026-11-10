@@ -11,6 +11,7 @@ from habitron_client import (
     HabitronTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.habitron.config_flow import (
@@ -42,8 +43,6 @@ from .const import (
     MOCK_UDN,
     MOCK_UID,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(

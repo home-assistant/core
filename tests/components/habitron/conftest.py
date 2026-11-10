@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from habitron_client import SmartHub
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -21,8 +22,6 @@ from .const import (
     MOCK_UID,
     MOCK_VERSION,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

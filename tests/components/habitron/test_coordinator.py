@@ -25,6 +25,7 @@ from habitron_client import (
     SmartHub,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.habitron.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.habitron.coordinator import HbtnCoordinator
@@ -34,8 +35,6 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import MOCK_HOST, MOCK_MAC, MOCK_UID, TYPE_SMART_CONTROLLER
-
-from tests.common import MockConfigEntry
 
 _COORD = "homeassistant.components.habitron.coordinator"
 

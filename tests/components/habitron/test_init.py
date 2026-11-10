@@ -7,6 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from habitron_client import HabitronError, HabitronTimeoutError, SmartHub
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitron import (
@@ -29,13 +35,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import ReplayClient
 from .const import MOCK_HOST, MOCK_MAC, MOCK_NAME, MOCK_UDN, MOCK_UID
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 async def test_setup_entry(

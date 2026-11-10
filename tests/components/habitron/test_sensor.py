@@ -17,6 +17,7 @@ from habitron_client import (
     SmartHub,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.habitron import sensor as habitron_sensor
 from homeassistant.components.habitron.const import DOMAIN, SCAN_INTERVAL
@@ -57,8 +58,6 @@ from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import MOCK_HOST, MOCK_UID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _make_module(uid: str = "MOD-1") -> MagicMock:

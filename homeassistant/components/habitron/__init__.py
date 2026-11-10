@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
     """Migrate old entry data to the current version."""
     data = {**entry.data}
     if entry.version == 1 and "habitron_host" in data:
@@ -21,10 +21,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -
     data.pop("update_interval", None)
     # Minor bump only, so the custom integration can still load the entry.
     hass.config_entries.async_update_entry(entry, data=data, version=2, minor_version=2)
-    return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
     """Set up Habitron from a config entry."""
     coordinator = HbtnCoordinator(hass, entry)
     entry.runtime_data = coordinator
@@ -44,8 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> 
     _async_cleanup_stale_devices(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 @callback
@@ -70,9 +67,9 @@ async def async_remove_config_entry_device(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: HabitronConfigEntry) -> None:

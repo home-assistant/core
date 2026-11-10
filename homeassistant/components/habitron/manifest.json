@@ -1,6 +1,7 @@
 {
   "domain": "habitron",
   "name": "Habitron",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@dneprojects"],
   "config_flow": true,
   "dependencies": ["network"],
