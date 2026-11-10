@@ -56,7 +56,7 @@ async def init_config_flow(hass: HomeAssistant) -> config_flow.OwnTracksFlow:
         hass,
         {"external_url": BASE_URL},
     )
-    flow = config_flow.OwnTracksFlow()
+    flow = config_flow.OwnTracksFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     return flow
 
@@ -65,11 +65,11 @@ async def test_user(hass: HomeAssistant, webhook_id, secret) -> None:
     """Test user step."""
     flow = await init_config_flow(hass)
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await flow.async_step_user({})
+    result = await flow.async_step_user({})  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OwnTracks"
     assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
@@ -111,7 +111,7 @@ async def test_user_not_supports_encryption(
     """Test user step."""
     flow = await init_config_flow(hass)
 
-    result = await flow.async_step_user({})
+    result = await flow.async_step_user({})  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result["description_placeholders"]["secret"]

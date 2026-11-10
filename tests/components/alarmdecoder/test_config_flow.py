@@ -441,7 +441,7 @@ async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
 )
 async def test_one_device_allowed(hass: HomeAssistant, protocol, connection) -> None:
     """Test that only one AlarmDecoder device is allowed."""
-    flow = config_flow.AlarmDecoderFlowHandler()
+    flow = config_flow.AlarmDecoderFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
 
     MockConfigEntry(

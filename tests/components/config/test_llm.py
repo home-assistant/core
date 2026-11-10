@@ -1291,12 +1291,12 @@ class _BaseOAuthTestFlow(ConfigFlow):
 
 async def _step_external(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
     """Return an external OAuth step."""
-    return await flow.async_step_auth()
+    return await flow.async_step_auth()  # pylint: disable=home-assistant-tests-direct-flow-step
 
 
 async def _step_pick_implementation(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:
     """Return a pick_implementation form step."""
-    return await flow.async_step_pick_implementation()
+    return await flow.async_step_pick_implementation()  # pylint: disable=home-assistant-tests-direct-flow-step
 
 
 async def _step_missing_credentials(flow: _BaseOAuthTestFlow) -> ConfigFlowResult:

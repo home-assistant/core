@@ -14,4 +14,4 @@ def test_assist_in_progress_deprecated_flow_requires_data(data: dict | None) -> 
     """Test AssistInProgressDeprecatedRepairFlow requires data."""
 
     with pytest.raises(ValueError):
-        AssistInProgressDeprecatedRepairFlow(data)
+        AssistInProgressDeprecatedRepairFlow(data)  # pylint: disable=home-assistant-tests-direct-flow-handler

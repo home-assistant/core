@@ -891,11 +891,11 @@ async def test_registration_complete_no_domain(
 ) -> None:
     """Test registration complete step without domain."""
 
-    flow_instance = OAuth2FlowHandler()
+    flow_instance = OAuth2FlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow_instance.hass = hass
     flow_instance.domain = None
 
-    result = await flow_instance.async_step_registration_complete({})
+    result = await flow_instance.async_step_registration_complete({})  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "domain_input"
 
@@ -905,13 +905,13 @@ async def test_registration_complete_with_domain_and_user_input(
 ) -> None:
     """Test registration complete step with domain and user input."""
 
-    flow_instance = OAuth2FlowHandler()
+    flow_instance = OAuth2FlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow_instance.hass = hass
     flow_instance.domain = "example.com"
     flow_instance.uid = UNIQUE_ID
     flow_instance.data = {"token": {"access_token": "test"}}
 
-    result = await flow_instance.async_step_registration_complete({"complete": True})
+    result = await flow_instance.async_step_registration_complete({"complete": True})  # pylint: disable=home-assistant-tests-direct-flow-step
     # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
@@ -922,11 +922,11 @@ async def test_registration_complete_with_domain_no_user_input(
 ) -> None:
     """Test registration complete step with domain but no user input."""
 
-    flow_instance = OAuth2FlowHandler()
+    flow_instance = OAuth2FlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow_instance.hass = hass
     flow_instance.domain = "example.com"
 
-    result = await flow_instance.async_step_registration_complete(None)
+    result = await flow_instance.async_step_registration_complete(None)  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "registration_complete"
     assert (
@@ -1121,4 +1121,4 @@ async def test_reauth_confirm_form(hass: HomeAssistant) -> None:
 def test_is_valid_domain(domain: str, expected_valid: bool) -> None:
     """Test domain validation."""
 
-    assert OAuth2FlowHandler()._is_valid_domain(domain) == expected_valid
+    assert OAuth2FlowHandler()._is_valid_domain(domain) == expected_valid  # pylint: disable=home-assistant-tests-direct-flow-handler

@@ -46,11 +46,11 @@ async def test_single_instance_allowed(
 
 async def test_without_config(hass: HomeAssistant) -> None:
     """Test config flow with no configuration."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.context = {}
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -97,7 +97,7 @@ async def test_with_invalid_credentials(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
     """Test config flow with invalid username and/or password."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.context = {}
 
@@ -105,7 +105,7 @@ async def test_with_invalid_credentials(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceUnauthorizedException,
     ):
-        result = await flow.async_step_user(config_data)
+        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -115,7 +115,7 @@ async def test_with_invalid_credentials(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         _async_mock_login,
     ):
-        result = await flow.async_step_user(config_data)
+        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -134,14 +134,14 @@ async def test_cannot_connect_exception(
     raised_exception: Exception | type[Exception],
 ) -> None:
     """Test config flow encountering a connection-related exception."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=raised_exception,
     ):
-        result = await flow.async_step_user(config_data)
+        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -151,7 +151,7 @@ async def test_cannot_connect_exception(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         _async_mock_login,
     ):
-        result = await flow.async_step_user(config_data)
+        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -160,7 +160,7 @@ async def test_with_existing_config(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
     """Test config flow with existing configuration."""
-    flow = config_flow.AqualinkFlowHandler()
+    flow = config_flow.AqualinkFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.context = {}
 
@@ -168,7 +168,7 @@ async def test_with_existing_config(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         _async_mock_login,
     ):
-        result = await flow.async_step_user(config_data)
+        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data["username"]

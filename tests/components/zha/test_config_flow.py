@@ -1291,7 +1291,7 @@ async def test_detect_radio_type_success(
 ) -> None:
     """Test detect radios successfully."""
 
-    handler = config_flow.ZhaConfigFlowHandler()
+    handler = config_flow.ZhaConfigFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     handler._radio_mgr.device_path = "/dev/null"
     handler.hass = hass
 
@@ -1320,7 +1320,7 @@ async def test_detect_radio_type_success_with_settings(
 ) -> None:
     """Test detect radios successfully but probing returns new settings."""
 
-    handler = config_flow.ZhaConfigFlowHandler()
+    handler = config_flow.ZhaConfigFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     handler._radio_mgr.device_path = "/dev/null"
     handler.hass = hass
 
@@ -2025,7 +2025,7 @@ def test_parse_uploaded_backup(process_mock) -> None:
     text = json.dumps(backup.as_dict())
     process_mock.return_value.__enter__.return_value.read_text.return_value = text
 
-    handler = config_flow.ZhaConfigFlowHandler()
+    handler = config_flow.ZhaConfigFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     parsed_backup = handler._parse_uploaded_backup(str(uuid.uuid4()))
 
     assert backup == parsed_backup

@@ -52,10 +52,10 @@ IMPORT_DATA = {
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    flow = LcnFlowHandler()
+    flow = LcnFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=None)
+    result = await flow.async_step_user(user_input=None)  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"

@@ -807,7 +807,7 @@ async def test_finish_auth_token_exchange(
 ) -> None:
     """Test that finish_auth exchanges short-lived token for long-lived token."""
     # Create flow instance
-    flow = MusicAssistantConfigFlow()
+    flow = MusicAssistantConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.url = "http://localhost:8095"
     flow.token = "short_lived_session_token"
@@ -819,7 +819,7 @@ async def test_finish_auth_token_exchange(
         return_value="long_lived_token_12345",
     ) as mock_create_token:
         # Call async_step_finish_auth to test token exchange
-        result = await flow.async_step_finish_auth()
+        result = await flow.async_step_finish_auth()  # pylint: disable=home-assistant-tests-direct-flow-step
 
     # Verify token was exchanged
     mock_create_token.assert_called_once()
@@ -991,7 +991,7 @@ async def test_finish_auth_reauth_source(
     """Test finish_auth updates entry when source is reauth."""
     mock_config_entry.add_to_hass(hass)
 
-    flow = MusicAssistantConfigFlow()
+    flow = MusicAssistantConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.context = {"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id}
     flow.url = "http://localhost:8095"
@@ -1001,7 +1001,7 @@ async def test_finish_auth_reauth_source(
         "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
         return_value="new_long_lived_token",
     ):
-        result = await flow.async_step_finish_auth()
+        result = await flow.async_step_finish_auth()  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -1026,7 +1026,7 @@ async def test_finish_auth_errors(
     abort_reason: str,
 ) -> None:
     """Test finish_auth handles errors during token exchange."""
-    flow = MusicAssistantConfigFlow()
+    flow = MusicAssistantConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.url = "http://localhost:8095"
     flow.token = "session_token"
@@ -1035,7 +1035,7 @@ async def test_finish_auth_errors(
         "homeassistant.components.music_assistant.config_flow.create_long_lived_token",
         side_effect=exception,
     ):
-        result = await flow.async_step_finish_auth()
+        result = await flow.async_step_finish_auth()  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
@@ -1046,12 +1046,12 @@ async def test_auth_step_with_oauth2_callback(
     mock_get_server_info: AsyncMock,
 ) -> None:
     """Test auth step receiving OAuth2 callback with code parameter."""
-    flow = MusicAssistantConfigFlow()
+    flow = MusicAssistantConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.url = "http://localhost:8095"
     flow.server_info = mock_get_server_info.return_value
 
-    result = await flow.async_step_auth(user_input={"code": "test_session_token"})
+    result = await flow.async_step_auth(user_input={"code": "test_session_token"})  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
     assert result["step_id"] == "finish_auth"
@@ -1063,12 +1063,12 @@ async def test_auth_step_with_error(
     mock_get_server_info: AsyncMock,
 ) -> None:
     """Test auth step receiving error from OAuth2 callback."""
-    flow = MusicAssistantConfigFlow()
+    flow = MusicAssistantConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.url = "http://localhost:8095"
     flow.server_info = mock_get_server_info.return_value
 
-    result = await flow.async_step_auth(user_input={"error": "access_denied"})
+    result = await flow.async_step_auth(user_input={"error": "access_denied"})  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_error"
@@ -1113,7 +1113,7 @@ async def test_auth_with_redirect_uri(
     mock_get_server_info: AsyncMock,
 ) -> None:
     """Test auth step with redirect URI available."""
-    flow = MusicAssistantConfigFlow()
+    flow = MusicAssistantConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     flow.url = "http://localhost:8095"
     flow.flow_id = "test_flow_id"
@@ -1129,7 +1129,7 @@ async def test_auth_with_redirect_uri(
             return_value="test_jwt_state",
         ),
     ):
-        result = await flow.async_step_auth()
+        result = await flow.async_step_auth()  # pylint: disable=home-assistant-tests-direct-flow-step
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "auth"

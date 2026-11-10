@@ -16,7 +16,7 @@ def init_config_flow(
     hass: HomeAssistant, side_effect: type[Exception] | None = None
 ) -> config_flow.FlowHandler:
     """Init a configuration flow."""
-    flow = config_flow.FlowHandler()
+    flow = config_flow.FlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
     if side_effect:
         flow._get_auth_url = Mock(side_effect=side_effect)
@@ -57,7 +57,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     flow = init_config_flow(hass)
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_user()
+        result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
@@ -66,16 +66,16 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -
     """Test registering an implementation and finishing flow works."""
     flow = init_config_flow(hass)
     flow.context = {"source": SOURCE_DISCOVERY}
-    result = await flow.async_step_discovery(["localhost", "tellstick"])
+    result = await flow.async_step_discovery(["localhost", "tellstick"])  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert len(flow._hosts) == 2
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await flow.async_step_user({"host": "localhost"})
+    result = await flow.async_step_user({"host": "localhost"})  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
@@ -83,7 +83,7 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -
         "app_name": APPLICATION_NAME,
     }
 
-    result = await flow.async_step_auth("")
+    result = await flow.async_step_auth("")  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "localhost"
     assert result["data"]["host"] == "localhost"
@@ -97,7 +97,7 @@ async def test_step_disco_no_local_api(hass: HomeAssistant, mock_tellduslive) ->
     flow = init_config_flow(hass)
     flow.context = {"source": SOURCE_DISCOVERY}
 
-    result = await flow.async_step_discovery(["localhost", "tellstick"])
+    result = await flow.async_step_discovery(["localhost", "tellstick"])  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert len(flow._hosts) == 1
@@ -107,8 +107,8 @@ async def test_step_auth(hass: HomeAssistant, mock_tellduslive) -> None:
     """Test that create cloud entity from auth."""
     flow = init_config_flow(hass)
 
-    await flow.async_step_auth()
-    result = await flow.async_step_auth(["localhost", "tellstick"])
+    await flow.async_step_auth()  # pylint: disable=home-assistant-tests-direct-flow-step
+    result = await flow.async_step_auth(["localhost", "tellstick"])  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cloud API"
     assert result["data"]["host"] == "Cloud API"
@@ -126,15 +126,15 @@ async def test_wrong_auth_flow_implementation(
     """Test wrong auth."""
     flow = init_config_flow(hass)
 
-    await flow.async_step_auth()
-    result = await flow.async_step_auth("")
+    await flow.async_step_auth()  # pylint: disable=home-assistant-tests-direct-flow-step
+    result = await flow.async_step_auth("")  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"]["base"] == "invalid_auth"
 
     session_cls, _ = mock_tellduslive
     session_cls.return_value.authorize.return_value = True
-    result = await flow.async_step_auth("")
+    result = await flow.async_step_auth("")  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -142,7 +142,7 @@ async def test_not_pick_host_if_only_one(hass: HomeAssistant, mock_tellduslive) 
     """Test not picking host if we have just one."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
@@ -153,7 +153,7 @@ async def test_abort_if_timeout_generating_auth_url(
     """Test abort if generating authorize url timeout."""
     flow = init_config_flow(hass, side_effect=TimeoutError)
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "authorize_url_timeout"
 
@@ -163,7 +163,7 @@ async def test_abort_no_auth_url(hass: HomeAssistant, mock_tellduslive) -> None:
     flow = init_config_flow(hass)
     flow._get_auth_url = Mock(return_value=False)
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
@@ -174,7 +174,7 @@ async def test_abort_if_exception_generating_auth_url(
     """Test we abort if generating authorize url blows up."""
     flow = init_config_flow(hass, side_effect=ValueError)
 
-    result = await flow.async_step_user()
+    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
@@ -188,4 +188,4 @@ async def test_discovery_already_configured(
     flow.context = {"source": SOURCE_DISCOVERY}
 
     with pytest.raises(data_entry_flow.AbortFlow):
-        await flow.async_step_discovery(["some-host", ""])
+        await flow.async_step_discovery(["some-host", ""])  # pylint: disable=home-assistant-tests-direct-flow-step

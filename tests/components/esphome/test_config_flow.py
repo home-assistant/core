@@ -1849,7 +1849,7 @@ async def test_user_flow_manual_key_repairs_stale_storage(
 
 async def test_repair_stored_key_without_mac_is_a_no_op(hass: HomeAssistant) -> None:
     """Test the repair helper does nothing when no MAC is known."""
-    flow = config_flow.EsphomeFlowHandler()
+    flow = config_flow.EsphomeFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
 
     with patch(

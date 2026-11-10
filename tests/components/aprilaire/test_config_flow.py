@@ -24,10 +24,10 @@ async def test_user_input_step() -> None:
 
     show_form_mock = Mock()
 
-    config_flow = AprilaireConfigFlow()
+    config_flow = AprilaireConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     config_flow.async_show_form = show_form_mock
 
-    await config_flow.async_step_user(None)
+    await config_flow.async_step_user(None)  # pylint: disable=home-assistant-tests-direct-flow-step
 
     show_form_mock.assert_called_once_with(
         step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -41,13 +41,13 @@ async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
     set_unique_id_mock = AsyncMock()
     async_abort_entries_match_mock = Mock()
 
-    config_flow = AprilaireConfigFlow()
+    config_flow = AprilaireConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     config_flow.async_show_form = show_form_mock
     config_flow.async_set_unique_id = set_unique_id_mock
     config_flow._async_abort_entries_match = async_abort_entries_match_mock
 
     with patch("pyaprilaire.client.AprilaireClient", return_value=client):
-        await config_flow.async_step_user(
+        await config_flow.async_step_user(  # pylint: disable=home-assistant-tests-direct-flow-step
             {
                 "host": "localhost",
                 "port": 7000,
@@ -77,7 +77,7 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     abort_if_unique_id_configured_mock = Mock()
     create_entry_mock = Mock()
 
-    config_flow = AprilaireConfigFlow()
+    config_flow = AprilaireConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     config_flow.hass = hass
     config_flow.async_show_form = show_form_mock
     config_flow.async_set_unique_id = set_unique_id_mock
@@ -87,7 +87,7 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     client.wait_for_response = AsyncMock(return_value={"mac_address": "1:2:3:4:5:6"})
 
     with patch("pyaprilaire.client.AprilaireClient", return_value=client):
-        await config_flow.async_step_user(
+        await config_flow.async_step_user(  # pylint: disable=home-assistant-tests-direct-flow-step
             {
                 "host": "localhost",
                 "port": 7000,
