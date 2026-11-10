@@ -132,6 +132,13 @@ async def test_stale_scenes_removed_on_setup(
     """Test a scene the hub no longer reports is removed during setup."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    existing_entity_ids = [
+        entity.entity_id
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    ]
     phantom = entity_registry.async_get_or_create(
         SCENE_DOMAIN,
         DOMAIN,
@@ -139,11 +146,22 @@ async def test_stale_scenes_removed_on_setup(
         config_entry=entry,
         suggested_object_id="phantom_scene",
     )
-
-    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    registry_events: list[er.EventEntityRegistryUpdatedData] = []
+    unsubscribe = hass.bus.async_listen(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        lambda event: registry_events.append(event.data),
+    )
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    unsubscribe()
+
+    assert {"action": "remove", "entity_id": phantom.entity_id} in registry_events
     assert entity_registry.async_get(phantom.entity_id) is None
+    for entity_id in existing_entity_ids:
+        assert {"action": "remove", "entity_id": entity_id} not in registry_events
+        assert entity_registry.async_is_registered(entity_id)
     assert hass.states.async_entity_ids_count(SCENE_DOMAIN) == 18
     assert entity_registry.async_is_registered(
         f"scene.powerview_generation_{api_version}_open_study"
