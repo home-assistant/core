@@ -27,7 +27,7 @@ async def test_user_input_step() -> None:
     config_flow = AprilaireConfigFlow()  # pylint: disable=home-assistant-tests-direct-flow-handler
     config_flow.async_show_form = show_form_mock
 
-    await config_flow.async_step_user(None)  # pylint: disable=home-assistant-tests-direct-flow-step
+    await config_flow.async_step_user(None)
 
     show_form_mock.assert_called_once_with(
         step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -47,7 +47,7 @@ async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
     config_flow._async_abort_entries_match = async_abort_entries_match_mock
 
     with patch("pyaprilaire.client.AprilaireClient", return_value=client):
-        await config_flow.async_step_user(  # pylint: disable=home-assistant-tests-direct-flow-step
+        await config_flow.async_step_user(
             {
                 "host": "localhost",
                 "port": 7000,
@@ -87,7 +87,7 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     client.wait_for_response = AsyncMock(return_value={"mac_address": "1:2:3:4:5:6"})
 
     with patch("pyaprilaire.client.AprilaireClient", return_value=client):
-        await config_flow.async_step_user(  # pylint: disable=home-assistant-tests-direct-flow-step
+        await config_flow.async_step_user(
             {
                 "host": "localhost",
                 "port": 7000,

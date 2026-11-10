@@ -177,7 +177,6 @@ Every check has a code following the
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
-| `W7464` | [`home-assistant-tests-direct-flow-step`](#w7464-home-assistant-tests-direct-flow-step) | Tests should not call a flow's `async_step_*` methods directly |
 | `W7465` | [`home-assistant-tests-direct-flow-handler`](#w7465-home-assistant-tests-direct-flow-handler) | Tests should not create an integration's flow handler themselves |
 
 ## `home_assistant_logger` checker
@@ -830,8 +829,8 @@ See the [config-flow-test-coverage quality scale rule](https://contributors.home
 
 ## `home_assistant_tests_direct_flow_handler` checker
 
-Detects integration tests that drive a flow handler themselves instead of
-going through the flow manager.
+Detects integration tests that create a flow handler themselves instead of
+letting the flow manager create it.
 
 Tests in `tests/components` should run a flow the way the frontend does:
 start it with `hass.config_entries.flow.async_init` (or `options` or
@@ -853,12 +852,6 @@ result = await hass.config_entries.flow.async_configure(
     result["flow_id"], {CONF_HOST: "1.2.3.4"}
 )
 ```
-
-### `W7464`: `home-assistant-tests-direct-flow-step`
-
-A test calls an `async_step_*` method itself. Calls a flow makes on itself
-(`self.async_step_*` or `super().async_step_*`), such as in a test flow class,
-are allowed.
 
 ### `W7465`: `home-assistant-tests-direct-flow-handler`
 

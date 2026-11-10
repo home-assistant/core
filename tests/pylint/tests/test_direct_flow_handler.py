@@ -80,18 +80,6 @@ result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         ),
         pytest.param(
             """
-class MockFlow(ConfigFlow):
-    async def async_step_user(self, user_input=None):
-        return await self.async_step_confirm()
-
-    async def async_step_reauth(self, entry_data):
-        return await super().async_step_reauth(entry_data)
-""",
-            TEST_MODULE,
-            id="own_steps_in_test_flow",
-        ),
-        pytest.param(
-            """
 from homeassistant.components.pylint_test.config_flow import NotAFlow
 
 thing = NotAFlow()
@@ -104,7 +92,6 @@ thing = NotAFlow()
 from homeassistant.components.pylint_test.config_flow import PylintTestConfigFlow
 
 flow = PylintTestConfigFlow()
-await flow.async_step_user()
 """,
             "tests.test_config_entries",
             id="core_tests",
@@ -114,18 +101,18 @@ await flow.async_step_user()
 from homeassistant.components.pylint_test.config_flow import PylintTestConfigFlow
 
 flow = PylintTestConfigFlow()
-await flow.async_step_user()
 """,
             "homeassistant.components.other.config_flow",
             id="integration_code",
         ),
         pytest.param(
             """
-mock_flow.async_step_user.assert_called_once()
+from homeassistant.components.pylint_test.config_flow import PylintTestConfigFlow
+
 patch.object(PylintTestConfigFlow, "async_step_user")
 """,
             TEST_MODULE,
-            id="not_called",
+            id="not_instantiated",
         ),
     ],
 )
@@ -177,45 +164,5 @@ def test_flow_handler_created(
         _expect(
             call, "home-assistant-tests-direct-flow-handler", "PylintTestConfigFlow"
         ),
-    ):
-        walk_checker(linter, checker, root_node)
-
-
-@pytest.mark.parametrize(
-    ("code", "step"),
-    [
-        pytest.param(
-            "result = await flow.async_step_user()",
-            "async_step_user",
-            id="user",
-        ),
-        pytest.param(
-            "result = await handler.async_step_reauth_confirm({CONF_PASSWORD: 'x'})",
-            "async_step_reauth_confirm",
-            id="other_receiver",
-        ),
-        pytest.param(
-            'result = await hass.config_entries.flow._progress["abc"].async_step_user()',
-            "async_step_user",
-            id="handler_from_progress",
-        ),
-    ],
-)
-def test_step_called(
-    linter: UnittestLinter,
-    checker: DirectFlowHandlerChecker,
-    code: str,
-    step: str,
-) -> None:
-    """Test calling a flow step directly is flagged."""
-    root_node = _module(code)
-    call = next(
-        call
-        for call in root_node.nodes_of_class(nodes.Call)
-        if isinstance(call.func, nodes.Attribute) and call.func.attrname == step
-    )
-
-    with assert_adds_messages(
-        linter, _expect(call, "home-assistant-tests-direct-flow-step", step)
     ):
         walk_checker(linter, checker, root_node)

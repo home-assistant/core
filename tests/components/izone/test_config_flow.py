@@ -342,7 +342,7 @@ async def test_select_controller_aborts_when_uid_not_on_shelf(
     assert result["step_id"] == "select_controller"
 
     flow = hass.config_entries.flow._progress[result["flow_id"]]
-    result = await flow.async_step_select_controller(  # pylint: disable=home-assistant-tests-direct-flow-step
+    result = await flow.async_step_select_controller(
         {config_flow.SELECTED_CONTROLLER_UID: "000000099"}
     )
 
@@ -396,7 +396,7 @@ async def test_select_controller_aborts_already_configured_when_uid_left_shelf(
     ).add_to_hass(hass)
 
     flow = hass.config_entries.flow._progress[result["flow_id"]]
-    result = await flow.async_step_select_controller(  # pylint: disable=home-assistant-tests-direct-flow-step
+    result = await flow.async_step_select_controller(
         {config_flow.SELECTED_CONTROLLER_UID: claimed_uid}
     )
 
@@ -1296,7 +1296,7 @@ async def test_confirm_asserts_when_controller_data_is_missing(
     flow = hass.config_entries.flow._progress[result["flow_id"]]
     flow._discovered_controller_host = None
     with pytest.raises(AssertionError):
-        await flow.async_step_confirm()  # pylint: disable=home-assistant-tests-direct-flow-step
+        await flow.async_step_confirm()
 
 
 async def test_confirm_asserts_when_unique_id_is_not_string(
@@ -1316,7 +1316,7 @@ async def test_confirm_asserts_when_unique_id_is_not_string(
     flow.context["unique_id"] = None
 
     with pytest.raises(AssertionError):
-        await flow.async_step_confirm({})  # pylint: disable=home-assistant-tests-direct-flow-step
+        await flow.async_step_confirm({})
 
 
 def test_async_fan_out_skips_uids_already_in_progress() -> None:

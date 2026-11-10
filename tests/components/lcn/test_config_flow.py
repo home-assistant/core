@@ -55,7 +55,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     flow = LcnFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=None)  # pylint: disable=home-assistant-tests-direct-flow-step
+    result = await flow.async_step_user(user_input=None)
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"

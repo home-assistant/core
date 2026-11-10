@@ -209,7 +209,7 @@ async def test_step_auth_user_falls(hass: HomeAssistant) -> None:
         mock.post("https://id.starline.ru/apiV3/user/login/", text='{"state": 0}')
         flow = config_flow.StarlineFlowHandler()  # pylint: disable=home-assistant-tests-direct-flow-handler
         flow.hass = hass
-        result = await flow.async_step_auth_user(  # pylint: disable=home-assistant-tests-direct-flow-step
+        result = await flow.async_step_auth_user(
             user_input={
                 config_flow.CONF_USERNAME: TEST_APP_USERNAME,
                 config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,

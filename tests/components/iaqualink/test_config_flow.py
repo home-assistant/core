@@ -50,7 +50,7 @@ async def test_without_config(hass: HomeAssistant) -> None:
     flow.hass = hass
     flow.context = {}
 
-    result = await flow.async_step_user()  # pylint: disable=home-assistant-tests-direct-flow-step
+    result = await flow.async_step_user()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -105,7 +105,7 @@ async def test_with_invalid_credentials(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceUnauthorizedException,
     ):
-        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -115,7 +115,7 @@ async def test_with_invalid_credentials(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         _async_mock_login,
     ):
-        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -141,7 +141,7 @@ async def test_cannot_connect_exception(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=raised_exception,
     ):
-        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -151,7 +151,7 @@ async def test_cannot_connect_exception(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         _async_mock_login,
     ):
-        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -168,7 +168,7 @@ async def test_with_existing_config(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         _async_mock_login,
     ):
-        result = await flow.async_step_user(config_data)  # pylint: disable=home-assistant-tests-direct-flow-step
+        result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data["username"]
