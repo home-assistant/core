@@ -4,6 +4,11 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.helpers.ast_utils import extended_ancestors
+from pylint_home_assistant.helpers.module_info import is_integration_module
+
+_CALLBACK = "homeassistant.core.callback"
+
 
 class HassDecoratorChecker(BaseChecker):
     """Checker for decorators."""
@@ -20,6 +25,13 @@ class HassDecoratorChecker(BaseChecker):
             "Fixture %s is invalid here, please %s",
             "home-assistant-pytest-fixture-decorator",
             "Used when a pytest fixture is invalid",
+        ),
+        "W7463": (
+            "%s overrides a @callback method of %s and should be decorated with "
+            "@callback",
+            "home-assistant-callback-override-missing-decorator",
+            "Used when a sync method overrides a @callback method without the "
+            "@callback decorator",
         ),
     }
     options = ()
@@ -100,16 +112,41 @@ class HassDecoratorChecker(BaseChecker):
                 args=("scope `package`", "use `module` or lower"),
             )
 
+    def _check_callback_override(
+        self, node: nodes.FunctionDef, decoratornames: set[str]
+    ) -> None:
+        if (
+            not isinstance(class_node := node.parent, nodes.ClassDef)
+            or _CALLBACK in decoratornames
+            or (node.name.startswith("__") and not node.name.endswith("__"))
+            or not is_integration_module(node.root().name)
+        ):
+            return
+        for ancestor in extended_ancestors(class_node):
+            base_method = ancestor.locals.get(node.name, [None])[-1]
+            if (
+                type(base_method) is nodes.FunctionDef
+                and _CALLBACK in base_method.decoratornames()
+            ):
+                self.add_message(
+                    "home-assistant-callback-override-missing-decorator",
+                    node=node,
+                    args=(node.name, ancestor.name),
+                )
+                return
+
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         """Apply checks on an AsyncFunctionDef node."""
         if decoratornames := node.decoratornames():
-            if "homeassistant.core.callback" in decoratornames:
+            if _CALLBACK in decoratornames:
                 self.add_message("home-assistant-async-callback-decorator", node=node)
             self._check_pytest_fixture(node, decoratornames)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
-        """Apply checks on an AsyncFunctionDef node."""
-        if decoratornames := node.decoratornames():
+        """Apply checks on a FunctionDef node."""
+        decoratornames = node.decoratornames()
+        self._check_callback_override(node, decoratornames)
+        if decoratornames:
             self._check_pytest_fixture(node, decoratornames)
 
 

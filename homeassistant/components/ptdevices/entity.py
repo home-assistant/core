@@ -34,7 +34,7 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
             configuration_url=f"https://www.ptdevices.com/device/level/{self.device['id']}",
             manufacturer="ParemTech Inc.",
             model=self.device["device_type"],
-            sw_version=str(self.device["version"]),
+            sw_version=self.device["version"],
             name=self.device["title"],
         )
 

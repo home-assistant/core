@@ -18,6 +18,13 @@ def functional_block(dpa: str) -> str:
     return dpa.partition(".")[0]
 
 
+class FB372(StrEnum):
+    """FB 372 Fan Actuator."""
+
+    ACT_TARGET_FAN_SPEED = "372.51"
+    ACT_CURR_FAN_SPEED = "372.55"
+
+
 class FB417(StrEnum):
     """FB 417 Light Switching Actuator Basic."""
 
