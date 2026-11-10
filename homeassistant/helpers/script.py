@@ -407,10 +407,7 @@ async def async_raise_schema_and_platform_errors(
 ) -> NoReturn:
     """Raise a schema error with the platform errors of what the schema accepted.
 
-    The platform step, which finds integration errors like an unknown device,
-    normally only runs once the schema passes. `sections` maps a config key to
-    what it holds; the key `None` stands for `config` itself. Items with a
-    schema error are skipped, but the lists inside them are still checked.
+    `sections` maps a config key to what it holds; `None` stands for `config`.
     """
     errors = cv.ValidationErrorCollector()
     errors.add(schema_error)
