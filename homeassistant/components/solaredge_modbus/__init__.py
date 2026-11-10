@@ -185,13 +185,14 @@ async def async_setup_entry(
 
     # What is wired to the inverter is read while setting up, so a meter or
     # battery added or removed later needs the entry to load again to be seen.
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            partial(_async_reload_when_attachments_change, hass, entry, unit),
-            ATTACHMENT_SCAN_INTERVAL,
+    if not entry.pref_disable_polling:
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass,
+                partial(_async_reload_when_attachments_change, hass, entry, unit),
+                ATTACHMENT_SCAN_INTERVAL,
+            )
         )
-    )
 
 
 def _known_silent_blocks(entry: SolarEdgeModbusConfigEntry) -> frozenset[str]:
