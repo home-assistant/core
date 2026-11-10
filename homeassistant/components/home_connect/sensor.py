@@ -38,6 +38,24 @@ PARALLEL_UPDATES = 0
 
 EVENT_OPTIONS = ["confirmed", "off", "present"]
 
+REFRIGERATION_APPLIANCE_TYPES = (
+    ApplianceType.FREEZER,
+    ApplianceType.FRIDGE_FREEZER,
+    ApplianceType.REFRIGERATOR,
+    ApplianceType.WINE_COOLER,
+)
+REFRIGERATION_DOOR_STATUS_KEYS = (
+    StatusKey.REFRIGERATION_COMMON_DOOR_BOTTLE_COOLER,
+    StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_COMMON,
+    StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER,
+    StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_LEFT,
+    StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_RIGHT,
+    StatusKey.REFRIGERATION_COMMON_DOOR_FLEX_COMPARTMENT,
+    StatusKey.REFRIGERATION_COMMON_DOOR_FREEZER,
+    StatusKey.REFRIGERATION_COMMON_DOOR_REFRIGERATOR,
+    StatusKey.REFRIGERATION_COMMON_DOOR_WINE_COMPARTMENT,
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectSensorEntityDescription(
@@ -603,10 +621,24 @@ EVENT_SENSORS = (
 )
 
 
+def _has_compartment_doors(
+    appliance_coordinator: HomeConnectApplianceCoordinator,
+) -> bool:
+    """Return whether a refrigeration appliance reports its compartment doors.
+
+    Their generic door state doesn't follow the doors, unlike the compartment ones.
+    """
+    data = appliance_coordinator.data
+    return data.info.type in REFRIGERATION_APPLIANCE_TYPES and any(
+        key in data.status for key in REFRIGERATION_DOOR_STATUS_KEYS
+    )
+
+
 def _get_entities_for_appliance(
     appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
+    skip_door_state = _has_compartment_doors(appliance_coordinator)
     return [
         *[
             HomeConnectEventSensor(appliance_coordinator, description)
@@ -624,6 +656,9 @@ def _get_entities_for_appliance(
             HomeConnectSensor(appliance_coordinator, description)
             for description in SENSORS
             if description.key in appliance_coordinator.data.status
+            and not (
+                skip_door_state and description.key == StatusKey.BSH_COMMON_DOOR_STATE
+            )
         ],
     ]
 
