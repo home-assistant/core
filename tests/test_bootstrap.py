@@ -35,11 +35,12 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryDisabler
 from homeassistant.const import (
     BASE_PLATFORMS,
     CONF_DEBUG,
+    EVENT_HOMEASSISTANT_START,
     KEY_DATA_BOOTSTRAP_PROGRESS,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
     SIGNAL_BOOTSTRAP_PROGRESS,
 )
-from homeassistant.core import CoreState, HomeAssistant, async_get_hass, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
@@ -2052,3 +2053,70 @@ async def test_bootstrap_progress_running_transition(hass: HomeAssistant) -> Non
         hass.data[KEY_DATA_BOOTSTRAP_PROGRESS]["phase"]
         == bootstrap.BootstrapPhase.RUNNING
     )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_while_starting(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test progress keeps updating while starting and a new entry is not retrying."""
+    hass.set_state(CoreState.not_running)
+    entry_setup_started = asyncio.Event()
+    release_entry = asyncio.Event()
+    start_listener_running = asyncio.Event()
+    release_start = asyncio.Event()
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        entry_setup_started.set()
+        await release_entry.wait()
+
+    async def slow_start_listener(event: Event) -> None:
+        start_listener_running.set()
+        await release_start.wait()
+
+    mock_integration(
+        hass, MockModule(domain="integration_new", async_setup_entry=async_setup_entry)
+    )
+    mock_platform(hass, "integration_new.config_flow", None)
+    progress = _track_bootstrap_progress(hass)
+
+    with mock_config_flow("integration_new", config_entries.ConfigFlow):
+        await bootstrap._async_set_up_integrations(hass, {"integration_new": {}})
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, slow_start_listener)
+        start_task = hass.async_create_task(hass.async_start())
+        await start_listener_running.wait()
+
+        # An entry added after its domain finished is in its first attempt.
+        entry = MockConfigEntry(domain="integration_new")
+        entry.add_to_hass(hass)
+        add_task = hass.async_create_background_task(
+            hass.config_entries.async_setup(entry.entry_id), "set up new entry"
+        )
+        await entry_setup_started.wait()
+
+        message_count = len(progress)
+        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        async_fire_time_changed(hass)
+        assert len(progress) == message_count + 1
+        state, data = progress[-1]
+        assert state is CoreState.starting
+        assert data["phase"] == bootstrap.BootstrapPhase.STARTING
+        assert data["config_entries"] == {
+            "total": 1,
+            "done": 0,
+            "retrying": [],
+            "failed": [],
+        }
+
+        release_start.set()
+        await start_task
+        assert progress[-1][1]["phase"] == bootstrap.BootstrapPhase.RUNNING
+
+        message_count = len(progress)
+        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        async_fire_time_changed(hass)
+        assert len(progress) == message_count
+
+        release_entry.set()
+        await add_task

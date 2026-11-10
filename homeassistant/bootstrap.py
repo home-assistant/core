@@ -1060,6 +1060,8 @@ class _WatchPendingSetups:
         self._phase = BootstrapPhase.PREPARING
         self._stage: str | None = None
         self._planned_domains: set[str] | None = None
+        self._retried_entry_ids: set[str] = set()
+        self._progress_handle: asyncio.TimerHandle | None = None
 
     def _async_watch(self) -> None:
         """Periodic log of setups that are pending."""
@@ -1116,6 +1118,25 @@ class _WatchPendingSetups:
     def _async_core_state_changed(self, phase: BootstrapPhase, _: core.Event) -> None:
         """Dispatch the progress when the core state changes after bootstrap."""
         self.async_set_phase(phase)
+        if phase is BootstrapPhase.STARTING:
+            self._async_schedule_progress()
+        elif self._progress_handle:
+            self._progress_handle.cancel()
+            self._progress_handle = None
+
+    def _async_schedule_progress(self) -> None:
+        """Schedule the next progress dispatch while Core is starting."""
+        self._progress_handle = self._loop.call_later(
+            SLOW_STARTUP_CHECK_INTERVAL, self._async_progress_tick
+        )
+
+    def _async_progress_tick(self) -> None:
+        """Dispatch the progress until Core is running or stopping."""
+        if self._hass.is_stopping:
+            self._progress_handle = None
+            return
+        self._async_dispatch_progress()
+        self._async_schedule_progress()
 
     def _async_progress(self) -> dict[str, Any]:
         """Return the startup progress.
@@ -1149,18 +1170,26 @@ class _WatchPendingSetups:
                 if entry.domain not in planned:
                     continue
                 entries["total"] += 1
+                state = entry.state
+                if state is config_entries.ConfigEntryState.SETUP_RETRY:
+                    self._retried_entry_ids.add(entry.entry_id)
+                # An entry setting up again after a retry finished its first attempt.
+                retried = entry.entry_id in self._retried_entry_ids and state in (
+                    config_entries.ConfigEntryState.SETUP_RETRY,
+                    config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+                )
                 if (
-                    entry.state not in _PENDING_CONFIG_ENTRY_STATES
-                    or entry.domain not in pending
+                    retried
+                    or state not in _PENDING_CONFIG_ENTRY_STATES
+                    or (
+                        state is config_entries.ConfigEntryState.NOT_LOADED
+                        and entry.domain not in pending
+                    )
                 ):
                     entries["done"] += 1
-                if entry.state is config_entries.ConfigEntryState.SETUP_RETRY or (
-                    # A setup after the domain finished is a retry attempt.
-                    entry.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
-                    and entry.domain not in pending
-                ):
+                if retried:
                     retrying.add(entry.domain)
-                elif entry.state in _FAILED_CONFIG_ENTRY_STATES:
+                elif state in _FAILED_CONFIG_ENTRY_STATES:
                     failed.add(entry.domain)
             entries["retrying"] = sorted(retrying)
             entries["failed"] = sorted(failed)
