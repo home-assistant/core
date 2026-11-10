@@ -91,13 +91,21 @@ def _ensure_list_if_present[_T](value: _T | None) -> list[_T] | list[Any] | None
 SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
     SERVICE_PERMIT: probatio.Schema(
         probatio.All(
-            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
+            cv.deprecated(
+                ATTR_IEEE_ADDRESS,
+                replacement_key=ATTR_IEEE,
+                breaks_in_ha_version="2027.6.0",
+            ),
             SERVICE_PERMIT_PARAMS,
         )
     ),
     IEEE_SERVICE: probatio.Schema(
         probatio.All(
-            cv.deprecated(ATTR_IEEE_ADDRESS, replacement_key=ATTR_IEEE),
+            cv.deprecated(
+                ATTR_IEEE_ADDRESS,
+                replacement_key=ATTR_IEEE,
+                breaks_in_ha_version="2027.6.0",
+            ),
             {probatio.Required(ATTR_IEEE): IEEE_SCHEMA},
         )
     ),
@@ -168,7 +176,7 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
                 ),
             }
         ),
-        cv.deprecated(ATTR_ARGS),
+        cv.deprecated(ATTR_ARGS, breaks_in_ha_version="2027.6.0"),
         probatio.AtLeastOne(ATTR_ARGS, ATTR_PARAMS),
     ),
     SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: probatio.Schema(

@@ -50,7 +50,7 @@ ATTRIBUTION = "Data provided by mvg.de"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = probatio.All(
-    cv.deprecated(CONF_DIRECTIONS),
+    cv.deprecated(CONF_DIRECTIONS, breaks_in_ha_version="2027.6.0"),
     SENSOR_PLATFORM_SCHEMA.extend(
         {
             probatio.Required(CONF_NEXT_DEPARTURE): [

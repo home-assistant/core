@@ -53,10 +53,10 @@ SWITCH_SCHEMA = probatio.Schema(
 )
 
 PLATFORM_SCHEMA = probatio.All(
-    cv.deprecated(CONF_HOST),
-    cv.deprecated(CONF_SLOTS),
-    cv.deprecated(CONF_TIMEOUT),
-    cv.deprecated(CONF_TYPE),
+    cv.deprecated(CONF_HOST, breaks_in_ha_version="2027.6.0"),
+    cv.deprecated(CONF_SLOTS, breaks_in_ha_version="2027.6.0"),
+    cv.deprecated(CONF_TIMEOUT, breaks_in_ha_version="2027.6.0"),
+    cv.deprecated(CONF_TYPE, breaks_in_ha_version="2027.6.0"),
     SWITCH_PLATFORM_SCHEMA.extend(
         {
             probatio.Required(CONF_MAC): mac_address,

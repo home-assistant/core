@@ -69,7 +69,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 DEFAULT_DEVELOPMENT: Final = "0"
 
 HTTP_SCHEMA: Final = probatio.All(
-    cv.deprecated(CONF_BASE_URL),
+    cv.deprecated(CONF_BASE_URL, breaks_in_ha_version="2027.6.0"),
     probatio.Schema(
         {
             probatio.Optional(CONF_SERVER_HOST): probatio.All(

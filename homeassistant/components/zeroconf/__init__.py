@@ -47,8 +47,8 @@ MAX_NAME_LEN = 63
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.deprecated(CONF_DEFAULT_INTERFACE),
-            cv.deprecated(CONF_IPV6),
+            cv.deprecated(CONF_DEFAULT_INTERFACE, breaks_in_ha_version="2027.6.0"),
+            cv.deprecated(CONF_IPV6, breaks_in_ha_version="2027.6.0"),
             probatio.Schema(
                 {
                     probatio.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
