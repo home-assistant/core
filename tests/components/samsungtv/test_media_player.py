@@ -425,38 +425,6 @@ async def test_update_access_denied(
 
 
 @pytest.mark.usefixtures("rest_api")
-async def test_update_ws_connection_failure(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    remote_websocket: Mock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Testing update tv connection failure exception."""
-    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
-
-    with (
-        patch.object(
-            remote_websocket,
-            "start_listening",
-            side_effect=ConnectionFailure({"event": "ms.voiceApp.hide"}),
-        ),
-        patch.object(remote_websocket, "is_alive", return_value=False),
-    ):
-        freezer.tick(timedelta(minutes=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (
-        "Unexpected ConnectionFailure trying to get remote for fake_host, please "
-        "report this issue: ConnectionFailure({'event': 'ms.voiceApp.hide'})"
-        in caplog.text
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.usefixtures("rest_api")
 async def test_update_ws_connection_failure_channel_timeout(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -487,27 +455,56 @@ async def test_update_ws_connection_failure_channel_timeout(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        pytest.param(
+            ConnectionFailure({"event": "ms.voiceApp.hide"}),
+            "Unexpected ConnectionFailure trying to get remote for fake_host, please "
+            "report this issue: ConnectionFailure({'event': 'ms.voiceApp.hide'})",
+            id="connection_failure",
+        ),
+        pytest.param(
+            ConnectionClosedError(None, None),
+            "Failed to get remote for fake_host: ConnectionClosedError(None, None)",
+            id="connection_closed",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("rest_api")
-async def test_update_ws_connection_closed(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, remote_websocket: Mock
+async def test_update_ws_connection_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    remote_websocket: Mock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    message: str,
 ) -> None:
-    """Testing update tv connection failure exception."""
+    """Test connection failures are logged once until the connection is restored."""
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
     with (
-        patch.object(
-            remote_websocket,
-            "start_listening",
-            side_effect=ConnectionClosedError(None, None),
-        ),
+        patch.object(remote_websocket, "start_listening", side_effect=error),
         patch.object(remote_websocket, "is_alive", return_value=False),
     ):
-        freezer.tick(timedelta(minutes=5))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        for _ in range(2):
+            freezer.tick(timedelta(minutes=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert [
+        record.levelname for record in caplog.records if record.message == message
+    ] == ["WARNING", "DEBUG"]
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Connection to fake_host restored" in caplog.text
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
 
 
 @pytest.mark.usefixtures("rest_api")
