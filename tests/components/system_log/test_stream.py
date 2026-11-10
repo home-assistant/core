@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 from pathlib import Path
 from queue import SimpleQueue
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -100,6 +100,63 @@ async def test_subscribe_raw_without_log_file(
     assert msg["success"]
     msg = await client.receive_json()
     assert msg["event"] == []
+
+
+@pytest.mark.parametrize(
+    ("integration", "expected"),
+    [
+        pytest.param({}, slice(-100, None), id="all"),
+        pytest.param({"integration": "demo"}, slice(-2, None), id="demo"),
+    ],
+)
+async def test_subscribe_raw_log_reader(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    integration: dict[str, str],
+    expected: slice,
+) -> None:
+    """Test the raw log starts with the log reader without a log file."""
+    log_lines = [
+        f"2026-10-29 10:00:00.{i:03} INFO (MainThread) [homeassistant.setup] {i}"
+        for i in range(150)
+    ]
+    log_lines += [
+        "2026-10-29 10:00:01.000 ERROR (MainThread) [homeassistant.components.demo]"
+        " Failed",
+        "ValueError: boom",
+    ]
+    hass.data[KEY_DATA_LOGGING] = None
+    await async_setup_component(hass, system_log.DOMAIN, {})
+    await hass.async_block_till_done()
+    system_log.async_register_log_reader(hass, AsyncMock(return_value=log_lines))
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "system_log/subscribe_raw", **integration})
+    msg = await client.receive_json()
+    assert msg["success"]
+    msg = await client.receive_json()
+    assert msg["event"] == log_lines[expected]
+
+
+async def test_subscribe_raw_log_file_before_reader(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, tmp_path: Path
+) -> None:
+    """Test the log file is read instead of the log reader."""
+    log_file = tmp_path / "home-assistant.log"
+    log_file.write_text("From the file\n")
+    hass.data[KEY_DATA_LOGGING] = str(log_file)
+    await async_setup_component(hass, system_log.DOMAIN, {})
+    await hass.async_block_till_done()
+    reader = AsyncMock(return_value=["From the reader"])
+    system_log.async_register_log_reader(hass, reader)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "system_log/subscribe_raw"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    msg = await client.receive_json()
+    assert msg["event"] == ["From the file"]
+    reader.assert_not_called()
 
 
 async def test_unsubscribe_raw(

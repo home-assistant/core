@@ -4,6 +4,7 @@
   "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": ["@Thomas55555"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/google_air_quality",
   "integration_type": "service",
   "iot_class": "cloud_polling",

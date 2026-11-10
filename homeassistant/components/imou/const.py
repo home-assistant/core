@@ -14,11 +14,11 @@ def imou_device_identifier(device: ImouHaDevice) -> str:
     return device.device_id
 
 
-# API URL region mapping
+# API URL region mapping. Frankfurt serves Europe. Oregon serves North America.
 API_URLS: dict[str, str] = {
     "sg": "openapi-sg.easy4ip.com",
-    "eu": "openapi-or.easy4ip.com",
-    "na": "openapi-fk.easy4ip.com",
+    "eu": "openapi-fk.easy4ip.com",
+    "na": "openapi-or.easy4ip.com",
     "cn": "openapi.lechange.cn",
 }
 

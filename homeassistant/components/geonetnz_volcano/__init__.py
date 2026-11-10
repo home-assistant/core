@@ -1,6 +1,6 @@
 """The GeoNet NZ Volcano integration."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from aio_geojson_geonetnz_volcano import GeonetnzVolcanoFeedManager
@@ -77,7 +77,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     identifier = f"{latitude}, {longitude}"
     if identifier in configured_instances(hass):
@@ -91,7 +90,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: conf[CONF_RADIUS],
-                CONF_SCAN_INTERVAL: scan_interval,
             },
         )
     )
@@ -145,7 +143,6 @@ class GeonetnzVolcanoFeedEntityManager:
             filter_radius=radius_in_km,
         )
         self._config_entry_id = config_entry.entry_id
-        self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._unit_system = unit_system
         self._track_time_remove_callback = None
         self.listeners = []
@@ -163,7 +160,7 @@ class GeonetnzVolcanoFeedEntityManager:
 
         # Trigger updates at regular intervals.
         self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, self._scan_interval
+            self._hass, update, DEFAULT_SCAN_INTERVAL
         )
 
         _LOGGER.debug("Feed entity manager initialized")

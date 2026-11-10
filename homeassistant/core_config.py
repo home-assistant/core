@@ -17,9 +17,6 @@ import yarl
 from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
 from .const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     BASE_PLATFORMS,
     CONF_ALLOWLIST_EXTERNAL_DIRS,
     CONF_ALLOWLIST_EXTERNAL_URLS,
@@ -53,6 +50,7 @@ from .const import (
     EVENT_CORE_CONFIG_UPDATE,
     KEY_DATA_LOGGING_DISABLED_REASON,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+    EntityStateAttribute,
     UnitOfLength,
     __version__,
 )
@@ -61,7 +59,7 @@ from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
 from .helpers.storage import Store
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import Undefined
 from .util import dt as dt_util, location
 from .util.hass_dict import HassKey
 from .util.package import is_docker_env
@@ -167,9 +165,8 @@ _PACKAGE_DEFINITION_SCHEMA = probatio.Schema(
 
 _CUSTOMIZE_DICT_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_FRIENDLY_NAME): cv.string,
-        probatio.Optional(ATTR_HIDDEN): cv.boolean,
-        probatio.Optional(ATTR_ASSUMED_STATE): cv.boolean,
+        probatio.Optional(EntityStateAttribute.FRIENDLY_NAME): cv.string,
+        probatio.Optional(EntityStateAttribute.ASSUMED_STATE): cv.boolean,
     },
     extra=probatio.ALLOW_EXTRA,
 )
@@ -733,11 +730,11 @@ class Config:
     async def _async_update(
         self,
         *,
-        country: str | UndefinedType | None = UNDEFINED,
+        country: str | Undefined | None = Undefined,
         currency: str | None = None,
         elevation: int | None = None,
-        external_url: str | UndefinedType | None = UNDEFINED,
-        internal_url: str | UndefinedType | None = UNDEFINED,
+        external_url: str | Undefined | None = Undefined,
+        internal_url: str | Undefined | None = Undefined,
         language: str | None = None,
         latitude: float | None = None,
         location_name: str | None = None,
@@ -749,15 +746,15 @@ class Config:
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
-        if country is not UNDEFINED:
+        if country is not Undefined:
             self.country = country
         if currency is not None:
             self.currency = currency
         if elevation is not None:
             self.elevation = elevation
-        if external_url is not UNDEFINED:
+        if external_url is not Undefined:
             self.external_url = external_url
-        if internal_url is not UNDEFINED:
+        if internal_url is not Undefined:
             self.internal_url = internal_url
         if language is not None:
             self.language = language
@@ -813,8 +810,8 @@ class Config:
             unit_system=data.get("unit_system_v2"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
-            external_url=data.get("external_url", UNDEFINED),
-            internal_url=data.get("internal_url", UNDEFINED),
+            external_url=data.get("external_url", Undefined),
+            internal_url=data.get("internal_url", Undefined),
             currency=data.get("currency"),
             country=data.get("country"),
             language=data.get("language"),

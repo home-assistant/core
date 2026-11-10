@@ -15,7 +15,11 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
 import sqlparse
 
-from homeassistant.components.recorder import SupportedDialect, get_instance
+from homeassistant.components.recorder import (
+    SupportedDialect,
+    get_engine_db_url,
+    get_instance,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -209,7 +213,7 @@ def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | 
     """
     sess: Session | None = None
     try:
-        engine = sqlalchemy.create_engine(db_url, future=True)
+        engine = sqlalchemy.create_engine(get_engine_db_url(db_url), future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
         # Run a dummy query just to test the db_url
         sess = sessmaker()

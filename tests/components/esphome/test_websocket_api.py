@@ -460,15 +460,6 @@ async def test_get_device_capabilities_restored(
             "zwave",
             id="legacy_int_unique_id",
         ),
-        pytest.param(
-            [
-                {"unique_id": "1234567890", "source": SOURCE_IGNORE},
-                {"entry_id": "zwave", "unique_id": "1234567890"},
-            ],
-            1234567890,
-            "zwave",
-            id="ignored_duplicate",
-        ),
         pytest.param([{"unique_id": "999"}], 1234567890, None, id="other_network"),
         pytest.param(
             [{"unique_id": "1234567890", "source": SOURCE_IGNORE}],

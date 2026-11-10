@@ -23,7 +23,7 @@ from .normalized_name_base_registry import (
 from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with dataclasses
@@ -345,14 +345,14 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self,
         area_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | UndefinedType | None = UNDEFINED,
-        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
-        icon: str | UndefinedType | None = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
-        picture: str | UndefinedType | None = UNDEFINED,
-        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
+        aliases: set[str] | Undefined = Undefined,
+        floor_id: str | Undefined | None = Undefined,
+        humidity_entity_id: str | Undefined | None = Undefined,
+        icon: str | Undefined | None = Undefined,
+        labels: set[str] | Undefined = Undefined,
+        name: str | Undefined = Undefined,
+        picture: str | Undefined | None = Undefined,
+        temperature_entity_id: str | Undefined | None = Undefined,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -382,14 +382,14 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self,
         area_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
-        floor_id: str | UndefinedType | None = UNDEFINED,
-        humidity_entity_id: str | UndefinedType | None = UNDEFINED,
-        icon: str | UndefinedType | None = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
-        picture: str | UndefinedType | None = UNDEFINED,
-        temperature_entity_id: str | UndefinedType | None = UNDEFINED,
+        aliases: set[str] | Undefined = Undefined,
+        floor_id: str | Undefined | None = Undefined,
+        humidity_entity_id: str | Undefined | None = Undefined,
+        icon: str | Undefined | None = Undefined,
+        labels: set[str] | Undefined = Undefined,
+        name: str | Undefined = Undefined,
+        picture: str | Undefined | None = Undefined,
+        temperature_entity_id: str | Undefined | None = Undefined,
         validate: bool = True,
     ) -> AreaEntry:
         """Update name of area."""
@@ -406,7 +406,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 ("picture", picture),
                 ("temperature_entity_id", temperature_entity_id),
             )
-            if value is not UNDEFINED and value != getattr(old, attr_name)
+            if value is not Undefined and value != getattr(old, attr_name)
         }
 
         if (
@@ -423,7 +423,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         ):
             _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
 
-        if name is not UNDEFINED and name != old.name:
+        if name is not Undefined and name != old.name:
             new_values["name"] = name
 
         if not new_values:
@@ -577,9 +577,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 # The renamed entity's state may not exist yet under its new id
                 self._async_update(
                     area.id,
-                    humidity_entity_id=new_entity_id if humidity_match else UNDEFINED,
+                    humidity_entity_id=new_entity_id if humidity_match else Undefined,
                     temperature_entity_id=(
-                        new_entity_id if temperature_match else UNDEFINED
+                        new_entity_id if temperature_match else Undefined
                     ),
                     validate=False,
                 )

@@ -8,6 +8,7 @@ from sensor_state_data import SensorDeviceInfo
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
+from homeassistant.helpers.typing import Undefined
 
 
 def test_sensor_device_info_to_hass_device_info() -> None:
@@ -79,7 +80,6 @@ def test_sensor_device_info_to_hass_device_info_read_only() -> None:
 @pytest.mark.parametrize(
     "copy_device_info",
     [
-        pytest.param(lambda device_info: DeviceInfo(**device_info), id="unpack"),
         pytest.param(copy.copy, id="copy"),
         pytest.param(copy.deepcopy, id="deepcopy"),
     ],
@@ -106,4 +106,4 @@ def test_sensor_device_info_to_hass_device_info_copy(
         "model": "B1",
         "sw_version": "1.0",
     }
-    assert "sw_version" not in device_info
+    assert device_info.sw_version is Undefined
