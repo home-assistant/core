@@ -1028,12 +1028,7 @@ class DeviceHandler:
                 try:
                     await self.hass.async_add_executor_job(dev.grab)
                 except OSError as err:
-                    _LOGGER.warning(
-                        "Unable to grab %s, it may be in use by another program"
-                        " (turn off Exclusive access to share it): %s",
-                        dev.name,
-                        err,
-                    )
+                    _LOGGER.warning("Unable to grab %s: %s", dev.name, err)
                     raise
             else:
                 _LOGGER.debug(
