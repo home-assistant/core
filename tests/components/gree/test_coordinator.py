@@ -56,7 +56,8 @@ async def test_responses_sustain_and_restore_availability(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         device().power = False
-        device().callbacks[response]({"Pow": 0})
+        device().raw_properties["Pow"] = 0
+        device().emit_response(response)
         await hass.async_block_till_done()
 
         state = hass.states.get(ENTITY_ID)
@@ -73,7 +74,8 @@ async def test_responses_sustain_and_restore_availability(
         assert state.state == expected_state
 
     device().power = False
-    device().callbacks[response]({"Pow": 0})
+    device().raw_properties["Pow"] = 0
+    device().emit_response(response)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -99,7 +101,8 @@ async def test_one_lost_response_is_tolerated(
         assert state.state == HVACMode.OFF
 
     device().power = False
-    device().callbacks[Response.RESULT]({"Pow": 0})
+    device().raw_properties["Pow"] = 0
+    device().emit_response(Response.RESULT)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -139,7 +142,8 @@ async def test_response_publishes_immediately(
     await async_setup_gree(hass)
 
     device().power = True
-    device().callbacks[response]({"Pow": 1})
+    device().raw_properties["Pow"] = 1
+    device().emit_response(response)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -150,22 +154,22 @@ async def test_response_publishes_immediately(
 async def test_device_availability_is_independent(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    discovery: Mock,
     device: Mock,
 ) -> None:
     """A responding device cannot keep a silent device available."""
     silent = build_device_mock()
-    responding = build_device_mock(name="fake-device-2", mac="bbccdd223344")
-    discovery.return_value.mock_devices = [silent, responding]
+    responding = build_device_mock(name="fake-device-2", identifier="bbccdd223344")
     device.side_effect = [silent, responding]
-    await async_setup_gree(hass)
+    await async_setup_gree(hass, silent)
+    await async_setup_gree(hass, responding)
 
     for _ in range(4):
         freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         responding.power = False
-        responding.callbacks[Response.DATA]({"Pow": 0})
+        responding.raw_properties["Pow"] = 0
+        responding.emit_response(Response.DATA)
         await hass.async_block_till_done()
 
     silent_state = hass.states.get(ENTITY_ID)
