@@ -7,6 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.transmission.const import DOMAIN
 from homeassistant.components.transmission.services import (
+    TORRENTS,
     TransmissionService,
     TransmissionServiceArgument,
 )
@@ -315,8 +316,8 @@ async def test_get_torrents_service(
     )
 
     assert response is not None
-    assert TransmissionServiceArgument.TORRENTS in response
-    torrents = response[TransmissionServiceArgument.TORRENTS]
+    assert TORRENTS in response
+    torrents = response[TORRENTS]
     assert isinstance(torrents, dict)
 
     assert len(torrents) == len(expected_statuses)

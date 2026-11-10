@@ -18,6 +18,7 @@ from .helpers import filter_torrents, format_torrents
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_DELETE_DATA = False
+TORRENTS = "torrents"
 
 
 class TransmissionService(StrEnum):
@@ -39,7 +40,6 @@ class TransmissionServiceArgument(StrEnum):
     DOWNLOAD_PATH = "download_path"
     LABELS = "labels"
     TORRENT = "torrent"
-    TORRENTS = "torrents"
     TORRENT_FILTER = "torrent_filter"
 
 
@@ -162,7 +162,7 @@ async def _async_get_torrents(call: ServiceCall) -> dict[str, Any] | None:
 
     info = format_torrents(torrents)
     return {
-        TransmissionServiceArgument.TORRENTS: info,
+        TORRENTS: info,
     }
 
 
