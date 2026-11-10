@@ -2803,6 +2803,21 @@ async def test_subscribe_trigger(
                 "message": "Unknown device 'nonexistent'",
             },
         ),
+        # Empty device or domain of a device trigger, raised as probatio.Invalid
+        (
+            {"platform": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'domain'",
+            },
+        ),
+        (
+            {"platform": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'device_id'",
+            },
+        ),
     ],
 )
 async def test_subscribe_trigger_config_error(
@@ -3022,6 +3037,21 @@ async def test_test_condition_template_error(
                 "message": (
                     "at least one of ['before', 'after'] is required at 'options'"
                 ),
+            },
+        ),
+        # Empty device or domain of a device condition, raised as probatio.Invalid
+        (
+            {"condition": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'domain'",
+            },
+        ),
+        (
+            {"condition": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'device_id'",
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3452,6 +3482,21 @@ async def test_subscribe_condition_error(
                 "message": (
                     "at least one of ['before', 'after'] is required at 'options'"
                 ),
+            },
+        ),
+        # Empty device or domain of a device condition, raised as probatio.Invalid
+        (
+            {"condition": "device", "domain": "", "device_id": "abc123"},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'domain'",
+            },
+        ),
+        (
+            {"condition": "device", "domain": "light", "device_id": ""},
+            {
+                "code": "invalid_format",
+                "message": "required value is empty at 'device_id'",
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
