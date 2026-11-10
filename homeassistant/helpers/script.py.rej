@@ -1,0 +1,10 @@
+diff a/homeassistant/helpers/script.py b/homeassistant/helpers/script.py	(rejected hunks)
+@@ -667,7 +667,7 @@ class _ScriptRun:
+     @async_trace_path("parallel")
+     async def _async_step_parallel(self) -> None:
+         """Run a sequence in parallel."""
+-        scripts = await self._script._async_get_parallel_scripts(self._step)  # noqa: SLF001
++        scripts = await self._script._async_get_parallel_scripts(self._step)
+ 
+         async def async_run_with_trace(idx: int, script: Script) -> None:
+             """Run a script with a trace path."""
