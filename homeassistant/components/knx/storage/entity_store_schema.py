@@ -1198,6 +1198,13 @@ class SensorKnxConfig:
                 dpa.FB1013.ATMOSPHERIC_PRESSURE_ABS,
                 dpa.FB1015.ANALOG_INPUT_VALUE,
                 dpa.FB1016.TEMP_VALUE,
+                # meters: the consumption is the main value of the channel
+                dpa.FB1101.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1102.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1103.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1104.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1105.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1110.CURRENT_ENERGY_CONSUMPTION,
             ],
         ),
     ]

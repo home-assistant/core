@@ -320,3 +320,39 @@ class FB1021(StrEnum):
     """FB 1021 Lock Sensor."""
 
     LOCK = "1021.100"
+
+
+class FB1101(StrEnum):
+    """FB 1101 MDC Heat Meter."""
+
+    CURRENT_ENERGY_CONSUMPTION = "1101.51"
+
+
+class FB1102(StrEnum):
+    """FB 1102 MDC Heat Cost Allocator."""
+
+    CURRENT_ENERGY_CONSUMPTION = "1102.51"
+
+
+class FB1103(StrEnum):
+    """FB 1103 MDC Water Meter."""
+
+    CURRENT_VOLUME_CONSUMPTION = "1103.51"
+
+
+class FB1104(StrEnum):
+    """FB 1104 MDC Electricity Meter."""
+
+    CURRENT_ENERGY_CONSUMPTION = "1104.101"
+
+
+class FB1105(StrEnum):
+    """FB 1105 MDC Gas Meter."""
+
+    CURRENT_VOLUME_CONSUMPTION = "1105.51"
+
+
+class FB1110(StrEnum):
+    """FB 1110 MDC Generic Meter."""
+
+    CURRENT_ENERGY_CONSUMPTION = "1110.51"

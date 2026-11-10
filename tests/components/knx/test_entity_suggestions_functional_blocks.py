@@ -20,6 +20,12 @@ from homeassistant.components.knx.storage.dpa import (
     FB1002,
     FB1014,
     FB1021,
+    FB1101,
+    FB1102,
+    FB1103,
+    FB1104,
+    FB1105,
+    FB1110,
     functional_block,
 )
 from homeassistant.components.knx.storage.entity_store_schema import (
@@ -44,6 +50,8 @@ DPT_COLOR_RGB = {"main": 232, "sub": 600}
 DPT_COLOR_RGBW = {"main": 251, "sub": 600}
 DPT_FAN_STAGE = {"main": 5, "sub": 10}
 DPT_TEMPERATURE = {"main": 9, "sub": 1}
+DPT_ACTIVE_ENERGY = {"main": 13, "sub": 10}
+DPT_POWER = {"main": 14, "sub": 56}
 
 
 def _channel(
@@ -119,6 +127,8 @@ TEST_PROJECT: dict[str, Any] = {
         "7/4/5": _group_address("7/4/5", {"main": 255, "sub": 1}),
         "7/5/1": _group_address("7/5/1", DPT_PERCENT),
         "7/5/2": _group_address("7/5/2", DPT_PERCENT),
+        "7/6/1": _group_address("7/6/1", DPT_ACTIVE_ENERGY),
+        "7/6/2": _group_address("7/6/2", DPT_POWER),
     },
     "devices": {
         "1.1.1": {
@@ -218,6 +228,12 @@ TEST_PROJECT: dict[str, Any] = {
                 "CH-1": _channel("Analogausgang", ["1019"], ["co-150", "co-151"]),
             },
         },
+        "1.3.7": {
+            "name": "Energiezähler",
+            "channels": {
+                "CH-1": _channel("Stromzähler", ["1104"], ["co-160", "co-161"]),
+            },
+        },
     },
     "communication_objects": {
         "co-1": _com_object(["417.52"], ["1/0/1", "1/0/2"]),
@@ -261,6 +277,8 @@ TEST_PROJECT: dict[str, Any] = {
         "co-140": _com_object(["321.51"], ["7/4/1", "7/4/3", "7/4/2"]),
         "co-150": _com_object(["1019.51"], ["7/5/1"]),
         "co-151": _com_object(["1019.52"], ["7/5/2"]),
+        "co-160": _com_object(["1104.147"], ["7/6/2"]),  # no config key for this DPA
+        "co-161": _com_object(["1104.101"], ["7/6/1"]),
     },
 }
 
@@ -372,6 +390,12 @@ def test_functional_block_platforms() -> None:
         "1015": [Platform.SENSOR],
         "1016": [Platform.SENSOR],
         "1019": [Platform.NUMBER],
+        "1101": [Platform.SENSOR],
+        "1102": [Platform.SENSOR],
+        "1103": [Platform.SENSOR],
+        "1104": [Platform.SENSOR],
+        "1105": [Platform.SENSOR],
+        "1110": [Platform.SENSOR],
     }
 
 
@@ -705,6 +729,36 @@ def test_number_non_numeric_dpt_dropped() -> None:
     assert _build_platform_suggestion(project, channel, Platform.NUMBER) is None
 
 
+def test_meter_suggestion() -> None:
+    """Test FB 1104 suggestion of the consumption value."""
+    channel = _test_channel("1.3.7", "CH-1")
+    suggestion = _build_platform_suggestion(TEST_PROJECT, channel, Platform.SENSOR)
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_sensor": {"state": "7/6/1", "dpt": "13.010"}}
+    # one sensor per channel - other values of a meter are not suggested
+    assert suggestion["unmatched"] == ["1104.147"]
+
+
+@pytest.mark.parametrize(
+    "dpa",
+    [
+        FB1101.CURRENT_ENERGY_CONSUMPTION,
+        FB1102.CURRENT_ENERGY_CONSUMPTION,
+        FB1103.CURRENT_VOLUME_CONSUMPTION,
+        FB1104.CURRENT_ENERGY_CONSUMPTION,
+        FB1105.CURRENT_VOLUME_CONSUMPTION,
+        FB1110.CURRENT_ENERGY_CONSUMPTION,
+    ],
+)
+def test_meter_functional_blocks(dpa: str) -> None:
+    """Test the consumption DPAs of metering functional blocks."""
+    project = _with_com_objects(**{"co-90": _com_object([dpa], ["7/6/1"])})
+    channel = _channel("Zähler", [functional_block(dpa)], ["co-90"])
+    suggestion = _build_platform_suggestion(project, channel, Platform.SENSOR)
+    assert suggestion is not None
+    assert suggestion["knx"] == {"ga_sensor": {"state": "7/6/1", "dpt": "13.010"}}
+
+
 async def test_ws_get_entity_suggestions(
     knx: KNXTestKit,
     get_entity_suggestions: KnxSuggestionGetter,
@@ -721,6 +775,7 @@ async def test_ws_get_entity_suggestions(
             "1014",
             "1018",
             "1019",
+            "1104",
             "321",
             "372",
             "417",
@@ -743,6 +798,7 @@ async def test_ws_get_entity_suggestions(
         "fb_1.3.3_CH-1",
         "fb_1.3.5_CH-1",
         "fb_1.3.6_CH-1",
+        "fb_1.3.7_CH-1",
     ]
 
     switch_actuator = suggestions["fb_1.1.1_CH-1"]
