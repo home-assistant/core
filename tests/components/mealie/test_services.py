@@ -26,7 +26,7 @@ from homeassistant.components.mealie.services import (
     MealieService,
     MealieServiceArgument,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -250,7 +250,7 @@ async def test_service_mealplan(
     response = await hass.services.async_call(
         DOMAIN,
         MealieService.GET_MEALPLAN,
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
+        {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -264,7 +264,7 @@ async def test_service_mealplan(
         DOMAIN,
         MealieService.GET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.START_DATE: "2023-10-22",
             MealieServiceArgument.END_DATE: "2023-10-25",
         },
@@ -281,7 +281,7 @@ async def test_service_mealplan(
         DOMAIN,
         MealieService.GET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.START_DATE: "2023-10-19",
         },
         blocking=True,
@@ -297,7 +297,7 @@ async def test_service_mealplan(
         DOMAIN,
         MealieService.GET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.END_DATE: "2023-10-22",
         },
         blocking=True,
@@ -314,7 +314,7 @@ async def test_service_mealplan(
             DOMAIN,
             MealieService.GET_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.START_DATE: "2023-10-22",
                 MealieServiceArgument.END_DATE: "2023-10-19",
             },
@@ -337,7 +337,7 @@ async def test_service_recipe(
         DOMAIN,
         MealieService.GET_RECIPE,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.RECIPE_ID: "recipe_id",
         },
         blocking=True,
@@ -350,10 +350,10 @@ async def test_service_recipe(
     "service_data",
     [
         # Default call
-        {ATTR_CONFIG_ENTRY_ID: "mock_entry_id"},
+        {CommonServiceArgument.CONFIG_ENTRY_ID: "mock_entry_id"},
         # With search terms and result limit
         {
-            ATTR_CONFIG_ENTRY_ID: "mock_entry_id",
+            CommonServiceArgument.CONFIG_ENTRY_ID: "mock_entry_id",
             MealieServiceArgument.SEARCH_TERMS: "pasta",
             MealieServiceArgument.RESULT_LIMIT: 5,
         },
@@ -370,7 +370,10 @@ async def test_service_get_recipes(
     await setup_integration(hass, mock_config_entry)
 
     # Patch entry_id into service_data for each run
-    service_data = {**service_data, ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+    service_data = {
+        **service_data,
+        CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+    }
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -396,7 +399,7 @@ async def test_service_import_recipe(
         DOMAIN,
         MealieService.IMPORT_RECIPE,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.URL: "http://example.com",
         },
         blocking=True,
@@ -411,7 +414,7 @@ async def test_service_import_recipe(
         DOMAIN,
         MealieService.IMPORT_RECIPE,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.URL: "http://example.com",
             MealieServiceArgument.INCLUDE_TAGS: True,
         },
@@ -437,7 +440,7 @@ async def test_service_set_random_mealplan(
         DOMAIN,
         MealieService.SET_RANDOM_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         },
@@ -454,7 +457,7 @@ async def test_service_set_random_mealplan(
         DOMAIN,
         MealieService.SET_RANDOM_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         },
@@ -481,7 +484,7 @@ async def test_service_set_random_mealplan_invalid_entry_type(
             DOMAIN,
             MealieService.SET_RANDOM_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "dessert",
             },
@@ -531,7 +534,7 @@ async def test_service_set_mealplan(
         DOMAIN,
         MealieService.SET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
@@ -549,7 +552,7 @@ async def test_service_set_mealplan(
         DOMAIN,
         MealieService.SET_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
@@ -577,7 +580,7 @@ async def test_service_set_mealplan_invalid_entry_type(
             DOMAIN,
             MealieService.SET_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "dessert",
                 MealieServiceArgument.NOTE_TITLE: "Note Title",
@@ -601,7 +604,7 @@ async def test_service_delete_mealplan(
         DOMAIN,
         MealieService.DELETE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
         },
         blocking=True,
@@ -612,7 +615,7 @@ async def test_service_delete_mealplan(
         DOMAIN,
         MealieService.DELETE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: 16,
         },
         blocking=True,
@@ -635,7 +638,7 @@ async def test_service_delete_mealplan_not_found(
             DOMAIN,
             MealieService.DELETE_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.MEALPLAN_ID: "16",
             },
             blocking=True,
@@ -683,7 +686,7 @@ async def test_service_update_mealplan(
         DOMAIN,
         MealieService.UPDATE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -702,7 +705,7 @@ async def test_service_update_mealplan(
         DOMAIN,
         MealieService.UPDATE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -720,7 +723,7 @@ async def test_service_update_mealplan(
         DOMAIN,
         MealieService.UPDATE_MEALPLAN,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: 16,
             MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -749,7 +752,7 @@ async def test_service_update_mealplan_invalid_entry_type(
             DOMAIN,
             MealieService.UPDATE_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.MEALPLAN_ID: "16",
                 MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "dessert",
@@ -776,7 +779,7 @@ async def test_service_update_mealplan_not_found(
             DOMAIN,
             MealieService.UPDATE_MEALPLAN,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.MEALPLAN_ID: "16",
                 MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "lunch",
@@ -854,7 +857,7 @@ async def test_service_parse_ingredient(
         DOMAIN,
         MealieService.PARSE_INGREDIENT,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.INGREDIENT: "1 can acorn squash",
         },
         blocking=True,
@@ -900,7 +903,7 @@ async def test_service_get_ingredient_parse_failure(
             DOMAIN,
             MealieService.PARSE_INGREDIENT,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.INGREDIENT: "1 can acorn squash",
             },
             blocking=True,
@@ -1070,7 +1073,8 @@ async def test_services_connection_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+            | payload,
             blocking=True,
             return_response=return_response,
         )
@@ -1158,7 +1162,8 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry2.entry_id}
+            | payload,
             blocking=True,
             return_response=return_response,
         )
@@ -1168,7 +1173,7 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: "bad-config_id"} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: "bad-config_id"} | payload,
             blocking=True,
             return_response=return_response,
         )

@@ -277,6 +277,61 @@
     'state': '-3.3',
   })
 # ---
+# name: test_sensors[sensor.device_name_extract_air_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('flexit_bacnet', '0000-0001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_name_extract_air_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Extract air humidity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Extract air humidity',
+    'platform': 'flexit_bacnet',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'extract_air_humidity',
+    'unique_id': '0000-0001-extract_air_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.device_name_extract_air_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Name Extract air humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_name_extract_air_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38.5',
+  })
+# ---
 # name: test_sensors[sensor.device_name_extract_air_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

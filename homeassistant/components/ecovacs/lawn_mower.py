@@ -17,7 +17,7 @@ from homeassistant.components.lawn_mower import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EcovacsConfigEntry
+from .controller import EcovacsConfigEntry
 from .entity import EcovacsEntity
 
 _LOGGER = logging.getLogger(__name__)

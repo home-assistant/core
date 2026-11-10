@@ -7808,6 +7808,106 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[switch.mini_split_eco_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'zzz87dkfce6pdqxwtk')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mini_split_eco_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Eco mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco_mode',
+    'unique_id': 'tuya.zzz87dkfce6pdqxwtkmode_eco',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.mini_split_eco_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mini-Split Eco mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mini_split_eco_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.mini_split_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'zzz87dkfce6pdqxwtk')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mini_split_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep',
+    'unique_id': 'tuya.zzz87dkfce6pdqxwtksleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[switch.mini_split_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mini-Split Sleep',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mini_split_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[switch.mirilla_puerta_flip-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -8261,7 +8361,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.pid_relay_2_switch_1-entry]
+# name: test_platform_setup_and_discovery[switch.pid_relay_2_channel_1_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8271,11 +8371,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'zyutbek7wdm1b4cgzckw')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'zyutbek7wdm1b4cgzckw_channel_1')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.pid_relay_2_switch_1',
+    'entity_id': 'switch.pid_relay_2_channel_1_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8283,36 +8383,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 1',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 1',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.zyutbek7wdm1b4cgzckwswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.pid_relay_2_switch_1-state]
+# name: test_platform_setup_and_discovery[switch.pid_relay_2_channel_1_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pid_relay_2 Switch 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 1 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.pid_relay_2_switch_1',
+    'entity_id': 'switch.pid_relay_2_channel_1_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.pid_relay_2_switch_2-entry]
+# name: test_platform_setup_and_discovery[switch.pid_relay_2_channel_2_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -8322,11 +8422,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('tuya', 'zyutbek7wdm1b4cgzckw')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('tuya', 'zyutbek7wdm1b4cgzckw_channel_2')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.pid_relay_2_switch_2',
+    'entity_id': 'switch.pid_relay_2_channel_2_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8334,29 +8434,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Switch 2',
+    'object_id_base': 'Switch',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': 'Switch 2',
+    'original_name': 'Switch',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'indexed_switch',
+    'translation_key': 'switch',
     'unique_id': 'tuya.zyutbek7wdm1b4cgzckwswitch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.pid_relay_2_switch_2-state]
+# name: test_platform_setup_and_discovery[switch.pid_relay_2_channel_2_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pid_relay_2 Switch 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Channel 2 Switch',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.pid_relay_2_switch_2',
+    'entity_id': 'switch.pid_relay_2_channel_2_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

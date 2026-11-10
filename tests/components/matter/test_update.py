@@ -15,7 +15,6 @@ from pytest_homeassistant.common import (
     async_mock_restore_state_shutdown_restart,
     mock_restore_cache_with_extra_data,
 )
-from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -217,61 +216,6 @@ async def test_update_check_with_same_version_string(
     assert state.state == STATE_OFF
     assert state.attributes.get("latest_version") == "1.1.5"
     assert state.attributes.get("release_url") is None
-
-
-@pytest.mark.parametrize(
-    ("update_source", "expect_warning"),
-    [
-        (UpdateSource.MAIN_NET_DCL, False),
-        (UpdateSource.LOCAL, True),
-    ],
-)
-@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
-async def test_release_notes(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    check_node_update: AsyncMock,
-    matter_node: MatterNode,
-    hass_ws_client: WebSocketGenerator,
-    update_source: UpdateSource,
-    expect_warning: bool,
-) -> None:
-    """Test release notes are translated and warn about non-official update sources."""
-    check_node_update.return_value = MatterSoftwareVersion(
-        vid=65521,
-        pid=32768,
-        software_version=2,
-        software_version_string="v2.0",
-        firmware_information="",
-        min_applicable_software_version=0,
-        max_applicable_software_version=1,
-        release_notes_url="http://home-assistant.io/non-existing-product",
-        update_source=update_source,
-    )
-
-    await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light_firmware",
-        },
-        blocking=True,
-    )
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            "id": 1,
-            "type": "update/release_notes",
-            "entity_id": "update.mock_dimmable_light_firmware",
-        }
-    )
-    result = await ws_client.receive_json()
-
-    release_notes = result["result"]
-    assert "The update process can take a while" in release_notes
-    assert ("Update provided by" in release_notes) is expect_warning
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])

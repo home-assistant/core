@@ -404,6 +404,15 @@
     }
   },
   "exceptions": {
+    "device_verification_required": {
+      "message": "Device verification required"
+    },
+    "invalid_auth": {
+      "message": "Invalid credentials"
+    },
+    "setup_error": {
+      "message": "Error during setup"
+    },
     "vacuum_raw_get_positions_not_supported": {
       "message": "Retrieving the positions of the chargers and the device itself is not supported"
     },

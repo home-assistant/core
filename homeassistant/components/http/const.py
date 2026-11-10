@@ -46,7 +46,7 @@ UNVERSIONED_SSL_PROFILES: Final = {
 }
 # Profiles following the current guidelines, recommended one first. A server
 # running any other profile with SSL gets a repair offering these.
-CURRENT_SSL_PROFILES: Final = (SSLProfile.MODERN_V6, SSLProfile.INTERMEDIATE_V6)
+CURRENT_SSL_PROFILES: Final = (SSLProfile.INTERMEDIATE_V6, SSLProfile.MODERN_V6)
 DEFAULT_SSL_PROFILE: Final = CURRENT_SSL_PROFILES[0]
 
 ISSUE_SSL_PROFILE_OUTDATED: Final = "ssl_profile_outdated"

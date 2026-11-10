@@ -52,24 +52,14 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
 
     @override
     async def _async_setup(self) -> None:
-        """Connect to the device and read its software version."""
-        try:
-            connected = await self.client.connect()
-            if not connected:
-                await self.client.close()
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_connect",
-                    translation_placeholders={"host": self.client.host},
-                )
-            self.sw_version = await self.client.async_get_software_version()
-        except OSError as err:
-            await self.client.close()
+        """Read the software version; the first request opens the connection."""
+        self.sw_version = await self.client.async_get_software_version()
+        if not self.client.is_connected:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"host": self.client.host},
-            ) from err
+            )
 
     @override
     async def _async_update_data(self) -> QubeData:

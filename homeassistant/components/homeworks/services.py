@@ -1,26 +1,42 @@
 """Services for the Lutron Homeworks Series 4 and 8 integration."""
 
 import asyncio
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING
 
 import probatio
 
-from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import CONF_CONTROLLER_ID, DOMAIN
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import HomeworksConfigEntry, HomeworksData
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class HomeworksService(StrEnum):
+    """Store keys for Lutron Homeworks services."""
+
+    SEND_COMMAND = "send_command"
+
+
+class HomeworksServiceArgument(StrEnum):
+    """Store keys for Lutron Homeworks service arguments."""
+
+    CONTROLLER_ID = "controller_id"
+    COMMAND = "command"
+
+
 SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_CONTROLLER_ID): str,
-        probatio.Required(CONF_COMMAND): probatio.All(probatio.EnsureList(), [str]),
+        probatio.Required(HomeworksServiceArgument.CONTROLLER_ID): str,
+        probatio.Required(HomeworksServiceArgument.COMMAND): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
     }
 )
 
@@ -31,7 +47,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        "send_command",
+        HomeworksService.SEND_COMMAND,
         async_send_command,
         schema=SERVICE_SEND_COMMAND_SCHEMA,
     )
@@ -55,18 +71,22 @@ async def async_send_command(service_call: ServiceCall) -> None:
                 return entry.runtime_data
         return None
 
-    homeworks_data = get_homeworks_data(service_call.data[CONF_CONTROLLER_ID])
+    homeworks_data = get_homeworks_data(
+        service_call.data[HomeworksServiceArgument.CONTROLLER_ID]
+    )
     if not homeworks_data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_controller_id",
             translation_placeholders={
-                "controller_id": service_call.data[CONF_CONTROLLER_ID],
+                "controller_id": service_call.data[
+                    HomeworksServiceArgument.CONTROLLER_ID
+                ],
                 "controller_ids": ",".join(get_controller_ids()),
             },
         )
 
-    commands = service_call.data[CONF_COMMAND]
+    commands = service_call.data[HomeworksServiceArgument.COMMAND]
     _LOGGER.debug("Send commands: %s", commands)
     for command in commands:
         if command.lower().startswith("delay"):

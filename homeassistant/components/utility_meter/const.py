@@ -1,6 +1,7 @@
 """Constants for the utility meter component."""
 
 from datetime import timedelta
+from enum import StrEnum
 from typing import TYPE_CHECKING, Final, TypedDict
 
 from homeassistant.util.hass_dict import HassKey
@@ -47,11 +48,6 @@ CONF_TARIFF_ENTITY: Final = "tariff_entity"
 CONF_CRON_PATTERN = "cron"
 CONF_SENSOR_ALWAYS_AVAILABLE: Final = "always_available"
 
-ATTR_TARIFF = "tariff"
-ATTR_TARIFFS = "tariffs"
-ATTR_CRON_PATTERN = "cron pattern"
-ATTR_NEXT_RESET = "next_reset"
-
 SIGNAL_START_PAUSE_METER = "utility_meter_start_pause"
 SIGNAL_RESET_METER = "utility_meter_reset"
 
@@ -69,3 +65,14 @@ class MeterInformation(TypedDict, total=False):
     tariff_entity: str | None
     unique_id: str
     utility_meter_sensors: list[UtilityMeterSensor]
+
+
+class UtilityMeterEntityStateAttribute(StrEnum):
+    """State attributes for utility meter entities."""
+
+    LAST_PERIOD = "last_period"
+    LAST_RESET = "last_reset"
+    LAST_VALID_STATE = "last_valid_state"
+    NEXT_RESET = "next_reset"
+    STATUS = "status"
+    TARIFF = "tariff"

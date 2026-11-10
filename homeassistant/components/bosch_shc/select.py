@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     OutdoorSirenService,
+    SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
     SHCMotionDetector2,
     SHCOutdoorSiren,
@@ -18,6 +19,7 @@ from boschshcpy import (
 )
 from boschshcpy.device import SHCDevice
 from boschshcpy.services_impl import (
+    DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
     PirSensorConfigurationService,
@@ -372,6 +374,27 @@ SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
 )
 
 
+def _dimmer_phase_control_select_option(
+    device: SHCMicromoduleDimmer, option: str
+) -> None:
+    """Write the dimmer's phase-control mode."""
+    device.edge_phase_control_mode = DimmerConfigurationService.EdgePhaseControlMode[
+        option.upper()
+    ]
+
+
+DIMMER_PHASE_CONTROL_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleDimmer](
+    key="dimmer_phase_control",
+    translation_key="dimmer_phase_control",
+    entity_category=EntityCategory.CONFIG,
+    options=["trailing", "leading"],
+    current_option_fn=lambda device, options: (
+        mode.name.lower() if (mode := device.edge_phase_control_mode) else None
+    ),
+    select_option_fn=_dimmer_phase_control_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -580,6 +603,18 @@ async def async_setup_entry(
             SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION,
             SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION,
         )
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=dimmer,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=DIMMER_PHASE_CONTROL_DESCRIPTION,
+        )
+        for dimmer in session.device_helper.micromodule_dimmers
+        if dimmer.supports_dimmer_configuration
+        and dimmer.edge_phase_control_mode is not None
     )
 
     async_add_entities(entities)

@@ -60,5 +60,4 @@ class SenseCapConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_supported_devices")
         if user_input is not None:
             return self.async_create_entry(title="SenseCAP", data={})
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm")

@@ -6,7 +6,7 @@ from freezegun import freeze_time
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
+from homeassistant.components.gdacs.const import DOMAIN
 from homeassistant.components.gdacs.sensor import (
     ATTR_CREATED,
     ATTR_LAST_UPDATE,
@@ -18,9 +18,9 @@ from homeassistant.components.gdacs.sensor import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant
@@ -62,19 +62,20 @@ async def test_setup(hass: HomeAssistant) -> None:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         latitude = 32.87336
         longitude = -117.22743
-        radius = 200
+        radius = 200000
         entry_data = {
-            CONF_RADIUS: radius,
-            CONF_LATITUDE: latitude,
-            CONF_LONGITUDE: longitude,
-            CONF_CATEGORIES: [],
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL.seconds,
+            CONF_LOCATION: {
+                CONF_RADIUS: radius,
+                CONF_LATITUDE: latitude,
+                CONF_LONGITUDE: longitude,
+            }
         }
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             title=f"{latitude}, {longitude}",
             data=entry_data,
             unique_id="my_very_unique_id",
+            version=2,
         )
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)

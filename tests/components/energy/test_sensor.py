@@ -33,6 +33,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.recorder import compile_statistics  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     UnitOfEnergy,
@@ -147,6 +148,46 @@ async def test_cost_sensor_attributes(
     assert entry.entity_category is None
     assert entry.disabled_by is None
     assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
+
+
+async def test_cost_sensor_names(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test cost sensors are named after their energy sensor."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "stat_energy_from": "sensor.grid_import",
+            "stat_energy_to": "sensor.grid_export",
+            "stat_cost": None,
+            "stat_compensation": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.3,
+            "entity_energy_price_export": None,
+            "number_energy_price_export": 0.1,
+            "cost_adjustment_day": 0,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    hass.states.async_set(
+        "sensor.grid_import", 100, {ATTR_FRIENDLY_NAME: "Meter import"}
+    )
+    await setup_integration(hass)
+
+    assert (
+        hass.states.get("sensor.grid_import_cost").attributes[ATTR_FRIENDLY_NAME]
+        == "Meter import cost"
+    )
+    # The export sensor has no state yet, so its entity ID names it
+    assert (
+        hass.states.get("sensor.grid_export_compensation").attributes[
+            ATTR_FRIENDLY_NAME
+        ]
+        == "Grid export compensation"
+    )
 
 
 @pytest.mark.parametrize(
@@ -2052,6 +2093,7 @@ async def test_power_sensor_grid_combined(
     # 500 - 200 = 300 (net import)
     assert float(state.state) == 300.0
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Grid power"
 
 
 async def test_power_sensor_device_assignment(
@@ -2365,6 +2407,7 @@ async def test_power_sensor_battery_combined(
     assert state is not None
     # 150 - 50 = 100 (net discharging)
     assert float(state.state) == 100.0
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Battery power"
 
     # Test net charging scenario
     hass.states.async_set("sensor.battery_discharge", "30.0")
@@ -3002,7 +3045,7 @@ async def test_power_sensor_naming_fallback(
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
     # Name should be based on entity_id since not in registry
-    assert state.attributes["friendly_name"] == "Battery Power Inverted"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Battery power inverted"
 
 
 async def test_power_sensor_no_device_assignment(
@@ -3201,7 +3244,7 @@ async def test_power_sensor_naming_with_registry_name(
     # Verify sensor was created with registry name
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
-    assert state.attributes["friendly_name"] == "My Battery Power Inverted"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "My Battery Power inverted"
 
 
 async def test_missing_price_entity(
@@ -3292,7 +3335,7 @@ def _make_cost_sensor() -> EnergyCostSensor:
             flow_type="flow_from",
             stat_energy_key="stat_energy_from",
             total_money_key="stat_cost",
-            name_suffix="Cost",
+            translation_key="cost",
             entity_id_suffix="cost",
         ),
         {

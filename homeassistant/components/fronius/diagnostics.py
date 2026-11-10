@@ -6,8 +6,8 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import FroniusConfigEntry
 from .coordinator import FroniusCoordinatorBase
+from .solar_net import FroniusConfigEntry
 
 TO_REDACT = {"unique_id", "serial"}
 
@@ -62,7 +62,7 @@ async def async_get_config_entry_diagnostics(
                 ],
                 "data": coordinator.data,
             }
-            for coordinator in solar_net.modbus_inverter_coordinators
+            for coordinator in solar_net.modbus.inverter_coordinators
         },
     }
 

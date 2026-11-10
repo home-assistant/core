@@ -10,7 +10,7 @@ from awesomeversion import (
 )
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
@@ -33,6 +33,7 @@ from .const import (
     ConfGatewayType,
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
+from .models import MySensorsConfigEntry
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
@@ -88,7 +89,7 @@ def _validate_version(version: str) -> dict[str, str]:
 
 
 def _is_same_device(
-    gw_type: ConfGatewayType, user_input: dict[str, Any], entry: ConfigEntry
+    gw_type: ConfGatewayType, user_input: dict[str, Any], entry: MySensorsConfigEntry
 ) -> bool:
     """Check if another ConfigDevice is actually the same as user_input.
 
