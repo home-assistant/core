@@ -109,7 +109,23 @@ class BinarySensorKnxConfig:
     """UI configuration of a KNX binary sensor."""
 
     ga_sensor: Annotated[
-        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="1")
+        GroupAddressConfig,
+        ga(
+            write=False,
+            state_required=True,
+            valid_dpt="1",
+            dpa_state=[
+                dpa.FB343.WINDOW_STATUS,
+                dpa.FB344.DEW_POINT_STATUS,
+                dpa.FB345.PRESENCE_STATUS,
+                dpa.FB802.WIND_ALARM,
+                dpa.FB803.RAIN_ALARM,
+                dpa.FB804.FROST_ALARM,
+                dpa.FB1002.IN_ALARM,
+                dpa.FB1014.DIGITAL_INPUT_VALUE,
+                dpa.FB1021.LOCK,
+            ],
+        ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
     section_advanced_options: Annotated[
