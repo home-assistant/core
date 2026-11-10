@@ -325,7 +325,10 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     retry_after=self._reconnect_delay.total_seconds(),
                 ) from exception
 
-            # A power event can stop the listener just as registration finishes
+            # Changes made while disconnected send no event, so fetch them now
+            await self._async_update_commands()
+
+            # A power event can stop the listener while registering or fetching
             if self.listen_task.done() or self.listen_task.cancelling():
                 self._reconnect_delay = min(
                     self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
@@ -338,8 +341,6 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 )
 
             self.logger.debug("Registered data listener for %s", self.title)
-            # Changes made while disconnected send no event, so fetch them now
-            await self._async_update_commands()
             self._reconnect_delay = UPDATE_INTERVAL
             if self._unavailable_logged:
                 self.logger.info("%s is available again", self.title)
