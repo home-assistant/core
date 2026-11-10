@@ -1,6 +1,11 @@
 """Application credentials platform for Home Connect."""
 
-from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from aiohomeconnect.const import (
+    OAUTH2_AUTHORIZE,
+    OAUTH2_AUTHORIZE_CHINA,
+    OAUTH2_TOKEN,
+    OAUTH2_TOKEN_CHINA,
+)
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
@@ -15,8 +20,8 @@ async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationSe
         )
         if hass.config.country != "CN"
         else AuthorizationServer(
-            authorize_url=OAUTH2_AUTHORIZE.replace(".com", ".cn"),
-            token_url=OAUTH2_TOKEN.replace(".com", ".cn"),
+            authorize_url=OAUTH2_AUTHORIZE_CHINA,
+            token_url=OAUTH2_TOKEN_CHINA,
         )
     )
 
