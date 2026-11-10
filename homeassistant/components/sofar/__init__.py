@@ -40,7 +40,7 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import battery_pack_identifier
+from .entity import battery_pack_identifier, entity_unique_id
 from .helpers import create_modbus_params
 from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
@@ -67,7 +67,7 @@ def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
     registry = er.async_get(hass)
     for key in _REMOVED_SENSOR_KEYS:
         entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{serial}_{key}"
+            SENSOR_DOMAIN, DOMAIN, entity_unique_id(serial, key)
         )
         if entity_id is not None:
             registry.async_remove(entity_id)
@@ -81,7 +81,7 @@ def _async_seed_high_water_marks(
     restore_state_data = restore_state.async_get(hass)
     for description in TOTAL_SENSOR_DESCRIPTIONS:
         entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
+            SENSOR_DOMAIN, DOMAIN, entity_unique_id(serial, description.key)
         )
         if (
             entity_id is None
