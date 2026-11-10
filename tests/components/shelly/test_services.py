@@ -6,13 +6,13 @@ from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.shelly.const import ATTR_KEY, ATTR_VALUE, DOMAIN
+from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.shelly.services import (
-    SERVICE_GET_KVS_VALUE,
-    SERVICE_SET_KVS_VALUE,
+    ShellyService,
+    ShellyServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -37,8 +37,11 @@ async def test_service_get_kvs_value(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_KVS_VALUE,
-        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+        ShellyService.GET_KVS_VALUE,
+        {
+            CommonServiceArgument.DEVICE_ID: device.id,
+            ShellyServiceArgument.KEY: "test_key",
+        },
         blocking=True,
         return_response=True,
     )
@@ -54,8 +57,11 @@ async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: "invalid_device_id", ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: "invalid_device_id",
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -63,7 +69,7 @@ async def test_service_get_kvs_value_invalid_device(hass: HomeAssistant) -> None
     assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert exc_info.value.translation_key == "service_device_not_found"
     assert exc_info.value.translation_placeholders == {
-        ATTR_DEVICE_ID: "invalid_device_id"
+        CommonServiceArgument.DEVICE_ID: "invalid_device_id"
     }
 
 
@@ -78,8 +84,11 @@ async def test_service_get_kvs_value_block_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -113,8 +122,11 @@ async def test_service_get_kvs_value_exc(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -142,8 +154,11 @@ async def test_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -171,8 +186,11 @@ async def test_service_get_kvs_value_sleeping_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -194,8 +212,12 @@ async def test_service_set_kvs_value(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_KVS_VALUE,
-        {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key", ATTR_VALUE: "test_value"},
+        ShellyService.SET_KVS_VALUE,
+        {
+            CommonServiceArgument.DEVICE_ID: device.id,
+            ShellyServiceArgument.KEY: "test_key",
+            ShellyServiceArgument.VALUE: "test_value",
+        },
         blocking=True,
     )
 
@@ -218,8 +240,11 @@ async def test_service_get_kvs_value_device_not_initialized(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
@@ -251,8 +276,11 @@ async def test_service_get_kvs_value_wrong_domain(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_KVS_VALUE,
-            {ATTR_DEVICE_ID: device.id, ATTR_KEY: "test_key"},
+            ShellyService.GET_KVS_VALUE,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                ShellyServiceArgument.KEY: "test_key",
+            },
             blocking=True,
             return_response=True,
         )
