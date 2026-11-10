@@ -2107,7 +2107,6 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
 
 _parallel_sequence_action = probatio.All(
     # Wrap a shorthand sequences in a parallel action
-    # The list index of a single action makes Any prefer the error of this branch
     probatio.All(ensure_list, [script_action]),
     lambda config: {
         CONF_SEQUENCE: config,
