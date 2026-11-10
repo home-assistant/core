@@ -109,6 +109,14 @@ class PortainerVolumeData:
     volume: DockerVolume
 
 
+@dataclass(slots=True)
+class PortainerDockerDiskSpaceData:
+    """Docker disk space data of an endpoint."""
+
+    system_df: DockerSystemDF
+    volumes: dict[str, dict[str, Any]]
+
+
 class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator for Portainer."""
 
@@ -801,7 +809,7 @@ class PortainerCoordinator(
 
 
 class PortainerDockerDiskSpaceCoordinator(
-    PortainerBaseCoordinator[dict[int, DockerSystemDF]]
+    PortainerBaseCoordinator[dict[int, PortainerDockerDiskSpaceData]]
 ):
     """Data Update Coordinator for Docker disk space.
 
@@ -836,7 +844,7 @@ class PortainerDockerDiskSpaceCoordinator(
         return _async_remove
 
     @override
-    async def update_data(self) -> dict[int, DockerSystemDF]:
+    async def update_data(self) -> dict[int, PortainerDockerDiskSpaceData]:
         """Fetch Docker disk space data independently from Portainer API."""
         if not self._entities_per_endpoint:
             return {}
@@ -846,7 +854,7 @@ class PortainerDockerDiskSpaceCoordinator(
             for subentry in self.config_entry.subentries.values()
             if subentry.unique_id
         }
-        results: dict[int, DockerSystemDF] = {}
+        results: dict[int, PortainerDockerDiskSpaceData] = {}
         for endpoint in endpoints:
             if (
                 endpoint.status == EndpointStatus.DOWN
@@ -855,7 +863,7 @@ class PortainerDockerDiskSpaceCoordinator(
             ):
                 continue
             try:
-                results[endpoint.id] = await self.portainer.docker_system_df(
+                system_df = await self.portainer.docker_system_df(
                     endpoint.id, verbose=True
                 )
             except PortainerTimeoutError:
@@ -865,6 +873,13 @@ class PortainerDockerDiskSpaceCoordinator(
                     endpoint.id,
                 )
                 continue
+            results[endpoint.id] = PortainerDockerDiskSpaceData(
+                system_df=system_df,
+                volumes={
+                    item["Name"]: item
+                    for item in system_df.volume_disk_usage.items or []
+                },
+            )
         return results
 
 

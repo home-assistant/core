@@ -395,5 +395,4 @@ class PortainerDockerDiskSpaceVolumeEntity(PortainerDockerDiskSpaceCoordinatorEn
     @property
     def volume_usage(self) -> dict[str, Any] | None:
         """Return the disk usage item for this volume."""
-        items = self.coordinator.data[self.endpoint_id].volume_disk_usage.items or []
-        return next((item for item in items if item["Name"] == self.volume_name), None)
+        return self.coordinator.data[self.endpoint_id].volumes.get(self.volume_name)

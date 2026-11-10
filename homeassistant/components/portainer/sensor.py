@@ -634,7 +634,7 @@ class PortainerDockerSystemDiskSpaceSensor(
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
-        return self.entity_description.value_fn(endpoint_data)
+        return self.entity_description.value_fn(endpoint_data.system_df)
 
 
 class PortainerStackSensor(PortainerStackEntity, SensorEntity):
