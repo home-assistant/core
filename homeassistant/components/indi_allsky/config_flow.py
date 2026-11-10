@@ -101,6 +101,12 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     if (username and not password) or (password and not username):
         raise MissingCredentials
 
+    session = async_create_clientsession(
+        hass,
+        verify_ssl=data.get(CONF_VERIFY_SSL, True),
+        auto_cleanup=False,
+        cookie_jar=aiohttp.CookieJar(unsafe=True),
+    )
     client = IndiAllSkyClient(
         host=data[CONF_HOST],
         port=int(data[CONF_PORT]),
@@ -110,11 +116,7 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         ),
         username=username or None,
         password=password or None,
-        session=async_create_clientsession(
-            hass,
-            verify_ssl=data.get(CONF_VERIFY_SSL, True),
-            cookie_jar=aiohttp.CookieJar(unsafe=True),
-        ),
+        session=session,
     )
 
     try:
@@ -137,6 +139,8 @@ async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         raise CannotConnect from err
     except Exception as err:
         raise Unknown from err
+    finally:
+        session.detach()
 
 
 class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
