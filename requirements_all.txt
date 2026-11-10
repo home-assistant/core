@@ -269,7 +269,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.engie_be
-aioengiebelgium==0.13.0
+aioengiebelgium==0.14.0
 
 # homeassistant.components.esphome
 aioesphomeapi==46.25.0
@@ -409,7 +409,7 @@ aiopnsense==1.0.10
 aiopowerwall==0.10.0
 
 # homeassistant.components.ptdevices
-aioptdevices==2026.03.2
+aioptdevices==2026.11.1
 
 # homeassistant.components.acmeda
 aiopulse==0.4.7
@@ -2465,7 +2465,7 @@ pyliebherrhomeapi==0.5.2
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.7.0
+pylitterbot==2025.8.0
 
 # homeassistant.components.london_air
 pylondonair==0.1.1
@@ -2710,7 +2710,7 @@ pysmarty2==0.10.3
 pysmartyplants==0.2.1
 
 # homeassistant.components.smhi
-pysmhi==2.1.0
+pysmhi==3.0.0
 
 # homeassistant.components.edl21
 pysml==0.1.9
@@ -3388,7 +3388,7 @@ transmission-rpc==7.0.3
 triggercmd==0.0.36
 
 # homeassistant.components.trmnl
-trmnl==0.1.1
+trmnl==0.2.0
 
 # homeassistant.components.twinkly
 ttls==1.11.1

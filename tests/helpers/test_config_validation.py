@@ -272,6 +272,333 @@ def test_ensure_list() -> None:
     assert schema({"1": "2"}) == [{"1": "2"}]
 
 
+def _even_as_str(value: Any) -> str:
+    """Validate an even number and return it as a string."""
+    if not isinstance(value, int) or value % 2:
+        raise probatio.Invalid("not even")
+    return str(value)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, [], id="none"),
+        pytest.param([], [], id="empty_list"),
+        pytest.param([2, 4], ["2", "4"], id="list"),
+        pytest.param([2], ["2"], id="list_of_one"),
+        pytest.param(2, ["2"], id="single"),
+        pytest.param(0, ["0"], id="falsy_single"),
+    ],
+)
+def test_list_of(value: Any, expected: list[str]) -> None:
+    """Test _list_of gives the same result as All(ensure_list, [validator])."""
+    assert cv._list_of(_even_as_str)(value) == expected
+    assert probatio.All(cv.ensure_list, [_even_as_str])(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "paths", "ensure_list_paths"),
+    [
+        pytest.param(3, [[]], [[0]], id="single"),
+        pytest.param("2", [[]], [[0]], id="single_str"),
+        pytest.param((2,), [[]], [[0]], id="tuple_is_a_single_item"),
+        pytest.param([3], [[0]], [[0]], id="list_of_one"),
+        pytest.param([2, 3, 4, 5], [[1], [3]], [[1], [3]], id="list"),
+    ],
+)
+def test_list_of_invalid(
+    value: Any, paths: list[list[int]], ensure_list_paths: list[list[int]]
+) -> None:
+    """Test _list_of only adds an index to the error path of a list item."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        cv._list_of(_even_as_str)(value)
+    assert [err.path for err in exc_info.value.errors] == paths
+    assert [err.msg for err in exc_info.value.errors] == ["not even"] * len(paths)
+
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        probatio.All(cv.ensure_list, [_even_as_str])(value)
+    assert [err.path for err in exc_info.value.errors] == ensure_list_paths
+
+
+_VALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_INVALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen"}
+_VALID_ACTION = {"delay": 1}
+_INVALID_ACTION = {"delay": "invalid"}
+_INVALID_TRIGGER = {"trigger": "event", "alias": 5}
+
+
+@pytest.mark.parametrize(
+    ("schema", "single", "single_path", "as_list", "list_path"),
+    [
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            _INVALID_ACTION,
+            ["delay"],
+            [_VALID_ACTION, _INVALID_ACTION],
+            [1, "delay"],
+            id="script",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            _INVALID_CONDITION,
+            ["state"],
+            [_VALID_CONDITION, _INVALID_CONDITION],
+            [1, "state"],
+            id="conditions",
+        ),
+        pytest.param(
+            cv.TRIGGER_SCHEMA,
+            _INVALID_TRIGGER,
+            ["alias"],
+            [{"trigger": "event"}, _INVALID_TRIGGER],
+            [1, "alias"],
+            id="triggers",
+        ),
+        pytest.param(
+            cv.AND_CONDITION_SCHEMA,
+            {"condition": "and", "conditions": _INVALID_CONDITION},
+            ["conditions", "state"],
+            {"condition": "and", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["conditions", 1, "state"],
+            id="and",
+        ),
+        pytest.param(
+            cv.OR_CONDITION_SCHEMA,
+            {"condition": "or", "conditions": _INVALID_CONDITION},
+            ["conditions", "state"],
+            {"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["conditions", 1, "state"],
+            id="or",
+        ),
+        pytest.param(
+            cv.NOT_CONDITION_SCHEMA,
+            {"condition": "not", "conditions": _INVALID_CONDITION},
+            ["conditions", "state"],
+            {"condition": "not", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["conditions", 1, "state"],
+            id="not",
+        ),
+        pytest.param(
+            cv.AND_CONDITION_SHORTHAND_SCHEMA,
+            {"and": _INVALID_CONDITION},
+            ["and", "state"],
+            {"and": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["and", 1, "state"],
+            id="and_shorthand",
+        ),
+        pytest.param(
+            cv.OR_CONDITION_SHORTHAND_SCHEMA,
+            {"or": _INVALID_CONDITION},
+            ["or", "state"],
+            {"or": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["or", 1, "state"],
+            id="or_shorthand",
+        ),
+        pytest.param(
+            cv.NOT_CONDITION_SHORTHAND_SCHEMA,
+            {"not": _INVALID_CONDITION},
+            ["not", "state"],
+            {"not": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["not", 1, "state"],
+            id="not_shorthand",
+        ),
+        pytest.param(
+            cv.CONDITION_SHORTHAND_SCHEMA,
+            {"condition": _INVALID_CONDITION},
+            ["condition", "state"],
+            {"condition": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["condition", 1, "state"],
+            id="condition_shorthand",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"choose": {"conditions": [], "sequence": [], "invalid": 1}},
+            ["choose", "invalid"],
+            {
+                "choose": [
+                    {"conditions": [], "sequence": []},
+                    {"conditions": [], "sequence": [], "invalid": 1},
+                ]
+            },
+            ["choose", 1, "invalid"],
+            id="choose",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"choose": {"conditions": _INVALID_CONDITION, "sequence": []}},
+            ["choose", "conditions", "state"],
+            {
+                "choose": [
+                    {"conditions": [], "sequence": []},
+                    {
+                        "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                        "sequence": [],
+                    },
+                ]
+            },
+            ["choose", 1, "conditions", 1, "state"],
+            id="choose_conditions",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"choose": [], "default": _INVALID_ACTION},
+            ["default", "delay"],
+            {"choose": [], "default": [_VALID_ACTION, _INVALID_ACTION]},
+            ["default", 1, "delay"],
+            id="choose_default",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"if": _INVALID_CONDITION, "then": []},
+            ["if", "state"],
+            {"if": [_VALID_CONDITION, _INVALID_CONDITION], "then": []},
+            ["if", 1, "state"],
+            id="if",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"if": [], "then": [], "else": _INVALID_ACTION},
+            ["else", "delay"],
+            {"if": [], "then": [], "else": [_VALID_ACTION, _INVALID_ACTION]},
+            ["else", 1, "delay"],
+            id="else",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"repeat": {"until": _INVALID_CONDITION, "sequence": []}},
+            ["repeat", "until", "state"],
+            {
+                "repeat": {
+                    "until": [_VALID_CONDITION, _INVALID_CONDITION],
+                    "sequence": [],
+                }
+            },
+            ["repeat", "until", 1, "state"],
+            id="repeat_until",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"sequence": _INVALID_ACTION},
+            ["sequence", "delay"],
+            {"sequence": [_VALID_ACTION, _INVALID_ACTION]},
+            ["sequence", 1, "delay"],
+            id="sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"wait_for_trigger": _INVALID_TRIGGER},
+            ["wait_for_trigger", "alias"],
+            {"wait_for_trigger": [{"trigger": "event"}, _INVALID_TRIGGER]},
+            ["wait_for_trigger", 1, "alias"],
+            id="wait_for_trigger",
+        ),
+    ],
+)
+def test_single_item_error_path(
+    schema: Callable[[Any], Any],
+    single: Any,
+    single_path: list[str | int],
+    as_list: Any,
+    list_path: list[str | int],
+) -> None:
+    """Test the error path of an item written without a list has no index."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        schema(single)
+    assert [err.path for err in exc_info.value.errors] == [single_path]
+
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        schema(as_list)
+    assert [err.path for err in exc_info.value.errors] == [list_path]
+
+
+# These validate to themselves
+_UNCHANGED_ACTION = {"event": "test"}
+_UNCHANGED_CONDITION = {"condition": "sun"}
+
+
+@pytest.mark.parametrize(
+    ("schema", "single", "expected"),
+    [
+        pytest.param(
+            cv.SCRIPT_SCHEMA, _UNCHANGED_ACTION, [_UNCHANGED_ACTION], id="script"
+        ),
+        pytest.param(cv.SCRIPT_SCHEMA, None, [], id="script_none"),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            _UNCHANGED_CONDITION,
+            [_UNCHANGED_CONDITION],
+            id="conditions",
+        ),
+        pytest.param(cv.CONDITIONS_SCHEMA, None, [], id="conditions_none"),
+        pytest.param(
+            cv.TRIGGER_SCHEMA,
+            {"trigger": "event"},
+            [{"platform": "event"}],
+            id="triggers",
+        ),
+        pytest.param(cv.TRIGGER_SCHEMA, None, [], id="triggers_none"),
+        pytest.param(
+            cv.TRIGGER_SCHEMA,
+            {"triggers": {"trigger": "event"}},
+            [{"platform": "event"}],
+            id="triggers_single_sublist",
+        ),
+        pytest.param(
+            cv.AND_CONDITION_SCHEMA,
+            {"condition": "and", "conditions": _UNCHANGED_CONDITION},
+            {"condition": "and", "conditions": [_UNCHANGED_CONDITION]},
+            id="and",
+        ),
+        pytest.param(
+            cv.CONDITION_SCHEMA,
+            {"or": _UNCHANGED_CONDITION},
+            {"condition": "or", "conditions": [_UNCHANGED_CONDITION]},
+            id="or_shorthand",
+        ),
+        pytest.param(
+            cv.CONDITION_SHORTHAND_SCHEMA,
+            {"condition": None},
+            {"condition": []},
+            id="condition_shorthand_none",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {
+                "choose": {
+                    "conditions": _UNCHANGED_CONDITION,
+                    "sequence": _UNCHANGED_ACTION,
+                }
+            },
+            [
+                {
+                    "choose": [
+                        {
+                            "conditions": [_UNCHANGED_CONDITION],
+                            "sequence": [_UNCHANGED_ACTION],
+                        }
+                    ]
+                }
+            ],
+            id="choose",
+        ),
+    ],
+)
+def test_single_item_is_wrapped_in_list(
+    schema: Callable[[Any], Any], single: Any, expected: Any
+) -> None:
+    """Test an item written without a list validates to a list."""
+    assert schema(single) == expected
+
+
+def test_single_trigger_not_a_mapping() -> None:
+    """Test a single trigger which is not a mapping is invalid."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        cv.TRIGGER_SCHEMA(5)
+    assert [(err.path, err.msg) for err in exc_info.value.errors] == [
+        ([], "expected a mapping")
+    ]
+
+
 def test_entity_id() -> None:
     """Test entity ID validation."""
     schema = probatio.Schema(cv.entity_id)
@@ -1051,6 +1378,153 @@ def test_template_complex() -> None:
         assert schema(value) == value
 
 
+INVALID_TEMPLATE = "{{ partial_print }"
+INVALID_TEMPLATE_MESSAGE = "invalid template (TemplateSyntaxError: unexpected '}')"
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("value", "expected_path"),
+    [
+        pytest.param(INVALID_TEMPLATE, [], id="string"),
+        pytest.param(["{{ beer }}", INVALID_TEMPLATE], [1], id="list_index"),
+        pytest.param({"a": "{{ beer }}", "b": INVALID_TEMPLATE}, ["b"], id="dict_key"),
+        pytest.param({INVALID_TEMPLATE: 1}, [INVALID_TEMPLATE], id="dict_template_key"),
+        pytest.param(
+            {"data": {"a": ["{{ beer }}", {"b": INVALID_TEMPLATE}]}},
+            ["data", "a", 1, "b"],
+            id="nested",
+        ),
+    ],
+)
+def test_template_complex_error_path(value: Any, expected_path: list[Any]) -> None:
+    """Test template_complex reports the path of the failing element."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        cv.template_complex(value)
+
+    assert excinfo.value.path == expected_path
+    assert excinfo.value.error_message == INVALID_TEMPLATE_MESSAGE
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("validator", "value", "expected_path", "expected_message"),
+    [
+        pytest.param(
+            probatio.Any(cv.string, cv.template_complex),
+            {"a": [INVALID_TEMPLATE]},
+            ["a", 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="any_string_template_complex",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data": {"a": INVALID_TEMPLATE}},
+            ["data", "a"],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_data",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data_template": {"a": [INVALID_TEMPLATE]}},
+            ["data_template", "a", 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_data_template",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data": [INVALID_TEMPLATE]},
+            ["data"],
+            "template value should be a string",
+            id="service_data_not_a_dict",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+            },
+            ["target", "entity_id", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_target_entity_id",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {
+                    "area_id": "kitchen",
+                    "exclude": {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+                },
+            },
+            ["target", "exclude", "entity_id", 1],
+            f"Entity ID {INVALID_TEMPLATE} is not a valid entity ID",
+            id="service_target_exclude_entity_id",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {
+                    "area_id": "kitchen",
+                    "exclude": {"entity_id": [[INVALID_TEMPLATE]]},
+                },
+            },
+            ["target", "exclude", "entity_id", 0, 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_target_exclude_entity_id_nested_list",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "target": {"entity_id": INVALID_TEMPLATE}},
+            ["target", "entity_id"],
+            f"Entity {INVALID_TEMPLATE} is neither a valid entity ID nor a valid UUID",
+            id="service_target_entity_id_not_a_list",
+        ),
+        pytest.param(
+            selector.TargetSelector(),
+            {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+            ["entity_id", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="target_selector_entity_id",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"repeat": {"for_each": ["a", INVALID_TEMPLATE], "sequence": []}}],
+            [0, "repeat", "for_each", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="repeat_for_each",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"repeat": {"for_each": {"a": INVALID_TEMPLATE}, "sequence": []}}],
+            [0, "repeat", "for_each"],
+            "template value should be a string",
+            id="repeat_for_each_not_a_list",
+        ),
+        pytest.param(
+            cv.positive_time_period_template,
+            {"hours": 1, "minutes": INVALID_TEMPLATE},
+            ["minutes"],
+            "expected float",
+            id="positive_time_period_template",
+        ),
+    ],
+)
+def test_template_complex_any_branch_error(
+    validator: Any, value: Any, expected_path: list[Any], expected_message: str
+) -> None:
+    """Test which error wins when template_complex is one branch of an Any.
+
+    Any reports the error with the longest path, and the first one on a tie.
+    """
+    with pytest.raises(probatio.Invalid) as excinfo:
+        probatio.Schema(validator)(value)
+
+    assert excinfo.value.path == expected_path
+    assert excinfo.value.error_message == expected_message
+
+
 def test_time_zone() -> None:
     """Test time zone validation."""
     schema = probatio.Schema(cv.time_zone)
@@ -1739,6 +2213,118 @@ def test_comp_entity_ids() -> None:
     for invalid in (["light.kitchen", "not-entity-id"], "*", ""):
         with pytest.raises(probatio.Invalid):
             schema(invalid)
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param("all", "all", id="all"),
+        pytest.param("ALL", "all", id="all_upper"),
+        pytest.param("none", "none", id="none"),
+        pytest.param("NoNe", "none", id="none_mixed_case"),
+        pytest.param(None, "none", id="none_value"),
+        pytest.param([], [], id="empty_list"),
+        pytest.param("light.kitchen", ["light.kitchen"], id="string"),
+        pytest.param("LIGHT.Kitchen", ["light.kitchen"], id="string_upper"),
+        pytest.param(
+            "light.kitchen, light.ceiling",
+            ["light.kitchen", "light.ceiling"],
+            id="comma_string",
+        ),
+        pytest.param(
+            ["light.kitchen", "light.ceiling"],
+            ["light.kitchen", "light.ceiling"],
+            id="list",
+        ),
+    ],
+)
+def test_comp_entity_ids_valid(
+    validator: Callable[[Any], Any], value: Any, expected: str | list[str]
+) -> None:
+    """Test component entity ID validators accept and normalize valid values."""
+    assert validator(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("validator", "value", "message"),
+    [
+        pytest.param(
+            cv.comp_entity_ids,
+            "not-entity-id",
+            "Entity ID not-entity-id is an invalid entity ID",
+            id="comp_entity_ids-string",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            ["light.kitchen", "not-entity-id"],
+            "Entity ID not-entity-id is an invalid entity ID",
+            id="comp_entity_ids-list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            ["all"],
+            "Entity ID all is an invalid entity ID",
+            id="comp_entity_ids-all_in_list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            4,
+            "Entity IDs must be a string or a list",
+            id="comp_entity_ids-int",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            "not-entity-id",
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID",
+            id="comp_entity_ids_or_uuids-string",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            ["light.kitchen", "not-entity-id"],
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID",
+            id="comp_entity_ids_or_uuids-list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            4,
+            "Entity IDs must be a string or a list",
+            id="comp_entity_ids_or_uuids-int",
+        ),
+        pytest.param(
+            cv.make_entity_service_schema({}),
+            {"entity_id": "not-entity-id"},
+            "Entity ID not-entity-id is an invalid entity ID at 'entity_id'",
+            id="entity_service_schema-string",
+        ),
+        pytest.param(
+            cv.make_entity_service_schema({}),
+            {"entity_id": ["light.kitchen", "not-entity-id"]},
+            "Entity ID not-entity-id is an invalid entity ID at 'entity_id'",
+            id="entity_service_schema-list",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"action": "light.turn_on", "target": {"entity_id": "not-entity-id"}}],
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID"
+            " at '[0].target.entity_id'",
+            id="script_schema-target",
+        ),
+    ],
+)
+def test_comp_entity_ids_invalid_message(
+    validator: Callable[[Any], Any], value: Any, message: str
+) -> None:
+    """Test component entity ID validators report the entity ID error."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        validator(value)
+    assert str(excinfo.value) == message
 
 
 def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
