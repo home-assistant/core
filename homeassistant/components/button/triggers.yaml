@@ -5,6 +5,19 @@ pressed:
       - domain: input_button
       - domain: event
         device_class: button
+  fields:
+    press_count:
+      required: true
+      default: "1"
+      selector:
+        select:
+          translation_key: press_count
+          mode: dropdown
+          options:
+            - "1"
+            - "2"
+            - "3"
+            - "4"
 held:
   target:
     entity:
