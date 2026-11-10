@@ -41,6 +41,8 @@ async def test_setup_and_unload_entry(
             "R1700BTs", "r1700bt", "R1700BTs", "r1700bts", id="r1700bts-family"
         ),
         pytest.param("R1280DB", "r1280db", "R1280DB", "r1280db", id="unchanged-model"),
+        pytest.param("RC80B", "r1700bt", "RC80B", "rc80b", id="rc80b-split"),
+        pytest.param("RC31A", "s360db", "RC31A", "r2600", id="rc31a-split"),
     ],
 )
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_edifier_code_to_command")
@@ -69,7 +71,7 @@ async def test_migrate_entry_from_v1(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 3
+    assert entry.version == 4
     assert entry.data[CONF_MODEL] == expected_model
     assert entry.data[CONF_COMMAND_SET] == expected_command_set
     assert entry.unique_id == f"{expected_command_set}_{EMITTER_ENTITY_ID}"
@@ -81,6 +83,8 @@ async def test_migrate_entry_from_v1(
         pytest.param("R2000DB", "r1280db", "r2000db", id="r2000db-split"),
         pytest.param("R2730DB", "r1280db", "r2730db", id="r2730db-split"),
         pytest.param("RC10D1", "r1280db", "r2730db", id="rc10d1-split"),
+        pytest.param("RC80B", "r1700bts", "rc80b", id="rc80b-split"),
+        pytest.param("RC31A", "s360db", "r2600", id="rc31a-split"),
         pytest.param("R1280DB", "r1280db", "r1280db", id="unchanged-model"),
     ],
 )
@@ -109,7 +113,46 @@ async def test_migrate_entry_from_v2(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.version == 3
+    assert entry.version == 4
+    assert entry.data[CONF_MODEL] == model
+    assert entry.data[CONF_COMMAND_SET] == expected_command_set
+    assert entry.unique_id == f"{expected_command_set}_{EMITTER_ENTITY_ID}"
+
+
+@pytest.mark.parametrize(
+    ("model", "old_command_set", "expected_command_set"),
+    [
+        pytest.param("RC80B", "r1700bts", "rc80b", id="rc80b-split"),
+        pytest.param("RC31A", "s360db", "r2600", id="rc31a-split"),
+        pytest.param("R1700BTs", "r1700bts", "r1700bts", id="unchanged-model"),
+    ],
+)
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_edifier_code_to_command")
+async def test_migrate_entry_from_v3(
+    hass: HomeAssistant,
+    model: str,
+    old_command_set: str,
+    expected_command_set: str,
+) -> None:
+    """Test v3 config entries are migrated to the split RC80B and R2600 command sets."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"Edifier {model} via Test IR emitter",
+        data={
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_MODEL: model,
+            CONF_COMMAND_SET: old_command_set,
+        },
+        unique_id=f"{old_command_set}_{EMITTER_ENTITY_ID}",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 4
     assert entry.data[CONF_MODEL] == model
     assert entry.data[CONF_COMMAND_SET] == expected_command_set
     assert entry.unique_id == f"{expected_command_set}_{EMITTER_ENTITY_ID}"

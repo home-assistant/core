@@ -47,6 +47,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             version=3,
         )
 
+    if entry.version == 3:
+        data = {**entry.data}
+        # The RC80B and RC31A models got their own command sets, split from
+        # the R1700BTs and S360DB ones, which they were incorrectly grouped with.
+        command_set = MODEL_TO_COMMAND_SET[EdifierModel(data[CONF_MODEL])]
+        data[CONF_COMMAND_SET] = command_set.value
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            unique_id=f"{command_set.value}_{data[CONF_INFRARED_ENTITY_ID]}",
+            version=4,
+        )
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload an Edifier IR config entry."""
