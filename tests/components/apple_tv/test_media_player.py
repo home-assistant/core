@@ -3,7 +3,7 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from pyatv.const import FeatureName, FeatureState
+from pyatv.const import DeviceState, FeatureName, FeatureState, PowerState
 from pyatv.exceptions import (
     BlockedStateError,
     ConnectionLostError,
@@ -13,6 +13,7 @@ from pyatv.exceptions import (
     PlaybackError,
     ProtocolError,
 )
+from pyatv.interface import Playing
 import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 
@@ -33,6 +34,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_VOLUME_SET,
+    STATE_OFF,
+    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -335,3 +338,28 @@ async def test_browse_media_uses_media_source(
 
     assert response["success"]
     mock_browse.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("device_state", "expected"),
+    [
+        (DeviceState.Playing, STATE_PLAYING),
+        (DeviceState.Paused, STATE_OFF),
+        (DeviceState.Idle, STATE_OFF),
+    ],
+)
+async def test_power_off_only_yields_to_active_playback(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    device_state: DeviceState,
+    expected: str,
+) -> None:
+    """Test a device reporting power off is off unless it is actually playing."""
+    mock_atv.power.power_state = PowerState.Off
+
+    mock_atv.push_updater.listener.playstatus_update(
+        mock_atv.push_updater, Playing(device_state=device_state)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected
