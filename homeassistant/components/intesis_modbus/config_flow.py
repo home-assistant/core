@@ -2,19 +2,8 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from intesis_gw_modbus import (
-    KNOWN_DEVICE_IDS,
-    GatewayModel,
-    TemperatureFormat,
-    detect_temperature_format,
-    model_for_device_id,
-)
-from modbus_connection import (
-    IllegalDataAddressError,
-    IllegalFunctionError,
-    ModbusError,
-    ModbusUnit,
-)
+from intesis_gw_modbus import GatewayModel, TemperatureFormat, async_probe_gateway
+from modbus_connection import ModbusError
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -44,10 +33,6 @@ from .helpers import create_modbus_params
 
 DEFAULT_BAUDRATE = 9600
 DEFAULT_UNIT_ID = 1
-
-DEVICE_ID_REGISTER = 49
-SETPOINT_REGISTER = 4
-VANE_REGISTER = 3
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -84,15 +69,6 @@ STEP_FEATURES_DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def _async_read_or_none(unit: ModbusUnit, address: int) -> int | None:
-    """Read one holding register, or None if the gateway does not have it."""
-    try:
-        [value] = await unit.read_holding_registers(address, 1)
-    except IllegalDataAddressError, IllegalFunctionError:
-        return None
-    return value
-
-
 class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle an Intesis Modbus config flow."""
 
@@ -102,7 +78,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self._data: dict[str, Any] = {}
         self._model: GatewayModel | None = None
-        self._raw_vane: int | None = None
+        self._vane_reported = False
 
     @override
     async def async_step_user(
@@ -123,26 +99,25 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     create_modbus_params(user_input),
                     user_input[CONF_UNIT_ID],
                 ) as unit:
-                    device_id = await _async_read_or_none(unit, DEVICE_ID_REGISTER)
-                    raw_setpoint = await _async_read_or_none(unit, SETPOINT_REGISTER)
-                    self._raw_vane = await _async_read_or_none(unit, VANE_REGISTER)
+                    probe = await async_probe_gateway(unit)
             except HomeAssistantError:
                 errors["base"] = "device_in_use"
             except ModbusError:
                 errors["base"] = "cannot_connect"
             else:
-                if (brand := KNOWN_DEVICE_IDS.get(device_id or -1)) is not None:
+                if probe.unsupported_brand is not None:
                     return self.async_abort(
                         reason="unsupported_brand",
-                        description_placeholders={"brand": brand},
+                        description_placeholders={"brand": probe.unsupported_brand},
                     )
-                if (model := model_for_device_id(device_id or -1)) is None:
+                if probe.model is None:
                     return self.async_abort(reason="unsupported_device")
-                self._model = model
-                self._data = {**user_input, CONF_MODEL: model.name}
-                if (fmt := detect_temperature_format(raw_setpoint)) is None:
+                self._model = probe.model
+                self._vane_reported = probe.vane_reported
+                self._data = {**user_input, CONF_MODEL: probe.model.name}
+                if probe.temperature_format is None:
                     return await self.async_step_temperature_format()
-                self._data[CONF_TEMPERATURE_FORMAT] = fmt.value
+                self._data[CONF_TEMPERATURE_FORMAT] = probe.temperature_format.value
                 return await self.async_step_features()
 
         return self.async_show_form(
@@ -171,7 +146,7 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm whether the unit has a vane.
 
         The gateway has no capability register for the vane, so the probe's
-        reading of register 3 only pre-fills the answer.
+        hint only pre-fills the answer.
         """
         if TYPE_CHECKING:
             assert self._model is not None
@@ -183,6 +158,6 @@ class IntesisModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="features",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_FEATURES_DATA_SCHEMA,
-                {CONF_HAS_VANE: self._raw_vane in self._model.brand.vane_positions},
+                {CONF_HAS_VANE: self._vane_reported},
             ),
         )
