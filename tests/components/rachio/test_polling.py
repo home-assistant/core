@@ -212,6 +212,13 @@ async def test_no_polling_when_no_interval_fits_the_limit(
 
 
 @pytest.mark.parametrize("mock_config_entry", [POLLING_OPTIONS], indirect=True)
+@pytest.mark.parametrize(
+    "reset_suffix",
+    [
+        pytest.param("Z", id="utc"),
+        pytest.param("Z[UTC]", id="utc-with-zone-name"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
 async def test_polling_pauses_when_few_calls_remain(
     hass: HomeAssistant,
@@ -219,6 +226,7 @@ async def test_polling_pauses_when_few_calls_remain(
     mock_rachio: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    reset_suffix: str,
 ) -> None:
     """Test polling stops, says so in the log, and resumes after the limit resets."""
     coordinator = mock_config_entry.runtime_data.controllers[0].poll_coordinator
@@ -226,7 +234,7 @@ async def test_polling_pauses_when_few_calls_remain(
     headers = {
         "status": 200,
         "x-ratelimit-remaining": "10",
-        "x-ratelimit-reset": reset.isoformat(),
+        "x-ratelimit-reset": reset.strftime("%Y-%m-%dT%H:%M:%S") + reset_suffix,
     }
     mock_rachio.device.current_schedule.return_value = (headers, _running()[1])
     await _advance(hass, freezer, timedelta(minutes=1))
@@ -250,6 +258,34 @@ async def test_polling_pauses_when_few_calls_remain(
     assert mock_rachio.device.current_schedule.call_count == calls + 1
     assert coordinator.last_update_success
     assert hass.states.is_state(ZONE_ENTITY_ID, STATE_OFF)
+
+
+@pytest.mark.parametrize("mock_config_entry", [POLLING_OPTIONS], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_polling_reserves_calls_for_hose_timers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rachio: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test polling pauses early enough to leave calls for the hose timers."""
+    coordinator = mock_config_entry.runtime_data.controllers[0].poll_coordinator
+    reset = dt_util.utcnow() + timedelta(hours=2)
+    mock_rachio.device.current_schedule.return_value = (
+        {
+            "status": 200,
+            "x-ratelimit-remaining": "100",
+            "x-ratelimit-reset": reset.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        },
+        {},
+    )
+    await _advance(hass, freezer, timedelta(minutes=1))
+    calls = mock_rachio.device.current_schedule.call_count
+
+    await _advance(hass, freezer, timedelta(minutes=1))
+
+    assert mock_rachio.device.current_schedule.call_count == calls
+    assert not coordinator.last_update_success
 
 
 @pytest.mark.parametrize("mock_config_entry", [POLLING_OPTIONS], indirect=True)

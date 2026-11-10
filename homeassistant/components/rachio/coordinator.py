@@ -44,7 +44,7 @@ HOSE_TIMER_SCHEDULE_CALLS_PER_DAY = MINUTES_PER_DAY // 30
 POLL_INTERVAL_STEP = 0.5
 MAX_POLL_INTERVAL = 60
 POLL_API_BUDGET_FRACTION = 0.9
-# Polling pauses below this many remaining calls so commands keep working
+# Calls kept free so commands keep working, on top of the expected hose timer use
 POLL_RESERVE_CALLS = 50
 
 
@@ -187,11 +187,13 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         config_entry: RachioConfigEntry,
         controller_id: str,
         interval_minutes: float,
+        base_count: int,
     ) -> None:
         """Initialize the Rachio controller update coordinator."""
         self.rachio = rachio
         self.controller_id = controller_id
         self._resume_polling_at: datetime | None = None
+        self._base_count = base_count
         self._calls_remaining = 0
         super().__init__(
             hass,
@@ -246,10 +248,17 @@ class RachioControllerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Stop polling until the API limit resets if few calls remain."""
         try:
             remaining = int(headers[HEADER_RATE_REMAINING])
-            reset = dt_util.parse_datetime(headers[HEADER_RATE_RESET])
+            reset = dt_util.parse_datetime(
+                headers[HEADER_RATE_RESET].removesuffix("[UTC]")
+            )
         except KeyError, ValueError:
             return
-        if reset is None or remaining >= POLL_RESERVE_CALLS:
+        if reset is None:
+            return
+        # Hose timers keep polling while this coordinator is paused
+        days_to_reset = max(reset - dt_util.utcnow(), timedelta()) / timedelta(days=1)
+        hose_timer_calls = hose_timer_calls_per_day(self._base_count) * days_to_reset
+        if remaining >= POLL_RESERVE_CALLS + hose_timer_calls:
             return
         self._calls_remaining = remaining
         self._resume_polling_at = reset

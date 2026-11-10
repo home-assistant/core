@@ -128,7 +128,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> No
     ):
         for controller in person.controllers:
             controller.poll_coordinator = RachioControllerUpdateCoordinator(
-                hass, rachio, entry, controller.controller_id, interval
+                hass,
+                rachio,
+                entry,
+                controller.controller_id,
+                interval,
+                len(person.base_stations),
             )
             await controller.poll_coordinator.async_config_entry_first_refresh()
 
