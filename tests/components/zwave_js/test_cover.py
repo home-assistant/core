@@ -585,7 +585,7 @@ async def test_aeotec_nano_shutter_cover(
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
 
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
@@ -961,6 +961,88 @@ async def test_fibaro_fgr222_shutter_cover_no_tilt(
     assert state
     assert state.state == STATE_UNKNOWN
     assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("operating_mode", "device_class"),
+    [
+        pytest.param(0, CoverDeviceClass.SHUTTER, id="roller_blind"),
+        pytest.param(1, CoverDeviceClass.SHUTTER, id="roller_blind_positioning"),
+        pytest.param(2, CoverDeviceClass.SHUTTER, id="venetian_blind"),
+        pytest.param(3, CoverDeviceClass.GATE, id="gate"),
+        pytest.param(4, CoverDeviceClass.GATE, id="gate_positioning"),
+    ],
+)
+async def test_fibaro_fgr222_shutter_cover_device_class(
+    hass: HomeAssistant,
+    client: MagicMock,
+    fibaro_fgr222_shutter_state: dict[str, Any],
+    integration: MockConfigEntry,
+    operating_mode: int,
+    device_class: CoverDeviceClass,
+) -> None:
+    """Test Fibaro FGR-222 device class without the proprietary tilt value."""
+    node_state = replace_value_of_zwave_value(
+        fibaro_fgr222_shutter_state,
+        [
+            ZwaveValueMatcher(
+                property_=10,
+                command_class=CommandClass.CONFIGURATION,
+                endpoint=0,
+            ),
+        ],
+        operating_mode,
+    )
+    node_state["values"] = [
+        value
+        for value in node_state["values"]
+        if value["commandClass"] != CommandClass.MANUFACTURER_PROPRIETARY
+    ]
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FIBARO_FGR_222_SHUTTER_COVER_ENTITY)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == device_class
+    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "operating_mode",
+    [
+        pytest.param(0, id="shutter"),
+        pytest.param(2, id="manual_time"),
+    ],
+)
+async def test_shelly_wave_shutter_cover_no_tilt(
+    hass: HomeAssistant,
+    client: MagicMock,
+    shelly_europe_ltd_qnsh_001p10_state: dict[str, Any],
+    integration: MockConfigEntry,
+    operating_mode: int,
+) -> None:
+    """Test Shelly Wave Shutter operating modes without tilt."""
+    node_state = replace_value_of_zwave_value(
+        shelly_europe_ltd_qnsh_001p10_state,
+        [
+            ZwaveValueMatcher(
+                property_=71,
+                command_class=CommandClass.CONFIGURATION,
+                endpoint=0,
+            ),
+        ],
+        operating_mode,
+    )
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids_count("cover") == 1
+    state = hass.states.get("cover.wave_shutter")
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
 
