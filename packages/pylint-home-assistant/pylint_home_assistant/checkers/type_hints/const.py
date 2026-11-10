@@ -791,7 +791,16 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
-    # "air_quality": [],  # ignored as deprecated
+    Platform.AIR_QUALITY: [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+    ],
     Platform.AI_TASK: [
         ClassTypeHintMatch(
             base_class="Entity",
