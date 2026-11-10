@@ -365,3 +365,38 @@ async def test_reauth(
     mock_abrp_client.assert_not_called()
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == expected_setups
+
+
+@pytest.mark.parametrize(
+    ("id_token", "expected_login_hint"),
+    [
+        pytest.param(
+            build_id_token(email="sofie@example.com", name="Sofie"),
+            "&login_hint=sofie@example.com",
+            id="email",
+        ),
+        pytest.param(build_id_token(name="Sofie"), "", id="no_email"),
+        pytest.param("header.not-base64!.sig", "", id="unparsable_id_token"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauth_login_hint(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    expected_login_hint: str,
+) -> None:
+    """Reauth prefills the stored account's email on the login page when known."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}&state={state}"
+        f"&scope=openid+profile+email+offline_access{expected_login_hint}"
+    )
