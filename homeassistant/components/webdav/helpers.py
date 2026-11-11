@@ -4,6 +4,13 @@ import logging
 
 from aiohttp import ClientTimeout
 from aiowebdav2.client import Client, ClientOptions
+from aiowebdav2.exceptions import (
+    AccessDeniedError,
+    ConflictError,
+    MethodNotSupportedError,
+    RemoteParentNotFoundError,
+    ResponseErrorCodeError,
+)
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -35,13 +42,19 @@ def async_create_client(
 
 async def async_ensure_path_exists(client: Client, path: str) -> bool:
     """Ensure the WebDAV server is reachable and a path exists recursively on it."""
-    if not await client.check():
+    if not await client.exists():
         return False
 
-    parts = [part for part in path.split("/") if part]
-    for i in range(1, len(parts) + 1):
-        sub_path = "/".join(parts[:i])
-        if not await client.check(sub_path) and not await client.mkdir(sub_path):
+    if path.strip("/") and not await client.exists(path):
+        try:
+            await client.mkdir(path, parents=True, exist_ok=True)
+        except (
+            AccessDeniedError,
+            ConflictError,
+            MethodNotSupportedError,
+            RemoteParentNotFoundError,
+            ResponseErrorCodeError,
+        ):
             return False
 
     return True

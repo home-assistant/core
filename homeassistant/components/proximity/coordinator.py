@@ -33,8 +33,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
 
@@ -55,6 +54,31 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 type ProximityConfigEntry = ConfigEntry[ProximityDataUpdateCoordinator]
+
+TRACKED_ENTITY_REMOVED_ISSUE_PREFIX = "tracked_entity_removed_"
+
+
+def tracked_entity_removed_issue_id(config_entry_id: str, entity_id: str) -> str:
+    """Return the id of the removed tracked entity issue of a config entry."""
+    return f"{TRACKED_ENTITY_REMOVED_ISSUE_PREFIX}{config_entry_id}_{entity_id}"
+
+
+@callback
+def async_create_tracked_entity_removed_issue(
+    hass: HomeAssistant, config_entry: ProximityConfigEntry, entity_id: str
+) -> None:
+    """Create a repair issue for a removed tracked entity."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        tracked_entity_removed_issue_id(config_entry.entry_id, entity_id),
+        config_entry_id=config_entry.entry_id,
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="tracked_entity_removed",
+        translation_placeholders={"entity_id": entity_id, "name": config_entry.title},
+    )
 
 
 def _tracked_in_zones(state: State) -> list[str] | None:
@@ -101,11 +125,11 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ProximityConfigEntry) -> None:
         """Initialize the Proximity coordinator."""
-        self.ignored_zone_ids: list[str] = config_entry.data[CONF_IGNORED_ZONES]
-        self.tracked_entities: list[str] = config_entry.data[CONF_TRACKED_ENTITIES]
-        self.tolerance: int = config_entry.data[CONF_TOLERANCE]
-        self.proximity_zone_id: str = config_entry.data[CONF_ZONE]
-        self.unit_of_measurement: str = config_entry.data.get(
+        self.ignored_zone_ids: list[str] = config_entry.options[CONF_IGNORED_ZONES]
+        self.tracked_entities: list[str] = config_entry.options[CONF_TRACKED_ENTITIES]
+        self.tolerance: int = config_entry.options[CONF_TOLERANCE]
+        self.proximity_zone_id: str = config_entry.options[CONF_ZONE]
+        self.unit_of_measurement: str = config_entry.options.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
         self.entity_mapping: dict[str, list[str]] = defaultdict(list)
@@ -152,7 +176,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         """Fetch and process tracked entity change event."""
         data = event.data
         if data["action"] == "remove":
-            self._create_removed_tracked_entity_issue(data["entity_id"])
+            async_create_tracked_entity_removed_issue(
+                self.hass, self.config_entry, data["entity_id"]
+            )
 
         if data["action"] == "update" and "entity_id" in data["changes"]:
             old_tracked_entity_id = data["old_entity_id"]
@@ -160,8 +186,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
-                data={
-                    **self.config_entry.data,
+                options={
+                    **self.config_entry.options,
                     CONF_TRACKED_ENTITIES: [
                         tracked_entity
                         for tracked_entity in (
@@ -415,16 +441,3 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 )
 
         return ProximityData(proximity_data, entities_data)
-
-    def _create_removed_tracked_entity_issue(self, entity_id: str) -> None:
-        """Create a repair issue for a removed tracked entity."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"tracked_entity_removed_{entity_id}",
-            is_fixable=True,
-            is_persistent=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="tracked_entity_removed",
-            translation_placeholders={"entity_id": entity_id, "name": self.name},
-        )

@@ -174,11 +174,13 @@ def mock_ultima_client(mock_smlight_client: MagicMock) -> MagicMock:
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    *,
+    wait_for_background: bool = True,
 ) -> MockConfigEntry:
     """Set up the integration."""
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=wait_for_background)
 
     return mock_config_entry

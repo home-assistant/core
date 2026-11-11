@@ -57,7 +57,10 @@ class MikrotikData:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+        self,
+        hass: HomeAssistant,
+        config_entry: MikrotikConfigEntry,
+        api: librouteros.Api,
     ) -> None:
         """Initialize the Mikrotik Client."""
         self.hass = hass

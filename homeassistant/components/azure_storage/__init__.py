@@ -62,19 +62,19 @@ async def async_setup_entry(
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="account_not_found",
-            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+            translation_placeholders={"account_name": entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except ClientAuthenticationError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
-            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+            translation_placeholders={"account_name": entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except AzureError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+            translation_placeholders={"account_name": entry.data[CONF_ACCOUNT_NAME]},
         ) from err
 
     entry.runtime_data = container_client

@@ -33,6 +33,7 @@ class WaterHeaterCapabilityAttribute(StrEnum):
     MAX_TEMP = "max_temp"
     TARGET_TEMP_STEP = "target_temp_step"
     OPERATION_LIST = "operation_list"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 class WaterHeaterStateAttribute(
@@ -40,6 +41,10 @@ class WaterHeaterStateAttribute(
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
         "TEMPERATURE": ("WaterHeaterStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
+        "TEMPERATURE_UNIT": (
+            "WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT",
+            "2027.6.0",
+        ),
     },
 ):
     """State attributes for water heater entities."""
@@ -51,7 +56,7 @@ class WaterHeaterStateAttribute(
     TARGET_TEMP_LOW = "target_temp_low"
     OPERATION_MODE = "operation_mode"
     AWAY_MODE = "away_mode"
-    TEMPERATURE_UNIT = "temperature_unit"
+    TEMPERATURE_UNIT = "temperature_unit"  # Deprecated, moved to capability attributes
 
 
 STATE_ECO = "eco"

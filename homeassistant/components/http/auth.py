@@ -143,6 +143,7 @@ async def async_setup_auth(
         if async_user_not_allowed_do_auth(hass, refresh_token.user, request):
             return False
 
+        hass.auth.async_log_access_token_usage(refresh_token, request.remote)
         request[KEY_HASS_USER] = refresh_token.user
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True

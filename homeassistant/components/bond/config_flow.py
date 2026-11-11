@@ -168,8 +168,8 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_HOST: self._discovered[CONF_HOST],
-                    CONF_NAME: self._discovered[CONF_NAME],
+                    "host": self._discovered[CONF_HOST],
+                    "name": self._discovered[CONF_NAME],
                 }
             }
         )
@@ -304,7 +304,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=DISCOVERY_SCHEMA,
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
 
