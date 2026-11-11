@@ -761,7 +761,7 @@ jobs:
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@61efe07e57e55bedeab750c434504de272a56e8c # v5.6.1
+        uses: CodSpeedHQ/action@af75f77f17a054769abefaa42fe8dc2975469b5f # v5.6.3
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.

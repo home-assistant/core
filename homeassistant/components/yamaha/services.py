@@ -1,23 +1,32 @@
 """Services for the Yamaha Network Receivers integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import (
-    DOMAIN,
-    SERVICE_ENABLE_OUTPUT,
-    SERVICE_MENU_CURSOR,
-    SERVICE_SELECT_SCENE,
-)
+from .const import DOMAIN
 from .media_player import CURSOR_TYPE_MAP
 
-ATTR_CURSOR = "cursor"
-ATTR_ENABLED = "enabled"
-ATTR_PORT = "port"
-ATTR_SCENE = "scene"
+
+class YamahaService(StrEnum):
+    """Store keys for Yamaha services."""
+
+    ENABLE_OUTPUT = "enable_output"
+    MENU_CURSOR = "menu_cursor"
+    SELECT_SCENE = "select_scene"
+
+
+class YamahaServiceArgument(StrEnum):
+    """Store keys for Yamaha service arguments."""
+
+    PORT = "port"
+    ENABLED = "enabled"
+    CURSOR = "cursor"
+    SCENE = "scene"
 
 
 @callback
@@ -27,20 +36,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SELECT_SCENE,
+        YamahaService.SELECT_SCENE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={probatio.Required(ATTR_SCENE): cv.string},
+        schema={probatio.Required(YamahaServiceArgument.SCENE): cv.string},
         func="set_scene",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ENABLE_OUTPUT,
+        YamahaService.ENABLE_OUTPUT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
-            probatio.Required(ATTR_ENABLED): cv.boolean,
-            probatio.Required(ATTR_PORT): cv.string,
+            probatio.Required(YamahaServiceArgument.ENABLED): cv.boolean,
+            probatio.Required(YamahaServiceArgument.PORT): cv.string,
         },
         func="enable_output",
     )
@@ -48,8 +57,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_MENU_CURSOR,
+        YamahaService.MENU_CURSOR,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={probatio.Required(ATTR_CURSOR): probatio.In(CURSOR_TYPE_MAP)},
+        schema={
+            probatio.Required(YamahaServiceArgument.CURSOR): probatio.In(
+                CURSOR_TYPE_MAP
+            )
+        },
         func="menu_cursor",
     )

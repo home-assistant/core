@@ -14,6 +14,7 @@ from python_open_router import KeyData, ModelsDataWrapper
 from homeassistant.components.open_router.const import (
     CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
+    CONF_REASONING,
     CONF_WEB_SEARCH,
     DOMAIN,
 )
@@ -47,12 +48,21 @@ def web_search() -> bool:
 
 
 @pytest.fixture
-def conversation_subentry_data(enable_assist: bool, web_search: str) -> dict[str, Any]:
+def reasoning() -> str:
+    """Mock reasoning setting."""
+    return "auto"
+
+
+@pytest.fixture
+def conversation_subentry_data(
+    enable_assist: bool, web_search: str, reasoning: str
+) -> dict[str, Any]:
     """Mock conversation subentry data."""
     res: dict[str, Any] = {
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "You are a helpful assistant.",
         CONF_WEB_SEARCH: web_search,
+        CONF_REASONING: reasoning,
     }
     if enable_assist:
         res[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]

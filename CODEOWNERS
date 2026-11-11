@@ -1215,7 +1215,7 @@ AGENTS.md @home-assistant/core
 /tests/components/meteo_france/ @oncleben31 @Quentame
 /homeassistant/components/meteo_lt/ @xE1H
 /tests/components/meteo_lt/ @xE1H
-/homeassistant/components/meteoalarm/ @rolfberkenbosch
+/homeassistant/components/meteoalarm/ @rolfberkenbosch @mastermc0 @jjprz
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
 /homeassistant/components/metoffice/ @MrHarcombe @avee87
@@ -1383,6 +1383,8 @@ AGENTS.md @home-assistant/core
 /tests/components/nut/ @bdraco @ollo69 @pestevez @tdfountain
 /homeassistant/components/nws/ @MatthewFlamm @kamiyo
 /tests/components/nws/ @MatthewFlamm @kamiyo
+/homeassistant/components/nx584/ @chrodriguez
+/tests/components/nx584/ @chrodriguez
 /homeassistant/components/nyt_games/ @joostlek
 /tests/components/nyt_games/ @joostlek
 /homeassistant/components/nzbget/ @chriscla

@@ -1,6 +1,10 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'app': dict({
+      'bundle': None,
+      'missing_reason': 'not_connected',
+    }),
     'connection': dict({
       'last_exception': None,
       'listening': False,
@@ -54,6 +58,7 @@
             'percentage': 98.4,
             'power': 25.5,
             'scope': 'system',
+            'serial': None,
             'state': 'charging',
             'time_remaining': 12,
             'voltage': 12.6,
@@ -64,6 +69,7 @@
             'percentage': 96,
             'power': None,
             'scope': 'device',
+            'serial': '**REDACTED**',
             'state': 'discharging',
             'time_remaining': None,
             'voltage': None,
@@ -75,6 +81,16 @@
         'state': 'charging',
         'time_remaining': 12,
         'voltage': 12.6,
+      }),
+      'commands': dict({
+        'backup': dict({
+          'arguments': '**REDACTED**',
+          'command': '**REDACTED**',
+          'id': 'backup',
+          'name': 'Back up',
+          'prefab': '',
+          'workingDir': '**REDACTED**',
+        }),
       }),
       'cpu': dict({
         'count': 4,
@@ -439,5 +455,56 @@
       'version': 1,
     }),
     'last_update_success': True,
+  })
+# ---
+# name: test_diagnostics_app_bundle
+  dict({
+    'bundle': dict({
+      'architecture': 'amd64',
+      'log_level': 'WARN',
+      'modules': list([
+        dict({
+          'failures': 0,
+          'has_data': True,
+          'last_error': None,
+          'last_error_at': None,
+          'name': 'cpu',
+          'updated': '2023-11-14T22:13:20Z',
+        }),
+        dict({
+          'failures': 3,
+          'has_data': False,
+          'last_error': '**REDACTED**',
+          'last_error_at': 1700000060,
+          'name': 'gpus',
+          'updated': None,
+        }),
+      ]),
+      'platform': 'linux',
+      'recent_errors': list([
+        dict({
+          'error': '**REDACTED**',
+          'event': None,
+          'level': 'WARN',
+          'message': 'Task processing error for module',
+          'module': 'gpus',
+          'time': 1700000060,
+        }),
+      ]),
+      'settings': dict({
+        'allowed_secondary_mount_points': 0,
+        'autostart': False,
+        'cameras_capture': False,
+        'commands': 2,
+        'desktop_hyprland_code': False,
+        'desktop_window_titles': False,
+        'hotkeys': 0,
+        'media_directories': 1,
+        'system_tray': True,
+      }),
+      'started_at': 1700000000,
+      'version': '5.24.0',
+    }),
+    'missing_reason': None,
   })
 # ---
