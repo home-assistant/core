@@ -90,7 +90,19 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
 
-    # Invalid energy values, lifeTimeData energy is lower than last year, month or day.
+    # Small differences between separately sampled totals do not hide lifetime.
+    mock_overview_data["overview"]["lifeTimeData"]["energy"] = 100000
+    mock_overview_data["overview"]["lastYearData"]["energy"] = 100340
+    solaredge_api.get_overview = AsyncMock(return_value=mock_overview_data)
+    freezer.tick(OVERVIEW_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
+    assert state
+    assert state.state == "100000"
+
+    # A zero lifetime value is invalid when another total contains production.
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0
     solaredge_api.get_overview = AsyncMock(return_value=mock_overview_data)
     freezer.tick(OVERVIEW_UPDATE_DELAY)

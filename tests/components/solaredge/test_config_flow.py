@@ -183,6 +183,35 @@ async def test_invalid_code_does_not_consume_pending_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_authorization_rejection_aborts_flow(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    setup_credentials: None,
+) -> None:
+    """Test a browser-validated provider rejection aborts the flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SITE_ID: SITE_ID}
+    )
+    client = await hass_client_no_auth()
+    response = await client.get(URL(result["url"]).path_qs, allow_redirects=False)
+    cookie = response.cookies[f"solaredge_oauth_{result['flow_id']}"]
+
+    response = await client.get(
+        f"{OAUTH2_CALLBACK_PATH}?error=access_denied&site_id={SITE_ID}",
+        headers={"Cookie": f"{cookie.key}={cookie.value}"},
+    )
+    assert response.status == 200
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "user_rejected_authorize"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_migrates_api_key_entry(
     recorder_mock: Recorder,
     hass: HomeAssistant,

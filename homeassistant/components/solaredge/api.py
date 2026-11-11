@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import API_BASE_URL
+from .const import API_BASE_URL, TELEMETRY_CACHE_DURATION
 
 type AccessTokenProvider = Callable[[], Awaitable[str]]
 
@@ -65,7 +65,7 @@ class SolarEdgeV2:
         self._meter_supported: bool | None = None
         self._lifetime_output: float | None = None
         self._lifetime_day: date | None = None
-        self._lifetime_day_energy = 0.0
+        self._lifetime_day_energy: float | None = None
 
     async def _request(
         self,
@@ -147,6 +147,7 @@ class SolarEdgeV2:
         params: dict[str, str | list[str]] | None = None,
     ) -> tuple[dict[str, Any] | list[Any], bool]:
         """Return a response and whether it was fetched from the API."""
+        self._retire_obsolete_cache_keys(cache_key)
         async with self._cache_locks.setdefault(cache_key, asyncio.Lock()):
             now = time.monotonic()
             if (cached := self._cache.get(cache_key)) and now - cached[
@@ -156,6 +157,21 @@ class SolarEdgeV2:
             result = await self._request(path, params=params)
             self._cache[cache_key] = (now, result)
             return result, True
+
+    def _retire_obsolete_cache_keys(self, cache_key: str) -> None:
+        """Retire dated cache entries replaced by a newer period."""
+        parts = cache_key.split(":")
+        if parts[0] not in {"energy", "overview", "storage"} or len(parts) < 3:
+            return
+        family = ":".join(parts[:-1])
+        for key in self._cache.keys() | self._cache_locks.keys():
+            if key == cache_key or not key.startswith(f"{family}:"):
+                continue
+            lock = self._cache_locks.get(key)
+            if lock is not None and lock.locked():
+                continue
+            self._cache.pop(key, None)
+            self._cache_locks.pop(key, None)
 
     async def get_details(self, site_id: str) -> dict[str, Any]:
         """Return site details in the V1-compatible shape."""
@@ -218,7 +234,7 @@ class SolarEdgeV2:
             power = await self._get_site_power(site_id, now)
             current_power = _latest_value(_find_list(power, "values"))
             if current_power is None:
-                current_power = _find_number(power, "value") or 0.0
+                current_power = _find_number(power, "value")
         return {
             "overview": {
                 "lifeTimeData": {"energy": lifetime_energy},
@@ -242,19 +258,20 @@ class SolarEdgeV2:
         if api_lifetime is None:
             return self._lifetime_output
 
-        current_daily = daily_energy or 0.0
         if refreshed or self._lifetime_output is None:
             self._lifetime_output = max(self._lifetime_output or 0.0, api_lifetime)
-        else:
-            delta = (
-                max(0.0, current_daily - self._lifetime_day_energy)
-                if self._lifetime_day == current_day
-                else current_daily
-            )
+            self._lifetime_day = current_day
+            self._lifetime_day_energy = daily_energy
+        elif daily_energy is not None:
+            if self._lifetime_day != current_day:
+                delta = daily_energy
+            elif self._lifetime_day_energy is None:
+                delta = 0.0
+            else:
+                delta = max(0.0, daily_energy - self._lifetime_day_energy)
             self._lifetime_output += delta
-
-        self._lifetime_day = current_day
-        self._lifetime_day_energy = current_daily
+            self._lifetime_day = current_day
+            self._lifetime_day_energy = daily_energy
         return self._lifetime_output
 
     async def _get_overview(
@@ -267,7 +284,7 @@ class SolarEdgeV2:
         """Get a site overview for a time period."""
         result = await self._cached_request(
             f"overview:{site_id}:{period}:{start.date().isoformat()}",
-            timedelta(minutes=55) if period == "day" else timedelta(hours=24),
+            TELEMETRY_CACHE_DURATION if period == "day" else timedelta(hours=24),
             f"/sites/{site_id}/overview",
             params={"from": start.isoformat(), "to": end.isoformat()},
         )
@@ -349,7 +366,7 @@ class SolarEdgeV2:
         try:
             result = await self._cached_request(
                 f"meter:{site_id}",
-                timedelta(minutes=55),
+                TELEMETRY_CACHE_DURATION,
                 f"/sites/{site_id}/meters/telemetry",
                 params={
                     "from": (now - timedelta(hours=1)).isoformat(),
@@ -369,7 +386,7 @@ class SolarEdgeV2:
         """Get latest site production power when no meter is installed."""
         result = await self._cached_request(
             f"power:{site_id}",
-            timedelta(minutes=55),
+            TELEMETRY_CACHE_DURATION,
             f"/sites/{site_id}/power",
             params={
                 "from": (now - timedelta(hours=1)).isoformat(),
@@ -405,10 +422,15 @@ class SolarEdgeV2:
             power = await self._get_site_power(site_id, now)
             production = _latest_value(_find_list(power, "values"))
             if production is None:
-                production = _find_number(power, "value") or 0.0
+                production = _find_number(power, "value")
 
-        exporting = exported is not None and (imported is None or exported > imported)
-        grid = exported if exporting else imported
+        net_grid = (
+            (imported or 0.0) - (exported or 0.0)
+            if imported is not None or exported is not None
+            else None
+        )
+        exporting = net_grid is not None and net_grid < 0
+        grid = abs(net_grid) if net_grid is not None else None
         connections = []
         if grid is not None:
             connections.append(
@@ -425,9 +447,10 @@ class SolarEdgeV2:
         }
         charge_power, discharge_power, state_of_energy = _latest_storage_values(storage)
         if charge_power is not None or discharge_power is not None:
-            charging = (charge_power or 0) > (discharge_power or 0)
-            discharging = (discharge_power or 0) > (charge_power or 0)
-            storage_power = charge_power if charging else discharge_power
+            net_storage = (discharge_power or 0.0) - (charge_power or 0.0)
+            charging = net_storage < 0
+            discharging = net_storage > 0
+            storage_power = abs(net_storage)
             if charging:
                 power_flow["connections"].append({"from": "PV", "to": "STORAGE"})
             elif discharging:
@@ -747,8 +770,9 @@ def _latest_storage_values(
     """Return aggregate latest storage telemetry."""
     charge_power: float | None = None
     discharge_power: float | None = None
-    state_of_energy_values: list[float] = []
-    for battery in _storage_devices(data):
+    batteries = _storage_devices(data)
+    state_of_energy: float | None = None
+    for battery in batteries:
         telemetry = _find_list(battery, "telemetry", "telemetries", "data", "values")
         if not telemetry:
             continue
@@ -760,9 +784,9 @@ def _latest_storage_values(
         if (
             value := _find_number(latest, "stateOfEnergy", "stateOfCharge")
         ) is not None:
-            state_of_energy_values.append(value)
+            state_of_energy = value
     return (
         charge_power,
         discharge_power,
-        state_of_energy_values[0] if len(state_of_energy_values) == 1 else None,
+        state_of_energy if len(batteries) == 1 else None,
     )

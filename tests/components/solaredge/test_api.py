@@ -1,7 +1,7 @@
 """Tests for the SolarEdge V2 API client."""
 
 import asyncio
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import time
 from unittest.mock import AsyncMock
 
@@ -287,6 +287,31 @@ async def test_concurrent_cache_misses_are_coalesced(
     api._request.assert_awaited_once()
 
 
+async def test_dated_cache_entries_are_retired() -> None:
+    """Test dated cache entries and their locks do not accumulate."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    api = SolarEdgeV2(AsyncMock(), async_access_token)
+    api._request = AsyncMock(return_value={})
+
+    await api._cached_request(
+        f"overview:{SITE_ID}:day:2026-10-21",
+        timedelta(hours=1),
+        "/overview",
+    )
+    api._cache_locks[f"overview:{SITE_ID}:day:2026-10-20"] = asyncio.Lock()
+    await api._cached_request(
+        f"overview:{SITE_ID}:day:2026-10-22",
+        timedelta(hours=1),
+        "/overview",
+    )
+
+    assert set(api._cache) == {f"overview:{SITE_ID}:day:2026-10-22"}
+    assert set(api._cache_locks) == {f"overview:{SITE_ID}:day:2026-10-22"}
+
+
 async def test_request_timeout_is_mapped(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -333,6 +358,127 @@ async def test_lifetime_energy_is_interpolated() -> None:
     assert api._estimated_lifetime_energy(1_000, 100, current_day, True) == 1_000
     assert api._estimated_lifetime_energy(1_000, 125, current_day, False) == 1_025
     assert api._estimated_lifetime_energy(1_000, 10, date(2026, 10, 22), False) == 1_035
+
+
+async def test_missing_daily_energy_preserves_lifetime_baseline() -> None:
+    """Test a missing daily sample does not reset or inflate the baseline."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    api = SolarEdgeV2(AsyncMock(), async_access_token)
+    current_day = date(2026, 10, 21)
+
+    assert api._estimated_lifetime_energy(1_000, 100, current_day, True) == 1_000
+    assert api._estimated_lifetime_energy(1_000, 125, current_day, False) == 1_025
+    assert api._estimated_lifetime_energy(1_000, None, current_day, False) == 1_025
+    assert api._estimated_lifetime_energy(1_000, 130, current_day, False) == 1_030
+
+
+async def test_missing_daily_energy_after_refresh_sets_next_baseline() -> None:
+    """Test the first valid daily sample after a missing refresh is a baseline."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    api = SolarEdgeV2(AsyncMock(), async_access_token)
+    current_day = date(2026, 10, 21)
+
+    assert api._estimated_lifetime_energy(1_000, None, current_day, True) == 1_000
+    assert api._estimated_lifetime_energy(1_000, 100, current_day, False) == 1_000
+    assert api._estimated_lifetime_energy(1_000, 125, current_day, False) == 1_025
+
+
+async def test_missing_power_remains_unknown(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test absent power samples remain unknown instead of becoming zero."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    aioclient_mock.get(
+        f"{API_BASE_URL}/sites/{SITE_ID}/meters/telemetry",
+        json={"meters": []},
+    )
+    aioclient_mock.get(
+        f"{API_BASE_URL}/sites/{SITE_ID}/power",
+        json={"values": [{"value": None}]},
+    )
+    api = SolarEdgeV2(async_get_clientsession(hass), async_access_token)
+
+    result = await api.get_current_power_flow(SITE_ID)
+
+    assert result["siteCurrentPowerFlow"]["PV"]["currentPower"] is None
+
+
+async def test_overview_missing_power_remains_unknown() -> None:
+    """Test the overview also preserves an absent power reading."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    api = SolarEdgeV2(AsyncMock(), async_access_token)
+    api._get_overview = AsyncMock(return_value={"production": {}})
+    api._get_energy = AsyncMock(return_value={})
+    api._cached_request_with_status = AsyncMock(
+        return_value=({"energy": 1_000, "unit": "WH"}, True)
+    )
+    api._get_meter_telemetry = AsyncMock(return_value={})
+    api._get_site_power = AsyncMock(return_value={"values": [{"value": None}]})
+
+    result = await api.get_overview(SITE_ID)
+
+    assert result["overview"]["currentPower"]["power"] is None
+
+
+async def test_power_flow_uses_net_grid_and_storage_power(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test simultaneous import/export and charge/discharge are netted."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    aioclient_mock.get(
+        f"{API_BASE_URL}/sites/{SITE_ID}/devices",
+        json=[{"type": "BATTERY", "serialNumber": "battery-1"}],
+    )
+    aioclient_mock.get(
+        f"{API_BASE_URL}/sites/{SITE_ID}/meters/telemetry",
+        json={
+            "meters": {
+                "meter-1": {
+                    "productionPower": {"values": [{"value": 500}]},
+                    "importPower": {"values": [{"value": 300}]},
+                    "exportPower": {"values": [{"value": 200}]},
+                }
+            }
+        },
+    )
+    aioclient_mock.get(
+        f"{API_BASE_URL}/sites/{SITE_ID}/storage/telemetry",
+        json={
+            "storage": {
+                "battery-1": {
+                    "chargePower": {"values": [{"timestamp": "1", "value": 300}]},
+                    "dischargePower": {"values": [{"timestamp": "1", "value": 100}]},
+                }
+            }
+        },
+    )
+    api = SolarEdgeV2(async_get_clientsession(hass), async_access_token)
+    await api.get_inventory(SITE_ID)
+
+    result = await api.get_current_power_flow(SITE_ID)
+
+    power_flow = result["siteCurrentPowerFlow"]
+    assert power_flow["GRID"]["currentPower"] == 100
+    assert {"from": "GRID", "to": "Load"} in power_flow["connections"]
+    assert power_flow["STORAGE"]["currentPower"] == 200
+    assert power_flow["STORAGE"]["status"] == "Charging"
 
 
 async def test_storage_telemetry_is_sorted_and_preserves_unknown_counters(
@@ -390,6 +536,22 @@ def test_multiple_battery_percentage_is_not_order_dependent() -> None:
     }
 
     assert _latest_storage_values(data) == (None, None, None)
+
+
+def test_multiple_battery_percentage_stays_unknown_when_one_is_missing() -> None:
+    """Test one available percentage is not treated as a site aggregate."""
+    data = {
+        "storage": {
+            "battery-1": {
+                "stateOfEnergy": {"values": [{"timestamp": "1", "value": 20}]}
+            },
+            "battery-2": {
+                "chargePower": {"values": [{"timestamp": "1", "value": 100}]}
+            },
+        }
+    }
+
+    assert _latest_storage_values(data) == (100, None, None)
 
 
 async def test_rotated_refresh_token_is_persisted(

@@ -22,12 +22,13 @@ CONF_SITE_ID = "site_id"
 CONF_SECTION_WEB_AUTH = "web_auth"
 DEFAULT_NAME = "SolarEdge"
 
-OVERVIEW_UPDATE_DELAY = timedelta(hours=1)
+OVERVIEW_UPDATE_DELAY = timedelta(hours=2)
 DETAILS_UPDATE_DELAY = timedelta(hours=24)
 INVENTORY_UPDATE_DELAY = timedelta(hours=24)
-POWER_FLOW_UPDATE_DELAY = timedelta(hours=1)
-ENERGY_DETAILS_DELAY = timedelta(hours=1)
+POWER_FLOW_UPDATE_DELAY = timedelta(hours=2)
+ENERGY_DETAILS_DELAY = timedelta(hours=2)
 STORAGE_DATA_UPDATE_DELAY = timedelta(hours=4)
 MODULE_STATISTICS_UPDATE_DELAY = timedelta(hours=12)
+TELEMETRY_CACHE_DURATION = timedelta(hours=1, minutes=55)
 
 SCAN_INTERVAL = timedelta(hours=1)

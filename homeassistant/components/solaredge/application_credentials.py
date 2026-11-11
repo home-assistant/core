@@ -169,10 +169,19 @@ class SolarEdgeOAuth2CallbackView(http.HomeAssistantView):
             )
 
         if "error" in request.query:
-            return web.Response(
-                text="SolarEdge authorization was rejected",
-                status=HTTPStatus.BAD_REQUEST,
+            await hass.config_entries.flow.async_configure(
+                flow_id=pending_flow.flow_id,
+                user_input={"error": request.query["error"]},
             )
+            pending_flows.pop(site_id, None)
+            response = web.Response(
+                headers={"content-type": "text/html"},
+                text="<script>window.close()</script>",
+            )
+            response.del_cookie(
+                _cookie_name(pending_flow.flow_id), path=OAUTH2_CALLBACK_PATH
+            )
+            return response
 
         try:
             token = await pending_flow.implementation.async_exchange_code(
@@ -289,7 +298,7 @@ class SolarEdgeOAuth2Implementation(AuthImplementation):
         return external_data["token"]
 
     @override
-    async def _token_request(self, data: dict) -> dict:
+    async def _token_request(self, data: dict[str, Any]) -> dict[str, Any]:
         """Make a JSON token request."""
         try:
             response = await async_get_clientsession(self.hass).post(
