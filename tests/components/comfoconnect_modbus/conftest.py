@@ -7,6 +7,7 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.comfoconnect_modbus import PLATFORMS
 from homeassistant.components.comfoconnect_modbus.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -64,8 +65,8 @@ def mock_get_unit(mock_connection: MockModbusConnection) -> Generator[MagicMock]
 
 @pytest.fixture
 def platforms() -> list[Platform]:
-    """The platforms to set up."""
-    return [Platform.SENSOR]
+    """Fixture to specify platforms to test."""
+    return PLATFORMS
 
 
 @pytest.fixture
@@ -78,6 +79,6 @@ async def init_integration(
     """Set up the ComfoConnect PRO integration for testing."""
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.comfoconnect_modbus.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
     return mock_config_entry

@@ -153,13 +153,17 @@ async def test_user_step_success(
 
 
 @pytest.mark.parametrize(
-    "error",
-    [ModbusTimeoutError("timed out"), HomeAssistantError("in use")],
+    ("error", "base"),
+    [
+        (ModbusTimeoutError("timed out"), "cannot_connect"),
+        (HomeAssistantError("in use"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
+    ],
 )
-async def test_user_step_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, error: Exception
+async def test_user_step_probe_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, error: Exception, base: str
 ) -> None:
-    """Test an unreachable gateway shows the error, then recovers."""
+    """Test a failed probe shows the error, then recovers."""
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with patch(
@@ -169,7 +173,7 @@ async def test_user_step_cannot_connect(
         result = await hass.config_entries.flow.async_configure(flow_id, MOCK_TCP_INPUT)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": base}
     assert (
         get_schema_suggested_value(result["data_schema"].schema, CONF_HOST)
         == (MOCK_TCP_INPUT[CONF_HOST])

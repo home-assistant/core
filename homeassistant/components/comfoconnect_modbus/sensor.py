@@ -182,8 +182,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ComfoConnect PRO sensor platform."""
-    runtime_data = entry.runtime_data
-    coordinator = runtime_data.coordinator
+    coordinator = entry.runtime_data
+    added: set[str] = set()
     async_add_entities(
         ComfoConnectProSensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
@@ -195,12 +195,12 @@ async def async_setup_entry(
         new = [
             description
             for description in OPTIONAL_SENSOR_DESCRIPTIONS
-            if description.key not in runtime_data.added_sensors
-            and description.value_fn(runtime_data.device) is not None
+            if description.key not in added
+            and description.value_fn(coordinator.device) is not None
         ]
         if not new:
             return
-        runtime_data.added_sensors.update(description.key for description in new)
+        added.update(description.key for description in new)
         async_add_entities(
             ComfoConnectProSensor(coordinator, description) for description in new
         )
@@ -217,5 +217,4 @@ class ComfoConnectProSensor(ComfoConnectProEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> StateType:
-        """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.device)

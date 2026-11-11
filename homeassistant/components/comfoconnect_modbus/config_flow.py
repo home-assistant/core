@@ -1,10 +1,11 @@
 """Config flow for Zehnder ComfoConnect PRO gateways."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any, override
 
 from comfoconnect_pro_modbus import ComfoConnectPro, NoVentilationUnitError
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusSerialParams, ModbusTcpParams
 import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -38,7 +39,8 @@ from .const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
-from .helpers import create_modbus_params
+
+_LOGGER = logging.getLogger(__name__)
 
 UNIT_ID_SELECTOR = probatio.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)),
@@ -80,6 +82,22 @@ STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): UNIT_ID_SELECTOR,
     }
 )
+
+
+def create_modbus_params(
+    data: Mapping[str, Any],
+) -> ModbusSerialParams | ModbusTcpParams:
+    """Build the Modbus link parameters from config entry data."""
+    if data[CONF_TYPE] == TYPE_SERIAL:
+        parity = PARITIES[data[CONF_PARITY]]
+        return ModbusSerialParams(
+            device=data[CONF_DEVICE],
+            baudrate=data[CONF_BAUDRATE],
+            parity=parity,
+            # The gateway takes 2 stop bits without parity and 1 with it.
+            stopbits=2 if parity == "N" else 1,
+        )
+    return ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
 
 
 def _link_data(connection_type: str, user_input: Mapping[str, Any]) -> dict[str, Any]:
@@ -173,6 +191,10 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
             if err.code is None:
                 return {"base": "no_path_to_unit"}, {}
             return {"base": "no_ventilation_unit"}, {"state": str(err.code)}
-        except ModbusError, HomeAssistantError:
+        except (ModbusError, HomeAssistantError) as err:
+            _LOGGER.debug("Could not reach the gateway: %r", err)
             return {"base": "cannot_connect"}, {}
+        except Exception:
+            _LOGGER.exception("Unexpected error while probing the gateway")
+            return {"base": "unknown"}, {}
         return {}, {}

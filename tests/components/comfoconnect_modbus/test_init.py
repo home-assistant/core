@@ -180,7 +180,7 @@ async def test_every_component_failing_marks_the_poll_failed(
     mock_unit.fail_read(address(0x0001), error, register_type="holding")
     await _tick(hass, freezer)
 
-    assert not init_integration.runtime_data.coordinator.last_update_success
+    assert not init_integration.runtime_data.last_update_success
     assert hass.states.get(AIRFLOW).state == STATE_UNAVAILABLE
 
 
@@ -205,18 +205,27 @@ async def test_lost_ventilation_unit_makes_everything_unavailable(
 async def test_setup_fails_when_the_link_is_held_with_other_settings(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test a link another entry holds with other settings fails setup for good."""
+    """Test setup fails with the modbus error when the link is in use with other settings."""
     mock_config_entry.add_to_hass(hass)
+    placeholders = {
+        "endpoint": "192.168.1.100:502",
+        "existing_params": "port 503",
+        "params": "port 502",
+    }
     with patch(
         "homeassistant.components.comfoconnect_modbus.async_get_unit",
-        side_effect=HomeAssistantError("in use with other settings"),
+        side_effect=HomeAssistantError(
+            translation_domain="modbus",
+            translation_key="device_in_use",
+            translation_placeholders=placeholders,
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == (
-        "The same port or host is already in use with other link settings"
-    )
+    assert mock_config_entry.error_reason_translation_domain == "modbus"
+    assert mock_config_entry.error_reason_translation_key == "device_in_use"
+    assert mock_config_entry.error_reason_translation_placeholders == placeholders
 
 
 @pytest.mark.parametrize("error", [GatewayPathUnavailableError, GatewayTargetError])
@@ -234,7 +243,7 @@ async def test_gateway_refusing_every_read_reports_no_path(
     mock_unit.fail_read(address(0x0001), error(), register_type="holding")
     await _tick(hass, freezer)
 
-    coordinator = init_integration.runtime_data.coordinator
+    coordinator = init_integration.runtime_data
     assert not coordinator.last_update_success
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert coordinator.last_exception.translation_key == "no_path_to_unit"
@@ -251,7 +260,7 @@ async def test_dead_link_keeps_the_modbus_error(
     mock_unit.fail_requests(ModbusConnectionError("socket closed"))
     await _tick(hass, freezer)
 
-    exception = init_integration.runtime_data.coordinator.last_exception
+    exception = init_integration.runtime_data.last_exception
     assert isinstance(exception, UpdateFailed)
     assert exception.translation_key == "modbus_error"
     assert isinstance(exception.__cause__, ModbusConnectionError)

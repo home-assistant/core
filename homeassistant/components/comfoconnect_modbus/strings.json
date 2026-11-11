@@ -6,7 +6,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_path_to_unit": "The gateway answered, but it has no path to a ventilation unit. Check the ComfoNet cable.",
-      "no_ventilation_unit": "The gateway answered, but it does not reach a ComfoAir Q or Flex ventilation unit (connection state {state}). Check the ComfoNet cable and the unit's firmware."
+      "no_ventilation_unit": "The gateway answered, but it does not reach a ComfoAir Q or Flex ventilation unit (connection state {state}). Check the ComfoNet cable and the unit's firmware.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "serial": {
@@ -166,9 +167,6 @@
     }
   },
   "exceptions": {
-    "link_settings_in_use": {
-      "message": "The same port or host is already in use with other link settings"
-    },
     "modbus_error": {
       "message": "Lost the Modbus link to the ComfoConnect PRO"
     },

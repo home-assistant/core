@@ -1,6 +1,5 @@
 """Data update coordinator for Zehnder ComfoConnect PRO gateways."""
 
-from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import override
@@ -23,6 +22,8 @@ from .const import DOMAIN, MANUFACTURER, MODEL, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_ERRORS = (GatewayPathUnavailableError, GatewayTargetError)
+
+type ComfoConnectProConfigEntry = ConfigEntry[ComfoConnectProDataUpdateCoordinator]
 
 
 class ComfoConnectProDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
@@ -89,21 +90,3 @@ class ComfoConnectProDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             )
 
         return report
-
-
-@dataclass
-class ComfoConnectProRuntimeData:
-    """Class to hold runtime data."""
-
-    coordinator: ComfoConnectProDataUpdateCoordinator
-    # `added_sensors` holds the keys of the optional sensors the sensor
-    # platform added entities for, once each reported a value.
-    added_sensors: set[str] = field(default_factory=set)
-
-    @property
-    def device(self) -> ComfoConnectPro:
-        """The gateway the coordinator polls."""
-        return self.coordinator.device
-
-
-type ComfoConnectProConfigEntry = ConfigEntry[ComfoConnectProRuntimeData]

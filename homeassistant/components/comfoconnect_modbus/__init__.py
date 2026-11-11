@@ -7,13 +7,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 
-from .const import CONF_UNIT_ID, DOMAIN
+from .config_flow import create_modbus_params
+from .const import CONF_UNIT_ID
 from .coordinator import (
     ComfoConnectProConfigEntry,
     ComfoConnectProDataUpdateCoordinator,
-    ComfoConnectProRuntimeData,
 )
-from .helpers import create_modbus_params
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -27,16 +26,16 @@ async def async_setup_entry(
             hass, entry, create_modbus_params(entry.data), entry.data[CONF_UNIT_ID]
         )
     except HomeAssistantError as err:
-        # Another entry holds the same port or host with other link settings
         raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="link_settings_in_use",
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
         ) from err
     coordinator = ComfoConnectProDataUpdateCoordinator(
         hass, entry, ComfoConnectPro(unit)
     )
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = ComfoConnectProRuntimeData(coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
