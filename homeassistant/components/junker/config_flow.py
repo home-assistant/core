@@ -31,6 +31,7 @@ from .junker_api import (
     AreaRequired,
     Collection,
     JunkerClient,
+    JunkerConnectionError,
     JunkerError,
     slugify_municipality,
 )
@@ -89,6 +90,8 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._municipality = municipality
                 self._areas = {str(area.id): area.name for area in err.areas}
                 return await self.async_step_area()
+            except JunkerConnectionError:
+                errors["base"] = "cannot_connect"
             except JunkerError:
                 errors["base"] = "invalid_municipality"
             except Exception:
@@ -120,6 +123,8 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 collections = await client.async_get_collections()
+            except JunkerConnectionError:
+                errors["base"] = "cannot_connect"
             except JunkerError:
                 errors["base"] = "invalid_area"
             except Exception:

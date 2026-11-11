@@ -6,7 +6,7 @@ import json
 import re
 import unicodedata
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError, ClientResponseError, ClientSession
 
 _BASE_URL = "https://differenziata.junkerapp.it"
 _EVENTS_RE = re.compile(r"var\s+events\s*=\s*(\[.*?\])\s*;", re.DOTALL)
@@ -16,6 +16,10 @@ _AREA_NAME_KEY = "NOME"  # codespell:ignore nome
 
 class JunkerError(Exception):
     """Base error for Junker calendar requests."""
+
+
+class JunkerConnectionError(JunkerError):
+    """Raised when Junker cannot be reached."""
 
 
 class AreaRequired(JunkerError):
@@ -73,8 +77,14 @@ class JunkerClient:
             async with self._session.get(f"{_BASE_URL}/{path}") as response:
                 response.raise_for_status()
                 page = await response.text()
-        except ClientError as err:
-            raise JunkerError("Unable to request the Junker calendar") from err
+        except ClientResponseError as err:
+            if err.status < 500:
+                raise JunkerError("The Junker calendar was not found") from err
+            raise JunkerConnectionError("Junker returned a server error") from err
+        except (ClientError, TimeoutError) as err:
+            raise JunkerConnectionError(
+                "Unable to request the Junker calendar"
+            ) from err
 
         if zones_match := _ZONES_RE.search(page):
             areas = self._parse_areas(zones_match.group(1))

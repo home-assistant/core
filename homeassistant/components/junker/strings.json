@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_area": "The selected area does not provide a collection calendar.",
       "invalid_municipality": "The municipality does not provide a collection calendar.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -53,7 +54,7 @@
     },
     "sensor": {
       "tomorrow_collection": {
-        "name": "Tomorrow's collection"
+        "name": "Tomorrow collection"
       }
     }
   },

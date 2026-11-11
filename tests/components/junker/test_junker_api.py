@@ -1,5 +1,7 @@
 """Tests for the Junker calendar client."""
 
+from typing import Any
+
 import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
@@ -7,6 +9,7 @@ from homeassistant.components.junker.junker_api import (
     _EVENTS_RE,
     AreaRequired,
     JunkerClient,
+    JunkerConnectionError,
     JunkerError,
     slugify_municipality,
 )
@@ -128,3 +131,17 @@ def test_parse_malformed_collections() -> None:
     """Test malformed event data raises a Junker error."""
     with pytest.raises(JunkerError):
         JunkerClient._parse_collections('[{"date":"x","vbin_desc":"Paper"}]')
+
+
+@pytest.mark.parametrize(
+    ("kwargs"),
+    [{"status": 500}, {"exc": TimeoutError}],
+)
+async def test_connection_errors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, kwargs: dict[str, Any]
+) -> None:
+    """Test server errors and timeouts raise a connection error."""
+    aioclient_mock.get(URL, **kwargs)
+    client = JunkerClient(async_get_clientsession(hass), "Test municipality")
+    with pytest.raises(JunkerConnectionError):
+        await client.async_get_collections()

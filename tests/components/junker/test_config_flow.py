@@ -12,7 +12,12 @@ from homeassistant.components.junker.const import (
     CONF_WASTE_TYPES,
     DOMAIN,
 )
-from homeassistant.components.junker.junker_api import Area, AreaRequired, JunkerError
+from homeassistant.components.junker.junker_api import (
+    Area,
+    AreaRequired,
+    JunkerConnectionError,
+    JunkerError,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -233,6 +238,52 @@ async def test_unexpected_area_error(hass: HomeAssistant, client: Mock) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    client.async_get_collections.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_AREA_ID: "1"}
+    )
+    result = await _complete(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_junker_client")
+async def test_cannot_connect_municipality(hass: HomeAssistant, client: Mock) -> None:
+    """Test a connection failure while validating the municipality."""
+    client.async_get_collections.side_effect = JunkerConnectionError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MUNICIPALITY: TEST_MUNICIPALITY}
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    client.async_get_collections.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MUNICIPALITY: TEST_MUNICIPALITY}
+    )
+    result = await _complete(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_junker_client")
+async def test_cannot_connect_area(hass: HomeAssistant, client: Mock) -> None:
+    """Test a connection failure while validating the area."""
+    client.async_get_collections.side_effect = [
+        AreaRequired([Area(1, "Central area")]),
+        JunkerConnectionError,
+    ]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MUNICIPALITY: TEST_MUNICIPALITY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_AREA_ID: "1"}
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
 
     client.async_get_collections.side_effect = None
     result = await hass.config_entries.flow.async_configure(
