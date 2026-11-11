@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -42,6 +43,42 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key="state",
+        translation_key="connection_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=["going_up", "up", "going_down", "down"],
+    ),
+    SensorEntityDescription(
+        key="ipv4",
+        translation_key="ipv4",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="ipv6",
+        translation_key="ipv6",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bandwidth_down",
+        translation_key="bandwidth_down",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bandwidth_up",
+        translation_key="bandwidth_up",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -246,9 +283,10 @@ class FreeboxDiskSensor(FreeboxSensor):
             model=disk["model"],
             name=f"Disk {disk['id']}",
             sw_version=disk["firmware"],
-            via_device=(
-                DOMAIN,
-                router.mac,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                router.hass,
+                (DOMAIN, router.mac),
+                config_entry_id=router.config_entry.entry_id,
             ),
         )
 

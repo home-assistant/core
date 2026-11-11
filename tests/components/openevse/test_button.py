@@ -6,9 +6,11 @@ from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
+    UnknownError,
     UnsupportedFeature,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -17,8 +19,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -76,41 +76,61 @@ async def test_press(
 @pytest.mark.parametrize(
     ("raised", "expected", "translation_key", "translation_placeholders"),
     [
-        (
+        pytest.param(
             AuthenticationError("bad creds"),
             ConfigEntryAuthFailed,
             "authentication_error",
             None,
+            id="auth_error",
         ),
-        (
+        pytest.param(
             TimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="timeout_error",
         ),
-        (
+        pytest.param(
             ServerTimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="server_timeout_error",
         ),
-        (
+        pytest.param(
             ParseJSONError("bad json"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="parse_json_error",
         ),
-        (
+        pytest.param(
             UnsupportedFeature("old firmware"),
             HomeAssistantError,
             "unsupported_feature",
             None,
+            id="unsupported_feature",
         ),
-        (
+        pytest.param(
             ContentTypeError(MagicMock(), (), message="bad content"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="content_type_error",
+        ),
+        pytest.param(
+            UnknownError("unknown error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="unknown_error",
+        ),
+        pytest.param(
+            RuntimeError("runtime error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="runtime_error",
         ),
     ],
 )

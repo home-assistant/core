@@ -3,25 +3,13 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.climate.const import (
-    ATTR_HUMIDITY,
-    ATTR_HVAC_ACTION,
-    HVACAction,
-    HVACMode,
-)
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     assert_numerical_condition_unit_conversion,
     other_states,
     parametrize_condition_states_all,
@@ -32,6 +20,21 @@ from tests.components.common import (
     target_entities,
 )
 
+from homeassistant.components.climate.condition import CONDITIONS
+from homeassistant.components.climate.const import (
+    ATTR_HUMIDITY,
+    ATTR_HVAC_ACTION,
+    ClimateEntityCapabilityAttribute,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
+
 
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -39,12 +42,27 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "climate")
 
 
+_CLIMATE_UNIT_ATTRIBUTES = {
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 _HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _TEMPERATURE_THRESHOLD = {
     "threshold": {
         "type": "above",
         "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
     }
+}
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_hvac_mode": TargetSupport.STANDARD,
+    "is_off": TargetSupport.STANDARD,
+    "is_on": TargetSupport.STANDARD,
+    "is_cooling": TargetSupport.STANDARD,
+    "is_drying": TargetSupport.STANDARD,
+    "is_heating": TargetSupport.STANDARD,
+    "is_target_humidity": TargetSupport.STANDARD,
+    "is_target_temperature": TargetSupport.STANDARD,
 }
 
 
@@ -76,6 +94,11 @@ async def test_climate_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -324,6 +347,7 @@ async def test_climate_attribute_condition_behavior_all(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -369,6 +393,7 @@ async def test_climate_numerical_condition_behavior_any(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -406,12 +431,31 @@ async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) 
         hass,
         condition="climate.is_target_temperature",
         entity_id="climate.test",
-        pass_states=[{"state": HVACMode.AUTO, "attributes": {ATTR_TEMPERATURE: 25}}],
+        pass_states=[
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {ATTR_TEMPERATURE: 25, **_CLIMATE_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {
+                    ATTR_TEMPERATURE: 80,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
+        ],
         fail_states=[
             {
                 "state": HVACMode.AUTO,
-                "attributes": {ATTR_TEMPERATURE: 20},
-            }
+                "attributes": {ATTR_TEMPERATURE: 20, **_CLIMATE_UNIT_ATTRIBUTES},
+            },
+            {
+                "state": HVACMode.AUTO,
+                "attributes": {
+                    ATTR_TEMPERATURE: 68,
+                    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+                },
+            },
         ],
         numerical_condition_options=[
             {

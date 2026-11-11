@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -10,9 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 from .conftest import TEST_SIMPLE_MAC, TEST_WEBHOOK_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 UPDATE_DATA = {
     "api_key": "",

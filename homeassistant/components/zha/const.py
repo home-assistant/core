@@ -5,6 +5,10 @@ EZSP_OVERWRITE_EUI64 = (
 )
 
 ATTR_ACTIVE_COORDINATOR = "active_coordinator"
+ATTR_DURATION = "duration"
+ATTR_INSTALL_CODE = "install_code"
+ATTR_QR_CODE = "qr_code"
+ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_ATTRIBUTES = "attributes"
 ATTR_AVAILABLE = "available"
 ATTR_DEVICE_TYPE = "device_type"
@@ -79,3 +83,5 @@ ZHA_OPTIONS = "zha_options"
 # Dispatcher signal carrying device reconfigure progress events (bind result,
 # attribute reporting result, configure complete) to the websocket subscriber.
 SIGNAL_DEVICE_RECONFIGURE_EVENT = "zha_device_reconfigure_event"
+
+RESPONSE = "response"

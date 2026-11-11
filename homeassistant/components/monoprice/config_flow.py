@@ -3,22 +3,18 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pymonoprice import get_monoprice
 from serialx import SerialException
-import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import VolDictType
 
+from . import MonopriceConfigEntry
 from .const import (
     CONF_SOURCE_1,
     CONF_SOURCE_2,
@@ -41,10 +37,10 @@ SOURCES = [
     CONF_SOURCE_6,
 ]
 
-OPTIONS_FOR_DATA: VolDictType = {vol.Optional(source): str for source in SOURCES}
+OPTIONS_FOR_DATA: VolDictType = {probatio.Optional(source): str for source in SOURCES}
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PORT): SerialPortSelector(), **OPTIONS_FOR_DATA}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_PORT): SerialPortSelector(), **OPTIONS_FOR_DATA}
 )
 
 
@@ -92,13 +88,13 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=user_input[CONF_PORT], data=info)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=user_input[CONF_PORT], data=info)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -108,7 +104,7 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MonopriceConfigEntry,
     ) -> MonopriceOptionsFlowHandler:
         """Define the config flow to handle options."""
         return MonopriceOptionsFlowHandler()
@@ -117,11 +113,11 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
 @callback
 def _key_for_source(index, source, previous_sources):
     if str(index) in previous_sources:
-        key = vol.Optional(
+        key = probatio.Optional(
             source, description={"suggested_value": previous_sources[str(index)]}
         )
     else:
-        key = vol.Optional(source)
+        key = probatio.Optional(source)
 
     return key
 
@@ -156,7 +152,7 @@ class MonopriceOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(options),
+            data_schema=probatio.Schema(options),
         )
 
 

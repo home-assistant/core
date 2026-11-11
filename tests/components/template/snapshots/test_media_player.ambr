@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My template',
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'TV',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'TV',
+        'Radio',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3460>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---

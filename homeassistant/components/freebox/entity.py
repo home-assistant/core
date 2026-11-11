@@ -36,7 +36,9 @@ class FreeboxHomeEntity(Entity):
             self._attr_unique_id += "-" + sub_node["name"].strip()
 
         self._available = True
-        self._firmware = node["props"].get("FwVersion")
+        # The Freebox reports the firmware version of home nodes as a number
+        firmware = node["props"].get("FwVersion")
+        self._firmware = str(firmware) if firmware is not None else None
         self._manufacturer = "Freebox SAS"
 
         self._model = CATEGORY_TO_MODEL.get(node["category"])
@@ -54,7 +56,11 @@ class FreeboxHomeEntity(Entity):
             model=self._model,
             name=node["label"].strip(),
             sw_version=self._firmware,
-            via_device=(DOMAIN, router.mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                router.hass,
+                (DOMAIN, router.mac),
+                config_entry_id=router.config_entry.entry_id,
+            ),
         )
 
     async def async_update_signal(self) -> None:
@@ -62,11 +68,10 @@ class FreeboxHomeEntity(Entity):
         self._node = self._router.home_devices[self._id]
         # Propagate Freebox device label changes to the device registry so
         # the entity stays in sync when users rename it on the Freebox app.
-        device_registry = dr.async_get(self.hass)
-        if device := device_registry.async_get_device(identifiers={(DOMAIN, self._id)}):
+        if device := self.device_entry:
             new_name = self._node["label"].strip()
             if device.name != new_name:
-                device_registry.async_update_device(device.id, name=new_name)
+                dr.async_get(self.hass).async_update_device(device.id, name=new_name)
         self.async_write_ha_state()
 
     async def set_home_endpoint_value(

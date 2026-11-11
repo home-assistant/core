@@ -1,6 +1,7 @@
 """Services for Indevolt integration."""
 
 import asyncio
+from enum import StrEnum
 from typing import Final, Never
 
 from indevolt_api import (
@@ -8,9 +9,10 @@ from indevolt_api import (
     PowerExceedsMaxError,
     SocBelowMinimumError,
 )
-import voluptuous as vol
+import probatio
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CommonServiceArgument
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
@@ -18,25 +20,41 @@ from homeassistant.helpers.service import async_extract_config_entry_ids
 from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 
-RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
+
+class IndevoltService(StrEnum):
+    """Store keys for Indevolt services."""
+
+    CHARGE = "charge"
+    DISCHARGE = "discharge"
+
+
+class IndevoltServiceArgument(StrEnum):
+    """Store keys for Indevolt service arguments."""
+
+    POWER = "power"
+    TARGET_SOC = "target_soc"
+
+
+RT_ACTION_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required("device_id"): vol.All(
-            cv.ensure_list,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): probatio.All(
+            probatio.EnsureList(),
             [cv.string],
         ),
-        vol.Required("target_soc"): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=0, max=100),
+        probatio.Required(IndevoltServiceArgument.TARGET_SOC): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=0, max=100),
         ),
-        vol.Required("power"): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=0, max=2400),
+        probatio.Required(IndevoltServiceArgument.POWER): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=0, max=10800),
         ),
     }
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Indevolt integration."""
 
     async def charge(call: ServiceCall) -> None:
@@ -50,10 +68,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         )
 
     hass.services.async_register(
-        DOMAIN, "charge", charge, schema=RT_ACTION_SERVICE_SCHEMA
+        DOMAIN, IndevoltService.CHARGE, charge, schema=RT_ACTION_SERVICE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, "discharge", discharge, schema=RT_ACTION_SERVICE_SCHEMA
+        DOMAIN, IndevoltService.DISCHARGE, discharge, schema=RT_ACTION_SERVICE_SCHEMA
     )
 
 
@@ -65,8 +83,8 @@ async def _async_handle_realtime_action(
     """Validate and execute a realtime action for one or more coordinators."""
     coordinators = await _async_get_coordinators_from_call(hass, call)
 
-    power: int = call.data["power"]
-    target_soc: int = call.data["target_soc"]
+    power: int = call.data[IndevoltServiceArgument.POWER]
+    target_soc: int = call.data[IndevoltServiceArgument.TARGET_SOC]
 
     _validate_realtime_action(coordinators, action, power, target_soc)
     await _execute_realtime_action(coordinators, action, power, target_soc)
@@ -146,7 +164,7 @@ async def _execute_realtime_action(
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
-    results: list[None | BaseException] = await asyncio.gather(
+    results: list[BaseException | None] = await asyncio.gather(
         *(
             coordinator.async_realtime_action(action, power, target_soc)
             for coordinator in coordinators

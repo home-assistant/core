@@ -1,11 +1,10 @@
 """The tests for the Open Hardware Monitor platform."""
 
+from pytest_homeassistant.common import async_load_fixture
 import requests_mock
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_load_fixture
 
 
 async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:

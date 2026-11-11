@@ -41,7 +41,7 @@ async def async_setup_platform(
         try:
             event = json_loads_object(msg.payload)
             device = parse_message(msg.topic, event)
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.debug(
                 "Failed to parse ARWN message on topic %s",
                 msg.topic,

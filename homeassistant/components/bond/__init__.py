@@ -1,7 +1,6 @@
 """The Bond integration."""
 
 from http import HTTPStatus
-import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
@@ -15,7 +14,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
@@ -36,8 +35,6 @@ PLATFORMS = [
 ]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
-_LOGGER = logging.getLogger(__name__)
-
 type BondConfigEntry = ConfigEntry[BondData]
 
 
@@ -47,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> None:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
@@ -65,8 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
         await hub.setup()
     except ClientResponseError as ex:
         if ex.status == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.error("Bond token no longer valid: %s", ex)
-            return False
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_token",
+            ) from ex
         raise ConfigEntryNotReady from ex
     except (ClientError, TimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
@@ -106,12 +105,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback
@@ -120,15 +117,15 @@ def _async_remove_old_device_identifiers(
 ) -> None:
     """Remove the non-unique device registry entries."""
     for device in hub.devices:
-        dev = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-        if dev is None:
-            continue
-        if config_entry_id in dev.config_entries:
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device.device_id), config_entry_id
+        )
+        if dev is not None:
             device_registry.async_remove_device(dev.id)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove bond config entry from a device."""
     data = config_entry.runtime_data

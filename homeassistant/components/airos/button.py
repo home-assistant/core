@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import DOMAIN, AirOSConfigEntry, AirOSDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
 
 PARALLEL_UPDATES = 0

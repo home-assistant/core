@@ -4,11 +4,11 @@ from datetime import datetime
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
+    CoverSpeed,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -29,7 +29,15 @@ async def async_setup_entry(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
             DemoCover(hass, "cover_2", "Hall Window", 10),
-            DemoCover(hass, "cover_3", "Living Room Window", 70, 50),
+            DemoCover(
+                hass,
+                "cover_3",
+                "Living Room Window",
+                70,
+                50,
+                supported_speeds=[CoverSpeed.SLOW, CoverSpeed.FAST],
+                translation_key="living_room_window",
+            ),
             DemoCover(
                 hass,
                 "cover_4",
@@ -69,6 +77,8 @@ class DemoCover(CoverEntity):
         tilt_position: int | None = None,
         device_class: CoverDeviceClass | None = None,
         supported_features: CoverEntityFeature | None = None,
+        supported_speeds: list[str] | None = None,
+        translation_key: str | None = None,
     ) -> None:
         """Initialize the cover."""
         self.hass = hass
@@ -76,6 +86,8 @@ class DemoCover(CoverEntity):
         self._position = position
         self._attr_device_class = device_class
         self._attr_supported_features = supported_features
+        self._attr_supported_speeds = supported_speeds
+        self._attr_translation_key = translation_key
         self._set_position: int | None = None
         self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position
@@ -187,7 +199,7 @@ class DemoCover(CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position: int = kwargs[ATTR_POSITION]
+        position: int = kwargs[CoverServiceArgument.POSITION]
         self._set_position = round(position, -1)
         if self._position == position:
             return
@@ -204,7 +216,7 @@ class DemoCover(CoverEntity):
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
-        tilt_position: int = kwargs[ATTR_TILT_POSITION]
+        tilt_position: int = kwargs[CoverServiceArgument.TILT_POSITION]
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return
@@ -219,6 +231,7 @@ class DemoCover(CoverEntity):
         """Stop the cover."""
         self._is_closing = False
         self._is_opening = False
+        self.async_write_ha_state()
         if self._position is None:
             return
         if self._unsub_listener_cover is not None:

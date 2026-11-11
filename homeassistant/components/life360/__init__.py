@@ -7,7 +7,7 @@ from homeassistant.helpers import issue_registry as ir
 DOMAIN = "life360"
 
 
-async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> None:
     """Set up config entry."""
     ir.async_create_issue(
         hass,
@@ -20,12 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
             "entries": "/config/integrations/integration/life360"
         },
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

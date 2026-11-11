@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.meater.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import setup_integration
 from .const import PROBE_ID
 
-from tests.common import MockConfigEntry
-
 
 async def test_device_info(
     hass: HomeAssistant,
@@ -25,7 +24,9 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, PROBE_ID)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, PROBE_ID), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry == snapshot
 

@@ -3,12 +3,11 @@
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from dynalite_devices_lib.dynalitebase import DynaliteBaseDevice
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import dynalite
 from homeassistant.const import ATTR_SERVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ATTR_METHOD = "method"
 ATTR_ARGS = "args"

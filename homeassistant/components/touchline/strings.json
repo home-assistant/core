@@ -33,14 +33,12 @@
       }
     }
   },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "description": "Home Assistant could not connect to the Roth Touchline controller while importing your YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",
-      "title": "Roth Touchline YAML configuration import failed"
+  "exceptions": {
+    "error_set_preset": {
+      "message": "An error occurred while setting the preset mode."
     },
-    "deprecated_yaml_import_issue_unknown": {
-      "description": "An unknown error occurred while importing your Roth Touchline YAML configuration. Remove the YAML configuration for Roth Touchline from configuration.yaml and set up the integration again from the Home Assistant UI.",
-      "title": "Roth Touchline YAML configuration import issue"
+    "error_set_temperature": {
+      "message": "An error occurred while setting the temperature."
     }
   }
 }

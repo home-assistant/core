@@ -5,6 +5,7 @@ import re
 from unittest.mock import patch
 
 import astroid
+from astroid import nodes
 from pylint.checkers import BaseChecker
 import pylint.testutils
 from pylint.testutils.unittest_linter import UnittestLinter
@@ -440,7 +441,7 @@ def test_invalid_flow_step(
     type_hint_checker: BaseChecker,
     code: str,
     expected_messages_fn: Callable[
-        [astroid.NodeNG], tuple[pylint.testutils.MessageTest, ...]
+        [nodes.NodeNG], tuple[pylint.testutils.MessageTest, ...]
     ],
 ) -> None:
     """Ensure invalid hints are rejected for flow step."""
@@ -516,7 +517,7 @@ def test_invalid_config_flow_async_get_options_flow(
 ) -> None:
     """Ensure invalid hints are rejected for ConfigFlow async_get_options_flow."""
     # AxisOptionsFlow doesn't inherit OptionsFlow, and therefore should fail
-    class_node, func_node, arg_node = astroid.extract_node(
+    class_node, func_node = astroid.extract_node(
         """
     class FlowHandler():
         pass
@@ -534,12 +535,13 @@ def test_invalid_config_flow_async_get_options_flow(
         ConfigFlow, domain=AXIS_DOMAIN
     ):
         def async_get_options_flow( #@
-            config_entry #@
+            config_entry
         ) -> AxisOptionsFlow:
             return AxisOptionsFlow(config_entry)
     """,
         "homeassistant.components.pylint_test.config_flow",
     )
+    arg_node = func_node.args.args[0]
     type_hint_checker.visit_module(class_node.parent)
 
     with assert_adds_messages(
@@ -1232,6 +1234,188 @@ def test_notify_get_service(
         type_hint_checker.visit_asyncfunctiondef(func_node)
 
 
+@pytest.mark.parametrize(
+    ("code", "module_name", "expected_args", "end_col_offset"),
+    [
+        pytest.param(
+            """
+    def async_setup_platform( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        pass
+    """,
+            "homeassistant.components.pylint_test.light",
+            ("async_setup_platform", "async def"),
+            24,
+            id="async_counterpart_not_coroutine",
+        ),
+        pytest.param(
+            """
+    async def setup_platform( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        pass
+    """,
+            "homeassistant.components.pylint_test.light",
+            ("setup_platform", "def"),
+            24,
+            id="sync_function_coroutine",
+        ),
+        pytest.param(
+            """
+    def async_unload_entry( #@
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+    ) -> None:
+        pass
+    """,
+            "homeassistant.components.pylint_test",
+            ("async_unload_entry", "async def"),
+            22,
+            id="awaited_function_not_coroutine",
+        ),
+        pytest.param(
+            """
+    async def async_condition_from_config( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+    ) -> ConditionCheckerType:
+        pass
+    """,
+            "homeassistant.components.pylint_test.device_condition",
+            ("async_condition_from_config", "def"),
+            37,
+            id="callback_coroutine",
+        ),
+        pytest.param(
+            """
+    def async_validate_trigger_config( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+    ) -> ConfigType:
+        pass
+    """,
+            "homeassistant.components.pylint_test.device_trigger",
+            ("async_validate_trigger_config", "async def"),
+            33,
+            id="device_trigger_validation_not_coroutine",
+        ),
+    ],
+)
+def test_invalid_function_async_mismatch(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    code: str,
+    module_name: str,
+    expected_args: tuple[str, str],
+    end_col_offset: int,
+) -> None:
+    """Ensure a function of the wrong kind is rejected."""
+    func_node = astroid.extract_node(code, module_name)
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="home-assistant-function-async-mismatch",
+            node=func_node,
+            args=expected_args,
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=end_col_offset,
+        ),
+    ):
+        type_hint_checker.visit_functiondef(func_node)
+
+
+@pytest.mark.parametrize(
+    ("code", "module_name"),
+    [
+        pytest.param(
+            """
+    async def async_setup_platform( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        pass
+    """,
+            "homeassistant.components.pylint_test.light",
+            id="async_counterpart",
+        ),
+        pytest.param(
+            """
+    def setup_platform( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        pass
+    """,
+            "homeassistant.components.pylint_test.light",
+            id="sync_function",
+        ),
+        pytest.param(
+            """
+    def async_condition_from_config( #@
+        hass: HomeAssistant,
+        config: ConfigType,
+    ) -> ConditionCheckerType:
+        pass
+    """,
+            "homeassistant.components.pylint_test.device_condition",
+            id="callback",
+        ),
+        pytest.param(
+            """
+    def _async_has_devices( #@
+        hass: HomeAssistant,
+    ) -> bool:
+        pass
+    """,
+            "homeassistant.components.pylint_test.config_flow",
+            id="sync_or_coroutine",
+        ),
+        pytest.param(
+            """
+    async def async_setup(
+        hass: HomeAssistant,
+        config: ConfigType,
+    ) -> bool:
+        def async_setup_entry( #@
+            hass: HomeAssistant,
+            entry: ConfigEntry,
+        ) -> None:
+            pass
+    """,
+            "homeassistant.components.pylint_test",
+            id="nested_function",
+        ),
+    ],
+)
+def test_valid_function_async_mismatch(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    code: str,
+    module_name: str,
+) -> None:
+    """Ensure a function of the right kind is accepted."""
+    func_node = astroid.extract_node(code, module_name)
+    type_hint_checker.visit_module(func_node.root())
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_functiondef(func_node)
+
+
 def test_pytest_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
@@ -1282,20 +1466,19 @@ def test_pytest_invalid_function(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for a test function."""
-    func_node, hass_node, caplog_node, first_none_node, second_none_node = (
-        astroid.extract_node(
-            """
+    func_node, caplog_node, first_none_node, second_none_node = astroid.extract_node(
+        """
     async def test_sample( #@
-        hass: Something, #@
+        hass: Something,
         caplog: SomethingElse, #@
         current_request_with_host, #@
         enable_custom_integrations: None, #@
     ) -> Anything:
         pass
     """,
-            "tests.components.pylint_test.notify",
-        )
+        "tests.components.pylint_test.notify",
     )
+    hass_node = func_node.args.args[0]
     type_hint_checker.visit_module(func_node.parent)
 
     with assert_adds_messages(
@@ -1390,13 +1573,13 @@ def test_pytest_invalid_fixture(
     linter: UnittestLinter, type_hint_checker: BaseChecker, decorator: str
 ) -> None:
     """Ensure invalid hints are rejected for a test fixture."""
-    func_node, hass_node, caplog_node, none_node = astroid.extract_node(
+    func_node, caplog_node, none_node = astroid.extract_node(
         f"""
     import pytest
 
     {decorator}
     def sample_fixture( #@
-        hass: Something, #@
+        hass: Something,
         caplog: SomethingElse, #@
         current_request_with_host, #@
     ) -> Any:
@@ -1404,6 +1587,7 @@ def test_pytest_invalid_fixture(
     """,
         "tests.components.pylint_test.notify",
     )
+    hass_node = func_node.args.args[0]
     type_hint_checker.visit_module(func_node.parent)
 
     with assert_adds_messages(

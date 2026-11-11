@@ -4,15 +4,14 @@ from collections.abc import Mapping
 from typing import Any, cast, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.ssdp import (
@@ -37,6 +36,7 @@ from .const import (
     ST_IGD_V1,
     ST_IGD_V2,
 )
+from .coordinator import UpnpConfigEntry
 from .device import async_get_mac_address_from_host, get_preferred_location
 
 
@@ -99,7 +99,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: UpnpConfigEntry,
     ) -> UpnpOptionsFlowHandler:
         """Get the options flow for this handler."""
         return UpnpOptionsFlowHandler()
@@ -157,9 +157,9 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self._discoveries:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required("unique_id"): vol.In(
+                probatio.Required("unique_id"): probatio.In(
                     {
                         discovery.ssdp_usn: _friendly_name_from_discovery(discovery)
                         for discovery in self._discoveries.values()
@@ -308,7 +308,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=data, options=options)
 
 
-class UpnpOptionsFlowHandler(OptionsFlow):
+class UpnpOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow."""
 
     async def async_step_init(
@@ -316,11 +316,11 @@ class UpnpOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONFIG_ENTRY_FORCE_POLL,
                     default=self.config_entry.options.get(
                         CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL

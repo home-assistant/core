@@ -1,8 +1,10 @@
 {
   "domain": "intellifire",
   "name": "IntelliFire",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@jeeftor"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dhcp": [
     {
       "hostname": "zentrios-*"
@@ -12,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["intellifire4py"],
-  "requirements": ["intellifire4py==4.4.0"]
+  "requirements": ["intellifire4py==4.5.6"]
 }

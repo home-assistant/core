@@ -5,6 +5,11 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientResponseError
 from pymiele import MieleDevices
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN, PROCESS_ACTION, PROGRAM_ID
@@ -23,12 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_actions_callback, get_data_callback
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 ENTITY_ID = "vacuum.robot_vacuum_cleaner"
 

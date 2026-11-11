@@ -1,11 +1,22 @@
 """Test repairs for MQTT."""
 
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.components.mqtt.common import (
+    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+    async_fire_mqtt_message,
+)
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.plugins import ClientSessionGenerator
+from pytest_homeassistant.typing import MqttMockHAClientGenerator
 
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
@@ -14,13 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util.yaml import parse_yaml
-
-from .common import MOCK_NOTIFY_SUBENTRY_DATA_MULTI, async_fire_mqtt_message
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.conftest import ClientSessionGenerator
-from tests.typing import MqttMockHAClientGenerator
 
 
 async def help_setup_yaml(hass: HomeAssistant, config: dict[str, str]) -> None:
@@ -46,6 +50,34 @@ async def help_setup_discovery(hass: HomeAssistant, config: dict[str, str]) -> N
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+async def help_export_config(
+    hass: HomeAssistant, flow_id: str, flow_step: str
+) -> dict[str, str]:
+    """Help to export an MQTT device from an open subentry reconfigure flow."""
+    result = await hass.config_entries.subentries.async_configure(
+        flow_id,
+        {"next_step_id": "export"},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "export"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": flow_step},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == flow_step
+    assert result["description_placeholders"] == {
+        "url": "https://www.home-assistant.io/integrations/mqtt/"
+    }
+
+    # Copy the exported config suggested values for an export
+    return {
+        field: field.description["suggested_value"]
+        for field in result["data_schema"].schema
+    }
+
+
 @pytest.mark.parametrize(
     "mqtt_config_subentries_data",
     [
@@ -69,6 +101,7 @@ async def test_subentry_reconfigure_export_settings(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
     flow_step: str,
     setup_helper: Coroutine[Any, Any, None],
@@ -85,8 +118,10 @@ async def test_subentry_reconfigure_export_settings(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
-    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
+    assert device.config_subentry_id == subentry_id
     assert device is not None
 
     # assert we entity for all subentry components
@@ -103,36 +138,18 @@ async def test_subentry_reconfigure_export_settings(
         "export",
     ]
 
-    # Open export menu
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {"next_step_id": "export"},
+    suggested_values_from_schema = await help_export_config(
+        hass, result["flow_id"], flow_step
     )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "export"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {"next_step_id": flow_step},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == flow_step
-    assert result["description_placeholders"] == {
-        "url": "https://www.home-assistant.io/integrations/mqtt/"
-    }
-
-    # Copy the exported config suggested values for an export
-    suggested_values_from_schema = {
-        field: field.description["suggested_value"]
-        for field in result["data_schema"].schema
-    }
     #  Try to set up the exported config with a changed device name
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
     await setup_helper(hass, suggested_values_from_schema)
 
     # Assert the subentry device was not effected by the exported configs
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
-    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
+    assert device.config_subentry_id == subentry_id
     assert device is not None
 
     # Assert a repair flow was created
@@ -140,9 +157,10 @@ async def test_subentry_reconfigure_export_settings(
     # The subentry ID is used as device identifier
     assert len(events) == 1
     issue_id = events[0].data["issue_id"]
-    issue_registry = ir.async_get(hass)
     repair_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert repair_issue.translation_key == translation_key
+    assert repair_issue.config_entry_id == config_entry.entry_id
+    assert repair_issue.config_subentry_id == subentry_id
 
     client = await hass_client()
 
@@ -156,11 +174,14 @@ async def test_subentry_reconfigure_export_settings(
     assert data["type"] == "create_entry"
 
     # Assert the subentry is removed and no other entity has linked the device
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is None
 
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(config_entry.subentries) == 0
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
     #  Try to set up the exported config again
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
@@ -169,6 +190,75 @@ async def test_subentry_reconfigure_export_settings(
 
     # The MQTT device was now set up from the new source
     await hass.async_block_till_done(wait_background_tasks=True)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
-    assert device.config_entries_subentries[config_entry.entry_id] == {None}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
+    assert device.config_subentry_id is None
     assert device is not None
+
+
+async def _remove_subentry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, subentry_id: str
+) -> None:
+    assert hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+
+
+async def _remove_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, subentry_id: str
+) -> None:
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("flow_step", "setup_helper"),
+    [
+        pytest.param("export_yaml", help_setup_yaml, id="yaml"),
+        pytest.param("export_discovery", help_setup_discovery, id="discovery"),
+    ],
+)
+@pytest.mark.parametrize(
+    "remove",
+    [
+        pytest.param(_remove_subentry, id="remove_subentry"),
+        pytest.param(_remove_config_entry, id="remove_config_entry"),
+    ],
+)
+async def test_subentry_migration_issue_removed(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    flow_step: str,
+    setup_helper: Callable[[HomeAssistant, dict[str, str]], Awaitable[None]],
+    remove: Callable[[HomeAssistant, MockConfigEntry, str], Awaitable[None]],
+) -> None:
+    """Test the migration issue is removed with its subentry or config entry."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    subentry_id = next(iter(config_entry.subentries))
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    suggested_values_from_schema = await help_export_config(
+        hass, result["flow_id"], flow_step
+    )
+    await setup_helper(hass, suggested_values_from_schema)
+
+    # The subentry ID is used as issue ID
+    assert (issue := issue_registry.async_get_issue(DOMAIN, subentry_id))
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.config_subentry_id == subentry_id
+
+    await remove(hass, config_entry, subentry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert issue_registry.async_get_issue(DOMAIN, subentry_id) is None

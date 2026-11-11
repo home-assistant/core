@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import denonavr
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -50,7 +50,7 @@ IGNORED_MODELS = ["HEOS 1", "HEOS 3", "HEOS 5", "HEOS 7"]
 
 DEFAULT_USE_TELNET_NEW_INSTALL = True
 
-CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
+CONFIG_SCHEMA = probatio.Schema({probatio.Optional(CONF_HOST): str})
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):
@@ -63,29 +63,29 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        settings_schema = vol.Schema(
+        settings_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_SHOW_ALL_SOURCES,
                     default=self.config_entry.options.get(
                         CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES
                     ),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ZONE2,
                     default=self.config_entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_ZONE3,
                     default=self.config_entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_UPDATE_AUDYSSEY,
                     default=self.config_entry.options.get(
                         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
                     ),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_TELNET,
                     default=self.config_entry.options.get(
                         CONF_USE_TELNET, DEFAULT_USE_TELNET
@@ -159,9 +159,9 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
             self.host = user_input["select_host"]
             return await self.async_step_connect()
 
-        select_scheme = vol.Schema(
+        select_scheme = probatio.Schema(
             {
-                vol.Required("select_host"): vol.In(
+                probatio.Required("select_host"): probatio.In(
                     [d_receiver["host"] for d_receiver in self.d_receivers]
                 )
             }
@@ -178,13 +178,10 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_connect()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
 
-    async def async_step_connect(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Connect to the receiver."""
+    async def _async_connect_receiver(self) -> denonavr.DenonAVR | None:
+        """Connect to the receiver, return None if that fails."""
         assert self.host
         connect_denonavr = ConnectDenonAVR(
             self.host,
@@ -200,11 +197,17 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             success = await connect_denonavr.async_connect_receiver()
         except AvrNetworkError, AvrTimoutError:
-            success = False
+            return None
         if not success:
+            return None
+        return connect_denonavr.receiver
+
+    async def async_step_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Connect to the receiver."""
+        if (receiver := await self._async_connect_receiver()) is None:
             return self.async_abort(reason="cannot_connect")
-        receiver = connect_denonavr.receiver
-        assert receiver
 
         if not self.serial_number:
             self.serial_number = receiver.serial_number
@@ -235,6 +238,39 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL_NUMBER: self.serial_number,
             },
             options={CONF_USE_TELNET: DEFAULT_USE_TELNET_NEW_INSTALL},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the receiver host."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self.host = user_input[CONF_HOST]
+            self._async_abort_entries_match({CONF_HOST: self.host})
+            if (receiver := await self._async_connect_receiver()) is None:
+                errors["base"] = "cannot_connect"
+            else:
+                unique_id = None
+                if receiver.serial_number is not None:
+                    unique_id = self.construct_unique_id(
+                        receiver.model_name.replace("*", ""), receiver.serial_number
+                    )
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
         )
 
     @override
@@ -271,6 +307,11 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         unique_id = self.construct_unique_id(self.model_name, self.serial_number)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
+
+        # HEOS-only devices (like the Denon Home speakers) are discovered as well,
+        # but don't serve the receiver API, so they could never be set up
+        if await self._async_connect_receiver() is None:
+            return self.async_abort(reason="cannot_connect")
 
         self.context.update(
             {

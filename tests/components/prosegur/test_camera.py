@@ -1,7 +1,6 @@
 """The camera tests for the prosegur platform."""
 
-import logging
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from pyprosegur.exceptions import ProsegurException
 import pytest
@@ -22,27 +21,16 @@ async def test_camera(hass: HomeAssistant, init_integration) -> None:
     assert image == Image(content_type="image/jpeg", content=b"ABC")
 
 
-async def test_camera_fail(
-    hass: HomeAssistant,
-    init_integration,
-    mock_install,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_camera_fail(hass: HomeAssistant, mock_install: MagicMock) -> None:
     """Test prosegur get_image fails."""
 
-    mock_install.get_image = AsyncMock(
-        return_value=b"ABC", side_effect=ProsegurException()
-    )
+    mock_install.get_image = AsyncMock(side_effect=ProsegurException())
 
-    with (
-        caplog.at_level(logging.ERROR, logger="homeassistant.components.prosegur"),
-        pytest.raises(HomeAssistantError) as exc,
+    with pytest.raises(
+        HomeAssistantError, match="Unable to get image from camera test_cam"
     ):
         await camera.async_get_image(hass, "camera.contract_1234abcd_test_cam")
-
-    assert "Unable to get image" in str(exc.value)
-
-    assert "Image test_cam doesn't exist" in caplog.text
 
 
 async def test_request_image(
@@ -60,24 +48,21 @@ async def test_request_image(
     assert mock_install.request_image.called
 
 
-async def test_request_image_fail(
-    hass: HomeAssistant,
-    init_integration,
-    mock_install,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+async def test_request_image_fail(hass: HomeAssistant, mock_install: MagicMock) -> None:
     """Test the camera request image service fails."""
 
     mock_install.request_image = AsyncMock(side_effect=ProsegurException())
 
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.prosegur"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Unable to request a new image from camera test_cam",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "request_image",
             {ATTR_ENTITY_ID: "camera.contract_1234abcd_test_cam"},
+            blocking=True,
         )
-        await hass.async_block_till_done()
 
-        assert mock_install.request_image.called
-
-        assert "Could not request image from camera test_cam" in caplog.text
+    assert mock_install.request_image.called

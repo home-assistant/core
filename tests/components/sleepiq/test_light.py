@@ -1,5 +1,7 @@
 """The tests for SleepIQ light platform."""
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
@@ -8,8 +10,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from .conftest import BED_ID, BED_NAME, BED_NAME_LOWER, setup_platform
-
-from tests.common import async_fire_time_changed
 
 
 async def test_setup(

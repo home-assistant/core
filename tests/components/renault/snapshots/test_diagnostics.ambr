@@ -201,6 +201,7 @@
   dict({
     'entry': dict({
       'data': dict({
+        'device_ids': '**REDACTED**',
         'kamereon_account_id': '**REDACTED**',
         'locale': 'fr_FR',
         'login_token': '**REDACTED**',

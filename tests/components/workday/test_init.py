@@ -4,6 +4,7 @@ from datetime import datetime
 
 from freezegun.api import FrozenDateTimeFactory
 from holidays.utils import country_holidays
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.workday.const import (
     DEFAULT_OFFSET,
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 
 from . import TEST_CONFIG_EXAMPLE_1, TEST_CONFIG_WITH_PROVINCE, init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(hass: HomeAssistant) -> None:

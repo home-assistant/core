@@ -2,7 +2,9 @@
 
 from unittest.mock import Mock, patch
 
+from caldav.lib.url import URL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.caldav.const import DOMAIN
 from homeassistant.const import (
@@ -12,8 +14,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_URL = "https://example.com/url-1"
 TEST_USERNAME = "username-1"
@@ -42,12 +42,14 @@ def mock_calendars() -> list[Mock]:
 @pytest.fixture(name="dav_client", autouse=True)
 def mock_dav_client(calendars: list[Mock]) -> Mock:
     """Fixture to mock the DAVClient."""
-    with patch(
-        "homeassistant.components.caldav.calendar.caldav.DAVClient"
-    ) as mock_client:
-        mock_client.return_value.principal.return_value.calendars.return_value = (
-            calendars
-        )
+    with (
+        patch("homeassistant.components.caldav.DAVClient") as mock_client,
+        patch("homeassistant.components.caldav.calendar.DAVClient", mock_client),
+        patch("homeassistant.components.caldav.config_flow.DAVClient", mock_client),
+    ):
+        mock_client.url = URL(TEST_URL)
+        mock_client.return_value.url = URL(TEST_URL)
+        mock_client.return_value.get_principal.return_value.get_calendars.return_value = calendars
         yield mock_client
 
 

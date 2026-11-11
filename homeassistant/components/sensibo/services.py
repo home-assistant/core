@@ -1,6 +1,6 @@
 """Sensibo services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -50,7 +50,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ASSUME_STATE,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Required(ATTR_STATE): vol.In(["on", "off"]),
+            probatio.Required(ATTR_STATE): probatio.In(["on", "off"]),
         },
         func="async_assume_state",
     )
@@ -60,7 +60,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ENABLE_TIMER,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Required(ATTR_MINUTES): cv.positive_int,
+            probatio.Required(ATTR_MINUTES): cv.positive_int,
         },
         func="async_enable_timer",
     )
@@ -70,11 +70,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ENABLE_PURE_BOOST,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Required(ATTR_AC_INTEGRATION): bool,
-            vol.Required(ATTR_GEO_INTEGRATION): bool,
-            vol.Required(ATTR_INDOOR_INTEGRATION): bool,
-            vol.Required(ATTR_OUTDOOR_INTEGRATION): bool,
-            vol.Required(ATTR_SENSITIVITY): vol.In(["normal", "sensitive"]),
+            probatio.Required(ATTR_AC_INTEGRATION): bool,
+            probatio.Required(ATTR_GEO_INTEGRATION): bool,
+            probatio.Required(ATTR_INDOOR_INTEGRATION): bool,
+            probatio.Required(ATTR_OUTDOOR_INTEGRATION): bool,
+            probatio.Required(ATTR_SENSITIVITY): probatio.In(["normal", "sensitive"]),
         },
         func="async_enable_pure_boost",
     )
@@ -84,14 +84,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_FULL_STATE,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Required(ATTR_MODE): vol.In(
+            probatio.Required(ATTR_MODE): probatio.In(
                 ["cool", "heat", "fan", "auto", "dry", "off"]
             ),
-            vol.Optional(ATTR_TARGET_TEMPERATURE): int,
-            vol.Optional(ATTR_FAN_MODE): str,
-            vol.Optional(ATTR_SWING_MODE): str,
-            vol.Optional(ATTR_HORIZONTAL_SWING_MODE): str,
-            vol.Optional(ATTR_LIGHT): vol.In(["on", "off", "dim"]),
+            probatio.Optional(ATTR_TARGET_TEMPERATURE): int,
+            probatio.Optional(ATTR_FAN_MODE): str,
+            probatio.Optional(ATTR_SWING_MODE): str,
+            probatio.Optional(ATTR_HORIZONTAL_SWING_MODE): str,
+            probatio.Optional(ATTR_LIGHT): probatio.In(["on", "off", "dim"]),
         },
         func="async_full_ac_state",
     )
@@ -101,11 +101,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ENABLE_CLIMATE_REACT,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): vol.Coerce(float),
-            vol.Required(ATTR_HIGH_TEMPERATURE_STATE): dict,
-            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): vol.Coerce(float),
-            vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
-            vol.Required(ATTR_SMART_TYPE): vol.In(
+            probatio.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): probatio.Coerce(float),
+            probatio.Required(ATTR_HIGH_TEMPERATURE_STATE): dict,
+            probatio.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): probatio.Coerce(float),
+            probatio.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
+            probatio.Required(ATTR_SMART_TYPE): probatio.In(
                 ["temperature", "feelslike", "humidity"]
             ),
         },
@@ -116,7 +116,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_GET_DEVICE_CAPABILITIES,
         entity_domain=CLIMATE_DOMAIN,
-        schema={vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
+        schema={probatio.Required(ATTR_HVAC_MODE): probatio.Coerce(HVACMode)},
         func="async_get_device_capabilities",
         supports_response=SupportsResponse.ONLY,
     )

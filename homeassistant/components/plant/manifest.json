@@ -2,6 +2,7 @@
   "domain": "plant",
   "name": "Plant Monitor",
   "after_dependencies": ["recorder"],
+  "categories": ["garden_plants", "helpers.calculate_value"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/plant",
   "quality_scale": "internal"

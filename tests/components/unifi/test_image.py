@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -24,15 +26,12 @@ from .conftest import (
     WebsocketStateManager,
 )
 
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.fixture(autouse=True)
 def mock_getrandbits():
     """Mock image access token which normally is randomized."""
     with patch(
-        "homeassistant.components.image.SystemRandom.getrandbits",
+        "homeassistant.components.image.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield

@@ -3,7 +3,7 @@
 from contextlib import suppress
 
 from bizkaibus.bizkaibus import BizkaibusData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -24,9 +24,9 @@ DEFAULT_NAME = "Next bus"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Required(CONF_ROUTE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_STOP_ID): cv.string,
+        probatio.Required(CONF_ROUTE): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

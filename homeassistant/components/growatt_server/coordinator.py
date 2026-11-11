@@ -1,8 +1,9 @@
 """Coordinator module for managing Growatt data fetching."""
 
-import datetime
+import datetime as dt
 import json
 import logging
+import math
 from typing import TYPE_CHECKING, Any, override
 
 import growattServer
@@ -37,9 +38,45 @@ if TYPE_CHECKING:
 
 type GrowattConfigEntry = ConfigEntry[GrowattRuntimeData]
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
+SCAN_INTERVAL = dt.timedelta(minutes=5)
+_MAX_POWER_READING_AGE = dt.timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _latest_power_value(
+    power_overview: dict[str, Any], now: dt.datetime
+) -> float | None:
+    """Return the newest recent power value from a plant power overview."""
+    latest_time: dt.datetime | None = None
+    latest_power: float | None = None
+
+    for reading in power_overview.get("powers", []):
+        power = reading.get("power")
+        timestamp = reading.get("time")
+        if power is None or not isinstance(timestamp, str):
+            continue
+        try:
+            reading_time = dt_util.parse_datetime(timestamp)
+        except ValueError:
+            continue
+        if reading_time is None:
+            continue
+        if reading_time.tzinfo is None:
+            reading_time = reading_time.replace(tzinfo=dt_util.get_default_time_zone())
+        if reading_time > now or now - reading_time > _MAX_POWER_READING_AGE:
+            continue
+        try:
+            power_value = float(power)
+        except TypeError, ValueError:
+            continue
+        if not math.isfinite(power_value):
+            continue
+        if latest_time is None or reading_time > latest_time:
+            latest_time = reading_time
+            latest_power = power_value
+
+    return latest_power
 
 
 class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -72,6 +109,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
 
+        # api is an OpenApiV1 (v1) or its base class GrowattApi (classic), chosen
+        # by api_version. The two expose different method sets, and mypy cannot
+        # narrow self.api by api_version at each call site, so it is typed as Any.
+        self.api: Any
         if self.api_version == "v1":
             self.username = None
             self.password = None
@@ -201,8 +242,27 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
-                # V1 API returns current_power in kW, convert to W
-                total_info["invTodayPpv"] = total_info["current_power"] * 1000
+                # The plant power overview is authoritative for instantaneous power.
+                # Plant energy overview's current_power is only a fallback on error;
+                # it can report zero while production continues.
+                current_power = total_info["current_power"] * 1000
+                now = dt_util.now()
+                try:
+                    power_overview = self.api.plant_power_overview(
+                        self.plant_id, now.date()
+                    )
+                except (growattServer.GrowattV1ApiError, RequestException) as err:
+                    _LOGGER.debug(
+                        "Failed to fetch plant power overview for %s: %s",
+                        self.plant_id,
+                        err,
+                    )
+                else:
+                    if (
+                        latest_power := _latest_power_value(power_overview, now)
+                    ) is not None:
+                        current_power = latest_power
+                total_info["invTodayPpv"] = current_power
             else:
                 # Classic API: use plant_info as before.
                 # Copy the response to avoid mutating the dict returned by the library
@@ -276,7 +336,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             time_str = sph_energy.get("time")
             if time_str:
                 try:
-                    parsed = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+                    parsed = dt.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
                     combined["lastdataupdate"] = parsed.replace(
                         tzinfo=dt_util.get_default_time_zone()
                     )
@@ -305,7 +365,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Create datetime from the latest entry
                 date_now = dt_util.now().date()
                 last_updated_time = dt_util.parse_time(str(sorted_keys[-1]))
-                mix_detail["lastdataupdate"] = datetime.datetime.combine(
+                mix_detail["lastdataupdate"] = dt.datetime.combine(
                     date_now,
                     last_updated_time,  # type: ignore[arg-type]
                     dt_util.get_default_time_zone(),
@@ -358,7 +418,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_data(
         self, entity_description: GrowattSensorEntityDescription
-    ) -> str | int | float | datetime.datetime | datetime.date | None:
+    ) -> str | int | float | dt.datetime | dt.date | None:
         """Get the data."""
         variable = entity_description.api_key
         api_value = self.data.get(variable)

@@ -1,11 +1,11 @@
 """The tests for Mobile App device actions."""
 
+from pytest_homeassistant.common import async_get_device_automations, patch
+
 from homeassistant.components import automation, device_automation
 from homeassistant.components.mobile_app import DATA_DEVICES, DOMAIN, util
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_get_device_automations, patch
 
 
 async def test_get_actions(hass: HomeAssistant, push_registration) -> None:

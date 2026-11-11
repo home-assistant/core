@@ -4,16 +4,15 @@ from datetime import datetime
 import logging
 from typing import Any, override
 
-from pyrail import iRail
+from pyrail import IRail, PyRailError
 from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -65,7 +64,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NMBS sensor entities based on a config entry."""
-    api_client = iRail(session=async_get_clientsession(hass))
+    api_client = IRail(session=async_get_clientsession(hass))
 
     name = config_entry.data.get(CONF_NAME, None)
     show_on_map = config_entry.data.get(CONF_SHOW_ON_MAP, False)
@@ -96,7 +95,7 @@ class NMBSLiveBoard(SensorEntity):
 
     def __init__(
         self,
-        api_client: iRail,
+        api_client: IRail,
         live_station: StationDetails,
         station_from: StationDetails,
         station_to: StationDetails,
@@ -128,6 +127,7 @@ class NMBSLiveBoard(SensorEntity):
 
         unique_id = f"{self._station.id}_{self._station_from.id}_{self._station_to.id}"
         vias = "_excl_vias" if self._excl_vias else ""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"nmbs_live_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
@@ -171,10 +171,15 @@ class NMBSLiveBoard(SensorEntity):
 
     async def async_update(self, **kwargs: Any) -> None:
         """Set the state equal to the next departure."""
-        liveboard = await self._api_client.get_liveboard(self._station.id)
+        try:
+            liveboard = await self._api_client.get_liveboard(
+                station_id=self._station.id
+            )
+        except PyRailError:
+            _LOGGER.warning("API failed in NMBSLiveBoard")
+            return
 
         if liveboard is None:
-            _LOGGER.warning("API failed in NMBSLiveBoard")
             return
 
         if not (departures := liveboard.departures):
@@ -199,7 +204,7 @@ class NMBSSensor(SensorEntity):
 
     def __init__(
         self,
-        api_client: iRail,
+        api_client: IRail,
         name: str,
         show_on_map: bool,
         station_from: StationDetails,
@@ -224,6 +229,7 @@ class NMBSSensor(SensorEntity):
         unique_id = f"{self._station_from.id}_{self._station_to.id}"
 
         vias = "_excl_vias" if self._excl_vias else ""
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         return f"nmbs_connection_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
@@ -275,8 +281,8 @@ class NMBSSensor(SensorEntity):
             attrs["departure_minutes"] = departure
 
         if self._show_on_map and self.station_coordinates:
-            attrs[ATTR_LATITUDE] = self.station_coordinates[0]
-            attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
+            attrs[EntityStateAttribute.LATITUDE] = self.station_coordinates[0]
+            attrs[EntityStateAttribute.LONGITUDE] = self.station_coordinates[1]
 
         if self.is_via_connection and not self._excl_vias:
             via = self._attrs.vias[0]
@@ -319,12 +325,15 @@ class NMBSSensor(SensorEntity):
 
     async def async_update(self, **kwargs: Any) -> None:
         """Set the state to the duration of a connection."""
-        connections = await self._api_client.get_connections(
-            self._station_from.id, self._station_to.id
-        )
+        try:
+            connections = await self._api_client.get_connections(
+                self._station_from.id, self._station_to.id
+            )
+        except PyRailError:
+            _LOGGER.warning("API failed in NMBSSensor")
+            return
 
         if connections is None:
-            _LOGGER.warning("API failed in NMBSSensor")
             return
 
         if not (connection := connections.connections):

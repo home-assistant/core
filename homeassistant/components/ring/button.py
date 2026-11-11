@@ -8,8 +8,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RingConfigEntry
-from .coordinator import RingDataCoordinator
+from .coordinator import RingConfigEntry, RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
 # Coordinator is used to centralize the data updates

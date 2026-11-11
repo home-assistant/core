@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 from aiomodernforms import ModernFormsConnectionError
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, modern_forms_no_light_call_mock
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @patch(

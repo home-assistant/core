@@ -1,12 +1,17 @@
 {
   "domain": "cookidoo",
   "name": "Cookidoo",
+  "categories": [
+    "productivity_information.shopping_groceries",
+    "appliances_cleaning.cooking"
+  ],
   "codeowners": ["@miaucl"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/cookidoo",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["cookidoo_api"],
   "quality_scale": "silver",
-  "requirements": ["cookidoo-api==0.17.2"]
+  "requirements": ["cookidoo-api==0.18.4"]
 }

@@ -10,18 +10,20 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .coordinator import (
+    DataGrandLyonAlertsCoordinator,
     DataGrandLyonConfigEntry,
     DataGrandLyonData,
+    DataGrandLyonParkAndRideCoordinator,
     DataGrandLyonTclCoordinator,
     DataGrandLyonVelovCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: DataGrandLyonConfigEntry
-) -> bool:
+) -> None:
     """Set up Data Grand Lyon from a config entry."""
     session = async_get_clientsession(hass)
     client = DataGrandLyonClient(
@@ -32,20 +34,27 @@ async def async_setup_entry(
 
     tcl_coordinator = DataGrandLyonTclCoordinator(hass, entry, client)
     velov_coordinator = DataGrandLyonVelovCoordinator(hass, entry, client)
+    park_and_ride_coordinator = DataGrandLyonParkAndRideCoordinator(hass, entry, client)
+    alerts_coordinator = DataGrandLyonAlertsCoordinator(hass, entry, client)
 
-    coordinators: list[DataUpdateCoordinator] = [tcl_coordinator, velov_coordinator]
+    coordinators: list[DataUpdateCoordinator] = [
+        tcl_coordinator,
+        velov_coordinator,
+        park_and_ride_coordinator,
+        alerts_coordinator,
+    ]
     await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
 
     entry.runtime_data = DataGrandLyonData(
         tcl_coordinator=tcl_coordinator,
         velov_coordinator=velov_coordinator,
+        park_and_ride_coordinator=park_and_ride_coordinator,
+        alerts_coordinator=alerts_coordinator,
     )
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def async_update_entry(
@@ -57,6 +66,6 @@ async def async_update_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: DataGrandLyonConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

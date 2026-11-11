@@ -4,13 +4,12 @@ import logging
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration, update_property_listeners
-
-from tests.common import MockConfigEntry
 
 TEST_ENTITY_ID = "switch.smarla"
 

@@ -1,0 +1,173 @@
+# serializer version: 1
+# name: test_diagnostics[api_key]
+  dict({
+    'api_key_configured': True,
+    'services': dict({
+      'details': dict({
+        'attributes': dict({
+          'installation_date': '2024-01-01',
+          'last_update_time': '2025-01-01',
+          'manufacturer_name': 'TestManufacturer',
+          'maximum_power': 350.0,
+          'model_name': 'TestModel',
+          'peak_power': 5.5,
+          'type': 'Optimizers & Inverters',
+        }),
+        'data': dict({
+          'status': 'Active',
+        }),
+        'last_update_success': True,
+      }),
+      'energy_details': dict({
+        'attributes': dict({
+          'Consumption': dict({
+            'date': '2025-01-01 00:00:00',
+          }),
+          'FeedIn': dict({
+            'date': '2025-01-01 00:00:00',
+          }),
+          'Production': dict({
+            'date': '2025-01-01 00:00:00',
+          }),
+          'Purchased': dict({
+            'date': '2025-01-01 00:00:00',
+          }),
+          'SelfConsumption': dict({
+            'date': '2025-01-01 00:00:00',
+          }),
+        }),
+        'data': dict({
+          'Consumption': 9876.0,
+          'FeedIn': 6913.0,
+          'Production': 12345.0,
+          'Purchased': 4444.0,
+          'SelfConsumption': 5432.0,
+        }),
+        'last_update_success': True,
+      }),
+      'inventory': dict({
+        'attributes': dict({
+          'batteries': list([
+            dict({
+              'manufacturer': 'Acme',
+              'model': 'B1',
+              'name': 'Battery1',
+              'nameplateCapacity': 9700.0,
+            }),
+          ]),
+          'gateways': list([
+            dict({
+              'name': 'Gateway1',
+            }),
+          ]),
+          'inverters': list([
+            dict({
+              'manufacturer': 'Acme',
+              'model': 'I1',
+              'name': 'Inverter1',
+            }),
+            dict({
+              'manufacturer': 'Acme',
+              'model': 'I1',
+              'name': 'Inverter2',
+            }),
+            dict({
+              'manufacturer': 'Acme',
+              'model': 'I1',
+              'name': 'Inverter3',
+            }),
+          ]),
+          'meters': list([
+            dict({
+              'manufacturer': 'Acme',
+              'model': 'M1',
+              'name': 'Production meter',
+            }),
+            dict({
+              'manufacturer': 'Acme',
+              'model': 'M1',
+              'name': 'Consumption meter',
+            }),
+          ]),
+          'sensors': list([
+          ]),
+        }),
+        'data': dict({
+          'batteries': 1,
+          'gateways': 1,
+          'inverters': 3,
+          'meters': 2,
+          'sensors': 0,
+        }),
+        'last_update_success': True,
+      }),
+      'overview': dict({
+        'attributes': dict({
+        }),
+        'data': dict({
+          'currentPower': 1234.5,
+          'lastDayData': 250.0,
+          'lastMonthData': 10000.0,
+          'lastUpdateTime': '2025-01-01 12:00:00',
+          'lastYearData': 50000.0,
+          'lifeTimeData': 100000.0,
+          'measuredBy': 'INVERTER',
+        }),
+        'last_update_success': True,
+      }),
+      'power_flow': dict({
+        'attributes': dict({
+          'GRID': dict({
+            'status': 'Active',
+          }),
+          'LOAD': dict({
+            'status': 'Active',
+          }),
+          'PV': dict({
+            'status': 'Active',
+          }),
+          'STORAGE': dict({
+            'status': 'Charging',
+          }),
+        }),
+        'data': dict({
+          'GRID': 250.0,
+          'LOAD': 1500.0,
+          'PV': 1500.0,
+          'STORAGE': -250.0,
+          'grid_flow_direction': 'import',
+          'storage_flow_direction': 'charge',
+          'storage_level': 75,
+        }),
+        'last_update_success': True,
+      }),
+      'storage': dict({
+        'attributes': dict({
+        }),
+        'data': dict({
+          'batteries': list([
+            dict({
+              'charge_energy': 500.0,
+              'discharge_energy': 300.0,
+              'power': 200.0,
+              'state_of_charge': 75.0,
+            }),
+          ]),
+          'charge_energy': 500.0,
+          'discharge_energy': 300.0,
+        }),
+        'last_update_success': True,
+      }),
+    }),
+    'web_login_configured': False,
+  })
+# ---
+# name: test_diagnostics[web_login]
+  dict({
+    'api_key_configured': False,
+    'modules_last_update_success': True,
+    'services': dict({
+    }),
+    'web_login_configured': True,
+  })
+# ---

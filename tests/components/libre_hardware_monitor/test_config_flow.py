@@ -1,6 +1,7 @@
 """Test the LibreHardwareMonitor config flow."""
 
-from unittest.mock import AsyncMock
+from dataclasses import replace
+from unittest.mock import AsyncMock, MagicMock, call
 
 from librehardwaremonitor_api import (
     LibreHardwareMonitorConnectionError,
@@ -8,6 +9,7 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorUnauthorizedError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -15,9 +17,14 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import AUTH_INPUT, REAUTH_INPUT, VALID_CONFIG, VALID_CONFIG_WITH_AUTH
-
-from tests.common import MockConfigEntry
+from .conftest import (
+    AUTH_INPUT,
+    REAUTH_INPUT,
+    RECONFIGURE_INPUT,
+    RECONFIGURED_TITLE,
+    VALID_CONFIG,
+    VALID_CONFIG_WITH_AUTH,
+)
 
 
 async def test_create_entry_without_auth(
@@ -266,3 +273,256 @@ async def test_reauth_errors(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data == {**VALID_CONFIG, **REAUTH_INPUT}
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_deprecated_version_is_rejected_and_flow_recovery(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test that a deprecated LHM version cannot be configured."""
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=True
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "deprecated_version"}
+    assert mock_setup_entry.call_count == 0
+
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=False
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_reauth_deprecated_version_is_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_deprecated_lhm_client: AsyncMock,
+) -> None:
+    """Test that reauth does not complete for a deprecated LHM version."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "deprecated_version"}
+    assert mock_config_entry.data == VALID_CONFIG
+
+    mock_deprecated_lhm_client.get_data.return_value = replace(
+        mock_deprecated_lhm_client.get_data.return_value, is_deprecated_version=False
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test reconfiguring host and port."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == RECONFIGURE_INPUT
+    assert mock_config_entry.title == RECONFIGURED_TITLE
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_reuses_saved_credentials(
+    hass: HomeAssistant,
+    mock_auth_config_entry: MockConfigEntry,
+    mock_lhm_client_class: MagicMock,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test that saved credentials are used to connect to the new server."""
+    mock_auth_config_entry.add_to_hass(hass)
+
+    result = await mock_auth_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **AUTH_INPUT}
+    mock_lhm_client_class.assert_called_once_with(**RECONFIGURE_INPUT, **AUTH_INPUT)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_with_auth(
+    hass: HomeAssistant,
+    mock_auth_config_entry: MockConfigEntry,
+    mock_lhm_client_class: MagicMock,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test reconfiguring to a server which rejects the saved credentials."""
+    mock_auth_config_entry.add_to_hass(hass)
+
+    result = await mock_auth_config_entry.start_reconfigure_flow(hass)
+
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_lhm_client.get_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **REAUTH_INPUT}
+    assert mock_auth_config_entry.title == RECONFIGURED_TITLE
+    assert mock_lhm_client_class.call_args_list == [
+        call(**RECONFIGURE_INPUT, **AUTH_INPUT),  # saved credentials, rejected
+        call(**RECONFIGURE_INPUT, **REAUTH_INPUT),  # invalid_auth
+        call(**RECONFIGURE_INPUT, **REAUTH_INPUT),  # success
+    ]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_text"),
+    [
+        (LibreHardwareMonitorConnectionError, "cannot_connect"),
+        (LibreHardwareMonitorNoDevicesError, "no_devices"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+    side_effect: Exception,
+    error_text: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_lhm_client.get_data.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error_text}
+    assert mock_config_entry.data == VALID_CONFIG
+
+    mock_lhm_client.get_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == RECONFIGURE_INPUT
+
+
+async def test_reconfigure_deprecated_version_is_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_deprecated_lhm_client: AsyncMock,
+) -> None:
+    """Test that reconfigure does not complete for a deprecated LHM version."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "deprecated_version"}
+    assert mock_config_entry.data == VALID_CONFIG
+
+    mock_deprecated_lhm_client.get_data.return_value = replace(
+        mock_deprecated_lhm_client.get_data.return_value, is_deprecated_version=False
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == RECONFIGURE_INPUT
+
+
+async def test_reconfigure_lhm_server_already_exists(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test that reconfiguring to a server of another entry is aborted."""
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.21:8086",
+        data=RECONFIGURE_INPUT,
+        version=2,
+        minor_version=2,
+    ).add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == VALID_CONFIG
+    mock_lhm_client.get_data.assert_not_called()

@@ -1,0 +1,15 @@
+{
+  "domain": "neopool",
+  "name": "NeoPool",
+  "categories": ["water.pools_spas"],
+  "codeowners": ["@svasek"],
+  "config_flow": true,
+  "connectivity": ["modbus"],
+  "dependencies": ["modbus", "usb"],
+  "documentation": "https://www.home-assistant.io/integrations/neopool",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["neopool_modbus"],
+  "quality_scale": "platinum",
+  "requirements": ["neopool-modbus==4.13.0"]
+}

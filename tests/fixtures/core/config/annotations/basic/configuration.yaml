@@ -1,0 +1,9 @@
+test_domain:
+  mars: blah
+  servers:
+    - port: 8123
+      name: kitchen
+    - port: 8124
+      name: hallway
+
+included_domain: !include included.yaml

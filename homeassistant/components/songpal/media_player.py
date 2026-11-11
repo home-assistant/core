@@ -28,11 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY
 
@@ -42,19 +38,6 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up from legacy configuration file. Obsolete."""
-    _LOGGER.error(
-        "Configuring Songpal through media_player platform is no longer supported."
-        " Convert to songpal platform or UI configuration"
-    )
 
 
 async def async_setup_entry(
@@ -161,6 +144,11 @@ class SongpalEntity(MediaPlayerEntity):
         """Activate websocket for listening if wanted."""
         _LOGGER.debug("Activating websocket connection")
 
+        # Narrowed once here rather than at each call site: the entity is only
+        # ever added from async_setup_entry, so the platform always has an entry.
+        entry = self.platform.config_entry
+        assert entry is not None
+
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
             self._volume = volume.volume
@@ -218,7 +206,11 @@ class SongpalEntity(MediaPlayerEntity):
                     # back from a disconnected state.
                     await self.async_update_ha_state(force_refresh=True)
 
-            self.hass.loop.create_task(self._dev.listen_notifications())
+            entry.async_create_background_task(
+                self.hass,
+                self._dev.listen_notifications(),
+                "songpal-listen-notifications",
+            )
             _LOGGER.warning(
                 "[%s(%s)] Connection reestablished", self.name, self._dev.endpoint
             )
@@ -232,9 +224,13 @@ class SongpalEntity(MediaPlayerEntity):
         async def handle_stop(event):
             await self._dev.stop_listen_notifications()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
+        self.async_on_remove(
+            self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_stop)
+        )
 
-        self.hass.loop.create_task(self._dev.listen_notifications())
+        entry.async_create_background_task(
+            self.hass, self._dev.listen_notifications(), "songpal-listen-notifications"
+        )
 
     @property
     @override
@@ -392,7 +388,7 @@ class SongpalEntity(MediaPlayerEntity):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        volume = int(volume * self._volume_max)
+        volume = round(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
 

@@ -3,13 +3,13 @@
 from enum import StrEnum, auto
 import logging
 
+import probatio
 from vallox_websocket_api import Profile, ValloxApiException
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE, PROFILE_DURATION_INDEFINITE
+from .const import DOMAIN, PRESET_MODE_TO_VALLOX_PROFILE, PROFILE_DURATION_INDEFINITE
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,19 +28,19 @@ class ValloxService(StrEnum):
     SET_PROFILE = auto()
 
 
-SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
+SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = probatio.Schema(
     {
-        vol.Required(ATTR_PROFILE_FAN_SPEED): vol.All(
-            vol.Coerce(int), vol.Clamp(min=0, max=100)
+        probatio.Required(ATTR_PROFILE_FAN_SPEED): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
         )
     }
 )
 
-SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+SERVICE_SCHEMA_SET_PROFILE = probatio.Schema(
     {
-        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
-        vol.Optional(ATTR_DURATION): vol.All(
-            vol.Coerce(int), vol.Clamp(min=1, max=PROFILE_DURATION_INDEFINITE)
+        probatio.Required(ATTR_PROFILE): probatio.In(PRESET_MODE_TO_VALLOX_PROFILE),
+        probatio.Optional(ATTR_DURATION): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=1, max=PROFILE_DURATION_INDEFINITE)
         ),
     }
 )
@@ -102,7 +102,7 @@ async def _async_set_profile(call: ServiceCall) -> None:
     coordinator = _get_coordinator(call.hass)
     try:
         await coordinator.client.set_profile(
-            I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
+            PRESET_MODE_TO_VALLOX_PROFILE[profile_key], duration
         )
     except ValloxApiException as err:
         placeholders = {"profile": profile_key}

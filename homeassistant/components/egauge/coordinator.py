@@ -11,7 +11,7 @@ from egauge_async.exceptions import (
 )
 from egauge_async.json.client import EgaugeJsonClient
 from egauge_async.json.models import RegisterInfo
-from httpx import ConnectError
+from httpx2 import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -43,10 +43,11 @@ class EgaugeData:
 class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     """Class to manage fetching eGauge data."""
 
+    config_entry: EgaugeConfigEntry
     serial_number: str
     hostname: str
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: EgaugeConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -73,14 +74,9 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             self.serial_number = await self.client.get_device_serial_number()
             self.hostname = await self.client.get_hostname()
             self._register_info = await self.client.get_register_info()
-        except (
-            EgaugeAuthenticationError,
-            EgaugePermissionError,
-            EgaugeException,
-        ) as err:
-            # EgaugeAuthenticationError and
-            # EgaugePermissionError will raise
-            # ConfigEntryAuthFailed once reauth is implemented
+        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
+            raise ConfigEntryAuthFailed from err
+        except EgaugeException as err:
             raise ConfigEntryError from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
@@ -91,13 +87,10 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         try:
             measurements = await self.client.get_current_measurements()
             counters = await self.client.get_current_counters()
-        except (
-            EgaugeAuthenticationError,
-            EgaugePermissionError,
-            EgaugeException,
-        ) as err:
-            # will raise ConfigEntryAuthFailed once reauth is implemented
-            raise ConfigEntryError("Error fetching device info: {err}") from err
+        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
+            raise ConfigEntryAuthFailed from err
+        except EgaugeException as err:
+            raise ConfigEntryError(f"Error fetching device info: {err}") from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 

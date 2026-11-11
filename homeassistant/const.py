@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 8
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -47,6 +47,9 @@ ENTITY_MATCH_ANY: Final = "any"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
+
+# Default radius of the Home Zone (in meters)
+DEFAULT_RADIUS: Final = 100
 
 # Max characters for data stored in the recorder (changes to these limits would require
 # a database migration)
@@ -363,8 +366,6 @@ ATTR_FRIENDLY_NAME: Final = "friendly_name"
 # A picture to represent entity
 ATTR_ENTITY_PICTURE: Final = "entity_picture"
 
-ATTR_IDENTIFIERS: Final = "identifiers"
-
 # Icon to use in the frontend
 ATTR_ICON: Final = "icon"
 
@@ -384,17 +385,22 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
-ATTR_CONFIGURATION_URL: Final = "configuration_url"
-ATTR_CONNECTIONS: Final = "connections"
-ATTR_DEFAULT_NAME: Final = "default_name"
-ATTR_MANUFACTURER: Final = "manufacturer"
-ATTR_MODEL: Final = "model"
-ATTR_MODEL_ID: Final = "model_id"
-ATTR_SERIAL_NUMBER: Final = "serial_number"
-ATTR_SUGGESTED_AREA: Final = "suggested_area"
-ATTR_SW_VERSION: Final = "sw_version"
-ATTR_HW_VERSION: Final = "hw_version"
-ATTR_VIA_DEVICE: Final = "via_device"
+_DEPRECATED_ATTR_CONFIGURATION_URL = DeprecatedConstant(
+    "configuration_url", None, "2027.12"
+)
+_DEPRECATED_ATTR_CONNECTIONS = DeprecatedConstant("connections", None, "2027.12")
+_DEPRECATED_ATTR_DEFAULT_NAME = DeprecatedConstant("default_name", None, "2027.12")
+_DEPRECATED_ATTR_HW_VERSION = DeprecatedConstant("hw_version", None, "2027.12")
+_DEPRECATED_ATTR_IDENTIFIERS = DeprecatedConstant("identifiers", None, "2027.12")
+_DEPRECATED_ATTR_MANUFACTURER = DeprecatedConstant("manufacturer", None, "2027.12")
+_DEPRECATED_ATTR_MODEL = DeprecatedConstant("model", None, "2027.12")
+_DEPRECATED_ATTR_MODEL_ID = DeprecatedConstant("model_id", None, "2027.12")
+_DEPRECATED_ATTR_SERIAL_NUMBER = DeprecatedConstant("serial_number", None, "2027.12")
+_DEPRECATED_ATTR_SUGGESTED_AREA = DeprecatedConstant("suggested_area", None, "2027.12")
+_DEPRECATED_ATTR_SW_VERSION = DeprecatedConstant("sw_version", None, "2027.12")
+_DEPRECATED_ATTR_VIA_DEVICE = DeprecatedConstant(
+    "via_device", "via_device_id", "2027.8"
+)
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
@@ -456,6 +462,14 @@ ATTR_TEMPERATURE: Final = "temperature"
 ATTR_PERSONS: Final = "persons"
 
 
+class CommonServiceArgument(StrEnum):
+    """Action fields shared by the actions of many integrations."""
+
+    CONFIG_ENTRY_ID = "config_entry_id"
+    DEVICE_ID = "device_id"
+    ENTITY_ID = "entity_id"
+
+
 class EntityCapabilityAttribute(StrEnum):
     """Capability attributes shared by all entities."""
 
@@ -471,6 +485,8 @@ class EntityStateAttribute(StrEnum):
     ENTITY_PICTURE = "entity_picture"
     FRIENDLY_NAME = "friendly_name"
     ICON = "icon"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
     RESTORED = "restored"
     SUPPORTED_FEATURES = "supported_features"
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
@@ -526,6 +542,7 @@ class UnitOfEnergy(StrEnum):
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
     GIGA_CALORIE = "Gcal"
+    THERM = "thm"
 
 
 # Reactive energy units
@@ -640,6 +657,7 @@ class UnitOfPressure(StrEnum):
     INHG = "inHg"
     INH2O = "inH₂O"
     PSI = "psi"
+    ATM = "atm"
 
 
 # Sound pressure units

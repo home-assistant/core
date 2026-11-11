@@ -19,7 +19,7 @@ from elmax_api.model.cover import Cover
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 from elmax_api.push.push import PushNotificationHandler
-from httpx import ConnectError, ConnectTimeout
+from httpx2 import ConnectError, ConnectTimeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

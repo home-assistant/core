@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from openwebif.api import OpenWebIfDevice, OpenWebIfServiceEvent, OpenWebIfStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.enigma2.const import (
     CONF_DEEP_STANDBY,
@@ -24,8 +25,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MAC_ADDRESS = "12:34:56:78:90:ab"
 

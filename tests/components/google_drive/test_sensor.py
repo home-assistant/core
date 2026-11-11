@@ -1,11 +1,15 @@
 """Tests for the Google Drive sensor platform."""
 
-import json
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import AgentBackup
@@ -13,8 +17,6 @@ from homeassistant.components.google_drive.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = [
     pytest.mark.freeze_time("2021-11-04 17:36:59+01:00"),
@@ -123,15 +125,7 @@ async def test_calculate_backups_size(
     assert state.state == "0.0"
 
     mock_api.list_files = AsyncMock(
-        return_value={
-            "files": [
-                {
-                    "id": "HA folder ID",
-                    "name": "HA folder name",
-                    "description": json.dumps(mock_agent_backup.as_dict()),
-                }
-            ]
-        }
+        return_value={"files": [{"size": str(int(mock_agent_backup.size))}]}
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -141,3 +135,26 @@ async def test_calculate_backups_size(
         state := hass.states.get("sensor.testuser_domain_com_total_size_of_backups")
     )
     assert state.state == "100.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calculate_backups_size_ignores_files_without_size(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a file Google Drive reports no size for is skipped."""
+    await setup_integration(hass, config_entry)
+
+    mock_api.list_files = AsyncMock(
+        return_value={"files": [{"size": "1048576"}, {"id": "no size reported"}]}
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        state := hass.states.get("sensor.testuser_domain_com_total_size_of_backups")
+    )
+    assert state.state == "1.0"

@@ -4,12 +4,15 @@ import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientResponse
-from attr import asdict
+from aiohttp import ClientError
 from pyenphase.envoy import Envoy
-from pyenphase.exceptions import EnvoyError
+from pyenphase.exceptions import EnvoyClientClosedError, EnvoyError
 
-from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -39,57 +42,24 @@ TO_REDACT = {
 }
 
 
-async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
-    """Collect Envoy endpoints to use for test fixture set."""
-    fixture_data: dict[str, Any] = {}
-    end_points = [
-        "/info",
-        "/api/v1/production",
-        "/api/v1/production/inverters",
-        "/production.json",
-        "/production.json?details=1",
-        "/production",
-        "/ivp/ensemble/power",
-        "/ivp/ensemble/inventory",
-        "/ivp/ensemble/dry_contacts",
-        "/ivp/ensemble/status",
-        "/ivp/ensemble/secctrl",
-        "/ivp/ss/dry_contact_settings",
-        "/admin/lib/tariff",
-        "/ivp/ss/gen_config",
-        "/ivp/ss/gen_schedule",
-        "/ivp/sc/pvlimit",
-        "/ivp/ss/pel_settings",
-        "/ivp/ensemble/generator",
-        "/ivp/meters",
-        "/ivp/meters/readings",
-        "/ivp/pdm/device_data",
-        "/home",
-        "/inventory.json?deleted=1",
-        "/admin/lib/acb_config",
-        "/ivp/sc/sched",
-        "/admin/lib/network_display",
-        "/admin/lib/wireless_display",
-        "/ivp/ensemble/relay",
-        "/ivp/livedata/status",
-        "/ivp/pdm/energy",
-    ]
-
-    for end_point in end_points:
-        try:
-            response: ClientResponse = await envoy.request(end_point)
-            fixture_data[end_point] = (
-                (await response.text()).replace("\n", "").replace(serial, CLEAN_TEXT)
-            )
-            fixture_data[f"{end_point}_log"] = json_dumps(
-                {
-                    "headers": dict(response.headers.items()),
-                    "code": response.status,
-                }
-            )
-        except EnvoyError as err:
-            fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
-    return fixture_data
+async def _get_fixture_collection(
+    envoy: Envoy, mask: bool, strict: bool
+) -> dict[str, Any]:
+    try:
+        fixtures: dict[str, Any] = await envoy.fixture_collection(
+            mask_serials=mask, strict_masking=strict
+        )
+    except (EnvoyError, EnvoyClientClosedError, ClientError) as err:
+        status = getattr(err, "status", None)
+        if isinstance(status, int) and 100 <= status <= 599:
+            return {"collection_aborted_log": f"Error: {type(err).__name__}: {status}"}
+        status_code = getattr(err, "status_code", 0)
+        if isinstance(status_code, int) and status_code > 0:
+            return {
+                "collection_aborted_log": f"Error: {type(err).__name__}: {status_code}"
+            }
+        return {"collection_aborted_log": f"Error: {type(err).__name__}"}
+    return fixtures
 
 
 async def async_get_config_entry_diagnostics(
@@ -119,10 +89,7 @@ async def async_get_config_entry_diagnostics(
                 state_dict.pop("context", None)
             entity_dict = entity_entry_as_dict(entity)
             entities.append({"entity": entity_dict, "state": state_dict})
-        device_dict = asdict(device)
-        device_dict.pop("_cache", None)
-        # This can be removed when suggested_area is removed from DeviceEntry
-        device_dict.pop("_suggested_area")
+        device_dict = device_entry_as_dict(device)
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial
@@ -177,6 +144,7 @@ async def async_get_config_entry_diagnostics(
         "part_number": envoy.part_number,
         "envoy_model": envoy.envoy_model,
         "active interface": active_interface,
+        "token_lifetime": coordinator.token_lifetime,
         "supported_features": [feature.name for feature in envoy.supported_features],
         "phase_mode": envoy.phase_mode,
         "phase_count": envoy.phase_count,
@@ -190,7 +158,10 @@ async def async_get_config_entry_diagnostics(
 
     fixture_data: dict[str, Any] = {}
     if entry.options.get(OPTION_DIAGNOSTICS_INCLUDE_FIXTURES, False):
-        fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
+        # use strict masking until option_flow let user select mode that should be used
+        fixture_data = await _get_fixture_collection(
+            envoy=envoy, mask=True, strict=True
+        )
 
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),

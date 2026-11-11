@@ -7,14 +7,12 @@ from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
 from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_ENABLE, ATTR_UNLATCH, ERROR_STATES
+from .const import ERROR_STATES
 from .coordinator import NukiConfigEntry
 from .entity import NukiEntity
 from .helpers import CannotConnect
@@ -36,23 +34,6 @@ async def async_setup_entry(
         [NukiOpenerEntity(coordinator, opener) for opener in entry_data.openers]
     )
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        "lock_n_go",
-        {
-            vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
-        },
-        "lock_n_go",
-    )
-
-    platform.async_register_entity_service(
-        "set_continuous_mode",
-        {
-            vol.Required(ATTR_ENABLE): cv.boolean,
-        },
-        "set_continuous_mode",
-    )
 
 
 class NukiDeviceEntity[_NukiDeviceT: NukiDevice](NukiEntity[_NukiDeviceT], LockEntity):

@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from automower_ble.protocol import ResponseResult
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import AUTOMOWER_SERVICE_INFO_SERIAL
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_automower_client")
 
@@ -33,8 +32,9 @@ async def test_setup(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{AUTOMOWER_SERVICE_INFO_SERIAL.address}_1197489078")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{AUTOMOWER_SERVICE_INFO_SERIAL.address}_1197489078"),
+        mock_config_entry.entry_id,
     )
 
     assert device_entry == snapshot

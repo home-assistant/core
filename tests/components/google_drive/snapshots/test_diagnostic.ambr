@@ -41,7 +41,7 @@
       }),
     }),
     'coordinator_data': dict({
-      'all_backups_size': 104857600.0,
+      'all_backups_size': 104857600,
       'storage_quota': dict({
         'limit': 10737418240,
         'usage': 5368709120,

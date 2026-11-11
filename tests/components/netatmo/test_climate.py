@@ -1,13 +1,16 @@
 """The tests for the Netatmo climate platform."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -18,6 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
@@ -44,9 +48,13 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
-
-from tests.common import MockConfigEntry
+from .common import (
+    fake_get_image,
+    fake_post_request,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
 
 async def test_entity(
@@ -1095,6 +1103,100 @@ async def test_webhook_home_id_mismatch(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
+
+
+async def test_thermostat_update_with_none_therm_setpoint_mode(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test thermostat setup when Netatmo returns no therm setpoint mode."""
+
+    def set_none_therm_setpoint_mode(payload: dict[str, Any]) -> None:
+        """Set the thermostat setpoint mode to None in the backend response."""
+        home = payload.get("body", {}).get("home")
+        if home is None:
+            return
+
+        for room in home.get("rooms", []):
+            if room["id"] == "2746182631":
+                room["therm_setpoint_mode"] = None
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with a missing thermostat setpoint mode."""
+        kwargs["msg_callback"] = set_none_therm_setpoint_mode
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_get_image.side_effect = fake_get_image
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.livingroom_livingroom")
+    assert state is not None
+    assert state.state == HVACMode.AUTO
+    assert state.attributes["preset_mode"] == PRESET_SCHEDULE
+
+
+@pytest.mark.parametrize(
+    ("boiler_status", "cooler_status", "expected"),
+    [
+        (True, False, HVACAction.HEATING),
+        (False, True, HVACAction.COOLING),
+        (False, False, HVACAction.IDLE),
+    ],
+)
+async def test_thermostat_hvac_action_boiler_and_cooler_status(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    boiler_status: bool,
+    cooler_status: bool,
+    expected: HVACAction,
+) -> None:
+    """Test the hvac action of a Smarther reporting boiler and cooler status."""
+
+    def set_smarther_status(payload: dict[str, Any]) -> None:
+        """Set the Smarther boiler and cooler status in the backend response."""
+        home = payload.get("body", {}).get("home")
+        if home is None:
+            return
+
+        for module in home.get("modules", []):
+            if module["id"] == "10:20:30:bd:b8:1e":
+                module["boiler_status"] = boiler_status
+                module["cooler_status"] = cooler_status
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with the given Smarther status."""
+        kwargs["msg_callback"] = set_smarther_status
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        selected_platforms([Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_get_image.side_effect = fake_get_image
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.corridor_corridor")
+    assert state is not None
+    assert state.attributes[ATTR_HVAC_ACTION] == expected
 
 
 async def test_webhook_set_point(

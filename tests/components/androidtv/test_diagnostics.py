@@ -1,5 +1,8 @@
 """Tests for the diagnostics data provided by the AndroidTV integration."""
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.androidtv.diagnostics import TO_REDACT
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -8,9 +11,6 @@ from homeassistant.core import HomeAssistant
 
 from . import patchers
 from .common import CONFIG_ANDROID_DEFAULT, SHELL_RESPONSE_OFF, setup_mock_entry
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

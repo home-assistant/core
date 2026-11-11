@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "incomplete_discovery": "The discovered air-Q device did not provide a device ID. Ensure the firmware is up to date."
     },
     "error": {
@@ -123,6 +122,24 @@
       "oxygen": {
         "name": "Oxygen"
       },
+      "particle_count_0_3": {
+        "name": "Particle count (>0.3 μm)"
+      },
+      "particle_count_0_5": {
+        "name": "Particle count (>0.5 μm)"
+      },
+      "particle_count_1": {
+        "name": "Particle count (>1 μm)"
+      },
+      "particle_count_10": {
+        "name": "Particle count (>10 μm)"
+      },
+      "particle_count_2_5": {
+        "name": "Particle count (>2.5 μm)"
+      },
+      "particle_count_5": {
+        "name": "Particle count (>5 μm)"
+      },
       "performance_index": {
         "name": "Performance index"
       },
@@ -146,6 +163,9 @@
       },
       "silicon_hydride": {
         "name": "Silicon hydride"
+      },
+      "typical_particle_size": {
+        "name": "Typical particle size"
       },
       "virus_index": {
         "name": "Virus index"

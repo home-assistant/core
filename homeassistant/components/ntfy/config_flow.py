@@ -13,13 +13,12 @@ from aiontfy.exceptions import (
     NtfyHTTPError,
     NtfyUnauthorizedAuthenticationError,
 )
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -59,28 +58,29 @@ from .const import (
     SECTION_FILTER,
     SUBENTRY_TYPE_TOPIC,
 )
+from .coordinator import NtfyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
+        probatio.Required(CONF_URL, default=DEFAULT_URL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.URL,
                 autocomplete="url",
             ),
         ),
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Required(SECTION_AUTH): data_entry_flow.section(
-            vol.Schema(
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(SECTION_AUTH): data_entry_flow.section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_USERNAME): TextSelector(
+                    probatio.Optional(CONF_USERNAME): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT,
                             autocomplete="username",
                         ),
                     ),
-                    vol.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -93,39 +93,41 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive(CONF_PASSWORD, ATTR_CREDENTIALS): TextSelector(
+        probatio.Exclusive(
+            probatio.Secret(CONF_PASSWORD), ATTR_CREDENTIALS
+        ): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             ),
         ),
-        vol.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
+        probatio.Exclusive(probatio.Secret(CONF_TOKEN), ATTR_CREDENTIALS): str,
     }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive(CONF_USERNAME, ATTR_CREDENTIALS): TextSelector(
+        probatio.Exclusive(CONF_USERNAME, ATTR_CREDENTIALS): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 autocomplete="username",
             ),
         ),
-        vol.Optional(CONF_PASSWORD, default=""): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             ),
         ),
-        vol.Exclusive(CONF_TOKEN, ATTR_CREDENTIALS): str,
+        probatio.Exclusive(probatio.Secret(CONF_TOKEN), ATTR_CREDENTIALS): str,
     }
 )
 
-TOPIC_FILTER_SCHEMA = vol.Schema(
+TOPIC_FILTER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PRIORITY): SelectSelector(
+        probatio.Optional(CONF_PRIORITY): SelectSelector(
             SelectSelectorConfig(
                 multiple=True,
                 options=["5", "4", "3", "2", "1"],
@@ -133,25 +135,25 @@ TOPIC_FILTER_SCHEMA = vol.Schema(
                 translation_key="priority",
             )
         ),
-        vol.Optional(CONF_TAGS): TextSelector(
+        probatio.Optional(CONF_TAGS): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_TITLE): str,
-        vol.Optional(CONF_MESSAGE): str,
+        probatio.Optional(CONF_TITLE): str,
+        probatio.Optional(CONF_MESSAGE): str,
     }
 )
 
 
-STEP_USER_TOPIC_SCHEMA = vol.Schema(
+STEP_USER_TOPIC_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TOPIC): str,
+        probatio.Required(CONF_TOPIC): str,
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Optional(CONF_NAME): str,
-        vol.Required(SECTION_FILTER): data_entry_flow.section(
+        probatio.Optional(CONF_NAME): str,
+        probatio.Required(SECTION_FILTER): data_entry_flow.section(
             TOPIC_FILTER_SCHEMA,
             {"collapsed": True},
         ),
@@ -168,7 +170,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: NtfyConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_TOPIC: TopicSubentryFlowHandler}
@@ -302,7 +304,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(
                         reason="account_mismatch",
                         description_placeholders={
-                            CONF_USERNAME: entry.data[CONF_USERNAME],
+                            "username": entry.data[CONF_USERNAME],
                             "wrong_username": account.username,
                         },
                     )
@@ -317,7 +319,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
-            description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            description_placeholders={"username": entry.data[CONF_USERNAME]},
         )
 
     async def async_step_reconfigure(
@@ -364,7 +366,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(
                             reason="account_mismatch",
                             description_placeholders={
-                                CONF_USERNAME: entry.data[CONF_USERNAME],
+                                "username": entry.data[CONF_USERNAME],
                                 "wrong_username": account.username,
                             },
                         )
@@ -387,6 +389,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
         if entry.data[CONF_USERNAME]:
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="reconfigure_user",
                 data_schema=self.add_suggested_values_to_schema(
@@ -395,8 +398,8 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
                 description_placeholders={
-                    CONF_NAME: entry.title,
-                    CONF_USERNAME: entry.data[CONF_USERNAME],
+                    "name": entry.title,
+                    "username": entry.data[CONF_USERNAME],
                 },
             )
 
@@ -407,7 +410,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input,
             ),
             errors=errors,
-            description_placeholders={CONF_NAME: entry.title},
+            description_placeholders={"name": entry.title},
         )
 
     async def async_step_reconfigure_user(
@@ -441,6 +444,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 k=16,
             )
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="add_topic",
             data_schema=self.add_suggested_values_to_schema(
@@ -506,5 +510,5 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
                 data_schema=TOPIC_FILTER_SCHEMA,
                 suggested_values=subentry_data,
             ),
-            description_placeholders={CONF_TOPIC: subentry_data[CONF_TOPIC]},
+            description_placeholders={"topic": subentry_data[CONF_TOPIC]},
         )

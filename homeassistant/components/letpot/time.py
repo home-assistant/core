@@ -6,14 +6,14 @@ from datetime import time
 from typing import Any, override
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.models import LetPotDeviceStatus
+from letpot.models import LetPotDeviceStatus, LetPotGardenStatus
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator, LetPotGardenStatus
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 from .entity import LetPotEntity, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache

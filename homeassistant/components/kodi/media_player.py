@@ -242,7 +242,7 @@ class KodiEntity(MediaPlayerEntity):
         if self._no_active_players:
             return MediaPlayerState.IDLE
 
-        if self._properties["speed"] == 0:
+        if self._properties.get("speed") == 0:
             return MediaPlayerState.PAUSED
 
         return MediaPlayerState.PLAYING
@@ -281,10 +281,11 @@ class KodiEntity(MediaPlayerEntity):
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
-        dev_reg = dr.async_get(self.hass)
-        device = dev_reg.async_get_device(identifiers={(DOMAIN, self.unique_id)})
-        dev_reg.async_update_device(device.id, sw_version=sw_version)
-        self._device_id = device.id
+        if self.device_entry:
+            dr.async_get(self.hass).async_update_device(
+                self.device_entry.id, sw_version=sw_version
+            )
+            self._device_id = self.device_entry.id
 
         self.async_schedule_update_ha_state(True)
 

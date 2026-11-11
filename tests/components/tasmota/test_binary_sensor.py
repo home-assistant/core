@@ -12,6 +12,8 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant import core as ha
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -40,9 +42,6 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
 )
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_controlling_state_via_mqtt(

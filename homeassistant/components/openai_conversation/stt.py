@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, override
 import wave
 
-from openai import OpenAIError
+from openai import OpenAIError, omit
 
 from homeassistant.components import stt
 from homeassistant.const import CONF_PROMPT
@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from . import OpenAIConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -177,13 +179,17 @@ class OpenAISTTEntity(stt.SpeechToTextEntity, OpenAIBaseLLMEntity):
 
         options = self.subentry.data
         client = self.entry.runtime_data
+        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL)
+        language = metadata.language.split("-")[0]
+        is_gpt_transcribe = model.startswith("gpt-transcribe")
 
         try:
             response = await client.audio.transcriptions.create(
-                model=options.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL),
+                model=model,
                 file=(f"a.{metadata.format.value}", audio_data),
                 response_format="json",
-                language=metadata.language.split("-")[0],
+                language=omit if is_gpt_transcribe else language,
+                languages=[language] if is_gpt_transcribe else omit,
                 prompt=options.get(CONF_PROMPT, DEFAULT_STT_PROMPT),
             )
         except OpenAIError:

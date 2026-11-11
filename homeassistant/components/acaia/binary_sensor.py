@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from aioacaia.acaiascale import AcaiaScale
+from aioacaia import AcaiaScale
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

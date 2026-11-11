@@ -76,7 +76,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     )
 
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
 
@@ -89,19 +89,21 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
+        if self.device.electric_heater is None:
+            return None
         if self.device.electric_heater:
             return HVACAction.HEATING
         return HVACAction.FAN
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.device.ventilation_mode == VENTILATION_MODE_AWAY:
             return self.device.air_temp_setpoint_away
@@ -136,12 +138,14 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
     @property
     @override
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
-        return OPERATION_TO_PRESET_MODE_MAP[self.device.operation_mode]
+        if (operation_mode := self.device.operation_mode) is None:
+            return None
+        return OPERATION_TO_PRESET_MODE_MAP[operation_mode]
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -176,8 +180,10 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
     @property
     @override
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
+        if self.device.operation_mode is None:
+            return None
         if self.device.operation_mode == OPERATION_MODE_OFF:
             return HVACMode.OFF
 

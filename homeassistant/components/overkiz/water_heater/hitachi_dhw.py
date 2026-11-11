@@ -36,7 +36,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_max_temp = 70.0
     _attr_precision = PRECISION_WHOLE
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
@@ -45,7 +45,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states.get(OverkizState.CORE_DHW_TEMPERATURE)
 
@@ -56,7 +56,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         target_temperature = self.device.states.get(
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE

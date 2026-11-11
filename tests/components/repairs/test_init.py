@@ -5,17 +5,17 @@ from unittest.mock import AsyncMock, Mock
 from awesomeversion.exceptions import AwesomeVersionStrategyException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import mock_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.repairs import repairs_flow_manager
-from homeassistant.components.repairs.const import DOMAIN
+from homeassistant.components.repairs.const import DATA_REPAIRS, DOMAIN
 from homeassistant.components.repairs.issue_handler import RepairsFlowManager
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_platform
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
@@ -478,8 +478,9 @@ async def test_non_compliant_platform(
     )
     assert await async_setup_component(hass, DOMAIN, {})
 
-    platforms = await hass.data[DOMAIN]["platforms"].async_get_platforms()
-    assert list(platforms) == ["fake_integration"]
+    platforms = await hass.data[DATA_REPAIRS].platforms.async_get_platforms()
+    assert "fake_integration" in platforms
+    assert "integration_without_repairs" not in platforms
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
@@ -550,10 +551,10 @@ async def test_sync_methods(
 
 async def test_flow_manager_helper(hass: HomeAssistant) -> None:
     """Test accessing the repairs flow manager with the helper."""
-    assert repairs_flow_manager(hass) is None
+    with pytest.raises(HomeAssistantError):
+        repairs_flow_manager(hass)
 
     assert await async_setup_component(hass, DOMAIN, {})
 
     flow_manager = repairs_flow_manager(hass)
-    assert flow_manager is not None
     assert isinstance(flow_manager, RepairsFlowManager)

@@ -1,5 +1,7 @@
 """Tests for the OpenAI Conversation integration."""
 
+from typing import Literal
+
 from openai.types.responses import (
     ResponseCodeInterpreterCallCodeDeltaEvent,
     ResponseCodeInterpreterCallCodeDoneEvent,
@@ -325,7 +327,11 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
 
 
 def create_code_interpreter_item(
-    id: str, code: str | list[str], output_index: int, logs: str | None = None
+    id: str,
+    code: str | list[str],
+    output_index: int,
+    logs: str | None = None,
+    status: Literal["completed", "incomplete", "failed"] = "completed",
 ) -> list[ResponseStreamEvent]:
     """Create a message item."""
     if isinstance(code, str):
@@ -382,26 +388,31 @@ def create_code_interpreter_item(
                 sequence_number=0,
                 type="response.code_interpreter_call.interpreting",
             ),
+        ]
+    )
+    if status == "completed":
+        events.append(
             ResponseCodeInterpreterCallCompletedEvent(
                 item_id=id,
                 output_index=output_index,
                 sequence_number=0,
                 type="response.code_interpreter_call.completed",
+            )
+        )
+    events.append(
+        ResponseOutputItemDoneEvent(
+            item=ResponseCodeInterpreterToolCall(
+                id=id,
+                code=code,
+                container_id=container_id,
+                outputs=[OutputLogs(type="logs", logs=logs)] if logs else None,
+                status=status,
+                type="code_interpreter_call",
             ),
-            ResponseOutputItemDoneEvent(
-                item=ResponseCodeInterpreterToolCall(
-                    id=id,
-                    code=code,
-                    container_id=container_id,
-                    outputs=[OutputLogs(type="logs", logs=logs)] if logs else None,
-                    status="completed",
-                    type="code_interpreter_call",
-                ),
-                output_index=output_index,
-                sequence_number=0,
-                type="response.output_item.done",
-            ),
-        ]
+            output_index=output_index,
+            sequence_number=0,
+            type="response.output_item.done",
+        )
     )
 
     return events

@@ -4,12 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture, patch
 
-from homeassistant.components.steam_online.const import DOMAIN
+from homeassistant.components.steam_online.const import DOMAIN, SUBENTRY_TYPE_FRIEND
+from homeassistant.config_entries import ConfigSubentryData
 
-from . import ACCOUNT_1, CONF_DATA, CONF_OPTIONS
-
-from tests.common import MockConfigEntry, load_json_object_fixture, patch
+from . import ACCOUNT_1, ACCOUNT_2, ACCOUNT_NAME_2, CONF_DATA
 
 
 @pytest.fixture(name="config_entry")
@@ -18,9 +18,22 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
-        options=CONF_OPTIONS,
         unique_id=ACCOUNT_1,
-        version=2,
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_FRIEND,
+                title=ACCOUNT_NAME_2,
+                unique_id=ACCOUNT_2,
+            ),
+            ConfigSubentryData(
+                data={},
+                subentry_type=SUBENTRY_TYPE_FRIEND,
+                title="unconfigured_account",
+                unique_id="1234567890",
+            ),
+        ],
+        version=3,
     )
 
 
@@ -28,7 +41,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.steam_online.async_setup_entry", return_value=True
+        "homeassistant.components.steam_online.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -42,6 +55,11 @@ def mock_steam_api() -> Generator[MagicMock]:
             "homeassistant.components.steam_online.config_flow.steam.api.interface"
         ) as mock_client,
         patch("homeassistant.components.steam_online.config_flow.steam.api.key.set"),
+        patch(
+            "homeassistant.components.steam_online.coordinator.steam.api.interface",
+            new=mock_client,
+        ),
+        patch("homeassistant.components.steam_online.coordinator.steam.api.key.set"),
         patch(
             "homeassistant.components.steam_online.config_flow.MAX_IDS_TO_REQUEST", 2
         ),

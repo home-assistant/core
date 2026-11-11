@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 
-from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP
+from .const import DOMAIN, LOGGER, VENSTAR_SLEEP
 
 type VenstarConfigEntry = ConfigEntry[VenstarDataUpdateCoordinator]
 
@@ -30,7 +30,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
         """Initialize global Venstar data updater."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),

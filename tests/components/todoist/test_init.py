@@ -4,12 +4,17 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.todoist.const import DOMAIN
+from homeassistant.components.todoist.services import (
+    TodoistService,
+    TodoistServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from .conftest import PROJECT_ID
 
 
 async def test_load_unload(
@@ -25,6 +30,29 @@ async def test_load_unload(
 
     assert await hass.config_entries.async_unload(todoist_config_entry.entry_id)
     assert todoist_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_new_task_service_uses_config_entry(
+    hass: HomeAssistant,
+    api: AsyncMock,
+) -> None:
+    """Test the new_task service reaches the config entry coordinator."""
+    await hass.services.async_call(
+        DOMAIN,
+        TodoistService.NEW_TASK,
+        {
+            TodoistServiceArgument.ASSIGNEE: "user",
+            TodoistServiceArgument.CONTENT: "task",
+            TodoistServiceArgument.LABELS: ["Label1"],
+            TodoistServiceArgument.PROJECT: "Name",
+        },
+        blocking=True,
+    )
+
+    api.add_task.assert_called_with(
+        "task", project_id=PROJECT_ID, labels=["Label1"], assignee_id="1"
+    )
 
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.INTERNAL_SERVER_ERROR])

@@ -1,6 +1,7 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 from functools import partial
 import logging
 from typing import Any, override
@@ -21,8 +22,6 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_HOST,
     CONF_MODEL,
@@ -98,6 +97,7 @@ from .const import (
     MODEL_FAN_P10,
     MODEL_FAN_P11,
     MODEL_FAN_P18,
+    MODEL_FAN_P33,
     MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
@@ -108,7 +108,6 @@ from .const import (
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
     SUCCESS,
-    SWITCH_DATA_KEY as DATA_KEY,
 )
 from .coordinator import GatewayDeviceCoordinator
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
@@ -139,12 +138,19 @@ ATTR_LEARN_MODE = "learn_mode"
 ATTR_LED = "led"
 ATTR_IONIZER = "ionizer"
 ATTR_ANION = "anion"
-ATTR_LOAD_POWER = "load_power"
-ATTR_POWER = "power"
-ATTR_POWER_MODE = "power_mode"
-ATTR_POWER_PRICE = "power_price"
 ATTR_PTC = "ptc"
-ATTR_WIFI_LED = "wifi_led"
+
+
+class XiaomiMiioSwitchEntityStateAttribute(StrEnum):
+    """State attributes for xiaomi_miio switch entities."""
+
+    LOAD_POWER = "load_power"
+    MODEL = "model"
+    POWER_MODE = "power_mode"
+    POWER_PRICE = "power_price"
+    TEMPERATURE = "temperature"
+    WIFI_LED = "wifi_led"
+
 
 FEATURE_SET_POWER_MODE = 1
 FEATURE_SET_WIFI_LED = 2
@@ -185,6 +191,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P18: FEATURE_FLAGS_FAN_P10_P11_P18,
+    MODEL_FAN_P33: FEATURE_FLAGS_FAN_P10_P11_P18,
     MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
     MODEL_FAN_P9: FEATURE_FLAGS_FAN_P9,
     MODEL_FAN_ZA1: FEATURE_FLAGS_FAN,
@@ -332,9 +339,6 @@ async def async_setup_coordinated_entry(
     device = config_entry.runtime_data.device
     coordinator = config_entry.runtime_data.device_coordinator
 
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-
     device_features = 0
 
     if model in MODEL_TO_FEATURES_MAP:
@@ -397,8 +401,6 @@ async def async_setup_other_entry(
         and model == "lumi.acpartner.v3"
     ):
         device: SwitchEntity
-        if DATA_KEY not in hass.data:
-            hass.data[DATA_KEY] = {}
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
@@ -416,12 +418,10 @@ async def async_setup_other_entry(
                     name, chuangmi_plug, config_entry, unique_id_ch, channel_usb
                 )
                 entities.append(device)
-                hass.data[DATA_KEY][host] = device
         elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
             power_strip = PowerStrip(host, token, model=model)
             device = XiaomiPowerStripSwitch(name, power_strip, config_entry, unique_id)
             entities.append(device)
-            hass.data[DATA_KEY][host] = device
         elif model in [
             "chuangmi.plug.m1",
             "chuangmi.plug.m3",
@@ -434,14 +434,12 @@ async def async_setup_other_entry(
                 name, chuangmi_plug, config_entry, unique_id
             )
             entities.append(device)
-            hass.data[DATA_KEY][host] = device
         elif model == "lumi.acpartner.v3":
             ac_companion = AirConditioningCompanionV3(host, token)
             device = XiaomiAirConditioningCompanionSwitch(
                 name, ac_companion, config_entry, unique_id
             )
             entities.append(device)
-            hass.data[DATA_KEY][host] = device
         else:
             _LOGGER.error(
                 (
@@ -750,8 +748,8 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._attr_extra_state_attributes = {
-            ATTR_TEMPERATURE: None,
-            ATTR_MODEL: self._model,
+            XiaomiMiioSwitchEntityStateAttribute.TEMPERATURE: None,
+            XiaomiMiioSwitchEntityStateAttribute.MODEL: self._model,
         }
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
@@ -810,7 +808,9 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 
             self._attr_available = True
             self._attr_is_on = state.is_on
-            self._attr_extra_state_attributes[ATTR_TEMPERATURE] = state.temperature
+            self._attr_extra_state_attributes[
+                XiaomiMiioSwitchEntityStateAttribute.TEMPERATURE
+            ] = state.temperature
 
         except DeviceException as ex:
             if self._attr_available:
@@ -867,16 +867,24 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
         else:
             self._device_features = FEATURE_FLAGS_POWER_STRIP_V1
 
-        self._attr_extra_state_attributes[ATTR_LOAD_POWER] = None
+        self._attr_extra_state_attributes[
+            XiaomiMiioSwitchEntityStateAttribute.LOAD_POWER
+        ] = None
 
         if self._device_features & FEATURE_SET_POWER_MODE == 1:
-            self._attr_extra_state_attributes[ATTR_POWER_MODE] = None
+            self._attr_extra_state_attributes[
+                XiaomiMiioSwitchEntityStateAttribute.POWER_MODE
+            ] = None
 
         if self._device_features & FEATURE_SET_WIFI_LED == 1:
-            self._attr_extra_state_attributes[ATTR_WIFI_LED] = None
+            self._attr_extra_state_attributes[
+                XiaomiMiioSwitchEntityStateAttribute.WIFI_LED
+            ] = None
 
         if self._device_features & FEATURE_SET_POWER_PRICE == 1:
-            self._attr_extra_state_attributes[ATTR_POWER_PRICE] = None
+            self._attr_extra_state_attributes[
+                XiaomiMiioSwitchEntityStateAttribute.POWER_PRICE
+            ] = None
 
     @override
     async def async_update(self) -> None:
@@ -893,20 +901,29 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             self._attr_available = True
             self._attr_is_on = state.is_on
             self._attr_extra_state_attributes.update(
-                {ATTR_TEMPERATURE: state.temperature, ATTR_LOAD_POWER: state.load_power}
+                {
+                    XiaomiMiioSwitchEntityStateAttribute.TEMPERATURE: state.temperature,
+                    XiaomiMiioSwitchEntityStateAttribute.LOAD_POWER: state.load_power,
+                }
             )
 
             if self._device_features & FEATURE_SET_POWER_MODE == 1 and state.mode:
-                self._attr_extra_state_attributes[ATTR_POWER_MODE] = state.mode.value
+                self._attr_extra_state_attributes[
+                    XiaomiMiioSwitchEntityStateAttribute.POWER_MODE
+                ] = state.mode.value
 
             if self._device_features & FEATURE_SET_WIFI_LED == 1 and state.wifi_led:
-                self._attr_extra_state_attributes[ATTR_WIFI_LED] = state.wifi_led
+                self._attr_extra_state_attributes[
+                    XiaomiMiioSwitchEntityStateAttribute.WIFI_LED
+                ] = state.wifi_led
 
             if (
                 self._device_features & FEATURE_SET_POWER_PRICE == 1
                 and state.power_price
             ):
-                self._attr_extra_state_attributes[ATTR_POWER_PRICE] = state.power_price
+                self._attr_extra_state_attributes[
+                    XiaomiMiioSwitchEntityStateAttribute.POWER_PRICE
+                ] = state.power_price
 
         except DeviceException as ex:
             if self._attr_available:
@@ -949,9 +966,13 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
         if self._model == MODEL_PLUG_V3:
             self._device_features = FEATURE_FLAGS_PLUG_V3
-            self._attr_extra_state_attributes[ATTR_WIFI_LED] = None
+            self._attr_extra_state_attributes[
+                XiaomiMiioSwitchEntityStateAttribute.WIFI_LED
+            ] = None
             if self._channel_usb is False:
-                self._attr_extra_state_attributes[ATTR_LOAD_POWER] = None
+                self._attr_extra_state_attributes[
+                    XiaomiMiioSwitchEntityStateAttribute.LOAD_POWER
+                ] = None
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -1006,13 +1027,19 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             else:
                 self._attr_is_on = state.is_on
 
-            self._attr_extra_state_attributes[ATTR_TEMPERATURE] = state.temperature
+            self._attr_extra_state_attributes[
+                XiaomiMiioSwitchEntityStateAttribute.TEMPERATURE
+            ] = state.temperature
 
             if state.wifi_led:
-                self._attr_extra_state_attributes[ATTR_WIFI_LED] = state.wifi_led
+                self._attr_extra_state_attributes[
+                    XiaomiMiioSwitchEntityStateAttribute.WIFI_LED
+                ] = state.wifi_led
 
             if self._channel_usb is False and state.load_power:
-                self._attr_extra_state_attributes[ATTR_LOAD_POWER] = state.load_power
+                self._attr_extra_state_attributes[
+                    XiaomiMiioSwitchEntityStateAttribute.LOAD_POWER
+                ] = state.load_power
 
         except DeviceException as ex:
             if self._attr_available:
@@ -1036,7 +1063,10 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
         super().__init__(name, plug, entry, unique_id)
 
         self._attr_extra_state_attributes.update(
-            {ATTR_TEMPERATURE: None, ATTR_LOAD_POWER: None}
+            {
+                XiaomiMiioSwitchEntityStateAttribute.TEMPERATURE: None,
+                XiaomiMiioSwitchEntityStateAttribute.LOAD_POWER: None,
+            }
         )
 
     @override
@@ -1077,7 +1107,9 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
 
             self._attr_available = True
             self._attr_is_on = state.power_socket == "on"
-            self._attr_extra_state_attributes[ATTR_LOAD_POWER] = state.load_power
+            self._attr_extra_state_attributes[
+                XiaomiMiioSwitchEntityStateAttribute.LOAD_POWER
+            ] = state.load_power
 
         except DeviceException as ex:
             if self._attr_available:

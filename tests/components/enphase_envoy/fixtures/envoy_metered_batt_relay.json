@@ -3,7 +3,7 @@
   "firmware": "7.1.2",
   "part_number": "123456789",
   "envoy_model": "Envoy, phases: 3, phase mode: split, net-consumption CT, production CT, storage CT",
-  "supported_features": 1659,
+  "supported_features": 1663,
   "phase_mode": "three",
   "phase_count": 3,
   "active_phase_count": 3,

@@ -25,6 +25,11 @@
         'connected_to_control': True,
         'created': '2021-08-19T09:25:22+00:00',
         'device_id': '**REDACTED**',
+        'distro': dict({
+          'code_name': None,
+          'name': '**REDACTED**',
+          'version': '15.0',
+        }),
         'enabled_routes': list([
         ]),
         'expires': '2022-02-15T09:25:22+00:00',
@@ -38,7 +43,14 @@
         'name': '**REDACTED**',
         'node_id': '**REDACTED**',
         'node_key': '**REDACTED**',
+        'oauth_client_id': '**REDACTED**',
         'os': 'iOS',
+        'posture_identity': dict({
+          'disabled': False,
+          'hardware_addresses': '**REDACTED**',
+          'serial_numbers': '**REDACTED**',
+        }),
+        'posture_status': None,
         'ssh_enabled': None,
         'tags': list([
         ]),
@@ -117,6 +129,7 @@
         'connected_to_control': True,
         'created': '2021-08-29T09:49:06+00:00',
         'device_id': '**REDACTED**',
+        'distro': None,
         'enabled_routes': list([
           '0.0.0.0/0',
           '10.10.10.0/23',
@@ -133,7 +146,10 @@
         'name': '**REDACTED**',
         'node_id': '**REDACTED**',
         'node_key': '**REDACTED**',
+        'oauth_client_id': None,
         'os': 'linux',
+        'posture_identity': None,
+        'posture_status': None,
         'ssh_enabled': None,
         'tags': list([
         ]),
@@ -156,6 +172,7 @@
         'connected_to_control': False,
         'created': '2021-08-29T09:49:06+00:00',
         'device_id': '**REDACTED**',
+        'distro': None,
         'enabled_routes': list([
           '0.0.0.0/0',
           '10.10.10.0/23',
@@ -172,7 +189,10 @@
         'name': '**REDACTED**',
         'node_id': '**REDACTED**',
         'node_key': '**REDACTED**',
+        'oauth_client_id': None,
         'os': 'linux',
+        'posture_identity': None,
+        'posture_status': None,
         'ssh_enabled': None,
         'tags': list([
         ]),

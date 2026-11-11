@@ -1,8 +1,9 @@
 """The binary_sensor tests for the yale platform."""
 
-import datetime
+import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -25,8 +26,6 @@ from .mocks import (
     _mock_doorsense_enabled_yale_lock_detail,
     _mock_lock_from_fixture,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_doorsense(hass: HomeAssistant) -> None:
@@ -309,9 +308,11 @@ async def test_doorbell_device_registry(
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
-    await _create_yale_with_devices(hass, [doorbell_one])
+    config_entry, _ = await _create_yale_with_devices(hass, [doorbell_one])
 
-    reg_device = device_registry.async_get_device(identifiers={("yale", "tmt100")})
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("yale", "tmt100"), config_entry.entry_id
+    )
     assert reg_device == snapshot
 
 
@@ -363,7 +364,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -373,7 +374,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
     )
 
     socketio.connected = True
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -383,7 +384,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
     )
 
     # Ensure socketio status is always preserved
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -406,7 +407,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
     await hass.async_block_till_done()
     assert (
         states.get(

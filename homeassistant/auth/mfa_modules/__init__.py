@@ -4,8 +4,8 @@ import logging
 import types
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
@@ -18,14 +18,14 @@ from homeassistant.util.hass_dict import HassKey
 
 MULTI_FACTOR_AUTH_MODULES: Registry[str, type[MultiFactorAuthModule]] = Registry()
 
-MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema(
+MULTI_FACTOR_AUTH_MODULE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TYPE): str,
-        vol.Optional(CONF_NAME): str,
+        probatio.Required(CONF_TYPE): str,
+        probatio.Optional(CONF_NAME): str,
         # Specify ID if you have two mfa auth module for same type.
-        vol.Optional(CONF_ID): str,
+        probatio.Optional(CONF_ID): str,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 DATA_REQS: HassKey[set[str]] = HassKey("mfa_auth_module_reqs_processed")
@@ -65,8 +65,8 @@ class MultiFactorAuthModule:
     # Implement by extending class
 
     @property
-    def input_schema(self) -> vol.Schema:
-        """Return a voluptuous schema to define mfa auth module's input."""
+    def input_schema(self) -> probatio.Schema:
+        """Return a schema to define mfa auth module's input."""
         raise NotImplementedError
 
     async def async_setup_flow(self, user_id: str) -> SetupFlow[Any]:
@@ -101,7 +101,7 @@ class SetupFlow[_MultiFactorAuthModuleT: MultiFactorAuthModule = MultiFactorAuth
     def __init__(
         self,
         auth_module: _MultiFactorAuthModuleT,
-        setup_schema: vol.Schema,
+        setup_schema: probatio.Schema,
         user_id: str,
     ) -> None:
         """Initialize the setup flow."""
@@ -137,7 +137,7 @@ async def auth_mfa_module_from_config(
 
     try:
         config = module.CONFIG_SCHEMA(config)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         _LOGGER.error(
             "Invalid configuration for multi-factor module %s: %s",
             module_name,

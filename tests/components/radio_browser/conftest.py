@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.radio_browser.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -26,9 +25,19 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
+        "homeassistant.components.radio_browser.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def mock_radio_browser() -> Generator[MagicMock]:
+    """Mock the Radio Browser client in the config flow."""
+    with patch(
+        "homeassistant.components.radio_browser.config_flow.RadioBrowser",
+        autospec=True,
+    ) as radio_browser_mock:
+        yield radio_browser_mock.return_value
 
 
 @pytest.fixture
@@ -127,6 +136,7 @@ def mock_radios(mock_countries, mock_stations):
     """Provide a radios mock object."""
     radios = MagicMock()
     radios.countries = AsyncMock(return_value=mock_countries)
+    radios.search = AsyncMock(return_value=mock_stations)
     radios.stations = AsyncMock(return_value=mock_stations)
     return radios
 
