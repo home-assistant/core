@@ -67,20 +67,21 @@ async def test_last_seen_timestamp_parsing(
 
 
 @pytest.mark.usefixtures("mock_auth_client")
-async def test_subscription_end_not_created_without_servicebooking(
+async def test_subscription_end_unknown_without_servicebooking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client_init: MagicMock,
 ) -> None:
-    """Test the subscription end sensor is not created without a servicebooking."""
+    """Test the subscription end sensor is unknown without a servicebooking."""
     mock_api_client_init.get_tracker.return_value.servicebooking = None
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.fluffy_subscription_end") is None
-    assert hass.states.get("sensor.fluffy_battery") is not None
+    state = hass.states.get("sensor.fluffy_subscription_end")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
