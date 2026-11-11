@@ -17,6 +17,7 @@ from homeassistant.components.izone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
 
@@ -45,6 +46,35 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_controller.close.assert_awaited()
     mock_discovery_service.close.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_setup_removes_stale_zone_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Zone devices the controller no longer reports are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+    controller_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001")},
+    )
+    stale_zone_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001", 5)},  # type: ignore[arg-type]
+        via_device_id=controller_device.id,
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(stale_zone_device.id) is None
+    assert device_registry.async_get(controller_device.id) is not None
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 0),  # type: ignore[arg-type]
+        mock_config_entry.entry_id,
+    )
 
 
 async def test_migrate_heals_legacy_domain_unique_id(
