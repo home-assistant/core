@@ -7,11 +7,15 @@ import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.homekit.accessories import HomeDriver
-from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
+from homeassistant.components.homekit.const import (
+    BRIDGE_NAME,
+    DOMAIN,
+    EVENT_HOMEKIT_CHANGED,
+)
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
 from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.core import Event, HomeAssistant
@@ -32,6 +36,8 @@ def run_driver(
 
     This mock does not mock async_stop, so the driver will not be stopped
     """
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
     event_loop = asyncio.get_event_loop()
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
@@ -45,7 +51,7 @@ def run_driver(
         yield HomeDriver(
             hass,
             pincode=b"123-45-678",
-            entry_id="",
+            entry_id=entry.entry_id,
             entry_title="mock entry",
             bridge_name=BRIDGE_NAME,
             iid_storage=iid_storage,

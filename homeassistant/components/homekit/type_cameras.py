@@ -2,7 +2,7 @@
 
 import asyncio
 from collections import deque
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Coroutine
 from dataclasses import asdict
 from datetime import datetime, timedelta
 import logging
@@ -440,7 +440,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 )
             )
         if self.secure_video:
-            self._recording_transport_start = self.hass.async_create_background_task(
+            self._recording_transport_start = self._async_create_entry_task(
                 self._async_start_recording_transport(),
                 f"homekit.camera-recording-transport-{self.entity_id}",
             )
@@ -688,7 +688,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 self.stop_stream(session_info), "homekit.camera-stop-stream"
             )
         if self.secure_video:
-            self._recording_transport_stop = self.hass.async_create_background_task(
+            self._recording_transport_stop = self._async_create_entry_task(
                 self._async_stop_recording_transport(),
                 f"homekit.camera-stop-recording-transport-{self.entity_id}",
             )
@@ -757,6 +757,14 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self._recording_problem = message
         _LOGGER.log(level, message, self.entity_id, *args)
 
+    @callback
+    def _async_create_entry_task[_R](
+        self, target: Coroutine[Any, Any, _R], name: str
+    ) -> asyncio.Task[_R]:
+        """Run a background task that ends with the HomeKit config entry."""
+        entry = self.hass.config_entries.async_get_known_entry(self.driver.entry_id)
+        return entry.async_create_background_task(self.hass, target, name)
+
     @override
     def homekit_camera_active_changed(self, active: bool) -> None:
         """Stop live streams when the camera is turned off in the Home app."""
@@ -766,7 +774,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         # The eager end tasks may change the sessions while we iterate.
         for session_info in list(self.sessions.values()):
             if "stream" in session_info:
-                self.hass.async_create_background_task(
+                self._async_create_entry_task(
                     self._async_end_session(session_info),
                     f"homekit.camera-end-session-{self.entity_id}",
                 )
@@ -824,7 +832,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             self._log_recording_problem("[%s] Failed to start recording ffmpeg")
             return
         stderr: deque[str] = deque(maxlen=RECORDING_STDERR_LINES)
-        stderr_task = self.hass.async_create_background_task(
+        stderr_task = self._async_create_entry_task(
             self._async_collect_stderr(await stream.get_reader(FFMPEG_STDERR), stderr),
             f"homekit.camera-recording-stderr-{self.entity_id}",
         )
