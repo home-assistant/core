@@ -24,15 +24,17 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
-    PRESET_AWAY,
     PRESET_BOOST,
-    PRESET_HOME,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
+)
+from homeassistant.components.fenix_control.climate import (
+    PRESET_DEFROST,
+    PRESET_PROGRAM,
 )
 from homeassistant.components.fenix_control.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
@@ -198,7 +200,7 @@ async def test_set_temperature_in_program(
 @pytest.mark.parametrize(
     ("preset_mode", "preset", "temperature"),
     [
-        (PresetMode.DEFROST, PRESET_AWAY, 8.0),
+        (PresetMode.DEFROST, PRESET_DEFROST, 8.0),
         (PresetMode.BOOST, PRESET_BOOST, 23.0),
     ],
 )
@@ -307,7 +309,7 @@ async def test_set_temperature_leaving_defrost_checks_manual_range(
     assert err.value.translation_key == "temp_out_of_range"
 
     mock_fenix_client.set_setpoint.assert_not_called()
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_DEFROST
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -315,7 +317,7 @@ async def test_set_temperature_leaving_defrost_checks_manual_range(
     ("preset", "temperature"),
     [
         # The program's setpoint is only known after the next poll
-        (PRESET_HOME, None),
+        (PRESET_PROGRAM, None),
         (PRESET_BOOST, 24.0),
     ],
 )
@@ -743,8 +745,8 @@ async def test_turn_off(hass: HomeAssistant, mock_fenix_client: MagicMock) -> No
 @pytest.mark.parametrize(
     ("preset", "preset_mode"),
     [
-        (PRESET_HOME, PresetMode.PROGRAM),
-        (PRESET_AWAY, PresetMode.DEFROST),
+        (PRESET_PROGRAM, PresetMode.PROGRAM),
+        (PRESET_DEFROST, PresetMode.DEFROST),
         (PRESET_BOOST, PresetMode.BOOST),
     ],
 )
@@ -788,7 +790,7 @@ async def test_set_preset_mode(
         ),
         pytest.param(
             SERVICE_SET_PRESET_MODE,
-            {ATTR_PRESET_MODE: PRESET_AWAY},
+            {ATTR_PRESET_MODE: PRESET_DEFROST},
             "set_preset_mode",
             "set_preset_mode_failed",
             id="preset",

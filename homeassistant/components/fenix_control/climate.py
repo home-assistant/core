@@ -8,9 +8,7 @@ from pyfenixcontrol import FenixControlError, HvacState, PresetMode
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    PRESET_AWAY,
     PRESET_BOOST,
-    PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -34,9 +32,13 @@ HVAC_MODE_TO_PRESET_MODE: dict[HVACMode, PresetMode] = {
     HVACMode.HEAT: PresetMode.MANUAL,
 }
 
+# Presets are named like the modes in the FENIX Control app
+PRESET_PROGRAM = "program"
+PRESET_DEFROST = "defrost"
+
 PRESET_TO_PRESET_MODE: dict[str, PresetMode] = {
-    PRESET_HOME: PresetMode.PROGRAM,
-    PRESET_AWAY: PresetMode.DEFROST,
+    PRESET_PROGRAM: PresetMode.PROGRAM,
+    PRESET_DEFROST: PresetMode.DEFROST,
     PRESET_BOOST: PresetMode.BOOST,
 }
 PRESET_MODE_TO_PRESET: dict[int, str] = {
@@ -210,7 +212,8 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     @override
     def hvac_action(self) -> HVACAction | None:
         """Return whether the thermostat is heating."""
-        # During a holiday the heating state field carries the holiday mode
+        # The thermostat still heats during a holiday, but the cloud doesn't say
+        # when: the heating state field then carries the holiday mode instead
         if self.device.holiday_active or self.device.hvac_state is None:
             return None
         if self.hvac_mode is HVACMode.OFF:

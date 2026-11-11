@@ -6,9 +6,9 @@
           "preset_mode": {
             "default": "mdi:circle-medium",
             "state": {
-              "away": "mdi:snowflake",
               "boost": "mdi:fire",
-              "home": "mdi:clock-outline"
+              "defrost": "mdi:snowflake",
+              "program": "mdi:clock-outline"
             }
           }
         }
