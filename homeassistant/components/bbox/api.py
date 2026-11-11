@@ -4,7 +4,7 @@ Targets the local HTTP API of recent Bbox firmwares (``/api/v1/``,
 reachable at ``mabbox.bytel.fr``, which the box resolves to itself).
 """
 
-from asyncio import gather
+from asyncio import CancelledError, create_task, gather
 import logging
 from typing import Any
 
@@ -154,6 +154,17 @@ class BboxApi:
 
         The two endpoints are requested concurrently, so the worst case
         stays a single request/login/retry chain instead of the sum of
-        both.
+        both. On failure, the other request is cancelled: gather
+        propagates the first exception without stopping the sibling.
         """
-        return await gather(self.get_ip_stats(), self.get_bbox_info())
+        stats_task = create_task(self.get_ip_stats())
+        info_task = create_task(self.get_bbox_info())
+        try:
+            return await gather(stats_task, info_task)
+        except BboxError, CancelledError:
+            # A failed gather leaves the sibling request running, and a
+            # bridge cancel must keep propagating: stop the other chain
+            # (cancelling a finished task is a no-op) and re-raise.
+            stats_task.cancel()
+            info_task.cancel()
+            raise
