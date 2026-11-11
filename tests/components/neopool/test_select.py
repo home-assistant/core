@@ -874,6 +874,65 @@ async def test_relay_mode_maps_communication_error_to_home_assistant_error(
         await _select_option(hass, entity_id, "auto")
 
 
+@pytest.mark.parametrize(
+    ("occupied_relay", "hidden_aux_number"),
+    [(4, 1), (5, 2), (6, 3), (7, 4)],
+)
+async def test_aux_select_absent_when_relay_assigned_to_function(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_timers: MockConfigEntry,
+    occupied_relay: int,
+    hidden_aux_number: int,
+) -> None:
+    """AUX selects are suppressed when their relay serves a built-in function.
+
+    The option is enabled (mock_config_entry_timers), so this exercises the
+    entity-level safety net, not the option gate.
+    """
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = occupied_relay
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry_timers)
+
+    all_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry_timers.entry_id
+    )
+    present_aux_suffixes = {
+        suffix
+        for n in range(1, 5)
+        for suffix in (
+            f"relay_aux{n}_mode",
+            f"relay_aux{n}_period",
+            f"relay_aux{n}b_period",
+        )
+        if any(
+            e.domain == SELECT_DOMAIN and e.unique_id.endswith(f"_{suffix}")
+            for e in all_entries
+        )
+    }
+    hidden_suffixes = {
+        f"relay_aux{hidden_aux_number}_mode",
+        f"relay_aux{hidden_aux_number}_period",
+        f"relay_aux{hidden_aux_number}b_period",
+    }
+    assert not (present_aux_suffixes & hidden_suffixes)
+    # The other three AUX relays stay free and keep their selects.
+    free_aux_numbers = {1, 2, 3, 4} - {hidden_aux_number}
+    expected_free = {
+        suffix
+        for n in free_aux_numbers
+        for suffix in (
+            f"relay_aux{n}_mode",
+            f"relay_aux{n}_period",
+            f"relay_aux{n}b_period",
+        )
+    }
+    assert expected_free.issubset(present_aux_suffixes)
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_neopool_client")
 async def test_all_entities(
     hass: HomeAssistant,

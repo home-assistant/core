@@ -603,6 +603,9 @@
     }
   },
   "options": {
+    "abort": {
+      "entry_not_loaded": "The options can be changed once the device has been set up."
+    },
     "step": {
       "init": {
         "data": {

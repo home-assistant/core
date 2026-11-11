@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import time as dt_time
 from typing import Any, Literal, override
 
-from neopool_modbus.registers import is_valid_relay_gpio
+from neopool_modbus.registers import aux_relay_available, is_valid_relay_gpio
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
@@ -38,13 +38,6 @@ class NeoPoolTimeEntityDescription(TimeEntityDescription):
     translation_placeholders: dict[str, str] | None = None
 
 
-def _option_supported(
-    opt_flag: str,
-) -> Callable[[dict[str, Any], Mapping[str, Any]], bool]:
-    """Return a supported_fn gating an entity on the given option flag."""
-    return lambda _data, opts: bool(opts.get(opt_flag))
-
-
 def _light_supported(data: dict[str, Any], opts: Mapping[str, Any]) -> bool:
     """Gate the light timer on its option and a valid lighting GPIO.
 
@@ -52,6 +45,15 @@ def _light_supported(data: dict[str, Any], opts: Mapping[str, Any]) -> bool:
     """
     return bool(opts.get(CONF_USE_LIGHT)) and is_valid_relay_gpio(
         data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
+    )
+
+
+def _aux_supported(
+    opt_flag: str, aux_number: int
+) -> Callable[[dict[str, Any], Mapping[str, Any]], bool]:
+    """Return a supported_fn gating an AUX timer on its option and relay availability."""
+    return lambda data, opts: (
+        bool(opts.get(opt_flag)) and aux_relay_available(aux_number, data)
     )
 
 
@@ -96,8 +98,10 @@ def _build_descriptions() -> dict[str, NeoPoolTimeEntityDescription]:
                 supported_fn: (
                     Callable[[dict[str, Any], Mapping[str, Any]], bool] | None
                 ) = _light_supported
-            elif opt_flag is not None:
-                supported_fn = _option_supported(opt_flag)
+            elif block.startswith("relay_aux") and opt_flag is not None:
+                digits = block.removeprefix("relay_aux")
+                aux_number = int(digits.rstrip("b"))
+                supported_fn = _aux_supported(opt_flag, aux_number)
             else:
                 supported_fn = None
             out[key] = NeoPoolTimeEntityDescription(

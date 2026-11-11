@@ -13,7 +13,7 @@ from neopool_modbus.capabilities import (
     is_ph_module_present,
     is_redox_module_present,
 )
-from neopool_modbus.registers import is_valid_relay_gpio
+from neopool_modbus.registers import aux_relay_available, is_valid_relay_gpio
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -91,24 +91,28 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, NeoPoolBinarySensorEntityDescription] = {
         translation_key="aux",
         translation_placeholders={"number": "1"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(1, data),
     ),
     "AUX2": NeoPoolBinarySensorEntityDescription(
         key="AUX2",
         translation_key="aux",
         translation_placeholders={"number": "2"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(2, data),
     ),
     "AUX3": NeoPoolBinarySensorEntityDescription(
         key="AUX3",
         translation_key="aux",
         translation_placeholders={"number": "3"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(3, data),
     ),
     "AUX4": NeoPoolBinarySensorEntityDescription(
         key="AUX4",
         translation_key="aux",
         translation_placeholders={"number": "4"},
         device_class=BinarySensorDeviceClass.POWER,
+        supported_fn=lambda data: aux_relay_available(4, data),
     ),
     "pH module control status": NeoPoolBinarySensorEntityDescription(
         key="pH module control status",

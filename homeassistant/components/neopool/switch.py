@@ -25,6 +25,7 @@ from neopool_modbus.registers import (
     FiltValveMode,
     RelayKind,
     TimerRelayMode,
+    aux_relay_available,
     is_valid_relay_gpio,
 )
 
@@ -248,6 +249,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "1"},
         write_fn=_make_write_relay_state(RelayKind.AUX1),
         is_on_fn=_make_is_on_from_key("AUX1"),
+        supported_fn=lambda data: aux_relay_available(1, data),
     ),
     "aux2": NeoPoolSwitchEntityDescription(
         key="aux2",
@@ -255,6 +257,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "2"},
         write_fn=_make_write_relay_state(RelayKind.AUX2),
         is_on_fn=_make_is_on_from_key("AUX2"),
+        supported_fn=lambda data: aux_relay_available(2, data),
     ),
     "aux3": NeoPoolSwitchEntityDescription(
         key="aux3",
@@ -262,6 +265,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "3"},
         write_fn=_make_write_relay_state(RelayKind.AUX3),
         is_on_fn=_make_is_on_from_key("AUX3"),
+        supported_fn=lambda data: aux_relay_available(3, data),
     ),
     "aux4": NeoPoolSwitchEntityDescription(
         key="aux4",
@@ -269,6 +273,7 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_placeholders={"number": "4"},
         write_fn=_make_write_relay_state(RelayKind.AUX4),
         is_on_fn=_make_is_on_from_key("AUX4"),
+        supported_fn=lambda data: aux_relay_available(4, data),
     ),
 }
 

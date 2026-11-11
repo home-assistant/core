@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -256,3 +256,32 @@ async def test_opt_in_entities_absent_without_options(
         )
         is not None
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("occupied_relay", "hidden_key"),
+    [(4, "AUX1"), (5, "AUX2"), (6, "AUX3"), (7, "AUX4")],
+)
+async def test_aux_binary_sensor_absent_when_relay_assigned_to_function(
+    hass: HomeAssistant,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_binary_sensor: MockConfigEntry,
+    occupied_relay: int,
+    hidden_key: str,
+) -> None:
+    """An AUX binary sensor is suppressed when its relay serves a function.
+
+    The option is enabled (mock_config_entry_binary_sensor), so this covers the
+    entity-level safety net rather than the option gate.
+    """
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = occupied_relay
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    with patch("homeassistant.components.neopool.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, mock_config_entry_binary_sensor)
+
+    assert _binary_state(hass, mock_config_entry_binary_sensor, hidden_key) is None
+    # The other three AUX relays stay free and keep their sensors.
+    for key in {"AUX1", "AUX2", "AUX3", "AUX4"} - {hidden_key}:
+        assert _binary_state(hass, mock_config_entry_binary_sensor, key) is not None
