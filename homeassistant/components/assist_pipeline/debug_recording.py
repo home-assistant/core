@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import stat
 import time
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, NamedTuple, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -36,15 +36,23 @@ class DebugRecordingsData(TypedDict):
     recording_dirs: list[str]
 
 
+class RecordingScan(NamedTuple):
+    """The finished recordings, and whether active runs or read errors skipped others."""
+
+    recordings: dict[Path, os.stat_result]
+    active: bool
+    failed: bool
+
+
 def _find_run_recordings(
     run_dir: Path, filenames: list[str]
 ) -> tuple[dict[Path, os.stat_result], bool]:
     """Return the WAV files the debug recording thread wrote in a run directory.
 
-    Also return False when a recording could not be read.
+    Also return True when a recording could not be read.
     """
     recordings: dict[Path, os.stat_result] = {}
-    complete = True
+    failed = False
     for filename in filenames:
         if not filename.startswith(RECORDING_PREFIXES) or not filename.endswith(".wav"):
             continue
@@ -54,11 +62,11 @@ def _find_run_recordings(
         except FileNotFoundError:
             continue
         except OSError:
-            complete = False
+            failed = True
             continue
         if stat.S_ISREG(recording_stat.st_mode):
             recordings[recording] = recording_stat
-    return recordings, complete
+    return recordings, failed
 
 
 def _dir_id(path: Path) -> tuple[int, int]:
@@ -69,8 +77,8 @@ def _dir_id(path: Path) -> tuple[int, int]:
 
 def _scan_debug_recordings(
     recording_dir: Path, skip_dirs: Collection[Path]
-) -> tuple[dict[Path, os.stat_result], bool]:
-    """Return the finished recordings, and whether none were skipped.
+) -> RecordingScan:
+    """Return the finished recordings, and why others were skipped.
 
     Runs write to [<device_id>/]<pipeline_name>/<monotonic_ns>/ below the
     directory, and pipeline names can contain slashes. Symlinks are not
@@ -79,18 +87,24 @@ def _scan_debug_recordings(
     They are compared by inode, as relative paths or `..` can name the same one.
     """
     recordings: dict[Path, os.stat_result] = {}
-    complete = True
+    active = False
+    failed = False
     active_since = time.time() - ACTIVE_RUN_TIME.total_seconds()
 
     def _on_error(err: OSError) -> None:
-        nonlocal complete
+        nonlocal failed
         if not isinstance(err, FileNotFoundError):
-            complete = False
+            failed = True
 
     skip_ids: set[tuple[int, int]] = set()
     for skip_dir in skip_dirs:
-        with suppress(FileNotFoundError):
+        try:
             skip_ids.add(_dir_id(skip_dir))
+        except FileNotFoundError:
+            continue
+        except OSError:
+            # Its recordings can't be told apart, so this directory isn't scanned.
+            return RecordingScan({}, active=False, failed=True)
 
     for dirpath, dirnames, filenames in os.walk(recording_dir, onerror=_on_error):
         run_dir = Path(dirpath)
@@ -107,29 +121,29 @@ def _scan_debug_recordings(
             or len(run_dir.relative_to(recording_dir).parts) < 2
         ):
             continue
-        run_recordings, run_complete = _find_run_recordings(run_dir, filenames)
+        run_recordings, run_failed = _find_run_recordings(run_dir, filenames)
+        failed = failed or run_failed
         if all(
             recording_stat.st_mtime < active_since
             for recording_stat in run_recordings.values()
         ):
             recordings.update(run_recordings)
         else:
-            run_complete = False
-        complete = complete and run_complete
-    return recordings, complete
+            active = True
+    return RecordingScan(recordings, active, failed)
 
 
 def find_debug_recordings(
     recording_dir: Path, skip_dirs: Collection[Path]
 ) -> dict[Path, os.stat_result]:
     """Return the finished recordings the debug recording thread wrote."""
-    return _scan_debug_recordings(recording_dir, skip_dirs)[0]
+    return _scan_debug_recordings(recording_dir, skip_dirs).recordings
 
 
 def scan_left_over_dirs(
     skip_dirs_per_dir: dict[Path, list[Path]],
-) -> dict[Path, tuple[dict[Path, os.stat_result], bool]]:
-    """Return the recordings per previous directory, and whether none were skipped."""
+) -> dict[Path, RecordingScan]:
+    """Return the scan of each previous directory."""
     return {
         left_over_dir: _scan_debug_recordings(left_over_dir, skip_dirs)
         for left_over_dir, skip_dirs in skip_dirs_per_dir.items()
@@ -137,9 +151,13 @@ def scan_left_over_dirs(
 
 
 def delete_debug_recordings(recording_dir: Path, skip_dirs: Collection[Path]) -> None:
-    """Delete the WAV files the debug recording thread wrote."""
+    """Delete the WAV files the debug recording thread wrote.
+
+    Raise OSError when recordings could not be read, but not for active runs.
+    """
+    scan = _scan_debug_recordings(recording_dir, skip_dirs)
     emptied: set[Path] = set()
-    for recording in find_debug_recordings(recording_dir, skip_dirs):
+    for recording in scan.recordings:
         recording.unlink(missing_ok=True)
         emptied.update(
             recording_dir / parent
@@ -150,6 +168,8 @@ def delete_debug_recordings(recording_dir: Path, skip_dirs: Collection[Path]) ->
     for directory in sorted(emptied, key=lambda path: len(path.parts), reverse=True):
         with suppress(OSError):
             directory.rmdir()
+    if scan.failed:
+        raise OSError(f"Could not read all debug recordings in {recording_dir}")
 
 
 def _issue_placeholders(
@@ -212,12 +232,12 @@ class DebugRecordings:
         # Skipped recordings may still be there, so check those directories again.
         self.left_over_dirs = [
             path
-            for path, (recordings, complete) in scans.items()
-            if recordings or not complete
+            for path, scan in scans.items()
+            if scan.recordings or scan.active or scan.failed
         ]
         await self._async_save()
         left_over = {
-            path: recordings for path, (recordings, _) in scans.items() if recordings
+            path: scan.recordings for path, scan in scans.items() if scan.recordings
         }
         if not left_over:
             ir.async_delete_issue(self.hass, DOMAIN, ISSUE_LEFT_OVER)

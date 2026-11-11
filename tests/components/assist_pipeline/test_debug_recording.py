@@ -296,6 +296,68 @@ async def test_left_over_repair_delete_failed(
     }
 
 
+_lstat = Path.lstat
+
+
+def _lstat_unreadable_wake(path: Path) -> os.stat_result:
+    """Fail for the wake word recording, like a file without read access."""
+    if path.name == WAKE.name:
+        raise PermissionError
+    return _lstat(path)
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_left_over_repair_scan_failed(
+    hass: HomeAssistant,
+    left_over_dir: Path,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the fix flow aborts when a recording can't be read."""
+    await _async_setup(hass, None)
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+    flow = await start_repair_fix_flow(client, DOMAIN, ISSUE_LEFT_OVER)
+    with patch.object(Path, "lstat", _lstat_unreadable_wake):
+        result = await process_repair_fix_flow(client, flow["flow_id"])
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "delete_failed"
+    # The readable recordings are deleted, and the directory is checked again.
+    for recording in RECORDINGS:
+        assert await hass.async_add_executor_job(
+            (left_over_dir / recording).exists
+        ) == (recording == WAKE)
+    assert _stored_dirs(hass_storage) == [str(left_over_dir)]
+
+
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_other_dir_unreadable(
+    hass: HomeAssistant,
+    left_over_dir: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the directories are checked again when another one can't be read."""
+    new_dir = tmp_path_factory.mktemp("new")
+    await hass.async_add_executor_job(_write_recordings, new_dir, 8)
+    with patch.object(Path, "stat", side_effect=PermissionError):
+        await _async_setup(hass, new_dir)
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER) is None
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED) is None
+    assert _stored_dirs(hass_storage) == [str(left_over_dir), str(new_dir)]
+
+    freezer.tick(timedelta(days=1, minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER) is not None
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_STILL_ENABLED) is not None
+
+
 @pytest.mark.usefixtures("init_supporting_components")
 async def test_still_enabled_repair(
     hass: HomeAssistant,
