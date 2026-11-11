@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from contextlib import ExitStack
 from itertools import chain
-from types import MappingProxyType
+from types import MappingProxyType, SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
@@ -207,6 +207,7 @@ def humidifier_fixture():
             "automatic_stop": "true",
         },
         features=[HumidifierFeatures.NIGHTLIGHT],
+        supports_rgb_nightlight=False,
         device_type="Classic200S",
         product_type="humidifier",
         device_name="Humidifier 200s",
@@ -244,6 +245,7 @@ def humidifier_300s_fixture():
             "automatic_stop": "true",
         },
         features=[HumidifierFeatures.NIGHTLIGHT],
+        supports_rgb_nightlight=False,
         device_type="Classic300S",
         product_type="humidifier",
         device_name="Humidifier 300s",
@@ -266,6 +268,31 @@ def humidifier_300s_fixture():
         config_module="configModule",
         current_firm_version="1.0.0",
         latest_firm_version="1.0.1",
+    )
+
+
+@pytest.fixture
+def rgb_humidifier() -> Mock:
+    """Create a humidifier with an independently controlled RGB night light."""
+    return Mock(
+        VeSyncHumid200300S,
+        cid="rgb-humidifier",
+        device_type="LUH-O451S-WEU",
+        device_name="OasisMist",
+        product_type="humidifier",
+        sub_device_no=None,
+        current_firm_version="2.0.01",
+        supports_rgb_nightlight=True,
+        state=SimpleNamespace(
+            connection_status="online",
+            device_status="off",
+            rgb_nightlight_status="on",
+            rgb_nightlight_brightness=40,
+            rgb_nightlight_red=255,
+            rgb_nightlight_green=0,
+            rgb_nightlight_blue=64,
+        ),
+        set_rgb_nightlight=AsyncMock(return_value=True),
     )
 
 
