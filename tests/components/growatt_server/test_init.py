@@ -3,6 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import timedelta
 import json
+import logging
 import threading
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -976,12 +977,13 @@ async def test_classic_api_setup_skips_login_during_cooldown(
     [
         pytest.param(
             requests.exceptions.RequestException("Connection error"),
-            "Failed to fetch the device list from Growatt, will retry",
+            "Failed to fetch the device list from Growatt: Connection error",
             id="network_error",
         ),
         pytest.param(
             json.decoder.JSONDecodeError("Invalid JSON", "", 0),
-            "Failed to fetch the device list from Growatt, will retry",
+            "Failed to fetch the device list from Growatt: "
+            "Invalid JSON: line 1 column 1 (char 0)",
             id="json_error",
         ),
         pytest.param(
@@ -1057,9 +1059,10 @@ async def test_classic_api_device_list_no_devices(
 )
 async def test_classic_api_device_list_errors(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
     exception: Exception,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test Classic API setup with device list errors."""
     mock_growatt_classic_api.device_list.side_effect = exception
@@ -1067,6 +1070,12 @@ async def test_classic_api_device_list_errors(
     await setup_integration(hass, mock_config_entry_classic)
 
     assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
+    # The setup retry already logs the reason, so this stays at debug.
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.message.startswith("Failed to fetch the Growatt device list")
+    ] == [logging.DEBUG]
 
 
 async def test_unknown_api_version(

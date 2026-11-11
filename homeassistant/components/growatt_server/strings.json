@@ -603,7 +603,7 @@
       "message": "Error communicating with Growatt API: {error}"
     },
     "device_list_failed": {
-      "message": "Failed to fetch the device list from Growatt, will retry."
+      "message": "Failed to fetch the device list from Growatt: {error}"
     },
     "device_not_configured": {
       "message": "{device_type} device {serial_number} is not configured for actions."

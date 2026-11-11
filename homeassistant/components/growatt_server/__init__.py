@@ -395,6 +395,9 @@ async def async_setup_entry(
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="device_list_failed",
+                translation_placeholders={
+                    "error": total_coordinator.device_list_error or ""
+                },
             )
         devices = total_coordinator.device_list
 

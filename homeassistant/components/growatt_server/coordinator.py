@@ -222,6 +222,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Thread safety: written in the executor thread, read on the event loop after
         # async_refresh() awaits the executor job — ordering guarantees safe access.
         self.device_list: list[dict[str, str]] | None = None
+        self.device_list_error: str | None = None
         # Flag set on the event loop (request_device_list_scan) and consumed in the
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
@@ -284,8 +285,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 KeyError,
                 TypeError,
             ) as err:
-                _LOGGER.warning("Failed to fetch the Growatt device list: %s", err)
+                _LOGGER.debug("Failed to fetch the Growatt device list: %s", err)
                 self.device_list = None
+                self.device_list_error = str(err)
 
     def _sync_renew_session(
         self,
