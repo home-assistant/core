@@ -2048,21 +2048,53 @@ async def test_bootstrap_progress_unscheduled_dependency(hass: HomeAssistant) ->
 @pytest.mark.parametrize("load_registries", [False])
 @patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
 @pytest.mark.parametrize(
-    "dependencies",
+    ("modules", "total", "failed"),
     [
-        pytest.param(["missing_integration"], id="missing_dependency"),
-        pytest.param(["bad_integration"], id="circular_dependency"),
+        pytest.param(
+            [
+                MockModule(domain="good_integration"),
+                MockModule(
+                    domain="bad_integration", dependencies=["missing_integration"]
+                ),
+            ],
+            3,
+            ["bad_integration", "not_found"],
+            id="missing_dependency",
+        ),
+        pytest.param(
+            [
+                MockModule(domain="good_integration"),
+                MockModule(domain="bad_integration", dependencies=["bad_integration"]),
+            ],
+            3,
+            ["bad_integration", "not_found"],
+            id="circular_dependency",
+        ),
+        pytest.param(
+            [
+                MockModule(domain="good_integration", dependencies=["intermediate"]),
+                MockModule(
+                    domain="intermediate",
+                    partial_manifest={"after_dependencies": ["bad_integration"]},
+                ),
+                MockModule(
+                    domain="bad_integration",
+                    partial_manifest={"after_dependencies": ["intermediate"]},
+                ),
+            ],
+            4,
+            ["bad_integration", "good_integration", "intermediate", "not_found"],
+            id="dependency_in_after_dependency_cycle",
+        ),
     ],
 )
 async def test_bootstrap_progress_unresolved_dependencies(
-    hass: HomeAssistant, dependencies: list[str]
+    hass: HomeAssistant, modules: list[MockModule], total: int, failed: list[str]
 ) -> None:
     """Test integrations dropped while resolving dependencies count as failed."""
     hass.set_state(CoreState.not_running)
-    mock_integration(hass, MockModule(domain="good_integration"))
-    mock_integration(
-        hass, MockModule(domain="bad_integration", dependencies=dependencies)
-    )
+    for module in modules:
+        mock_integration(hass, module)
     progress = _track_bootstrap_progress(hass)
 
     await bootstrap._async_set_up_integrations(
@@ -2071,9 +2103,9 @@ async def test_bootstrap_progress_unresolved_dependencies(
 
     _, final = progress[-1]
     assert final["integrations"] == {
-        "total": 3,
-        "done": 3,
-        "failed": ["bad_integration", "not_found"],
+        "total": total,
+        "done": total,
+        "failed": failed,
     }
 
 

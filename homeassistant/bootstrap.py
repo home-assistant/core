@@ -951,7 +951,7 @@ async def _async_set_up_integrations(
             for domain in domain_group & all_domains
             for dep in (domain, *integrations_after_dependencies[domain])
         }
-        | (_get_domains(hass, config) - all_domains)
+        | ((_get_domains(hass, config) | all_integrations.keys()) - all_domains)
     )
 
     _LOGGER.info("Setting up stage 0")
