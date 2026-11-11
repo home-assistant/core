@@ -28,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import BMxConfigEntry
+from .const import BATTERY_STATUSES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,8 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "battery_status": SensorEntityDescription(
         key="battery_status",
         translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=BATTERY_STATUSES,
     ),
     "battery_percent": SensorEntityDescription(
         key="battery_percent",

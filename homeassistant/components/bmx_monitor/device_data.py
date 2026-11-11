@@ -22,6 +22,7 @@ from sensor_state_data import SensorDeviceClass, SensorUpdate, Units
 from homeassistant.config_entries import ConfigEntry
 
 from .const import (
+    BATTERY_STATUSES,
     CONF_BATTERY_TYPE,
     CONF_CUSTOM_BATTERY_CHEMISTRY,
     CONF_CUSTOM_CHARGING_VOLTAGE,
@@ -178,7 +179,8 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
             self.update_sensor(
                 key="battery_status",
                 native_unit_of_measurement=None,
-                native_value=status,
+                # An unrecognised status code is reported as unknown.
+                native_value=status if status in BATTERY_STATUSES else None,
                 device_class=None,
             )
 

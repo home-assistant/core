@@ -163,10 +163,10 @@ def test_custom_chemistry_is_independent(device: BMxBluetoothDeviceData) -> None
 
 @pytest.mark.parametrize(
     ("status", "expected"),
-    [(4, "charging"), (2, "normal"), (99, "unknown")],
+    [(4, "charging"), (2, "normal"), (99, None)],
 )
 def test_automatic_reading(
-    device: BMxBluetoothDeviceData, status: int, expected: str
+    device: BMxBluetoothDeviceData, status: int, expected: str | None
 ) -> None:
     """Automatic mode publishes monitor values and known generation."""
     device._bm2_generation = BM2Generation.ENHANCED

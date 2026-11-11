@@ -23,7 +23,11 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothEntityKey,
 )
 from homeassistant.components.bmx_monitor import sensor
-from homeassistant.components.bmx_monitor.const import CONF_BATTERY_TYPE, DOMAIN
+from homeassistant.components.bmx_monitor.const import (
+    BATTERY_STATUSES,
+    CONF_BATTERY_TYPE,
+    DOMAIN,
+)
 from homeassistant.components.bmx_monitor.device_data import MIN_POLL_INTERVAL
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
@@ -304,6 +308,14 @@ async def test_enhanced_chosen_never_connects(
         assert states["battery_voltage"] == "14.5"
         assert states["battery_percent"] == "100"
         assert states["battery_status"] == "charging"
+        status_entity = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{ADDRESS}-battery_status"
+        )
+        assert status_entity is not None
+        status_state = hass.states.get(status_entity)
+        assert status_state is not None
+        assert status_state.attributes["device_class"] == "enum"
+        assert status_state.attributes["options"] == BATTERY_STATUSES
         assert await hass.config_entries.async_unload(entry.entry_id)
 
 

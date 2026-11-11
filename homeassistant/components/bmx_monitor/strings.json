@@ -22,7 +22,7 @@
         "data_description": {
           "battery_type": "Battery chemistry"
         },
-        "description": "A supported BM2 battery monitor was detected. Do you want to add `{name}` to Home Assistant?\n\nRoutine updates will prefer the active BM2 connection and can fall back to advertisement data where supported.",
+        "description": "A supported BM2 battery monitor was detected. Do you want to add `{name}` to Home Assistant?\n\nSensors are updated from the BM2's Bluetooth advertisements. Home Assistant connects to the BM2 only when its advertisements don't include everything needed.",
         "title": "BM2 battery monitor discovered"
       },
       "custom_battery_details": {
