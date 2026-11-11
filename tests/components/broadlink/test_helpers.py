@@ -1,9 +1,22 @@
 """Tests for Broadlink helper functions."""
 
+from unittest.mock import patch
+
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.broadlink.helpers import data_packet, mac_address
+from homeassistant.components.broadlink.const import (
+    CONF_ENTRY_KIND,
+    DOMAIN,
+    ENTRY_KIND_MAGIC_FAMILY,
+)
+from homeassistant.components.broadlink.helpers import (
+    data_packet,
+    import_device,
+    mac_address,
+)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 
@@ -54,3 +67,26 @@ async def test_invalid_mac_address(hass: HomeAssistant) -> None:
     for mac in invalid:
         with pytest.raises((ValueError, probatio.Invalid)):
             mac_address(mac)
+
+
+async def test_import_device_filters_magic_entries(hass: HomeAssistant) -> None:
+    """Test classic host discovery ignores hostless Magic entries."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ENTRY_KIND: ENTRY_KIND_MAGIC_FAMILY,
+            "family_id": "family-1",
+        },
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.0.2.10"},
+    ).add_to_hass(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as async_init:
+        import_device(hass, "192.0.2.10")
+        import_device(hass, "192.0.2.11")
+        await hass.async_block_till_done()
+
+    async_init.assert_awaited_once()
+    assert async_init.await_args.kwargs["data"] == {CONF_HOST: "192.0.2.11"}

@@ -10,7 +10,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import event
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, is_magic_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,11 @@ class BroadlinkHeartbeat:
         """Send packets to feed watchdog timers."""
         hass = self._hass
         config_entries = hass.config_entries.async_entries(DOMAIN)
-        hosts: set[str] = {entry.data[CONF_HOST] for entry in config_entries}
+        hosts: set[str] = {
+            entry.data[CONF_HOST]
+            for entry in config_entries
+            if not is_magic_entry(entry)
+        }
         await self.heartbeat(hosts)
 
     @staticmethod

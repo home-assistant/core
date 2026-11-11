@@ -1,12 +1,16 @@
 """Broadlink entities."""
 
-from typing import override
+from typing import Any, override
+
+from broadlink_async.magic import ImportedDevice
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, magic_family_identifier
+from .coordinator import FamilyCoordinator
 
 
 class BroadlinkEntity(Entity):
@@ -72,4 +76,46 @@ class BroadlinkEntity(Entity):
             sw_version=str(device.fw_version)
             if device.fw_version is not None
             else None,
+        )
+
+
+class BroadLinkMagicEntity(CoordinatorEntity[FamilyCoordinator]):
+    """Base class for entities of an imported Magic Home family."""
+
+    _attr_has_entity_name = True
+
+    def _family_device_id(self) -> str:
+        """Return the registry id of the imported family device."""
+        return dr.async_get_device_id_by_identifier(
+            self.coordinator.hass,
+            (DOMAIN, magic_family_identifier(self.coordinator.family.family_id)),
+            config_entry_id=self.coordinator.config_entry.entry_id,
+        )
+
+    def _confirmed_state(
+        self, device: ImportedDevice, pending: dict[str, int]
+    ) -> dict[str, Any]:
+        """Return reported values that do not contradict pending commands.
+
+        A periodic report sent before a command took effect still carries the
+        old value, so a pending key is only applied once a report confirms it.
+        """
+        state: dict[str, Any] = {}
+        for key, value in self.coordinator.device_states.get(
+            device.stable_id, {}
+        ).items():
+            if key not in pending:
+                state[key] = value
+            elif int(value) == pending[key]:
+                pending.pop(key)
+                state[key] = value
+        return state
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether at least one family gateway is online."""
+        return bool(
+            self.coordinator.last_update_success
+            and self.coordinator.gateway_set.online_gateways
         )

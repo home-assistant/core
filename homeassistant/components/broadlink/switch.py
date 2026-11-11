@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.magic import DeviceKind, ImportedDevice
 import probatio
 
 from homeassistant.components.switch import (
@@ -25,9 +26,14 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    device_registry as dr,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -35,9 +41,16 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import BROADLINK_DATA, DOMAINS_AND_TYPES
+from .const import (
+    BROADLINK_DATA,
+    DOMAIN,
+    DOMAINS_AND_TYPES,
+    is_magic_entry,
+    magic_device_identifier,
+)
+from .coordinator import BroadLinkMagicConfigEntry, FamilyCoordinator
 from .device import BroadlinkDevice
-from .entity import BroadlinkEntity
+from .entity import BroadlinkEntity, BroadLinkMagicEntity
 from .helpers import data_packet, import_device, mac_address
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +126,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink switch."""
+    if is_magic_entry(config_entry):
+        await _async_setup_magic_entry(hass, config_entry, async_add_entities)
+        return
+
     device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     switches: list[BroadlinkSwitch] = []
 
@@ -306,3 +323,106 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True
+
+
+async def _async_setup_magic_entry(
+    hass: HomeAssistant,
+    entry: BroadLinkMagicConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up imported switch panels and plugs."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        BroadLinkMagicSwitch(coordinator, device, channel)
+        for device in coordinator.family.switch_devices
+        for channel in range(device.channel_count)
+    )
+
+
+class BroadLinkMagicSwitch(BroadLinkMagicEntity, SwitchEntity):
+    """One channel of an imported switch panel or plug."""
+
+    _attr_is_on = False
+
+    def __init__(
+        self,
+        coordinator: FamilyCoordinator,
+        device: ImportedDevice,
+        channel: int,
+    ) -> None:
+        """Initialize one switch channel."""
+        super().__init__(coordinator)
+        self._device = device
+        self._channel = channel
+        self._report_serial = 0
+        self._area_name = coordinator.room_name(device.room_id)
+        if device.channel_count == 1:
+            self._attr_name = None
+        elif channel < len(device.channel_names) and device.channel_names[channel]:
+            self._attr_name = device.channel_names[channel]
+        else:
+            self._attr_translation_key = "channel"
+            self._attr_translation_placeholders = {"channel": str(channel + 1)}
+        self._attr_unique_id = (
+            f"{coordinator.family.family_id}_{device.stable_id}_{channel}"
+        )
+        model = (
+            "Magic Home Plug" if device.kind is DeviceKind.PLUG else "Magic Home Switch"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, magic_device_identifier(device.stable_id))},
+            manufacturer="BroadLink",
+            model=model,
+            name=device.name,
+            suggested_area=self._area_name,
+            via_device_id=self._family_device_id(),
+        )
+
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Apply a SwitchV1 channel report."""
+        # Every gateway packet refreshes the coordinator; only a new report for
+        # this device may override the optimistic state set by a command.
+        serial = self.coordinator.report_serials.get(self._device.stable_id, 0)
+        if serial != self._report_serial:
+            self._report_serial = serial
+            state = self.coordinator.device_states.get(self._device.stable_id, {})
+            channels = state.get("channels")
+            if isinstance(channels, dict) and self._channel in channels:
+                self._attr_is_on = bool(channels[self._channel])
+        super()._handle_coordinator_update()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Assign the imported room without overriding user changes."""
+        await super().async_added_to_hass()
+        if self._area_name and self.registry_entry is not None:
+            device_id = self.registry_entry.device_id
+            registry = dr.async_get(self.hass)
+            registry_device = registry.async_get(device_id) if device_id else None
+            if registry_device is not None and registry_device.area_id is None:
+                area = ar.async_get(self.hass).async_get_or_create(self._area_name)
+                registry.async_update_device(registry_device.id, area_id=area.id)
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on this panel channel."""
+        await self.coordinator.async_send_switch(
+            self._device,
+            self._channel,
+            True,
+        )
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off this panel channel."""
+        await self.coordinator.async_send_switch(
+            self._device,
+            self._channel,
+            False,
+        )
+        self._attr_is_on = False
+        self.async_write_ha_state()

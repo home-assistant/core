@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, is_magic_entry
 
 
 def data_packet(value):
@@ -38,7 +38,9 @@ def format_mac(mac):
 def import_device(hass, host):
     """Create a config flow for a device."""
     configured_hosts = {
-        entry.data.get(CONF_HOST) for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data[CONF_HOST]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if not is_magic_entry(entry)
     }
 
     if host not in configured_hosts:

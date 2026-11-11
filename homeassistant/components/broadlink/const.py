@@ -1,7 +1,8 @@
 """Constants."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from datetime import timedelta
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
@@ -11,6 +12,58 @@ if TYPE_CHECKING:
     from .heartbeat import BroadlinkHeartbeat
 
 DOMAIN = "broadlink"
+
+CONF_ENTRY_KIND: Final = "entry_kind"
+ENTRY_KIND_CLASSIC: Final = "classic"
+ENTRY_KIND_MAGIC_FAMILY: Final = "magic_family"
+
+CONF_FAMILY_ID: Final = "family_id"
+CONF_FAMILY_NAME: Final = "family_name"
+CONF_FAMILY_PID: Final = "family_pid"
+CONF_FAMILY_TOKEN: Final = "family_token"
+CONF_BLETOKEN: Final = "bletoken"
+CONF_DEVICES: Final = "devices"
+CONF_GATEWAYS: Final = "gateways"
+CONF_GROUPS: Final = "groups"
+CONF_ROOMS: Final = "rooms"
+CONF_SCENES: Final = "scenes"
+CONF_VIRTUAL_SUBTOKENS: Final = "virtual_subtokens"
+
+IMPORT_PATH: Final = "/industry/v1/familyinfo/import"
+IMPORT_TIMEOUT: Final = 180
+UPDATE_INTERVAL: Final = timedelta(seconds=60)
+
+MAGIC_PLATFORMS: Final = [
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SWITCH,
+]
+
+
+def is_magic_entry(entry) -> bool:
+    """Return whether a config entry represents a Magic Home family."""
+    return entry.data.get(CONF_ENTRY_KIND) == ENTRY_KIND_MAGIC_FAMILY
+
+
+def magic_family_identifier(family_id: str) -> str:
+    """Return a namespaced Magic family device identifier."""
+    return f"magic:family:{family_id}"
+
+
+def magic_gateway_identifier(mac: str) -> str:
+    """Return a namespaced Magic gateway device identifier."""
+    return f"magic:gw:{mac}"
+
+
+def magic_device_identifier(stable_id: str) -> str:
+    """Return a namespaced Magic child device identifier."""
+    return f"magic:dev:{stable_id}"
+
+
+def magic_rm_device_identifier(stable_id: str) -> str:
+    """Return a namespaced Magic RM child device identifier."""
+    return f"magic:rm:{stable_id}"
+
 
 DOMAINS_AND_TYPES = {
     Platform.BINARY_SENSOR: {"HYS"},

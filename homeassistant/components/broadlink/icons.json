@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "climate": {
+      "floor_heating": {
+        "default": "mdi:heating-coil"
+      }
+    }
+  }
+}

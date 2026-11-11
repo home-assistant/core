@@ -3,9 +3,15 @@
 from unittest.mock import call, patch
 
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.broadlink.const import (
+    CONF_ENTRY_KIND,
+    DOMAIN,
+    ENTRY_KIND_MAGIC_FAMILY,
+)
 from homeassistant.components.broadlink.heartbeat import BroadlinkHeartbeat
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -112,3 +118,23 @@ async def test_heartbeat_do_not_unload(hass: HomeAssistant) -> None:
 
     assert mock_ping.call_count == 1
     assert mock_ping.call_args == call(device_b.host)
+
+
+async def test_heartbeat_filters_magic_entry(hass: HomeAssistant) -> None:
+    """Test Magic entries without hosts are excluded from classic heartbeats."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ENTRY_KIND: ENTRY_KIND_MAGIC_FAMILY,
+            "family_id": "family-1",
+        },
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.0.2.10"},
+    ).add_to_hass(hass)
+
+    with patch(DEVICE_PING) as mock_ping:
+        await BroadlinkHeartbeat(hass).async_heartbeat(dt_util.utcnow())
+
+    mock_ping.assert_awaited_once_with("192.0.2.10")

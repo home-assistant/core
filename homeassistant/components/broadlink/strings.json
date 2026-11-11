@@ -3,8 +3,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_listen": "Home Assistant could not listen on UDP port 12346. Ensure the port is available.",
+      "gateway_in_other_family": "A gateway of this family is already part of the imported family {family}. Remove that family or the gateway from it before importing this one.",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "not_supported": "Device not supported",
+      "invalid_import": "The app did not upload a valid family.",
+      "multiple_families": "The app uploaded more than one family. Export one family at a time.",
+      "no_gateway": "The imported family does not contain a supported gateway.",
+      "no_url": "Home Assistant does not have a URL reachable by the Magic Home app.",
+      "not_supported": "YAML import is not supported.",
+      "reconfigure_successful": "The Magic Home family was updated successfully.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -14,9 +21,44 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name} ({model} at {host})",
+    "progress": {
+      "magic_wait_for_import": "Waiting for the Magic Home app to upload the family"
+    },
     "step": {
       "auth": {
         "title": "Authenticate to the device"
+      },
+      "device": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "timeout": "Timeout"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Broadlink device."
+        },
+        "description": "Connect to the device"
+      },
+      "magic_confirm": {
+        "description": "Import `{family_name}` with {gateway_count} gateways and {device_count} devices?",
+        "title": "Confirm Magic Home family"
+      },
+      "magic_family": {
+        "data": {
+          "qr": "Family import QR code"
+        },
+        "data_description": {
+          "qr": "Scan this code with the BroadLink Magic Home app."
+        },
+        "description": "Gateway Wi-Fi firmware 62341 or newer is required for Bluetooth status reports. Open the BroadLink Magic Home app and scan this QR code. Configure the gateway to connect to this Home Assistant host on UDP port 12346. The import URL is `{import_url}`. After the app reports a successful upload, select Submit.",
+        "title": "Import a Magic Home family"
+      },
+      "magic_import_timeout": {
+        "description": "No family was imported within three minutes. Select Submit to generate a new QR code.",
+        "title": "Import timed out"
+      },
+      "magic_wait_for_import": {
+        "description": "Waiting for the app to upload the family.",
+        "title": "Waiting for Magic Home"
       },
       "reset": {
         "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Select the device.\n3. Select `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock.",
@@ -30,14 +72,11 @@
         "title": "Unlock the device (optional)"
       },
       "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "timeout": "Timeout"
+        "menu_options": {
+          "device": "Broadlink device",
+          "magic_family": "Magic Home family"
         },
-        "data_description": {
-          "host": "The hostname or IP address of your Broadlink device."
-        },
-        "description": "Connect to the device"
+        "title": "Set up Broadlink"
       }
     }
   },
@@ -45,6 +84,11 @@
     "binary_sensor": {
       "heating": {
         "name": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+      }
+    },
+    "climate": {
+      "floor_heating": {
+        "name": "Floor heating"
       }
     },
     "infrared": {
@@ -92,6 +136,11 @@
       "total_consumption": {
         "name": "Total consumption"
       }
+    },
+    "switch": {
+      "channel": {
+        "name": "Channel {channel}"
+      }
     }
   },
   "exceptions": {
@@ -104,11 +153,17 @@
     "connect_failed": {
       "message": "Failed to connect to the device at {host}: {error}"
     },
+    "device_not_addressable": {
+      "message": "{device} cannot be controlled because the imported family does not contain its FastCon address"
+    },
     "device_not_found": {
       "message": "Device not found: {device}"
     },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
+    },
+    "gateway_offline": {
+      "message": "No gateway of the imported family is online"
     },
     "invalid_command": {
       "message": "Invalid command: {error}"
