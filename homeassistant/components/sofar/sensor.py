@@ -75,17 +75,17 @@ async def async_setup_entry(
         SENSOR_DESCRIPTIONS + TOTAL_SENSOR_DESCRIPTIONS,
     )
     runtime_data = entry.runtime_data
-    served = runtime_data.served_components
 
     entities: list[SofarSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and _battery_string(description) is None
+        if description.component in runtime_data.served_components
+        and _battery_string(description) is None
     ]
     entities.extend(
         SofarTotalSensor(runtime_data, description)
         for description in TOTAL_SENSOR_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     )
     async_add_entities(entities)
 
@@ -109,7 +109,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         runtime_data.readings.async_add_listener(_async_add_wired_battery_strings)
     )
-    if BATTERY_PACKS in served:
+    if BATTERY_PACKS in runtime_data.served_components:
         _async_setup_battery_packs(entry, runtime_data, async_add_entities)
 
 
