@@ -12,8 +12,16 @@ from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.alarm_control_panel import (
     HomematicipAlarmControlPanelEntity,
 )
-from homeassistant.components.homematicip_cloud.services import SERVICE_ARM_ANYWAY
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF, STATE_ON
+from homeassistant.components.homematicip_cloud.services import (
+    HomematicIPService,
+    HomematicIPServiceArgument,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -197,8 +205,11 @@ async def _async_arm_anyway(hass: HomeAssistant, mode: str = "away") -> None:
     """Call the arm anyway action."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ARM_ANYWAY,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MODE: mode},
+        HomematicIPService.ARM_ANYWAY,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            HomematicIPServiceArgument.MODE: mode,
+        },
         blocking=True,
     )
 

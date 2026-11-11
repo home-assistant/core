@@ -1151,6 +1151,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "snooz",
+        "local_name": "Breez*",
+    },
+    {
+        "domain": "snooz",
         "local_name": "Snooz*",
     },
     {

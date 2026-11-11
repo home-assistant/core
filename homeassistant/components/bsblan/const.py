@@ -16,7 +16,6 @@ SCAN_INTERVAL_SLOW = timedelta(minutes=5)  # For config data
 # Services
 DATA_BSBLAN_CLIENT: Final = "bsblan_client"
 
-ATTR_TARGET_TEMPERATURE: Final = "target_temperature"
 ATTR_INSIDE_TEMPERATURE: Final = "inside_temperature"
 ATTR_OUTSIDE_TEMPERATURE: Final = "outside_temperature"
 

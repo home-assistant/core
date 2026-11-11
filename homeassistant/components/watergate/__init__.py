@@ -8,6 +8,14 @@ import logging
 from aiohttp.web import Request, Response
 from watergate_local_api import WatergateApiException, WatergateLocalApiClient
 from watergate_local_api.models import WebhookEvent
+from watergate_local_api.models.webhook_model import (
+    AutoShutOffReportData,
+    OnlineEvent,
+    PowerSupplyChangedEventData,
+    TelemetryEventData,
+    ValveEventData,
+    WifiChangedEventData,
+)
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -25,12 +33,6 @@ from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-WEBHOOK_TELEMETRY_TYPE = "telemetry"
-WEBHOOK_VALVE_TYPE = "valve"
-WEBHOOK_WIFI_CHANGED_TYPE = "wifi-changed"
-WEBHOOK_POWER_SUPPLY_CHANGED_TYPE = "power-supply-changed"
-WEBHOOK_AUTO_SHUT_OFF = "auto-shut-off-report"
-WEBHOOK_ONLINE_TYPE = "online"
 
 CLEAR_WEBHOOK_TIMEOUT = 10
 
@@ -114,9 +116,7 @@ def get_webhook_handler(
 
         data = WebhookEvent.parse_webhook_event(body)
 
-        body_type = body.get("type")
-
-        if body_type == WEBHOOK_ONLINE_TYPE:
+        if isinstance(data, OnlineEvent):
             # The event carries no state, and it may have changed while the
             # device was away, so fetch it instead of guessing.
             await coordinator.async_request_refresh()
@@ -124,9 +124,9 @@ def get_webhook_handler(
 
         if not (coordinator_data := coordinator.data):
             pass
-        elif body_type == WEBHOOK_VALVE_TYPE:
+        elif isinstance(data, ValveEventData):
             coordinator_data.state.valve_state = data.state
-        elif body_type == WEBHOOK_TELEMETRY_TYPE:
+        elif isinstance(data, TelemetryEventData):
             errors = data.errors or []
             coordinator_data.telemetry.flow = (
                 data.flow if "flow" not in errors else None
@@ -137,20 +137,25 @@ def get_webhook_handler(
             coordinator_data.telemetry.water_temperature = (
                 data.temperature if "temperature" not in errors else None
             )
-        elif body_type == WEBHOOK_WIFI_CHANGED_TYPE:
+        elif isinstance(data, WifiChangedEventData):
             coordinator_data.networking.ip = data.ip
             coordinator_data.networking.gateway = data.gateway
             coordinator_data.networking.subnet = data.subnet
             coordinator_data.networking.ssid = data.ssid
             coordinator_data.networking.rssi = data.rssi
-        elif body_type == WEBHOOK_POWER_SUPPLY_CHANGED_TYPE:
+        elif isinstance(data, PowerSupplyChangedEventData):
             coordinator_data.state.power_supply = data.supply
-        elif body_type == WEBHOOK_AUTO_SHUT_OFF:
+        elif isinstance(data, AutoShutOffReportData):
             async_dispatcher_send(
                 hass, AUTO_SHUT_OFF_EVENT_NAME.format(data.type.lower()), data
             )
 
         coordinator.async_set_updated_data(coordinator_data)
+
+        if isinstance(data, PowerSupplyChangedEventData):
+            # A battery may have been inserted or removed, which changes whether
+            # (and what) /power reports.
+            await coordinator.async_request_refresh()
 
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 

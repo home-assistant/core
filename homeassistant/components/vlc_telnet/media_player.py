@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -120,7 +120,7 @@ class VlcDevice(MediaPlayerEntity):
     volume_level: int
 
     def __init__(
-        self, config_entry: ConfigEntry, vlc: Client, name: str, available: bool
+        self, config_entry: VlcConfigEntry, vlc: Client, name: str, available: bool
     ) -> None:
         """Initialize the vlc device."""
         self._config_entry = config_entry
