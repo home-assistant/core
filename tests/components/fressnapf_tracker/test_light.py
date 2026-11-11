@@ -168,15 +168,12 @@ async def test_turn_on_led_not_activatable(
     mock_api_client_coordinator: MagicMock,
     activatable_parameter: str,
 ) -> None:
-    """Test turning on the light when LED is not activatable raises.
-
-    The mock light is on, so it stays available and the service call reaches
-    the entity, which then explains why the flashlight cannot be activated.
-    """
-    led_activatable = mock_api_client_init.get_tracker.return_value.led_activatable
-    setattr(led_activatable, activatable_parameter, False)
-    # The API reports overall false as soon as one of the flags is false
-    led_activatable.overall = False
+    """Test turning on the light when LED is not activatable raises."""
+    setattr(
+        mock_api_client_init.get_tracker.return_value.led_activatable,
+        activatable_parameter,
+        False,
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -238,7 +235,7 @@ async def test_turn_on_off_error(
     [
         pytest.param(0, False, STATE_UNAVAILABLE, id="off_not_activatable"),
         pytest.param(0, True, STATE_OFF, id="off_activatable"),
-        pytest.param(50, False, STATE_ON, id="on_not_activatable"),
+        pytest.param(50, False, STATE_UNAVAILABLE, id="on_not_activatable"),
         pytest.param(50, True, STATE_ON, id="on_activatable"),
     ],
 )
@@ -251,10 +248,7 @@ async def test_availability(
     activatable: bool,
     expected_state: str,
 ) -> None:
-    """Test the flashlight is only unavailable if it is off and cannot be activated.
-
-    A flashlight that is already on stays available so it can be turned off.
-    """
+    """Test the flashlight is unavailable if it cannot be activated."""
     tracker = mock_api_client_init.get_tracker.return_value
     tracker.led_brightness.value = brightness
     tracker.led_activatable.overall = activatable
