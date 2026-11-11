@@ -50,6 +50,15 @@ SUPPORT_WEBOSTV_VOLUME = (
 PARALLEL_UPDATES = 0
 
 
+def _volume_set_supported(volume_status: dict[str, Any]) -> bool | None:
+    """Return if the TV reports that the sound output supports absolute volume."""
+    if "volumeSyncable" in volume_status:  # webOS 22+
+        return bool(volume_status["volumeSyncable"])
+    if "supportvolume" in volume_status:  # webOS 4.x
+        return bool(volume_status["supportvolume"])
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WebOsTvConfigEntry,
@@ -124,11 +133,10 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             if tv_state.sound_output == "external_speaker":
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
             elif tv_state.sound_output != "lineout":
-                supported = (
-                    supported
-                    | SUPPORT_WEBOSTV_VOLUME
-                    | MediaPlayerEntityFeature.VOLUME_SET
-                )
+                supported = supported | SUPPORT_WEBOSTV_VOLUME
+                # webOS 5/6 does not report it, keep volume set when unknown
+                if _volume_set_supported(tv_state.volume_status) is not False:
+                    supported = supported | MediaPlayerEntityFeature.VOLUME_SET
 
             self._supported_features = supported
 
