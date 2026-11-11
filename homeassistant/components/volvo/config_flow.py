@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -90,7 +90,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+                description_placeholders={"name": self._get_reauth_entry().title},
             )
         return await self.async_step_user()
 
@@ -133,9 +133,10 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 # form. If it is, skip this step and go directly to the next step.
                 try:
                     await self._async_load_vehicles(api)
-                    return await self.async_step_vin()
                 except VolvoApiException:
                     pass
+                else:
+                    return await self.async_step_vin()
 
             elif self.source == SOURCE_RECONFIGURE:
                 user_input = self._config_data = dict(

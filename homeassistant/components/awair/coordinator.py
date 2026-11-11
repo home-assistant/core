@@ -49,6 +49,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AwairResult]]):
     ) -> None:
         """Set up the AwairDataUpdateCoordinator class."""
         self.title = config_entry.title
+        self.host: str | None = config_entry.data.get(CONF_HOST)
 
         super().__init__(
             hass,

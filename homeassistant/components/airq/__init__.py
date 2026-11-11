@@ -36,6 +36,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: AirQConfigEntry) -> Non
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: AirQConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

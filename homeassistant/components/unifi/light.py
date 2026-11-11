@@ -31,6 +31,7 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_device_supported_fn,
 )
 
 if TYPE_CHECKING:
@@ -60,6 +61,8 @@ def get_device_brightness_or_default(device: Device) -> int:
 @callback
 def async_device_led_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device supports LED control."""
+    if not async_device_supported_fn(hub, obj_id):
+        return False
     device: Device = hub.api.devices[obj_id]
     return device.led_override is not None or device.supports_led_ring
 

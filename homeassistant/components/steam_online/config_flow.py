@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -161,7 +161,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
-            description_placeholders={CONF_NAME: entry.title, **PLACEHOLDERS},
+            description_placeholders={"name": entry.title, **PLACEHOLDERS},
         )
 
 
@@ -242,7 +242,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_abort(
                     reason="friendlist_private",
                     description_placeholders={
-                        CONF_NAME: me.personaname,
+                        "name": me.personaname,
                         "privacy_settings_url": f"{me.profileurl}edit/settings",
                     },
                 )

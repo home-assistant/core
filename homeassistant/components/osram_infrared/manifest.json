@@ -4,6 +4,7 @@
   "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@freeDom-"],
   "config_flow": true,
+  "connectivity": ["infrared"],
   "dependencies": ["infrared"],
   "documentation": "https://www.home-assistant.io/integrations/osram_infrared",
   "integration_type": "device",

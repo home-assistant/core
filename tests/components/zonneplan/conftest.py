@@ -67,6 +67,11 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
                 "get_consumer_prices_electricity_hourly.json", DOMAIN
             )
         ),
+        PriceChart.ELECTRICITY_QUARTER_HOURLY: ConsumerPrices.from_dict(
+            load_json_object_fixture(
+                "get_consumer_prices_electricity_quarter_hourly.json", DOMAIN
+            )
+        ),
         PriceChart.GAS_DAILY: ConsumerPrices.from_dict(
             load_json_object_fixture("get_consumer_prices_gas_daily.json", DOMAIN)
         ),

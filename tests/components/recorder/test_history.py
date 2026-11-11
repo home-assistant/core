@@ -4,6 +4,7 @@ from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
 import json
+from typing import Any
 from unittest.mock import patch, sentinel
 
 from freezegun import freeze_time
@@ -19,6 +20,7 @@ from pytest_homeassistant.components.recorder.common import (
     db_state_to_native,
 )
 from pytest_homeassistant.typing import RecorderInstanceContextManager
+from sqlalchemy.exc import OperationalError
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history
@@ -509,6 +511,48 @@ async def test_get_significant_states(hass: HomeAssistant) -> None:
 
     hist = history.get_significant_states(hass, zero, four, entity_ids=list(states))
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+
+@pytest.mark.parametrize(
+    "get_states",
+    [
+        pytest.param(
+            lambda hass, start, end: history.get_significant_states(
+                hass, start, end, entity_ids=["media_player.test"]
+            ),
+            id="get_significant_states",
+        ),
+        pytest.param(
+            lambda hass, start, end: history.state_changes_during_period(
+                hass, start, end, entity_id="media_player.test"
+            ),
+            id="state_changes_during_period",
+        ),
+    ],
+)
+async def test_stream_error_falls_back(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    get_states: Any,
+) -> None:
+    """Test states are read again without streaming when reading rows fails."""
+    zero, four, _ = record_states(hass)
+    await async_wait_recording_done(hass)
+    expected = get_states(hass, zero, four)
+
+    sorted_states_to_dict = history._sorted_states_to_dict
+
+    def _fail_streamed(states: Any, **kwargs: Any) -> dict[str, list[Any]]:
+        # Only the streamed result is not a list
+        if not isinstance(states, list):
+            raise OperationalError("SELECT", {}, Exception())
+        return sorted_states_to_dict(states, **kwargs)
+
+    with patch.object(history, "_sorted_states_to_dict", side_effect=_fail_streamed):
+        states = get_states(hass, zero, four)
+    assert expected["media_player.test"]
+    assert_dict_of_states_equal_without_context_and_last_changed(expected, states)
+    assert "Error reading rows, retrying" in caplog.text
 
 
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")

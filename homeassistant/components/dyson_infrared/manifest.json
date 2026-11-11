@@ -4,6 +4,7 @@
   "categories": ["climate.fans_ventilation"],
   "codeowners": ["@elax46"],
   "config_flow": true,
+  "connectivity": ["infrared"],
   "dependencies": ["infrared"],
   "documentation": "https://www.home-assistant.io/integrations/dyson_infrared",
   "integration_type": "device",

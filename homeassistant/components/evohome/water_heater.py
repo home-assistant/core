@@ -109,9 +109,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get(NEXT_SP_FROM)
         else:
-            until = dt_util.now() + duration
-
-        until = dt_util.as_utc(until) if until else None
+            until = dt_util.utcnow() + duration
 
         if state:
             await self.coordinator.call_client_api(self._evo_device.set_on(until=until))
@@ -147,7 +145,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         else:
             await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get(NEXT_SP_FROM)
-            until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:
                 await self.coordinator.call_client_api(
