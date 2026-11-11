@@ -2038,7 +2038,43 @@ async def test_bootstrap_progress_unscheduled_dependency(hass: HomeAssistant) ->
 
     _, final = progress[-1]
     assert "dependency_only" not in hass.config.components
-    assert final["integrations"] == {"total": 0, "done": 0, "failed": []}
+    assert final["integrations"] == {
+        "total": 2,
+        "done": 2,
+        "failed": ["cycle_a", "cycle_b"],
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+@pytest.mark.parametrize(
+    "dependencies",
+    [
+        pytest.param(["missing_integration"], id="missing_dependency"),
+        pytest.param(["bad_integration"], id="circular_dependency"),
+    ],
+)
+async def test_bootstrap_progress_unresolved_dependencies(
+    hass: HomeAssistant, dependencies: list[str]
+) -> None:
+    """Test integrations dropped while resolving dependencies count as failed."""
+    hass.set_state(CoreState.not_running)
+    mock_integration(hass, MockModule(domain="good_integration"))
+    mock_integration(
+        hass, MockModule(domain="bad_integration", dependencies=dependencies)
+    )
+    progress = _track_bootstrap_progress(hass)
+
+    await bootstrap._async_set_up_integrations(
+        hass, {"good_integration": {}, "bad_integration": {}, "not_found": {}}
+    )
+
+    _, final = progress[-1]
+    assert final["integrations"] == {
+        "total": 3,
+        "done": 3,
+        "failed": ["bad_integration", "not_found"],
+    }
 
 
 @pytest.mark.parametrize("load_registries", [False])

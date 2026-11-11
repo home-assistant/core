@@ -943,6 +943,7 @@ async def _async_set_up_integrations(
         ("2", domains, STAGE_2_TIMEOUT),
     ]
     # Not every resolved domain is set up by a stage, only count those that are.
+    # Domains dropped while resolving dependencies count as failed.
     watcher.async_set_planned_domains(
         {
             dep
@@ -950,6 +951,7 @@ async def _async_set_up_integrations(
             for domain in domain_group & all_domains
             for dep in (domain, *integrations_after_dependencies[domain])
         }
+        | (_get_domains(hass, config) - all_domains)
     )
 
     _LOGGER.info("Setting up stage 0")
