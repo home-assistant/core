@@ -700,6 +700,7 @@ FLOWS = {
         "rehlko",
         "rejseplanen",
         "remember_the_milk",
+        "remootio",
         "remote_calendar",
         "renault",
         "renson",
