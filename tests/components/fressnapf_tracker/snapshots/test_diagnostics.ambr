@@ -18,7 +18,7 @@
           'last_position_accuracy': None,
           'last_position_timestamp': None,
           'last_seen': None,
-          'last_seen_timestamp': None,
+          'last_seen_timestamp': '2024-01-15T12:30:00Z',
           'led_activatable': dict({
             'has_led': True,
             'nonempty_battery': True,
