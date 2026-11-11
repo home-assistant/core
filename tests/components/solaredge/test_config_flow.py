@@ -10,14 +10,15 @@ from yarl import URL
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import (
+    CONF_SECTION_WEB_AUTH,
     CONF_SITE_ID,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_CALLBACK_PATH,
     OAUTH2_TOKEN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_TOKEN
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryDisabler
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -92,6 +93,31 @@ async def test_full_flow(
     assert result["result"].data[CONF_SITE_ID] == SITE_ID
     assert result["result"].data[CONF_TOKEN]["refresh_token"] == "refresh-token"
     assert aioclient_mock.mock_calls[-1][2]["code_verifier"]
+
+
+async def test_duplicate_legacy_site_is_rejected(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test an unmigrated disabled entry still blocks a duplicate site."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge",
+        unique_id=None,
+        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: "retired-api-key"},
+        version=1,
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SITE_ID: SITE_ID}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -275,6 +301,47 @@ async def test_reconfigure_keeps_oauth_token(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_TOKEN] == TOKEN
+
+
+async def test_reconfigure_keeps_only_legacy_auth(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_web_api: AsyncMock,
+) -> None:
+    """Test legacy web credentials cannot be removed before OAuth migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge",
+        unique_id=SITE_ID,
+        data={
+            CONF_SITE_ID: SITE_ID,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "password",
+        },
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "auth_missing"}
+    assert entry.data[CONF_USERNAME] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: "new-user",
+                CONF_PASSWORD: "new-password",
+            }
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_USERNAME] == "new-user"
 
 
 async def test_migration_starts_reauth(

@@ -75,6 +75,7 @@ class SolarEdgeConfigFlow(
         errors: dict[str, str] = {}
         if user_input is not None:
             site_id = user_input[CONF_SITE_ID]
+            self._async_abort_entries_match({CONF_SITE_ID: site_id})
             await self.async_set_unique_id(site_id)
             self._abort_if_unique_id_configured()
 
@@ -169,6 +170,8 @@ class SolarEdgeConfigFlow(
                 else:
                     new_data[CONF_USERNAME] = username
                     new_data[CONF_PASSWORD] = web_auth[CONF_PASSWORD]
+            elif CONF_TOKEN not in new_data:
+                errors["base"] = "auth_missing"
             if not errors:
                 return self.async_update_reload_and_abort(entry, data=new_data)
 

@@ -109,7 +109,8 @@ async def test_rate_limit_error_distinguishes_monthly_limit(
         await api.get_details(SITE_ID)
 
     assert exc_info.value.monthly_limit
-    assert exc_info.value.retry_after is None
+    assert exc_info.value.retry_after is not None
+    assert exc_info.value.retry_after > 0
 
 
 async def test_rate_limit_without_headers_is_transient(
@@ -389,6 +390,28 @@ async def test_missing_daily_energy_after_refresh_sets_next_baseline() -> None:
     assert api._estimated_lifetime_energy(1_000, 125, current_day, False) == 1_025
 
 
+async def test_invalid_zero_lifetime_is_not_interpolated() -> None:
+    """Test a zero provider lifetime does not create a false reset."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    api = SolarEdgeV2(AsyncMock(), async_access_token)
+    api._get_overview = AsyncMock(
+        return_value={"production": {"total": 100, "units": "WH"}}
+    )
+    api._get_energy = AsyncMock(return_value={"total": 100, "unit": "WH"})
+    api._cached_request_with_status = AsyncMock(
+        return_value=({"energy": 0, "unit": "WH"}, True)
+    )
+    api._get_meter_telemetry = AsyncMock(return_value={})
+    api._get_site_power = AsyncMock(return_value={})
+
+    result = await api.get_overview(SITE_ID)
+
+    assert result["overview"]["lifeTimeData"]["energy"] is None
+
+
 async def test_missing_power_remains_unknown(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -481,6 +504,38 @@ async def test_power_flow_uses_net_grid_and_storage_power(
     assert power_flow["STORAGE"]["status"] == "Charging"
 
 
+async def test_power_flow_exposes_storage_level_without_power() -> None:
+    """Test storage charge level is available without a power sample."""
+
+    async def async_access_token() -> str:
+        return "access-token"
+
+    api = SolarEdgeV2(AsyncMock(), async_access_token)
+    api._cache[f"devices:{SITE_ID}"] = (
+        0,
+        [{"type": "BATTERY", "serialNumber": "battery-1"}],
+    )
+    api._get_meter_telemetry = AsyncMock(return_value={})
+    api._get_site_power = AsyncMock(return_value={})
+    api._get_storage_telemetry = AsyncMock(
+        return_value={
+            "storage": {
+                "battery-1": {
+                    "stateOfEnergy": {"values": [{"timestamp": "1", "value": 60}]}
+                }
+            }
+        }
+    )
+
+    result = await api.get_current_power_flow(SITE_ID)
+
+    assert result["siteCurrentPowerFlow"]["STORAGE"] == {
+        "status": None,
+        "currentPower": None,
+        "chargeLevel": 60,
+    }
+
+
 async def test_storage_telemetry_is_sorted_and_preserves_unknown_counters(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -552,6 +607,20 @@ def test_multiple_battery_percentage_stays_unknown_when_one_is_missing() -> None
     }
 
     assert _latest_storage_values(data) == (100, None, None)
+
+
+def test_storage_metrics_use_latest_independent_samples() -> None:
+    """Test each storage metric uses its latest non-null sample."""
+    data = {
+        "storage": {
+            "battery-1": {
+                "chargePower": {"values": [{"timestamp": "1", "value": 100}]},
+                "stateOfEnergy": {"values": [{"timestamp": "2", "value": 60}]},
+            }
+        }
+    }
+
+    assert _latest_storage_values(data) == (100, None, 60)
 
 
 async def test_rotated_refresh_token_is_persisted(

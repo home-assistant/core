@@ -112,6 +112,7 @@ class SolarEdgeV2:
                     now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                     + timedelta(days=32)
                 ).replace(day=1)
+                retry_after = (self._monthly_limit_until - now).total_seconds()
             raise SolarEdgeRateLimitError(
                 retry_after=retry_after, monthly_limit=monthly_limit
             )
@@ -220,11 +221,19 @@ class SolarEdgeV2:
             _find_number(production, "total"),
             _find_string(production, "units", "unit"),
         )
+        monthly_energy = _energy_total_wh(monthly)
+        yearly_energy = _energy_total_wh(yearly)
+        api_lifetime = _energy_wh(
+            _find_number(lifetime, "energy", "lifetimeEnergy"),
+            _find_string(lifetime, "units", "unit"),
+        )
+        if api_lifetime == 0 and any(
+            (energy or 0) > 0
+            for energy in (daily_energy, monthly_energy, yearly_energy)
+        ):
+            api_lifetime = None
         lifetime_energy = self._estimated_lifetime_energy(
-            _energy_wh(
-                _find_number(lifetime, "energy", "lifetimeEnergy"),
-                _find_string(lifetime, "units", "unit"),
-            ),
+            api_lifetime,
             daily_energy,
             day_start.date(),
             lifetime_refreshed,
@@ -238,8 +247,8 @@ class SolarEdgeV2:
         return {
             "overview": {
                 "lifeTimeData": {"energy": lifetime_energy},
-                "lastYearData": {"energy": _energy_total_wh(yearly)},
-                "lastMonthData": {"energy": _energy_total_wh(monthly)},
+                "lastYearData": {"energy": yearly_energy},
+                "lastMonthData": {"energy": monthly_energy},
                 "lastDayData": {"energy": daily_energy},
                 "currentPower": {"power": current_power},
                 "lastUpdateTime": _find_string(daily, "lastUpdateTime", "timestamp")
@@ -446,19 +455,23 @@ class SolarEdgeV2:
             "GRID": {"status": "Active", "currentPower": grid},
         }
         charge_power, discharge_power, state_of_energy = _latest_storage_values(storage)
+        storage_power: float | None = None
+        status: str | None = None
         if charge_power is not None or discharge_power is not None:
             net_storage = (discharge_power or 0.0) - (charge_power or 0.0)
             charging = net_storage < 0
             discharging = net_storage > 0
             storage_power = abs(net_storage)
+            status = (
+                "Charging" if charging else "Discharging" if discharging else "Idle"
+            )
             if charging:
                 power_flow["connections"].append({"from": "PV", "to": "STORAGE"})
             elif discharging:
                 power_flow["connections"].append({"from": "STORAGE", "to": "Load"})
+        if state_of_energy is not None or storage_power is not None:
             power_flow["STORAGE"] = {
-                "status": (
-                    "Charging" if charging else "Discharging" if discharging else "Idle"
-                ),
+                "status": status,
                 "currentPower": storage_power,
                 "chargeLevel": state_of_energy,
             }
@@ -776,13 +789,38 @@ def _latest_storage_values(
         telemetry = _find_list(battery, "telemetry", "telemetries", "data", "values")
         if not telemetry:
             continue
-        latest = telemetry[-1]
-        if (value := _find_number(latest, "chargePower")) is not None:
+        if (
+            value := next(
+                (
+                    value
+                    for item in reversed(telemetry)
+                    if (value := _find_number(item, "chargePower")) is not None
+                ),
+                None,
+            )
+        ) is not None:
             charge_power = (charge_power or 0) + value
-        if (value := _find_number(latest, "dischargePower")) is not None:
+        if (
+            value := next(
+                (
+                    value
+                    for item in reversed(telemetry)
+                    if (value := _find_number(item, "dischargePower")) is not None
+                ),
+                None,
+            )
+        ) is not None:
             discharge_power = (discharge_power or 0) + value
         if (
-            value := _find_number(latest, "stateOfEnergy", "stateOfCharge")
+            value := next(
+                (
+                    value
+                    for item in reversed(telemetry)
+                    if (value := _find_number(item, "stateOfEnergy", "stateOfCharge"))
+                    is not None
+                ),
+                None,
+            )
         ) is not None:
             state_of_energy = value
     return (
