@@ -448,7 +448,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             code = user_input[CONF_CODE].strip()
-            if not code.isdigit():
+            if not code.isdecimal():
                 errors["base"] = "invalid_mfa_code"
             else:
                 try:
