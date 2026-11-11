@@ -53,7 +53,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: Single climate entity per device, enabled by default.
-  discovery: todo
+  discovery: done
   stale-devices: todo
   diagnostics: todo
   exception-translations: todo

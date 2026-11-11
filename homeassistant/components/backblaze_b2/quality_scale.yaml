@@ -123,4 +123,4 @@ rules:
     comment: |
       The b2sdk library does not support custom HTTP session injection.
       It manages HTTP connections internally through its own session management.
-  strict-typing: todo
+  strict-typing: done

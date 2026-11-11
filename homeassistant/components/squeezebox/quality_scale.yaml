@@ -43,7 +43,7 @@ rules:
   devices: done
   diagnostics: todo
   discovery-update-info: todo
-  discovery: todo
+  discovery: done
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
@@ -67,4 +67,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done

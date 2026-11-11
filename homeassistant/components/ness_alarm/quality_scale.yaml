@@ -76,7 +76,7 @@ rules:
   icon-translations:
     status: exempt
     comment: No entity icons are used.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices: todo
 
