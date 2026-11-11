@@ -2,11 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "missing_serial_number": "The printer did not report a serial number."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
@@ -28,6 +30,9 @@
             "name": "Advanced settings"
           }
         }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the HP printer {name} at {host}?"
       }
     }
   },
