@@ -115,3 +115,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             unique_id=config_entry.unique_id or config_entry.data[CONF_SITE_ID],
             version=2,
         )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SolarEdgeConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    return CONF_TOKEN not in config_entry.data
