@@ -16,13 +16,18 @@ from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .const import CONF_USER_ID, DOMAIN
 from .coordinator import (
     FressnapfTrackerConfigEntry,
     FressnapfTrackerDataUpdateCoordinator,
 )
+from .util import hashed_serial_number
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -33,6 +38,17 @@ PLATFORMS: list[Platform] = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def invalid_tracker_issue_id(entry_id: str, serialnumber: str) -> str:
+    """Return the repair issue ID for an invalid tracker.
+
+    The ID contains the config entry ID because a tracker can be shared
+    between accounts. The serial number is hashed because issue IDs are
+    appended to diagnostics downloads without redaction. The placeholders
+    of a non persistent issue are not part of the download.
+    """
+    return f"invalid_fressnapf_tracker_{entry_id}_{hashed_serial_number(serialnumber)}"
 
 
 async def _get_valid_tracker(
@@ -55,11 +71,17 @@ async def _get_valid_tracker(
             "Tracker with serialnumber %s is invalid. Consider removing it via the App",
             device.serialnumber,
         )
+        # Remove the issue created by earlier versions with the serial number in
+        # its ID so the tracker does not get two issues after an upgrade
+        async_delete_issue(
+            hass,
+            DOMAIN,
+            f"invalid_fressnapf_tracker_{entry.entry_id}_{device.serialnumber}",
+        )
         async_create_issue(
             hass,
             DOMAIN,
-            # A tracker can be shared between accounts
-            f"invalid_fressnapf_tracker_{entry.entry_id}_{device.serialnumber}",
+            invalid_tracker_issue_id(entry.entry_id, device.serialnumber),
             config_entry_id=entry.entry_id,
             issue_domain=DOMAIN,
             learn_more_url="https://www.home-assistant.io/integrations/fressnapf_tracker/",
