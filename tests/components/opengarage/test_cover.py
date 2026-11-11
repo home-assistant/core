@@ -65,7 +65,7 @@ async def test_cover_position(
 @pytest.mark.parametrize(
     ("door_state", "expected_state", "expected_position"),
     [
-        (2, STATE_OPEN, 100),
+        (2, STATE_OPEN, None),
         (3, STATE_CLOSING, None),
         (4, STATE_OPENING, None),
         (5, STATE_UNKNOWN, None),
@@ -108,6 +108,45 @@ async def test_cover_external_movement(
     for door_state, expected_state in zip(door_states, expected_states, strict=True):
         await _simulate_door_state(hass, mock_opengarage, door_state)
         assert hass.states.get("cover.garage_abcdef").state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("service", "moving_door_state", "moving_state", "final_door_state", "final_state"),
+    [
+        (SERVICE_OPEN_COVER, 4, STATE_OPENING, 1, STATE_OPEN),
+        (SERVICE_CLOSE_COVER, 3, STATE_CLOSING, 0, STATE_CLOSED),
+    ],
+    ids=["open", "close"],
+)
+async def test_cover_command_from_stopped(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    service: str,
+    moving_door_state: int,
+    moving_state: str,
+    final_door_state: int,
+    final_state: str,
+) -> None:
+    """Test a door stopped mid-travel can be opened or closed."""
+    mock_opengarage.push_button.return_value = 1
+    await _simulate_door_state(hass, mock_opengarage, 2)
+    assert hass.states.get("cover.garage_abcdef").state == STATE_OPEN
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        blocking=True,
+    )
+    assert mock_opengarage.push_button.call_count == 1
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    await _simulate_door_state(hass, mock_opengarage, moving_door_state)
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    await _simulate_door_state(hass, mock_opengarage, final_door_state)
+    assert hass.states.get("cover.garage_abcdef").state == final_state
 
 
 async def test_cover_command_with_firmware_transition(

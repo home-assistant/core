@@ -17,12 +17,16 @@ from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# A door stopped mid-travel is partially open: it is not closed, but it
+# has no known position and can still be opened.
+STATE_STOPPED = "stopped"
+
 # Firmware 1.2.x reports door: 0 closed, 1 open, 2 stopped, 3 closing,
-# 4 opening, 5 unknown. A door stopped mid-travel is partially open.
-STATES_MAP = {
+# 4 opening, 5 unknown.
+STATES_MAP: dict[int, str] = {
     0: CoverState.CLOSED,
     1: CoverState.OPEN,
-    2: CoverState.OPEN,
+    2: STATE_STOPPED,
     3: CoverState.CLOSING,
     4: CoverState.OPENING,
 }
