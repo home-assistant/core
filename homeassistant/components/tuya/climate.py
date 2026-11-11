@@ -684,9 +684,10 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         Return True if the cloud reports the remote state.
         """
         status = self.device.status
-        if _IR_AC_STATUS_POWER not in status:
-            return False
         use = _IR_AC_STATUS_CODES if codes is None else codes
+        # Power may be reported after the other fields at startup: the fields
+        # are kept meanwhile and the state is shown once power is known.
+        reports_power = _IR_AC_STATUS_POWER in status
         current = self._remote_state
         mode = (
             _ir_ac_int(status.get(_IR_AC_STATUS_MODE))
@@ -714,9 +715,11 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         fan_mode = _IR_AC_TUYA_TO_HA_FAN.get(fan) if fan is not None else None
         if fan_mode not in self._all_fan_modes:
             fan_mode = None
-        if hvac_mode is not None and _IR_AC_STATUS_MODE in use:
-            self._last_on_mode = hvac_mode
-            # The remote is in this combination: the code exists.
+        if hvac_mode is not None:
+            if _IR_AC_STATUS_MODE in use:
+                self._last_on_mode = hvac_mode
+            # The remote is in this combination: the code exists. The mode
+            # may be an older report, as long as a field is fresh.
             if (
                 fan_mode is not None
                 and _IR_AC_STATUS_FAN in use
@@ -729,7 +732,7 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
                 and _IR_AC_STATUS_TEMPERATURE in use
             ):
                 self._fixed_temperatures[hvac_mode] = temperature
-        if _IR_AC_STATUS_POWER in use:
+        if _IR_AC_STATUS_POWER in use and reports_power:
             if not status[_IR_AC_STATUS_POWER]:
                 self._attr_hvac_mode = HVACMode.OFF
             elif hvac_mode is not None:
@@ -737,14 +740,14 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         elif (
             hvac_mode is not None
             and _IR_AC_STATUS_MODE in use
-            and self._attr_hvac_mode != HVACMode.OFF
+            and self._attr_hvac_mode not in (None, HVACMode.OFF)
         ):
             self._attr_hvac_mode = hvac_mode
         if temperature is not None and _IR_AC_STATUS_TEMPERATURE in use:
             self._attr_native_target_temperature = float(temperature)
         if fan_mode is not None and _IR_AC_STATUS_FAN in use:
             self._attr_fan_mode = fan_mode
-        return True
+        return reports_power
 
     @override
     async def _process_device_update(
@@ -755,8 +758,7 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         """Follow changes of the remote state (for example from the Tuya app)."""
         if not set(updated_status_properties) & _IR_AC_STATUS_CODES:
             return False
-        reported = set(updated_status_properties) & _IR_AC_STATUS_CODES
-        self._fresh_status_codes |= reported
+        self._fresh_status_codes |= set(updated_status_properties) & _IR_AC_STATUS_CODES
         if self._sending or (
             self.hass.loop.time() < self._settle_until
             and not self._status_matches_sent()
@@ -765,8 +767,11 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
             # through cool to change the fan): not shown.
             return False
         self._settle_until = 0.0
-        # Only the reported codes: the others may be older than the commands.
-        self._remote_reports_state = self._async_sync_from_status(reported)
+        # Only the codes reported since the last command (kept across partial
+        # reports): the others may be older than the commands.
+        self._remote_reports_state = self._async_sync_from_status(
+            self._fresh_status_codes
+        )
         return True
 
     @asynccontextmanager

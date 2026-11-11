@@ -1709,6 +1709,74 @@ async def test_infrared_ac_late_report_of_one_field(
 
 
 @pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_learns_from_field_reports(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+) -> None:
+    """Test fan speeds and locked temperatures are learned from one field."""
+    mock_device.status.update({"power": True, "mode": "4", "temp": 25, "wind": "1"})
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    state = hass.states.get(IR_AC_ENTITY_ID)
+    assert state.state == HVACMode.DRY
+    assert state.attributes["fan_modes"] == ["low"]
+
+    # A report of the wind alone, in the known mode.
+    mock_device.status.update({"wind": "2"})
+    await notification_helper.async_send_device_update(mock_device, {"wind": "2"})
+    state = hass.states.get(IR_AC_ENTITY_ID)
+    assert state.attributes["fan_mode"] == "medium"
+    assert state.attributes["fan_modes"] == ["low", "medium"]
+
+    # A report of the temperature alone.
+    mock_device.status.update({"temp": 24})
+    await notification_helper.async_send_device_update(mock_device, {"temp": 24})
+    entity = hass.data["climate"].get_entity(IR_AC_ENTITY_ID)
+    assert entity._fixed_temperatures[HVACMode.DRY] == 24
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+@pytest.mark.parametrize(
+    "order",
+    [
+        ("power", "mode", "temp", "wind"),
+        ("mode", "temp", "wind", "power"),
+        ("temp", "power", "wind", "mode"),
+    ],
+)
+async def test_infrared_ac_partial_startup_reports(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    order: tuple[str, ...],
+) -> None:
+    """Test the state is built from startup reports in any order."""
+    full = {"power": True, "mode": "1", "temp": 19, "wind": "3"}
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.OFF
+
+    for code in order:
+        mock_device.status[code] = full[code]
+        await notification_helper.async_send_device_update(
+            mock_device, {code: full[code]}
+        )
+        if code == "power" or code == order[-1]:
+            continue
+        # Without power, the fields are kept but the unit is not shown on.
+        if "power" not in mock_device.status:
+            assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.OFF
+
+    state = hass.states.get(IR_AC_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 19
+    assert state.attributes["fan_mode"] == "high"
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
 async def test_infrared_ac_command_rejected(
     hass: HomeAssistant,
     mock_manager: Manager,
