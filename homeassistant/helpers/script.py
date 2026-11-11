@@ -1,7 +1,7 @@
 """Helpers to execute scripts."""
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from typing import Any, Literal, TypedDict, cast, overload, override
+from typing import Any, Literal, NamedTuple, TypedDict, cast, overload, override
 
 import async_interrupt
 import probatio
@@ -336,57 +336,69 @@ REPEAT_TERMINATE_ITERATIONS = 10000
 
 type _BlockKind = Literal["triggers", "conditions", "actions"]
 
-_EACH = object()
 
-# The blocks of triggers, conditions and actions nested in an action, by action
-# type: the path to the dicts holding the blocks, then the key and kind of each
-# block. _EACH stands for every index of a list. Blocks are validated in order.
-# Blocks not in _OPTIONAL_BLOCKS are required by the action's schema.
-_NESTED_BLOCKS: dict[
-    str, tuple[tuple[tuple[Any, ...], tuple[tuple[str, _BlockKind], ...]], ...]
-] = {
-    cv.SCRIPT_ACTION_CHOOSE: (
-        ((), ((CONF_DEFAULT, "actions"),)),
-        (
-            (CONF_CHOOSE, _EACH),
-            ((CONF_CONDITIONS, "conditions"), (CONF_SEQUENCE, "actions")),
-        ),
-    ),
-    cv.SCRIPT_ACTION_IF: (
-        (
-            (),
-            ((CONF_IF, "conditions"), (CONF_THEN, "actions"), (CONF_ELSE, "actions")),
-        ),
-    ),
-    cv.SCRIPT_ACTION_PARALLEL: (
-        ((CONF_PARALLEL, _EACH), ((CONF_SEQUENCE, "actions"),)),
-    ),
-    cv.SCRIPT_ACTION_REPEAT: (
-        (
-            (CONF_REPEAT,),
-            (
-                (CONF_UNTIL, "conditions"),
-                (CONF_WHILE, "conditions"),
-                (CONF_SEQUENCE, "actions"),
-            ),
-        ),
-    ),
-    cv.SCRIPT_ACTION_SEQUENCE: (((), ((CONF_SEQUENCE, "actions"),)),),
-    cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: (((), ((CONF_WAIT_FOR_TRIGGER, "triggers"),)),),
+class _Block(NamedTuple):
+    """A block of triggers, conditions or actions nested in an action."""
+
+    kind: _BlockKind
+    optional: bool = False
+
+
+# The layout of a config: a block, a dict, or a list of dicts with the layout
+type _Layout = Mapping[str, _Block | _Layout | list[_Layout]]
+
+# Blocks are validated in order. A block that is not optional is required by
+# the action's schema.
+_NESTED_BLOCKS: dict[str, _Layout] = {
+    cv.SCRIPT_ACTION_CHOOSE: {
+        CONF_DEFAULT: _Block("actions", optional=True),
+        CONF_CHOOSE: [
+            {CONF_CONDITIONS: _Block("conditions"), CONF_SEQUENCE: _Block("actions")}
+        ],
+    },
+    cv.SCRIPT_ACTION_IF: {
+        CONF_IF: _Block("conditions"),
+        CONF_THEN: _Block("actions"),
+        CONF_ELSE: _Block("actions", optional=True),
+    },
+    cv.SCRIPT_ACTION_PARALLEL: {CONF_PARALLEL: [{CONF_SEQUENCE: _Block("actions")}]},
+    cv.SCRIPT_ACTION_REPEAT: {
+        CONF_REPEAT: {
+            CONF_UNTIL: _Block("conditions", optional=True),
+            CONF_WHILE: _Block("conditions", optional=True),
+            CONF_SEQUENCE: _Block("actions"),
+        }
+    },
+    cv.SCRIPT_ACTION_SEQUENCE: {CONF_SEQUENCE: _Block("actions")},
+    cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: {CONF_WAIT_FOR_TRIGGER: _Block("triggers")},
 }
 
-_OPTIONAL_BLOCKS = frozenset({CONF_DEFAULT, CONF_ELSE, CONF_UNTIL, CONF_WHILE})
+
+async def _async_validate_block(
+    hass: HomeAssistant, kind: _BlockKind, block: list[Any]
+) -> list[Any]:
+    """Validate a block of triggers, conditions or actions."""
+    if kind == "triggers":
+        return await trigger_helper.async_validate_trigger_config(hass, block)
+    if kind == "conditions":
+        return await condition.async_validate_conditions_config(hass, block)
+    return await async_validate_actions_config(hass, block)
 
 
-def _nested_block_containers(config: Any, key_path: tuple[Any, ...]) -> list[Any]:
-    """Return the dicts found at key_path in an action."""
-    containers = [config]
-    for key in key_path:
-        if key is _EACH:
-            containers = [item for container in containers for item in container]
+async def _async_validate_nested_blocks(
+    hass: HomeAssistant, config: ConfigType, layout: _Layout
+) -> None:
+    """Validate the blocks in config in place, following layout."""
+    for key, nested in layout.items():
+        if isinstance(nested, _Block):
+            if nested.optional and key not in config:
+                continue
+            config[key] = await _async_validate_block(hass, nested.kind, config[key])
+        elif isinstance(nested, list):
+            for item in config[key]:
+                await _async_validate_nested_blocks(hass, item, nested[0])
         else:
-            containers = [container[key] for container in containers]
-    return containers
+            await _async_validate_nested_blocks(hass, config[key], nested)
 
 
 async def async_validate_actions_config(
@@ -413,26 +425,11 @@ async def async_validate_action_config(
     if action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
         return await condition.async_validate_condition_config(hass, config)
 
-    if action_type not in _NESTED_BLOCKS:
+    if (layout := _NESTED_BLOCKS.get(action_type)) is None:
         raise ValueError(f"No validation for {action_type}")
 
-    for key_path, blocks in _NESTED_BLOCKS[action_type]:
-        for container in _nested_block_containers(config, key_path):
-            for key, kind in blocks:
-                if key in _OPTIONAL_BLOCKS and key not in container:
-                    continue
-                container[key] = await _BLOCK_VALIDATORS[kind](hass, container[key])
-
+    await _async_validate_nested_blocks(hass, config, layout)
     return config
-
-
-_BLOCK_VALIDATORS: dict[
-    _BlockKind, Callable[[HomeAssistant, list[Any]], Coroutine[Any, Any, list[Any]]]
-] = {
-    "triggers": trigger_helper.async_validate_trigger_config,
-    "conditions": condition.async_validate_conditions_config,
-    "actions": async_validate_actions_config,
-}
 
 
 class _HaltScript(Exception):
