@@ -3,10 +3,12 @@
 from unittest.mock import AsyncMock
 
 from broadlink_async.magic import MSG_HEARTBEAT, Family, ImportedDevice, pack_message
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.entity import PENDING_COMMAND_TIMEOUT
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -126,3 +128,85 @@ async def test_three_in_one_panel(
         {ATTR_ENTITY_ID: ac, "temperature": 25},
         [b"\x02\x01\x19"],
     )
+
+
+async def test_set_temperature_applies_hvac_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_send: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a temperature request with an HVAC mode also turns the load on."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    ac = _entity_id(entity_registry, "climate", "")
+    floor = _entity_id(entity_registry, "climate", "_floor_heating")
+    config_entry.runtime_data.gateway_set.handle_packet(
+        "aabbccddeeff",
+        pack_message(MSG_HEARTBEAT, 1, bytes.fromhex("aabbccddeeff")),
+        ("192.0.2.10", 41001),
+    )
+    config_entry.runtime_data.async_set_updated_data(
+        config_entry.runtime_data.gateway_set
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: floor, "temperature": 22, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+    assert [call.args for call in mock_send.await_args_list] == [
+        (PANEL_ADDR, [b"\x00\x01\x03"]),
+        (PANEL_ADDR, [b"\x04\x01\x16"]),
+    ]
+    floor_state = hass.states.get(floor)
+    assert floor_state.state == HVACMode.HEAT
+    assert floor_state.attributes["temperature"] == 22
+
+    mock_send.reset_mock()
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: ac, "temperature": 25, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    assert len(mock_send.await_args_list) == 2
+    assert mock_send.await_args_list[-1].args == (PANEL_ADDR, [b"\x02\x01\x19"])
+    ac_state = hass.states.get(ac)
+    assert ac_state.state == HVACMode.COOL
+    assert ac_state.attributes["temperature"] == 25
+
+
+async def test_unconfirmed_command_expires(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_send: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a lost command stops hiding device reports after a while."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    floor = _entity_id(entity_registry, "climate", "_floor_heating")
+    coordinator = config_entry.runtime_data
+    coordinator.gateway_set.handle_packet(
+        "aabbccddeeff",
+        pack_message(MSG_HEARTBEAT, 1, bytes.fromhex("aabbccddeeff")),
+        ("192.0.2.10", 41001),
+    )
+
+    await hass.services.async_call(
+        "climate", "turn_off", {ATTR_ENTITY_ID: floor}, blocking=True
+    )
+    coordinator._handle_fastcon_report(PANEL_ADDR, STATUS)
+    await hass.async_block_till_done()
+    assert hass.states.get(floor).state == HVACMode.OFF
+
+    freezer.tick(PENDING_COMMAND_TIMEOUT)
+    coordinator._handle_fastcon_report(PANEL_ADDR, STATUS)
+    await hass.async_block_till_done()
+    assert hass.states.get(floor).state == HVACMode.HEAT

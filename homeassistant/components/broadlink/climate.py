@@ -20,6 +20,7 @@ from broadlink_async.magic import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
     ClimateEntity,
     ClimateEntityFeature,
@@ -43,7 +44,7 @@ from .const import (
 )
 from .coordinator import BroadLinkMagicConfigEntry, FamilyCoordinator
 from .device import BroadlinkDevice
-from .entity import BroadlinkEntity, BroadLinkMagicEntity
+from .entity import BroadlinkEntity, BroadLinkMagicEntity, PendingCommands
 
 
 class SensorMode(IntEnum):
@@ -235,7 +236,7 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
         super().__init__(coordinator)
         self._device = device
         self._area_name = coordinator.room_name(device.room_id)
-        self._pending_state: dict[str, int] = {}
+        self._pending_state = PendingCommands()
         self._attr_unique_id = f"{coordinator.family.family_id}_{device.stable_id}"
         self._attr_device_info = _magic_climate_device_info(
             coordinator, device, self._family_device_id()
@@ -286,22 +287,24 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
         else:
             commands = [("power", 1), ("mode", _HVAC_TO_RM[hvac_mode])]
         await self.coordinator.async_send_ac(self._device, commands)
-        self._pending_state["power"] = 0 if hvac_mode is HVACMode.OFF else 1
+        self._pending_state.set("power", 0 if hvac_mode is HVACMode.OFF else 1)
         if hvac_mode is HVACMode.OFF:
-            self._pending_state.pop("mode", None)
+            self._pending_state.discard("mode")
         else:
-            self._pending_state["mode"] = _HVAC_TO_RM[hvac_mode]
+            self._pending_state.set("mode", _HVAC_TO_RM[hvac_mode])
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set target temperature."""
+        """Set target temperature and optionally HVAC mode."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
         temperature = round(float(kwargs[ATTR_TEMPERATURE]))
         await self.coordinator.async_send_ac(
             self._device, [("temperature", temperature)]
         )
-        self._pending_state["temperature"] = temperature
+        self._pending_state.set("temperature", temperature)
         self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
@@ -311,7 +314,7 @@ class BroadLinkMagicClimate(BroadLinkMagicEntity, ClimateEntity):
         await self.coordinator.async_send_ac(
             self._device, [("fan", _FAN_TO_RM[fan_mode])]
         )
-        self._pending_state["fan"] = _FAN_TO_RM[fan_mode]
+        self._pending_state.set("fan", _FAN_TO_RM[fan_mode])
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
@@ -356,7 +359,7 @@ class BroadLinkMagicFloorHeating(BroadLinkMagicEntity, ClimateEntity):
         """Initialize a floor-heating entity."""
         super().__init__(coordinator)
         self._device = device
-        self._pending_state: dict[str, int] = {}
+        self._pending_state = PendingCommands()
         self._attr_unique_id = (
             f"{coordinator.family.family_id}_{device.stable_id}_floor_heating"
         )
@@ -385,7 +388,7 @@ class BroadLinkMagicFloorHeating(BroadLinkMagicEntity, ClimateEntity):
         await self.coordinator.async_send_payloads(
             self._device, [encode_floor_heating_attribute(attribute, value)]
         )
-        self._pending_state[f"floor_heating_{attribute}"] = value
+        self._pending_state.set(f"floor_heating_{attribute}", value)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -396,7 +399,9 @@ class BroadLinkMagicFloorHeating(BroadLinkMagicEntity, ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set the floor-heating target temperature."""
+        """Set the floor-heating target temperature and optionally HVAC mode."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
         temperature = round(float(kwargs[ATTR_TEMPERATURE]))
         await self._async_send("temperature", temperature)
         self._attr_native_target_temperature = temperature

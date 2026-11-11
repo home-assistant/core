@@ -1,5 +1,6 @@
 """Broadlink entities."""
 
+import time
 from typing import Any, override
 
 from broadlink_async.magic import ImportedDevice
@@ -11,6 +12,42 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, magic_family_identifier
 from .coordinator import FamilyCoordinator
+
+PENDING_COMMAND_TIMEOUT = 30.0
+
+
+class PendingCommands:
+    """Commanded values waiting for a confirming device report."""
+
+    def __init__(self) -> None:
+        """Initialize an empty set of pending commands."""
+        self._values: dict[str, tuple[int, float]] = {}
+
+    def set(self, key: str, value: int) -> None:
+        """Record a commanded value."""
+        self._values[key] = (value, time.monotonic() + PENDING_COMMAND_TIMEOUT)
+
+    def discard(self, key: str) -> None:
+        """Forget a commanded value."""
+        self._values.pop(key, None)
+
+    def confirmed(self, reported: dict[str, Any]) -> dict[str, Any]:
+        """Return reported values that do not contradict pending commands.
+
+        A periodic report sent before a command took effect still carries the
+        old value, so a pending key is only applied once a report confirms it
+        or the confirmation window has passed.
+        """
+        now = time.monotonic()
+        state: dict[str, Any] = {}
+        for key, value in reported.items():
+            if (pending := self._values.get(key)) is not None:
+                expected, deadline = pending
+                if int(value) != expected and now < deadline:
+                    continue
+                del self._values[key]
+            state[key] = value
+        return state
 
 
 class BroadlinkEntity(Entity):
@@ -93,23 +130,12 @@ class BroadLinkMagicEntity(CoordinatorEntity[FamilyCoordinator]):
         )
 
     def _confirmed_state(
-        self, device: ImportedDevice, pending: dict[str, int]
+        self, device: ImportedDevice, pending: PendingCommands
     ) -> dict[str, Any]:
-        """Return reported values that do not contradict pending commands.
-
-        A periodic report sent before a command took effect still carries the
-        old value, so a pending key is only applied once a report confirms it.
-        """
-        state: dict[str, Any] = {}
-        for key, value in self.coordinator.device_states.get(
-            device.stable_id, {}
-        ).items():
-            if key not in pending:
-                state[key] = value
-            elif int(value) == pending[key]:
-                pending.pop(key)
-                state[key] = value
-        return state
+        """Return the reported state of a device filtered by pending commands."""
+        return pending.confirmed(
+            self.coordinator.device_states.get(device.stable_id, {})
+        )
 
     @property
     @override

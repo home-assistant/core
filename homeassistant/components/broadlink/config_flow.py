@@ -492,6 +492,20 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._timeout_shown = True
         return self.async_show_form(step_id="magic_import_timeout")
 
+    def _magic_gateway_owner(self, family: Family) -> ConfigEntry | None:
+        """Return another Magic family entry that owns a gateway of this family."""
+        imported_macs = {gateway.mac for gateway in family.gateways if gateway.mac}
+        unique_id = f"magic:{family.family_id}"
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.unique_id == unique_id or not is_magic_entry(entry):
+                continue
+            if imported_macs & {
+                gateway.mac.lower()
+                for gateway in gateways_from_entry_data(dict(entry.data))
+            }:
+                return entry
+        return None
+
     async def async_step_magic_discover(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -519,18 +533,11 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         if self._existing_entry is None:
             self._abort_if_unique_id_configured()
-        imported_macs = {gateway.mac.lower() for gateway in family.gateways}
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == unique_id or not is_magic_entry(entry):
-                continue
-            if imported_macs & {
-                gateway.mac.lower()
-                for gateway in gateways_from_entry_data(dict(entry.data))
-            }:
-                return self.async_abort(
-                    reason="gateway_in_other_family",
-                    description_placeholders={"family": entry.title},
-                )
+        if (owner := self._magic_gateway_owner(family)) is not None:
+            return self.async_abort(
+                reason="gateway_in_other_family",
+                description_placeholders={"family": owner.title},
+            )
         self._family = family
         self._gateways = [
             DiscoveredRMMax(
@@ -552,6 +559,11 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._family is not None
         assert self._gateways is not None
         if user_input is not None:
+            if (owner := self._magic_gateway_owner(self._family)) is not None:
+                return self.async_abort(
+                    reason="gateway_in_other_family",
+                    description_placeholders={"family": owner.title},
+                )
             data = family_to_entry_data(self._family, self._gateways)
             data[CONF_ENTRY_KIND] = ENTRY_KIND_MAGIC_FAMILY
             if self._existing_entry is not None:

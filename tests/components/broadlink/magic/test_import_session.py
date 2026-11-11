@@ -24,6 +24,8 @@ def test_expired_and_removed_sessions() -> None:
     manager.remove(session.project_id)
     assert session.event.is_set()
     assert manager.active_sessions == ()
+    assert session.complete([Family("family", "Home", "00010203")]) is False
+    assert session.families is None
 
 
 def test_shared_manager(hass: HomeAssistant) -> None:

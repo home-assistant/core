@@ -334,6 +334,34 @@ async def test_setup_devices_remote_and_unload(
             blocking=True,
         )
     assert err.value.translation_key == "gateway_offline"
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {ATTR_ENTITY_ID: "light.living_room_lamp", "rgb_color": [1, 2, 3]},
+            blocking=True,
+        )
+    coordinator.async_set_updated_data(coordinator.gateway_set)
+    await hass.async_block_till_done()
+    lamp_state = hass.states.get("light.living_room_lamp")
+    assert lamp_state.state == "on"
+    assert lamp_state.attributes["color_mode"] == "color_temp"
+
+    mock_send.return_value = 1
+    coordinator._handle_fastcon_report(257, bytes(6))
+    await hass.async_block_till_done()
+    assert hass.states.get("light.living_room_lamp").state == "off"
+    mock_send.reset_mock()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {ATTR_ENTITY_ID: "light.living_room_lamp", "color_temp_kelvin": 6500},
+        blocking=True,
+    )
+    assert mock_send.await_args.args[1] == [b"\x40\x00\x00\x00\x00\xff"]
+    lamp_state = hass.states.get("light.living_room_lamp")
+    assert lamp_state.state == "on"
+    assert lamp_state.attributes["brightness"] == 128
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 

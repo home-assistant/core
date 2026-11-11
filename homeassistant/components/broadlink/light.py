@@ -186,6 +186,7 @@ class _BroadLinkMagicLightBase(BroadLinkMagicEntity, LightEntity):
         super().__init__(coordinator)
         self._rgbcw = rgbcw
         self._report_serial = 0
+        self._last_brightness = 255
         if rgbcw:
             self._attr_supported_color_modes = {
                 ColorMode.COLOR_TEMP,
@@ -217,6 +218,8 @@ class _BroadLinkMagicLightBase(BroadLinkMagicEntity, LightEntity):
                 self._attr_is_on = bool(state["is_on"])
             if "brightness" in state:
                 self._attr_brightness = int(state["brightness"])
+                if self._attr_brightness:
+                    self._last_brightness = self._attr_brightness
             if rgb := state.get("rgb_color"):
                 self._attr_rgb_color = tuple(rgb)
                 if any(self._attr_rgb_color):
@@ -252,41 +255,51 @@ class _BroadLinkMagicLightBase(BroadLinkMagicEntity, LightEntity):
                 ATTR_COLOR_TEMP_KELVIN,
             )
         )
-        if ATTR_BRIGHTNESS in kwargs:
-            self._attr_brightness = int(kwargs[ATTR_BRIGHTNESS])
+        brightness = (
+            int(kwargs[ATTR_BRIGHTNESS])
+            if ATTR_BRIGHTNESS in kwargs
+            else self._attr_brightness or self._last_brightness
+        )
+        rgb_color = self._attr_rgb_color
+        color_temp_kelvin = self._attr_color_temp_kelvin
+        color_mode = self._attr_color_mode
         if ATTR_RGB_COLOR in kwargs:
-            self._attr_rgb_color = tuple(kwargs[ATTR_RGB_COLOR])
-            self._attr_color_mode = ColorMode.RGB
+            rgb_color = tuple(kwargs[ATTR_RGB_COLOR])
+            color_mode = ColorMode.RGB
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            self._attr_color_temp_kelvin = int(kwargs[ATTR_COLOR_TEMP_KELVIN])
-            self._attr_color_mode = ColorMode.COLOR_TEMP
+            color_temp_kelvin = int(kwargs[ATTR_COLOR_TEMP_KELVIN])
+            color_mode = ColorMode.COLOR_TEMP
 
         if self._rgbcw and has_level_or_color:
             cold_percent = None
             rgb = None
-            if self._attr_color_mode is ColorMode.RGB:
-                rgb = self._attr_rgb_color
-            elif (
-                self._attr_color_mode is ColorMode.COLOR_TEMP
-                and self._attr_color_temp_kelvin is not None
-            ):
-                cold_percent = round(
-                    (self._attr_color_temp_kelvin - 2700) * 100 / (6500 - 2700)
-                )
+            if color_mode is ColorMode.RGB:
+                rgb = rgb_color
+            elif color_mode is ColorMode.COLOR_TEMP and color_temp_kelvin is not None:
+                cold_percent = round((color_temp_kelvin - 2700) * 100 / (6500 - 2700))
             payload = encode_rgbcw_light(
                 on=True,
-                brightness=self._attr_brightness,
+                brightness=brightness,
                 rgb=rgb,
                 cold_percent=cold_percent,
             )
-            self._attr_is_on = self._attr_brightness > 0
+            is_on = brightness > 0
         elif ATTR_BRIGHTNESS in kwargs:
-            payload = encode_light_brightness(self._attr_brightness)
-            self._attr_is_on = self._attr_brightness > 0
+            payload = encode_light_brightness(brightness)
+            is_on = brightness > 0
         else:
             payload = encode_light_power(True)
-            self._attr_is_on = True
+            is_on = True
         await self._async_send(payload)
+
+        if has_level_or_color:
+            self._attr_brightness = brightness
+            if brightness:
+                self._last_brightness = brightness
+        self._attr_rgb_color = rgb_color
+        self._attr_color_temp_kelvin = color_temp_kelvin
+        self._attr_color_mode = color_mode
+        self._attr_is_on = is_on
         self.async_write_ha_state()
 
     @override

@@ -18,9 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-def _payload() -> bytes:
+def _payload(bletoken: str = "00010203") -> bytes:
     family_info = base64.b64encode(
-        json.dumps({"name": "Test home", "bletoken": "00010203"}).encode()
+        json.dumps({"name": "Test home", "bletoken": bletoken}).encode()
     ).decode()
     devlist = base64.b64encode(
         json.dumps(
@@ -90,6 +90,26 @@ async def test_invalid_session_and_payload(
     response = await client.post(
         f"{IMPORT_PATH}?projectid={session.project_id}",
         data=b"not json",
+    )
+    assert (await response.json())["status"] == -1
+    assert session.consumed is False
+
+
+@pytest.mark.parametrize("bletoken", ["", "not-hex"])
+async def test_missing_or_invalid_bletoken_is_rejected(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    bletoken: str,
+) -> None:
+    """Test a family without a usable FastCon token is rejected."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    async_register_import_view(hass)
+    session = get_import_manager(hass).create()
+    client = await hass_client()
+
+    response = await client.post(
+        f"{IMPORT_PATH}?projectid={session.project_id}",
+        data=_payload(bletoken),
     )
     assert (await response.json())["status"] == -1
     assert session.consumed is False

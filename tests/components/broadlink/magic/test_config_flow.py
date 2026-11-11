@@ -206,6 +206,40 @@ async def test_gateway_in_other_family(
     assert result["description_placeholders"] == {"family": "Other home"}
 
 
+async def test_gateway_claimed_by_other_family_before_confirm(
+    hass: HomeAssistant,
+    family: Family,
+    gateways: list[DiscoveredRMMax],
+) -> None:
+    """Test gateway ownership is checked again when the import is confirmed."""
+    result, session = await _start_import(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert session.complete([family])
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    if result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["step_id"] == "magic_confirm"
+
+    other = Family(
+        "family-2", "Other home", "", devices=[family.devices[0]], rooms=family.rooms
+    )
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Other home",
+        unique_id="magic:family-2",
+        data={
+            **family_to_entry_data(other, gateways[:1]),
+            CONF_ENTRY_KIND: ENTRY_KIND_MAGIC_FAMILY,
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "gateway_in_other_family"
+    assert result["description_placeholders"] == {"family": "Other home"}
+
+
 @pytest.mark.parametrize(
     ("families", "reason"),
     [

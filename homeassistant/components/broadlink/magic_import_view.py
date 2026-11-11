@@ -16,6 +16,7 @@ from .magic_import_session import get_import_manager
 
 _LOGGER = logging.getLogger(__name__)
 MAX_IMPORT_SIZE = 4 * 1024 * 1024
+READ_CHUNK_SIZE = 64 * 1024
 DATA_IMPORT_VIEW_REGISTERED: HassKey[bool] = HassKey(
     "broadlink_magic_import_view_registered"
 )
@@ -46,12 +47,14 @@ class FamilyImportView(HomeAssistantView):
 
         if (request.content_length or 0) > MAX_IMPORT_SIZE:
             return _response(-1, "family data too large")
-        body = await request.read()
-        if len(body) > MAX_IMPORT_SIZE:
-            return _response(-1, "family data too large")
+        body = bytearray()
+        async for chunk in request.content.iter_chunked(READ_CHUNK_SIZE):
+            body.extend(chunk)
+            if len(body) > MAX_IMPORT_SIZE:
+                return _response(-1, "family data too large")
 
         try:
-            families = parse_import_payload(body)
+            families = parse_import_payload(bytes(body))
         except ImportDataError as err:
             _LOGGER.warning("Rejected invalid BroadLink Magic family import: %s", err)
             return _response(-1, "invalid family data")

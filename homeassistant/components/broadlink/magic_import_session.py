@@ -71,6 +71,7 @@ class ImportSessionManager:
     def remove(self, project_id: str) -> None:
         """Remove and clear a session."""
         if session := self._sessions.pop(project_id, None):
+            session.consumed = True
             session.families = None
             session.error = None
             session.event.set()
