@@ -9,7 +9,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_THEME, INFRARED_BRIGHTNESS, INFRARED_LEVELS
+from .const import INFRARED_BRIGHTNESS, INFRARED_LEVELS
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 
@@ -27,7 +27,7 @@ INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
 )
 
 THEME_ENTITY = SelectEntityDescription(
-    key=ATTR_THEME,
+    key="theme",
     translation_key="theme",
     entity_category=EntityCategory.CONFIG,
     options=list(THEME_NAMES),

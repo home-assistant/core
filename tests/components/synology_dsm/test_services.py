@@ -26,6 +26,7 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
+from homeassistant.helpers import issue_registry as ir
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
@@ -221,3 +222,21 @@ async def test_service_with_unknown_serial(
 
     assert err.value.translation_key == "serial_not_found"
     assert getattr(mock_dsm.system, service).call_count == 0
+
+
+@pytest.mark.parametrize("service", [SERVICE_REBOOT, SERVICE_SHUTDOWN])
+@pytest.mark.usefixtures("setup_dsm")
+async def test_deprecated_action_still_works_and_raises_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_dsm: MagicMock,
+    service: str,
+) -> None:
+    """Test the deprecated actions still run and raise a repair issue."""
+    await hass.services.async_call(DOMAIN, service, {}, blocking=True)
+
+    assert getattr(mock_dsm.system, service).call_count == 1
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"action": f"{DOMAIN}.{service}"}

@@ -6,13 +6,8 @@ from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import probatio
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    DOMAIN as COVER_DOMAIN,
-    CoverEntityFeature,
-)
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverEntityFeature
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -29,33 +24,30 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.json import JsonValueType
 
-from .const import ATTR_KEY, ATTR_VALUE, CONF_SLEEP_PERIOD, DOMAIN
+from .const import CONF_SLEEP_PERIOD, DOMAIN, ShellyService, ShellyServiceArgument
 from .coordinator import ShellyConfigEntry
 from .utils import get_device_entry_gen
 
-SERVICE_GET_KVS_VALUE = "get_kvs_value"
-SERVICE_SET_KVS_VALUE = "set_kvs_value"
-SERVICE_SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
 SERVICE_GET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_KEY): str,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(ShellyServiceArgument.KEY): str,
     }
 )
 SERVICE_SET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
-        probatio.Required(ATTR_KEY): str,
-        probatio.Required(ATTR_VALUE): probatio.Any(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+        probatio.Required(ShellyServiceArgument.KEY): str,
+        probatio.Required(ShellyServiceArgument.VALUE): probatio.Any(
             str, int, float, bool, dict, list, None
         ),
     }
 )
 SERVICE_SET_COVER_POSITION_AND_TILT_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_POSITION): probatio.All(
+    probatio.Required(ShellyServiceArgument.POSITION): probatio.All(
         probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
-    probatio.Required(ATTR_TILT_POSITION): probatio.All(
+    probatio.Required(ShellyServiceArgument.TILT_POSITION): probatio.All(
         probatio.Coerce(int), probatio.Range(min=0, max=100)
     ),
 }
@@ -68,7 +60,7 @@ def async_get_config_entry_for_service_call(
     """Get the config entry related to a service call (by device ID)."""
     config_entry: ShellyConfigEntry
     _, config_entry = async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.DEVICE_ID]
     )
 
     if (
@@ -121,12 +113,12 @@ async def _async_execute_action(
 
 async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
     """Handle the get_kvs_value service call."""
-    key = call.data[ATTR_KEY]
+    key = call.data[ShellyServiceArgument.KEY]
 
     response = await _async_execute_action(call, "kvs_get", (key,))
 
     result: dict[str, JsonValueType] = {}
-    result[ATTR_VALUE] = response[ATTR_VALUE]
+    result["value"] = response["value"]
 
     return result
 
@@ -134,7 +126,12 @@ async def async_get_kvs_value(call: ServiceCall) -> ServiceResponse:
 async def async_set_kvs_value(call: ServiceCall) -> None:
     """Handle the set_kvs_value service call."""
     await _async_execute_action(
-        call, "kvs_set", (call.data[ATTR_KEY], call.data[ATTR_VALUE])
+        call,
+        "kvs_set",
+        (
+            call.data[ShellyServiceArgument.KEY],
+            call.data[ShellyServiceArgument.VALUE],
+        ),
     )
 
 
@@ -143,13 +140,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for Shelly integration."""
     for service, method, schema, response in (
         (
-            SERVICE_GET_KVS_VALUE,
+            ShellyService.GET_KVS_VALUE,
             async_get_kvs_value,
             SERVICE_GET_KVS_VALUE_SCHEMA,
             SupportsResponse.ONLY,
         ),
         (
-            SERVICE_SET_KVS_VALUE,
+            ShellyService.SET_KVS_VALUE,
             async_set_kvs_value,
             SERVICE_SET_KVS_VALUE_SCHEMA,
             SupportsResponse.NONE,
@@ -166,7 +163,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_COVER_POSITION_AND_TILT,
+        ShellyService.SET_COVER_POSITION_AND_TILT,
         entity_domain=COVER_DOMAIN,
         schema=SERVICE_SET_COVER_POSITION_AND_TILT_SCHEMA,
         func="async_set_cover_position_and_tilt",
