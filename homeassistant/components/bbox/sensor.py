@@ -29,7 +29,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
 from .api import BboxApi, BboxError
-from .const import DEFAULT_HOST
+from .const import DEFAULT_HOST, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +38,6 @@ ATTRIBUTION = "Powered by Bouygues Telecom"
 DEFAULT_NAME = "Bbox"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-REQUEST_TIMEOUT = 10  # seconds
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -223,11 +221,16 @@ class BboxData:
     def update(self):
         """Get the latest data from the Bbox."""
 
+        future = None
         try:
-            self.data, self.router_infos = run_coroutine_threadsafe(
-                self._async_fetch(), self._hass.loop
-            ).result(REQUEST_TIMEOUT)
+            future = run_coroutine_threadsafe(self._async_fetch(), self._hass.loop)
+            self.data, self.router_infos = future.result(REQUEST_TIMEOUT)
         except (BboxError, TimeoutError) as error:
+            # Do not leave the abandoned fetch running under a bridge
+            # timeout: it would keep hitting the Bbox for a discarded
+            # result.
+            if future is not None:
+                future.cancel()
             _LOGGER.error(error)
             self.data = None
             self.router_infos = None
