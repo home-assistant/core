@@ -35,6 +35,7 @@ from .const import (
     LOGGER,
     PEAKS_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
+    RELATIONS_SCAN_INTERVAL,
 )
 
 if TYPE_CHECKING:
@@ -96,6 +97,7 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
             LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}_relations",
+            update_interval=RELATIONS_SCAN_INTERVAL,
         )
         self.client = client
 
@@ -397,7 +399,12 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
         )
         self.client = client
         self.data = EngieBeEpexData(hourly=(), quarter_hourly=())
-        self._listener_unsub: Callable[[], None] | None = None
+        self._listener_unsub: Callable[[], None] = async_track_utc_time_change(
+            hass,
+            self._async_quarter_hour_tick,
+            minute=(0, 15, 30, 45),
+            second=0,
+        )
 
     @callback
     def _async_quarter_hour_tick(self, _now: datetime) -> None:
@@ -407,20 +414,8 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     @override
     async def async_shutdown(self) -> None:
         """Cancel the quarter-hour listener timer and shut down."""
-        if self._listener_unsub is not None:
-            self._listener_unsub()
-            self._listener_unsub = None
+        self._listener_unsub()
         await super().async_shutdown()
-
-    @override
-    async def _async_setup(self) -> None:
-        """Start the quarter-hour listener timer."""
-        self._listener_unsub = async_track_utc_time_change(
-            self.hass,
-            self._async_quarter_hour_tick,
-            minute=(0, 15, 30, 45),
-            second=0,
-        )
 
     @override
     async def _async_update_data(self) -> EngieBeEpexData:
