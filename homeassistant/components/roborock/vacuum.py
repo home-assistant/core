@@ -158,6 +158,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
         | VacuumEntityFeature.CLEAN_AREA
+        | VacuumEntityFeature.CLEAN_AREA_PASSES
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -311,7 +312,9 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         ]
 
     @override
-    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+    async def async_clean_segments(
+        self, segment_ids: list[str], *, passes: int | None = None, **kwargs: Any
+    ) -> None:
         """Clean the specified segments."""
         parsed: list[tuple[int, int]] = []
         for seg_id in segment_ids:
@@ -327,10 +330,10 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         if not current_map_segments:
             return
 
-        await self.send(
-            RoborockCommand.APP_SEGMENT_CLEAN,
-            [{"segments": current_map_segments}],
-        )
+        params: dict[str, Any] = {"segments": current_map_segments}
+        if passes is not None:
+            params["repeat"] = passes
+        await self.send(RoborockCommand.APP_SEGMENT_CLEAN, [params])
 
     @override
     async def async_send_command(

@@ -513,12 +513,23 @@ async def test_get_segments_no_map(
     assert msg["result"] == {"segments": []}
 
 
+@pytest.mark.parametrize(
+    ("extra_data", "expected_params"),
+    [
+        pytest.param({}, {"segments": [16, 17]}, id="default"),
+        pytest.param(
+            {"passes": 2}, {"segments": [16, 17], "repeat": 2}, id="with_passes"
+        ),
+    ],
+)
 async def test_clean_segments(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     fake_vacuum: FakeDevice,
     vacuum_command: Mock,
+    extra_data: dict[str, int],
+    expected_params: dict[str, Any],
 ) -> None:
     """Test that clean_area service sends the correct segment clean command."""
     entity_registry.async_update_entity_options(
@@ -540,7 +551,7 @@ async def test_clean_segments(
     await hass.services.async_call(
         VACUUM_DOMAIN,
         SERVICE_CLEAN_AREA,
-        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"], **extra_data},
         blocking=True,
     )
 
@@ -548,7 +559,7 @@ async def test_clean_segments(
     assert vacuum_command.send.call_count == 1
     assert vacuum_command.send.call_args == call(
         RoborockCommand.APP_SEGMENT_CLEAN,
-        params=[{"segments": [16, 17]}],
+        params=[expected_params],
     )
 
 

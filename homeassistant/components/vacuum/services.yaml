@@ -53,6 +53,14 @@ clean_area:
         area:
           multiple: true
           reorder: true
+    passes:
+      filter:
+        supported_features:
+          - vacuum.VacuumEntityFeature.CLEAN_AREA_PASSES
+      selector:
+        number:
+          min: 1
+          mode: box
 
 send_command:
   target:
