@@ -1096,34 +1096,52 @@ class SpeechManager:
         """Delete cached files that were not used for the given days."""
         cutoff = time() - days * 86400
 
-        def remove_unused_files(files: dict[str, str]) -> list[str]:
-            """Remove unused files from filesystem and return their keys."""
-            removed = []
+        def find_unused_files(files: dict[str, str]) -> list[str]:
+            """Return the keys of files that were not used since the cutoff."""
+            unused = []
             for cache_key, filename in files.items():
-                voice_file = os.path.join(self.cache_dir, filename)
                 try:
-                    if os.stat(voice_file).st_atime >= cutoff:
+                    if (
+                        os.stat(os.path.join(self.cache_dir, filename)).st_atime
+                        >= cutoff
+                    ):
                         continue
-                    os.remove(voice_file)
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    _LOGGER.warning("Can't check cache file '%s': %s", filename, err)
+                    continue
+                unused.append(cache_key)
+            return unused
+
+        def remove_files(files: list[str]) -> None:
+            """Remove files from filesystem."""
+            for filename in files:
+                try:
+                    os.remove(os.path.join(self.cache_dir, filename))
                 except FileNotFoundError:
                     pass
                 except OSError as err:
                     _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
-                    continue
-                removed.append(cache_key)
-            return removed
 
-        # Messages in the memory cache are in use but don't touch their file
-        removed = await self.hass.async_add_executor_job(
-            remove_unused_files,
+        # Messages in the memory cache are in use
+        unused = await self.hass.async_add_executor_job(
+            find_unused_files,
             {
                 cache_key: filename
                 for cache_key, filename in self.file_cache.items()
                 if cache_key not in self.mem_cache
             },
         )
-        for cache_key in removed:
-            self.file_cache.pop(cache_key, None)
+        # Unindex before removing, so a request started meanwhile regenerates
+        # the audio instead of reading a removed file
+        files = [
+            filename
+            for cache_key in unused
+            if cache_key not in self.mem_cache
+            and (filename := self.file_cache.pop(cache_key, None))
+        ]
+        await self.hass.async_add_executor_job(remove_files, files)
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
@@ -1368,6 +1386,10 @@ class SpeechManager:
         # Is speech already in memory
         if cache := self.mem_cache.get(cache_key):
             _LOGGER.debug("Found audio in cache for %s", message[0:32])
+            if filename := self.file_cache.get(cache_key):
+                self.hass.async_add_executor_job(
+                    _mark_file_used, os.path.join(self.cache_dir, filename)
+                )
             return cache
 
         store_to_disk = use_file_cache
@@ -1668,12 +1690,7 @@ class SpeechManager:
             """Load a speech from filesystem."""
             with open(voice_file, "rb") as speech:
                 data = speech.read()
-                # Mark the file as used, independent of the mount's atime setting
-                with suppress(OSError):
-                    os.utime(
-                        speech.fileno(),
-                        ns=(time_ns(), os.fstat(speech.fileno()).st_mtime_ns),
-                    )
+                _mark_file_used(speech.fileno())
                 return data
 
         try:
@@ -1724,6 +1741,12 @@ class SpeechManager:
             _LOGGER.error("ID3 tag error: %s", err)
 
         return data_bytes.getvalue()
+
+
+def _mark_file_used(file: int | str) -> None:
+    """Set the access time of a cache file, independent of the mount's atime setting."""
+    with suppress(OSError):
+        os.utime(file, ns=(time_ns(), os.stat(file).st_mtime_ns))
 
 
 def _init_tts_cache_dir(hass: HomeAssistant, cache_dir: str) -> str:

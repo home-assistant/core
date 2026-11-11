@@ -43,10 +43,11 @@ from homeassistant.components.tts.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from .common import (
     DEFAULT_LANG,
@@ -825,7 +826,7 @@ async def _async_speak_from_cache(
         },
         blocking=True,
     )
-    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    await get_media_source_url(hass, calls[-1].data[ATTR_MEDIA_CONTENT_ID])
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
@@ -879,20 +880,31 @@ async def test_service_clear_cache_days_missing_file(
     assert hass.data[tts.DATA_TTS_MANAGER].file_cache == {}
 
 
-async def test_service_clear_cache_days_remove_error(
+@pytest.mark.parametrize(
+    ("failing_call", "expected_log", "expected_files"),
+    [
+        pytest.param("stat", "Can't check", [OLD_CACHE_FILE], id="stat"),
+        pytest.param("remove", "Can't remove", [], id="remove"),
+    ],
+)
+async def test_service_clear_cache_days_file_error(
     hass: HomeAssistant,
     mock_tts_cache_dir: Path,
     mock_tts_entity: MockTTSEntity,
     caplog: pytest.LogCaptureFixture,
+    failing_call: str,
+    expected_log: str,
+    expected_files: list[str],
 ) -> None:
-    """Test clear cache keeps files it can't remove."""
+    """Test clear cache logs files it can't check or remove."""
     await hass.async_add_executor_job(
         _write_cache_file, mock_tts_cache_dir / OLD_CACHE_FILE, 31
     )
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     with patch(
-        "homeassistant.components.tts.os.remove", side_effect=OSError("No access")
+        f"homeassistant.components.tts.os.{failing_call}",
+        side_effect=OSError("No access"),
     ):
         await hass.services.async_call(
             tts.DOMAIN,
@@ -901,8 +913,9 @@ async def test_service_clear_cache_days_remove_error(
             blocking=True,
         )
 
-    assert list(hass.data[tts.DATA_TTS_MANAGER].file_cache.values()) == [OLD_CACHE_FILE]
-    assert f"Can't remove cache file '{OLD_CACHE_FILE}': No access" in caplog.text
+    assert list(hass.data[tts.DATA_TTS_MANAGER].file_cache.values()) == expected_files
+    assert (mock_tts_cache_dir / OLD_CACHE_FILE).is_file()
+    assert f"{expected_log} cache file '{OLD_CACHE_FILE}': No access" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1291,7 +1304,7 @@ async def test_service_clear_cache_days_keeps_memory_cached(
     await hass.async_add_executor_job(_write_cache_file, cache_file)
     await mock_config_entry_setup(hass, mock_tts_entity)
     await _async_speak_from_cache(hass, calls)
-    # Replays from memory don't refresh the file's access time
+    # Age the file while its message is still in the memory cache
     await hass.async_add_executor_job(_write_cache_file, cache_file, 31)
 
     await hass.services.async_call(
@@ -1299,6 +1312,78 @@ async def test_service_clear_cache_days_keeps_memory_cached(
         tts.SERVICE_CLEAR_CACHE,
         {TextToSpeechServiceArgument.DAYS: 30},
         blocking=True,
+    )
+
+    assert cache_file.is_file()
+
+
+@pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
+async def test_memory_cache_use_updates_access_time(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test replaying a message from the memory cache marks its file as used."""
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
+    cache_file = mock_tts_cache_dir / DOORBELL_CACHE_FILE
+    await hass.async_add_executor_job(_write_cache_file, cache_file)
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    await _async_speak_from_cache(hass, calls)
+    await hass.async_add_executor_job(_write_cache_file, cache_file, 31)
+    mtime = (await hass.async_add_executor_job(cache_file.stat)).st_mtime_ns
+
+    await _async_speak_from_cache(hass, calls)
+
+    stat = await hass.async_add_executor_job(cache_file.stat)
+    assert stat.st_atime > time.time() - 60
+    assert stat.st_mtime_ns == mtime
+
+
+@pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
+async def test_service_clear_cache_days_concurrent_load(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test clear cache keeps a file that a request starts loading meanwhile."""
+    cache_file = mock_tts_cache_dir / DOORBELL_CACHE_FILE
+    await hass.async_add_executor_job(_write_cache_file, cache_file, 31)
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+    caches: list[tts.TTSCache] = []
+    add_executor_job = hass.async_add_executor_job
+
+    @callback
+    def request_message() -> None:
+        caches.append(
+            manager.async_cache_message_in_memory(
+                "tts.test", "There is someone at the door.", True, "en_US", {}
+            )
+        )
+
+    def find_and_request(
+        find_unused_files: Callable[[dict[str, str]], list[str]],
+        files: dict[str, str],
+    ) -> list[str]:
+        unused = find_unused_files(files)
+        run_callback_threadsafe(hass.loop, request_message).result()
+        return unused
+
+    def add_job(target: Callable[..., Any], *args: Any) -> asyncio.Future[Any]:
+        if target.__name__ == "find_unused_files":
+            return add_executor_job(find_and_request, target, *args)
+        return add_executor_job(target, *args)
+
+    with patch.object(hass, "async_add_executor_job", side_effect=add_job):
+        await hass.services.async_call(
+            tts.DOMAIN,
+            tts.SERVICE_CLEAR_CACHE,
+            {TextToSpeechServiceArgument.DAYS: 30},
+            blocking=True,
+        )
+
+    assert b"".join([chunk async for chunk in caches[0].async_stream_data()]) == (
+        MOCK_DATA
     )
 
     assert cache_file.is_file()
