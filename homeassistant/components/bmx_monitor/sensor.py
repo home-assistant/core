@@ -3,6 +3,7 @@
 import logging
 from typing import override
 
+from bmx_ble.battery import BatteryStatus
 from sensor_state_data import DeviceKey, SensorUpdate
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -28,7 +29,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import BMxConfigEntry
-from .const import BATTERY_STATUSES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,11 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key="battery_status",
         translation_key="battery_status",
         device_class=SensorDeviceClass.ENUM,
-        options=BATTERY_STATUSES,
+        options=[
+            status.value
+            for status in BatteryStatus
+            if status is not BatteryStatus.unknown
+        ],
     ),
     "battery_percent": SensorEntityDescription(
         key="battery_percent",

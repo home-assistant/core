@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bleak import BLEDevice
 from bleak.exc import BleakError
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
-from bmx_ble.battery import BATTERY_PROFILES, Battery, BatteryReading
+from bmx_ble.battery import BATTERY_PROFILES, Battery, BatteryReading, BatteryStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from sensor_state_data import SensorUpdate
@@ -254,7 +254,9 @@ def test_custom_profile_defaults(device: BMxBluetoothDeviceData) -> None:
 def test_reading_interpretation_is_delegated(device: BMxBluetoothDeviceData) -> None:
     """The adapter publishes library results instead of calculating them."""
     raw = BM2Reading(12.5, 67, 2, "active")
-    interpreted = BatteryReading("Library chemistry", 12.8, 80, "floating", True)
+    interpreted = BatteryReading(
+        "Library chemistry", 12.8, 80, BatteryStatus.floating, True
+    )
     with (
         patch(
             "homeassistant.components.bmx_monitor.device_data.interpret_reading",

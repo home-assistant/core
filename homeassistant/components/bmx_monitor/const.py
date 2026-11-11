@@ -27,8 +27,6 @@ GATT_TIMEOUT = 20
 
 BM_NAMES = ["Battery Monitor", "Li Battery Monitor", "ZX-1689"]
 
-BATTERY_STATUSES = ["critical", "low", "normal", "charging", "floating"]
-
 BATTERY_TYPES = [
     Battery.automatic.value,
     Battery.agm.value,
