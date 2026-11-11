@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
 from pytest_homeassistant.common import (
@@ -20,9 +20,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.sofar.const import (
     DOMAIN,
-    HAS_FAULT_LOG,
+    FAULT_LOG,
     LAST_HANDLED_FAULT,
     SCAN_INTERVAL,
+    SERVED_COMPONENTS,
 )
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
@@ -257,7 +258,7 @@ async def test_entries_found_by_first_good_read_do_not_fire(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
-        data={**MOCK_ENTRY_DATA, HAS_FAULT_LOG: True},
+        data={**MOCK_ENTRY_DATA, SERVED_COMPONENTS: [FAULT_LOG]},
         title=MOCK_MODEL,
     )
     entry.add_to_hass(hass)
@@ -281,6 +282,43 @@ async def test_entries_found_by_first_good_read_do_not_fire(
     assert (
         hass.states.get(ENTITY_ID).attributes[ATTR_EVENT_TYPE] == "grid_overfrequency"
     )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_log_dropped_at_the_wake_does_not_replay_later(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a log dropped while waking does not replay after a restart."""
+    entry = _handled_entry([1, "2026-10-09T17:01:23"])
+    unit = mock_connection.for_unit(1)
+    seed_fault_log(unit, GRID_OVER_VOLTAGE)
+    unit.fail_requests(ModbusTimeoutError("asleep"))
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Half awake: the log times out, so setup takes it as absent.
+    unit.fail_requests(None)
+    unit.fail_read(FAULT_LOG_REGISTER, ModbusTimeoutError("waking"))
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert entry.data[LAST_HANDLED_FAULT] == [1, "2026-10-09T17:01:23"]
+
+    unit.fail_read(FAULT_LOG_REGISTER, None)
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _fired(events) == []
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -183,6 +183,32 @@ TEMPERATURE_SENSOR_CONFIG = {
     }
 }
 
+# Three phase energy meter which also reports totals over all phases
+THREE_PHASE_ENERGY_SENSOR_CONFIG = {
+    "sn": {
+        "Time": "2026-11-02T21:21:16",
+        "ENERGY": {
+            "TotalStartTime": "2026-10-26T15:51:39",
+            "Total": 1749.746,
+            "Yesterday": 21.747,
+            "Today": 12.946,
+            "TodaySumImport": 0.000,
+            "TodaySumExport": 0.000,
+            "ExportActive": [1184.800, 1057.966, 986.676],
+            "ExportActiveTotal": 3229.442,
+            "Period": [3, 1, 3],
+            "Power": [174, 38, 130],
+            "PowerTotal": 341,
+            "ApparentPower": [198, 122, 198],
+            "ReactivePower": [-56, -98, -106],
+            "Factor": [0.88, 0.31, 0.65],
+            "Frequency": 50,
+            "Voltage": [230, 232, 230],
+            "Current": [0.860, 0.525, 0.863],
+        },
+    }
+}
+
 
 @pytest.mark.parametrize(
     ("sensor_config", "entity_ids", "messages"),
@@ -311,6 +337,18 @@ TEMPERATURE_SENSOR_CONFIG = {
                 '{"SENSOR1":{"Unknown":20.5},"SENSOR2":{"Unknown":20.5},"SENSOR3":{"Unknown":20.5},"SENSOR4":{"Unknown":20.5}}',
                 '{"StatusSNS":{"SENSOR1":{"Unknown":20},"SENSOR2":{"Unknown":20},"SENSOR3":{"Unknown":20},"SENSOR4":{"Unknown":20}}}',
             ),
+        ),
+        pytest.param(
+            THREE_PHASE_ENERGY_SENSOR_CONFIG,
+            [
+                "sensor.tasmota_energy_exportactivetotal",
+                "sensor.tasmota_energy_powertotal",
+            ],
+            (
+                '{"ENERGY":{"ExportActiveTotal":3229.442,"PowerTotal":341}}',
+                '{"StatusSNS":{"ENERGY":{"ExportActiveTotal":3230.1,"PowerTotal":-120}}}',
+            ),
+            id="three_phase_totals",
         ),
     ],
 )

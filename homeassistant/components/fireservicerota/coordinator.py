@@ -62,7 +62,7 @@ class FireServiceRotaOauth:
     """Handle authentication tokens."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, fsr: FireServiceRota
+        self, hass: HomeAssistant, entry: FireServiceConfigEntry, fsr: FireServiceRota
     ) -> None:
         """Initialize the oauth object."""
         self._hass = hass
@@ -103,7 +103,7 @@ class FireServiceRotaOauth:
 class FireServiceRotaWebSocket:
     """Define a FireServiceRota websocket manager object."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: FireServiceConfigEntry) -> None:
         """Initialize the websocket object."""
         self._hass = hass
         self._entry = entry
@@ -137,7 +137,7 @@ class FireServiceRotaWebSocket:
 class FireServiceRotaClient:
     """Getting the latest data from fireservicerota."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: FireServiceConfigEntry) -> None:
         """Initialize the data object."""
         self._hass = hass
         self._entry = entry

@@ -4,6 +4,7 @@
   "categories": ["garden_plants"],
   "codeowners": ["@dontinelli"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [{ "hostname": "fyta*" }],
   "documentation": "https://www.home-assistant.io/integrations/fyta",
   "integration_type": "hub",

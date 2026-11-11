@@ -1,13 +1,12 @@
 """The StarLine component."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .account import StarlineAccount
+from .account import StarlineAccount, StarlineConfigEntry
 from .const import (
     CONF_SCAN_OBD_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
@@ -16,8 +15,6 @@ from .const import (
     PLATFORMS,
 )
 from .services import async_setup_services
-
-type StarlineConfigEntry = ConfigEntry[StarlineAccount]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

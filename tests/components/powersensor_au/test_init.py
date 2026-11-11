@@ -155,6 +155,25 @@ async def test_devices_start_failure_retries_and_recovers(
     }
 
 
+async def test_discovery_is_stopped_if_forwarding_platforms_fails(
+    hass: HomeAssistant,
+    mock_devices: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Discovery starts before the platforms, so it must not outlive a failed setup."""
+    await _unload(hass, config_entry)
+    mock_devices.stop.reset_mock()
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups", side_effect=ImportError
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_devices.stop.assert_awaited_once()
+
+
 @pytest.mark.usefixtures("mock_async_zeroconf")
 @pytest.mark.parametrize(
     ("roles", "with_solar"),
@@ -209,6 +228,16 @@ async def _delete_device(
     client = await hass_ws_client(hass)
     response = await client.remove_device(device_id)
     return response["success"]
+
+
+async def _keep_loaded(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Leave the entry running."""
+
+
+async def _unload(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Unload the entry, as disabling the integration does."""
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -302,6 +331,56 @@ async def test_lost_device_can_be_deleted_and_is_rebuilt_if_it_returns(
     } == entities
 
 
+@pytest.mark.parametrize(
+    ("mac", "device_type"),
+    [
+        pytest.param(PLUG_MAC, "plug", id="plug"),
+        pytest.param(SENSOR_MAC, "sensor", id="sensor"),
+    ],
+)
+async def test_device_can_be_deleted_while_unloaded_and_returns_on_load(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    mac: str,
+    device_type: str,
+) -> None:
+    """While unloaded nothing tracks the network, so any device can be deleted.
+
+    One still on the network is set up again when the integration next loads.
+    """
+    found = {"event": "device_found", "mac": mac, "device_type": device_type}
+    await fire(found)
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac), config_entry.entry_id
+    )
+    assert device is not None
+    entities = {
+        e.unique_id for e in er.async_entries_for_device(entity_registry, device.id)
+    }
+    assert entities
+    await _unload(hass, config_entry)
+
+    assert await _delete_device(hass, hass_ws_client, device.id)
+    assert device_registry.async_get(device.id) is None
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    await fire(found)
+    await hass.async_block_till_done()
+    returned = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac), config_entry.entry_id
+    )
+    assert returned is not None
+    assert {
+        e.unique_id for e in er.async_entries_for_device(entity_registry, returned.id)
+    } == entities
+
+
 async def test_returning_sensor_gets_entities_of_a_role_it_had_before(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -358,12 +437,22 @@ async def test_returning_sensor_gets_entities_of_a_role_it_had_before(
     )
 
 
+@pytest.mark.parametrize(
+    "before_delete",
+    [
+        pytest.param(_keep_loaded, id="loaded"),
+        pytest.param(_unload, id="unloaded"),
+    ],
+)
 async def test_household_view_cannot_be_deleted(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
+    before_delete: Callable[
+        [HomeAssistant, MockConfigEntry], Coroutine[Any, Any, None]
+    ],
 ) -> None:
     """The household view belongs to the installation, not to one device."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
@@ -381,6 +470,7 @@ async def test_household_view_cannot_be_deleted(
         (DOMAIN, VHH_DEVICE_ID), config_entry.entry_id
     )
     assert device is not None
+    await before_delete(hass, config_entry)
 
     assert not await _delete_device(hass, hass_ws_client, device.id)
     assert device_registry.async_get(device.id) is not None

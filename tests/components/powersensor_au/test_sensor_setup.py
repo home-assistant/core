@@ -28,7 +28,13 @@ from homeassistant.components.powersensor_au.const import (
     ROLE_SOLAR,
     ROLE_WATER,
 )
-from homeassistant.const import EVENT_STATE_REPORTED, Platform
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_REPORTED,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfEnergy,
+)
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -37,8 +43,8 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 PLUG_MAC = "aabbccddeeff"
 SENSOR_MAC = "112233445566"
 SOLAR_MAC = "665544332211"
-# A role newer firmware might report that this integration does not know.
-UNRECOGNISED_ROLE = "gas"
+# A role newer firmware might report that this integration does not support.
+UNSUPPORTED_ROLE = "gas"
 
 PLUG_ENTITIES = {
     f"{PLUG_MAC}_{key}"
@@ -362,7 +368,7 @@ async def test_energy_converted_from_joules(
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """summation_joules is converted to kWh before storing state."""
+    """The energy total reported in joules is shown in kWh, its suggested unit."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await fire(
         {
@@ -392,7 +398,8 @@ async def test_energy_converted_from_joules(
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.state) == pytest.approx(1.0, rel=1e-4)
+    assert state.state == "1.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
 
 
 @pytest.mark.parametrize(
@@ -972,14 +979,42 @@ async def test_role_change_writes_device_registry_once(
     assert device.name == f"Solar sensor ({SENSOR_MAC})"
 
 
-async def test_unrecognised_role_is_shown_as_unknown(
+@pytest.mark.usefixtures("config_entry")
+@pytest.mark.parametrize(
+    "role_field",
+    [
+        pytest.param({}, id="omitted"),
+        pytest.param({"role": "unknown"}, id="wire_unknown"),
+    ],
+)
+async def test_sensor_without_a_role_is_shown_as_unknown(
+    hass: HomeAssistant,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
+    role_field: dict[str, str],
+) -> None:
+    """A sensor that has no role shows HA's unknown state, not unsupported."""
+    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
+    await fire(
+        {"event": "battery_level", "mac": SENSOR_MAC, "volts": 4.0, **role_field}
+    )
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_device_role"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def test_unsupported_role_is_shown_as_unsupported(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A role outside the ENUM options is displayed as unknown rather than rejected.
+    """A role outside the ENUM options is displayed as unsupported, not rejected.
 
     Only the display is clamped; the reported role is still persisted.
     """
@@ -1005,16 +1040,16 @@ async def test_unrecognised_role_is_shown_as_unknown(
             {
                 "event": "battery_level",
                 "mac": SENSOR_MAC,
-                "role": UNRECOGNISED_ROLE,
+                "role": UNSUPPORTED_ROLE,
                 "volts": 4.0,
             }
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "unknown"
+    assert hass.states.get(entity_id).state == "unsupported"
     assert "not in the list of options" not in caplog.text
-    assert caplog.text.count(f"Unrecognised role '{UNRECOGNISED_ROLE}'") == 1
-    assert config_entry.data["roles"][SENSOR_MAC] == UNRECOGNISED_ROLE
+    assert caplog.text.count(f"Unsupported role '{UNSUPPORTED_ROLE}'") == 1
+    assert config_entry.data["roles"][SENSOR_MAC] == UNSUPPORTED_ROLE
 
     await fire(
         {"event": "battery_level", "mac": SENSOR_MAC, "role": ROLE_SOLAR, "volts": 4.0}

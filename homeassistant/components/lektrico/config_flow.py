@@ -6,17 +6,12 @@ from lektricowifi import Device, DeviceConnectionError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    ATTR_HW_VERSION,
-    ATTR_SERIAL_NUMBER,
-    CONF_HOST,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_HW_VERSION, CONF_SERIAL_NUMBER, DOMAIN
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -79,9 +74,9 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
             title=self._name,
             data={
                 CONF_HOST: self._host,
-                ATTR_SERIAL_NUMBER: self._serial_number,
+                CONF_SERIAL_NUMBER: self._serial_number,
                 CONF_TYPE: self._device_type,
-                ATTR_HW_VERSION: self._board_revision,
+                CONF_HW_VERSION: self._board_revision,
             },
         )
 

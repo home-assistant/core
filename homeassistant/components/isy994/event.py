@@ -1,8 +1,7 @@
 """Event entities for ISY Insteon load and keypad-button nodes.
 
 Each entity represents a physical button on the device and emits one of the
-standard button event types (architecture#1377) when its corresponding
-control event arrives from the ISY.
+standard button event types when its corresponding control event arrives from the ISY.
 """
 
 from typing import TYPE_CHECKING, Final, NamedTuple, override
@@ -24,7 +23,7 @@ from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.event import (
-    ATTR_MULTI_PRESS_COUNT,
+    ATTR_PRESS_COUNT,
     ButtonEventType,
     EventDeviceClass,
     EventEntity,
@@ -53,19 +52,19 @@ class _ControlEvent(NamedTuple):
 
     event_type: ButtonEventType
     direction: str
-    multi_press_count: int | None = None
+    press_count: int | None = None
 
 
-# Maps to the architecture#1377 standard button event types. `direction`
+# Maps to the standard button event types. `direction`
 # distinguishes the two paddle positions of a single physical button rather
 # than splitting into two entities. CMD_FADE_STOP
 # (long-press end) isn't listed here: its direction is whichever fade most
 # recently started, tracked in `ISYButtonEvent._last_fade_direction`.
 CONTROL_TO_EVENT: Final[dict[str, _ControlEvent]] = {
-    CMD_ON: _ControlEvent(ButtonEventType.PRESS_END, DIRECTION_UP),
-    CMD_OFF: _ControlEvent(ButtonEventType.PRESS_END, DIRECTION_DOWN),
-    CMD_ON_FAST: _ControlEvent(ButtonEventType.MULTI_PRESS_END, DIRECTION_UP, 2),
-    CMD_OFF_FAST: _ControlEvent(ButtonEventType.MULTI_PRESS_END, DIRECTION_DOWN, 2),
+    CMD_ON: _ControlEvent(ButtonEventType.SINGLE_PRESS, DIRECTION_UP),
+    CMD_OFF: _ControlEvent(ButtonEventType.SINGLE_PRESS, DIRECTION_DOWN),
+    CMD_ON_FAST: _ControlEvent(ButtonEventType.MULTI_PRESS, DIRECTION_UP, 2),
+    CMD_OFF_FAST: _ControlEvent(ButtonEventType.MULTI_PRESS, DIRECTION_DOWN, 2),
     CMD_FADE_UP: _ControlEvent(ButtonEventType.LONG_PRESS_START, DIRECTION_UP),
     CMD_FADE_DOWN: _ControlEvent(ButtonEventType.LONG_PRESS_START, DIRECTION_DOWN),
 }
@@ -75,8 +74,8 @@ BUTTON_DESCRIPTION: Final[EventEntityDescription] = EventEntityDescription(
     translation_key="button",
     device_class=EventDeviceClass.BUTTON,
     event_types=[
-        ButtonEventType.PRESS_END,
-        ButtonEventType.MULTI_PRESS_END,
+        ButtonEventType.SINGLE_PRESS,
+        ButtonEventType.MULTI_PRESS,
         ButtonEventType.LONG_PRESS_START,
         ButtonEventType.LONG_PRESS_END,
     ],
@@ -199,7 +198,7 @@ class ISYButtonEvent(ISYNodeEntity, EventEntity):
         event_attributes: dict[str, str | int] = {
             ATTR_DIRECTION: control_event.direction
         }
-        if control_event.multi_press_count is not None:
-            event_attributes[ATTR_MULTI_PRESS_COUNT] = control_event.multi_press_count
+        if control_event.press_count is not None:
+            event_attributes[ATTR_PRESS_COUNT] = control_event.press_count
         self._trigger_event(control_event.event_type, event_attributes)
         self.async_write_ha_state()

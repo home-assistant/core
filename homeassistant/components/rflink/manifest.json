@@ -6,6 +6,7 @@
     "diy_makers.boards_hardware"
   ],
   "codeowners": ["@javicalle"],
+  "connectivity": ["rf"],
   "documentation": "https://www.home-assistant.io/integrations/rflink",
   "iot_class": "assumed_state",
   "loggers": ["rflink"],

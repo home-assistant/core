@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@ssaenger"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/ws66i",
   "integration_type": "device",
   "iot_class": "local_polling",

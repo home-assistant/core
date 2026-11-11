@@ -57,6 +57,9 @@
       "drop": {
         "name": "Drop"
       },
+      "fall": {
+        "name": "Fall"
+      },
       "feeding": {
         "name": "Feeding"
       },
@@ -1126,6 +1129,9 @@
       },
       "do_not_disturb": {
         "name": "Do not disturb"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
       },
       "energy_saving": {
         "name": "Energy saving"

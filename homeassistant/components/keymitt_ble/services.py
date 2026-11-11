@@ -1,5 +1,7 @@
 """Services for the Keymitt MicroBot Push integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -9,11 +11,27 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
 
-CALIBRATE = "calibrate"
+
+class MicroBotService(StrEnum):
+    """Store keys for Keymitt MicroBot Push services."""
+
+    CALIBRATE = "calibrate"
+
+
+class MicroBotServiceArgument(StrEnum):
+    """Store keys for Keymitt MicroBot Push service arguments."""
+
+    DEPTH = "depth"
+    DURATION = "duration"
+    MODE = "mode"
+
+
 CALIBRATE_SCHEMA: VolDictType = {
-    probatio.Required("depth"): cv.positive_int,
-    probatio.Required("duration"): cv.positive_int,
-    probatio.Required("mode"): probatio.In(["normal", "invert", "toggle"]),
+    probatio.Required(MicroBotServiceArgument.DEPTH): cv.positive_int,
+    probatio.Required(MicroBotServiceArgument.DURATION): cv.positive_int,
+    probatio.Required(MicroBotServiceArgument.MODE): probatio.In(
+        ["normal", "invert", "toggle"]
+    ),
 }
 
 
@@ -24,7 +42,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        CALIBRATE,
+        MicroBotService.CALIBRATE,
         entity_domain=SWITCH_DOMAIN,
         schema=CALIBRATE_SCHEMA,
         func="async_calibrate",

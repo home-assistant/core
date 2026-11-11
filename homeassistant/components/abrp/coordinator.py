@@ -1,8 +1,9 @@
-"""Telemetry coordinator for the A Better Routeplanner integration."""
+"""Coordinators for the A Better Routeplanner integration."""
 
-import asyncio
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
+from typing import override
 
 from aioabrp import (
     AbrpApiError,
@@ -12,87 +13,69 @@ from aioabrp import (
     ConnectionEvent,
     ConnectionState,
     Telemetry,
-    VehicleModelDisplay,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+GARAGE_SCAN_INTERVAL = timedelta(hours=1)
 
 
 @dataclass(frozen=True, slots=True)
 class AbrpData:
     """Runtime data stored on the config entry."""
 
-    vehicles: list[tuple[AbrpVehicle, VehicleModelDisplay | None]]
+    garage_coordinator: AbrpGarageCoordinator
     telemetry_coordinator: AbrpTelemetryCoordinator
 
 
 type AbrpConfigEntry = ConfigEntry[AbrpData]
 
 
-async def async_fetch_garage(
-    client: AbrpClient,
-) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
-    """Fetch the garage once at setup, pairing each vehicle with its display."""
+async def async_fetch_garage(client: AbrpClient) -> list[AbrpVehicle]:
+    """Fetch the garage."""
     try:
-        raw_vehicles = await client.async_get_vehicles()
+        return await client.async_get_vehicles()
     except AbrpAuthError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="abrp_session_invalid",
         ) from err
     except AbrpApiError as err:
-        raise ConfigEntryNotReady(
+        raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="abrp_update_failed",
         ) from err
 
-    results = await asyncio.gather(
-        *(
-            client.async_get_vehicle_model_display(raw.vehicle_model)
-            for raw in raw_vehicles
-        ),
-        return_exceptions=True,
-    )
-    paired: list[tuple[AbrpVehicle, VehicleModelDisplay | None]] = []
-    for raw, result in zip(raw_vehicles, results, strict=True):
-        if isinstance(result, AbrpAuthError):
-            # Not fatal: the display lookup authenticates separately from the garage.
-            _LOGGER.warning(
-                "Display metadata for typecode %s rejected (%s); the device "
-                "falls back to the raw typecode",
-                raw.vehicle_model,
-                result,
-            )
-            paired.append((raw, None))
-            continue
-        if isinstance(result, (AbrpApiError, TimeoutError)):
-            _LOGGER.debug(
-                "Display metadata for typecode %s failed (%s); the device "
-                "falls back to the raw typecode",
-                raw.vehicle_model,
-                result,
-            )
-            paired.append((raw, None))
-            continue
-        if isinstance(result, BaseException):
-            if isinstance(result, Exception):
-                _LOGGER.warning(
-                    "Unexpected display-metadata failure for typecode %s: %s",
-                    raw.vehicle_model,
-                    result,
-                )
-                paired.append((raw, None))
-                continue
-            raise result
-        paired.append((raw, result))
-    return paired
+
+class AbrpGarageCoordinator(DataUpdateCoordinator[list[AbrpVehicle]]):
+    """Polls the garage so vehicles added in ABRP appear without a reload."""
+
+    config_entry: AbrpConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, entry: AbrpConfigEntry, client: AbrpClient
+    ) -> None:
+        """Initialize the garage coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN} garage",
+            update_interval=GARAGE_SCAN_INTERVAL,
+        )
+        self.client = client
+
+    @override
+    async def _async_update_data(self) -> list[AbrpVehicle]:
+        """Fetch the garage."""
+        return await async_fetch_garage(self.client)
 
 
 class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
@@ -137,10 +120,10 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
         ABRP closes idle streams (~200 s) as steady state, so a disconnect only
         logs and never marks entities unavailable. ``AUTH_FAILED`` is the one
         exception: the library stops the stream for good, so entities stop
-        claiming values nothing will refresh. Clearing that flag on a reconnect
-        rather than on any later event is defensive: aioabrp returns from its
-        run loop once it has dispatched ``AUTH_FAILED``, so today nothing
-        follows it at all.
+        claiming values nothing will refresh and reauth starts. Clearing that
+        flag on a reconnect rather than on any later event is defensive: aioabrp
+        returns from its run loop once it has dispatched ``AUTH_FAILED``, so
+        today nothing follows it at all.
         """
         previous = self.last_connection_event
         changed = previous is None or previous.state is not event.state
@@ -163,6 +146,7 @@ class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
             if event.state is ConnectionState.AUTH_FAILED:
                 self.stream_auth_failed = True
                 self.async_update_listeners()
+                self.config_entry.async_start_reauth(self.hass)
             elif event.state is ConnectionState.CONNECTED and self.stream_auth_failed:
                 self.stream_auth_failed = False
                 self.async_update_listeners()

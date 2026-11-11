@@ -221,6 +221,6 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
             ),
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
