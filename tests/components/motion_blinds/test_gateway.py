@@ -49,7 +49,6 @@ async def test_connect_gateway_timeout_no_error_spam(
             "homeassistant.components.motion_blinds.gateway.MotionGateway",
             return_value=gateway,
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         assert await connect.async_connect_gateway(TEST_HOST, TEST_API_KEY) is False
 

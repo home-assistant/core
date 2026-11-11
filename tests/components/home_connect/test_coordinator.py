@@ -645,7 +645,6 @@ async def test_event_listener_resilience(
     after_event_expected_state: str,
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
-    caplog.set_level("DEBUG")
     future = hass.loop.create_future()
 
     async def stream_exception():
