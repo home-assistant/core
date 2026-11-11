@@ -1,5 +1,8 @@
 """Test the SilverCrest Infrared button platform."""
 
+from collections.abc import Generator
+from unittest.mock import patch
+
 from infrared_protocols.codes.silvercrest.fan import SilverCrestFanCode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -16,9 +19,19 @@ from homeassistant.components.silvercrest_infrared.const import (
     SilverCrestIrDeviceType,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+
+@pytest.fixture(autouse=True)
+def button_only() -> Generator[None]:
+    """Enable only the button platform."""
+    with patch(
+        "homeassistant.components.silvercrest_infrared.PLATFORMS",
+        [Platform.BUTTON],
+    ):
+        yield
 
 
 @pytest.mark.parametrize(

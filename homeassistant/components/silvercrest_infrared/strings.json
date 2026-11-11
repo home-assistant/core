@@ -5,26 +5,30 @@
       "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
-      "missing_infrared_entity": "Select an infrared emitter."
+      "missing_infrared_entity": "Select an infrared emitter or receiver."
     },
     "step": {
       "reconfigure": {
         "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
         },
         "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:component::silvercrest_infrared::config::step::user::data_description::infrared_receiver_entity_id%]"
         },
         "title": "Reconfigure SilverCrest Infrared device"
       },
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
         },
         "data_description": {
           "device_type": "The type of device to control.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
         },
         "description": "Select the device type and an infrared emitter.",
         "title": "Set up SilverCrest infrared device"
@@ -53,6 +57,22 @@
       "power": { "name": "Power" },
       "speed": { "name": "Speed" },
       "timer": { "name": "Timer" }
+    },
+    "event": {
+      "received_command": {
+        "name": "Received command",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "mode": "[%key:component::silvercrest_infrared::entity::button::mode::name%]",
+              "osc": "[%key:component::silvercrest_infrared::entity::button::osc::name%]",
+              "power": "[%key:component::silvercrest_infrared::entity::button::power::name%]",
+              "speed": "[%key:component::silvercrest_infrared::entity::button::speed::name%]",
+              "timer": "[%key:component::silvercrest_infrared::entity::button::timer::name%]"
+            }
+          }
+        }
+      }
     }
   },
   "selector": {
