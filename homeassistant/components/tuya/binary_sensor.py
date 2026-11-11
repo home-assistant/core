@@ -447,6 +447,18 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             on_value="tilt",
         ),
     ),
+    DeviceCategory.ZNDB: (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CT_DIRECTION1,
+            translation_key="ct_direction1",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CT_DIRECTION2,
+            translation_key="ct_direction2",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
 }
 
 
