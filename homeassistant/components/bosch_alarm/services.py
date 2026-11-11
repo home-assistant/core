@@ -2,18 +2,31 @@
 
 import asyncio
 import datetime as dt
+from enum import StrEnum
 from typing import Any
 
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_DATE_TIME
+from .const import DOMAIN
 from .types import BoschAlarmConfigEntry
+
+
+class BoschAlarmService(StrEnum):
+    """Store keys for Bosch Alarm services."""
+
+    SET_DATE_TIME = "set_date_time"
+
+
+class BoschAlarmServiceArgument(StrEnum):
+    """Store keys for Bosch Alarm service arguments."""
+
+    DATETIME = "datetime"
 
 
 def validate_datetime(value: Any) -> dt.datetime:
@@ -30,17 +43,19 @@ def validate_datetime(value: Any) -> dt.datetime:
 
 SET_DATE_TIME_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_DATETIME): validate_datetime,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(BoschAlarmServiceArgument.DATETIME): validate_datetime,
     }
 )
 
 
 async def async_set_panel_date(call: ServiceCall) -> None:
     """Set the date and time on a bosch alarm panel."""
-    value: dt.datetime = call.data.get(ATTR_DATETIME, dt_util.now())
+    value: dt.datetime = call.data.get(
+        BoschAlarmServiceArgument.DATETIME, dt_util.now()
+    )
     config_entry: BoschAlarmConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     panel = config_entry.runtime_data
     try:
@@ -59,7 +74,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_DATE_TIME,
+        BoschAlarmService.SET_DATE_TIME,
         async_set_panel_date,
         schema=SET_DATE_TIME_SCHEMA,
     )

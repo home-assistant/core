@@ -20,7 +20,7 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import ConfigType, Undefined
 
 from .agent_manager import get_agent_manager
 from .const import DOMAIN
@@ -150,7 +150,7 @@ async def async_attach_trigger(
             automation_result = await future
             if isinstance(
                 automation_result, ScriptRunResult
-            ) and automation_result.conversation_response not in (None, UNDEFINED):
+            ) and automation_result.conversation_response not in (None, Undefined):
                 return automation_result.conversation_response
 
         # It's important to return None here instead of a string.

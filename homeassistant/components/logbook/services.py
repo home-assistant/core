@@ -4,7 +4,7 @@ from enum import StrEnum
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
@@ -31,7 +31,7 @@ LOG_MESSAGE_SCHEMA = probatio.Schema(
         probatio.Required(LogbookServiceArgument.NAME): cv.string,
         probatio.Required(LogbookServiceArgument.MESSAGE): cv.string,
         probatio.Optional(LogbookServiceArgument.DOMAIN): cv.slug,
-        probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): cv.entity_id,
     }
 )
 
@@ -43,7 +43,7 @@ def _log_message(service: ServiceCall) -> None:
     message = service.data[LogbookServiceArgument.MESSAGE]
     name = service.data[LogbookServiceArgument.NAME]
     domain = service.data.get(LogbookServiceArgument.DOMAIN)
-    entity_id = service.data.get(ATTR_ENTITY_ID)
+    entity_id = service.data.get(CommonServiceArgument.ENTITY_ID)
 
     if entity_id is None and domain is None:
         # If there is no entity_id or

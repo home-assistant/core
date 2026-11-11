@@ -50,8 +50,10 @@ from boschshcpy import (
     ThermostatService,
 )
 from boschshcpy.services_impl import (
+    DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
+    OutdoorSirenPowerSupplyService,
     OutdoorSirenService,
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
@@ -269,6 +271,7 @@ def outdoor_siren_device(
     device_id: str = "hdm:ZigBee:outdoorsiren1",
     name: str = "Outdoor Siren",
     sound_level: OutdoorSirenService.SoundLevel = OutdoorSirenService.SoundLevel.MEDIUM,
+    power_supply: OutdoorSirenPowerSupplyService | None = None,
 ) -> SHCOutdoorSiren:
     """Build a minimal device double for the outdoor_sirens bucket."""
     device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
@@ -284,6 +287,8 @@ def outdoor_siren_device(
     siren_service = create_autospec(OutdoorSirenService, instance=True)
     siren_service.sound_level = sound_level
     device.siren = siren_service
+    device.supports_power_supply = power_supply is not None
+    device.power_supply = power_supply
     return device
 
 
@@ -419,6 +424,8 @@ def climate_control_device(
     supports_eco: bool = True,
     low: bool = False,
     has_demand: bool = False,
+    ventilation_mode: bool = False,
+    setpoint_temperature_offset_active: bool = False,
 ) -> SHCClimateControl:
     """Build a minimal device double for the climate_controls bucket."""
     device = create_autospec(SHCClimateControl, instance=True, spec_set=True)
@@ -443,6 +450,8 @@ def climate_control_device(
     device.supports_eco = supports_eco
     device.low = low
     device.has_demand = has_demand
+    device.ventilation_mode = ventilation_mode
+    device.setpoint_temperature_offset_active = setpoint_temperature_offset_active
     return device
 
 
@@ -523,6 +532,8 @@ def thermostat_gen2_device(
     temperature: float = 21.0,
     humidity: float | None = None,
     terminal_temperature: float | None = None,
+    display_brightness: int | None = None,
+    display_on_time: int | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -564,6 +575,14 @@ def thermostat_gen2_device(
         device.supports_humidity = humidity is not None
         device.humidity = humidity
         device.terminal_temperature = terminal_temperature
+    device.display_brightness = display_brightness
+    device.display_on_time = display_on_time
+    device.display_brightness_min = 0
+    device.display_brightness_max = 100
+    device.display_brightness_step_size = 1
+    device.display_on_time_min = 0
+    device.display_on_time_max = 3600
+    device.display_on_time_step_size = 1
     return device
 
 
@@ -592,6 +611,10 @@ def micromodule_dimmer_device(
     name: str = "Dimmer",
     binarystate: bool = False,
     brightness: int = 50,
+    supports_dimmer_configuration: bool = False,
+    edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
+    | None = None,
+    dimming_speed: int | None = 5,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -606,6 +629,9 @@ def micromodule_dimmer_device(
     device.status = "AVAILABLE"
     device.binarystate = binarystate
     device.brightness = brightness
+    device.supports_dimmer_configuration = supports_dimmer_configuration
+    device.edge_phase_control_mode = edge_phase_control_mode
+    device.dimming_speed = dimming_speed
     return device
 
 
@@ -878,6 +904,8 @@ def motion_detector2_device(
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
     smart_sensitivity: dict[str, str] | None = None,
+    binaryswitch: bool = False,
+    multi_level_switch: int = 0,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -901,6 +929,8 @@ def motion_detector2_device(
         if smart_sensitivity
         else None
     )
+    device.binaryswitch = binaryswitch
+    device.multi_level_switch = multi_level_switch
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:

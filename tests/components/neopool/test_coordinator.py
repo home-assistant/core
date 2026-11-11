@@ -16,6 +16,7 @@ from homeassistant.components.neopool.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
@@ -65,13 +66,14 @@ async def test_corrupt_gpio_creates_repair_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """A GPIO register outside 0..MAX_RELAY_GPIO opens a corrupted_gpio issue."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     bad_data = dict(MOCK_POOL_DATA)
     bad_data["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
     mock_neopool_client.async_read_all = AsyncMock(return_value=bad_data)
 
     await setup_integration(hass, mock_config_entry)
 
-    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.ERROR
 
@@ -83,8 +85,9 @@ async def test_clean_gpio_does_not_create_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """A clean read does not open a corrupted_gpio issue."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     await setup_integration(hass, mock_config_entry)
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_corrupt_gpio_self_heals_on_next_clean_read(
@@ -95,19 +98,64 @@ async def test_corrupt_gpio_self_heals_on_next_clean_read(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """The corrupted_gpio issue clears once a subsequent poll reads clean values."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     bad_data = dict(MOCK_POOL_DATA)
     bad_data["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
     mock_neopool_client.async_read_all = AsyncMock(return_value=bad_data)
     await setup_integration(hass, mock_config_entry)
 
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     mock_neopool_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_corrupt_gpio_issue_per_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Each entry gets its own linked corrupted_gpio issue."""
+    bad_data = dict(MOCK_POOL_DATA)
+    bad_data["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
+    mock_neopool_client.async_read_all = AsyncMock(return_value=bad_data)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other pool",
+        unique_id="0987654321",
+        version=CURRENT_VERSION,
+        data={**mock_config_entry.data, CONF_HOST: "192.0.2.2"},
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, other_entry)
+
+    for entry in (mock_config_entry, other_entry):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"corrupted_gpio_{entry.entry_id}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_key == "corrupted_gpio"
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"corrupted_gpio_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"corrupted_gpio_{other_entry.entry_id}")
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
@@ -117,20 +165,21 @@ async def test_corrupt_gpio_clears_stale_issue_from_previous_session(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Stale issue from a previous HA session clears on first poll."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "corrupted_gpio",
+        issue_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="corrupted_gpio",
         translation_placeholders={"details": "- stale"},
     )
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await setup_integration(hass, mock_config_entry)
 
-    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_corrupt_gpio_logs_error_only_on_state_change(
@@ -169,12 +218,13 @@ async def test_corrupt_gpio_updates_issue_on_value_change(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """The repair issue details refresh when a corrupted register value changes."""
+    issue_id = f"corrupted_gpio_{mock_config_entry.entry_id}"
     first = dict(MOCK_POOL_DATA)
     first["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
     mock_neopool_client.async_read_all = AsyncMock(return_value=first)
 
     await setup_integration(hass, mock_config_entry)
-    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_placeholders is not None
     assert str(MAX_RELAY_GPIO + 1) in issue.translation_placeholders["details"]
@@ -186,7 +236,7 @@ async def test_corrupt_gpio_updates_issue_on_value_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_placeholders is not None
     assert str(MAX_RELAY_GPIO + 2) in issue.translation_placeholders["details"]

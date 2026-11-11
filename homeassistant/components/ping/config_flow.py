@@ -10,7 +10,6 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -21,6 +20,7 @@ from homeassistant.helpers import selector
 from homeassistant.util.network import is_ip_address
 
 from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .coordinator import PingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PingConfigEntry,
     ) -> OptionsFlowHandler:
         """Create the options flow."""
         return OptionsFlowHandler()

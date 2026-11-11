@@ -7,14 +7,12 @@ from propcache.api import cached_property
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
-from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.util import color as color_util
 
 from .const import (
     COLOR_MODES_BRIGHTNESS,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
-    DOMAIN,
     EFFECT_OFF,
     ColorMode,
     LightEntityCapabilityAttribute,
@@ -141,41 +139,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        if self._attr_min_color_temp_kelvin is None:
-            # For historical reason when both Mired and Kelvin were supported,
-            # integrations may have set this explicitly to None.
-            # Fallback to DEFAULT to ensure compatibility.
-            report_usage(  # type: ignore[unreachable]
-                "is explicitly setting `_attr_min_color_temp_kelvin` to `None`, when "
-                "it should be setting a valid integer, possibly DEFAULT_MIN_KELVIN ",
-                breaks_in_ha_version="2026.8",
-                core_behavior=ReportBehavior.LOG,
-                integration_domain=self.platform.platform_name
-                if self.platform
-                else None,
-                exclude_integrations={DOMAIN},
-            )
-            return DEFAULT_MIN_KELVIN
         return self._attr_min_color_temp_kelvin
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        if self._attr_max_color_temp_kelvin is None:
-            # For historical reason when both Mired and Kelvin were supported,
-            # integrations may have set this explicitly to None.
-            # Fallback to DEFAULT to ensure compatibility.
-            report_usage(  # type: ignore[unreachable]
-                "is explicitly setting `_attr_max_color_temp_kelvin` to `None`, when "
-                "it should be setting a valid integer, possibly DEFAULT_MAX_KELVIN ",
-                breaks_in_ha_version="2026.8",
-                core_behavior=ReportBehavior.LOG,
-                integration_domain=self.platform.platform_name
-                if self.platform
-                else None,
-                exclude_integrations={DOMAIN},
-            )
-            return DEFAULT_MAX_KELVIN
         return self._attr_max_color_temp_kelvin
 
     @cached_property

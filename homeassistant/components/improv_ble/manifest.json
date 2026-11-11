@@ -10,6 +10,7 @@
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@emontnemery"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/improv_ble",
   "integration_type": "device",

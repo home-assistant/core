@@ -4,13 +4,10 @@ from unittest.mock import AsyncMock
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.aftership.const import (
-    CONF_SLUG,
-    CONF_TITLE,
-    CONF_TRACKING_NUMBER,
-    DOMAIN,
-    SERVICE_ADD_TRACKING,
-    SERVICE_REMOVE_TRACKING,
+from homeassistant.components.aftership.const import DOMAIN
+from homeassistant.components.aftership.services import (
+    AfterShipService,
+    AfterShipServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 
@@ -34,11 +31,11 @@ async def test_add_tracking(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_TRACKING,
+        AfterShipService.ADD_TRACKING,
         {
-            CONF_TRACKING_NUMBER: "123456789",
-            CONF_TITLE: "Laptop",
-            CONF_SLUG: "usps",
+            AfterShipServiceArgument.TRACKING_NUMBER: "123456789",
+            AfterShipServiceArgument.TITLE: "Laptop",
+            AfterShipServiceArgument.SLUG: "usps",
         },
         blocking=True,
     )
@@ -60,8 +57,8 @@ async def test_add_tracking_only_required(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ADD_TRACKING,
-        {CONF_TRACKING_NUMBER: "123456789"},
+        AfterShipService.ADD_TRACKING,
+        {AfterShipServiceArgument.TRACKING_NUMBER: "123456789"},
         blocking=True,
     )
 
@@ -82,10 +79,10 @@ async def test_remove_tracking(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_REMOVE_TRACKING,
+        AfterShipService.REMOVE_TRACKING,
         {
-            CONF_TRACKING_NUMBER: "123456789",
-            CONF_SLUG: "usps",
+            AfterShipServiceArgument.TRACKING_NUMBER: "123456789",
+            AfterShipServiceArgument.SLUG: "usps",
         },
         blocking=True,
     )

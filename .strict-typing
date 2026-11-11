@@ -163,6 +163,7 @@ homeassistant.components.cookidoo.*
 homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
+homeassistant.components.croma_infrared.*
 homeassistant.components.crownstone.*
 homeassistant.components.data_grand_lyon.*
 homeassistant.components.date.*
@@ -194,6 +195,7 @@ homeassistant.components.duckdns.*
 homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
+homeassistant.components.e3dc.*
 homeassistant.components.easyenergy.*
 homeassistant.components.ecosmart.*
 homeassistant.components.ecovacs.*
@@ -327,6 +329,7 @@ homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
 homeassistant.components.immich.*
+homeassistant.components.imou.*
 homeassistant.components.incomfort.*
 homeassistant.components.indevolt.*
 homeassistant.components.indi_allsky.*
@@ -692,6 +695,7 @@ homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
 homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
+homeassistant.components.watergate.*
 homeassistant.components.watts.*
 homeassistant.components.watttime.*
 homeassistant.components.wattwaechter.*

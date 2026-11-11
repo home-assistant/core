@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@andrewsayre"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/heos",
   "integration_type": "hub",
   "iot_class": "local_push",

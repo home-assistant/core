@@ -57,7 +57,6 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
     _attr_max_temp = 50
     _attr_min_temp = -50
     _attr_precision = 1.0
-    _attr_should_poll = False
     _attr_supported_features = ClimateEntityFeature(
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )

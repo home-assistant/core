@@ -9,6 +9,7 @@ from pypalazzetti.exceptions import CommunicationError
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, LOGGER
@@ -27,7 +28,10 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            client = PalazzettiClient(hostname=host)
+            client = PalazzettiClient(
+                hostname=host,
+                session=async_get_clientsession(self.hass),
+            )
             try:
                 await client.connect()
             except CommunicationError:
@@ -65,7 +69,10 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
-        self._discovered_device = PalazzettiClient(hostname=discovery_info.ip)
+        self._discovered_device = PalazzettiClient(
+            hostname=discovery_info.ip,
+            session=async_get_clientsession(self.hass),
+        )
         try:
             await self._discovered_device.connect()
         except CommunicationError:
