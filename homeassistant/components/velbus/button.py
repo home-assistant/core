@@ -8,12 +8,13 @@ from velbusaio.channels import (
 )
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+from .entity_discovery import async_setup_platform_discovery, discover_button_entities
 
 PARALLEL_UPDATES = 0
 
@@ -23,11 +24,9 @@ async def async_setup_entry(
     entry: VelbusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Velbus switch based on config_entry."""
-    await entry.runtime_data.scan_task
-    async_add_entities(
-        VelbusButton(channel)
-        for channel in entry.runtime_data.controller.get_all_button()
+    """Set up Velbus button based on config_entry."""
+    await async_setup_platform_discovery(
+        hass, entry, async_add_entities, discover_button_entities, Platform.BUTTON
     )
 
 

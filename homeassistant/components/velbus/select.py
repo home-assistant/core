@@ -5,12 +5,13 @@ from typing import override
 from velbusaio.properties import SelectedProgram
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+from .entity_discovery import async_setup_platform_discovery, discover_select_entities
 
 PARALLEL_UPDATES = 0
 
@@ -21,10 +22,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus select based on config_entry."""
-    await entry.runtime_data.scan_task
-    async_add_entities(
-        VelbusSelect(channel)
-        for channel in entry.runtime_data.controller.get_all_select()
+    await async_setup_platform_discovery(
+        hass, entry, async_add_entities, discover_select_entities, Platform.SELECT
     )
 
 

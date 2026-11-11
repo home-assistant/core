@@ -18,14 +18,14 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+from .entity_discovery import async_setup_platform_discovery, discover_light_entities
 
 BRIGHTNESS_SCALE = (1, 100)
 PARALLEL_UPDATES = 0
@@ -36,17 +36,10 @@ async def async_setup_entry(
     entry: VelbusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Velbus switch based on config_entry."""
-    await entry.runtime_data.scan_task
-    entities: list[Entity] = [
-        VelbusLight(channel)
-        for channel in entry.runtime_data.controller.get_all_light()
-    ]
-    entities.extend(
-        VelbusButtonLight(channel)
-        for channel in entry.runtime_data.controller.get_all_led()
+    """Set up Velbus light based on config_entry."""
+    await async_setup_platform_discovery(
+        hass, entry, async_add_entities, discover_light_entities, Platform.LIGHT
     )
-    async_add_entities(entities)
 
 
 class VelbusLight(VelbusEntity, LightEntity):
