@@ -61,6 +61,7 @@ class SnooEvent(SnooDescriptionEntity, EventEntity):
             # Otherwise, it will update when the coordinator gets data.
             self._async_handle_event()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._async_handle_event()

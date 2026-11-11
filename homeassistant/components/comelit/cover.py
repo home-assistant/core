@@ -7,14 +7,14 @@ from aiocomelit import ComelitDeviceObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -166,6 +166,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         """Return if the cover is opening."""
         return self._current_action("opening")
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -235,7 +236,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        target = kwargs[ATTR_POSITION]
+        target = kwargs[CoverServiceArgument.POSITION]
 
         # Let the motor end stop finish full travel instead of the timer
         if target == 0:
@@ -271,7 +272,11 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         self.async_on_remove(self._cancel_position_timer)
 
         if (state := await self.async_get_last_state()) is not None:
-            if (position := state.attributes.get(ATTR_CURRENT_POSITION)) is not None:
+            if (
+                position := state.attributes.get(
+                    CoverEntityStateAttribute.CURRENT_POSITION
+                )
+            ) is not None:
                 self._position = position
             elif state.state == CoverState.CLOSED:
                 self._position = 0

@@ -63,4 +63,9 @@ class IZoneCoordinator(DataUpdateCoordinator[pizone.Controller]):
                 translation_key="refresh_rejected",
                 translation_placeholders={"error": str(err)},
             ) from err
+        if not self.controller.connected:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="controller_offline",
+            )
         return self.controller
