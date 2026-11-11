@@ -2498,3 +2498,16 @@ async def test_missing_lorawan_requirement(hass: HomeAssistant, missing: str) ->
     ):
         registrations = await loader.async_get_lorawan(hass)
     assert "sensecap" not in registrations
+
+
+def test_zeroconf_top_level_property_moved(caplog: pytest.LogCaptureFixture) -> None:
+    """Test a top-level zeroconf property is moved into properties with a warning."""
+    matcher = loader.async_process_zeroconf_match_dict(
+        {"type": "_test._tcp.local.", "manufacturer": "ACME"}
+    )
+
+    assert matcher == {"properties": {"manufacturer": "acme"}}
+    assert (
+        'Matching the zeroconf property "manufacturer" at top-level is deprecated and '
+        "will stop working in Home Assistant 2027.6.0"
+    ) in caplog.text
