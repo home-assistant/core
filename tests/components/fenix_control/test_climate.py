@@ -460,6 +460,40 @@ async def test_running_poll_keeps_command(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_running_poll_with_holiday_wins_over_command(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a holiday found by a running poll isn't hidden by a command."""
+    polling = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_get_devices(*args: object) -> list[Device]:
+        polling.set()
+        await release.wait()
+        return [HOLIDAY_DEVICE]
+
+    mock_fenix_client.get_devices.side_effect = slow_get_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.wait_for(polling.wait(), 1)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.AUTO]
+
+
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("hvac_mode", "preset_mode"),
     [

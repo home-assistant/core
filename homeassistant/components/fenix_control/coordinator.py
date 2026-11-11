@@ -72,7 +72,9 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
 
         fresh = {device.id: device for device in devices}
         for device_id in self._commanded & fresh.keys():
-            fresh[device_id] = self.data.devices[device_id]
+            # A holiday locks the controls, so it wins over the commanded state
+            if not fresh[device_id].holiday_active:
+                fresh[device_id] = self.data.devices[device_id]
         return FenixControlData(devices=fresh)
 
     def async_set_device(self, device: Device) -> None:
