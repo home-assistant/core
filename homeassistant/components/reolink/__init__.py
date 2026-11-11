@@ -81,6 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Reolink shared code."""
 
     async_setup_services(hass)
+    hass.http.register_view(PlaybackProxyView(hass))
     return True
 
 
@@ -262,8 +263,6 @@ async def async_setup_entry(
     )
 
     migrate_entity_ids(hass, config_entry.entry_id, host)
-
-    hass.http.register_view(PlaybackProxyView(hass))
 
     await register_callbacks(host, device_coordinator, hass)
 
