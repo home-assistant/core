@@ -29,11 +29,11 @@
       "air_demand": {
         "name": "Air demand"
       },
-      "floor_demand": {
-        "name": "Floor demand"
-      },
       "cold_demand": {
         "name": "Cold demand"
+      },
+      "floor_demand": {
+        "name": "Floor demand"
       },
       "heat_demand": {
         "name": "Heat demand"
@@ -98,12 +98,6 @@
       }
     },
     "sensor": {
-      "rssi": {
-        "name": "RSSI"
-      },
-      "thermostat_signal": {
-        "name": "Signal strength"
-      },
       "eco_adapt": {
         "name": "Eco-Adapt",
         "state": {
@@ -113,6 +107,12 @@
           "manual": "Manual",
           "off": "[%key:common::state::off%]"
         }
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "thermostat_signal": {
+        "name": "Signal strength"
       }
     }
   }
