@@ -1,5 +1,6 @@
 """Test BM2 sensor conversion, registration and entity properties."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from time import monotonic
@@ -9,6 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bleak.exc import BleakError
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
 from bmx_ble.battery import Battery
+from bmx_ble.protocol import BM2_AES_IV, BM2_AES_KEY
+from Crypto.Cipher import AES
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.components.bluetooth import (
@@ -373,4 +376,64 @@ async def test_legacy_chosen_reads_at_fixed_interval(
         assert not entry.runtime_data.last_poll_successful
         # Neither the advert's own 48 % nor anything cached is published.
         assert _reading_states(hass, entity_registry, entry) == voltage_derived
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")
+async def test_no_second_read_while_connecting(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, clock: Clock
+) -> None:
+    """An advertisement during a real library read doesn't queue another read.
+
+    Only the Bluetooth connection is faked, so bmx-ble's own async_poll runs and
+    marks the read as in progress while it connects.
+    """
+    # 12.5 V; lead-acid derives the published status from voltage.
+    notification = AES.new(BM2_AES_KEY, AES.MODE_CBC, BM2_AES_IV).encrypt(
+        bytes.fromhex("004e2464" + "00" * 12)
+    )
+    client = MagicMock(address=ADDRESS)
+    client.start_notify = AsyncMock(
+        side_effect=lambda _uuid, callback: callback(0, bytearray(notification))
+    )
+    client.stop_notify = AsyncMock()
+    client.disconnect = AsyncMock()
+    connecting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def connect(*_args: Any, **_kwargs: Any) -> MagicMock:
+        connecting.set()
+        await release.wait()
+        return client
+
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS, options=LEADACID_OPTIONS)
+    entry.add_to_hass(hass)
+    with patch(
+        "bmx_ble.protocol.establish_connection", side_effect=connect
+    ) as establish:
+        _inject(hass, clock, LEGACY)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        await asyncio.wait_for(connecting.wait(), 5)
+        device_data = entry.runtime_data._update_method.__self__
+        assert device_data.ignore_advertisement
+
+        # Past the minimum interval, so only the in-progress read stops a poll.
+        clock.advance(hass, MIN_POLL_INTERVAL + 1)
+        _inject(hass, clock, LEGACY)
+        await hass.async_block_till_done()
+
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert not device_data.ignore_advertisement
+        # Let the debounce cooldown expire; a queued duplicate would run now.
+        clock.advance(hass, 11)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert establish.await_count == 1
+        client.disconnect.assert_awaited_once()
+        states = _reading_states(hass, entity_registry, entry)
+        assert states["battery_voltage"] == "12.5"
+        assert states["battery_status"] == "normal"
         assert await hass.config_entries.async_unload(entry.entry_id)
