@@ -161,25 +161,37 @@ def _validates(platform: Platform, knx_config: dict[str, Any]) -> bool:
     return True
 
 
-def _matched_group_addresses(
-    project: KNXProject, knx_config: dict[str, Any]
-) -> list[SuggestedGroupAddress]:
-    """Return the project group addresses a `knx` config uses."""
-    addresses = dict.fromkeys(
-        project_address
-        for _, ga_config in _iter_ga_configs(knx_config)
-        for address in (
-            *(ga_config.get(slot) for slot in _SLOTS),
-            *(ga_config.get(CONF_GA_PASSIVE) or ()),
+def _project_addresses(knx_config: dict[str, Any]) -> list[str]:
+    """Return the group addresses a `knx` config uses, as project data names them."""
+    return list(
+        dict.fromkeys(
+            project_address
+            for _, ga_config in _iter_ga_configs(knx_config)
+            for address in (
+                *(ga_config.get(slot) for slot in _SLOTS),
+                *(ga_config.get(CONF_GA_PASSIVE) or ()),
+            )
+            if (project_address := _project_address(address)) is not None
         )
-        if (project_address := _project_address(address)) is not None
     )
+
+
+def _matched_group_addresses(
+    project: KNXProject, knx_config: dict[str, Any], template: dict[str, Any]
+) -> list[SuggestedGroupAddress]:
+    """Return the group addresses a suggested `knx` config uses on its own.
+
+    Addresses shared with the template - eg. a central switchover - are left
+    out: they are used by the template entity, which doesn't make the suggested
+    channel an already configured one.
+    """
+    shared = set(_project_addresses(template))
     return [
         SuggestedGroupAddress(
             address=address, name=project["group_addresses"][address]["name"]
         )
-        for address in addresses
-        if address in project["group_addresses"]
+        for address in _project_addresses(knx_config)
+        if address not in shared and address in project["group_addresses"]
     ]
 
 
@@ -255,7 +267,7 @@ def _build_suggestions(
                             platform: PlatformSuggestion(
                                 knx=knx_config,
                                 matched_group_addresses=_matched_group_addresses(
-                                    project, knx_config
+                                    project, knx_config, template
                                 ),
                                 unmatched=sorted(mapping.unmatched),
                             )

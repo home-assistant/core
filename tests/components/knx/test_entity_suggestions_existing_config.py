@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.storage.entity_suggestions.existing_config import (
     _apply,
+    _matched_group_addresses,
     _source_addresses,
 )
 from homeassistant.components.knx.storage.entity_suggestions.ga_mapping import (
@@ -504,3 +505,20 @@ def test_apply() -> None:
     }
     # the configuration the mapping is applied to stays as it is
     assert config["ga_switch"]["write"] == "1/2/3"
+
+
+def test_matched_group_addresses() -> None:
+    """Test addresses shared with the template don't count as used by a channel."""
+    template = {
+        "ga_switch": {"write": "3/0/1", "state": "3/0/2", "passive": []},
+        # a central object all channels of the device share
+        "ga_lock": {"write": "3/9/9", "passive": []},
+    }
+    knx_config = {
+        "ga_switch": {"write": "3/1/1", "state": "3/1/2", "passive": ["3/0/1"]},
+        "ga_lock": {"write": "3/9/9", "passive": []},
+    }
+    assert _matched_group_addresses(_project(), knx_config, template) == [
+        {"address": "3/1/1", "name": "GA 3/1/1"},
+        {"address": "3/1/2", "name": "GA 3/1/2"},
+    ]
