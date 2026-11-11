@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import IntEnum
-from typing import cast, override
+from typing import override
 
 from sofar_modbus.model import CorrectedTotal
 from sofar_modbus.modern.battery_pack import BatteryPack
@@ -178,15 +178,20 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         last_data = await self.async_get_last_sensor_data()
         if last_data is not None and isinstance(last_data.native_value, (int, float)):
             self._attr_native_value = last_data.native_value
+        self._take_total()
 
-    @property
+    @callback
     @override
-    def native_value(self) -> int | float | None:
-        value = self.entity_description.total_fn(self.coordinator.device).value
-        # Restore state saves this even while unavailable; keep the last total.
-        if value is not None:
+    def _handle_coordinator_update(self) -> None:
+        self._take_total()
+        super()._handle_coordinator_update()
+
+    def _take_total(self) -> None:
+        """Keep the last total while the inverter reports none."""
+        if (
+            value := self.entity_description.total_fn(self.coordinator.device).value
+        ) is not None:
             self._attr_native_value = value
-        return cast(int | float | None, self._attr_native_value)
 
 
 class SofarPackSensor(SofarEntity, SensorEntity):
