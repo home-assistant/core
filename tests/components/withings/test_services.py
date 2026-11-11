@@ -6,7 +6,7 @@ from functools import partial
 from unittest.mock import AsyncMock
 
 from aiowithings import Measurement, MeasurementAttribution, MeasurementType
-from aiowithings.models import MeasurementGroupCategory
+from aiowithings.models import MeasurementGroup, MeasurementGroupCategory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
@@ -224,6 +224,37 @@ async def test_backfill_api_failure(
     assert (
         await recorder_mock.async_add_executor_job(
             partial(get_metadata, hass, statistic_ids={ENTITY_ID})
+        )
+        == {}
+    )
+
+
+async def test_backfill_sensor_renamed_during_fetch(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Do not import under the old ID when the sensor is renamed during a fetch."""
+    await setup_integration(hass, polling_config_entry, False)
+
+    async def rename_during_fetch(*args: object) -> list[MeasurementGroup]:
+        entity_registry.async_update_entity(ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID)
+        return [replace(load_measurements_fixture()[0], taken_at=START)]
+
+    withings.get_measurement_in_period.side_effect = rename_during_fetch
+    with pytest.raises(ServiceValidationError, match="weight sensor changed"):
+        await hass.services.async_call(
+            DOMAIN,
+            ACTION,
+            {ATTR_CONFIG_ENTRY_ID: polling_config_entry.entry_id},
+            blocking=True,
+        )
+    await async_wait_recording_done(hass)
+    assert (
+        await recorder_mock.async_add_executor_job(
+            partial(get_metadata, hass, statistic_ids={ENTITY_ID, RENAMED_ENTITY_ID})
         )
         == {}
     )

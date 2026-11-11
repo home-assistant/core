@@ -458,6 +458,9 @@
     "weight_history_failed": {
       "message": "Could not retrieve weight history from Withings. No statistics were imported."
     },
+    "weight_sensor_changed": {
+      "message": "The weight sensor changed while importing statistics. Run the action again."
+    },
     "weight_sensor_required": {
       "message": "Enable the existing weight sensor and include it in Recorder before importing weight statistics."
     }

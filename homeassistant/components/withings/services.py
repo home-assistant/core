@@ -163,4 +163,13 @@ async def async_backfill_weight_statistics(call: ServiceCall) -> None:
             )
         )
     if statistics:
+        if (
+            er.async_get(hass).async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_weight_kg"
+            )
+            != entity_id
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="weight_sensor_changed"
+            )
         async_import_statistics(hass, metadata, statistics)
