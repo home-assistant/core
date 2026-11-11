@@ -558,5 +558,7 @@ class EngieBeVehiclesCoordinator(DataUpdateCoordinator[dict[int, EngieBeVehicleD
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
         return data

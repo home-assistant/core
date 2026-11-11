@@ -420,6 +420,9 @@
     },
     "invalid_auth": {
       "message": "Authentication with ENGIE Belgium failed. Please reauthenticate."
+    },
+    "no_active_session": {
+      "message": "The vehicle has no active Smart Charge session."
     }
   },
   "selector": {

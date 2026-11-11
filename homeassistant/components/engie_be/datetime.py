@@ -2,9 +2,14 @@
 
 from dataclasses import replace
 from datetime import datetime
+from http import HTTPStatus
 from typing import TYPE_CHECKING, override
 
-from aioengiebelgium import EngieBeAuthenticationError, EngieBeError
+from aioengiebelgium import (
+    EngieBeAuthenticationError,
+    EngieBeCommunicationError,
+    EngieBeError,
+)
 
 from homeassistant.components.datetime import DateTimeEntity
 from homeassistant.core import HomeAssistant, callback
@@ -95,17 +100,33 @@ class EngieBeDepartureTime(
                 translation_key="departure_too_far",
                 translation_placeholders={"days": str(MAX_DEPARTURE_AHEAD.days)},
             )
-        current = self.coordinator.data[self._vehicle_id]
+        client = self.coordinator.client
         try:
-            updated = await self.coordinator.client.async_update_latest_charging_session_charge_settings(
+            latest = await client.async_get_latest_charging_session_charge_settings(
+                self._vehicle_id
+            )
+            target_battery_level = latest.target_battery_level
+            if target_battery_level is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="no_active_session"
+                )
+            updated = await client.async_update_latest_charging_session_charge_settings(
                 self._vehicle_id,
                 departure_time_override=value,
-                target_battery_level=current.target_battery_level,
-                direct=current.direct,
+                target_battery_level=target_battery_level,
+                direct=bool(latest.direct),
             )
         except EngieBeAuthenticationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
+        except EngieBeCommunicationError as err:
+            if err.status == HTTPStatus.NOT_FOUND:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="no_active_session"
+                ) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         except EngieBeError as err:
             raise HomeAssistantError(
@@ -115,7 +136,10 @@ class EngieBeDepartureTime(
             {
                 **self.coordinator.data,
                 self._vehicle_id: replace(
-                    current, departure=updated.departure_time_override
+                    self.coordinator.data[self._vehicle_id],
+                    departure=updated.departure_time_override,
+                    target_battery_level=target_battery_level,
+                    direct=bool(latest.direct),
                 ),
             }
         )

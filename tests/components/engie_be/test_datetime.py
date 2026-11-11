@@ -4,9 +4,11 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import (
+    ChargingSessionChargeSettings,
     EngieBeAuthenticationError,
     EngieBeCommunicationError,
     EngieBeError,
+    EngieBeInvalidResponseError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -96,6 +98,81 @@ async def test_set_value(
     assert state.state == new_departure.isoformat()
 
 
+async def test_set_value_keeps_settings_changed_since_last_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+) -> None:
+    """Test the write sends the current ENGIE settings, not the polled ones."""
+    client = mock_engie_client.return_value
+    new_departure = NOW + timedelta(days=2)
+    await setup_entry(hass, mock_config_entry)
+    changed = ChargingSessionChargeSettings(
+        target_battery_level=90,
+        departure_time_override=NOW + timedelta(days=1),
+        direct=True,
+    )
+    client.async_get_latest_charging_session_charge_settings.side_effect = [changed]
+    client.async_update_latest_charging_session_charge_settings.return_value = (
+        ChargingSessionChargeSettings(
+            target_battery_level=90,
+            departure_time_override=new_departure,
+            direct=True,
+        )
+    )
+
+    await hass.services.async_call(
+        DATETIME_DOMAIN,
+        "set_value",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_DATETIME: new_departure.isoformat()},
+        blocking=True,
+    )
+
+    client.async_update_latest_charging_session_charge_settings.assert_awaited_once_with(
+        VEHICLE_ID,
+        departure_time_override=new_departure,
+        target_battery_level=90,
+        direct=True,
+    )
+
+
+@pytest.mark.parametrize(
+    "latest",
+    [
+        pytest.param(
+            EngieBeCommunicationError("not found", status=404), id="not-found"
+        ),
+        pytest.param(
+            ChargingSessionChargeSettings(target_battery_level=None),
+            id="no-battery-target",
+        ),
+    ],
+)
+async def test_set_value_without_active_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    latest: EngieBeCommunicationError | ChargingSessionChargeSettings,
+) -> None:
+    """Test a session that ended since the last poll is reported and nothing is sent."""
+    client = mock_engie_client.return_value
+    await setup_entry(hass, mock_config_entry)
+    client.async_get_latest_charging_session_charge_settings.side_effect = [latest]
+
+    with pytest.raises(HomeAssistantError, match="no active Smart Charge session"):
+        await hass.services.async_call(
+            DATETIME_DOMAIN,
+            "set_value",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_DATETIME: (NOW + timedelta(days=1)).isoformat(),
+            },
+            blocking=True,
+        )
+
+    client.async_update_latest_charging_session_charge_settings.assert_not_awaited()
+
+
 async def test_set_value_too_far(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -131,6 +208,11 @@ async def test_set_value_too_far(
             EngieBeCommunicationError("boom"),
             "connection error",
             id="communication",
+        ),
+        pytest.param(
+            EngieBeInvalidResponseError("bad"),
+            "connection error",
+            id="invalid-response",
         ),
     ],
 )
