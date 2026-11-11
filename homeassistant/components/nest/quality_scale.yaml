@@ -35,7 +35,7 @@ rules:
 
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
   entity-unavailable: todo
@@ -49,9 +49,9 @@ rules:
   test-coverage: todo
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
-  discovery: todo
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -73,4 +73,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done

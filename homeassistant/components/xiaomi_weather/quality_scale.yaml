@@ -9,13 +9,13 @@ rules:
     status: done
     comment: Xiaomi assets are reused via the alias proposed in https://github.com/home-assistant/brands/pull/11187 (open, awaiting merge).
   common-modules: done
-  config-entry-unloading: todo
+  config-entry-unloading: done
   config-flow: done
   config-flow-test-coverage:
     status: done
     comment: The coordinate setup flow has full line and branch coverage.
   dependency-transparency: done
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery: todo
   discovery-update-info: todo
@@ -66,7 +66,7 @@ rules:
   repair-issues: todo
   runtime-data: done
   stale-devices: todo
-  strict-typing: todo
+  strict-typing: done
   test-before-configure: done
   test-before-setup: done
   test-coverage: todo

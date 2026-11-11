@@ -84,4 +84,4 @@ rules:
     status: exempt
     comment: |
       The integration does not use HTTP.
-  strict-typing: todo
+  strict-typing: done

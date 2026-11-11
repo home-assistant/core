@@ -52,7 +52,7 @@ rules:
   diagnostics: done
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   dynamic-devices:
     status: exempt
     comment: Each config entry maps to a single device
@@ -69,4 +69,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
