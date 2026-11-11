@@ -1,6 +1,9 @@
 """Axis camera platform tests."""
 
-from unittest.mock import patch
+import asyncio
+from collections.abc import Coroutine
+from typing import Any
+from unittest.mock import Mock, patch
 from urllib.parse import unquote, urlsplit
 
 import pytest
@@ -105,6 +108,50 @@ async def test_camera_uses_vapix_basic_authentication_for_snapshot(
 
     assert image.content == image_bytes
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Basic cm9vdDpwYXNz"
+
+
+@pytest.mark.parametrize("basic_auth_challenge", [pytest.param(True, id="basic")])
+async def test_camera_stream_closed_on_unload(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    basic_auth_challenge: bool,
+) -> None:
+    """Test unloading the entry closes an active MJPEG request."""
+    assert basic_auth_challenge
+    config_entry = await config_entry_factory()
+    camera_entity = camera.helper.get_camera_from_entity_id(
+        hass, f"{CAMERA_DOMAIN}.{NAME}"
+    )
+    stream_started = asyncio.Event()
+    stream_closed = asyncio.Event()
+
+    async def mock_proxy(
+        _hass: HomeAssistant,
+        _request: object,
+        stream_coro: Coroutine[Any, Any, Any],
+    ) -> None:
+        stream_coro.close()
+        stream_started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            stream_closed.set()
+
+    with patch(
+        "homeassistant.components.mjpeg.camera.async_aiohttp_proxy_web", mock_proxy
+    ):
+        stream_task = asyncio.create_task(
+            camera_entity.handle_async_mjpeg_stream(Mock())
+        )
+        try:
+            await stream_started.wait()
+            assert await hass.config_entries.async_unload(config_entry.entry_id)
+            await asyncio.wait_for(stream_closed.wait(), timeout=1)
+            await asyncio.gather(stream_task, return_exceptions=True)
+            assert stream_task.cancelled()
+        finally:
+            stream_task.cancel()
+            await asyncio.gather(stream_task, return_exceptions=True)
 
 
 @pytest.mark.parametrize("param_properties_payload", [PROPERTY_DATA])
