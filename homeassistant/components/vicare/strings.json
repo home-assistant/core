@@ -386,6 +386,12 @@
         "state": {
           "charge": "[%key:common::state::charging%]",
           "discharge": "[%key:common::state::discharging%]",
+          "initialization": "Initializing",
+          "off": "[%key:common::state::off%]",
+          "precharge": "Precharging",
+          "ready": "Ready",
+          "safetycheck": "Safety check",
+          "shutdown": "Shutting down",
           "standby": "[%key:common::state::standby%]"
         }
       },

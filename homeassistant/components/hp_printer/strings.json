@@ -33,45 +33,133 @@
   },
   "entity": {
     "sensor": {
+      "black_counterfeit_refills": {
+        "name": "Black counterfeit refills"
+      },
+      "black_genuine_refills": {
+        "name": "Black genuine refills"
+      },
+      "black_installation_date": {
+        "name": "Black installation date"
+      },
       "black_level": {
         "name": "Black level"
+      },
+      "black_manufacturing_date": {
+        "name": "Black manufacturing date"
+      },
+      "black_pages_printed": {
+        "name": "Black pages printed",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "black_pages_remaining": {
         "name": "Black pages remaining",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
+      "black_warranty_expiration_date": {
+        "name": "Black warranty expiration date"
+      },
       "color_pages": {
         "name": "Printed color pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "copied_adf_pages": {
+        "name": "Copied pages from document feeder",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "copied_color_pages": {
+        "name": "Copied color pages",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "copied_flatbed_pages": {
+        "name": "Copied pages from glass",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "copied_monochrome_pages": {
+        "name": "Copied black and white pages",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "copied_pages": {
         "name": "Copied pages",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
+      "cyan_counterfeit_refills": {
+        "name": "Cyan counterfeit refills"
+      },
+      "cyan_genuine_refills": {
+        "name": "Cyan genuine refills"
+      },
+      "cyan_installation_date": {
+        "name": "Cyan installation date"
+      },
       "cyan_level": {
         "name": "Cyan level"
+      },
+      "cyan_manufacturing_date": {
+        "name": "Cyan manufacturing date"
+      },
+      "cyan_pages_printed": {
+        "name": "Cyan pages printed",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "cyan_pages_remaining": {
         "name": "Cyan pages remaining",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
+      "cyan_warranty_expiration_date": {
+        "name": "Cyan warranty expiration date"
+      },
       "duplex_sheets": {
         "name": "Printed double-sided sheets",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::simplex_sheets::unit_of_measurement%]"
+      },
+      "faxed_adf_pages": {
+        "name": "Faxed pages from document feeder",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "faxed_flatbed_pages": {
+        "name": "Faxed pages from glass",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "faxed_pages": {
         "name": "Faxed pages",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
+      "faxed_pc_pages": {
+        "name": "Faxed pages from computer",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
       "jams": {
         "name": "Paper jams"
+      },
+      "magenta_counterfeit_refills": {
+        "name": "Magenta counterfeit refills"
+      },
+      "magenta_genuine_refills": {
+        "name": "Magenta genuine refills"
+      },
+      "magenta_installation_date": {
+        "name": "Magenta installation date"
       },
       "magenta_level": {
         "name": "Magenta level"
       },
+      "magenta_manufacturing_date": {
+        "name": "Magenta manufacturing date"
+      },
+      "magenta_pages_printed": {
+        "name": "Magenta pages printed",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
       "magenta_pages_remaining": {
         "name": "Magenta pages remaining",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "magenta_warranty_expiration_date": {
+        "name": "Magenta warranty expiration date"
+      },
+      "manufacturing_date": {
+        "name": "Manufacturing date"
       },
       "mispicks": {
         "name": "Paper mispicks"
@@ -126,19 +214,57 @@
         "name": "Printed pages",
         "unit_of_measurement": "pages"
       },
+      "tri_color_counterfeit_refills": {
+        "name": "Tri-color counterfeit refills"
+      },
+      "tri_color_genuine_refills": {
+        "name": "Tri-color genuine refills"
+      },
+      "tri_color_installation_date": {
+        "name": "Tri-color installation date"
+      },
       "tri_color_level": {
         "name": "Tri-color level"
+      },
+      "tri_color_manufacturing_date": {
+        "name": "Tri-color manufacturing date"
+      },
+      "tri_color_pages_printed": {
+        "name": "Tri-color pages printed",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "tri_color_pages_remaining": {
         "name": "Tri-color pages remaining",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
+      "tri_color_warranty_expiration_date": {
+        "name": "Tri-color warranty expiration date"
+      },
+      "yellow_counterfeit_refills": {
+        "name": "Yellow counterfeit refills"
+      },
+      "yellow_genuine_refills": {
+        "name": "Yellow genuine refills"
+      },
+      "yellow_installation_date": {
+        "name": "Yellow installation date"
+      },
       "yellow_level": {
         "name": "Yellow level"
+      },
+      "yellow_manufacturing_date": {
+        "name": "Yellow manufacturing date"
+      },
+      "yellow_pages_printed": {
+        "name": "Yellow pages printed",
+        "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
       },
       "yellow_pages_remaining": {
         "name": "Yellow pages remaining",
         "unit_of_measurement": "[%key:component::hp_printer::entity::sensor::total_pages::unit_of_measurement%]"
+      },
+      "yellow_warranty_expiration_date": {
+        "name": "Yellow warranty expiration date"
       }
     }
   },

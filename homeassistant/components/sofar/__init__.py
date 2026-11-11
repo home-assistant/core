@@ -108,10 +108,10 @@ def _async_store_served(
 
 async def _async_refresh_versions(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Read the firmware versions a setup without the inverter missed."""
-    readings = entry.runtime_data.readings
-    await readings.device.async_read_identity()
+    await entry.runtime_data.readings.device.async_read_identity()
     dr.async_get(hass).async_get_or_create_from_info(
-        config_entry_id=entry.entry_id, device_info=readings.device_info
+        config_entry_id=entry.entry_id,
+        device_info=entry.runtime_data.readings.device_info,
     )
 
 
@@ -170,11 +170,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
-        failure = readings.last_exception
         if not (
             device.connected
-            and isinstance(failure, UpdateFailed)
-            and isinstance(failure.__cause__, ModbusTimeoutError)
+            and isinstance(readings.last_exception, UpdateFailed)
+            and isinstance(readings.last_exception.__cause__, ModbusTimeoutError)
         ):
             raise
         _LOGGER.info(

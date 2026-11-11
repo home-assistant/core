@@ -109,7 +109,23 @@ class BinarySensorKnxConfig:
     """UI configuration of a KNX binary sensor."""
 
     ga_sensor: Annotated[
-        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="1")
+        GroupAddressConfig,
+        ga(
+            write=False,
+            state_required=True,
+            valid_dpt="1",
+            dpa_state=[
+                dpa.FB343.WINDOW_STATUS,
+                dpa.FB344.DEW_POINT_STATUS,
+                dpa.FB345.PRESENCE_STATUS,
+                dpa.FB802.WIND_ALARM,
+                dpa.FB803.RAIN_ALARM,
+                dpa.FB804.FROST_ALARM,
+                dpa.FB1002.IN_ALARM,
+                dpa.FB1014.DIGITAL_INPUT_VALUE,
+                dpa.FB1021.LOCK,
+            ],
+        ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
     section_advanced_options: Annotated[
@@ -632,7 +648,15 @@ NOTIFY_KNX_SCHEMA = probatio.DataclassSchema(NotifyKnxConfig)
 class NumberKnxConfig:
     """UI configuration of a KNX number entity."""
 
-    ga_sensor: Annotated[GroupAddressConfig, ga(write_required=True, dpt=["numeric"])]
+    ga_sensor: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            dpt=["numeric"],
+            dpa_write=[dpa.FB1019.ANALOG_OUT_SETP],
+            dpa_state=[dpa.FB1019.STATUS_ANALOG_OUTPUT],
+        ),
+    ]
     respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
     section_advanced_options: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
@@ -899,8 +923,8 @@ class SwitchKnxConfig:
         ga(
             write_required=True,
             valid_dpt="1",
-            dpa_write=[dpa.FB417.SWITCH_ON_OFF],
-            dpa_state=[dpa.FB417.INFO_ON_OFF],
+            dpa_write=[dpa.FB417.SWITCH_ON_OFF, dpa.FB1018.DIGITAL_OUT_SETP],
+            dpa_state=[dpa.FB417.INFO_ON_OFF, dpa.FB1018.STATUS_DIGITAL_OUTPUT],
         ),
     ]
     invert: Annotated[bool, selector.BooleanSelector()] = False
@@ -1143,7 +1167,46 @@ class SensorKnxConfig:
 
     ga_sensor: Annotated[
         GroupAddressConfig,
-        ga(write=False, state_required=True, dpt=["numeric", "string"]),
+        ga(
+            write=False,
+            state_required=True,
+            dpt=["numeric", "string"],
+            dpa_state=[
+                dpa.FB180.TEMP_DHW,
+                dpa.FB187.TEMP_COLLECTOR,
+                dpa.FB320.TEMP_OUTSIDE,
+                dpa.FB321.TEMP_ROOM,
+                dpa.FB322.TEMP_SUPPLY_AIR,
+                dpa.FB323.TEMP_RETURN_AIR,
+                dpa.FB324.TEMP_FLOW_WATER,
+                dpa.FB325.TEMP_RETURN_WATER,
+                dpa.FB326.TEMP_FLOW_WATER_COND,
+                dpa.FB327.TEMP_RETURN_WATER_COND,
+                dpa.FB328.TEMP_DISCHARGE_AIR,
+                dpa.FB329.TEMP_FLOOR,
+                dpa.FB330.AQ_OUTSIDE,
+                dpa.FB331.AQ_ROOM,
+                dpa.FB332.AQ_SUPPLY_AIR,
+                dpa.FB333.AQ_RETURN_AIR,
+                dpa.FB336.HUM_REL_OUTSIDE,
+                dpa.FB337.HUM_REL_ROOM,
+                dpa.FB338.HUM_REL_SUPPLY_AIR,
+                dpa.FB339.HUM_REL_RETURN_AIR,
+                dpa.FB348.SUN_INTENSITY,
+                dpa.FB409.ROOM_ILLUMINATION,
+                dpa.FB410.INDOOR_LUMINANCE,
+                dpa.FB1013.ATMOSPHERIC_PRESSURE_ABS,
+                dpa.FB1015.ANALOG_INPUT_VALUE,
+                dpa.FB1016.TEMP_VALUE,
+                # meters: the consumption is the main value of the channel
+                dpa.FB1101.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1102.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1103.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1104.CURRENT_ENERGY_CONSUMPTION,
+                dpa.FB1105.CURRENT_VOLUME_CONSUMPTION,
+                dpa.FB1110.CURRENT_ENERGY_CONSUMPTION,
+            ],
+        ),
     ]
     section_advanced_options: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
