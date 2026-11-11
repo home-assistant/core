@@ -26,6 +26,7 @@ from . import (
     AIR_PURIFIER_US_SERVICE_INFO,
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
+    PLUG_MINI_IT_SERVICE_INFO,
     RELAY_SWITCH_1_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
     STANDING_FAN_SERVICE_INFO,
@@ -121,6 +122,7 @@ async def test_exception_handling_switch(
     ("sensor_type", "service_info"),
     [
         ("plug_mini_eu", PLUG_MINI_EU_SERVICE_INFO),
+        ("plug_mini_it", PLUG_MINI_IT_SERVICE_INFO),
         ("relay_switch_1", RELAY_SWITCH_1_SERVICE_INFO),
         ("relay_switch_1pm", WORELAY_SWITCH_1PM_SERVICE_INFO),
     ],
@@ -233,6 +235,12 @@ async def test_relay_switch_2pm_control(
         (
             "plug_mini_eu",
             PLUG_MINI_EU_SERVICE_INFO,
+            "switch.test_name",
+            "SwitchbotRelaySwitch",
+        ),
+        (
+            "plug_mini_it",
+            PLUG_MINI_IT_SERVICE_INFO,
             "switch.test_name",
             "SwitchbotRelaySwitch",
         ),

@@ -49,6 +49,7 @@ from . import (
     KEYPAD_VISION_PRO_INFO,
     LEAK_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
+    PLUG_MINI_IT_SERVICE_INFO,
     PRESENCE_SENSOR_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
     REMOTE_SERVICE_INFO,
@@ -611,11 +612,20 @@ async def test_evaporative_humidifier_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("sensor_type", "service_info"),
+    [
+        pytest.param("plug_mini_eu", PLUG_MINI_EU_SERVICE_INFO, id="eu"),
+        pytest.param("plug_mini_it", PLUG_MINI_IT_SERVICE_INFO, id="it"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_plug_mini_eu_sensor(hass: HomeAssistant) -> None:
-    """Test setting up creates the plug mini eu sensor."""
+async def test_plug_mini_eu_sensor(
+    hass: HomeAssistant, sensor_type: str, service_info: BluetoothServiceInfoBleak
+) -> None:
+    """Test setting up creates the plug mini sensor."""
     await async_setup_component(hass, DOMAIN, {})
-    inject_bluetooth_service_info(hass, PLUG_MINI_EU_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, service_info)
 
     with patch(
         "homeassistant.components.switchbot.switch.switchbot.SwitchbotRelaySwitch.get_basic_info",
@@ -633,7 +643,7 @@ async def test_plug_mini_eu_sensor(hass: HomeAssistant) -> None:
             data={
                 CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
                 CONF_NAME: "test-name",
-                CONF_SENSOR_TYPE: "plug_mini_eu",
+                CONF_SENSOR_TYPE: sensor_type,
                 CONF_KEY_ID: "ff",
                 CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
             },

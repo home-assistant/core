@@ -67,6 +67,7 @@ class SupportedModels(StrEnum):
     RGBICWW_LIGHT_BARS = "rgbicww_light_bars"
     PERMANENT_OUTDOOR_LIGHT = "permanent_outdoor_light"
     PLUG_MINI_EU = "plug_mini_eu"
+    PLUG_MINI_IT = "plug_mini_it"
     RELAY_SWITCH_2PM = "relay_switch_2pm"
     K11_PLUS_VACUUM = "k11+_vacuum"
     GARAGE_DOOR_OPENER = "garage_door_opener"
@@ -128,6 +129,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RGBICWW_LIGHT_BARS: SupportedModels.RGBICWW_LIGHT_BARS,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: SupportedModels.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU: SupportedModels.PLUG_MINI_EU,
+    SwitchbotModel.PLUG_MINI_IT: SupportedModels.PLUG_MINI_IT,
     SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
     SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
     SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
@@ -192,6 +194,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.RGBICWW_LIGHT_BARS,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT,
     SwitchbotModel.PLUG_MINI_EU,
+    SwitchbotModel.PLUG_MINI_IT,
     SwitchbotModel.RELAY_SWITCH_2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR,
@@ -229,6 +232,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.RGBICWW_LIGHT_BARS: switchbot.SwitchbotRgbicLight,
     SwitchbotModel.PERMANENT_OUTDOOR_LIGHT: switchbot.SwitchbotPermanentOutdoorLight,
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.PLUG_MINI_IT: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR: (
