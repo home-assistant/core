@@ -1,5 +1,8 @@
 """Tests for the Reolink views platform."""
 
+import asyncio
+from collections.abc import AsyncGenerator
+from datetime import datetime
 from http import HTTPStatus
 import logging
 from typing import Any, cast
@@ -10,7 +13,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.enums import VodRequestType
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import ReolinkError, UnexpectedDataError
 
 from homeassistant.components.reolink.views import async_generate_playback_proxy_url
 from homeassistant.core import HomeAssistant
@@ -32,6 +35,10 @@ TEST_VOD_TYPE = VodRequestType.PLAYBACK.value
 TEST_MIME_TYPE_MP4 = "video/mp4"
 TEST_URL = "http://test_url&token=test"
 TEST_ERROR = "TestError"
+TEST_NVR_START = "20231114131200"
+TEST_NVR_END = "20231114131700"
+TEST_NVR_FILE_NAME = f"{TEST_NVR_START}_{TEST_NVR_END}"
+TEST_NVR_VOD_TYPE = VodRequestType.NVR_DOWNLOAD.value
 
 
 def get_mock_session(
@@ -263,3 +270,167 @@ async def test_playback_connect_error(
     response = cast(ClientResponse, await http_client.get(proxy_url))
 
     assert response.status == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    "stream_res",
+    [
+        pytest.param("sub", id="sub"),
+        pytest.param("main", id="main"),
+        pytest.param("autotrack_sub", id="autotrack_sub"),
+        pytest.param("telephoto_main", id="telephoto_main"),
+    ],
+)
+async def test_playback_baichuan(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    stream_res: str,
+) -> None:
+    """Test NVR playback proxy URL using the Baichuan mp4 stream."""
+
+    async def stream_mp4(*args: Any) -> AsyncGenerator[bytes]:
+        yield b"test"
+        yield b"test"
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(side_effect=stream_mp4)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        stream_res,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await response.content.read() == b"testtest"
+    assert response.status == 200
+    assert response.content_type == TEST_MIME_TYPE_MP4
+    reolink_host.baichuan.stream_mp4.assert_called_once_with(
+        int(TEST_CHANNEL),
+        datetime(2023, 11, 14, 13, 12, 0),
+        datetime(2023, 11, 14, 13, 17, 0),
+        stream_res,
+        "ffmpeg",
+    )
+    reolink_host.get_vod_source.assert_not_called()
+
+
+async def test_playback_baichuan_start_error(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test NVR playback proxy URL with an error before the first mp4 data."""
+
+    async def stream_mp4(*args: Any) -> AsyncGenerator[bytes]:
+        raise UnexpectedDataError(TEST_ERROR)
+        yield b""  # pylint: disable=unreachable
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(side_effect=stream_mp4)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        TEST_STREAM,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await response.content.read() == bytes(TEST_ERROR, "utf-8")
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_playback_baichuan_stream_error(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test NVR playback proxy URL with an error while streaming the mp4."""
+
+    async def stream_mp4(*args: Any) -> AsyncGenerator[bytes]:
+        yield b"test"
+        raise UnexpectedDataError(TEST_ERROR)
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(side_effect=stream_mp4)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        TEST_STREAM,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await response.content.read() == b"test"
+    assert response.status == 200
+    assert "Reolink playback error while streaming mp4" in caplog.text
+
+
+async def test_playback_baichuan_stop_previous(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a new NVR playback stops the previous one, the NVR allows only one download."""
+    first_closed = asyncio.Event()
+
+    async def first_stream(*args: Any) -> AsyncGenerator[bytes]:
+        try:
+            yield b"first"
+            await asyncio.Event().wait()
+        finally:
+            first_closed.set()
+
+    async def second_stream(*args: Any) -> AsyncGenerator[bytes]:
+        yield b"second"
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(
+        side_effect=[first_stream(), second_stream()]
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        TEST_STREAM,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    first_response = cast(ClientResponse, await http_client.get(proxy_url))
+    assert first_response.status == 200
+    assert not first_closed.is_set()
+
+    second_response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await second_response.content.read() == b"second"
+    assert second_response.status == 200
+    assert first_closed.is_set()
+    first_response.close()

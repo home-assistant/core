@@ -372,6 +372,15 @@
     "authentication_failed": {
       "message": "Authentication failed for {title} ({host})"
     },
+    "command_exit_code": {
+      "message": "{name} exited with code {exit_code}"
+    },
+    "command_failed": {
+      "message": "Failed to run {name}: {error}"
+    },
+    "command_timeout": {
+      "message": "{name} didn't finish in time"
+    },
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
     },
