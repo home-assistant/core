@@ -34,7 +34,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
@@ -888,10 +892,15 @@ async def _async_multicast_set_value(call: ServiceCall) -> None:
 
 async def _async_ping(call: ServiceCall) -> None:
     """Ping node(s)."""
-    _LOGGER.warning(
-        "This service is deprecated in favor of the ping button entity. Service "
-        "calls will still work for now but the service will be removed in a "
-        "future release"
+    ir.async_create_issue(
+        call.hass,
+        const.DOMAIN,
+        "deprecated_ping_action",
+        breaks_in_ha_version="2027.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_ping_action",
+        translation_placeholders={"action": f"{const.DOMAIN}.{const.SERVICE_PING}"},
     )
     nodes = list(_async_get_nodes(call))
     results = await asyncio.gather(

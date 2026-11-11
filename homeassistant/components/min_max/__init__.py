@@ -17,6 +17,7 @@ __all__ = [
     "DOMAIN",
 ]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Min/Max from a config entry."""
     async_create_issue(

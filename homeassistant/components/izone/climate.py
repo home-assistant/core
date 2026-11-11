@@ -366,9 +366,6 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if not self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
-            self.async_schedule_update_ha_state(True)
-            return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             temp = _normalize_setpoint(temp)
             await self._async_run_and_update(self.controller.set_temp_setpoint(temp))
@@ -527,8 +524,6 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self._zone.mode is not Zone.Mode.AUTO:
-            return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             temp = _normalize_setpoint(temp)
             await self._async_run_and_update(self._zone.set_temp_setpoint(temp))

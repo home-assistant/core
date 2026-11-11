@@ -65,11 +65,13 @@ class TimeDateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
 
+    @callback
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return f"Time & Date {options[CONF_DISPLAY_OPTIONS]}"
 
+    @callback
     @override
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Abort if instance already exist."""
