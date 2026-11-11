@@ -34,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_COMMAND_SET: EdifierCommandSet.R1700BTS.value,
         },
         unique_id=f"r1700bts_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
-        version=3,
+        version=4,
     )
 
 
@@ -79,6 +79,16 @@ def mock_edifier_code_to_command() -> Generator[None]:
         ),
         patch(
             "infrared_protocols.codes.edifier.rc20g.EdifierRC20GCode.to_command",
+            autospec=True,
+            side_effect=lambda self: self,
+        ),
+        patch(
+            "infrared_protocols.codes.edifier.rc80b.EdifierRC80BCode.to_command",
+            autospec=True,
+            side_effect=lambda self: self,
+        ),
+        patch(
+            "infrared_protocols.codes.edifier.r2600.EdifierR2600Code.to_command",
             autospec=True,
             side_effect=lambda self: self,
         ),
