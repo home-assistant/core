@@ -302,6 +302,18 @@
         }
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "Infrared emitter"

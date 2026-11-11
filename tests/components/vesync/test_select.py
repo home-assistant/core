@@ -287,17 +287,33 @@ async def test_nightlight_select_option_unsupported(
 @pytest.mark.parametrize(
     "install_humidifier_device", ["humidifier_300s"], indirect=True
 )
+@pytest.mark.parametrize(
+    ("last_response", "message"),
+    [
+        pytest.param(
+            ResponseInfo(name="error", error_type="error", message="Device error"),
+            "Device error",
+            id="last_response",
+        ),
+        pytest.param(
+            None,
+            "Unknown error selecting option, no response.",
+            id="no_last_response",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("install_humidifier_device")
 async def test_select_option_device_failure(
-    hass: HomeAssistant, humidifier_300s: Mock
+    hass: HomeAssistant,
+    humidifier_300s: Mock,
+    last_response: ResponseInfo | None,
+    message: str,
 ) -> None:
     """Test an error is raised when the device rejects the option."""
     humidifier_300s.set_nightlight_brightness.return_value = False
-    humidifier_300s.last_response = ResponseInfo(
-        name="error", error_type="error", message="Device error"
-    )
+    humidifier_300s.last_response = last_response
 
-    with pytest.raises(HomeAssistantError, match="Device error"):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
