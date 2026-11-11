@@ -1,6 +1,6 @@
 """Tests for OAuth2 setup error handling (HA 2026.3+)."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import RequestInfo
 from daikin_onecta import OnectaAuthenticationError
@@ -65,14 +65,24 @@ async def test_poll_rejected_cloud_token_stops_polling_without_reauth(
     coordinator = config_entry.runtime_data
     with patch(
         "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
-        side_effect=OnectaAuthenticationError(
-            status=status, method="GET", path="/v1/gateway-devices"
+        new=AsyncMock(
+            side_effect=OnectaAuthenticationError(
+                status=status, method="GET", path="/v1/gateway-devices"
+            )
         ),
-    ):
+    ) as get_cloud_devices:
         assert coordinator.update_interval is not None
         freezer.tick(coordinator.update_interval)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        get_cloud_devices.assert_awaited_once()
+
+        # An auth failure stops scheduled polling when no reauth flow is supported.
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        get_cloud_devices.assert_awaited_once()
 
     assert not coordinator.last_update_success
     assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)

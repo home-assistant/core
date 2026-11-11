@@ -1429,6 +1429,7 @@ async def test_climate_service_updates_entity_state(
             await service_call
         assert err.value.translation_domain == DOMAIN
         assert err.value.translation_key == "set_temperature_failed"
+        assert str(err.value) == "Failed to set the temperature for Daikin"
         expected_temperature = 20
 
     state = hass.states.get(entity_id)
