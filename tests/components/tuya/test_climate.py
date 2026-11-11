@@ -17,7 +17,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.exceptions import TuyaSDKException
+from tuya_sharing.exceptions import ApiRequestException
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -497,13 +497,20 @@ def _ir_restore(
     ]
 
 
+def _no_ir_code_error() -> ApiRequestException:
+    """Return the error of the cloud when the IR library has no code."""
+    return ApiRequestException(
+        error_code="2050", error_message="no infrared code for this command"
+    )
+
+
 def _reject_commands(*rejected: tuple[str, Any]) -> Callable[[str, list], None]:
     """Return a send_commands side effect rejecting some commands."""
 
     def _send_commands(device_id: str, commands: list[dict[str, Any]]) -> None:
         for command in commands:
             if (command["code"], command["value"]) in rejected:
-                raise TuyaSDKException("2050")
+                raise _no_ir_code_error()
 
     return _send_commands
 
@@ -1373,7 +1380,7 @@ async def test_infrared_ac_unknown_remote_state_rejected(
         """Reject fan only unless the fan was set to auto (hub left in dry)."""
         command = (commands[0]["code"], commands[0]["value"])
         if command == ("M", 3) and ("F", 0) not in sent:
-            raise TuyaSDKException("2050")
+            raise _no_ir_code_error()
         sent.append(command)
 
     mock_manager.send_commands.side_effect = _send_commands
@@ -1561,6 +1568,112 @@ async def test_infrared_ac_rejected_temperature_shown(
 
 
 @pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_other_errors_not_bridged(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test only a missing IR code is retried through cool."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    mock_manager.send_commands.side_effect = ApiRequestException(
+        error_code="1109", error_message="param is wrong"
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: IR_AC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
+            blocking=True,
+        )
+    # No retry through cool, and no misleading "not supported" error.
+    assert exc_info.value.translation_key == "command_rejected"
+    assert mock_manager.send_commands.call_count == 1
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.OFF
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_turn_on_uses_mode_set_meanwhile(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test a turn on queued behind a mode change turns on in the new mode."""
+    mock_restore_cache_with_extra_data(
+        hass, _ir_restore(HVACMode.COOL, {"M": 0, "T": 24, "F": 2})
+    )
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    queued = False
+
+    def _turn_on_while_sending(device_id: str, commands: list[dict[str, Any]]) -> None:
+        """Turn on while the first command of the mode change is sent."""
+        nonlocal queued
+        if not queued:
+            queued = True
+            hass.async_create_task(
+                hass.services.async_call(
+                    CLIMATE_DOMAIN,
+                    SERVICE_TURN_ON,
+                    {ATTR_ENTITY_ID: IR_AC_ENTITY_ID},
+                    blocking=True,
+                ),
+                eager_start=True,
+            )
+
+    mock_manager.send_commands.side_effect = _turn_on_while_sending
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: IR_AC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    # The queued turn on did not switch back to the mode used before.
+    assert ("M", 0) not in [
+        (command["code"], command["value"])
+        for call in mock_manager.send_commands.call_args_list
+        for command in call.args[1]
+    ]
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.HEAT
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_only_fresh_status_fields_applied(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a report of one field does not bring back the old other fields."""
+    mock_device.status.update({"power": False, "mode": "0", "temp": 24, "wind": "2"})
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: IR_AC_ENTITY_ID,
+            ATTR_TEMPERATURE: 19,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+    # Only the temperature is reported: power and mode are still the old ones.
+    mock_device.status.update({"temp": 19})
+    await notification_helper.async_send_device_update(mock_device, {"temp": 19})
+
+    freezer.tick(11)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(IR_AC_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 19
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
 async def test_infrared_ac_command_rejected(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -1570,7 +1683,7 @@ async def test_infrared_ac_command_rejected(
     """Test other rejected commands are only reported."""
     mock_device.status.update(IR_AC_REPORTED_STATUS)
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    mock_manager.send_commands.side_effect = TuyaSDKException("2050")
+    mock_manager.send_commands.side_effect = _no_ir_code_error()
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
