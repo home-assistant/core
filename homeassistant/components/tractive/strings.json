@@ -63,9 +63,7 @@
         "name": "Bark status",
         "state": {
           "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
-          "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
-          "infrequent": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::infrequent%]",
-          "normal": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::normal%]",
+          "normal": "[%key:common::state::normal%]",
           "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]",
           "not_synced_yet": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_synced_yet%]"
         }
@@ -87,8 +85,7 @@
         "state": {
           "calculating_baseline": "Calculating baseline",
           "elevated": "Elevated",
-          "infrequent": "Infrequent",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "not_enough_data_today": "Not enough data today",
           "not_synced_yet": "Not synced yet"
         }
@@ -98,8 +95,7 @@
         "state": {
           "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
           "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
-          "infrequent": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::infrequent%]",
-          "normal": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::normal%]",
+          "normal": "[%key:common::state::normal%]",
           "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]",
           "not_synced_yet": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_synced_yet%]"
         }
@@ -107,10 +103,8 @@
       "scratch_status": {
         "name": "Scratch status",
         "state": {
-          "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
-          "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
-          "infrequent": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::infrequent%]",
-          "normal": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::normal%]",
+          "infrequent": "Infrequent",
+          "normal": "[%key:common::state::normal%]",
           "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]",
           "not_synced_yet": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_synced_yet%]"
         }

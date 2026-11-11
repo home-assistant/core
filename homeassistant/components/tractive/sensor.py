@@ -71,20 +71,8 @@ class TractiveSensor(TractiveEntity, SensorEntity):
             else self._pet_status
         )
         value: StateType = getattr(status, self.entity_description.key)
-        # Tractive does not document its states, so report a new one as unknown
-        if (options := self.entity_description.options) and value not in options:
-            return None
         return value
 
-
-HEALTH_STATUS_OPTIONS = [
-    "calculating_baseline",
-    "elevated",
-    "infrequent",
-    "normal",
-    "not_enough_data_today",
-    "not_synced_yet",
-]
 
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
@@ -160,28 +148,50 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         translation_key="resting_heart_rate_status",
         health_sensor=True,
         device_class=SensorDeviceClass.ENUM,
-        options=HEALTH_STATUS_OPTIONS,
+        options=[
+            "calculating_baseline",
+            "elevated",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
     ),
     TractiveSensorEntityDescription(
         key="resting_respiratory_rate_status",
         translation_key="resting_respiratory_rate_status",
         health_sensor=True,
         device_class=SensorDeviceClass.ENUM,
-        options=HEALTH_STATUS_OPTIONS,
+        options=[
+            "calculating_baseline",
+            "elevated",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
     ),
     TractiveSensorEntityDescription(
         key="bark_status",
         translation_key="bark_status",
         health_sensor=True,
         device_class=SensorDeviceClass.ENUM,
-        options=HEALTH_STATUS_OPTIONS,
+        options=[
+            "calculating_baseline",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
     ),
     TractiveSensorEntityDescription(
         key="scratch_status",
         translation_key="scratch_status",
         health_sensor=True,
         device_class=SensorDeviceClass.ENUM,
-        options=HEALTH_STATUS_OPTIONS,
+        options=[
+            "infrequent",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
     ),
 )
 

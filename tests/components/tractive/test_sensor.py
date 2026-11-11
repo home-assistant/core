@@ -151,24 +151,3 @@ async def test_sensor_without_health_data(
         "sensor.tracker_device_id_123_status",
     ):
         assert hass.states.get(entity_id) is not None
-
-
-async def test_sensor_unknown_health_status(
-    hass: HomeAssistant,
-    mock_tractive_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a health status that is not in the options is reported as unknown."""
-    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
-        await init_integration(hass, mock_config_entry)
-
-    state = hass.states.get("sensor.test_pet_resting_heart_rate_status")
-    assert state is not None
-    assert state.state == "elevated"
-
-    mock_tractive_client.set_pet_status(resting_heart_rate_status="new_status")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test_pet_resting_heart_rate_status")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
