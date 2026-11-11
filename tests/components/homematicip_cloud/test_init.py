@@ -569,6 +569,7 @@ async def test_migrate_unique_id_three_way_collision(
     assert entity_registry.async_get(multi_channel.entity_id) is None
 
 
+@pytest.mark.usefixtures("simple_mock_home")
 async def test_import_finishes_before_setup_returns(hass: HomeAssistant) -> None:
     """Test all YAML access points are imported before the integration setup returns."""
     await translation.async_load_integrations(hass, {DOMAIN})
