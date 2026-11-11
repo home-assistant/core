@@ -4,6 +4,11 @@
       "favorite_now_playing": {
         "default": "mdi:heart-plus"
       }
+    },
+    "select": {
+      "dsp_preset": {
+        "default": "mdi:tune-vertical"
+      }
     }
   },
   "services": {

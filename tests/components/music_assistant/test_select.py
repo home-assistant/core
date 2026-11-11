@@ -1,8 +1,13 @@
 """Test Music Assistant select entities."""
 
-from unittest.mock import MagicMock, call
+from collections.abc import Callable
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call
 
+from music_assistant_models.dsp import DSPConfig, DSPConfigPreset
 from music_assistant_models.enums import EventType
+from music_assistant_models.errors import MusicAssistantError
+from music_assistant_models.event import MassEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +18,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -151,3 +161,138 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform select"
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dsp_preset_select(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the DSP preset select shows and applies the preset of a player."""
+    music_assistant_client.server_info.schema_version = 101
+    config = music_assistant_client.config
+    config.get_dsp_preset = AsyncMock(
+        return_value=[
+            DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night"),
+            DSPConfigPreset(name="Party", config=DSPConfig(), preset_id="party"),
+        ]
+    )
+    config.get_player_dsp_config = AsyncMock(
+        return_value=DSPConfig(enabled=True, preset_id="night")
+    )
+    config.apply_dsp_preset = AsyncMock()
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "select.test_player_1_dsp_preset"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Night"
+    assert state.attributes["options"] == ["Night", "Party"]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Party"},
+        blocking=True,
+    )
+    assert config.apply_dsp_preset.call_args == call("00:00:00:00:00:01", "party")
+
+    # the select follows the config the server reports, also while DSP is off
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.PLAYER_DSP_CONFIG_UPDATED,
+        "00:00:00:00:00:01",
+        DSPConfig(enabled=False, preset_id="party").to_dict(),
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Party"
+
+    # the presets follow the server, without any the select is unavailable
+    party = DSPConfigPreset(name="Party", config=DSPConfig(), preset_id="party")
+    for presets, expected_state in (([party], "Party"), ([], STATE_UNAVAILABLE)):
+        await trigger_subscription_callback(
+            hass,
+            music_assistant_client,
+            EventType.DSP_PRESETS_UPDATED,
+            data=[preset.to_dict() for preset in presets],
+        )
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+
+    # a group applies the DSP of each member
+    assert hass.states.get("select.test_group_player_1_dsp_preset") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dsp_preset_select_update_while_loading(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test an update that arrives while loading wins over the older response."""
+    music_assistant_client.server_info.schema_version = 101
+    night = DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night")
+    old = DSPConfigPreset(name="Old", config=DSPConfig(), preset_id="old")
+
+    def subscription(*filters: Any) -> Callable[[MassEvent], None]:
+        # the latest subscription is the one of the select that is loading
+        return next(
+            sub.args[0]
+            for sub in reversed(music_assistant_client.subscribe.call_args_list)
+            if sub.args[1:] == filters
+        )
+
+    async def presets_while_loading() -> list[DSPConfigPreset]:
+        subscription(EventType.DSP_PRESETS_UPDATED)(
+            MassEvent(EventType.DSP_PRESETS_UPDATED, data=[night.to_dict()])
+        )
+        return [old]
+
+    async def config_while_loading(player_id: str) -> DSPConfig:
+        subscription(EventType.PLAYER_DSP_CONFIG_UPDATED, player_id)(
+            MassEvent(
+                EventType.PLAYER_DSP_CONFIG_UPDATED,
+                object_id=player_id,
+                data=DSPConfig(enabled=True, preset_id="night").to_dict(),
+            )
+        )
+        return DSPConfig(enabled=True, preset_id="old")
+
+    config = music_assistant_client.config
+    config.get_dsp_preset = AsyncMock(side_effect=presets_while_loading)
+    config.get_player_dsp_config = AsyncMock(side_effect=config_while_loading)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    state = hass.states.get("select.test_player_1_dsp_preset")
+    assert state
+    assert state.state == "Night"
+    assert state.attributes["options"] == ["Night"]
+
+
+async def test_dsp_preset_select_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the DSP preset select is a disabled config entity."""
+    music_assistant_client.server_info.schema_version = 101
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entry = entity_registry.async_get("select.test_player_1_dsp_preset")
+    assert entry
+    assert entry.unique_id == "00:00:00:00:00:01_dsp_preset"
+    assert entry.entity_category is EntityCategory.CONFIG
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dsp_preset_select_presets_request_fails(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test a failing preset request keeps the other selects of the player."""
+    music_assistant_client.server_info.schema_version = 101
+    music_assistant_client.config.get_dsp_preset = AsyncMock(
+        side_effect=MusicAssistantError("Connection lost")
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    assert hass.states.get("select.test_player_1_link_audio_delay")

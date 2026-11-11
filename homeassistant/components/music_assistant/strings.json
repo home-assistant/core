@@ -191,6 +191,9 @@
           "auto": "[%key:common::state::auto%]"
         }
       },
+      "dsp_preset": {
+        "name": "DSP preset"
+      },
       "equalizer_mode": {
         "name": "Equalizer mode",
         "state": {
