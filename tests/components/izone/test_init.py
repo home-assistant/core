@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .conftest import async_load_yaml_exclude, create_mock_controller
+from .conftest import async_load_yaml_exclude, create_mock_controller, create_mock_zone
 
 
 async def test_setup_and_unload(
@@ -55,27 +55,32 @@ async def test_reconfigured_system_reloads_entry(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
+    mock_discovery_service: Mock,
     mock_controller: Mock,
+    mock_zones: list[Mock],
 ) -> None:
-    """A poll that finds the system reprogrammed reloads the entry."""
+    """A poll that finds the system reprogrammed reloads with the new zones."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert hass.states.get("climate.bedroom") is None
 
     mock_controller.refresh_all.side_effect = DeviceReconfigurationError(
         {"NoOfZones": (1, 2)}
     )
-    with patch.object(
-        hass.config_entries, "async_schedule_reload"
-    ) as mock_schedule_reload:
-        freezer.tick(UPDATE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    reprogrammed = create_mock_controller(zones_total=2)
+    reprogrammed.zones = [*mock_zones, create_mock_zone(index=1, name="Bedroom")]
+    mock_discovery_service.create_controller.return_value = reprogrammed
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
-    assert (
-        hass.states.get("climate.izone_controller_000000001").state == STATE_UNAVAILABLE
-    )
+    mock_controller.close.assert_awaited()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for entity_id in ("climate.izone_controller_000000001", "climate.bedroom"):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
 
 
 async def test_migrate_heals_legacy_domain_unique_id(
