@@ -1,7 +1,7 @@
 """Constants for the Jellyfin integration."""
 
 import logging
-from typing import Final
+from typing import Final, NamedTuple
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.const import Platform, __version__ as hass_version
@@ -39,6 +39,7 @@ ITEM_TYPE_SEASON: Final = "Season"
 MAX_IMAGE_WIDTH: Final = 500
 MAX_STREAMING_BITRATE: Final = "140000000"
 
+MEDIA_SOURCE_KEY_CONTAINER: Final = "Container"
 MEDIA_SOURCE_KEY_PATH: Final = "Path"
 
 MEDIA_TYPE_AUDIO: Final = "Audio"
@@ -52,11 +53,23 @@ SUPPORTED_COLLECTION_TYPES: Final = [
 ]
 
 SUPPORTED_AUDIO_CODECS: Final = ["aac", "mp3", "vorbis", "wma"]
-AUDIO_CODEC_MIME_TYPES: Final = {
-    "aac": "audio/aac",
-    "mp3": "audio/mpeg",
-    "vorbis": "audio/ogg",
-    "wma": "audio/x-ms-wma",
+
+
+class AudioTranscodeTarget(NamedTuple):
+    """How to request and describe a stream transcoded to an audio codec."""
+
+    codec: str  # codec name passed to the Jellyfin (ffmpeg) transcoder
+    container: str  # transcoding container that can hold this codec
+    mime_type: str  # mime type of the resulting stream
+
+
+# Jellyfin defaults the transcoding container to mp3 regardless of the requested
+# codec, so the container must be passed explicitly for every codec but mp3.
+AUDIO_TRANSCODE_TARGETS: Final = {
+    "aac": AudioTranscodeTarget("aac", "aac", "audio/aac"),
+    "mp3": AudioTranscodeTarget("mp3", "mp3", "audio/mpeg"),
+    "vorbis": AudioTranscodeTarget("vorbis", "ogg", "audio/ogg"),
+    "wma": AudioTranscodeTarget("wmav2", "asf", "audio/x-ms-wma"),
 }
 
 PLAYABLE_ITEM_TYPES: Final = [ITEM_TYPE_AUDIO, ITEM_TYPE_EPISODE, ITEM_TYPE_MOVIE]

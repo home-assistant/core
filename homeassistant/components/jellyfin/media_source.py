@@ -18,7 +18,7 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    AUDIO_CODEC_MIME_TYPES,
+    AUDIO_TRANSCODE_TARGETS,
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
     CONF_AUDIO_CODEC,
@@ -39,6 +39,7 @@ from .const import (
     ITEM_TYPE_SEASON,
     ITEM_TYPE_SERIES,
     MAX_IMAGE_WIDTH,
+    MEDIA_SOURCE_KEY_CONTAINER,
     MEDIA_SOURCE_KEY_PATH,
     MEDIA_TYPE_AUDIO,
     MEDIA_TYPE_NONE,
@@ -535,7 +536,13 @@ class JellyfinSource(MediaSource):
 
         if media_type == MEDIA_TYPE_AUDIO:
             if audio_codec := self.entry.options.get(CONF_AUDIO_CODEC):
-                return self.api.audio_url(item_id, audio_codec=audio_codec)  # type: ignore[no-any-return]
+                target = AUDIO_TRANSCODE_TARGETS[audio_codec]
+                url: str = self.api.audio_url(item_id, audio_codec=target.codec)
+                return f"{url}&TranscodingContainer={target.container}"
+            # Without a container list the universal endpoint always transcodes,
+            # so allow the source's own container to stream the original file
+            if container := _media_container(media_item):
+                return self.api.audio_url(item_id, container=container)  # type: ignore[no-any-return]
             return self.api.audio_url(item_id)  # type: ignore[no-any-return]
         if media_type == MEDIA_TYPE_VIDEO:
             return self.api.video_url(item_id)  # type: ignore[no-any-return]
@@ -549,8 +556,16 @@ class JellyfinSource(MediaSource):
         ):
             # The server transcodes to the configured codec, so the source
             # file's mime type no longer describes the stream
-            return AUDIO_CODEC_MIME_TYPES[audio_codec]
+            return AUDIO_TRANSCODE_TARGETS[audio_codec].mime_type
         return _media_mime_type(media_item)
+
+
+def _media_container(media_item: dict[str, Any]) -> str | None:
+    """Return the container of a media item's first media source."""
+    if not (media_sources := media_item.get(ITEM_KEY_MEDIA_SOURCES)):
+        return None
+    container: str | None = media_sources[0].get(MEDIA_SOURCE_KEY_CONTAINER)
+    return container
 
 
 def _media_mime_type(media_item: dict[str, Any]) -> str | None:
