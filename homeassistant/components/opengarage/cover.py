@@ -17,7 +17,15 @@ from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STATES_MAP = {0: CoverState.CLOSED, 1: CoverState.OPEN}
+# Firmware 1.2.x reports door: 0 closed, 1 open, 2 stopped, 3 closing,
+# 4 opening, 5 unknown. A door stopped mid-travel is partially open.
+STATES_MAP = {
+    0: CoverState.CLOSED,
+    1: CoverState.OPEN,
+    2: CoverState.OPEN,
+    3: CoverState.CLOSING,
+    4: CoverState.OPENING,
+}
 
 
 async def async_setup_entry(

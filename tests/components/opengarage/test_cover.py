@@ -14,7 +14,14 @@ from homeassistant.components.cover import (
     SERVICE_TOGGLE,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -53,6 +60,80 @@ async def test_cover_position(
     state = hass.states.get("cover.garage_abcdef")
     assert state.state == expected_state
     assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
+
+
+@pytest.mark.parametrize(
+    ("door_state", "expected_state", "expected_position"),
+    [
+        (2, STATE_OPEN, 100),
+        (3, STATE_CLOSING, None),
+        (4, STATE_OPENING, None),
+        (5, STATE_UNKNOWN, None),
+    ],
+    ids=["stopped", "closing", "opening", "unknown"],
+)
+async def test_cover_extended_door_states(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    door_state: int,
+    expected_state: str,
+    expected_position: int | None,
+) -> None:
+    """Test door states reported by firmware 1.2.x beyond open and closed."""
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+
+
+@pytest.mark.parametrize(
+    ("door_states", "expected_states"),
+    [
+        ([0, 4, 1], [STATE_CLOSED, STATE_OPENING, STATE_OPEN]),
+        ([1, 3, 0], [STATE_OPEN, STATE_CLOSING, STATE_CLOSED]),
+        ([1, 3, 2], [STATE_OPEN, STATE_CLOSING, STATE_OPEN]),
+    ],
+    ids=["opening", "closing", "stopped_while_closing"],
+)
+async def test_cover_external_movement(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    door_states: list[int],
+    expected_states: list[str],
+) -> None:
+    """Test a door moved outside HA never passes through unknown."""
+    for door_state, expected_state in zip(door_states, expected_states, strict=True):
+        await _simulate_door_state(hass, mock_opengarage, door_state)
+        assert hass.states.get("cover.garage_abcdef").state == expected_state
+
+
+async def test_cover_command_with_firmware_transition(
+    hass: HomeAssistant,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a close command while the firmware reports the closing state."""
+    mock_opengarage.push_button.return_value = 1
+    await _simulate_door_state(hass, mock_opengarage, 1)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        blocking=True,
+    )
+    assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSING
+
+    await _simulate_door_state(hass, mock_opengarage, 3)
+    assert hass.states.get("cover.garage_abcdef").state == STATE_CLOSING
+
+    await _simulate_door_state(hass, mock_opengarage, 0)
+    state = hass.states.get("cover.garage_abcdef")
+    assert state.state == STATE_CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
 
 async def test_cover_position_during_transition(
