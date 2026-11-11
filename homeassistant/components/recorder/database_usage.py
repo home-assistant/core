@@ -1,8 +1,9 @@
-"""Report which entities and event types use space in the recorder database."""
+"""Report which entities and statistics use space in the recorder database."""
 
 import asyncio
+from collections import defaultdict
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
-import logging
 from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import probatio
@@ -11,22 +12,18 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.recorder import get_instance, session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, SupportedDialect
 from .db_schema import (
-    TABLE_EVENT_DATA,
-    TABLE_EVENTS,
     TABLE_STATE_ATTRIBUTES,
     TABLE_STATES,
     TABLE_STATISTICS,
     TABLE_STATISTICS_SHORT_TERM,
-    EventData,
-    Events,
-    EventTypes,
     StateAttributes,
     States,
     StatesMeta,
@@ -36,11 +33,12 @@ from .db_schema import (
 )
 
 if TYPE_CHECKING:
+    from sqlalchemy.dialects.mysql.base import MySQLDialect
+
     from .core import Recorder
 
-_LOGGER = logging.getLogger(__name__)
-
-CACHE_TIME: Final = timedelta(minutes=5)
+CACHE_TIME: Final = timedelta(hours=1)
+REFRESH_INTERVAL: Final = timedelta(minutes=1)
 
 DATA_DATABASE_USAGE: HassKey[DatabaseUsageCache] = HassKey(f"{DOMAIN}_database_usage")
 
@@ -49,16 +47,6 @@ SQLITE_DBSTAT_QUERY: Final = (
     "JOIN sqlite_master AS m ON m.name = d.name "
     "WHERE d.aggregate = TRUE GROUP BY m.tbl_name"
 )
-
-# Bytes per row including indexes, measured with dbstat on SQLite 3.53
-SQLITE_ROW_BYTES: Final = {
-    TABLE_STATES: 157,
-    TABLE_STATISTICS: 90,
-    TABLE_STATISTICS_SHORT_TERM: 90,
-    TABLE_EVENTS: 125,
-}
-# Bytes per byte of JSON including row overhead and indexes
-SQLITE_JSON_FACTOR: Final = 1.2
 
 
 class TableUsage(TypedDict):
@@ -69,83 +57,90 @@ class TableUsage(TypedDict):
 
 
 class EntityUsage(TypedDict):
-    """Estimated space used by one entity."""
+    """Estimated space the states of one entity use.
 
-    entity_id: str
+    An entity_id of None collects rows without a known entity.
+    """
+
+    entity_id: str | None
     states: int
+    states_bytes: int | None
+    attributes_bytes: int | None
+
+
+class StatisticUsage(TypedDict):
+    """Estimated space one statistic uses.
+
+    A statistic_id of None collects rows without a known statistic.
+    """
+
+    statistic_id: str | None
+    source: str | None
     statistics: int
     statistics_short_term: int
-    bytes: int
-
-
-class EventTypeUsage(TypedDict):
-    """Estimated space used by one event type."""
-
-    event_type: str
-    events: int
-    bytes: int
+    statistics_bytes: int | None
+    statistics_short_term_bytes: int | None
 
 
 class DatabaseUsage(TypedDict):
-    """Space used in the recorder database."""
+    """Space used in the recorder database.
+
+    total_bytes is the size on disk, free_bytes included. Byte figures per
+    table and row are None when the engine cannot report table sizes.
+    """
 
     generated_at: datetime
+    duration: float
     total_bytes: int
-    tables: list[TableUsage]
+    free_bytes: int | None
+    tables: list[TableUsage] | None
     entities: list[EntityUsage]
-    event_types: list[EventTypeUsage]
+    statistics: list[StatisticUsage]
 
 
-def _sqlite_table_bytes(
-    session: Session, totals: dict[str, int]
-) -> tuple[dict[str, int], int]:
-    """Return bytes per table, indexes included, and the database size.
-
-    Uses the dbstat virtual table, or an estimate from the row counts spread
-    over the used pages when SQLite is built without dbstat.
-    """
+def _sqlite_table_bytes(session: Session) -> tuple[dict[str, int] | None, int, int]:
+    """Return bytes per table, the database size and its free space."""
     page_count = session.execute(text("PRAGMA page_count")).scalar_one()
     page_size = session.execute(text("PRAGMA page_size")).scalar_one()
+    free_pages = session.execute(text("PRAGMA freelist_count")).scalar_one()
     try:
         rows = session.execute(text(SQLITE_DBSTAT_QUERY)).all()
-    except OperationalError:
-        _LOGGER.debug("dbstat is not available, estimating table sizes")
+    except OperationalError as err:
+        # Only dbstat can be missing, when built without SQLITE_ENABLE_DBSTAT_VTAB
+        if "no such table" not in str(err.orig):
+            raise
+        table_bytes = None
     else:
-        return {table: int(size) for table, size in rows}, page_count * page_size
-    estimates = {
-        table: totals[table] * row_bytes
-        for table, row_bytes in SQLITE_ROW_BYTES.items()
-    } | {
-        TABLE_STATE_ATTRIBUTES: round(
-            totals[TABLE_STATE_ATTRIBUTES] * SQLITE_JSON_FACTOR
-        ),
-        TABLE_EVENT_DATA: round(totals[TABLE_EVENT_DATA] * SQLITE_JSON_FACTOR),
-    }
-    estimated = sum(estimates.values()) or 1
-    free_pages = session.execute(text("PRAGMA freelist_count")).scalar_one()
-    used = (page_count - free_pages) * page_size
-    return (
-        {table: round(used * size / estimated) for table, size in estimates.items()},
-        page_count * page_size,
-    )
+        table_bytes = {table: int(size) for table, size in rows}
+    return table_bytes, page_count * page_size, free_pages * page_size
 
 
-def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int]:
-    """Return bytes per table, indexes included, and the database size."""
-    table_bytes = {
-        table: int(size or 0)
-        for table, size in session.execute(
-            text(
-                "SELECT table_name, data_length + index_length "
-                "FROM information_schema.tables WHERE table_schema = DATABASE()"
-            )
-        ).all()
-    }
-    return table_bytes, sum(table_bytes.values())
+def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
+    """Return bytes per table, the database size and its free space."""
+    dialect = session.get_bind().dialect
+    if TYPE_CHECKING:
+        assert isinstance(dialect, MySQLDialect)
+    if not dialect.is_mariadb:
+        # MySQL caches these sizes for a day by default, MariaDB does not
+        session.execute(text("SET SESSION information_schema_stats_expiry = 0"))
+    rows = session.execute(
+        text(
+            "SELECT table_name, data_length + index_length, data_free "
+            "FROM information_schema.tables WHERE table_schema = DATABASE()"
+        )
+    ).all()
+    table_bytes = {table: int(size or 0) for table, size, _ in rows}
+    table_free = [int(free or 0) for _, _, free in rows]
+    # Tables in the shared system tablespace each report its free space
+    if session.execute(text("SELECT @@innodb_file_per_table")).scalar_one():
+        free_bytes = sum(table_free)
+    else:
+        free_bytes = max(table_free, default=0)
+    return table_bytes, sum(table_bytes.values()) + free_bytes, free_bytes
 
 
-def _postgresql_table_bytes(session: Session) -> tuple[dict[str, int], int]:
-    """Return bytes per table, indexes and TOAST included, and the database size."""
+def _postgresql_table_bytes(session: Session) -> tuple[dict[str, int], int, None]:
+    """Return bytes per table and the database size, catalogs included."""
     table_bytes = {
         table: int(size)
         for table, size in session.execute(
@@ -159,21 +154,12 @@ def _postgresql_table_bytes(session: Session) -> tuple[dict[str, int], int]:
     total = session.execute(
         text("SELECT pg_database_size(current_database())")
     ).scalar_one()
-    return table_bytes, int(total)
+    return table_bytes, int(total), None
 
 
-def _counts(session: Session, column: Any) -> dict[int, int]:
+def _counts(session: Session, column: Any) -> dict[int | None, int]:
     """Return the row count per value of an indexed column."""
     return dict(session.execute(select(column, func.count()).group_by(column)).all())
-
-
-def _names(session: Session, key: Any, name: Any) -> dict[int, str]:
-    """Return the name per id of a lookup table."""
-    return {
-        id_: value
-        for id_, value in session.execute(select(key, name)).all()
-        if value is not None
-    }
 
 
 def _byte_length(dialect: SupportedDialect | None, column: Any) -> Any:
@@ -187,156 +173,156 @@ def _byte_length(dialect: SupportedDialect | None, column: Any) -> Any:
             return func.length(cast(column, LargeBinary))
 
 
-def _first_owner_lengths(
-    session: Session, owner: Any, owner_ref: Any, byte_length: Any, shared_id: Any
-) -> dict[int, int]:
-    """Return the shared data length in bytes per owner.
+def _attribute_lengths(
+    session: Session, dialect: SupportedDialect | None
+) -> dict[int | None, int]:
+    """Return the attributes length in bytes per metadata_id.
 
-    Each shared row goes to the first owner found through the index on the
-    referencing column, which is exact unless several owners share a row.
-    Rows without an owner are left out.
+    Each attributes row goes to the first state found through the index on
+    attributes_id, so a row shared by several entities is counted once.
+    Rows without a state go to None.
     """
-    first_owner = select(owner).where(owner_ref == shared_id).limit(1).scalar_subquery()
-    sub = select(first_owner.label("owner"), byte_length.label("length")).subquery()
+    owner = (
+        select(States.metadata_id)
+        .where(States.attributes_id == StateAttributes.attributes_id)
+        .limit(1)
+        .scalar_subquery()
+    )
+    sub = select(
+        owner.label("owner"),
+        _byte_length(dialect, StateAttributes.shared_attrs).label("length"),
+    ).subquery()
     return {
-        owner_id: int(length)
-        for owner_id, length in session.execute(
-            select(sub.c.owner, func.sum(sub.c.length))
-            .where(sub.c.owner.is_not(None))
-            .group_by(sub.c.owner)
+        metadata_id: int(length or 0)
+        for metadata_id, length in session.execute(
+            select(sub.c.owner, func.sum(sub.c.length)).group_by(sub.c.owner)
         ).all()
     }
 
 
+def _group[KeyT](
+    values: dict[int | None, int], keys: Mapping[int | None, KeyT]
+) -> dict[KeyT | None, int]:
+    """Return the values per key, with unknown ids under None."""
+    grouped: dict[KeyT | None, int] = defaultdict(int)
+    for id_, value in values.items():
+        grouped[keys.get(id_)] += value
+    return grouped
+
+
 def get_database_usage(instance: Recorder) -> DatabaseUsage:
-    """Return the space entities and event types use in the database.
+    """Return the space entities and statistics use in the database.
 
     Table sizes come from the database engine; a table's bytes are spread over
-    its rows evenly, except for attributes and event data, which are spread by
-    the length of the JSON each entity or event type owns.
+    its rows evenly, except for attributes, which are spread by the length of
+    the JSON each entity owns.
     """
-    generated_at = dt_util.utcnow()
+    started = dt_util.utcnow()
     dialect = instance.dialect_name
     with session_scope(session=instance.get_session(), read_only=True) as session:
         states = _counts(session, States.metadata_id)
-        attributes = _first_owner_lengths(
-            session,
-            States.metadata_id,
-            States.attributes_id,
-            _byte_length(dialect, StateAttributes.shared_attrs),
-            StateAttributes.attributes_id,
-        )
+        attributes = _attribute_lengths(session, dialect)
         statistics = _counts(session, Statistics.metadata_id)
         short_term = _counts(session, StatisticsShortTerm.metadata_id)
-        events = _counts(session, Events.event_type_id)
-        event_data = _first_owner_lengths(
-            session,
-            Events.event_type_id,
-            Events.data_id,
-            _byte_length(dialect, EventData.shared_data),
-            EventData.data_id,
-        )
-        totals = {
-            TABLE_STATES: sum(states.values()),
-            TABLE_STATE_ATTRIBUTES: sum(attributes.values()),
-            TABLE_STATISTICS: sum(statistics.values()),
-            TABLE_STATISTICS_SHORT_TERM: sum(short_term.values()),
-            TABLE_EVENTS: sum(events.values()),
-            TABLE_EVENT_DATA: sum(event_data.values()),
-        }
+        table_bytes: dict[str, int] | None
+        free_bytes: int | None
         match dialect:
             case SupportedDialect.MYSQL:
-                table_bytes, total_bytes = _mysql_table_bytes(session)
+                table_bytes, total_bytes, free_bytes = _mysql_table_bytes(session)
             case SupportedDialect.POSTGRESQL:
-                table_bytes, total_bytes = _postgresql_table_bytes(session)
+                table_bytes, total_bytes, free_bytes = _postgresql_table_bytes(session)
             case _:
-                table_bytes, total_bytes = _sqlite_table_bytes(session, totals)
-        entity_ids = _names(session, StatesMeta.metadata_id, StatesMeta.entity_id)
-        statistic_ids = _names(session, StatisticsMeta.id, StatisticsMeta.statistic_id)
-        event_types = _names(session, EventTypes.event_type_id, EventTypes.event_type)
-
-    def share(table: str, part: int) -> float:
-        """Return the bytes of a table that part of its rows or JSON takes."""
-        if not part:
-            return 0.0
-        return table_bytes.get(table, 0) * part / totals[table]
-
-    entity_usage: dict[str, EntityUsage] = {
-        entity_id: {
-            "entity_id": entity_id,
-            "states": states.get(metadata_id, 0),
-            "statistics": 0,
-            "statistics_short_term": 0,
-            "bytes": round(
-                share(TABLE_STATES, states.get(metadata_id, 0))
-                + share(TABLE_STATE_ATTRIBUTES, attributes.get(metadata_id, 0))
-            ),
+                table_bytes, total_bytes, free_bytes = _sqlite_table_bytes(session)
+        entity_ids: dict[int | None, str | None] = dict(
+            session.execute(select(StatesMeta.metadata_id, StatesMeta.entity_id))
+            .tuples()
+            .all()
+        )
+        statistic_ids: dict[int | None, tuple[str | None, str | None]] = {
+            id_: (statistic_id, source)
+            for id_, statistic_id, source in session.execute(
+                select(
+                    StatisticsMeta.id,
+                    StatisticsMeta.statistic_id,
+                    StatisticsMeta.source,
+                )
+            ).all()
         }
-        for metadata_id, entity_id in entity_ids.items()
-    }
-    for metadata_id, statistic_id in statistic_ids.items():
-        usage = entity_usage.setdefault(
-            statistic_id,
-            {
-                "entity_id": statistic_id,
-                "states": 0,
-                "statistics": 0,
-                "statistics_short_term": 0,
-                "bytes": 0,
-            },
-        )
-        usage["statistics"] = statistics.get(metadata_id, 0)
-        usage["statistics_short_term"] = short_term.get(metadata_id, 0)
-        usage["bytes"] += round(
-            share(TABLE_STATISTICS, usage["statistics"])
-            + share(TABLE_STATISTICS_SHORT_TERM, usage["statistics_short_term"])
-        )
 
+    totals = {
+        TABLE_STATES: sum(states.values()),
+        TABLE_STATE_ATTRIBUTES: sum(attributes.values()),
+        TABLE_STATISTICS: sum(statistics.values()),
+        TABLE_STATISTICS_SHORT_TERM: sum(short_term.values()),
+    }
+
+    def share(table: str, part: int) -> int | None:
+        """Return the bytes of a table that part of its rows or JSON takes."""
+        if table_bytes is None:
+            return None
+        if not part:
+            return 0
+        return round(table_bytes.get(table, 0) * part / totals[table])
+
+    entity_states = _group(states, entity_ids)
+    entity_attributes = _group(attributes, entity_ids)
+    statistic_rows = _group(statistics, statistic_ids)
+    statistic_short_term = _group(short_term, statistic_ids)
+    generated_at = dt_util.utcnow()
     return {
         "generated_at": generated_at,
+        "duration": (generated_at - started).total_seconds(),
         "total_bytes": total_bytes,
-        "tables": sorted(
-            ({"table": table, "bytes": size} for table, size in table_bytes.items()),
-            key=lambda usage: (-usage["bytes"], usage["table"]),
-        ),
-        "entities": sorted(
-            entity_usage.values(),
-            key=lambda usage: (-usage["bytes"], -usage["states"], usage["entity_id"]),
-        ),
-        "event_types": sorted(
-            (
-                {
-                    "event_type": event_type,
-                    "events": events.get(event_type_id, 0),
-                    "bytes": round(
-                        share(TABLE_EVENTS, events.get(event_type_id, 0))
-                        + share(TABLE_EVENT_DATA, event_data.get(event_type_id, 0))
-                    ),
-                }
-                for event_type_id, event_type in event_types.items()
-            ),
-            key=lambda usage: (-usage["bytes"], -usage["events"], usage["event_type"]),
-        ),
+        "free_bytes": free_bytes,
+        "tables": None
+        if table_bytes is None
+        else [{"table": table, "bytes": size} for table, size in table_bytes.items()],
+        "entities": [
+            {
+                "entity_id": entity_id,
+                "states": entity_states.get(entity_id, 0),
+                "states_bytes": share(TABLE_STATES, entity_states.get(entity_id, 0)),
+                "attributes_bytes": share(
+                    TABLE_STATE_ATTRIBUTES, entity_attributes.get(entity_id, 0)
+                ),
+            }
+            for entity_id in entity_states | entity_attributes
+        ],
+        "statistics": [
+            {
+                "statistic_id": key[0] if key else None,
+                "source": key[1] if key else None,
+                "statistics": statistic_rows.get(key, 0),
+                "statistics_short_term": statistic_short_term.get(key, 0),
+                "statistics_bytes": share(TABLE_STATISTICS, statistic_rows.get(key, 0)),
+                "statistics_short_term_bytes": share(
+                    TABLE_STATISTICS_SHORT_TERM, statistic_short_term.get(key, 0)
+                ),
+            }
+            for key in statistic_rows | statistic_short_term
+        ],
     }
 
 
 class DatabaseUsageCache:
     """Run one database usage report at a time and keep the last result."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
-        self._usage: DatabaseUsage | None = None
+        self._hass = hass
+        self.usage: DatabaseUsage | None = None
         self._pending: asyncio.Future[DatabaseUsage] | None = None
+        self._expire_job = HassJob(self._async_expire, cancel_on_shutdown=True)
+        self._cancel_expire: Callable[[], None] | None = None
 
-    async def async_get(self, instance: Recorder, refresh: bool) -> DatabaseUsage:
-        """Return the cached report, or wait for a new or running one."""
+    async def async_refresh(self, instance: Recorder) -> DatabaseUsage:
+        """Return a new report, or the last one if it is still recent."""
         if self._pending is None:
             if (
-                not refresh
-                and self._usage is not None
-                and dt_util.utcnow() - self._usage["generated_at"] < CACHE_TIME
+                self.usage is not None
+                and dt_util.utcnow() - self.usage["generated_at"] < REFRESH_INTERVAL
             ):
-                return self._usage
+                return self.usage
             self._pending = instance.async_add_executor_job(
                 get_database_usage, instance
             )
@@ -348,14 +334,24 @@ class DatabaseUsageCache:
     def _async_finished(self, future: asyncio.Future[DatabaseUsage]) -> None:
         """Store the result of a finished run."""
         self._pending = None
-        if not future.cancelled() and future.exception() is None:
-            self._usage = future.result()
+        if future.cancelled() or future.exception() is not None:
+            return
+        if self._cancel_expire is not None:
+            self._cancel_expire()
+        self.usage = future.result()
+        self._cancel_expire = async_call_later(self._hass, CACHE_TIME, self._expire_job)
+
+    @callback
+    def _async_expire(self, _now: datetime) -> None:
+        """Release the cached report."""
+        self._cancel_expire = None
+        self.usage = None
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the database usage websocket API."""
-    hass.data[DATA_DATABASE_USAGE] = DatabaseUsageCache()
+    hass.data[DATA_DATABASE_USAGE] = DatabaseUsageCache(hass)
     websocket_api.async_register_command(hass, ws_database_usage)
 
 
@@ -370,7 +366,11 @@ def async_setup(hass: HomeAssistant) -> None:
 async def ws_database_usage(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Return the space entities and event types use in the database."""
+    """Return the last report, or analyze the database when refresh is set."""
+    cache = hass.data[DATA_DATABASE_USAGE]
+    if not msg["refresh"]:
+        connection.send_result(msg["id"], cache.usage)
+        return
     instance = get_instance(hass)
     # Offline migrations finish and the recorder executor starts once ready
     if not await instance.async_db_ready:
@@ -378,7 +378,11 @@ async def ws_database_usage(
             msg["id"], "recorder_not_ready", "The recorder database is not available"
         )
         return
-    connection.send_result(
-        msg["id"],
-        await hass.data[DATA_DATABASE_USAGE].async_get(instance, msg["refresh"]),
-    )
+    if instance.migration_in_progress:
+        connection.send_error(
+            msg["id"],
+            "migration_in_progress",
+            "The recorder database is being migrated",
+        )
+        return
+    connection.send_result(msg["id"], await cache.async_refresh(instance))
