@@ -4018,10 +4018,71 @@ async def test_validate_config_works(
         (
             "triggers",
             {"platform": "non_existing", "event_type": "hello"},
-            "Invalid trigger 'non_existing' specified at '[0]'",
+            "Invalid trigger 'non_existing' specified",
         ),
         # Raises probatio.Invalid
         ("triggers", [5], "expected a mapping at '[0]'"),
+        pytest.param(
+            "triggers",
+            [{"platform": "non_existing"}],
+            "Invalid trigger 'non_existing' specified at '[0]'",
+            id="trigger_list",
+        ),
+        pytest.param(
+            "triggers",
+            {"platform": "state"},
+            "required key not provided at 'entity_id'",
+            id="single_trigger_with_path",
+        ),
+        pytest.param(
+            "triggers",
+            [{"platform": "state"}],
+            "required key not provided at '[0].entity_id'",
+            id="trigger_list_with_path",
+        ),
+        pytest.param(
+            "triggers",
+            {"triggers": [{"platform": "event", "event_type": "a"}, {"platform": "x"}]},
+            "Invalid trigger 'x' specified at '[1]'",
+            id="single_trigger_sublist",
+        ),
+        pytest.param(
+            "conditions",
+            {"condition": "state", "entity_id": "abcd" * 8, "state": "on"},
+            f"Unknown entity registry entry {'abcd' * 8}",
+            id="single_condition",
+        ),
+        pytest.param(
+            "conditions",
+            [{"condition": "state", "entity_id": "abcd" * 8, "state": "on"}],
+            f"Unknown entity registry entry {'abcd' * 8} at '[0]'",
+            id="condition_list",
+        ),
+        pytest.param(
+            "conditions",
+            {
+                "condition": "and",
+                "conditions": {
+                    "condition": "state",
+                    "entity_id": "abcd" * 8,
+                    "state": "on",
+                },
+            },
+            f"Unknown entity registry entry {'abcd' * 8} at 'conditions[0]'",
+            id="single_condition_nested_single_condition",
+        ),
+        pytest.param(
+            "actions",
+            {"wait_for_trigger": {"platform": "non_existing"}},
+            "Invalid trigger 'non_existing' specified at 'wait_for_trigger[0]'",
+            id="single_action_nested_single_trigger",
+        ),
+        pytest.param(
+            "actions",
+            [{"wait_for_trigger": [{"platform": "non_existing"}]}],
+            "Invalid trigger 'non_existing' specified at '[0].wait_for_trigger[0]'",
+            id="action_list",
+        ),
         # Raises probatio.Invalid
         (
             "conditions",
