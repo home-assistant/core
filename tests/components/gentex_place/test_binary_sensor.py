@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from place.models.device_shadow import AlarmStatus
 from place.models.discover_device import DiscoverDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration, trigger_shadow_callback
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures(

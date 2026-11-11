@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import botocore.exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.gentex_place.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_CREDENTIALS, TEST_UNIQUE_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture", "mock_setup_entry")
@@ -91,6 +90,15 @@ async def test_login_client_error(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "srp_auth_failed"}
 
+    mock_login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_CREDENTIALS,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures(
     "aioclient_mock_fixture",
@@ -113,3 +121,12 @@ async def test_login_unknown_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    mock_login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_CREDENTIALS,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

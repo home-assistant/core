@@ -7,14 +7,13 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from place.config import OAUTH2_TOKEN_URL
 from place.errors import PlaceFulfillmentError, PlaceMqttConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.conftest import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

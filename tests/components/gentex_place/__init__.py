@@ -3,11 +3,10 @@
 from unittest.mock import MagicMock
 
 import jwt
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_UNIQUE_ID = "06ebba97-100b-4c09-9917-e85d40b7898a"
 TEST_CREDENTIALS = {CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"}

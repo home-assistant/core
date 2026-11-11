@@ -8,13 +8,12 @@ from place.config import OAUTH2_TOKEN_URL
 from place.models import Credentials
 from place.models.discover_device import DiscoverDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.gentex_place.const import DOMAIN
 
 from . import TEST_ACCESS_JWT, TEST_UNIQUE_ID
-
-from tests.common import MockConfigEntry
-from tests.conftest import AiohttpClientMocker
 
 MOCK_SHADOW = {
     "coAlarmStatus": 0,
@@ -161,11 +160,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.gentex_place.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.gentex_place.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield mock_setup_entry
