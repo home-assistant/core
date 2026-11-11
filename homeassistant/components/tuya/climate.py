@@ -755,7 +755,8 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         """Follow changes of the remote state (for example from the Tuya app)."""
         if not set(updated_status_properties) & _IR_AC_STATUS_CODES:
             return False
-        self._fresh_status_codes |= set(updated_status_properties) & _IR_AC_STATUS_CODES
+        reported = set(updated_status_properties) & _IR_AC_STATUS_CODES
+        self._fresh_status_codes |= reported
         if self._sending or (
             self.hass.loop.time() < self._settle_until
             and not self._status_matches_sent()
@@ -764,7 +765,8 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
             # through cool to change the fan): not shown.
             return False
         self._settle_until = 0.0
-        self._remote_reports_state = self._async_sync_from_status()
+        # Only the reported codes: the others may be older than the commands.
+        self._remote_reports_state = self._async_sync_from_status(reported)
         return True
 
     @asynccontextmanager

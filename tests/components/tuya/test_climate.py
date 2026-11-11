@@ -1674,6 +1674,41 @@ async def test_infrared_ac_only_fresh_status_fields_applied(
 
 
 @pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_late_report_of_one_field(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a report of one field after the settle time keeps the other fields."""
+    mock_device.status.update({"power": False, "mode": "0", "temp": 24, "wind": "2"})
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: IR_AC_ENTITY_ID,
+            ATTR_TEMPERATURE: 19,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+    freezer.tick(11)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.HEAT
+
+    # The cached power and mode are older than the commands.
+    mock_device.status.update({"temp": 21})
+    await notification_helper.async_send_device_update(mock_device, {"temp": 21})
+    state = hass.states.get(IR_AC_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 21
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
 async def test_infrared_ac_command_rejected(
     hass: HomeAssistant,
     mock_manager: Manager,
