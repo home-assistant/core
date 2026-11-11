@@ -12,8 +12,12 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from .quality_scale_validation import (
     RuleValidationProtocol,
+    config_entry_unloading,
     config_flow,
+    devices,
+    diagnostics,
     discovery,
+    reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
     strict_typing,
@@ -57,18 +61,34 @@ ALL_RULES = [
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
-    Rule("config-entry-unloading", ScaledQualityScaleTiers.SILVER),
+    Rule(
+        "config-entry-unloading",
+        ScaledQualityScaleTiers.SILVER,
+        config_entry_unloading,
+    ),
     Rule("docs-configuration-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("docs-installation-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
-    Rule("reauthentication-flow", ScaledQualityScaleTiers.SILVER),
+    Rule(
+        "reauthentication-flow",
+        ScaledQualityScaleTiers.SILVER,
+        reauthentication_flow,
+    ),
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
-    Rule("devices", ScaledQualityScaleTiers.GOLD),
-    Rule("diagnostics", ScaledQualityScaleTiers.GOLD),
+    Rule(
+        "devices",
+        ScaledQualityScaleTiers.GOLD,
+        devices,
+    ),
+    Rule(
+        "diagnostics",
+        ScaledQualityScaleTiers.GOLD,
+        diagnostics,
+    ),
     Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
@@ -2132,9 +2152,12 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
     rules_done = set[str]()
     rules_met = set[str]()
+    rules_todo_without_comment = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status not in {"done", "exempt"}:
+            if status == "todo" and not isinstance(rule_value, dict):
+                rules_todo_without_comment.add(rule_name)
             continue
         rules_met.add(rule_name)
         if status == "done":
@@ -2147,6 +2170,20 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             for error in errors:
                 integration.add_error("quality_scale", f"[{rule_name}] {error}")
             integration.add_error("quality_scale", RULE_URL.format(rule_name=rule_name))
+
+    # A rule marked as todo without a comment, while the validator finds it
+    # implemented, means the quality scale file is out of sync with the code.
+    # Rules that are only partially done should explain what is missing.
+    for rule_name in sorted(rules_todo_without_comment):
+        if (validator := VALIDATORS.get(rule_name)) and not validator.validate(
+            config, integration, rules_done=rules_done
+        ):
+            integration.add_error(
+                "quality_scale",
+                f"[{rule_name}] Rule is marked as todo, but the integration"
+                " appears to implement it. Mark it as done, or add a comment"
+                " explaining what is still missing",
+            )
 
     # An integration must have all the necessary rules for the declared
     # quality scale, and all the rules below.

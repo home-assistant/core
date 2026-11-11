@@ -23,6 +23,9 @@ def validate(
     """Validate that the integration has a reconfiguration flow."""
 
     config_flow_file = integration.path / "config_flow.py"
+    if not config_flow_file.exists():
+        return ["Integration is missing config_flow.py"]
+
     config_flow = ast_parse_module(config_flow_file)
 
     if not _has_step_reconfigure_function(config_flow):
