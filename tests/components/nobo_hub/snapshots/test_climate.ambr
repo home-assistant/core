@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_entities[climate.living_room_living_room-entry]
+# name: test_climate_entities[climate.living_room_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27,7 +27,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.living_room_living_room',
+    'entity_id': 'climate.living_room_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -50,11 +50,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_entities[climate.living_room_living_room-state]
+# name: test_climate_entities[climate.living_room_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.AUTO: 'auto'>,
@@ -75,7 +75,7 @@
       <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.living_room_living_room',
+    'entity_id': 'climate.living_room_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

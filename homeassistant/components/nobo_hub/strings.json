@@ -52,6 +52,11 @@
       }
     }
   },
+  "device": {
+    "zone": {
+      "name": "Heating"
+    }
+  },
   "entity": {
     "select": {
       "global_override": {

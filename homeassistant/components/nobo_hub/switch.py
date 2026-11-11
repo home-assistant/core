@@ -8,7 +8,6 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NoboHubConfigEntry
@@ -67,13 +66,7 @@ class NoboDisableGlobalOverrideSwitch(NoboBaseEntity, SwitchEntity):
         super().__init__(hass, hub, entry_id)
         self._id = zone_id
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}:disable_global_override"
-        zone_name = hub.zones[zone_id]["name"]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            name=zone_name,
-            via_device_id=self._hub_device_id,
-            suggested_area=zone_name,
-        )
+        self._attr_device_info = self._zone_device_info(zone_id)
         self._read_state()
 
     @override
