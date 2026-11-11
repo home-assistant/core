@@ -147,8 +147,8 @@ async def test_automatic_missing_client_cleanup(
 ) -> None:
     """Test missing client trackers are removed during initial startup cleanup.
 
-    The device tracker platform removes stale trackers when it is set up,
-    before it registers trackers for the current client list.
+    The known-clients coordinator sweeps the registry on its first refresh,
+    which runs before the device tracker platform is set up.
     """
 
     mock_config_entry = MockConfigEntry(
@@ -175,14 +175,14 @@ async def test_automatic_missing_client_cleanup(
     assert entity_registry.async_get(tracker.entity_id) is None
 
 
-async def test_cleanup_removes_only_unknown_integration_disabled_trackers(
+async def test_cleanup_removes_unknown_integration_disabled_tracker(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test only unknown trackers disabled by the integration are removed."""
+    """Test an unknown tracker disabled by the integration is removed."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -194,32 +194,6 @@ async def test_cleanup_removes_only_unknown_integration_disabled_trackers(
         config_entry=mock_config_entry,
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
-    enabled_unknown_client = entity_registry.async_get_or_create(
-        domain="device_tracker",
-        platform=DOMAIN,
-        unique_id="scanner_Default_66-66-66-66-66-66",
-        config_entry=mock_config_entry,
-    )
-    user_disabled = entity_registry.async_get_or_create(
-        domain="device_tracker",
-        platform=DOMAIN,
-        unique_id="scanner_Default_77-77-77-77-77-77",
-        config_entry=mock_config_entry,
-        disabled_by=er.RegistryEntryDisabler.USER,
-    )
-    sensor_entity = entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id="some_sensor",
-        config_entry=mock_config_entry,
-    )
-    unrelated_tracker = entity_registry.async_get_or_create(
-        domain="device_tracker",
-        platform=DOMAIN,
-        unique_id="tracker_00-11-22-33-44-55",
-        config_entry=mock_config_entry,
-        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
-    )
 
     site_client = mock_omada_clients_only_client.get_site_client.return_value
     site_client.get_known_clients.side_effect = partial(
@@ -228,10 +202,62 @@ async def test_cleanup_removes_only_unknown_integration_disabled_trackers(
     await _async_poll_known_clients(hass, freezer)
 
     assert entity_registry.async_get(unknown_client.entity_id) is None
-    assert entity_registry.async_get(enabled_unknown_client.entity_id) is not None
-    assert entity_registry.async_get(user_disabled.entity_id) is not None
-    assert entity_registry.async_get(sensor_entity.entity_id) is not None
-    assert entity_registry.async_get(unrelated_tracker.entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("domain", "unique_id", "disabled_by"),
+    [
+        pytest.param(
+            "device_tracker",
+            "scanner_Default_66-66-66-66-66-66",
+            None,
+            id="enabled-unknown-tracker",
+        ),
+        pytest.param(
+            "device_tracker",
+            "scanner_Default_77-77-77-77-77-77",
+            er.RegistryEntryDisabler.USER,
+            id="user-disabled-tracker",
+        ),
+        pytest.param("sensor", "some_sensor", None, id="other-domain"),
+        pytest.param(
+            "device_tracker",
+            "tracker_00-11-22-33-44-55",
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="unowned-tracker",
+        ),
+    ],
+)
+async def test_cleanup_keeps_entries_it_does_not_own(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    domain: str,
+    unique_id: str,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test the cleanup leaves entries it does not own alone."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=unique_id,
+        config_entry=mock_config_entry,
+        disabled_by=disabled_by,
+    )
+
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+    site_client.get_known_clients.side_effect = partial(
+        _get_known_clients_without, hass, ""
+    )
+    await _async_poll_known_clients(hass, freezer)
+
+    assert entity_registry.async_get(entity.entity_id) is not None
 
 
 async def _get_known_clients_without(
@@ -594,6 +620,109 @@ async def test_cleanup_runs_when_only_wired_clients_are_known(
 
     assert entity_registry.async_get(tracker.entity_id) is None
     assert device_registry.async_get(device_id) is None
+
+
+async def test_cleanup_keeps_tracker_for_known_client(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a tracker whose client is still known survives the sweep untouched."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    known_mac = "2C-71-FF-ED-34-83"
+    tracker_entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"scanner_Default_{known_mac}"
+    )
+    assert tracker_entity_id is not None
+    tracker = entity_registry.async_get(tracker_entity_id)
+    assert tracker is not None
+    assert tracker.device_id is not None
+    assert tracker.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    registry_id = tracker.id
+    device_id = tracker.device_id
+    device_modified_at = device_registry.async_get(device_id).modified_at
+
+    # The mocked controller still reports this client, so the sweep keeps it.
+    await _async_poll_known_clients(hass, freezer)
+
+    kept_tracker = entity_registry.async_get(tracker_entity_id)
+    assert kept_tracker is not None
+    assert kept_tracker.id == registry_id
+    assert kept_tracker.device_id == device_id
+    kept_device = device_registry.async_get(device_id)
+    assert kept_device is not None
+    assert kept_device.modified_at == device_modified_at
+
+
+async def test_repeat_poll_does_not_readd_known_trackers(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unchanged known clients are not added to the platform again."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    known_mac = "2C-71-FF-ED-34-83"
+    tracker_entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"scanner_Default_{known_mac}"
+    )
+    assert tracker_entity_id is not None
+    tracker = entity_registry.async_get(tracker_entity_id)
+    assert tracker is not None
+    registry_id = tracker.id
+
+    # An enabled entity is instantiated, so a duplicate add is reported as an
+    # error by the entity platform instead of being skipped silently.
+    entity_registry.async_update_entity(tracker_entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    assert hass.states.get(tracker_entity_id) is not None
+
+    caplog.clear()
+    await _async_poll_known_clients(hass, freezer)
+    await _async_poll_known_clients(hass, freezer)
+
+    kept_tracker = entity_registry.async_get(tracker_entity_id)
+    assert kept_tracker is not None
+    assert kept_tracker.id == registry_id
+    assert kept_tracker.disabled_by is None
+    assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_cleanup_keeps_trackers_when_first_refresh_fails(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a failed known-clients first refresh removes nothing."""
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+    site_client.get_known_clients.side_effect = OmadaClientException("boom")
+
+    mock_config_entry.add_to_hass(hass)
+    stale_tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_99-99-99-99-99-99",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert entity_registry.async_get(stale_tracker.entity_id) is not None
 
 
 async def test_migrate_entry_v1_to_v2(
