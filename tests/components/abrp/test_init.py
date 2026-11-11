@@ -381,10 +381,12 @@ async def test_display_missing_on_poll_keeps_device_metadata(
     mock_abrp_client.return_value = [replace(mock_abrp_vehicles[0], display=display)]
     await setup_integration(hass, config_entry_with_vehicles)
 
-    mock_abrp_client.return_value = mock_abrp_vehicles[:1]
-    freezer.tick(GARAGE_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # An empty garage in between must not lose what was already resolved.
+    for garage in ([], mock_abrp_vehicles[:1]):
+        mock_abrp_client.return_value = garage
+        freezer.tick(GARAGE_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{config_entry_with_vehicles.unique_id}_{MOCK_VEHICLE_ID}"),

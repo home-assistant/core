@@ -107,9 +107,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
         if stale:
             # Reload so a vehicle that comes back gets its entities again.
             hass.config_entries.async_schedule_reload(entry.entry_id)
-        known.clear()
         known.update(raw.vehicle_id for raw in garage_coordinator.data)
-        stream.set_vehicle_ids(known)
+        stream.set_vehicle_ids({raw.vehicle_id for raw in garage_coordinator.data})
 
     _async_sync_vehicles()
     await stream.start()
