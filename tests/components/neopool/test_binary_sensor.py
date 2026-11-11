@@ -128,13 +128,20 @@ async def test_pool_cover_none_yields_unknown(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("enable_value", [0, 0x2, None])
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"MBF_PAR_HIDRO_COVER_ENABLE": 0},
+        {"MBF_PAR_HIDRO_COVER_ENABLE": 0x2},
+        {},
+    ],
+)
 async def test_pool_cover_unknown_when_detection_disabled(
     hass: HomeAssistant,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    enable_value: int | None,
+    overrides: dict[str, int],
 ) -> None:
     """Cover reads unknown when the cover-enable bit is clear or missing.
 
@@ -146,12 +153,14 @@ async def test_pool_cover_unknown_when_detection_disabled(
     """
     await setup_integration(hass, mock_config_entry_binary_sensor)
 
-    data: dict = {**MOCK_POOL_DATA, "Pool Cover": False}
-    if enable_value is None:
-        data.pop("MBF_PAR_HIDRO_COVER_ENABLE", None)
-    else:
-        data["MBF_PAR_HIDRO_COVER_ENABLE"] = enable_value
-    mock_neopool_client.async_read_all.return_value = data
+    data = {
+        k: v for k, v in MOCK_POOL_DATA.items() if k != "MBF_PAR_HIDRO_COVER_ENABLE"
+    }
+    mock_neopool_client.async_read_all.return_value = {
+        **data,
+        "Pool Cover": False,
+        **overrides,
+    }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
