@@ -1,0 +1,470 @@
+# serializer version: 1
+# name: test_entities[sensor][sensor.koito_currently_playing_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_currently_playing_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Currently playing track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Currently playing track',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'currently_playing_track',
+    'unique_id': '01J000000000000000000000000_currently_playing_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_currently_playing_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'artist': 'Artist',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://koito.example/song.webp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Currently playing track',
+      'image_url': 'https://koito.example/song.webp',
+      'title': 'Song',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_currently_playing_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Artist - Song',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_minutes_listened-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_minutes_listened',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minutes listened',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Minutes listened',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'minutes_listened',
+    'unique_id': '01J000000000000000000000000_minutes_listened',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_minutes_listened-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Minutes listened',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_minutes_listened',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_plays-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_plays',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Plays',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plays',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plays',
+    'unique_id': '01J000000000000000000000000_plays',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_plays-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Plays',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_plays',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_top_album-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_top_album',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top album',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top album',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'top_albums',
+    'unique_id': '01J000000000000000000000000_top_albums',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_top_album-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'artists': list([
+        'Artist',
+      ]),
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://koito.example/album.webp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Top album',
+      'image_url': 'https://koito.example/album.webp',
+      'title': 'Album',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_top_album',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Artist - Album',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_top_artist-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_top_artist',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top artist',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top artist',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'top_artists',
+    'unique_id': '01J000000000000000000000000_top_artists',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_top_artist-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://koito.example/artist.webp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Top artist',
+      'image_url': 'https://koito.example/artist.webp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_top_artist',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Artist',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_top_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_top_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top track',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'top_tracks',
+    'unique_id': '01J000000000000000000000000_top_tracks',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_top_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'artists': list([
+        'Artist',
+      ]),
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://koito.example/song.webp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Top track',
+      'image_url': 'https://koito.example/song.webp',
+      'title': 'Song',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_top_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Artist - Song',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_unique_albums-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_unique_albums',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unique albums',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unique albums',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unique_albums',
+    'unique_id': '01J000000000000000000000000_unique_albums',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_unique_albums-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Unique albums',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_unique_albums',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_unique_artists-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_unique_artists',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unique artists',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unique artists',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unique_artists',
+    'unique_id': '01J000000000000000000000000_unique_artists',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_unique_artists-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Unique artists',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_unique_artists',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_unique_tracks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.koito_unique_tracks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unique tracks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unique tracks',
+    'platform': 'koito',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unique_tracks',
+    'unique_id': '01J000000000000000000000000_unique_tracks',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.koito_unique_tracks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Koito Unique tracks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.koito_unique_tracks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
