@@ -414,6 +414,12 @@
       "message": "Authentication with ENGIE Belgium failed. Please reauthenticate."
     }
   },
+  "issues": {
+    "no_active_agreements": {
+      "description": "This ENGIE Belgium account has no active contracts, so the integration has no devices or entities to show. Check your contracts on the ENGIE website. When a contract is active again, reload the integration to clear this issue.",
+      "title": "No active contracts for {email}"
+    }
+  },
   "selector": {
     "mfa_method": {
       "options": {

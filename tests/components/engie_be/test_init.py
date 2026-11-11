@@ -6,9 +6,6 @@ import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from aioengiebelgium import (
-    AccountRelation,
-    CustomerAccount,
-    CustomerAccountRelations,
     EnergyContractsResponse,
     EngieBeAuthenticationError,
     EngieBeCommunicationError,
@@ -28,17 +25,23 @@ from homeassistant.components.engie_be.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .conftest import (
     BAN,
     BAN_2,
     BRUSSELS_TIME_ZONE,
+    EMAIL,
     OFFTAKE_ONLY_EAN,
     build_contracts,
     build_epex_payload,
     build_prices,
     build_relations,
+    build_relations_without_agreements,
     setup_dynamic_entry,
     without_capacity_tariff,
 )
@@ -271,21 +274,11 @@ async def test_setup_without_active_agreements(
     mock_engie_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test setup succeeds without devices or entities when there are no active business agreements."""
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
-        CustomerAccountRelations(
-            accounts=(
-                AccountRelation(
-                    id="account-1",
-                    admin=True,
-                    customer_account=CustomerAccount(
-                        customer_account_number="can-1",
-                        business_agreements=(),
-                    ),
-                ),
-            )
-        )
+        build_relations_without_agreements()
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -299,6 +292,47 @@ async def test_setup_without_active_agreements(
     assert not without_capacity_tariff(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"no_active_agreements_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.is_fixable is False
+    assert issue.translation_key == "no_active_agreements"
+    assert issue.translation_placeholders == {"email": EMAIL}
+    assert issue.learn_more_url == "https://www.engie.be"
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("mock_engie_client")
+async def test_no_active_agreements_issue_cleared_on_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the no-active-agreements issue clears once agreements load again."""
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        build_relations_without_agreements()
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"no_active_agreements_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
+
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        build_relations()
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.issues
 
 
 async def test_device_created_for_household_without_prices(

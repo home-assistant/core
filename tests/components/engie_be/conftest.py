@@ -92,6 +92,22 @@ def build_relations(*bans: str, with_address: bool = True) -> CustomerAccountRel
     )
 
 
+def build_relations_without_agreements() -> CustomerAccountRelations:
+    """Build a customer-account-relations response without business agreements."""
+    return CustomerAccountRelations(
+        accounts=(
+            AccountRelation(
+                id="account-1",
+                admin=True,
+                customer_account=CustomerAccount(
+                    customer_account_number="can-1",
+                    business_agreements=(),
+                ),
+            ),
+        )
+    )
+
+
 def build_prices(
     *,
     valid_from: date | None = date(2000, 1, 1),

@@ -8,10 +8,10 @@ from datetime import datetime
 from aioengiebelgium import EngieBeAuthenticationError, EngieBeClient, EngieBeError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -96,6 +96,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
 
     relations = EngieBeRelationsCoordinator(hass, entry, client)
     await relations.async_config_entry_first_refresh()
+
+    issue_id = f"no_active_agreements_{entry.entry_id}"
+    if relations.data:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+    else:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            config_entry_id=entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            learn_more_url="https://www.engie.be",
+            translation_key="no_active_agreements",
+            translation_placeholders={"email": entry.data[CONF_EMAIL]},
+        )
 
     device_registry = dr.async_get(hass)
 
