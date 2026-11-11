@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.wake_on_lan.const import DOMAIN
-from homeassistant.components.wake_on_lan.services import SERVICE_SEND_MAGIC_PACKET
+from homeassistant.components.wake_on_lan.services import WakeOnLanService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -37,7 +37,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MAGIC_PACKET,
+            WakeOnLanService.SEND_MAGIC_PACKET,
             {"mac": mac, "broadcast_address": bc_ip, "broadcast_port": bc_port},
             blocking=True,
         )
@@ -49,7 +49,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         mocked_wakeonlan.reset_mock()
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MAGIC_PACKET,
+            WakeOnLanService.SEND_MAGIC_PACKET,
             {
                 "mac": mac,
                 "secureon_password": secureon_password,
@@ -66,7 +66,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         mocked_wakeonlan.reset_mock()
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MAGIC_PACKET,
+            WakeOnLanService.SEND_MAGIC_PACKET,
             {"mac": mac, "broadcast_address": bc_ip},
             blocking=True,
         )
@@ -78,7 +78,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         mocked_wakeonlan.reset_mock()
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MAGIC_PACKET,
+            WakeOnLanService.SEND_MAGIC_PACKET,
             {"mac": mac, "broadcast_port": bc_port},
             blocking=True,
         )
@@ -91,7 +91,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         with pytest.raises(probatio.Invalid):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_SEND_MAGIC_PACKET,
+                WakeOnLanService.SEND_MAGIC_PACKET,
                 {"broadcast_address": bc_ip},
                 blocking=True,
             )
@@ -99,7 +99,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
 
         mocked_wakeonlan.reset_mock()
         await hass.services.async_call(
-            DOMAIN, SERVICE_SEND_MAGIC_PACKET, {"mac": mac}, blocking=True
+            DOMAIN, WakeOnLanService.SEND_MAGIC_PACKET, {"mac": mac}, blocking=True
         )
         assert len(mocked_wakeonlan.mock_calls) == 1
         assert mocked_wakeonlan.mock_calls[0][1][0] == mac
@@ -115,7 +115,7 @@ async def test_send_magic_packet_raise_repair(
         await async_setup_component(hass, DOMAIN, {})
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MAGIC_PACKET,
+            WakeOnLanService.SEND_MAGIC_PACKET,
             {"mac": mac},
             blocking=True,
         )

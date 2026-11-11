@@ -48,7 +48,7 @@ from homeassistant.components.labs import (
     async_is_preview_feature_enabled,
     async_subscribe_preview_feature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -113,6 +113,7 @@ from .helpers import (
 )
 from .models import (
     TeslemetryChargeOnSolarStore,
+    TeslemetryConfigEntry,
     TeslemetryData,
     TeslemetryEnergyData,
     TeslemetryVehicleData,
@@ -137,8 +138,6 @@ PLATFORMS: Final = [
 _VEHICLE_ISSUE_ID_PATTERN = re.compile(
     f"({'|'.join(map(re.escape, VEHICLE_ISSUE_LEARN_MORE))})_"
 )
-
-type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
