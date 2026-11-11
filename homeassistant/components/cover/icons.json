@@ -109,9 +109,9 @@
       }
     },
     "window": {
-      "default": "mdi:window-open",
+      "default": "mdi:window-open-variant",
       "state": {
-        "closed": "mdi:window-closed",
+        "closed": "mdi:window-closed-variant",
         "closing": "mdi:arrow-down-box",
         "opening": "mdi:arrow-up-box"
       }
