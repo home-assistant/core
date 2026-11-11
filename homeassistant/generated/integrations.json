@@ -2476,18 +2476,6 @@
       ],
       "supported_by": "midea"
     },
-    "comfoconnect": {
-      "name": "Zehnder ComfoAir Q",
-      "integration_type": "hub",
-      "categories": [
-        "climate.fans_ventilation"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "command_line": {
       "name": "Command line",
       "integration_type": "hub",
@@ -17285,6 +17273,32 @@
         "zwave"
       ],
       "supported_by": "fibaro"
+    },
+    "zehnder": {
+      "name": "Zehnder",
+      "integrations": {
+        "comfoconnect": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_push",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "connectivity": [
+            "network"
+          ],
+          "name": "Zehnder ComfoAir Q"
+        },
+        "comfoconnect_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "name": "Zehnder ComfoConnect PRO"
+        }
+      }
     },
     "zerproc": {
       "name": "Zerproc",

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "active_error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "boost_remaining": {
+        "default": "mdi:timer-sand"
+      },
+      "filter_days_remaining": {
+        "default": "mdi:air-filter"
+      }
+    }
+  }
+}
