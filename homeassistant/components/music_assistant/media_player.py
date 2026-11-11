@@ -101,6 +101,9 @@ SUPPORTED_FEATURES_BASE = (
     | MediaPlayerEntityFeature.PAUSE
 )
 
+# Schema version where play_media takes the picked player and routes it to the right queue
+PLAY_MEDIA_ROUTING_SCHEMA_VERSION = 107
+
 QUEUE_OPTION_MAP = {
     # map from HA enqueue options to MA enqueue options
     # which are the same but just in case
@@ -614,10 +617,16 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     f"Could not resolve {media_id} to playable media item"
                 )
 
-            # determine active queue to send the play request to
+            # determine the queue to send the play request to
             if TYPE_CHECKING:
+                assert self.mass.server_info is not None
                 assert self.player.active_source is not None
-            if queue := self.mass.player_queues.get(self.player.active_source):
+            if (
+                self.mass.server_info.schema_version
+                >= PLAY_MEDIA_ROUTING_SCHEMA_VERSION
+            ):
+                queue_id = self.player_id
+            elif queue := self.mass.player_queues.get(self.player.active_source):
                 queue_id = queue.queue_id
             else:
                 queue_id = self.player_id

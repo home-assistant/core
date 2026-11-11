@@ -1249,6 +1249,167 @@ async def test_media_player_standard_play_media_default_user(
     )
 
 
+@pytest.mark.parametrize(
+    ("schema_version", "queue_id"),
+    [
+        pytest.param(107, "00:00:00:00:00:01", id="picked_player"),
+        pytest.param(106, "test_group_player_1", id="older_server_active_queue"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("enqueue", "option"),
+    [
+        pytest.param("play", QueueOption.PLAY, id="play"),
+        pytest.param("replace", QueueOption.REPLACE, id="replace"),
+        pytest.param("add", QueueOption.ADD, id="add"),
+        pytest.param("next", QueueOption.NEXT, id="next"),
+    ],
+)
+async def test_media_player_standard_play_media_grouped_player(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    schema_version: int,
+    queue_id: str,
+    enqueue: str,
+    option: QueueOption,
+) -> None:
+    """Test the queue play_media targets for a player that plays its group's queue."""
+    music_assistant_client.server_info.schema_version = schema_version
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].active_source = "test_group_player_1"
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player_1",
+            ATTR_MEDIA_CONTENT_ID: "spotify://track/1234",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_ENQUEUE: enqueue,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=queue_id,
+        media=["spotify://track/1234"],
+        option=option,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("schema_version", "queue_id"),
+    [
+        pytest.param(107, "00:00:00:00:00:01", id="picked_player"),
+        pytest.param(106, "test_group_player_1", id="older_server_active_queue"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("enqueue", "option"),
+    [
+        pytest.param("play", QueueOption.PLAY, id="play"),
+        pytest.param("replace", QueueOption.REPLACE, id="replace"),
+        pytest.param("add", QueueOption.ADD, id="add"),
+        pytest.param("next", QueueOption.NEXT, id="next"),
+        pytest.param("replace_next", QueueOption.REPLACE_NEXT, id="replace_next"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("radio_mode", "media"),
+    [
+        pytest.param(False, "spotify://track/1234", id="no_radio"),
+        # the client sends radio mode as a radio playlist
+        pytest.param(
+            True, "radio_playlist://playlist/spotify://track/1234", id="radio"
+        ),
+    ],
+)
+async def test_media_player_play_media_action_grouped_player(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    schema_version: int,
+    queue_id: str,
+    enqueue: str,
+    option: QueueOption,
+    radio_mode: bool,
+    media: str,
+) -> None:
+    """Test the queue the play_media action targets for a player that plays its group's queue."""
+    music_assistant_client.server_info.schema_version = schema_version
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.players._players[
+        "00:00:00:00:00:01"
+    ].active_source = "test_group_player_1"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player_1",
+            ATTR_MEDIA_ID: "spotify://track/1234",
+            ATTR_MEDIA_ENQUEUE: enqueue,
+            ATTR_RADIO_MODE: radio_mode,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=queue_id,
+        media=[media],
+        option=option,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        sort_field=None,
+        sort_direction=None,
+        shuffle=None,
+        start_from_beginning=False,
+        require_schema=None,
+    )
+
+
+@pytest.mark.parametrize("schema_version", [106, 107])
+@pytest.mark.parametrize("enqueue", ["play", "add"])
+async def test_media_player_play_media_ungrouped_player(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    schema_version: int,
+    enqueue: str,
+) -> None:
+    """Test that play_media on a player that plays its own queue targets that queue."""
+    music_assistant_client.server_info.schema_version = schema_version
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player_1",
+            ATTR_MEDIA_CONTENT_ID: "spotify://track/1234",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_ENQUEUE: enqueue,
+        },
+        blocking=True,
+    )
+    assert (
+        music_assistant_client.send_command.call_args.kwargs["queue_id"]
+        == "00:00:00:00:00:01"
+    )
+
+
 async def test_media_player_play_announcement_action(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
