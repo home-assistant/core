@@ -1,7 +1,7 @@
 """Repairs for the Assist pipeline integration."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,8 @@ class DebugRecordingsRepairFlow(ConfirmRepairFlow):
             recording_dirs = debug_recordings.left_over_dirs
             check = debug_recordings.async_check_left_over
         else:
-            assert debug_recordings.recording_dir is not None
+            if TYPE_CHECKING:
+                assert debug_recordings.recording_dir is not None
             recording_dirs = [debug_recordings.recording_dir]
             check = debug_recordings.async_check_still_enabled
 

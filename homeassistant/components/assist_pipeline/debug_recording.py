@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import stat
 import time
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -61,6 +61,12 @@ def _find_run_recordings(
     return recordings, complete
 
 
+def _dir_id(path: Path) -> tuple[int, int]:
+    """Return the device and inode, which are the same for every path to it."""
+    dir_stat = path.stat()
+    return dir_stat.st_dev, dir_stat.st_ino
+
+
 def _scan_debug_recordings(
     recording_dir: Path, skip_dirs: Collection[Path]
 ) -> tuple[dict[Path, os.stat_result], bool]:
@@ -70,6 +76,7 @@ def _scan_debug_recordings(
     directory, and pipeline names can contain slashes. Symlinks are not
     followed, so files outside the directory are never returned. The other
     recording directories in skip_dirs are left out, as they can be nested.
+    They are compared by inode, as relative paths or `..` can name the same one.
     """
     recordings: dict[Path, os.stat_result] = {}
     complete = True
@@ -80,9 +87,21 @@ def _scan_debug_recordings(
         if not isinstance(err, FileNotFoundError):
             complete = False
 
+    skip_ids: set[tuple[int, int]] = set()
+    for skip_dir in skip_dirs:
+        with suppress(FileNotFoundError):
+            skip_ids.add(_dir_id(skip_dir))
+
     for dirpath, dirnames, filenames in os.walk(recording_dir, onerror=_on_error):
         run_dir = Path(dirpath)
-        dirnames[:] = [name for name in dirnames if run_dir / name not in skip_dirs]
+        try:
+            skip = _dir_id(run_dir) in skip_ids
+        except OSError as err:
+            _on_error(err)
+            skip = True
+        if skip:
+            dirnames.clear()
+            continue
         if (
             not run_dir.name.isdigit()
             or len(run_dir.relative_to(recording_dir).parts) < 2
@@ -139,7 +158,7 @@ def _issue_placeholders(
     """Return the placeholders describing the recordings."""
     return {
         "count": str(len(recordings)),
-        "size": f"{sum(stat.st_size for stat in recordings) / 1_000_000:.1f}",
+        "size": f"{sum(recording.st_size for recording in recordings) / 1_000_000:.1f}",
         "path": ", ".join(str(recording_dir) for recording_dir in recording_dirs),
     }
 
@@ -166,12 +185,13 @@ class DebugRecordings:
             path for path in self._stored_dirs if path != self.recording_dir
         ]
         await self.async_check_left_over()
-        if self.recording_dir is None:
+        if self.recording_dir is not None:
+            await self.async_check_still_enabled()
+        elif not self.left_over_dirs:
             return
-        await self.async_check_still_enabled()
         async_track_time_interval(
             self.hass,
-            self._async_check_still_enabled_interval,
+            self._async_check_interval,
             CHECK_INTERVAL,
             cancel_on_shutdown=True,
         )
@@ -212,22 +232,26 @@ class DebugRecordings:
             translation_placeholders=_issue_placeholders(
                 list(left_over),
                 [
-                    stat
+                    recording_stat
                     for recordings in left_over.values()
-                    for stat in recordings.values()
+                    for recording_stat in recordings.values()
                 ],
             ),
         )
 
     async def async_check_still_enabled(self) -> None:
         """Raise the issue when recording has been on for too long."""
-        assert self.recording_dir is not None
+        if TYPE_CHECKING:
+            assert self.recording_dir is not None
         recordings = await self.hass.async_add_executor_job(
             find_debug_recordings,
             self.recording_dir,
             self.other_dirs(self.recording_dir),
         )
-        oldest = min((stat.st_mtime for stat in recordings.values()), default=None)
+        oldest = min(
+            (recording_stat.st_mtime for recording_stat in recordings.values()),
+            default=None,
+        )
         if oldest is None or time.time() - oldest < MAX_RECORDING_AGE.total_seconds():
             ir.async_delete_issue(self.hass, DOMAIN, ISSUE_STILL_ENABLED)
             return
@@ -243,9 +267,12 @@ class DebugRecordings:
             ),
         )
 
-    async def _async_check_still_enabled_interval(self, now: datetime) -> None:
-        """Check the recording age once a day."""
-        await self.async_check_still_enabled()
+    async def _async_check_interval(self, now: datetime) -> None:
+        """Check again once a day, also for recordings skipped as active."""
+        if self.left_over_dirs:
+            await self.async_check_left_over()
+        if self.recording_dir is not None:
+            await self.async_check_still_enabled()
 
     async def _async_save(self) -> None:
         """Store the directories that may hold recordings, if they changed."""

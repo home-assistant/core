@@ -207,15 +207,22 @@ async def test_left_over_deleted_manually(
 async def test_left_over_kept_while_recording_active(
     hass: HomeAssistant,
     left_over_dir: Path,
+    freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a previous directory with skipped recordings is kept to check again."""
+    """Test a previous directory with skipped recordings is checked again."""
     await hass.async_add_executor_job(_make_recordings_active, left_over_dir)
     await _async_setup(hass, None)
 
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER) is None
     assert _stored_dirs(hass_storage) == [str(left_over_dir)]
+
+    freezer.tick(timedelta(days=1, minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_LEFT_OVER) is not None
 
 
 @pytest.mark.parametrize(
@@ -235,6 +242,11 @@ async def test_left_over_kept_while_recording_active(
             patch.object(os, "walk", side_effect=_walk_with_error),
             1,
             id="unlistable_directory",
+        ),
+        pytest.param(
+            patch.object(Path, "stat", side_effect=PermissionError),
+            1,
+            id="unreadable_directory",
         ),
     ],
 )
@@ -349,6 +361,7 @@ def _write_symlinked_recordings(recording_dir: Path, external_dir: Path) -> None
     ("current", "previous"),
     [
         pytest.param("new", "", id="current_in_previous"),
+        pytest.param("other/../new", "", id="current_in_previous_other_spelling"),
         pytest.param("", "old", id="previous_in_current"),
     ],
 )
