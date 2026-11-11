@@ -2333,6 +2333,67 @@
     }
   },
   {
+    "adapter": 12,
+    "area": 38,
+    "category": "basic_shutter",
+    "group": {
+      "label": "Chambre"
+    },
+    "id": 152,
+    "label": "RTS Shutter",
+    "name": "node_152",
+    "type": {
+      "inherit": "node::rts",
+      "endpoints": [
+        {
+          "ep_type": "slot",
+          "id": 0,
+          "label": "Monter",
+          "name": "up",
+          "value_type": "void",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 1,
+          "label": "Stop",
+          "name": "stop",
+          "value_type": "void",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "slot",
+          "id": 2,
+          "label": "Descendre",
+          "name": "down",
+          "value_type": "void",
+          "visibility": "normal"
+        },
+        {
+          "ep_type": "signal",
+          "id": 3,
+          "label": "État",
+          "name": "state",
+          "param_type": "void",
+          "value_type": "bool",
+          "visibility": "normal"
+        }
+      ]
+    },
+    "show_endpoints": [
+      {
+        "id": 3,
+        "name": "state",
+        "ep_type": "signal",
+        "value": false,
+        "value_type": "bool"
+      }
+    ],
+    "props": {
+      "FwVersion": 1
+    }
+  },
+  {
     "adapter": 5,
     "category": "alarm",
     "group": {
