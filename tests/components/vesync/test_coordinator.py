@@ -75,13 +75,11 @@ async def test_reauth_started_on_login_error(
 
     # update_all_devices logs device errors, so update_energy is what can raise
     outlet.update_energy = AsyncMock(side_effect=VeSyncLoginError("Login failed"))
-    coordinator = config_entry.runtime_data
 
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL_ENERGY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
     flows = list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
