@@ -26,7 +26,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Migrate fixed time transitions to the time choices."""
+    """Migrate fixed time boundaries to the time choices."""
     if entry.version == 1:
         options = dict(entry.options)
         options[CONF_AFTER] = {CONF_TIME: options.pop(CONF_AFTER_TIME)}

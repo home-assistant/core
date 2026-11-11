@@ -108,7 +108,7 @@ async def test_config_entry_matches_yaml(
     after: dict[str, Any],
     before: dict[str, Any],
 ) -> None:
-    """Test UI transitions and offsets behave like their YAML equivalents."""
+    """Test UI boundaries and offsets behave like their YAML equivalents."""
     assert await async_setup_component(
         hass,
         "binary_sensor",

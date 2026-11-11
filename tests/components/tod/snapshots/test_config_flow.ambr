@@ -84,7 +84,7 @@
                   }),
                 }),
                 'multiple': False,
-                'translation_key': 'transition',
+                'translation_key': 'boundary',
               }),
             }),
           }),
@@ -95,7 +95,7 @@
             }),
           }),
         }),
-        'translation_key': 'transition',
+        'translation_key': 'boundary',
       }),
     }),
   })

@@ -23,13 +23,7 @@
     }
   },
   "selector": {
-    "sun_event": {
-      "options": {
-        "sunrise": "Sunrise",
-        "sunset": "Sunset"
-      }
-    },
-    "transition": {
+    "boundary": {
       "choices": {
         "sun": "Sun",
         "time": "Time"
@@ -45,6 +39,12 @@
         "time": {
           "name": "Time"
         }
+      }
+    },
+    "sun_event": {
+      "options": {
+        "sunrise": "Sunrise",
+        "sunset": "Sunset"
       }
     }
   },

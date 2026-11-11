@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 
 async def test_form(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Test the transition selector offered by the form."""
+    """Test the boundary selector offered by the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -60,7 +60,7 @@ async def test_config_flow(
     before: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test creating fixed time, sun, and mixed transitions."""
+    """Test creating fixed time, sun, and mixed boundaries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -91,7 +91,7 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-    "transition",
+    "boundary",
     [
         pytest.param({"active_choice": "time", "time": "25:00"}, id="invalid-time"),
         pytest.param(
@@ -117,10 +117,8 @@ async def test_config_flow(
         ),
     ],
 )
-async def test_invalid_transition(
-    hass: HomeAssistant, transition: dict[str, Any]
-) -> None:
-    """Test rejecting invalid transitions."""
+async def test_invalid_boundary(hass: HomeAssistant, boundary: dict[str, Any]) -> None:
+    """Test rejecting invalid boundaries."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -129,7 +127,7 @@ async def test_invalid_transition(
             result["flow_id"],
             {
                 "name": "My tod",
-                "after": transition,
+                "after": boundary,
                 "before": {"active_choice": "time", "time": "18:00"},
             },
         )
@@ -187,7 +185,7 @@ async def test_options(
     new_before: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test reconfiguring transitions and reloading the existing entity."""
+    """Test reconfiguring boundaries and reloading the existing entity."""
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
