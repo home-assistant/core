@@ -14,7 +14,6 @@ from homeassistant.components.energyid.const import (
     DOMAIN,
 )
 from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
-    EnergyIDSensorMappingFlowHandler,
     _get_suggested_entities,
     _validate_mapping_input,
 )
@@ -224,12 +223,6 @@ def test_get_suggested_entities_no_suitable_entities(
             domain, platform, unique_id, suggested_object_id=suggested_object_id
         )
     assert _get_suggested_entities(hass) == []
-
-
-def test_energyid_sensor_mapping_flow_handler_repr() -> None:
-    """Test instantiating and repr-ing the handler."""
-    handler = EnergyIDSensorMappingFlowHandler()
-    assert handler.__class__.__name__ == "EnergyIDSensorMappingFlowHandler"
 
 
 async def test_duplicate_entity_key(

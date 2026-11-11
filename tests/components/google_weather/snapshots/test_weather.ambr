@@ -123,13 +123,47 @@
     }),
   ])
 # ---
+# name: test_minute_forecast_service
+  dict({
+    'weather.home': dict({
+      'end_time': '2025-06-01T06:00:00Z',
+      'segments': list([
+        dict({
+          'end_time': '2025-06-01T00:02:00Z',
+          'intensity': 'moderate',
+          'precipitation': 0.5,
+          'precipitation_probability': 62,
+          'precipitation_type': 'rain',
+          'snowfall_amount': 0.0,
+          'start_time': '2025-06-01T00:00:00Z',
+        }),
+        dict({
+          'end_time': '2025-06-01T00:04:00Z',
+          'intensity': 'none',
+          'precipitation': None,
+          'precipitation_probability': 0,
+          'precipitation_type': 'none',
+          'snowfall_amount': None,
+          'start_time': '2025-06-01T00:02:00Z',
+        }),
+      ]),
+      'start_time': '2025-06-01T00:00:00Z',
+    }),
+  })
+# ---
 # name: test_weather[weather.home-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityCapabilityAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ConfigSubentry subentry_type='location' title='Home'>,
     'device_class': None,
@@ -169,19 +203,19 @@
       <WeatherEntityStateAttribute.DEW_POINT: 'dew_point'>: 1.1,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 42,
-      <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 1019.16,
-      <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <WeatherEntityCapabilityAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 7>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 13.7,
-      <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 1.0,
       <WeatherEntityStateAttribute.VISIBILITY: 'visibility'>: 16.0,
-      <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityCapabilityAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
       <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 335,
       <WeatherEntityStateAttribute.WIND_GUST_SPEED: 'wind_gust_speed'>: 18.0,
       <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 8.0,
-      <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'weather.home',

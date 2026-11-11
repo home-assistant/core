@@ -14,7 +14,6 @@ from pyportainer import (
 from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -86,7 +85,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: PortainerConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_ENVIRONMENT: EnvironmentSubentryFlowHandler}

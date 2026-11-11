@@ -7,6 +7,8 @@ from functools import partial
 import logging
 from typing import Any, override
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ICON,
@@ -28,7 +30,7 @@ from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
 from .validators import BlockedTemplateAttributes
 
 _LOGGER = logging.getLogger(__name__)
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 @dataclass
@@ -390,7 +392,7 @@ class AbstractTemplateEntity(Entity):
             return
 
         # Handle extra data.
-        extra_data = _SENTINEL
+        extra_data: Any | _SENTINEL | None = _SENTINEL
         if self._restore_state_extra_data is not None:
             extra_data = await self._async_get_last_template_data()
 

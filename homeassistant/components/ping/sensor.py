@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -118,7 +117,7 @@ class PingSensor(PingEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: PingConfigEntry,
         description: PingSensorEntityDescription,
         coordinator: PingUpdateCoordinator,
     ) -> None:

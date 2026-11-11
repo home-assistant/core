@@ -150,6 +150,37 @@ async def test_symo_meter(
 
 
 @pytest.mark.parametrize(
+    ("status_code", "expected_message"),
+    [
+        pytest.param(12, "ready", id="documented"),
+        pytest.param(255, "unknown", id="reported_unknown"),
+        pytest.param(99, "unknown", id="undocumented"),
+    ],
+)
+async def test_symo_inverter_status_forged(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    status_code: int,
+    expected_message: str,
+) -> None:
+    """Tests for inverter status codes we have no fixture for."""
+    mock_responses(
+        aioclient_mock,
+        fixture_set="symo",
+        override_data={
+            "symo/GetInverterRealtimeData_Device_1.json": [
+                (["Body", "Data", "DeviceStatus", "StatusCode"], status_code),
+            ],
+        },
+    )
+    await setup_fronius_integration(hass)
+
+    state = hass.states.get("sensor.symo_20_status_message")
+    assert state
+    assert state.state == expected_message
+
+
+@pytest.mark.parametrize(
     ("location_code", "expected_code", "expected_description"),
     [
         (-1, -1, "unknown"),

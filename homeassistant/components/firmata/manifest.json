@@ -4,6 +4,7 @@
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@DaAwesomeP"],
   "config_flow": false,
+  "connectivity": ["serial"],
   "documentation": "https://www.home-assistant.io/integrations/firmata",
   "iot_class": "local_push",
   "loggers": ["pymata_express"],

@@ -3,11 +3,12 @@
 import copy
 from http import HTTPStatus
 import ssl
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import plexapi.exceptions
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 from pytest_homeassistant.typing import ClientSessionGenerator
 import requests.exceptions
 import requests_mock
@@ -30,6 +31,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
@@ -41,7 +43,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
+from .const import (
+    DEFAULT_DATA,
+    DEFAULT_OPTIONS,
+    MOCK_SERVERS,
+    MOCK_TOKEN,
+    PLEX_DIRECT_URL,
+)
 from .mock_classes import MockGDM
 
 
@@ -900,3 +908,212 @@ async def test_client_header_issues(hass: HomeAssistant) -> None:
         await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"next_step_id": "website_auth"}
         )
+
+
+@pytest.fixture
+def mock_reconfigured_server(
+    requests_mock: requests_mock.Mocker,
+    plex_server_default: str,
+    plex_server_accounts: str,
+) -> None:
+    """Mock the Plex server at its new address."""
+    for url in ("http://5.6.7.8:32401", "https://5.6.7.8:32401"):
+        requests_mock.get(url, text=plex_server_default)
+        requests_mock.get(f"{url}/accounts", text=plex_server_accounts)
+
+
+@pytest.mark.parametrize(
+    ("user_input", "server_config"),
+    [
+        pytest.param(
+            {
+                CONF_HOST: "5.6.7.8",
+                CONF_PORT: 32401,
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: True,
+            },
+            {
+                CONF_CLIENT_ID: DEFAULT_DATA[PLEX_SERVER_CONFIG][CONF_CLIENT_ID],
+                CONF_TOKEN: MOCK_TOKEN,
+                CONF_URL: "http://5.6.7.8:32401",
+            },
+            id="http",
+        ),
+        pytest.param(
+            {
+                CONF_HOST: "5.6.7.8",
+                CONF_PORT: 32401,
+                CONF_SSL: True,
+                CONF_VERIFY_SSL: False,
+            },
+            {
+                CONF_CLIENT_ID: DEFAULT_DATA[PLEX_SERVER_CONFIG][CONF_CLIENT_ID],
+                CONF_TOKEN: MOCK_TOKEN,
+                CONF_URL: "https://5.6.7.8:32401",
+                CONF_VERIFY_SSL: False,
+            },
+            id="https",
+        ),
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_plex_calls", "mock_reconfigured_server", "mock_setup_entry"
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    user_input: dict[str, Any],
+    server_config: dict[str, Any],
+) -> None:
+    """Test reconfiguring the server address."""
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    # Plex registers an options update listener that does not reload the entry
+    options_listener = AsyncMock()
+    entry.add_update_listener(options_listener)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch("homeassistant.components.plex.async_unload_entry", return_value=None):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**DEFAULT_DATA, PLEX_SERVER_CONFIG: server_config}
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(mock_setup_entry.mock_calls) == 2
+    assert "has an update listener" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("url", "host", "port", "use_ssl"),
+    [
+        pytest.param(
+            "http://[2001:db8::1]:32400", "[2001:db8::1]", 32400, False, id="ipv6"
+        ),
+        pytest.param(
+            "https://plex.example.com",
+            "plex.example.com",
+            443,
+            True,
+            id="https_no_port",
+        ),
+        pytest.param(
+            "http://plex.example.com", "plex.example.com", 80, False, id="http_no_port"
+        ),
+    ],
+)
+async def test_reconfigure_form_defaults(
+    hass: HomeAssistant, url: str, host: str, port: int, use_ssl: bool
+) -> None:
+    """Test the reconfigure form is prefilled from the stored URL."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **DEFAULT_DATA,
+            PLEX_SERVER_CONFIG: {**DEFAULT_DATA[PLEX_SERVER_CONFIG], CONF_URL: url},
+        },
+        options=DEFAULT_OPTIONS,
+        unique_id=DEFAULT_DATA[CONF_SERVER_IDENTIFIER],
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, CONF_HOST) == host
+    assert get_schema_suggested_value(schema, CONF_PORT) == port
+    assert get_schema_suggested_value(schema, CONF_SSL) is use_ssl
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(
+            plexapi.exceptions.Unauthorized,
+            {"base": "faulty_credentials"},
+            id="faulty_credentials",
+        ),
+        pytest.param(
+            requests.exceptions.SSLError, {"base": "ssl_error"}, id="ssl_error"
+        ),
+        pytest.param(
+            requests.exceptions.ConnectionError,
+            {CONF_HOST: "not_found"},
+            id="not_found",
+        ),
+        pytest.param(Exception, {"base": "unknown"}, id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_plex_calls", "mock_reconfigured_server", "mock_setup_entry"
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    side_effect: type[Exception],
+    errors: dict[str, str],
+) -> None:
+    """Test errors during reconfiguration and recovering from them."""
+    entry.add_to_hass(hass)
+    user_input = {
+        CONF_HOST: "5.6.7.8",
+        CONF_PORT: 32401,
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: True,
+    }
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch("plexapi.server.PlexServer", side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == "http://5.6.7.8:32401"
+
+
+@pytest.mark.usefixtures(
+    "mock_plex_calls", "mock_reconfigured_server", "mock_setup_entry"
+)
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfiguring to a different Plex server aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEFAULT_DATA,
+        options=DEFAULT_OPTIONS,
+        unique_id=MOCK_SERVERS[1][CONF_SERVER_IDENTIFIER],
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "5.6.7.8",
+            CONF_PORT: 32401,
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == DEFAULT_DATA

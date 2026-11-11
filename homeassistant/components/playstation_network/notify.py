@@ -16,7 +16,6 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityDescription,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -160,7 +159,7 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
             key=group_id,
             translation_key=PlaystationNetworkNotify.GROUP_MESSAGE,
             translation_placeholders={
-                CONF_NAME: group_details["groupName"]["value"]
+                "name": group_details["groupName"]["value"]
                 or ", ".join(
                     member["onlineId"]
                     for member in group_details["members"]
@@ -188,7 +187,7 @@ class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEn
             key=f"{account_id}_{PlaystationNetworkNotify.DIRECT_MESSAGE}",
             translation_key=PlaystationNetworkNotify.DIRECT_MESSAGE,
             translation_placeholders={
-                CONF_NAME: coordinator.psn.friends_list[account_id].online_id
+                "name": coordinator.psn.friends_list[account_id].online_id
             },
             entity_registry_enabled_default=False,
         )

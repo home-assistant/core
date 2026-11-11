@@ -20,7 +20,7 @@ async def test_switch(
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_SWITCH
     vera_device.is_switched_on = MagicMock(return_value=False)
-    entity_id = "switch.dev1_1"
+    entity_id = "switch.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,

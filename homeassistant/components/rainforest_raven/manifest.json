@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@cottsay"],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/rainforest_raven",
   "integration_type": "hub",

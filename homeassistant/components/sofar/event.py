@@ -14,10 +14,10 @@ from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
-from .const import LAST_HANDLED_FAULT
+from .const import FAULT_LOG, LAST_HANDLED_FAULT
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -41,7 +41,7 @@ class SofarEventEntityDescription(EventEntityDescription, SofarEntityDescription
 EVENT_DESCRIPTIONS: tuple[SofarEventEntityDescription, ...] = (
     SofarEventEntityDescription(
         key="fault",
-        component="fault_log",
+        component=FAULT_LOG,
         translation_key="fault",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_types=[fault.key for fault in FAULTS],
@@ -74,7 +74,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
 
     entity_description: SofarEventEntityDescription
     # The newest entry handled; None while the log is empty.
-    _handled: EntryKey | UndefinedType | None = UNDEFINED
+    _handled: EntryKey | Undefined | None = Undefined
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -101,7 +101,7 @@ class SofarFaultEvent(SofarEntity, EventEntity):
         # Automations arm their triggers only once Home Assistant runs.
         if self.hass.state is not CoreState.running:
             return
-        if (handled := self._handled) is UNDEFINED:
+        if (handled := self._handled) is Undefined:
             self._remember(self._newest())
             return
         for entry in reversed(

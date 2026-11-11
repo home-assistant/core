@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 
 import probatio
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 import pytest
 from pytest_homeassistant.common import (
     MockEntity,
@@ -17,19 +18,11 @@ from pytest_homeassistant.common import (
 from homeassistant.components.hdmi_cec import (
     DOMAIN,
     EVENT_HDMI_CEC_UNAVAILABLE,
-    SERVICE_POWER_ON,
-    SERVICE_SELECT_DEVICE,
-    SERVICE_SEND_COMMAND,
-    SERVICE_STANDBY,
-    SERVICE_UPDATE_DEVICES,
-    SERVICE_VOLUME,
     WATCHDOG_INTERVAL,
-    CecCommand,
-    KeyPressCommand,
-    KeyReleaseCommand,
     PhysicalAddress,
     parse_mapping,
 )
+from homeassistant.components.hdmi_cec.services import HdmiCecService
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -127,6 +120,27 @@ async def test_setup_cec_adapter(
     mock_hdmi_network_instance.stop.assert_called_once_with()
 
 
+@pytest.mark.usefixtures("mock_hdmi_network")
+@pytest.mark.parametrize(
+    "service",
+    [
+        HdmiCecService.POWER_ON,
+        HdmiCecService.SELECT_DEVICE,
+        HdmiCecService.SEND_COMMAND,
+        HdmiCecService.STANDBY,
+        HdmiCecService.UPDATE,
+        HdmiCecService.VOLUME,
+    ],
+)
+async def test_services_registered_during_setup(
+    hass: HomeAssistant, service: str
+) -> None:
+    """Test the actions are available before Home Assistant has started."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    assert hass.services.has_service(DOMAIN, service)
+
+
 @pytest.mark.parametrize("osd_name", ["test", "test_a_long_name"])
 async def test_setup_set_osd_name(
     hass: HomeAssistant, osd_name: str, mock_cec_adapter: MagicMock
@@ -173,7 +187,7 @@ async def test_service_power_on(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_POWER_ON,
+        HdmiCecService.POWER_ON,
         {},
         blocking=True,
     )
@@ -189,7 +203,7 @@ async def test_service_standby(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_STANDBY,
+        HdmiCecService.STANDBY,
         {},
         blocking=True,
     )
@@ -207,7 +221,7 @@ async def test_service_select_device_alias(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_DEVICE,
+        HdmiCecService.SELECT_DEVICE,
         {"device": "Chromecast"},
         blocking=True,
     )
@@ -240,7 +254,7 @@ async def test_service_select_device_entity(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_DEVICE,
+        HdmiCecService.SELECT_DEVICE,
         {"device": "test_domain.hdmi_3"},
         blocking=True,
     )
@@ -259,7 +273,7 @@ async def test_service_select_device_physical_address(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SELECT_DEVICE,
+        HdmiCecService.SELECT_DEVICE,
         {"device": "1.1.0.0"},
         blocking=True,
     )
@@ -278,7 +292,7 @@ async def test_service_update_devices(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_DEVICES,
+        HdmiCecService.UPDATE,
         {},
         blocking=True,
     )
@@ -319,7 +333,7 @@ async def test_service_volume_x_times(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {direction: count},
         blocking=True,
     )
@@ -343,7 +357,7 @@ async def test_service_volume_press(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {direction: "press"},
         blocking=True,
     )
@@ -367,7 +381,7 @@ async def test_service_volume_release(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {direction: "release"},
         blocking=True,
     )
@@ -406,7 +420,7 @@ async def test_service_volume_mute(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_VOLUME,
+        HdmiCecService.VOLUME,
         {"mute": attr},
         blocking=True,
     )
@@ -495,7 +509,7 @@ async def test_service_send_command(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_COMMAND,
+        HdmiCecService.SEND_COMMAND,
         data,
         blocking=True,
     )

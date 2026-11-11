@@ -11,7 +11,6 @@ from yarl import URL
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -46,6 +45,7 @@ from .const import (
     PLACEHOLDER_API_KEY,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
+from .coordinator import LiteLLMConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: LiteLLMConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {
@@ -184,7 +184,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
             ),
-            description_placeholders={CONF_URL: reauth_entry.data[CONF_URL]},
+            description_placeholders={"url": reauth_entry.data[CONF_URL]},
             errors=errors,
         )
 

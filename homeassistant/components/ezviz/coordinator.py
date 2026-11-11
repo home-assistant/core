@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 type EzvizConfigEntry = ConfigEntry[EzvizDataUpdateCoordinator]
 
 
-class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
+class EzvizDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching EZVIZ data."""
 
     def __init__(
