@@ -84,7 +84,9 @@ async def test_airzone_anti_freeze_switch_off(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    mock_put.assert_called_once()
+    mock_put.assert_called_once_with(
+        {API_SYSTEM_ID: 1, API_ZONE_ID: 3, API_ANTI_FREEZE: False}
+    )
     state = hass.states.get("switch.dorm_1_anti_freeze")
     assert state.state == STATE_OFF
 
