@@ -24,7 +24,12 @@ from homeassistant.components.recorder.statistics import (
     get_metadata,
     statistics_during_period,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, Platform, UnitOfMass
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+    Platform,
+    UnitOfMass,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -69,9 +74,7 @@ async def async_backfill_weight_statistics(call: ServiceCall) -> None:
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="recorder_required"
         )
-    entity_id = er.async_get(hass).async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_weight_kg"
-    )
+    entity_id = _async_get_weight_entity_id(hass, entry)
     recorder = get_instance(hass)
     if (
         entity_id is None
@@ -97,6 +100,7 @@ async def async_backfill_weight_statistics(call: ServiceCall) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="weight_history_failed"
         ) from err
+    _async_ensure_weight_entity_id(hass, entry, entity_id)
 
     hourly: dict[datetime, list[float]] = defaultdict(list)
     for group in measurements:
@@ -121,6 +125,8 @@ async def async_backfill_weight_statistics(call: ServiceCall) -> None:
     if entity_id in metadata_by_id:
         metadata = metadata_by_id[entity_id][1]
     else:
+        # Match the unit Recorder will use when it compiles the sensor's states.
+        state = hass.states.get(entity_id)
         metadata = StatisticMetaData(
             mean_type=StatisticMeanType.ARITHMETIC,
             has_sum=False,
@@ -128,7 +134,9 @@ async def async_backfill_weight_statistics(call: ServiceCall) -> None:
             source=RECORDER_DOMAIN,
             statistic_id=entity_id,
             unit_class=MassConverter.UNIT_CLASS,
-            unit_of_measurement=UnitOfMass.KILOGRAMS,
+            unit_of_measurement=(
+                state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
+            ),
         )
     unit = metadata["unit_of_measurement"]
     if unit is None or unit not in MassConverter.VALID_UNITS:
@@ -163,13 +171,26 @@ async def async_backfill_weight_statistics(call: ServiceCall) -> None:
             )
         )
     if statistics:
-        if (
-            er.async_get(hass).async_get_entity_id(
-                Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_weight_kg"
-            )
-            != entity_id
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="weight_sensor_changed"
-            )
+        _async_ensure_weight_entity_id(hass, entry, entity_id)
         async_import_statistics(hass, metadata, statistics)
+
+
+@callback
+def _async_get_weight_entity_id(
+    hass: HomeAssistant, entry: WithingsConfigEntry
+) -> str | None:
+    """Return the current entity ID of the account's weight sensor."""
+    return er.async_get(hass).async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_weight_kg"
+    )
+
+
+@callback
+def _async_ensure_weight_entity_id(
+    hass: HomeAssistant, entry: WithingsConfigEntry, entity_id: str
+) -> None:
+    """Stop if the weight sensor was renamed while the action was waiting."""
+    if _async_get_weight_entity_id(hass, entry) != entity_id:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="weight_sensor_changed"
+        )

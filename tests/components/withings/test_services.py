@@ -175,14 +175,31 @@ async def test_backfill_preserves_statistics(
     assert hass.states.get(ENTITY_ID) is None
 
 
+@pytest.mark.parametrize(
+    ("sensor_options", "unit", "expected_mean"),
+    [
+        ({}, UnitOfMass.KILOGRAMS, 70),
+        (
+            {"unit_of_measurement": UnitOfMass.POUNDS},
+            UnitOfMass.POUNDS,
+            154.32358352941432,
+        ),
+    ],
+)
 async def test_backfill_without_existing_statistics(
     hass: HomeAssistant,
     recorder_mock: Recorder,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    sensor_options: dict[str, str],
+    unit: str,
+    expected_mean: float,
 ) -> None:
-    """Create native weight statistics without creating another sensor."""
+    """Create native weight statistics in the sensor's unit without another sensor."""
     await setup_integration(hass, polling_config_entry, False)
+    entity_registry.async_update_entity_options(ENTITY_ID, "sensor", sensor_options)
+    await hass.async_block_till_done()
     withings.get_measurement_in_period.return_value = [
         replace(load_measurements_fixture()[0], taken_at=START)
     ]
@@ -197,11 +214,11 @@ async def test_backfill_without_existing_statistics(
         statistics_during_period, hass, START, None, {ENTITY_ID}, "hour", None, {"mean"}
     )
     assert len(rows[ENTITY_ID]) == 1
-    assert rows[ENTITY_ID][0]["mean"] == 70
+    assert rows[ENTITY_ID][0]["mean"] == pytest.approx(expected_mean)
     metadata = await recorder_mock.async_add_executor_job(
         partial(get_metadata, hass, statistic_ids={ENTITY_ID})
     )
-    assert metadata[ENTITY_ID][1]["unit_of_measurement"] == UnitOfMass.KILOGRAMS
+    assert metadata[ENTITY_ID][1]["unit_of_measurement"] == unit
     assert metadata[ENTITY_ID][1]["source"] == "recorder"
 
 
