@@ -1,7 +1,9 @@
 """Provides the DataUpdateCoordinator."""
 
+import asyncio
 from datetime import timedelta
 import logging
+from time import monotonic
 from typing import Any, override
 
 from gardena_bluetooth.client import Client
@@ -33,6 +35,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 SEGMENTED_SCAN_INTERVAL = timedelta(minutes=30)
 SEGMENTED_SCAN_COUNT = int(SEGMENTED_SCAN_INTERVAL / SCAN_INTERVAL)
 LOGGER = logging.getLogger(__name__)
+READ_TIMEOUT = 10.0
+READ_RETRIES = 1
+SLOW_READ_THRESHOLD = 1.0
 
 type GardenaBluetoothConfigEntry = ConfigEntry[GardenaBluetoothCoordinator]
 
@@ -124,6 +129,29 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except CharacteristicNoAccess:
             LOGGER.debug("No access to update internal time")
 
+    async def _read_characteristic(self, char: Characteristic) -> Any:
+        """Retry transient timeouts for ordinary reads."""
+        if isinstance(char, CharacteristicSegmented):
+            return await self.client.read_char(char)
+        attempt = 0
+        while True:
+            attempt += 1
+            start = monotonic()
+            try:
+                async with asyncio.timeout(READ_TIMEOUT):
+                    value = await self.client.read_char(char)
+            except TimeoutError as exception:
+                LOGGER.debug("Read %s timed out on attempt %s", char.unique_id, attempt)
+                if attempt > READ_RETRIES:
+                    raise UpdateFailed(
+                        f"Timeout reading {char.unique_id} after {attempt} attempts"
+                    ) from exception
+            else:
+                elapsed = monotonic() - start
+                if elapsed > SLOW_READ_THRESHOLD:
+                    LOGGER.debug("Slow read of %s took %.2fs", char.unique_id, elapsed)
+                return value
+
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Poll the device."""
@@ -154,7 +182,7 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 continue
 
             try:
-                data[unique_id] = await self.client.read_char(char)
+                data[unique_id] = await self._read_characteristic(char)
             except CharacteristicNoAccess as exception:
                 LOGGER.debug(
                     "Unable to get data for %s due to %s", unique_id, exception
