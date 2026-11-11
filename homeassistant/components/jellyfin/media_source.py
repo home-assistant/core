@@ -3,7 +3,7 @@
 import logging
 import mimetypes
 import os
-from typing import Any, override
+from typing import Any, Final, NamedTuple, override
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
@@ -18,7 +18,6 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    AUDIO_TRANSCODE_TARGETS,
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
     CONF_AUDIO_CODEC,
@@ -39,7 +38,6 @@ from .const import (
     ITEM_TYPE_SEASON,
     ITEM_TYPE_SERIES,
     MAX_IMAGE_WIDTH,
-    MEDIA_SOURCE_KEY_CONTAINER,
     MEDIA_SOURCE_KEY_PATH,
     MEDIA_TYPE_AUDIO,
     MEDIA_TYPE_NONE,
@@ -50,6 +48,24 @@ from .const import (
 from .coordinator import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+MEDIA_SOURCE_KEY_CONTAINER: Final = "Container"
+
+
+class AudioTranscodeTarget(NamedTuple):
+    """Combines codec, container, and mime type information for audio transcoding."""
+
+    codec: str  # codec name passed to the Jellyfin (ffmpeg) transcoder
+    container: str  # transcoding container that can hold this codec
+    mime_type: str  # mime type of the resulting stream
+
+
+AUDIO_TRANSCODE_TARGETS: Final = {
+    "aac": AudioTranscodeTarget("aac", "aac", "audio/aac"),
+    "mp3": AudioTranscodeTarget("mp3", "mp3", "audio/mpeg"),
+    "vorbis": AudioTranscodeTarget("vorbis", "ogg", "audio/ogg"),
+    "wma": AudioTranscodeTarget("wmav2", "asf", "audio/x-ms-wma"),
+}
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -562,8 +578,7 @@ class JellyfinSource(MediaSource):
 
 def _media_container(media_item: dict[str, Any]) -> str | None:
     """Return the container of a media item's first media source."""
-    if not (media_sources := media_item.get(ITEM_KEY_MEDIA_SOURCES)):
-        return None
+    media_sources = media_item.get(ITEM_KEY_MEDIA_SOURCES) or [{}]
     container: str | None = media_sources[0].get(MEDIA_SOURCE_KEY_CONTAINER)
     return container
 
