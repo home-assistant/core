@@ -509,8 +509,10 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                                 mode=selector.SelectSelectorMode.LIST,
                             )
                         ),
+                        # Suggested values come from the entry options, which have
+                        # no exclusive value until the entry is set up and migrated
                         probatio.Required(
-                            CONF_EXCLUSIVE,
+                            CONF_EXCLUSIVE, default=DEFAULT_EXCLUSIVE
                         ): selector.BooleanSelector(),
                         probatio.Required(
                             CONF_EMULATE_KEY_HOLD,
