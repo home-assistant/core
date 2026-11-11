@@ -36,7 +36,11 @@ from neopool_modbus.registers import (
     is_valid_relay_gpio,
 )
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
+    SelectEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -54,6 +58,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
+from .helpers import cleanup_occupied_aux_entities
 
 PARALLEL_UPDATES = 1
 
@@ -629,6 +634,8 @@ async def async_setup_entry(
     """Set up NeoPool select entities from a config entry."""
     coordinator = entry.runtime_data
     options = entry.options
+
+    cleanup_occupied_aux_entities(hass, entry.entry_id, SELECT_DOMAIN, coordinator.data)
 
     async_add_entities(
         NeoPoolSelect(coordinator, key, desc)

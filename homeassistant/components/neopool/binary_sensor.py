@@ -16,6 +16,7 @@ from neopool_modbus.capabilities import (
 from neopool_modbus.registers import aux_relay_available, is_valid_relay_gpio
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -34,6 +35,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
+from .helpers import cleanup_occupied_aux_entities
 
 PARALLEL_UPDATES = 0
 
@@ -351,6 +353,10 @@ async def async_setup_entry(
     """Set up NeoPool binary sensors from a config entry."""
     coordinator = entry.runtime_data
     options = entry.options
+
+    cleanup_occupied_aux_entities(
+        hass, entry.entry_id, BINARY_SENSOR_DOMAIN, coordinator.data
+    )
 
     async_add_entities(
         NeoPoolBinarySensor(coordinator, key, desc)

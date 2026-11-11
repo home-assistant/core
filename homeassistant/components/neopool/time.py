@@ -7,7 +7,11 @@ from typing import Any, Literal, override
 
 from neopool_modbus.registers import aux_relay_available, is_valid_relay_gpio
 
-from homeassistant.components.time import TimeEntity, TimeEntityDescription
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeEntity,
+    TimeEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,6 +25,7 @@ from .const import (
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolDebouncedWriteEntity
+from .helpers import cleanup_occupied_aux_entities
 
 # The platform coalesces rapid writes per entity via a debounce timer. Each
 # start/stop entity flushes its own endpoint independently, so a platform
@@ -127,6 +132,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up NeoPool time entities from a config entry."""
     coordinator = entry.runtime_data
+
+    cleanup_occupied_aux_entities(hass, entry.entry_id, TIME_DOMAIN, coordinator.data)
 
     async_add_entities(
         NeoPoolTime(coordinator, key, desc)

@@ -23,7 +23,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.neopool.const import FOLLOW_UP_REFRESH_DELAY
+from homeassistant.components.neopool.const import DOMAIN, FOLLOW_UP_REFRESH_DELAY
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -661,6 +661,48 @@ async def test_aux_switch_absent_when_relay_assigned_to_function(
     assert hidden_suffix not in aux_suffixes
     # The other three AUX relays stay free and keep their switches.
     assert aux_suffixes == {"_aux1", "_aux2", "_aux3", "_aux4"} - {hidden_suffix}
+
+
+async def test_occupied_aux_cleanup_removes_only_disabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_neopool_client: MagicMock,
+    mock_config_entry_switch: MockConfigEntry,
+) -> None:
+    """Setup removes a disabled occupied-AUX entry but keeps an enabled one.
+
+    On an existing install the gate alone leaves a registered AUX entity as a
+    restored, unavailable state. The cleanup drops such a stale entry only when
+    it is disabled, so a user-enabled AUX keeps its customisations even once its
+    relay becomes occupied.
+    """
+    mock_config_entry_switch.add_to_hass(hass)
+    # AUX1 relay 4 and AUX2 relay 5 are both claimed by a function.
+    data = {**mock_neopool_client.async_read_all.return_value}
+    data["MBF_PAR_PH_ACID_RELAY_GPIO"] = 4
+    data["MBF_PAR_PH_BASE_RELAY_GPIO"] = 5
+    mock_neopool_client.async_read_all = AsyncMock(return_value=data)
+    serial = mock_config_entry_switch.unique_id
+    # A stale disabled AUX1 entry (should be removed) and an enabled, customised
+    # AUX2 entry (should be kept).
+    disabled = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{serial}_aux1",
+        config_entry=mock_config_entry_switch,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    enabled = entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        f"{serial}_aux2",
+        config_entry=mock_config_entry_switch,
+    )
+
+    await setup_integration(hass, mock_config_entry_switch)
+
+    assert entity_registry.async_get(disabled.entity_id) is None
+    assert entity_registry.async_get(enabled.entity_id) is not None
 
 
 async def test_switch_write_schedules_follow_up_refresh(
