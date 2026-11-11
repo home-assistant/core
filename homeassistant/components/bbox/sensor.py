@@ -4,6 +4,7 @@ from asyncio import run_coroutine_threadsafe
 from datetime import timedelta
 import logging
 
+from aiohttp import CookieJar
 import probatio
 
 from homeassistant.components.sensor import (
@@ -22,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -213,7 +214,11 @@ class BboxData:
         """
         if self._api is None:
             self._api = BboxApi(
-                async_get_clientsession(self._hass), self._password, self._host
+                async_create_clientsession(
+                    self._hass, cookie_jar=CookieJar(unsafe=True)
+                ),
+                self._password,
+                self._host,
             )
         return await self._api.get_ip_stats_and_info()
 

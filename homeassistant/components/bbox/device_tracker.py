@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
+from aiohttp import CookieJar
 import probatio
 
 from homeassistant.components.device_tracker import (
@@ -16,7 +17,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -72,7 +73,11 @@ class BboxDeviceScanner(DeviceScanner):
         """
         if self._api is None:
             self._api = BboxApi(
-                async_get_clientsession(self.hass), self._password, self._host
+                async_create_clientsession(
+                    self.hass, cookie_jar=CookieJar(unsafe=True)
+                ),
+                self._password,
+                self._host,
             )
         return await self._api.get_connected_devices()
 
