@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import client_exceptions
 from freezegun.api import FrozenDateTimeFactory
-from pyControl4.error_handling import BadCredentials, BadToken
+from pyControl4.error_handling import BadCredentials, BadToken, C4Exception
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -147,7 +147,7 @@ async def test_gather_entry_variables_isolates_per_item_failures(
 
     async def _get_item_variables(item_id: int) -> list[dict]:
         if item_id == 100:
-            raise TimeoutError("device unreachable")
+            raise C4Exception("item removed")
         return [{"varName": "Level", "value": 50}]
 
     mock_c4_director.get_item_variables = AsyncMock(side_effect=_get_item_variables)

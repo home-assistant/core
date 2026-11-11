@@ -418,6 +418,25 @@ async def test_climate_undefined_humidity(
     assert state.attributes.get("current_humidity") is None
 
 
+@pytest.mark.parametrize("mock_climate_variables", [_make_climate_data()])
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_climate_missing_hvac_modes_list(hass: HomeAssistant) -> None:
+    """Test all HVAC modes are offered when HVAC_MODES_LIST is missing."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.HEAT_COOL,
+    ]
+
+
 @pytest.mark.parametrize(
     "mock_climate_variables",
     [

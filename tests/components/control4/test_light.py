@@ -302,6 +302,27 @@ async def test_light_not_created_when_no_initial_data(hass: HomeAssistant) -> No
     assert hass.states.get(SWITCH_ENTITY_ID) is None
 
 
+@pytest.mark.usefixtures("mock_c4_account", "mock_light_update_variables")
+async def test_light_setup_retried_after_initial_timeout(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_director: MagicMock,
+) -> None:
+    """A timeout on the initial variable read retries light setup."""
+    get_item_variables = mock_c4_director.get_item_variables.side_effect
+    mock_c4_director.get_item_variables.side_effect = TimeoutError
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(DIMMER_ENTITY_ID) is None
+
+    mock_c4_director.get_item_variables.side_effect = get_item_variables
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DIMMER_ENTITY_ID) is not None
+
+
 @pytest.mark.usefixtures(
     "mock_c4_account",
     "mock_c4_director",

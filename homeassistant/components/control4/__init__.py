@@ -8,7 +8,7 @@ from typing import Any
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import BadCredentials, C4Exception, InvalidCategory
+from pyControl4.error_handling import BadCredentials, C4Exception
 from pyControl4.websocket import C4Websocket
 
 from homeassistant.const import (
@@ -202,18 +202,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) ->
 
 async def get_items_of_category(
     hass: HomeAssistant, entry: Control4ConfigEntry, category: str
-) -> list[dict[str, Any]]:
+):
     """Return a list of all Control4 items with the specified category."""
-    director = entry.runtime_data.director
-    try:
-        return await director.get_all_items_by_category(category)
-    except InvalidCategory:
-        _LOGGER.warning(
-            "Category %s does not exist on this Control4 system, "
-            "entities from this domain will not be set up",
-            category,
-        )
-        return []
+    return [
+        item
+        for item in entry.runtime_data.director_all_items
+        if "categories" in item and category in item["categories"]
+    ]
 
 
 async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
