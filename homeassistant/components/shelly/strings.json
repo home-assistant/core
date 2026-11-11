@@ -302,6 +302,18 @@
         }
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
     "infrared": {
       "infrared_emitter": {
         "name": "Infrared emitter"
@@ -491,6 +503,24 @@
           }
         }
       },
+      "humidity_level": {
+        "name": "Humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "humidity_level_with_channel_name": {
+        "name": "{channel_name} humidity level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
       "humidity_with_channel_name": {
         "name": "{channel_name} humidity"
       },
@@ -500,6 +530,14 @@
           "bright": "Bright",
           "dark": "Dark",
           "twilight": "Twilight"
+        }
+      },
+      "illuminance_level_with_channel_name": {
+        "name": "{channel_name} illuminance level",
+        "state": {
+          "bright": "[%key:component::shelly::entity::sensor::illuminance_level::state::bright%]",
+          "dark": "[%key:component::shelly::entity::sensor::illuminance_level::state::dark%]",
+          "twilight": "[%key:component::shelly::entity::sensor::illuminance_level::state::twilight%]"
         }
       },
       "lamp_life": {
@@ -765,6 +803,9 @@
       }
     },
     "switch": {
+      "boost": {
+        "name": "Boost"
+      },
       "camera_privacy": {
         "name": "Privacy"
       },

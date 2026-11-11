@@ -16,6 +16,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
 
+PARALLEL_UPDATES = 0
+
 
 def _get_obj_holidays_and_language(
     country: str,
