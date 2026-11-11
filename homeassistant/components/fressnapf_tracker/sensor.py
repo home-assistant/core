@@ -41,7 +41,6 @@ class FressnapfTrackerSensorDescription(SensorEntityDescription):
     """Class describing Fressnapf Tracker sensor entities."""
 
     value_fn: Callable[[Tracker], int | datetime | None]
-    exists_fn: Callable[[Tracker], bool] = lambda _: True
 
 
 SENSOR_ENTITY_DESCRIPTIONS: tuple[FressnapfTrackerSensorDescription, ...] = (
@@ -65,7 +64,6 @@ SENSOR_ENTITY_DESCRIPTIONS: tuple[FressnapfTrackerSensorDescription, ...] = (
         translation_key="subscription_end",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        exists_fn=lambda data: data.servicebooking is not None,
         value_fn=lambda data: (
             _parse_timestamp(data.servicebooking.servicebooking_until)
             if data.servicebooking is not None
@@ -86,7 +84,6 @@ async def async_setup_entry(
         FressnapfTrackerSensor(coordinator, sensor_description)
         for sensor_description in SENSOR_ENTITY_DESCRIPTIONS
         for coordinator in entry.runtime_data
-        if sensor_description.exists_fn(coordinator.data)
     )
 
 
