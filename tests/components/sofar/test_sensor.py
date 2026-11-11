@@ -315,25 +315,6 @@ async def test_total_keeps_its_restored_value_while_asleep(
     assert extra_data.as_dict()["native_value"] == 990.0
 
 
-async def test_total_follows_a_later_poll(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test a total changed after setup is published on the next poll."""
-    entity_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_solar_generation_total"
-    )
-    assert entity_id is not None
-    mock_connection.for_unit(1).holding[0x0687] = 160  # 16.0 kWh
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(entity_id).state == "16.0"
-
-
 async def test_sensor_availability_on_component_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -348,16 +329,22 @@ async def test_sensor_availability_on_component_failure(
     pv_power_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
     )
+    total_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_solar_generation_total"
+    )
     assert grid_frequency_id is not None
     assert pv_power_id is not None
+    assert total_id is not None
 
     unit = mock_connection.for_unit(1)
     unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
+    unit.holding[0x0687] = 160  # 16.0 kWh
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(grid_frequency_id).state == STATE_UNAVAILABLE
     assert hass.states.get(pv_power_id).state == "2.5"
+    assert hass.states.get(total_id).state == "16.0"
 
     unit.fail_read(0x0484, None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
