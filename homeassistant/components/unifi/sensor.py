@@ -58,10 +58,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES, DOMAIN
-from .device_tracker import (
-    async_client_allowed_fn,
-    async_client_ssid_allowed_fn,
-)
+from .device_tracker import async_client_allowed_fn, async_client_ssid_allowed_fn
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
