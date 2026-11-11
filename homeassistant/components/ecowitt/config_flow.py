@@ -1,5 +1,7 @@
 """Config flow for ecowitt."""
 
+from contextlib import suppress
+from ipaddress import ip_address
 import secrets
 from typing import Any, override
 
@@ -8,10 +10,34 @@ from yarl import URL
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.util.network import is_loopback
 
 from .const import DOMAIN
+
+
+def _get_station_target_url(hass: HomeAssistant) -> URL:
+    """Return the URL the station should upload to.
+
+    Stations can only upload over plain HTTP on the local network, so configured
+    HTTPS or external URLs (e.g. behind a reverse proxy) do not work for them.
+    """
+    with suppress(NoURLAvailableError):
+        url = URL(get_url(hass, allow_external=False, allow_cloud=False, allow_ip=True))
+        if url.scheme == "http":
+            return url
+
+    api = hass.config.api
+    if (
+        api is not None
+        and not api.use_ssl
+        and not is_loopback(ip_address(api.local_ip))
+    ):
+        return URL.build(scheme="http", host=api.local_ip, port=api.port)
+
+    return URL(get_url(hass))
 
 
 class EcowittConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -31,7 +57,7 @@ class EcowittConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user",
             )
 
-        base_url = URL(get_url(self.hass))
+        base_url = _get_station_target_url(self.hass)
         assert base_url.host
 
         return self.async_create_entry(
