@@ -52,7 +52,6 @@ def resolve_db_url(hass: HomeAssistant, db_url: str | None) -> str:
 def validate_sql_select(value: Template) -> Template:
     """Validate that value is a SQL SELECT query."""
     try:
-        assert value.hass
         check_and_render_sql_query(value.hass, value)
     except (TemplateError, InvalidSqlQuery) as err:
         raise probatio.Invalid(str(err)) from err

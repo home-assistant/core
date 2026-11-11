@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity, LightServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -115,8 +115,10 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on and optionally set the brightness."""
-        if ATTR_BRIGHTNESS in kwargs:
-            return await self.async_update_value(round(kwargs[ATTR_BRIGHTNESS] / 2.55))
+        if LightServiceArgument.BRIGHTNESS in kwargs:
+            return await self.async_update_value(
+                round(kwargs[LightServiceArgument.BRIGHTNESS] / 2.55)
+            )
         return await self.async_update_state(True)
 
 
@@ -142,4 +144,6 @@ class AdvantageAirThingLightDimmable(AdvantageAirThingEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on by setting the brightness."""
-        await self.async_update_value(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
+        await self.async_update_value(
+            round(kwargs.get(LightServiceArgument.BRIGHTNESS, 255) / 2.55)
+        )

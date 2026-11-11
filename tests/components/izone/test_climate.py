@@ -19,10 +19,15 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    PRESET_ECO,
+    PRESET_NONE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
@@ -33,6 +38,9 @@ from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.components.izone.services import IZoneService, IZoneServiceArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     CommonServiceArgument,
@@ -273,6 +281,145 @@ async def test_set_zone_mode(
         blocking=True,
     )
     zone.set_mode.assert_awaited_once_with(Zone.Mode.CLOSE)
+
+
+@pytest.mark.parametrize(
+    ("mock_zones", "service", "expected_mode"),
+    [
+        pytest.param(
+            [create_mock_zone(index=0, name="Living Room")],
+            SERVICE_TURN_ON,
+            Zone.Mode.AUTO,
+            id="turn_on_auto_zone",
+        ),
+        pytest.param(
+            [create_mock_zone(index=0, name="Living Room", zone_type=Zone.Type.OPCL)],
+            SERVICE_TURN_ON,
+            Zone.Mode.OPEN,
+            id="turn_on_open_close_zone",
+        ),
+        pytest.param(
+            [create_mock_zone(index=0, name="Living Room")],
+            SERVICE_TURN_OFF,
+            Zone.Mode.CLOSE,
+            id="turn_off",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_turn_on_off(
+    hass: HomeAssistant,
+    mock_zones: list[Mock],
+    service: str,
+    expected_mode: Zone.Mode,
+) -> None:
+    """Turning a zone on uses its type's open mode; turning it off closes it."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ZONE_ENTITY},
+        blocking=True,
+    )
+    mock_zones[0].set_mode.assert_awaited_once_with(expected_mode)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_controller_turn_on(
+    hass: HomeAssistant,
+    mock_controller: Mock,
+) -> None:
+    """Turning the controller on switches the system on."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: CONTROLLER_ENTITY},
+        blocking=True,
+    )
+    mock_controller.set_on.assert_awaited_once_with(True)
+
+
+@pytest.mark.parametrize(
+    ("preset_mode", "expected_free_air"),
+    [
+        pytest.param(PRESET_ECO, True, id="eco"),
+        pytest.param(PRESET_NONE, False, id="none"),
+    ],
+)
+async def test_set_preset_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    preset_mode: str,
+    expected_free_air: bool,
+) -> None:
+    """The eco preset switches free air on, and none switches it off."""
+    mock_controller.free_air_enabled = True
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_PRESET_MODE: preset_mode},
+        blocking=True,
+    )
+    mock_controller.set_free_air.assert_awaited_once_with(expected_free_air)
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [create_mock_controller(free_air_enabled=True, free_air=True, zones_total=1)],
+)
+async def test_free_air_shows_fan_only(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+) -> None:
+    """Free air shows as fan only with the eco preset, and only off/fan only remain."""
+    mock_controller.zones = mock_zones
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(CONTROLLER_ENTITY)
+    assert state is not None
+    assert state.state == HVACMode.FAN_ONLY
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.FAN_ONLY]
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+
+
+@pytest.mark.parametrize(
+    ("zone_mode", "expected_hvac_mode", "has_target_temperature"),
+    [
+        pytest.param(Zone.Mode.AUTO, HVACMode.HEAT_COOL, True, id="auto"),
+        pytest.param(Zone.Mode.OPEN, HVACMode.FAN_ONLY, False, id="open"),
+        pytest.param(Zone.Mode.CLOSE, HVACMode.OFF, False, id="close"),
+    ],
+)
+async def test_auto_zone_target_temperature_follows_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_zones: list[Mock],
+    zone_mode: Zone.Mode,
+    expected_hvac_mode: HVACMode,
+    has_target_temperature: bool,
+) -> None:
+    """An auto zone only offers a setpoint while it is in auto mode."""
+    mock_zones[0].mode = zone_mode
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ZONE_ENTITY)
+    assert state is not None
+    assert state.state == expected_hvac_mode
+    assert (
+        bool(
+            state.attributes[ATTR_SUPPORTED_FEATURES]
+            & ClimateEntityFeature.TARGET_TEMPERATURE
+        )
+        is has_target_temperature
+    )
+    assert (ATTR_TEMPERATURE in state.attributes) is has_target_temperature
 
 
 async def test_target_temperature_when_controller_owns(

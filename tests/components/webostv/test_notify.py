@@ -11,7 +11,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
 )
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import ATTR_ICON
+from homeassistant.components.webostv.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component

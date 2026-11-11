@@ -57,6 +57,15 @@ DESCRIPTIONS: list[WatergateBinarySensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    WatergateBinarySensorEntityDescription(
+        value_fn=lambda data: (
+            "external" in data.state.power_supply if data.state else None
+        ),
+        translation_key="external_power",
+        key="external_power",
+        device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 
