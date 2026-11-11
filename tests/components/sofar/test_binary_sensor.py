@@ -53,6 +53,7 @@ async def test_all_entities(
     unit = connection.for_unit(1)
     unit.holding[0x0405] = 0b1  # ID001_GRID_OVER_VOLTAGE
     unit.holding[0x1105] = 0b1  # active power limit armed
+    unit.holding[0x1106] = 800  # 80% limit, on while armed
     freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
