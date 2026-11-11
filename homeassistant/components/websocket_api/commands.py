@@ -86,6 +86,7 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import (
+    BootstrapProgress,
     async_get_loaded_integrations,
     async_get_setup_timings,
     async_wait_component,
@@ -263,7 +264,7 @@ def handle_subscribe_bootstrap_progress(
     """Handle subscribe bootstrap progress command."""
 
     @callback
-    def forward_bootstrap_progress(message: dict[str, Any]) -> None:
+    def forward_bootstrap_progress(message: BootstrapProgress) -> None:
         """Forward bootstrap progress to websocket."""
         connection.send_message(messages.event_message(msg["id"], message))
 

@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 from functools import partial
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
 from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
@@ -19,6 +19,7 @@ from .util.signal_type import SignalType
 if TYPE_CHECKING:
     from .core import EventStateChangedData, EventStateReportedData
     from .helpers.typing import NoEventData
+    from .setup import BootstrapProgress
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
@@ -1061,14 +1062,16 @@ HASSIO_USER_NAME = "Supervisor"
 SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
     "bootstrap_integrations"
 )
-SIGNAL_BOOTSTRAP_PROGRESS: SignalType[dict[str, Any]] = SignalType("bootstrap_progress")
+SIGNAL_BOOTSTRAP_PROGRESS: SignalType[BootstrapProgress] = SignalType(
+    "bootstrap_progress"
+)
 
 
 # hass.data keys for logging information.
 KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
 KEY_DATA_LOGGING_DISABLED_REASON: HassKey[str] = HassKey("logging_disabled_reason")
 # Last startup progress message, sent to new subscribers.
-KEY_DATA_BOOTSTRAP_PROGRESS: HassKey[dict[str, Any]] = HassKey("bootstrap_progress")
+KEY_DATA_BOOTSTRAP_PROGRESS: HassKey[BootstrapProgress] = HassKey("bootstrap_progress")
 
 
 # Date/Time formats

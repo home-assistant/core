@@ -91,6 +91,38 @@ class EventComponentLoaded(TypedDict):
     component: str
 
 
+class BootstrapPhase(StrEnum):
+    """Startup phases reported in the bootstrap progress."""
+
+    PREPARING = "preparing"
+    """Resolving the domains to set up; the total is not known yet."""
+    SETUP = "setup"
+    """Setting up the integrations of a bootstrap stage."""
+    WRAP_UP = "wrap_up"
+    """Waiting for the tasks created during integration setup."""
+    STARTING = "starting"
+    """CoreState.starting: start event listeners and startup jobs."""
+    RUNNING = "running"
+    """CoreState.running: startup is finished."""
+
+
+class BootstrapIntegrationsProgress(TypedDict):
+    """Integrations whose setup attempt finished during bootstrap."""
+
+    total: int | None
+    done: int
+    failed: list[str]
+
+
+class BootstrapProgress(TypedDict):
+    """Startup progress sent by bootstrap."""
+
+    phase: BootstrapPhase
+    elapsed: float
+    integrations: BootstrapIntegrationsProgress
+    active: dict[str, float]
+
+
 @callback
 def async_notify_setup_error(
     hass: HomeAssistant, component: str, display_link: str | None = None

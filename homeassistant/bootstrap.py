@@ -3,7 +3,6 @@
 import asyncio
 from collections import defaultdict
 import contextlib
-from enum import StrEnum
 from functools import partial
 from itertools import chain
 import logging
@@ -100,6 +99,9 @@ from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .loader import Integration
 from .setup import (
+    BootstrapIntegrationsProgress,
+    BootstrapPhase,
+    BootstrapProgress,
     # _setup_started and _async_get_domains_pending_setup are marked as protected to make it clear
     # that it is not part of the public API and should not be used
     # by integrations. It is only used for internal tracking of
@@ -581,7 +583,7 @@ async def async_from_config_dict(
         )
         return None
 
-    await _async_set_up_integrations(hass, config)
+    await _async_set_up_integrations(hass, config, start)
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
@@ -900,10 +902,12 @@ async def _async_resolve_domains_and_preload(
 
 
 async def _async_set_up_integrations(
-    hass: core.HomeAssistant, config: dict[str, Any]
+    hass: core.HomeAssistant, config: dict[str, Any], start: float | None = None
 ) -> None:
     """Set up all the integrations."""
-    watcher = _WatchPendingSetups(hass, _setup_started(hass))
+    watcher = _WatchPendingSetups(
+        hass, _setup_started(hass), monotonic() if start is None else start
+    )
     watcher.async_start()
 
     integrations, all_integrations = await _async_resolve_domains_and_preload(
@@ -925,7 +929,6 @@ async def _async_set_up_integrations(
     )
 
     async_set_domains_to_be_loaded(hass, all_domains)
-    watcher.async_set_planned_domains(all_domains)
 
     # Initialize recorder
     if "recorder" in all_domains:
@@ -939,6 +942,15 @@ async def _async_set_up_integrations(
         ("1", STAGE_1_INTEGRATIONS, STAGE_1_TIMEOUT),
         ("2", domains, STAGE_2_TIMEOUT),
     ]
+    # Not every resolved domain is set up by a stage, only count those that are.
+    watcher.async_set_planned_domains(
+        {
+            dep
+            for _, domain_group, _ in stages
+            for domain in domain_group & all_domains
+            for dep in (domain, *integrations_after_dependencies[domain])
+        }
+    )
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:
@@ -952,7 +964,7 @@ async def _async_set_up_integrations(
             _LOGGER.info("Already set up stage %s: %s", name, stage_domains_unfiltered)
             continue
 
-        watcher.async_set_phase(BootstrapPhase.SETUP, name)
+        watcher.async_set_phase(BootstrapPhase.SETUP)
         stage_dep_domains_unfiltered = {
             dep
             for domain in stage_domains
@@ -1016,31 +1028,6 @@ async def _async_set_up_integrations(
         )
 
 
-class BootstrapPhase(StrEnum):
-    """Startup phases reported in the bootstrap progress."""
-
-    PREPARING = "preparing"
-    """Resolving the domains to set up; the total is not known yet."""
-    SETUP = "setup"
-    """Setting up the integrations of a bootstrap stage."""
-    WRAP_UP = "wrap_up"
-    """Waiting for the tasks created during integration setup."""
-    STARTING = "starting"
-    """CoreState.starting: start event listeners and startup jobs."""
-    RUNNING = "running"
-    """CoreState.running: startup is finished."""
-
-
-_FAILED_CONFIG_ENTRY_STATES = {
-    config_entries.ConfigEntryState.SETUP_ERROR,
-    config_entries.ConfigEntryState.MIGRATION_ERROR,
-}
-_PENDING_CONFIG_ENTRY_STATES = {
-    config_entries.ConfigEntryState.NOT_LOADED,
-    config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
-}
-
-
 class _WatchPendingSetups:
     """Periodic log and dispatch of setups that are pending."""
 
@@ -1048,6 +1035,7 @@ class _WatchPendingSetups:
         self,
         hass: core.HomeAssistant,
         setup_started: dict[tuple[str, str | None], float],
+        started: float,
     ) -> None:
         """Initialize the WatchPendingSetups class."""
         self._hass = hass
@@ -1056,11 +1044,9 @@ class _WatchPendingSetups:
         self._handle: asyncio.TimerHandle | None = None
         self._previous_was_empty = True
         self._loop = hass.loop
-        self._started = monotonic()
+        self._started = started
         self._phase = BootstrapPhase.PREPARING
-        self._stage: str | None = None
         self._planned_domains: set[str] | None = None
-        self._retried_entry_ids: set[str] = set()
         self._progress_handle: asyncio.TimerHandle | None = None
 
     def _async_watch(self) -> None:
@@ -1104,14 +1090,13 @@ class _WatchPendingSetups:
     @core.callback
     def async_set_planned_domains(self, domains: set[str]) -> None:
         """Set the domains bootstrap will set up, including dependencies."""
-        self._planned_domains = set(domains)
+        self._planned_domains = domains
         self._async_dispatch_progress()
 
     @core.callback
-    def async_set_phase(self, phase: BootstrapPhase, stage: str | None = None) -> None:
+    def async_set_phase(self, phase: BootstrapPhase) -> None:
         """Set the current phase and dispatch the progress."""
         self._phase = phase
-        self._stage = stage
         self._async_dispatch_progress()
 
     @core.callback
@@ -1138,7 +1123,7 @@ class _WatchPendingSetups:
         self._async_dispatch_progress()
         self._async_schedule_progress()
 
-    def _async_progress(self) -> dict[str, Any]:
+    def _async_progress(self) -> BootstrapProgress:
         """Return the startup progress.
 
         Progress is counted in integrations (domains) whose setup attempt
@@ -1146,62 +1131,26 @@ class _WatchPendingSetups:
         """
         now = monotonic()
         active: dict[str, float] = {}
-        for (domain, _), start_time in self._setup_started.items():
-            active[domain] = max(active.get(domain, 0.0), now - start_time)
+        # The running message is kept for late subscribers, so it lists no setups.
+        if self._phase is not BootstrapPhase.RUNNING:
+            for (domain, _), start_time in self._setup_started.items():
+                active[domain] = max(active.get(domain, 0.0), now - start_time)
 
-        integrations: dict[str, Any] = {"total": None, "done": 0, "failed": []}
-        entries: dict[str, Any] = {
-            "total": 0,
-            "done": 0,
-            "retrying": [],
-            "failed": [],
-        }
+        integrations = BootstrapIntegrationsProgress(total=None, done=0, failed=[])
         if (planned := self._planned_domains) is not None:
             pending = _async_get_domains_pending_setup(self._hass) & planned
-            components = self._hass.config.components
             integrations["total"] = len(planned)
             integrations["done"] = len(planned) - len(pending)
-            integrations["failed"] = sorted(planned - pending - components)
-            retrying: set[str] = set()
-            failed: set[str] = set()
-            for entry in self._hass.config_entries.async_entries(
-                include_ignore=False, include_disabled=False
-            ):
-                if entry.domain not in planned:
-                    continue
-                entries["total"] += 1
-                state = entry.state
-                if state is config_entries.ConfigEntryState.SETUP_RETRY:
-                    self._retried_entry_ids.add(entry.entry_id)
-                # An entry setting up again after a retry finished its first attempt.
-                retried = entry.entry_id in self._retried_entry_ids and state in (
-                    config_entries.ConfigEntryState.SETUP_RETRY,
-                    config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
-                )
-                if (
-                    retried
-                    or state not in _PENDING_CONFIG_ENTRY_STATES
-                    or (
-                        state is config_entries.ConfigEntryState.NOT_LOADED
-                        and entry.domain not in pending
-                    )
-                ):
-                    entries["done"] += 1
-                if retried:
-                    retrying.add(entry.domain)
-                elif state in _FAILED_CONFIG_ENTRY_STATES:
-                    failed.add(entry.domain)
-            entries["retrying"] = sorted(retrying)
-            entries["failed"] = sorted(failed)
+            integrations["failed"] = sorted(
+                planned - pending - self._hass.config.components
+            )
 
-        return {
-            "phase": self._phase,
-            "stage": self._stage,
-            "elapsed": now - self._started,
-            "integrations": integrations,
-            "config_entries": entries,
-            "active": active,
-        }
+        return BootstrapProgress(
+            phase=self._phase,
+            elapsed=now - self._started,
+            integrations=integrations,
+            active=active,
+        )
 
     def _async_dispatch_progress(self) -> None:
         """Store and dispatch the startup progress."""

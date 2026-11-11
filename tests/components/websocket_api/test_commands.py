@@ -74,7 +74,13 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.loader import Integration, async_get_integration
-from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from homeassistant.setup import (
+    BootstrapIntegrationsProgress,
+    BootstrapPhase,
+    BootstrapProgress,
+    async_set_domains_to_be_loaded,
+    async_setup_component,
+)
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
@@ -3736,12 +3742,22 @@ async def test_subscribe_bootstrap_progress(
     subscription = msg["id"]
     assert msg["success"]
 
-    message = {"phase": "setup", "integrations": {"total": 3, "done": 1}}
+    message = BootstrapProgress(
+        phase=BootstrapPhase.SETUP,
+        elapsed=1.5,
+        integrations=BootstrapIntegrationsProgress(total=3, done=1, failed=["fail"]),
+        active={"slow": 1.0},
+    )
     async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_PROGRESS, message)
     msg = await websocket_client.receive_json()
     assert msg["id"] == subscription
     assert msg["type"] == "event"
-    assert msg["event"] == message
+    assert msg["event"] == {
+        "phase": "setup",
+        "elapsed": 1.5,
+        "integrations": {"total": 3, "done": 1, "failed": ["fail"]},
+        "active": {"slow": 1.0},
+    }
 
 
 async def test_subscribe_bootstrap_progress_sends_current_progress(
