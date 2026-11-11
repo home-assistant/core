@@ -115,5 +115,17 @@
         "name": "Signal strength"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "mqtt_topic": "MQTT topic prefix"
+        },
+        "data_description": {
+          "mqtt_topic": "MQTT topic prefix configured on the Airzone WebServer. Leave empty to disable MQTT updates."
+        }
+      }
+    }
   }
 }

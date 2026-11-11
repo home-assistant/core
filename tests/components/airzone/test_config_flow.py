@@ -15,7 +15,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.airzone.config_flow import short_mac
-from homeassistant.components.airzone.const import DOMAIN
+from homeassistant.components.airzone.const import CONF_MQTT_TOPIC, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -488,3 +488,55 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         assert result["data"][CONF_ID] == TEST_ID
 
         mock_setup_entry.assert_called_once()
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test updating the MQTT topic through options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.airzone.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            return_value=HVAC_DHW_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            return_value=HVAC_WEBSERVER_MOCK,
+        ),
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_MQTT_TOPIC: "airzone"},
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert entry.options[CONF_MQTT_TOPIC] == "airzone"
