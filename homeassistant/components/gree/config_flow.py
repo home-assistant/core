@@ -1,4 +1,4 @@
-"""Config flow for Gree."""
+"""Config flow for Gree using shared user and DHCP discovery."""
 
 from greeclimate.discovery import Discovery
 
