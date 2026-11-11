@@ -553,7 +553,11 @@ class WaterHeater(HomeAccessory):
         )
         state = self.hass.states.get(self.entity_id)
         assert state
-        self._unit = state.attributes[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+        # A state restored from an old registry entry can lack the capability
+        self._unit = state.attributes.get(
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT,
+            self.hass.config.units.temperature_unit,
+        )
         min_temp, max_temp = self.get_temperature_range(state)
 
         features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
@@ -602,6 +606,22 @@ class WaterHeater(HomeAccessory):
         )
 
         self.async_update_state(state)
+
+    @callback
+    @override
+    def async_update_state_callback(self, new_state: State | None) -> None:
+        """Reload when the temperature unit changed, also across an unavailable state."""
+        if (
+            new_state is not None
+            and new_state.state != STATE_UNAVAILABLE
+            and new_state.attributes.get(
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT, self._unit
+            )
+            != self._unit
+        ):
+            self.async_reload()
+            return
+        super().async_update_state_callback(new_state)
 
     def get_temperature_range(self, state: State) -> tuple[float, float]:
         """Return min and max temperature range."""

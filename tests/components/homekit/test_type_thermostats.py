@@ -3241,3 +3241,77 @@ async def test_reload_on_temperature_unit_change(
         )
         await hass.async_block_till_done()
         mock_reload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("accessory_cls", "entity_id"),
+    [
+        pytest.param(Thermostat, "climate.test", id="thermostat"),
+        pytest.param(HeaterCooler, "climate.test", id="heater_cooler"),
+        pytest.param(WaterHeater, "water_heater.test", id="water_heater"),
+    ],
+)
+async def test_reload_on_temperature_unit_change_while_unavailable(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    accessory_cls: type[HomeAccessory],
+    entity_id: str,
+) -> None:
+    """Test the accessory reloads when the unit changed while it was unavailable."""
+    hass.states.async_set(entity_id, HVACMode.HEAT, _RELOAD_TEST_ATTRS)
+    await hass.async_block_till_done()
+    acc = accessory_cls(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE, _RELOAD_TEST_ATTRS)
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        hass.states.async_set(
+            entity_id,
+            HVACMode.HEAT,
+            {
+                **_RELOAD_TEST_ATTRS,
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+                    UnitOfTemperature.FAHRENHEIT
+                ),
+            },
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("accessory_cls", "entity_id"),
+    [
+        pytest.param(Thermostat, "climate.test", id="thermostat"),
+        pytest.param(HeaterCooler, "climate.test", id="heater_cooler"),
+        pytest.param(WaterHeater, "water_heater.test", id="water_heater"),
+    ],
+)
+async def test_temperature_unit_missing(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    accessory_cls: type[HomeAccessory],
+    entity_id: str,
+) -> None:
+    """Test a state without a temperature unit, like one restored from an old entry."""
+    attributes = {ATTR_MIN_TEMP: 50, ATTR_MAX_TEMP: 90}
+    hass.states.async_set(entity_id, HVACMode.HEAT, attributes)
+    await hass.async_block_till_done()
+    acc = accessory_cls(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc._unit == hass.config.units.temperature_unit
+
+    with patch.object(acc, "async_reload") as mock_reload:
+        hass.states.async_set(
+            entity_id, HVACMode.HEAT, {**attributes, ATTR_CURRENT_TEMPERATURE: 20}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_THERMOSTAT
@@ -101,7 +101,11 @@ class HomeKitClimateAccessory(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         attributes = state.attributes
-        self._unit = attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        # A state restored from an old registry entry can lack the capability
+        self._unit = attributes.get(
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT,
+            self.hass.config.units.temperature_unit,
+        )
         features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         # ``fan_modes`` maps lowercased names to their original casing;
@@ -139,6 +143,22 @@ class HomeKitClimateAccessory(HomeAccessory):
                 ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT,
             )
         )
+
+    @callback
+    @override
+    def async_update_state_callback(self, new_state: State | None) -> None:
+        """Reload when the temperature unit changed, also across an unavailable state."""
+        if (
+            new_state is not None
+            and new_state.state != STATE_UNAVAILABLE
+            and new_state.attributes.get(
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT, self._unit
+            )
+            != self._unit
+        ):
+            self.async_reload()
+            return
+        super().async_update_state_callback(new_state)
 
     def get_temperature_range(self, state: State) -> tuple[float, float]:
         """Return the min and max temperature range."""
