@@ -116,6 +116,7 @@ class BboxDeviceScanner(DeviceScanner):
             ).result(REQUEST_TIMEOUT)
         except (BboxError, TimeoutError) as error:
             _LOGGER.error("Error fetching Bbox device list: %s", error)
+            self.last_results = []
             return False
 
         now = dt_util.now()

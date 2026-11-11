@@ -102,7 +102,7 @@ class BboxApi:
         except ClientResponseError as err:
             _LOGGER.error("Bbox returned HTTP %s for %s", err.status, url)
             raise BboxError(f"Bbox error for {url}: HTTP {err.status}") from err
-        except ClientError as err:
+        except (ClientError, ValueError) as err:
             _LOGGER.error("Bbox returned an invalid payload for %s: %s", url, err)
             raise BboxError(f"Invalid payload from {url}") from err
         # The Bbox API wraps some payloads in a single-element array.
