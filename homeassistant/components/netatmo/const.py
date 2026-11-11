@@ -138,6 +138,11 @@ CAMERA_TRIGGERS = [
     EVENT_TYPE_ON,
 ]
 
+DOORBELL_TRIGGERS = [
+    EVENT_TYPE_CONNECTION,
+    EVENT_TYPE_DISCONNECTION,
+]
+
 OUTDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_ANIMAL,
     EVENT_TYPE_HUMAN,
@@ -225,3 +230,4 @@ CAMERA_CONNECTION_WEBHOOKS = [
 # For NDB there is no monitoring attribute in status but only alim_status.
 # 2 = Full power/online for NDB (and also Correct power adapter for NACamera).
 NETATMO_ALIM_STATUS_ONLINE = 2
+NETATMO_DOORBELLS = ["NDB"]
