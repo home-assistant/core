@@ -206,36 +206,24 @@ class SofarPackSensor(SofarEntity, SensorEntity):
         pack: BatteryPack,
     ) -> None:
         """Initialize the entity."""
-        # The base builds the unique ID and device info from this pack.
-        self._pack = pack
         super().__init__(runtime_data, entity_description)
-
-    @override
-    def _unique_id(self, serial: str) -> str:
-        """Name the entity after its pack, which repeats every key."""
-        return (
-            f"{battery_pack_identifier(serial, self._pack)}"
-            f"_{self.entity_description.key}"
+        self._pack = pack
+        identifier = battery_pack_identifier(
+            self.coordinator.device.serial_number, pack
         )
-
-    @override
-    def _device_info(
-        self, runtime_data: SofarRuntimeData, serial: str
-    ) -> dr.DeviceInfo:
-        """Place the entity on its own pack, connected via the inverter."""
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, battery_pack_identifier(serial, self._pack))},
+        # Every pack repeats the same keys.
+        self._attr_unique_id = f"{identifier}_{entity_description.key}"
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
             via_device_id=runtime_data.inverter_device_id,
             translation_key="battery_pack",
             translation_placeholders={
-                "group": str(self._pack.group_nr + 1),
-                "pack": str(self._pack.pack_nr + 1),
+                "group": str(pack.group_nr + 1),
+                "pack": str(pack.pack_nr + 1),
             },
-            model=self._pack.pack_model or None,
-            sw_version=(
-                None if self._pack.bms_version is None else str(self._pack.bms_version)
-            ),
-            serial_number=self._pack.pack_serial_number or None,
+            model=pack.pack_model or None,
+            sw_version=None if pack.bms_version is None else str(pack.bms_version),
+            serial_number=pack.pack_serial_number or None,
         )
 
     @property

@@ -1428,6 +1428,24 @@ async def test_upnp_subscribe_events_upnpresponseerror(
     assert "Device rejected subscription" in caplog.text
 
 
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "upnp_notify_server")
+async def test_upnp_keeps_existing_subscription(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dmr_device: Mock,
+) -> None:
+    """Test an active Upnp subscription is not renewed on update."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert dmr_device.async_subscribe_services.call_count == 1
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 1
+
+
 @pytest.mark.usefixtures("rest_api", "upnp_notify_server")
 async def test_upnp_re_subscribe_events(
     hass: HomeAssistant,
