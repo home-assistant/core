@@ -289,6 +289,33 @@ async def test_user_step_same_tcp_gateway_is_a_duplicate(
     assert result["reason"] == "already_configured"
 
 
+async def test_user_step_gateway_added_during_the_probe(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a gateway another flow adds while this one probes is a duplicate."""
+    flow_id = await _start_flow(hass, TYPE_TCP)
+    connection = _gateway()
+
+    @asynccontextmanager
+    async def _get_temporary_unit(
+        hass: HomeAssistant,
+        params: ModbusSerialParams | ModbusTcpParams,
+        unit_id: int,
+    ) -> AsyncIterator[MockModbusUnit]:
+        MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA).add_to_hass(hass)
+        yield connection.for_unit(unit_id)
+
+    with patch(
+        "homeassistant.components.comfoconnect_modbus.config_flow.async_get_temporary_unit",
+        side_effect=_get_temporary_unit,
+    ):
+        result = await hass.config_entries.flow.async_configure(flow_id, MOCK_TCP_INPUT)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_setup_entry.mock_calls
+
+
 async def test_user_step_normalizes_the_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:

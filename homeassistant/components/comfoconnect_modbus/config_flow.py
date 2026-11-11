@@ -176,6 +176,8 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(_link_identity(data))
             errors, description_placeholders = await self._async_validate(data)
             if not errors:
+                # Check again because another flow may have added the gateway during the probe
+                self._async_abort_entries_match(_link_identity(data))
                 return self.async_create_entry(title=DEFAULT_NAME, data=data)
 
         return self.async_show_form(
