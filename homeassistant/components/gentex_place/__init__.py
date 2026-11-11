@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> None:
     """Set up Place from a config entry."""
     auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
     try:
@@ -79,9 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
