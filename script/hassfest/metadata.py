@@ -2,9 +2,9 @@
 
 import tomllib
 
-from homeassistant.const import REQUIRED_PYTHON_VER, __version__
+from hassfest.model import Config, Integration
 
-from .model import Config, Integration
+from homeassistant.const import REQUIRED_PYTHON_VER, __version__
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

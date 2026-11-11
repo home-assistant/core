@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_EVENT_DATA,
+    CONF_EXCLUDE,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -49,12 +50,7 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    TemplateVarsType,
-    UndefinedType,
-)
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, Undefined
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
@@ -679,7 +675,7 @@ async def async_initialize_triggers(
     domain: str,
     name: str,
     log_cb: Callable,
-    home_assistant_start: bool | UndefinedType = UNDEFINED,
+    home_assistant_start: bool | Undefined = Undefined,
     variables: TemplateVarsType = None,
     *,
     did_not_trigger: TriggerNotTriggeredAction | None = None,
@@ -690,7 +686,7 @@ async def async_initialize_triggers(
     invoked - for new-style triggers that support it - when a trigger evaluates
     a relevant change but reports it did not fire. Old-style triggers ignore it.
     """
-    if home_assistant_start is not UNDEFINED:
+    if home_assistant_start is not Undefined:
         report_usage(
             "passes `home_assistant_start` to `async_initialize_triggers`, which is "
             "deprecated and will be removed in Home Assistant 2027.8; the parameter "
@@ -859,9 +855,11 @@ def async_extract_targets(
     config: dict,
     target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
 ) -> list[str]:
-    """Extract targets from a target config."""
+    """Extract targets from a target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):
         return []
-    if not (targets := target_conf.get(target)):
-        return []
-    return [targets] if isinstance(targets, str) else targets
+    found: list[str] = []
+    for conf in (target_conf, target_conf.get(CONF_EXCLUDE, {})):
+        if targets := conf.get(target):
+            found.extend([targets] if isinstance(targets, str) else targets)
+    return found

@@ -1,11 +1,11 @@
 """Tests for the Aseko Pool Live integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.aseko_pool_live.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry_unknown_version(hass: HomeAssistant) -> None:

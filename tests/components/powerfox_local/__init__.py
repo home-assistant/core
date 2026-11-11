@@ -1,8 +1,8 @@
 """Tests for the Powerfox Local integration."""
 
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import MockConfigEntry
 
-from tests.common import MockConfigEntry
+from homeassistant.core import HomeAssistant
 
 MOCK_HOST = "1.1.1.1"
 MOCK_API_KEY = "9x9x1f12xx3x"

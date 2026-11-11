@@ -3,11 +3,10 @@
 from unittest.mock import AsyncMock
 
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(

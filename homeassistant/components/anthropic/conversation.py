@@ -8,8 +8,8 @@ from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AnthropicConfigEntry
 from .const import DOMAIN
+from .coordinator import AnthropicConfigEntry
 from .entity import AnthropicBaseLLMEntity
 
 PARALLEL_UPDATES = 0

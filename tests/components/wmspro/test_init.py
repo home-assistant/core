@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.wmspro.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import remove_config_entry, setup_config_entry, unload_config_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_entry_device_config_ping_failed(

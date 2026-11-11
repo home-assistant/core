@@ -54,6 +54,18 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "CONF_EXTRA_ARGUMENTS",
+    "CONF_INITIAL_STATE",
+    "CONF_INPUT",
+    "CONF_OUTPUT",
+    "DOMAIN",
+    "FFmpegBase",
+    "FFmpegManager",
+    "async_get_image",
+    "get_ffmpeg_manager",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the FFmpeg component."""

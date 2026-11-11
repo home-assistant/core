@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, call, patch
 
 from pyloadapi import CannotConnect, InvalidAuth, ParserError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.pyload.switch import PyLoadSwitch
@@ -19,8 +20,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 # Maps entity to the mock calls to assert
 API_CALL = {

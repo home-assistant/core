@@ -1,8 +1,10 @@
 {
   "domain": "arve",
   "name": "Arve",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@ikalnyi"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/arve",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

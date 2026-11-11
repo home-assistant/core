@@ -6,17 +6,13 @@ from uuid import UUID
 import probatio
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
+from .coordinator import IBeaconConfigEntry
 
 
 class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,7 +37,7 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: IBeaconConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return IBeaconOptionsFlow()

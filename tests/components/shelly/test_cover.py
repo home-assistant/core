@@ -22,15 +22,22 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER_TILT,
     CoverState,
 )
-from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    RPC_COVER_UPDATE_TIME_SEC,
+    ShellyService,
+    ShellyServiceArgument,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
@@ -259,6 +266,7 @@ async def test_rpc_device_services(
     assert state.state == CoverState.CLOSING
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
@@ -291,6 +299,7 @@ async def test_rpc_device_update(
     """Test RPC device update."""
     entity_id = "cover.test_name_test_cover_0"
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "current_pos", 0)
     await init_integration(hass, 2)
 
     state = hass.states.get(entity_id)
@@ -298,10 +307,45 @@ async def test_rpc_device_update(
     assert state.state == CoverState.CLOSED
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "open")
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "current_pos", 100
+    )
     mock_rpc_device.mock_update()
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    ("device_state", "current_pos", "expected_state"),
+    [
+        pytest.param("closed", 0, CoverState.CLOSED, id="closed"),
+        # Some OEM firmwares (e.g. RaexMP46) never report "closed"
+        pytest.param("stopped", 0, CoverState.CLOSED, id="stopped_at_zero"),
+        pytest.param("stopped", 35, CoverState.OPEN, id="stopped_partway"),
+        pytest.param("open", 100, CoverState.OPEN, id="open"),
+    ],
+)
+async def test_rpc_device_position_control_closed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    device_state: str,
+    current_pos: int,
+    expected_state: str,
+) -> None:
+    """Test RPC cover with position control is closed at position 0."""
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "state", device_state
+    )
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "cover:0", "current_pos", current_pos
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get("cover.test_name_test_cover_0"))
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == current_pos
 
 
 @pytest.mark.parametrize(
@@ -311,6 +355,9 @@ async def test_rpc_device_update(
         ("stopped", "open", CoverState.OPEN),
         # Nothing has moved since the device booted
         ("stopped", None, STATE_UNKNOWN),
+        # A limit switch reports the end position
+        ("closed", "close", CoverState.CLOSED),
+        ("open", "open", CoverState.OPEN),
     ],
 )
 async def test_rpc_device_no_position_control(
@@ -485,3 +532,57 @@ async def test_rpc_not_initialized_update(
     mock_rpc_device.update_cover_status.assert_not_called()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rpc_cover_set_position_and_tilt(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC cover set position and tilt sends a single command."""
+    entity_id = "cover.test_name_test_cover_0"
+
+    config = deepcopy(mock_rpc_device.config)
+    config["cover:0"]["slat"] = {"enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cover:0"]["slat_pos"] = 0
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    await hass.services.async_call(
+        DOMAIN,
+        ShellyService.SET_COVER_POSITION_AND_TILT,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            ShellyServiceArgument.POSITION: 100,
+            ShellyServiceArgument.TILT_POSITION: 100,
+        },
+        blocking=True,
+    )
+
+    mock_rpc_device.cover_set_position.assert_called_once_with(0, pos=100, slat_pos=100)
+
+
+async def test_rpc_cover_set_position_and_tilt_not_supported(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test RPC cover set position and tilt on a cover without tilt."""
+    await init_integration(hass, 3)
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            ShellyService.SET_COVER_POSITION_AND_TILT,
+            {
+                CommonServiceArgument.ENTITY_ID: "cover.test_name_test_cover_0",
+                ShellyServiceArgument.POSITION: 100,
+                ShellyServiceArgument.TILT_POSITION: 100,
+            },
+            blocking=True,
+        )
+
+    mock_rpc_device.cover_set_position.assert_not_called()

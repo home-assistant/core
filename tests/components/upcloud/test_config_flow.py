@@ -1,5 +1,6 @@
 """Tests for the UpCloud config flow."""
 
+from pytest_homeassistant.common import MockConfigEntry
 import requests.exceptions
 import requests_mock
 from requests_mock import ANY
@@ -10,8 +11,6 @@ from homeassistant.components.upcloud.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_USERNAME: "user",

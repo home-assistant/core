@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from automower_ble.protocol import ResponseResult
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import AUTOMOWER_SERVICE_INFO_SERIAL
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_automower_client")
 

@@ -274,7 +274,7 @@
             'instance_id': '0a123c',
           }),
         }),
-        'CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> collections.abc.AsyncIterator[bytes]',
+        'BackupManager._async_upload_backup.<locals>.upload_backup_to_agent.<locals>.open_stream_and_track() -> collections.abc.AsyncIterator[bytes]',
         987,
       ),
       dict({
@@ -378,7 +378,7 @@
             'instance_id': '0a123c',
           }),
         }),
-        'CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> collections.abc.AsyncIterator[bytes]',
+        'BackupManager._async_upload_backup.<locals>.upload_backup_to_agent.<locals>.open_stream_and_track() -> collections.abc.AsyncIterator[bytes]',
         987,
       ),
       dict({

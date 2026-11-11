@@ -1,13 +1,17 @@
 """The init tests for the nexia platform."""
 
-from unittest.mock import MagicMock, NonCallableMock, patch
+from unittest.mock import AsyncMock, MagicMock, NonCallableMock, patch
 
 import aiohttp
 from nexia.home import NexiaHome
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.nexia import _preregister_devices
+from homeassistant.components.nexia.config_flow import NexiaConfigFlow
 from homeassistant.components.nexia.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -15,9 +19,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup_retry_client_os_error(
@@ -35,7 +36,7 @@ async def test_setup_invalid_credentials(
     hass: HomeAssistant,
     patch_nexia_home: NonCallableMock[NexiaHome],
 ) -> None:
-    """Verify setup fails on invalid credentials."""
+    """Verify setup fails and starts reauth on invalid credentials."""
     patch_nexia_home.login.side_effect = aiohttp.ClientResponseError(
         MagicMock(), (), status=401
     )
@@ -45,6 +46,10 @@ async def test_setup_invalid_credentials(
         config_entry.reason
         == "Access error from Nexia service, please check credentials"
     )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 async def test_device_remove_devices(
@@ -83,8 +88,8 @@ async def test_device_remove_devices(
 
 
 async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
-    """Test migrating a 1.1 config entry to 1.2."""
-    with patch("homeassistant.components.nexia.async_setup_entry", return_value=True):
+    """Test migrating a 1.1 config entry."""
+    with patch("homeassistant.components.nexia.async_setup_entry", return_value=None):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
@@ -94,9 +99,120 @@ async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.version == 1
-        assert entry.minor_version == 2
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.version == NexiaConfigFlow.VERSION
+        assert entry.minor_version == NexiaConfigFlow.MINOR_VERSION
         assert entry.unique_id == "123456"
+
+
+@pytest.mark.usefixtures("patch_nexia_home")
+async def test_migrate_entity_identifiers(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test migrating config entity identifiers to string."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    int_entry = entity_registry.async_get_or_create(
+        "climate",
+        DOMAIN,
+        85034552,
+        config_entry=entry,
+    )
+    str_entry = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "already_a_string",
+        config_entry=entry,
+    )
+    modified_before = str_entry.modified_at
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
+    assert entry.state is ConfigEntryState.LOADED
+
+    migrated_entry = entity_registry.async_get(int_entry.entity_id)
+    assert migrated_entry is not None
+    assert migrated_entry.unique_id == "85034552"
+    assert migrated_entry.entity_id == int_entry.entity_id
+
+    unchanged_entry = entity_registry.async_get(str_entry.entity_id)
+    assert unchanged_entry is not None
+    assert unchanged_entry.unique_id == "already_a_string"
+    assert unchanged_entry.modified_at == modified_before
+
+
+@pytest.mark.usefixtures("patch_nexia_home")
+async def test_migrate_device_identifiers(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test migrating config device identifiers to string."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    int_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, 12345), ("other_domain", "not_touched")},
+        name="Center",
+    )
+    str_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "already_a_string")},
+        name="Center",
+    )
+    modified_before = str_device.modified_at
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
+    assert entry.state is ConfigEntryState.LOADED
+
+    migrated_device = device_registry.async_get(int_device.id)
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {
+        (DOMAIN, "12345"),
+        ("other_domain", "not_touched"),
+    }
+    assert migrated_device.id == int_device.id
+
+    unchanged_device = device_registry.async_get(str_device.id)
+    assert unchanged_device is not None
+    assert unchanged_device.identifiers == {(DOMAIN, "already_a_string")}
+    assert unchanged_device.modified_at == modified_before
+
+
+@patch("homeassistant.components.nexia.async_migrate_entry")
+async def test_string_identifiers(
+    mock_migrate_entry: AsyncMock,
+    hass: HomeAssistant,
+    patch_nexia_home: NexiaHome,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the identifiers are strings."""
+    entry = await setup_integration(hass, patch_nexia_home)
+
+    # verify migration was not called
+    mock_migrate_entry.assert_not_awaited()
+
+    entities = entity_registry.entities
+    entity_entries = entities.get_entries_for_config_entry_id(entry.entry_id)
+    assert len(entity_entries) > 0
+    for entity_entry in entity_entries:
+        assert isinstance(entity_entry.unique_id, str)
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) > 0
+    for device_entry in device_entries:
+        for domain, ident in device_entry.identifiers:
+            assert isinstance(ident, str), (
+                f"Device [{device_entry.name}] has non-string identifier ({domain}, {ident})"
+            )
 
 
 async def test_device_preregistration(
@@ -114,8 +230,7 @@ async def test_device_preregistration(
     for thermostat_id in thermostat_ids:
         thermostat = mock_nexia_home.get_thermostat_by_id(thermostat_id)
         device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
-            entry.entry_id,
+            (DOMAIN, str(thermostat.thermostat_id)), entry.entry_id
         )
         assert device is not None
 
@@ -125,8 +240,7 @@ async def test_device_preregistration(
         for zone_id in zone_ids:
             zone = thermostat.get_zone_by_id(zone_id)
             device = device_registry.async_get_device_by_identifier(
-                (DOMAIN, zone.zone_id),  # type: ignore[arg-type] # until fix issue #139773
-                entry.entry_id,
+                (DOMAIN, str(zone.zone_id)), entry.entry_id
             )
             assert device is not None
             assert device.area_id == slugify(zone.get_name())
@@ -141,22 +255,19 @@ async def test_device_via_device_links(
     config_entry = await setup_integration(hass, patch_nexia_home)
 
     thermostat_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, 2000004),  # type: ignore[arg-type] # until fix issue #139773
-        config_entry.entry_id,
+        (DOMAIN, "2000004"), config_entry.entry_id
     )
     assert thermostat_device is not None
 
     zone_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, 500),  # type: ignore[arg-type] # until fix issue #139773
-        config_entry.entry_id,
+        (DOMAIN, "500"), config_entry.entry_id
     )
     assert zone_device is not None
     assert zone_device.via_device_id == thermostat_device.id
     assert zone_device.area_id == "zone3"
 
     sensor_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "502"),
-        config_entry.entry_id,
+        (DOMAIN, "502"), config_entry.entry_id
     )
     assert sensor_device is not None
     assert sensor_device.via_device_id == zone_device.id

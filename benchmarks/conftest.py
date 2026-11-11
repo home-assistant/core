@@ -8,9 +8,9 @@ These benchmarks live outside ``tests`` on purpose: ``testpaths`` only points at
 from collections.abc import AsyncGenerator, Callable
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
 
 from homeassistant.core import HomeAssistant
-from tests.common import async_test_home_assistant
 
 
 @pytest.fixture
@@ -22,7 +22,10 @@ async def hass() -> AsyncGenerator[HomeAssistant]:
     synchronously from within the running loop.
     """
     async with async_test_home_assistant() as hass:
-        yield hass
+        try:
+            yield hass
+        finally:
+            await hass.async_stop(force=True)
 
 
 @pytest.fixture

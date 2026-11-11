@@ -1,30 +1,37 @@
 """Tests for the Anthropic integration."""
 
+import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator, Generator
 from copy import deepcopy
-import datetime
+import datetime as dt
 from pathlib import Path
 from typing import Unpack
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from anthropic import AsyncStream, RateLimitError
+from anthropic import APIConnectionError, AsyncStream, RateLimitError
+from anthropic.pagination import AsyncPage
 from anthropic.types import (
+    CacheCreation,
+    CacheMissPreviousMessageNotFound,
+    CacheMissSystemChanged,
+    CacheMissUnavailable,
     CitationCharLocation,
-    CitationCharLocationParam,
     CitationsConfig,
     CitationsWebSearchResultLocation,
-    CitationWebSearchResultLocationParam,
     Container,
+    Diagnostics,
     DocumentBlock,
     EncryptedCodeExecutionResultBlock,
     Message,
     MessageDeltaUsage,
+    OutputTokensDetails,
     PlainTextSource,
     RawMessageDeltaEvent,
     RawMessageStartEvent,
     RawMessageStopEvent,
     RawMessageStreamEvent,
     ServerToolCaller20260120,
+    ServerToolUsage,
     StopReason,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -48,15 +55,18 @@ from freezegun import freeze_time
 from httpx2 import URL, Request, Response
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_EFFORT,
     CONF_PROMPT_CACHING,
+    CONF_RECOMMENDED,
     CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
+    CONF_THINKING_TYPE,
     CONF_TOOL_SEARCH,
     CONF_WEB_FETCH,
     CONF_WEB_FETCH_MAX_USES,
@@ -68,6 +78,7 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
+    PromptCaching,
 )
 from homeassistant.components.anthropic.entity import (
     MAX_TOOL_ITERATIONS,
@@ -105,9 +116,8 @@ from . import (
     create_tool_use_block,
     create_web_fetch_result_block,
     create_web_search_result_block,
+    model_list,
 )
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "conversation.claude_conversation"
 
@@ -123,7 +133,7 @@ def mock_config_entry_with_server_tools(
         data={
             CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
-            CONF_THINKING_EFFORT: "medium",
+            CONF_EFFORT: "medium",
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
         },
     )
@@ -149,11 +159,126 @@ def captured_requests(
 
 
 @pytest.fixture
+def mock_usage_stream(mock_create_stream: AsyncMock) -> AsyncMock:
+    """Control individual stream events and interruptions."""
+    next_event = AsyncMock()
+    iterator = MagicMock()
+    iterator.__anext__ = next_event
+    stream = MagicMock(spec=AsyncStream)
+    stream.__aenter__.return_value = stream
+    stream.__aiter__.side_effect = lambda: iterator
+    mock_create_stream.side_effect = None
+    mock_create_stream.return_value = stream
+    return next_event
+
+
+@pytest.fixture
+def token_usage_events() -> list[RawMessageStreamEvent]:
+    """Return a started response with cumulative usage updates."""
+    return [
+        RawMessageStartEvent(
+            type="message_start",
+            message=Message(
+                id="msg_interrupted",
+                type="message",
+                role="assistant",
+                content=[],
+                model="claude-haiku-5-5",
+                usage=Usage(
+                    input_tokens=100,
+                    cache_creation_input_tokens=20,
+                    cache_read_input_tokens=80,
+                    output_tokens=0,
+                ),
+                diagnostics=Diagnostics(
+                    cache_miss_reason=CacheMissSystemChanged(
+                        type="system_changed", cache_missed_input_tokens=12
+                    )
+                ),
+            ),
+        ),
+        *create_content_block(0, ["ok"]),
+        RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(),
+            usage=MessageDeltaUsage(output_tokens=5),
+        ),
+        RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(),
+            usage=MessageDeltaUsage(output_tokens=10),
+        ),
+    ]
+
+
+@pytest.fixture
+def response_diagnostics() -> list[Diagnostics | None]:
+    """Queue diagnostics returned by successive responses."""
+    return []
+
+
+@pytest.fixture
+def diagnostic_requests(
+    mock_create_stream: AsyncMock,
+    response_diagnostics: list[Diagnostics | None],
+) -> list[MessageCreateParamsStreaming]:
+    """Capture requests and give each streamed response a distinct identifier."""
+    requests: list[MessageCreateParamsStreaming] = []
+    create_stream = mock_create_stream.side_effect
+
+    def capture_request(
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> MagicMock:
+        requests.append(deepcopy(kwargs))
+        message_id = f"msg_cache_diagnostics_{len(requests)}"
+        diagnostics = response_diagnostics.pop(0) if response_diagnostics else None
+        stream = create_stream(**kwargs)
+        iterate = stream.__aiter__.side_effect
+
+        async def with_diagnostics() -> AsyncIterator[RawMessageStreamEvent]:
+            async for event in iterate():
+                if isinstance(event, RawMessageStartEvent):
+                    event.message.id = message_id
+                    event.message.diagnostics = diagnostics
+                yield event
+
+        stream.__aiter__.side_effect = with_diagnostics
+        return stream
+
+    mock_create_stream.side_effect = capture_request
+    return requests
+
+
+@pytest.fixture
+def mock_code_execution(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Enable server tools before loading the integration."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_CHAT_MODEL: "claude-opus-4-7", CONF_CODE_EXECUTION: True},
+    )
+
+
+@pytest.fixture
+def mock_caching_disabled(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Disable prompt caching before loading the integration."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_PROMPT_CACHING: PromptCaching.OFF},
+    )
+
+
+@pytest.fixture
 def code_execution_container() -> Container:
     """Return an active code execution container."""
     return Container(
         id="container_paused",
-        expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
+        expires_at=dt_util.utcnow() + dt.timedelta(minutes=5),
     )
 
 
@@ -216,8 +341,8 @@ async def test_device(
     assert device is not None
     assert device.name == "Claude conversation"
     assert device.manufacturer == "Anthropic"
-    assert device.model == "Claude Haiku 4.5"
-    assert device.model_id == "claude-haiku-4-5-20251001"
+    assert device.model == "Claude Haiku 5.5"
+    assert device.model_id == "claude-haiku-5-5"
     assert device.entry_type == dr.DeviceEntryType.SERVICE
 
 
@@ -338,16 +463,112 @@ async def test_conversation_agent(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+async def test_unknown_stream_event(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ignore unknown SSE events decoded by the SDK and continue the response."""
+    mock_create_stream.return_value = [create_content_block(0, ["Hello!"])]
+    create_stream = mock_create_stream.side_effect
+
+    async def sdk_stream(
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> AsyncStream[RawMessageStreamEvent]:
+        stream = create_stream(**kwargs)
+        body = 'event: future_event\ndata: {"type":"future_event"}\n\n' + "".join(
+            [
+                f"event: {event.type}\ndata: {event.to_json(indent=None)}\n\n"
+                async for event in stream
+            ]
+        )
+        return AsyncStream(
+            cast_to=RawMessageStreamEvent,
+            response=Response(200, content=body),
+            client=mock_config_entry.runtime_data.client,
+        )
+
+    mock_create_stream.side_effect = sdk_stream
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Hello!"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "response_usage",
+    [
+        pytest.param([MessageDeltaUsage(output_tokens=10)], id="initial_usage"),
+        pytest.param(
+            [
+                MessageDeltaUsage.model_construct(
+                    input_tokens=110,
+                    cache_creation_input_tokens=30,
+                    cache_read_input_tokens=90,
+                    output_tokens=20,
+                    server_tool_use=ServerToolUsage(
+                        web_fetch_requests=3, web_search_requests=4
+                    ),
+                    output_tokens_details=OutputTokensDetails(thinking_tokens=8),
+                    future_delta_usage=7,
+                ),
+                MessageDeltaUsage(
+                    input_tokens=None,
+                    cache_creation_input_tokens=None,
+                    cache_read_input_tokens=None,
+                    output_tokens=30,
+                    server_tool_use=None,
+                    output_tokens_details=None,
+                ),
+                MessageDeltaUsage(output_tokens=40),
+            ],
+            id="cumulative_sparse_and_null",
+        ),
+        pytest.param(
+            [
+                MessageDeltaUsage(
+                    input_tokens=0,
+                    cache_creation_input_tokens=0,
+                    cache_read_input_tokens=0,
+                    output_tokens=0,
+                    server_tool_use=ServerToolUsage(
+                        web_fetch_requests=0, web_search_requests=0
+                    ),
+                    output_tokens_details=OutputTokensDetails(thinking_tokens=0),
+                )
+            ],
+            id="explicit_zero",
+        ),
+        pytest.param(
+            [
+                MessageDeltaUsage(
+                    output_tokens=10,
+                    server_tool_use=ServerToolUsage(
+                        web_fetch_requests=4, web_search_requests=5
+                    ),
+                    output_tokens_details=OutputTokensDetails(thinking_tokens=9),
+                )
+            ],
+            id="nested_replacement",
+        ),
+    ],
+)
 async def test_token_stats_reported(
     hass: HomeAssistant,
+    response_usage: list[MessageDeltaUsage],
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that cache reads, not cache creation, are reported as cached tokens."""
+    """Trace normalized token counts and accumulated provider usage."""
     trace.async_clear_traces()
 
     async def mock_stream(
         **kwargs: Unpack[MessageCreateParamsStreaming],
     ) -> AsyncIterator[RawMessageStreamEvent]:
-        """Stream a single response carrying distinct cache read and creation usage."""
+        """Stream initial usage followed by cumulative usage updates."""
         yield RawMessageStartEvent(
             type="message_start",
             message=Message(
@@ -356,21 +577,37 @@ async def test_token_stats_reported(
                 content=[],
                 role="assistant",
                 model=kwargs["model"],
-                usage=Usage(
+                usage=Usage.model_construct(
                     input_tokens=100,
-                    output_tokens=0,
+                    output_tokens=6,
                     cache_creation_input_tokens=20,
                     cache_read_input_tokens=80,
+                    cache_creation=CacheCreation(
+                        ephemeral_1h_input_tokens=5,
+                        ephemeral_5m_input_tokens=15,
+                    ),
+                    inference_geo="us",
+                    service_tier="standard",
+                    server_tool_use=ServerToolUsage.model_construct(
+                        web_fetch_requests=2,
+                        web_search_requests=1,
+                        future_server_tool_requests=6,
+                    ),
+                    output_tokens_details=OutputTokensDetails.model_construct(
+                        thinking_tokens=4, future_output_tokens=2
+                    ),
+                    future_initial_usage=5,
                 ),
             ),
         )
         for event in create_content_block(0, ["ok"]):
             yield event
-        yield RawMessageDeltaEvent(
-            type="message_delta",
-            delta=Delta(stop_reason="end_turn", stop_sequence=""),
-            usage=MessageDeltaUsage(output_tokens=10),
-        )
+        for usage in response_usage:
+            yield RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason="end_turn", stop_sequence=""),
+                usage=usage,
+            )
         yield RawMessageStopEvent(type="message_stop")
 
     stream = MagicMock(spec=AsyncStream)
@@ -393,19 +630,154 @@ async def test_token_stats_reported(
 
     trace_obj = next(iter(trace.async_get_traces()))
     events = trace_obj.as_dict().get("events", [])
-    stats = next(
-        event["data"]["stats"]
+    usage_events = [
+        event["data"]
         for event in events
-        if event.get("event_type") == "agent_detail"
-        and event.get("data", {}).get("stats")
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == "end_turn"
+    assert usage_events == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    (
+        "event_slice",
+        "trailing_events",
+        "interruption",
+        "expected_response_type",
+        "expected_stop_reason",
+    ),
+    [
+        pytest.param(
+            slice(1),
+            [],
+            APIConnectionError(request=Request("POST", "https://api.anthropic.com")),
+            intent.IntentResponseType.ERROR,
+            "interrupted",
+            id="transport_error_after_start",
+        ),
+        pytest.param(
+            slice(None),
+            [],
+            APIConnectionError(request=Request("POST", "https://api.anthropic.com")),
+            intent.IntentResponseType.ERROR,
+            "interrupted",
+            id="transport_error_after_usage",
+        ),
+        pytest.param(
+            slice(None),
+            [],
+            StopAsyncIteration(),
+            intent.IntentResponseType.ACTION_DONE,
+            "interrupted",
+            id="premature_eof",
+        ),
+        pytest.param(
+            slice(None),
+            [
+                RawMessageDeltaEvent(
+                    type="message_delta",
+                    delta=Delta(stop_reason="end_turn"),
+                    usage=MessageDeltaUsage(output_tokens=12),
+                ),
+            ],
+            APIConnectionError(request=Request("POST", "https://api.anthropic.com")),
+            intent.IntentResponseType.ERROR,
+            "end_turn",
+            id="transport_error_after_stop_reason",
+        ),
+    ],
+)
+async def test_token_stats_interrupted(
+    hass: HomeAssistant,
+    mock_usage_stream: AsyncMock,
+    token_usage_events: list[RawMessageStreamEvent],
+    event_slice: slice,
+    trailing_events: list[RawMessageStreamEvent],
+    interruption: Exception,
+    expected_response_type: intent.IntentResponseType,
+    expected_stop_reason: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Trace the last known usage once when a response is interrupted."""
+    trace.async_clear_traces()
+    mock_usage_stream.side_effect = [
+        *token_usage_events[event_slice],
+        *trailing_events,
+        interruption,
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
     )
-    # cache_read_input_tokens (80) is the served-from-cache count, distinct from
-    # cache_creation_input_tokens (20); only the read count should surface as cached.
-    assert stats == {
-        "input_tokens": 100,
-        "cached_input_tokens": 80,
-        "output_tokens": 10,
-    }
+
+    assert result.response.response_type is expected_response_type
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == expected_stop_reason
+    assert (
+        usage_events[0]["diagnostics"]["cache_miss_reason"]["type"] == "system_changed"
+    )
+    assert usage_events == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_token_stats_cancelled(
+    hass: HomeAssistant,
+    mock_usage_stream: AsyncMock,
+    token_usage_events: list[RawMessageStreamEvent],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Cancellation preserves one summary and still propagates."""
+    trace.async_clear_traces()
+    mock_usage_stream.side_effect = [*token_usage_events, asyncio.CancelledError()]
+
+    with pytest.raises(asyncio.CancelledError):
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id=ENTITY_ID
+        )
+
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == "interrupted"
+    assert (
+        usage_events[0]["diagnostics"]["cache_miss_reason"]["type"] == "system_changed"
+    )
+    assert usage_events == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_token_stats_missing_message_start(
+    hass: HomeAssistant,
+    mock_usage_stream: AsyncMock,
+) -> None:
+    """Do not fabricate usage when a stream fails before message_start."""
+    trace.async_clear_traces()
+    mock_usage_stream.side_effect = APIConnectionError(
+        request=Request("POST", "https://api.anthropic.com")
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not [
+        event
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail"
+        and {"stats", "usage", "diagnostics", "message_id"}.intersection(event["data"])
+    ]
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -469,8 +841,184 @@ async def test_prompt_caching_automatic(
     )
 
     assert mock_create_stream.call_args.kwargs["cache_control"] == {"type": "ephemeral"}
+    assert mock_create_stream.call_args.kwargs["diagnostics"] == {
+        "previous_message_id": None
+    }
     system = mock_create_stream.call_args.kwargs["system"]
     assert isinstance(system, str)
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "diagnostics",
+    [
+        pytest.param(None, id="absent"),
+        pytest.param(Diagnostics(cache_miss_reason=None), id="pending"),
+        pytest.param(
+            Diagnostics(
+                cache_miss_reason=CacheMissSystemChanged(
+                    type="system_changed", cache_missed_input_tokens=123
+                )
+            ),
+            id="system_changed",
+        ),
+        pytest.param(
+            Diagnostics(cache_miss_reason=CacheMissUnavailable(type="unavailable")),
+            id="unavailable",
+        ),
+        pytest.param(
+            Diagnostics(
+                cache_miss_reason=CacheMissPreviousMessageNotFound(
+                    type="previous_message_not_found"
+                )
+            ),
+            id="previous_message_not_found",
+        ),
+    ],
+)
+async def test_cache_diagnostics_trace(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    diagnostic_requests: list[MessageCreateParamsStreaming],
+    response_diagnostics: list[Diagnostics | None],
+    diagnostics: Diagnostics | None,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Trace cache diagnostics without losing pending or unavailable results."""
+    trace.async_clear_traces()
+    response_diagnostics.append(diagnostics)
+    mock_create_stream.return_value = [create_content_block(0, ["Hello."])]
+
+    await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert diagnostic_requests[0]["diagnostics"] == {"previous_message_id": None}
+    diagnostic_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(diagnostic_events) == 1
+    assert diagnostic_events[0]["stats"]["stop_reason"] == "end_turn"
+    assert "usage" in diagnostic_events[0]
+    assert diagnostic_events == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_cache_diagnostics_conversation_isolation(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    diagnostic_requests: list[MessageCreateParamsStreaming],
+) -> None:
+    """Carry response identifiers across turns while keeping chats separate."""
+    mock_create_stream.return_value = [
+        create_content_block(0, ["Hello."]),
+        create_content_block(0, ["Welcome back."]),
+        create_content_block(0, ["Another conversation."]),
+        create_content_block(0, ["Continuing the first conversation."]),
+    ]
+
+    first = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+    await conversation.async_converse(
+        hass, "hello again", first.conversation_id, Context(), agent_id=ENTITY_ID
+    )
+    await conversation.async_converse(
+        hass, "a new conversation", None, Context(), agent_id=ENTITY_ID
+    )
+    await conversation.async_converse(
+        hass, "continue", first.conversation_id, Context(), agent_id=ENTITY_ID
+    )
+
+    assert [request["diagnostics"] for request in diagnostic_requests] == [
+        {"previous_message_id": None},
+        {"previous_message_id": "msg_cache_diagnostics_1"},
+        {"previous_message_id": None},
+        {"previous_message_id": "msg_cache_diagnostics_2"},
+    ]
+
+
+@pytest.mark.usefixtures("mock_code_execution", "mock_init_component")
+async def test_cache_diagnostics_pause_turn(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    diagnostic_requests: list[MessageCreateParamsStreaming],
+) -> None:
+    """Compare each resumed server tool request against its preceding response."""
+    trace.async_clear_traces()
+    mock_create_stream.return_value = [
+        [
+            *create_server_tool_use_block(
+                0, "srvtoolu_cache", "bash_code_execution", ['{"command": "echo 42"}']
+            ),
+            RawMessageDeltaEvent(
+                type="message_delta",
+                delta=Delta(stop_reason="pause_turn"),
+                usage=MessageDeltaUsage(output_tokens=10),
+            ),
+        ],
+        [*create_bash_code_execution_result_block(0, "srvtoolu_cache", stdout="42\n")],
+        create_content_block(0, ["You are welcome."]),
+    ]
+
+    result = await conversation.async_converse(
+        hass, "calculate the answer", None, Context(), agent_id=ENTITY_ID
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    await conversation.async_converse(
+        hass, "thank you", result.conversation_id, Context(), agent_id=ENTITY_ID
+    )
+
+    assert [request["diagnostics"] for request in diagnostic_requests] == [
+        {"previous_message_id": None},
+        {"previous_message_id": "msg_cache_diagnostics_1"},
+        {"previous_message_id": "msg_cache_diagnostics_2"},
+    ]
+    usage_events = [
+        event["data"]
+        for conversation_trace in trace.async_get_traces()
+        for event in conversation_trace.as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert [event["stats"]["output_tokens"] for event in usage_events] == [10, 0, 0]
+    assert [event["stats"]["stop_reason"] for event in usage_events] == [
+        "pause_turn",
+        "end_turn",
+        "end_turn",
+    ]
+
+
+@pytest.mark.usefixtures("mock_caching_disabled", "mock_init_component")
+async def test_cache_diagnostics_disabled(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    diagnostic_requests: list[MessageCreateParamsStreaming],
+) -> None:
+    """Keep response metadata when prompt caching is disabled."""
+    trace.async_clear_traces()
+    mock_create_stream.return_value = [create_content_block(0, ["Hello."])]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert "diagnostics" not in diagnostic_requests[0]
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert "diagnostics" not in usage_events[0]
+    assert usage_events[0]["stats"]["stop_reason"] == "end_turn"
+    chat_log = hass.data[conversation.chat_log.DATA_CHAT_LOGS][result.conversation_id]
+    last_content = chat_log.content[-1]
+    assert isinstance(last_content, conversation.AssistantContent)
+    assert isinstance(last_content.native, ContentDetails)
+    assert last_content.native.message_id == "msg_cache_diagnostics_1"
 
 
 @pytest.mark.parametrize(
@@ -551,13 +1099,24 @@ async def test_empty_response_without_completed_turn(
     chat_log = conversation.ChatLog(hass, "test-conversation")
 
     async def stream() -> AsyncGenerator[RawMessageStreamEvent]:
+        yield RawMessageStartEvent(
+            type="message_start",
+            message=Message(
+                id="msg_incomplete",
+                type="message",
+                role="assistant",
+                content=[],
+                model="claude-haiku-5-5",
+                usage=Usage(input_tokens=0, output_tokens=0),
+            ),
+        )
         for event in (*body_events, *end_events):
             yield event
 
     results = [
         content
         async for content in chat_log.async_add_delta_content_stream(
-            "conversation.claude_conversation", AnthropicDeltaStream(chat_log, stream())
+            "conversation.claude_conversation", AnthropicDeltaStream(stream())
         )
     ]
 
@@ -632,6 +1191,7 @@ async def test_function_call(
     expected_call_tool_args: dict[str, str],
 ) -> None:
     """Test function call from the assistant."""
+    trace.async_clear_traces()
     agent_id = "conversation.claude_conversation"
     context = Context()
 
@@ -670,6 +1230,22 @@ async def test_function_call(
     assert isinstance(system, list)
     system_text = " ".join(block["text"] for block in system if "text" in block)
     assert "You are a voice assistant for Home Assistant." in system_text
+    assert mock_create_stream.call_args_list[0].kwargs["diagnostics"] == {
+        "previous_message_id": None
+    }
+    assert mock_create_stream.call_args_list[1].kwargs["diagnostics"] == {
+        "previous_message_id": "msg_1234567890ABCDEFGHIJKLMN"
+    }
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 2
+    assert [event["stats"]["stop_reason"] for event in usage_events] == [
+        "tool_use",
+        "end_turn",
+    ]
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
@@ -700,6 +1276,7 @@ async def test_function_call(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -777,6 +1354,7 @@ async def test_function_exception(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -874,7 +1452,7 @@ async def test_conversation_id(
     )
 
     result = await conversation.async_converse(
-        hass, "hello", None, None, agent_id="conversation.claude_conversation"
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
     conversation_id = result.conversation_id
@@ -883,7 +1461,7 @@ async def test_conversation_id(
         hass,
         "hello",
         conversation_id,
-        None,
+        Context(),
         agent_id="conversation.claude_conversation",
     )
 
@@ -892,13 +1470,17 @@ async def test_conversation_id(
     unknown_id = ulid_util.ulid()
 
     result = await conversation.async_converse(
-        hass, "hello", unknown_id, None, agent_id="conversation.claude_conversation"
+        hass,
+        "hello",
+        unknown_id,
+        Context(),
+        agent_id="conversation.claude_conversation",
     )
 
     assert result.conversation_id != unknown_id
 
     result = await conversation.async_converse(
-        hass, "hello", "koala", None, agent_id="conversation.claude_conversation"
+        hass, "hello", "koala", Context(), agent_id="conversation.claude_conversation"
     )
 
     assert result.conversation_id == "koala"
@@ -937,6 +1519,7 @@ async def test_stop_reason_error(
     error_message: str,
 ) -> None:
     """Test errors for refused, truncated, or stop-sequence responses."""
+    trace.async_clear_traces()
     mock_create_stream.return_value = [
         [
             *create_content_block(0, ["An incomplete response"]),
@@ -961,6 +1544,13 @@ async def test_stop_reason_error(
     assert result.response.error_code == "unknown"
     assert result.response.speech["plain"]["speech"] == error_message
     mock_create_stream.assert_awaited_once()
+    usage_events = [
+        event["data"]
+        for event in trace.async_get_traces()[0].as_dict()["events"]
+        if event["event_type"] == "agent_detail" and "stats" in event["data"]
+    ]
+    assert len(usage_events) == 1
+    assert usage_events[0]["stats"]["stop_reason"] == stop_reason
 
 
 @pytest.mark.usefixtures("mock_config_entry_with_server_tools", "mock_init_component")
@@ -1110,7 +1700,9 @@ async def test_double_system_messages(
     """Test error for two or more system prompts."""
     conversation_id = "conversation_id"
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [
@@ -1134,22 +1726,138 @@ async def test_double_system_messages(
     )
 
 
+@pytest.mark.parametrize(
+    "subentry_data",
+    [
+        pytest.param({}, id="defaults"),
+        pytest.param({CONF_RECOMMENDED: True}, id="recommended"),
+    ],
+)
+@pytest.mark.usefixtures("mock_model_list")
+async def test_default_options_not_persisted(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    subentry_data: dict[str, bool],
+) -> None:
+    """Resolve request defaults without turning them into saved overrides."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=subentry_data
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    request = mock_create_stream.call_args.kwargs
+    assert request["thinking"] == {"type": "adaptive", "display": "summarized"}
+    assert request["output_config"] == {"effort": "low"}
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+
+
+async def test_missing_capabilities_preserve_saved_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Omit unavailable capabilities from requests without erasing saved settings."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_data = {
+        CONF_CHAT_MODEL: "claude-sonnet-4-6",
+        CONF_EFFORT: "medium",
+        CONF_THINKING_TYPE: "enabled",
+        CONF_THINKING_BUDGET: 1500,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=subentry_data
+    )
+    mock_model_list.side_effect = None
+    mock_model_list.return_value = AsyncPage(data=[], has_more=False)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    request = mock_create_stream.call_args.kwargs
+    assert "thinking" not in request
+    assert "output_config" not in request
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+
+
+async def test_unsupported_server_tools_preserve_saved_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Omit tools no longer advertised without changing their saved settings."""
+    model = model_list[0].model_copy(deep=True)
+    assert model.capabilities is not None
+    model.capabilities.server_tools.code_execution.supported = False
+    model.capabilities.server_tools.web_search.supported = False
+    mock_model_list.side_effect = None
+    mock_model_list.return_value = AsyncPage(data=[model], has_more=False)
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_data = {
+        CONF_CODE_EXECUTION: True,
+        CONF_WEB_SEARCH: True,
+        CONF_WEB_FETCH: True,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=subentry_data
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert mock_create_stream.call_args.kwargs["tools"] == [
+        {"name": "web_fetch", "type": "web_fetch_20250910", "max_uses": 5}
+    ]
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-4-5", id="claude-opus-4-5"),
+        pytest.param("claude-sonnet-4-6", id="claude-sonnet-4-6"),
+    ],
+)
 @pytest.mark.usefixtures("mock_init_component")
 async def test_extended_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
+    model: str,
 ) -> None:
-    """Test extended thinking support."""
+    """Test manual thinking and effort on models with and without adaptive thinking."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-5",
+            CONF_CHAT_MODEL: model,
             CONF_THINKING_BUDGET: 1500,
-            CONF_THINKING_EFFORT: "medium",
+            CONF_THINKING_TYPE: "enabled",
+            CONF_EFFORT: "medium",
         },
     )
     await hass.async_block_till_done()
@@ -1194,17 +1902,55 @@ async def test_extended_thinking(
             {
                 CONF_LLM_HASS_API: "assist",
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
-                CONF_THINKING_BUDGET: 0,
+                CONF_THINKING_TYPE: "disabled",
             },
-            id="zero_budget",
+            id="without_effort",
         ),
         pytest.param(
             {
                 CONF_LLM_HASS_API: "assist",
                 CONF_CHAT_MODEL: "claude-opus-4-7",
-                CONF_THINKING_EFFORT: "none",
+                CONF_THINKING_TYPE: "disabled",
+                CONF_EFFORT: "low",
             },
-            id="no_effort",
+            id="low_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-haiku-5-5",
+                CONF_THINKING_TYPE: "disabled",
+                CONF_EFFORT: "high",
+            },
+            id="high_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "low",
+            },
+            id="between_tools_low_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "medium",
+            },
+            id="between_tools_medium_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_THINKING_BUDGET: 1500,
+                CONF_EFFORT: "high",
+            },
+            id="between_tools_high_effort",
         ),
     ],
 )
@@ -1217,7 +1963,7 @@ async def test_disabled_thinking(
     snapshot: SnapshotAssertion,
     subentry_data: dict[str, str | int],
 ) -> None:
-    """Test conversation with thinking effort disabled."""
+    """Test that effort remains independent of the thinking mode."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
@@ -1292,7 +2038,7 @@ async def test_extended_thinking_tool_call(
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             CONF_CHAT_MODEL: "claude-opus-4-7",
-            CONF_THINKING_EFFORT: "medium",
+            CONF_EFFORT: "medium",
         },
     )
     await hass.async_block_till_done()
@@ -2878,43 +3624,43 @@ async def test_pause_turn_followed_by_local_tool(
                                 index=54,
                                 length=26,
                                 citations=[
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text=(
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": (
                                             "This release iterates on some of"
                                             " the features we introduced in"
                                             " the last couple of releases,"
                                             " but also..."
                                         ),
-                                        encrypted_index="AAA==",
-                                        title="Home Assistant Release",
-                                        url="https://www.example.com/todays-news",
-                                    ),
+                                        "encrypted_index": "AAA==",
+                                        "title": "Home Assistant Release",
+                                        "url": "https://www.example.com/todays-news",
+                                    },
                                 ],
                             ),
                             CitationDetails(
                                 index=84,
                                 length=29,
                                 citations=[
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text=(
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": (
                                             "Breaking news from around the"
                                             " world today includes major"
                                             " events in technology, politics,"
                                             " and culture..."
                                         ),
-                                        encrypted_index="AQE=",
-                                        title="Breaking News",
-                                        url="https://www.newssite.com/breaking-news",
-                                    ),
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text="Well, this happened...",
-                                        encrypted_index="AgI=",
-                                        title="Breaking News",
-                                        url="https://www.newssite.com/breaking-news",
-                                    ),
+                                        "encrypted_index": "AQE=",
+                                        "title": "Breaking News",
+                                        "url": "https://www.newssite.com/breaking-news",
+                                    },
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": "Well, this happened...",
+                                        "encrypted_index": "AgI=",
+                                        "title": "Breaking News",
+                                        "url": "https://www.newssite.com/breaking-news",
+                                    },
                                 ],
                             ),
                         ],
@@ -2977,14 +3723,14 @@ async def test_pause_turn_followed_by_local_tool(
                                 index=70,
                                 length=44,
                                 citations=[
-                                    CitationCharLocationParam(
-                                        type="char_location",
-                                        cited_text="Anthropic integration now supports web fetch tool.",
-                                        document_index=0,
-                                        document_title="Latest Home Assistant Release Notes",
-                                        start_char_index=56,
-                                        end_char_index=105,
-                                    ),
+                                    {
+                                        "type": "char_location",
+                                        "cited_text": "Anthropic integration now supports web fetch tool.",
+                                        "document_index": 0,
+                                        "document_title": "Latest Home Assistant Release Notes",
+                                        "start_char_index": 56,
+                                        "end_char_index": 105,
+                                    },
                                 ],
                             ),
                         ],
@@ -3014,7 +3760,7 @@ async def test_pause_turn_followed_by_local_tool(
                     tool_name="GetCurrentTime",
                     result=llm.ToolResult(
                         data={
-                            "speech_slots": {"time": datetime.time(14, 30, 0)},
+                            "speech_slots": {"time": dt.time(14, 30, 0)},
                             "message": "Current time retrieved",
                         }
                     ),
@@ -3125,7 +3871,9 @@ async def test_history_conversion(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = content
@@ -3154,7 +3902,9 @@ async def test_history_conversion_skips_whitespace_content(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [

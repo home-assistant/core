@@ -9,6 +9,11 @@ from aioautomower.model import MowerAttributes, SingleMessageData
 from aioautomower.model.model_message import Message, Severity, SingleMessageAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
@@ -21,8 +26,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))

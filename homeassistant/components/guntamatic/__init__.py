@@ -11,16 +11,15 @@ _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> None:
     """Set up guntamatic from a config entry."""
     coordinator = GuntamaticCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

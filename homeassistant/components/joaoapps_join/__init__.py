@@ -107,11 +107,18 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             api_key=api_key,
         )
 
+    # Cannot be moved: action names come from the configuration
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}ring", ring_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}set_wallpaper", set_wallpaper_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_sms", send_sms_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_file", send_file_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_url", send_url_service)
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, f"{name}send_tasker", send_tasker_service)
 
 

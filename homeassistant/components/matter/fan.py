@@ -230,12 +230,14 @@ class MatterFan(MatterEntity, FanEntity):
         elif (
             self._attr_preset_modes
             and PRESET_NATURAL_WIND in self._attr_preset_modes
+            and wind_setting is not None
             and wind_setting & WindBitmap.kNaturalWind
         ):
             self._attr_preset_mode = PRESET_NATURAL_WIND
         elif (
             self._attr_preset_modes
             and PRESET_SLEEP_WIND in self._attr_preset_modes
+            and wind_setting is not None
             and wind_setting & WindBitmap.kSleepWind
         ):
             self._attr_preset_mode = PRESET_SLEEP_WIND

@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,13 +14,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import CONF_DATA, HOST
 
-from tests.common import async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 
 def _patch_setup():
     return patch(
-        "homeassistant.components.netgear_lte.async_setup_entry", return_value=True
+        "homeassistant.components.netgear_lte.async_setup_entry", return_value=None
     )
 
 

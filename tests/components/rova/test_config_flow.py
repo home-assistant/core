@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.components.rova.const import (
@@ -14,8 +15,6 @@ from homeassistant.components.rova.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 ZIP_CODE = "7991AD"
 HOUSE_NUMBER = "10"

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_MANUFACTURER, ATTR_MODEL
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -114,9 +114,9 @@ class TelldusLiveEntity(Entity):
             name=self.device.name,
         )
         if (model := device.get("model")) is not None:
-            device_info[ATTR_MODEL] = model.title()
+            device_info.model = model.title()
         if (protocol := device.get("protocol")) is not None:
-            device_info[ATTR_MANUFACTURER] = protocol.title()
+            device_info.manufacturer = protocol.title()
         if (client := device.get("client")) is not None:
             config_entry = self.platform.config_entry
             if TYPE_CHECKING:
@@ -127,5 +127,5 @@ class TelldusLiveEntity(Entity):
                 (DOMAIN, client), config_entry.entry_id
             )
             if hub_device is not None:
-                device_info["via_device_id"] = hub_device.id
+                device_info.via_device_id = hub_device.id
         return device_info

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aiohttp.client_exceptions import ClientError
 from openwebif.error import InvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MAC_ADDRESS, TEST_FULL, TEST_REQUIRED
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from typing import Any, Final
 import probatio
 from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_FRIENDLY_NAME, ATTR_LOCATION
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCATION
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -34,6 +34,8 @@ from .const import (
     SERVICE_GET_PACKAGES,
 )
 from .coordinator import SeventeenTrackConfigEntry
+
+_ATTR_FRIENDLY_NAME = "friendly_name"
 
 SERVICE_GET_PACKAGES_SCHEMA: Final = probatio.Schema(
     {
@@ -130,7 +132,7 @@ def _package_to_dict(package: Package) -> dict[str, Any]:
         ATTR_LOCATION: package.location,
         ATTR_STATUS: package.status,
         ATTR_INFO_TEXT: package.info_text,
-        ATTR_FRIENDLY_NAME: package.friendly_name,
+        _ATTR_FRIENDLY_NAME: package.friendly_name,
     }
     if timestamp := package.timestamp:
         result[ATTR_TIMESTAMP] = timestamp.isoformat()

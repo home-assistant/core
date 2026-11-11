@@ -11,7 +11,7 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> None:
     """Set up Gatus from a config entry."""
     coordinator = GatusDataUpdateCoordinator(hass, entry, entry.data[CONF_URL])
 
@@ -20,9 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> boo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

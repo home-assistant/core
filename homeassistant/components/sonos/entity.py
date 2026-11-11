@@ -1,7 +1,7 @@
 """Entity representing a Sonos player."""
 
 from abc import abstractmethod
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -59,7 +59,7 @@ class SonosEntity(Entity):
         assert self.unique_id
         del self.config_entry.runtime_data.unique_id_speaker_mappings[self.unique_id]
 
-    async def async_fallback_poll(self, now: datetime.datetime) -> None:
+    async def async_fallback_poll(self, now: dt.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
             self.speaker.subscriptions_failed = True
@@ -129,4 +129,4 @@ class SonosPollingEntity(SonosEntity):
         try:
             self.poll_state()
         except SonosUpdateError as err:
-            _LOGGER.debug("Could not poll: %s", err)
+            _LOGGER.debug("Could not poll: %s", err.__cause__)

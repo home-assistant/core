@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.pegel_online.const import (
     CONF_STATION,
@@ -21,8 +22,6 @@ from .const import (
     MOCK_STATION_DETAILS_DRESDEN,
     MOCK_STATION_MEASUREMENT_DRESDEN,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_error(

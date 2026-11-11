@@ -1,20 +1,25 @@
 """Collection of test helpers."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from fractions import Fraction
 import functools
 from functools import partial
 import io
+import threading
 
 import av
 import numpy as np
 
 from homeassistant.components.camera import DynamicStreamSettings
+from homeassistant.components.stream import Stream
 from homeassistant.components.stream.core import Orientation, Segment
 from homeassistant.components.stream.fmp4utils import (
     TRANSFORM_MATRIX_TOP,
     XYW_ROW,
     find_box,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 FAKE_TIME = dt_util.utcnow()
@@ -29,6 +34,29 @@ DefaultSegment = partial(
 )
 
 AUDIO_SAMPLE_RATE = 8000
+
+
+@asynccontextmanager
+async def worker_lifetime(
+    hass: HomeAssistant, stream: Stream, *, request_quit: bool = False
+) -> AsyncIterator[threading.Thread]:
+    """Scope a started stream's worker thread; on exit it has finished.
+
+    The thread is captured on entry, before anything yields, because
+    worker_finished() clears stream._thread once the worker exits. With
+    request_quit the worker is told to stop rather than run to completion.
+    The body's exception propagates without joining, so a paused worker fails
+    the test instead of hanging it.
+    """
+    worker = stream._thread
+    assert worker is not None, "start the stream before entering"
+    yield worker
+    if request_quit:
+        stream._thread_quit.set()
+    await hass.async_add_executor_job(worker.join)
+    if stream._thread is worker:
+        stream._thread = None
+    await hass.async_block_till_done()
 
 
 def stream_teardown():

@@ -1,8 +1,16 @@
 """The tests for the Template Weather platform."""
 
+from enum import StrEnum
+from itertools import chain
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
@@ -24,6 +32,7 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
     Forecast,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityStateAttribute,
 )
 from homeassistant.const import (
@@ -52,13 +61,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 ATTR_FORECAST = "forecast"
 
@@ -1050,7 +1052,7 @@ async def test_extra_template_attributes(
 
 @pytest.mark.parametrize(
     "attribute",
-    list(WeatherEntityStateAttribute),
+    list(chain(WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute)),
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1097,7 +1099,7 @@ async def test_attributes_template(
 
 @pytest.mark.parametrize(
     "attribute",
-    list(WeatherEntityStateAttribute),
+    list(chain(WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute)),
 )
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
@@ -1105,7 +1107,7 @@ async def test_attributes_template(
 async def test_attributes_template_with_blocked_attributes(
     hass: HomeAssistant,
     style: ConfigurationStyle,
-    attribute: WeatherEntityStateAttribute,
+    attribute: StrEnum,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked attributes for a single attributes template."""

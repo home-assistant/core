@@ -34,7 +34,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> None:
     """Set up Liebherr from a config entry."""
     # Create shared API client
     client = LiebherrClient(
@@ -147,9 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

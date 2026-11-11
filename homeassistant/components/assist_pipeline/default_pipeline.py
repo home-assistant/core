@@ -1,6 +1,5 @@
 """Default implementation of the Assist pipeline engine."""
 
-import array
 import asyncio
 from collections import deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
@@ -9,12 +8,14 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
+import audioop  # pylint: disable=deprecated-module
 import hass_nabucasa
 
 from homeassistant.components import conversation, media_player, stt, tts, wake_word
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
     chat_session,
     device_registry as dr,
@@ -64,6 +65,19 @@ KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = H
     "pipeline_conversation_data"
 )
 STREAM_RESPONSE_CHARS = 60
+
+
+async def _skip_audio(
+    audio_stream: AsyncIterable[bytes], num_bytes: int
+) -> AsyncGenerator[bytes]:
+    """Yield the audio after the first num_bytes."""
+    async for chunk in audio_stream:
+        if num_bytes > 0:
+            skipped = min(num_bytes, len(chunk))
+            chunk = chunk[skipped:]
+            num_bytes -= skipped
+        if chunk:
+            yield chunk
 
 
 @callback
@@ -158,6 +172,7 @@ class _DefaultPipelineProcessor:
     _intent_agent_only: bool = field(init=False, default=False)
     _streamed_response_text: bool = field(init=False, default=False)
     _invalidated: bool = field(init=False, default=False)
+    _stt_last_timestamp_ms: int | None = field(init=False, default=None)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -192,7 +207,7 @@ class _DefaultPipelineProcessor:
 
     @callback
     def cleanup(self) -> None:
-        """Clean up resources after a pipeline error."""
+        """Clean up resources when a run stops early."""
         if self.tts_stream is not None:
             self.tts_stream.delete()
             self.tts_stream = None
@@ -405,12 +420,10 @@ class _DefaultPipelineProcessor:
         stream: AsyncIterable[EnhancedAudioChunk],
     ) -> str:
         """Run speech-to-text portion of pipeline. Returns the spoken text."""
-        # Create a background task to prepare the conversation agent
-        if self.host.end_stage >= PipelineStage.INTENT and self.intent_agent:
+        # Create a background task to prepare the conversation agents
+        if self.intent_agent:
             self.host.hass.async_create_background_task(
-                conversation.async_prepare_agent(
-                    self.host.hass, self.intent_agent.id, self.host.language
-                ),
+                self._async_prepare_intent_agents(self.intent_agent.id),
                 f"prepare conversation agent {self.intent_agent.id}",
             )
 
@@ -419,13 +432,19 @@ class _DefaultPipelineProcessor:
         else:
             engine = self.stt_provider.entity_id
 
+        audio_processing = self.stt_provider.async_get_audio_processing(metadata)
+        provider_vad = (
+            self.host.audio_settings.is_vad_enabled
+            and not audio_processing.requires_external_vad
+        )
+
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_START,
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
-                    "audio_processing": asdict(self.stt_provider.audio_processing),
+                    "audio_processing": asdict(audio_processing),
                 },
             )
         )
@@ -437,13 +456,18 @@ class _DefaultPipelineProcessor:
             stt_vad: VoiceCommandSegmenter | None = None
             if (
                 self.host.audio_settings.is_vad_enabled
-                and self.stt_provider.audio_processing.requires_external_vad
+                and audio_processing.requires_external_vad
             ):
                 stt_vad = VoiceCommandSegmenter(
                     silence_seconds=self.host.audio_settings.silence_seconds
                 )
 
-            result = await self.stt_provider.async_process_audio_stream(
+            process_audio_stream = (
+                self.stt_provider.async_process_audio_stream
+                if isinstance(self.stt_provider, stt.Provider)
+                else self.stt_provider.internal_async_process_audio_stream
+            )
+            result = await process_audio_stream(
                 metadata,
                 self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
             )
@@ -462,6 +486,15 @@ class _DefaultPipelineProcessor:
             ) from src_error
 
         _LOGGER.debug("speech-to-text result %s", result)
+
+        # The provider detected the end of speech by returning the transcribed text
+        if provider_vad:
+            self.host.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": self._stt_last_timestamp_ms or 0},
+                )
+            )
 
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
@@ -521,7 +554,26 @@ class _DefaultPipelineProcessor:
                     )
                     sent_vad_start = True
 
+            self._stt_last_timestamp_ms = chunk.timestamp_ms
             yield chunk.audio
+
+    @callback
+    def _accept_wake_word_audio(
+        self, wake_word_phrase: str, wake_word_audio_ms: int
+    ) -> None:
+        """Accept the wake word whose audio starts the stream."""
+        self.host.accept_wake_word(wake_word_phrase)
+        self.host.process_event(
+            PipelineEvent(
+                PipelineEventType.WAKE_WORD_END,
+                {
+                    "wake_word_output": {
+                        "wake_word_phrase": wake_word_phrase,
+                        "wake_word_audio_ms": wake_word_audio_ms,
+                    }
+                },
+            )
+        )
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""
@@ -561,7 +613,37 @@ class _DefaultPipelineProcessor:
 
         self.intent_agent = agent_info
 
-    async def recognize_intent(
+    def _intent_input_language(self) -> str:
+        """Return the language that intent recognition uses."""
+        if self.host.pipeline.conversation_language == MATCH_ALL:
+            # LLMs support all languages ('*') so use languages from the
+            # pipeline for intent fallback.
+            #
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            return (
+                self.host.pipeline.stt_language
+                or self.host.pipeline.tts_language
+                or self.host.pipeline.language
+            )
+        return self.host.pipeline.conversation_language
+
+    async def _async_prepare_intent_agents(self, agent_id: str) -> None:
+        """Prepare the agents that intent recognition uses."""
+        language = self._intent_input_language()
+        # Local intents run on the default agent before the pipeline agent.
+        # Without them, loading the language intents would only cost memory.
+        if (
+            agent_id != conversation.HOME_ASSISTANT_AGENT
+            and self.host.pipeline.prefer_local_intents
+            and not self._intent_agent_only
+        ):
+            await conversation.async_prepare_intents(self.host.hass, language)
+        await conversation.async_prepare_agent(self.host.hass, agent_id, language)
+
+    async def recognize_intent(  # noqa: C901
         self,
         intent_input: str,
         conversation_id: str,
@@ -574,21 +656,7 @@ class _DefaultPipelineProcessor:
         if self.intent_agent is None or self._conversation_data is None:
             raise RuntimeError("Recognize intent was not prepared")
 
-        if self.host.pipeline.conversation_language == MATCH_ALL:
-            # LLMs support all languages ('*') so use languages from the
-            # pipeline for intent fallback.
-            #
-            # We prioritize the STT and TTS languages because they may be more
-            # specific, such as "zh-CN" instead of just "zh". This is necessary
-            # for languages whose intents are split out by region when
-            # preferring local intent matching.
-            input_language = (
-                self.host.pipeline.stt_language
-                or self.host.pipeline.tts_language
-                or self.host.pipeline.language
-            )
-        else:
-            input_language = self.host.pipeline.conversation_language
+        input_language = self._intent_input_language()
 
         self.host.process_event(
             PipelineEvent(
@@ -720,7 +788,9 @@ class _DefaultPipelineProcessor:
 
             with (
                 chat_session.async_get_chat_session(
-                    self.host.hass, user_input.conversation_id
+                    self.host.hass,
+                    user_input.conversation_id,
+                    context=user_input.context,
                 ) as session,
                 conversation.async_get_chat_log(
                     self.host.hass,
@@ -810,6 +880,14 @@ class _DefaultPipelineProcessor:
                     speech = conversation_result.response.speech.get("plain", {}).get(
                         "speech", ""
                     )
+                    # Agents that do not use the chat log only answer in their result.
+                    if chat_log.content[-1].role == "user" and speech:
+                        chat_log.async_add_assistant_content_without_tools(
+                            conversation.AssistantContent(
+                                agent_id=agent_id,
+                                content=speech,
+                            )
+                        )
                     if tts_input_stream and self._streamed_response_text:
                         tts_input_stream.put_nowait(None)
 
@@ -826,6 +904,16 @@ class _DefaultPipelineProcessor:
                         )
                     )
 
+        except conversation.ConversationBusyError as src_error:
+            raise IntentRecognitionError(
+                code="intent-busy",
+                message=str(src_error),
+            ) from src_error
+        except Unauthorized as src_error:
+            raise IntentRecognitionError(
+                code="intent-unauthorized",
+                message="Not allowed to continue this conversation",
+            ) from src_error
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
             raise IntentRecognitionError(
@@ -920,17 +1008,25 @@ class _DefaultPipelineProcessor:
 
         tts_options: dict[str, Any] = {}
         if self.host.pipeline.tts_voice is not None:
-            tts_options[tts.ATTR_VOICE] = self.host.pipeline.tts_voice
+            tts_options[TextToSpeechCommonOption.VOICE] = self.host.pipeline.tts_voice
 
         if isinstance(self.host.tts_audio_output, dict):
             tts_options.update(self.host.tts_audio_output)
         elif isinstance(self.host.tts_audio_output, str):
-            tts_options[tts.ATTR_PREFERRED_FORMAT] = self.host.tts_audio_output
+            tts_options[TextToSpeechCommonOption.PREFERRED_FORMAT] = (
+                self.host.tts_audio_output
+            )
             if self.host.tts_audio_output == "wav":
                 # 16 Khz, 16-bit mono
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = SAMPLE_RATE
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = SAMPLE_CHANNELS
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE] = (
+                    SAMPLE_RATE
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS] = (
+                    SAMPLE_CHANNELS
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES] = (
+                    SAMPLE_WIDTH
+                )
 
         try:
             self.tts_stream = tts.async_create_stream(
@@ -986,17 +1082,17 @@ class _DefaultPipelineProcessor:
         )
 
     async def process_volume_only(
-        self, audio_stream: AsyncIterable[bytes]
+        self, audio_stream: AsyncIterable[bytes], start_ms: int = 0
     ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Apply volume transformation only with optional chunking.
 
         No VAD/audio enhancements are applied.
         """
-        timestamp_ms = 0
+        timestamp_ms = start_ms
         async for chunk in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
-                chunk = _multiply_volume(
-                    chunk, self.host.audio_settings.volume_multiplier
+                chunk = audioop.mul(
+                    chunk, SAMPLE_WIDTH, self.host.audio_settings.volume_multiplier
                 )
 
             for sub_chunk in chunk_samples(
@@ -1010,7 +1106,7 @@ class _DefaultPipelineProcessor:
                 timestamp_ms += MS_PER_CHUNK
 
     async def process_enhance_audio(
-        self, audio_stream: AsyncIterable[bytes]
+        self, audio_stream: AsyncIterable[bytes], start_ms: int = 0
     ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Split audio into chunks and apply audio enhancements.
 
@@ -1019,12 +1115,14 @@ class _DefaultPipelineProcessor:
         """
         assert self.audio_enhancer is not None
 
-        timestamp_ms = 0
+        timestamp_ms = start_ms
         async for dirty_samples in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
                 # Static gain
-                dirty_samples = _multiply_volume(
-                    dirty_samples, self.host.audio_settings.volume_multiplier
+                dirty_samples = audioop.mul(
+                    dirty_samples,
+                    SAMPLE_WIDTH,
+                    self.host.audio_settings.volume_multiplier,
                 )
 
             # Split into chunks for audio enhancements/VAD
@@ -1039,14 +1137,31 @@ class _DefaultPipelineProcessor:
         current_stage: PipelineStage | None = self.host.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
+        stt_stream = request.stt_stream
+        skipped_ms = 0
 
-        if request.stt_stream is not None:
+        if (
+            (stt_stream is not None)
+            and (request.wake_word_audio_ms is not None)
+            and (current_stage == PipelineStage.STT)
+        ):
+            # Whole chunks only, since the partial chunk at the end is dropped
+            skipped_ms = (request.wake_word_audio_ms // MS_PER_CHUNK) * MS_PER_CHUNK
+            stt_stream = _skip_audio(
+                stt_stream, skipped_ms * BYTES_PER_CHUNK // MS_PER_CHUNK
+            )
+
+        if stt_stream is not None:
+            # Timestamps count from the start of the stream, as when the
+            # pipeline detects the wake word itself
             if self.host.audio_settings.needs_processor:
                 # VAD/noise suppression/auto gain/volume
-                stt_processed_stream = self.process_enhance_audio(request.stt_stream)
+                stt_processed_stream = self.process_enhance_audio(
+                    stt_stream, skipped_ms
+                )
             else:
                 # Volume multiplier only
-                stt_processed_stream = self.process_volume_only(request.stt_stream)
+                stt_processed_stream = self.process_volume_only(stt_stream, skipped_ms)
 
         if current_stage == PipelineStage.WAKE_WORD:
             # wake-word-detection
@@ -1066,8 +1181,16 @@ class _DefaultPipelineProcessor:
             assert request.stt_metadata is not None
             assert stt_processed_stream is not None
 
-            if request.wake_word_phrase is not None:
-                self.host.accept_wake_word(request.wake_word_phrase)
+            # Wake word detection accepts the wake word it detects
+            if (self.host.start_stage == PipelineStage.STT) and (
+                request.wake_word_phrase is not None
+            ):
+                if request.wake_word_audio_ms is not None:
+                    self._accept_wake_word_audio(
+                        request.wake_word_phrase, request.wake_word_audio_ms
+                    )
+                else:
+                    self.host.accept_wake_word(request.wake_word_phrase)
 
             stt_input_stream = stt_processed_stream
 
@@ -1143,6 +1266,12 @@ class _DefaultPipelineProcessor:
                 raise PipelineRunValidationError(
                     "stt_stream is required for speech-to-text"
                 )
+            if (request.wake_word_audio_ms is not None) and (
+                request.wake_word_phrase is None
+            ):
+                raise PipelineRunValidationError(
+                    "wake_word_phrase is required with wake_word_audio_ms"
+                )
         elif self.host.start_stage == PipelineStage.INTENT:
             if request.intent_input is None:
                 raise PipelineRunValidationError(
@@ -1197,19 +1326,6 @@ class _DefaultPipelineProcessor:
             <= end_stage_index
         ):
             await self.prepare_text_to_speech()
-
-
-def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
-    """Multiply 16-bit PCM samples by a constant."""
-
-    def _clamp(val: float) -> float:
-        """Clamp to signed 16-bit."""
-        return max(-32768, min(32767, val))
-
-    return array.array(
-        "h",
-        (int(_clamp(value * volume_multiplier)) for value in array.array("h", chunk)),
-    ).tobytes()
 
 
 @dataclass

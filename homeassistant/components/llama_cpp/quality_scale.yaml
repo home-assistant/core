@@ -48,7 +48,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: No periodic updates are performed by this integration.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold

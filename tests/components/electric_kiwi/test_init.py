@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import RequestInfo
 from electrickiwi_api.exceptions import ApiException, AuthException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.electric_kiwi.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(

@@ -233,10 +233,10 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
         placeholders: dict[str, str] = super().description_placeholders or {}
         if self.issue and self.issue.reference:
             placeholders[PLACEHOLDER_KEY_ADDON_INFO] = (
-                f"homeassistant://hassio/addon/{self.issue.reference}/info"
+                f"homeassistant://config/app/{self.issue.reference}/info"
             )
             placeholders[PLACEHOLDER_KEY_ADDON_DOCUMENTATION] = (
-                f"homeassistant://hassio/addon/{self.issue.reference}/documentation"
+                f"homeassistant://config/app/{self.issue.reference}/documentation"
             )
         return placeholders or None
 

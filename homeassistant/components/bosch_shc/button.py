@@ -52,7 +52,7 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[SHCButton] = [
         SHCButton(
             hass=hass,
             device=device,
@@ -61,8 +61,8 @@ async def async_setup_entry(
             description=SMOKE_TEST_DESCRIPTION,
         )
         for device in session.device_helper.smoke_detectors
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         SHCButton(
             hass=hass,
             device=device,
@@ -73,6 +73,7 @@ async def async_setup_entry(
         for device in session.device_helper.motion_detectors2
         if device.supports_tamper_reset
     )
+    async_add_entities(entities)
 
 
 class SHCButton[_DeviceT: SHCDevice](SHCEntity, ButtonEntity):

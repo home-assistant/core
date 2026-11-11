@@ -1,6 +1,7 @@
 {
   "domain": "local_ip",
   "name": "Local IP Address",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@issacg"],
   "config_flow": true,
   "dependencies": ["network"],

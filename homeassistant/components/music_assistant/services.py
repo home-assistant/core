@@ -7,6 +7,7 @@ import probatio
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_SHUFFLE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
 )
@@ -59,7 +60,7 @@ from .const import (
     ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import catch_user_not_found, get_music_assistant_client
+from .helpers import catch_user_not_found, get_music_assistant_client, user_from_context
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -93,7 +94,7 @@ PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 
 
 @callback
-def register_actions(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
     hass.services.async_register(
         DOMAIN,
@@ -152,6 +153,7 @@ def register_actions(hass: HomeAssistant) -> None:
             probatio.Optional(ATTR_ARTIST): cv.string,
             probatio.Optional(ATTR_ALBUM): cv.string,
             probatio.Optional(ATTR_RADIO_MODE): probatio.Coerce(bool),
+            probatio.Optional(ATTR_MEDIA_SHUFFLE): cv.boolean,
             probatio.Optional(ATTR_START_ITEM): cv.string,
             probatio.Optional(ATTR_USERNAME): cv.string,
         },
@@ -224,7 +226,9 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
             media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
             limit=call.data[ATTR_LIMIT],
             library_only=call.data[ATTR_LIBRARY_ONLY],
-            user=search_username,
+            user=search_username
+            if search_username is not None
+            else user_from_context(call.context),
         )
     response: ServiceResponse = SEARCH_RESULT_SCHEMA(
         {

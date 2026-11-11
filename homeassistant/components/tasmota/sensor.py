@@ -94,6 +94,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
         STATE_CLASS: SensorStateClass.TOTAL,
     },
+    hc.SENSOR_ENERGY_EXPORT_ACTIVE_TOTAL: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
     hc.SENSOR_ENERGY_EXPORT_REACTIVE: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_ENERGY_EXPORT_TARIFF: {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
@@ -165,6 +169,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_POWER: {
+        DEVICE_CLASS: SensorDeviceClass.POWER,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
+    hc.SENSOR_POWER_TOTAL: {
         DEVICE_CLASS: SensorDeviceClass.POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -307,17 +315,6 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
             # set state class to measurement.
             if self._tasmota_entity.discovered_as_numeric:
                 self._attr_state_class = SensorStateClass.MEASUREMENT
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

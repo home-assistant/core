@@ -7,14 +7,13 @@ from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.tcp import common as tcp
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 TEST_CONFIG = {
     "sensor": {

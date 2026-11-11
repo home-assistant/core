@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from apyosoenergyapi.waterheater import OSOEnergyWaterHeaterData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.osoenergy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_CONFIG = {
     CONF_API_KEY: "secret_api_key",

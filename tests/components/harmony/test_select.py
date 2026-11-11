@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -12,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
 from .const import ENTITY_REMOTE, ENTITY_SELECT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_connection_state_changes(

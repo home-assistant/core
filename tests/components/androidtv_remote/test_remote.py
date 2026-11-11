@@ -4,13 +4,12 @@ from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 REMOTE_ENTITY = "remote.my_android_tv"
 

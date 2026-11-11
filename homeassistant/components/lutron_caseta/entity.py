@@ -3,8 +3,7 @@
 import logging
 from typing import Any, override
 
-from homeassistant.const import ATTR_SUGGESTED_AREA
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -66,12 +65,18 @@ class LutronCasetaEntity(Entity):
             configuration_url=CONFIG_URL,
         )
         if area != UNASSIGNED_AREA:
-            info[ATTR_SUGGESTED_AREA] = area
+            info.suggested_area = area
         self._attr_device_info = info
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
+        self._async_subscribe_to_bridge()
+
+    @callback
+    def _async_subscribe_to_bridge(self) -> None:
+        """Subscribe to updates from the bridge."""
         self._smartbridge.add_subscriber(self.device_id, self._handle_bridge_update)
 
     def _handle_bridge_update(self) -> None:

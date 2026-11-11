@@ -1,6 +1,7 @@
 {
   "domain": "systemmonitor",
   "name": "System monitor",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/systemmonitor",

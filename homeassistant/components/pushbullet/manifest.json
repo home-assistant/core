@@ -1,8 +1,10 @@
 {
   "domain": "pushbullet",
   "name": "Pushbullet",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@engrbm87"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/pushbullet",
   "integration_type": "service",
   "iot_class": "cloud_polling",

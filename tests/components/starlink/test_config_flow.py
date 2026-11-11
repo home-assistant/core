@@ -1,5 +1,7 @@
 """Test the Starlink config flow."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -8,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .patchers import DEVICE_FOUND_PATCHER, NO_DEVICE_PATCHER, SETUP_ENTRY_PATCHER
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_user_fails_can_succeed(hass: HomeAssistant) -> None:

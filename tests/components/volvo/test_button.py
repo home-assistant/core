@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoApiException, VolvoCarsCommandResult
@@ -16,8 +17,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import configure_mock
 from .const import DEFAULT_VIN
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_api", "full_model")

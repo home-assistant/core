@@ -1,13 +1,13 @@
 """Tests for the Smart Meter B Route integration init."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.route_b_smart_meter.const import (
     CONNECT_RETRIES,
     REOPEN_DELAYS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_success(

@@ -1,7 +1,7 @@
 """Test Home Assistant date util methods."""
 # pylint: disable=home-assistant-enforce-utcnow
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta, timezone
 
 import pytest
 
@@ -29,14 +29,30 @@ async def test_async_get_time_zone_retrieves_valid_time_zone() -> None:
     assert await dt_util.async_get_time_zone(TEST_TIME_ZONE) is not None
 
 
-def test_get_time_zone_returns_none_for_garbage_time_zone() -> None:
-    """Test getting a non existing time zone."""
-    assert dt_util.get_time_zone("Non existing time zone") is None
+GARBAGE_TIME_ZONES = [
+    pytest.param("Non existing time zone", id="not_found"),
+    pytest.param("", id="empty"),
+    pytest.param("Europe/", id="trailing_slash"),
+    pytest.param("Europe//Berlin", id="double_slash"),
+    pytest.param("/UTC", id="absolute_path"),
+    pytest.param("../etc", id="parent_directory"),
+    pytest.param("UTC\x00", id="null_byte"),
+    pytest.param("a" * 300, id="name_too_long"),
+]
 
 
-async def test_async_get_time_zone_returns_none_for_garbage_time_zone() -> None:
+@pytest.mark.parametrize("time_zone_str", GARBAGE_TIME_ZONES)
+def test_get_time_zone_returns_none_for_garbage_time_zone(time_zone_str: str) -> None:
     """Test getting a non existing time zone."""
-    assert await dt_util.async_get_time_zone("Non existing time zone") is None
+    assert dt_util.get_time_zone(time_zone_str) is None
+
+
+@pytest.mark.parametrize("time_zone_str", GARBAGE_TIME_ZONES)
+async def test_async_get_time_zone_returns_none_for_garbage_time_zone(
+    time_zone_str: str,
+) -> None:
+    """Test getting a non existing time zone."""
+    assert await dt_util.async_get_time_zone(time_zone_str) is None
 
 
 def test_set_default_time_zone() -> None:
@@ -148,6 +164,52 @@ def test_parse_datetime_converts_correctly() -> None:
     assert utcnow == dt_util.parse_datetime(utcnow.isoformat())
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(
+            "1880-01-01T00:00:00-04:56:02",
+            datetime(
+                1880,
+                1,
+                1,
+                tzinfo=timezone(-timedelta(hours=4, minutes=56, seconds=2)),
+            ),
+            id="extended",
+        ),
+        pytest.param(
+            "1880-01-01T00:00:00-045602",
+            datetime(
+                1880,
+                1,
+                1,
+                tzinfo=timezone(-timedelta(hours=4, minutes=56, seconds=2)),
+            ),
+            id="basic",
+        ),
+        pytest.param(
+            "1900-01-01T12:30:00.5+01:39:52",
+            datetime(
+                1900,
+                1,
+                1,
+                12,
+                30,
+                0,
+                500000,
+                tzinfo=timezone(timedelta(hours=1, minutes=39, seconds=52)),
+            ),
+            id="fractional_seconds",
+        ),
+    ],
+)
+def test_parse_datetime_offset_with_seconds(value: str, expected: datetime) -> None:
+    """Test parse_datetime handles UTC offsets with a seconds component."""
+    parsed = dt_util.parse_datetime(value)
+    assert parsed == expected
+    assert parsed.utcoffset() == expected.utcoffset()
+
+
 def test_parse_datetime_returns_none_for_incorrect_format() -> None:
     """Test parse_datetime returns None if incorrect format."""
     assert dt_util.parse_datetime("not a datetime string") is None
@@ -183,6 +245,22 @@ def test_parse_duration(
 ) -> None:
     """Test that parse_duration returns the expected result."""
     assert dt_util.parse_duration(duration_string) == expected_result
+
+
+@pytest.mark.parametrize(
+    ("time_string", "expected_result"),
+    [
+        pytest.param("12:34", time(12, 34), id="hours_minutes"),
+        pytest.param("12:34:56", time(12, 34, 56), id="hours_minutes_seconds"),
+        pytest.param("24:00", None, id="hour_out_of_range"),
+        pytest.param("0:2147483648", None, id="minute_overflows_c_int"),
+        pytest.param("2147483648:00", None, id="hour_overflows_c_int"),
+        pytest.param("0:0:99999999999999999999", None, id="second_overflows_c_long"),
+    ],
+)
+def test_parse_time(time_string: str, expected_result: time | None) -> None:
+    """Test that parse_time returns the expected result."""
+    assert dt_util.parse_time(time_string) == expected_result
 
 
 def test_get_age() -> None:
@@ -313,6 +391,20 @@ def test_time_remaining() -> None:
         (timedelta(hours=1, minutes=54, seconds=33), 0, "1 hour 54 minutes 33 seconds"),
         (timedelta(hours=-1), 1, "1 hour"),
         (timedelta(hours=-1, minutes=-30), 2, "1 hour 30 minutes"),
+        (timedelta(minutes=59, seconds=45), 1, "1 hour"),
+        (timedelta(hours=1, minutes=59, seconds=45), 2, "2 hours"),
+        (timedelta(hours=23, minutes=59, seconds=45), 2, "1 day"),
+        (timedelta(days=1, minutes=59, seconds=45), 2, "1 day 1 hour"),
+        (timedelta(days=29, hours=13), 1, "1 month"),
+        (timedelta(days=364, hours=13), 2, "1 year"),
+        (timedelta(days=350), 1, "1 year"),
+        (timedelta(days=360), 1, "1 year"),
+        (timedelta(days=364), 1, "1 year"),
+        (timedelta(days=365, hours=-1), 1, "1 year"),
+        (timedelta(days=729), 2, "2 years"),
+        (timedelta(days=724, hours=23, minutes=59, seconds=50), 2, "2 years"),
+        (timedelta(days=724, hours=13), 3, "2 years"),
+        (timedelta(days=380, hours=23, minutes=59, seconds=50), 2, "1 year 16 days"),
     ],
 )
 def test_timedelta_string(delta: timedelta, precision: int, expected: str) -> None:
@@ -536,6 +628,61 @@ def test_find_next_time_expression_exiting_dst(now_dt, expected_dt) -> None:
     pattern_seconds = dt_util.parse_time_expression(0, 0, 59)
     pattern_minutes = dt_util.parse_time_expression(30, 0, 59)
     pattern_hours = dt_util.parse_time_expression(2, 0, 59)
+
+    now_dt = now_dt.replace(tzinfo=tz)
+    expected_dt = expected_dt.replace(tzinfo=tz)
+
+    res_dt = dt_util.find_next_time_expression_time(
+        now_dt, pattern_seconds, pattern_minutes, pattern_hours
+    )
+    assert dt_util.as_utc(res_dt) == dt_util.as_utc(expected_dt)
+
+
+# DST transitions that are not on a whole hour boundary. Lord Howe turns back
+# 30 minutes on 2024.04.07 2:00, so 1:30-2:00 is ambiguous; Chatham turns back
+# 1h on 2024.04.07 3:45, so 2:45-3:45 is ambiguous.
+@pytest.mark.parametrize(
+    ("time_zone", "now_dt", "hour", "minute", "expected_dt"),
+    [
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2024, 4, 7, 1, 50, 0, fold=0),
+            1,
+            [25, 35],
+            datetime(2024, 4, 7, 1, 35, 0, fold=1),
+            id="lord_howe_skip_match_before_fold",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2024, 4, 7, 3, 0, 0, fold=0),
+            2,
+            "*",
+            datetime(2024, 4, 7, 2, 45, 0, fold=1),
+            id="chatham_start_of_fold",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2024, 4, 7, 3, 30, 0, fold=0),
+            [2, 3],
+            15,
+            datetime(2024, 4, 7, 3, 15, 0, fold=1),
+            id="chatham_match_in_fold",
+        ),
+    ],
+)
+def test_find_next_time_expression_exiting_dst_not_hour_aligned(
+    time_zone: str,
+    now_dt: datetime,
+    hour: int | list[int],
+    minute: int | list[int] | str,
+    expected_dt: datetime,
+) -> None:
+    """Test exiting DST by less than or off an hour boundary."""
+    tz = dt_util.get_time_zone(time_zone)
+    dt_util.set_default_time_zone(tz)
+    pattern_seconds = dt_util.parse_time_expression(0, 0, 59)
+    pattern_minutes = dt_util.parse_time_expression(minute, 0, 59)
+    pattern_hours = dt_util.parse_time_expression(hour, 0, 23)
 
     now_dt = now_dt.replace(tzinfo=tz)
     expected_dt = expected_dt.replace(tzinfo=tz)

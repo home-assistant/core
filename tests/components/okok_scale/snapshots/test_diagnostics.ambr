@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'service_info': dict({
+      'address': '**REDACTED**',
+      'advertisement': '**REDACTED**',
+      'connectable': True,
+      'device': '**REDACTED**',
+      'manufacturer_data': dict({
+        '61695': dict({
+          '__type': "<class 'bytes'>",
+          'repr': "b'\\x02\\x04T\\x03\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00P\\xfb\\x19\\x01#E'",
+        }),
+      }),
+      'name': '**REDACTED**',
+      'raw': None,
+      'rssi': -60,
+      'service_data': dict({
+      }),
+      'service_uuids': list([
+      ]),
+      'source': '**REDACTED**',
+      'tx_power': -127,
+    }),
+  })
+# ---

@@ -4,6 +4,8 @@ from unittest.mock import Mock, patch
 
 from habluetooth import BluetoothServiceInfoBleak
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from syrupy.assertion import SnapshotAssertion
 from togrill_bluetooth.packets import PacketA0Notify, PacketA1Notify
 
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import TOGRILL_SERVICE_INFO, setup_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 def patch_async_ble_device_from_address(

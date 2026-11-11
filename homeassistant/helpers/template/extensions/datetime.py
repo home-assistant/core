@@ -3,6 +3,8 @@
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.helpers.template.helpers import raise_no_default
 from homeassistant.helpers.template.render_info import render_info_cv
 from homeassistant.util import dt as dt_util
@@ -12,7 +14,7 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -76,6 +78,11 @@ class DateTimeExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "datetime",
                     self.is_datetime,
+                    as_test=True,
+                ),
+                TemplateFunction(
+                    "timedelta",
+                    self.is_timedelta,
                     as_test=True,
                 ),
                 # Functions that require hass
@@ -231,6 +238,10 @@ class DateTimeExtension(BaseTemplateExtension):
     def is_datetime(self, value: Any) -> bool:
         """Return whether a value is a datetime."""
         return isinstance(value, datetime)
+
+    def is_timedelta(self, value: Any) -> bool:
+        """Return whether a value is a timedelta."""
+        return isinstance(value, timedelta)
 
     def now(self) -> datetime:
         """Record fetching now."""

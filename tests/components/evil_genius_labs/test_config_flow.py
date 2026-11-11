@@ -30,7 +30,7 @@ def _patch_device(
         ),
         patch(
             "homeassistant.components.evil_genius_labs.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -61,7 +61,7 @@ async def test_form(
         ),
         patch(
             "homeassistant.components.evil_genius_labs.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -6,8 +6,10 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import automation
+from homeassistant.components.sun.const import SunEntityStateAttribute
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import trace
@@ -15,8 +17,6 @@ from homeassistant.helpers.condition import async_validate_condition_config
 from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.typing import WebSocketGenerator
 
 # San Diego (default test location), Kotzebue, Alaska (just inside the Arctic
 # Circle - brief midnight sun in June) and Longyearbyen, Svalbard (deep polar -
@@ -1539,7 +1539,9 @@ async def test_elevation_condition(
     expected: bool,
 ) -> None:
     """Test the elevation condition compares the sun's elevation to a threshold."""
-    hass.states.async_set("sun.sun", "above_horizon", {"elevation": elevation})
+    hass.states.async_set(
+        "sun.sun", "above_horizon", {SunEntityStateAttribute.ELEVATION: elevation}
+    )
     await async_setup_component(
         hass,
         automation.DOMAIN,

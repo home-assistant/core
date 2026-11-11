@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from .const import DOMAIN, InputTextService, InputTextServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +31,11 @@ async def _async_reproduce_state(
         return
 
     # Call service
-    service = SERVICE_SET_VALUE
-    service_data = {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: state.state}
+    service = InputTextService.SET_VALUE
+    service_data = {
+        ATTR_ENTITY_ID: state.entity_id,
+        InputTextServiceArgument.VALUE: state.state,
+    }
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

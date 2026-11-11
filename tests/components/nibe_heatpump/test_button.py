@@ -9,6 +9,7 @@ from nibe.coil import CoilData
 from nibe.coil_groups import UNIT_COILGROUPS
 from nibe.heatpump import Model
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import (
@@ -20,8 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import async_add_model
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)

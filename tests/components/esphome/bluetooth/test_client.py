@@ -4,15 +4,12 @@ from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceIn
 from bleak.exc import BleakError
 from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
-from bleak_esphome.backend.scanner import (  # pylint: disable=no-name-in-module
-    ESPHomeScanner,
-)
+from bleak_esphome.backend.scanner import ESPHomeScanner  # pylint: disable=no-name-in-module
 import pytest
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import HaBluetoothConnector
 from homeassistant.core import HomeAssistant
-
-from tests.components.bluetooth import generate_ble_device
 
 ESP_MAC_ADDRESS = "AA:BB:CC:DD:EE:FF"
 ESP_NAME = "proxy"

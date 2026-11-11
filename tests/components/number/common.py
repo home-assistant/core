@@ -1,8 +1,8 @@
 """Common helper and classes for number entity tests."""
 
-from homeassistant.components.number import NumberEntity, RestoreNumber
+from pytest_homeassistant.common import MockEntity
 
-from tests.common import MockEntity
+from homeassistant.components.number import NumberEntity, RestoreNumber
 
 
 class MockNumberEntity(MockEntity, NumberEntity):

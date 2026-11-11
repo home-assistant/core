@@ -1,6 +1,7 @@
 """Trigger entity."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -50,24 +51,13 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         AbstractTemplateEntity.__init__(self, hass, config)
 
         self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
-        self._rendered_entity_variables: dict | None = None
+        self._rendered_entity_variables: Mapping[str, Any] | None = None
         self._state_render_error = False
         self._cond_func: condition.ConditionsChecker | None = None
 
         self._skip_rendered_result: list[str] = []
         if self.skip_rendered_result is not None:
             self._skip_rendered_result.extend(self.skip_rendered_result)
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -84,6 +74,8 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             )
 
         await super().async_added_to_hass()
+        self.coordinator.entities.add(self)
+        self.async_on_remove(partial(self.coordinator.entities.discard, self))
 
         if self.coordinator.data is not None:
             # The trigger already produced data; rendering it must win over
@@ -211,7 +203,10 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @override
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        return self._rendered_entity_variables or {}
+        return {
+            **self.coordinator.trigger_variables,
+            **(self._rendered_entity_variables or {}),
+        }
 
     @override
     def _render_single_template(
@@ -325,11 +320,21 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 write_state = True
                 continue
 
-            value = (
-                entity_template.validator(rendered)
-                if entity_template.validator
-                else rendered
-            )
+            try:
+                value = (
+                    entity_template.validator(rendered)
+                    if entity_template.validator
+                    else rendered
+                )
+            except probatio.Invalid as err:
+                log_validation_error(
+                    rendered,
+                    entity_template.template,
+                    entity_template.attribute,
+                    self.entity_id,
+                    err,
+                )
+                value = None
 
             if entity_template.on_update:
                 entity_template.on_update(value)
@@ -359,7 +364,12 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         if not check_conditions(self._cond_func, variables):
             return
 
-        self.async_set_context(self.coordinator.data["context"])
+        if (context := self.coordinator.data["context"]) is None:
+            # A trigger without a context must not inherit the previous one
+            self._context = None
+            self._context_set = None
+        else:
+            self.async_set_context(context)
         if self._render_availability_template(variables):
             self._render_templates(variables)
 

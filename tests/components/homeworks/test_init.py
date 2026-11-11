@@ -9,6 +9,7 @@ from pyhomeworks.pyhomeworks import (
     HW_LOGIN_INCORRECT,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.homeworks import EVENT_BUTTON_PRESS, EVENT_BUTTON_RELEASE
 from homeassistant.components.homeworks.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry, async_capture_events
 
 
 async def test_load_unload_config_entry(

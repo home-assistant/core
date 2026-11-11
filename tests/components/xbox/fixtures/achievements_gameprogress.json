@@ -1,0 +1,61 @@
+{
+  "achievements": [
+    {
+      "id": "1",
+      "serviceConfigId": "4fc10100-5f7a-4470-899b-280835760c07",
+      "name": "Taking Inventory",
+      "titleAssociations": [
+        {
+          "name": "Minecraft",
+          "id": 1739947436
+        }
+      ],
+      "progressState": "Achieved",
+      "progression": {
+        "requirements": [
+          {
+            "id": "b4b0b3c3-2e1f-4a2e-8a2f-1d3a5f6c7b81",
+            "current": "1",
+            "target": "1",
+            "operationType": "SumInteger",
+            "valueType": "Integer",
+            "ruleParticipationType": "Individual"
+          }
+        ],
+        "timeUnlocked": "2024-03-17T19:22:41.4831429Z"
+      },
+      "mediaAssets": [
+        {
+          "name": "Taking Inventory",
+          "type": "Icon",
+          "url": "https://images-eds.xboxlive.com/image?url=2SqJ8T7RkYeXQ0Wl8sJkXn6eUxhKk9C0PjXYHCIhOa1mRAzD1gLAxRLc.UZVJnCFCpdEeNJbCz1n0Vb3SrKJdBbzxHoBGPHnQnVQlGIHIWXmC3GPVcOaJ7FqG0hDaSEkR"
+        }
+      ],
+      "platforms": ["Durango"],
+      "isSecret": false,
+      "description": "Open your inventory.",
+      "lockedDescription": "Open your inventory.",
+      "productId": "9nblggh537b3",
+      "achievementType": "Persistent",
+      "participationType": "Individual",
+      "timeWindow": null,
+      "rewards": [
+        {
+          "name": null,
+          "description": null,
+          "value": "20",
+          "type": "Gamerscore",
+          "mediaAsset": null,
+          "valueType": "Int"
+        }
+      ],
+      "estimatedTime": "00:00:00",
+      "deeplink": "",
+      "isRevoked": false
+    }
+  ],
+  "pagingInfo": {
+    "continuationToken": null,
+    "totalRecords": 121
+  }
+}

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
@@ -23,8 +24,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import ENTRY_OPTIONS, init_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("nzbget_api")

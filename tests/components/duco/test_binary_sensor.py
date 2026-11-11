@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from duco_connectivity import DiagComponent, DucoConnectionError, DucoError, Node
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.duco.const import BOX_NODE_ID
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_fire_coordinator_update, setup_platform_integration
-
-from tests.common import MockConfigEntry
 
 VENTILATION_PROBLEM_ENTITY_ID = "binary_sensor.living_ventilation"
 

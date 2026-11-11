@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 type ChessConfigEntry = ConfigEntry[ChessCoordinator]
@@ -55,5 +57,9 @@ class ChessCoordinator(DataUpdateCoordinator[ChessData]):
                 self.config_entry.data[CONF_USERNAME]
             )
         except ChessComAPIError as err:
-            raise UpdateFailed(f"Error communicating with Chess.com: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         return ChessData(player=player, stats=stats)

@@ -6,7 +6,7 @@ from functools import wraps
 from typing import Any, Concatenate, override
 
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.exceptions import SFRBoxError
+from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 from sfrbox_api.models import SystemInfo
 
 from homeassistant.components.button import (
@@ -42,6 +42,12 @@ def with_error_wrapping[**_P, _R](
         """Catch SFRBoxError errors and raise HomeAssistantError."""
         try:
             return await func(self, *args, **kwargs)
+        except SFRBoxAuthenticationError as err:
+            self._entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except SFRBoxError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -83,7 +89,7 @@ async def async_setup_entry(
     system_info = data.system.data
 
     entities = [
-        SFRBoxButton(data.box, description, system_info) for description in BUTTON_TYPES
+        SFRBoxButton(entry, description, system_info) for description in BUTTON_TYPES
     ]
     async_add_entities(entities)
 
@@ -95,13 +101,14 @@ class SFRBoxButton(SFREntity, ButtonEntity):
 
     def __init__(
         self,
-        box: SFRBox,
+        entry: SFRConfigEntry,
         description: SFRBoxButtonEntityDescription,
         system_info: SystemInfo,
     ) -> None:
         """Initialize the button."""
         super().__init__(description, system_info)
-        self._box = box
+        self._entry = entry
+        self._box = entry.runtime_data.box
 
     @with_error_wrapping
     @override

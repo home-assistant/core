@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from egauge_async.json.models import RegisterInfo, RegisterType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.egauge.const import DOMAIN
 from homeassistant.const import (
@@ -15,8 +16,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

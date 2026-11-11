@@ -1,9 +1,16 @@
 """Tests for the Flexit Nordic (BACnet) number entities."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from flexit_bacnet import DecodingError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -11,14 +18,13 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "number.device_name_fireplace_supply_fan_setpoint"
 
@@ -111,3 +117,47 @@ async def test_numbers_implementation(
     )
 
     assert hass.states.get(ENTITY_ID).state == "30"
+
+
+@pytest.mark.parametrize(
+    ("property_name", "entity_id"),
+    [
+        pytest.param(
+            "fan_setpoint_supply_air_fire",
+            ENTITY_ID,
+            id="missing_value",
+        ),
+        pytest.param(
+            "fan_setpoint_extract_air_home",
+            "number.device_name_away_extract_fan_setpoint",
+            id="missing_maximum",
+        ),
+        pytest.param(
+            "fan_setpoint_supply_air_away",
+            "number.device_name_home_supply_fan_setpoint",
+            id="missing_minimum",
+        ),
+    ],
+)
+async def test_missing_number_property(
+    hass: HomeAssistant,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    property_name: str,
+    entity_id: str,
+) -> None:
+    """Test missing number values or limits make controls unavailable."""
+    initial_value = getattr(mock_flexit_bacnet, property_name)
+    setattr(mock_flexit_bacnet, property_name, None)
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    setattr(mock_flexit_bacnet, property_name, initial_value)
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass, utcnow())
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
