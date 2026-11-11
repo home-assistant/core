@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import IntEnum
-from typing import cast, override
+from typing import override
 
 from sofar_modbus.model import CorrectedTotal
 from sofar_modbus.modern.battery_pack import BatteryPack
@@ -75,17 +75,17 @@ async def async_setup_entry(
         SENSOR_DESCRIPTIONS + TOTAL_SENSOR_DESCRIPTIONS,
     )
     runtime_data = entry.runtime_data
-    served = runtime_data.served_components
 
     entities: list[SofarSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
-        if description.component in served and _battery_string(description) is None
+        if description.component in runtime_data.served_components
+        and _battery_string(description) is None
     ]
     entities.extend(
         SofarTotalSensor(runtime_data, description)
         for description in TOTAL_SENSOR_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     )
     async_add_entities(entities)
 
@@ -109,7 +109,7 @@ async def async_setup_entry(
     entry.async_on_unload(
         runtime_data.readings.async_add_listener(_async_add_wired_battery_strings)
     )
-    if BATTERY_PACKS in served:
+    if BATTERY_PACKS in runtime_data.served_components:
         _async_setup_battery_packs(entry, runtime_data, async_add_entities)
 
 
@@ -178,15 +178,20 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         last_data = await self.async_get_last_sensor_data()
         if last_data is not None and isinstance(last_data.native_value, (int, float)):
             self._attr_native_value = last_data.native_value
+        self._take_total()
 
-    @property
+    @callback
     @override
-    def native_value(self) -> int | float | None:
-        value = self.entity_description.total_fn(self.coordinator.device).value
-        # Restore state saves this even while unavailable; keep the last total.
-        if value is not None:
+    def _handle_coordinator_update(self) -> None:
+        self._take_total()
+        super()._handle_coordinator_update()
+
+    def _take_total(self) -> None:
+        """Keep the last total while the inverter reports none."""
+        if (
+            value := self.entity_description.total_fn(self.coordinator.device).value
+        ) is not None:
             self._attr_native_value = value
-        return cast(int | float | None, self._attr_native_value)
 
 
 class SofarPackSensor(SofarEntity, SensorEntity):
@@ -201,36 +206,24 @@ class SofarPackSensor(SofarEntity, SensorEntity):
         pack: BatteryPack,
     ) -> None:
         """Initialize the entity."""
-        # The base builds the unique ID and device info from this pack.
-        self._pack = pack
         super().__init__(runtime_data, entity_description)
-
-    @override
-    def _unique_id(self, serial: str) -> str:
-        """Name the entity after its pack, which repeats every key."""
-        return (
-            f"{battery_pack_identifier(serial, self._pack)}"
-            f"_{self.entity_description.key}"
+        self._pack = pack
+        identifier = battery_pack_identifier(
+            self.coordinator.device.serial_number, pack
         )
-
-    @override
-    def _device_info(
-        self, runtime_data: SofarRuntimeData, serial: str
-    ) -> dr.DeviceInfo:
-        """Place the entity on its own pack, connected via the inverter."""
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, battery_pack_identifier(serial, self._pack))},
+        # Every pack repeats the same keys.
+        self._attr_unique_id = f"{identifier}_{entity_description.key}"
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
             via_device_id=runtime_data.inverter_device_id,
             translation_key="battery_pack",
             translation_placeholders={
-                "group": str(self._pack.group_nr + 1),
-                "pack": str(self._pack.pack_nr + 1),
+                "group": str(pack.group_nr + 1),
+                "pack": str(pack.pack_nr + 1),
             },
-            model=self._pack.pack_model or None,
-            sw_version=(
-                None if self._pack.bms_version is None else str(self._pack.bms_version)
-            ),
-            serial_number=self._pack.pack_serial_number or None,
+            model=pack.pack_model or None,
+            sw_version=None if pack.bms_version is None else str(pack.bms_version),
+            serial_number=pack.pack_serial_number or None,
         )
 
     @property
