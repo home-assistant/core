@@ -131,7 +131,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> Non
         model=controller.sys_type,
         name=f"iZone Controller {controller.device_uid}",
     )
-    _async_remove_stale_zone_devices(hass, entry, controller)
+    zone_identifiers = {
+        (DOMAIN, controller.device_uid, zone.index) for zone in controller.zones
+    }
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if any(
+            len(identifier) == 3 for identifier in device.identifiers
+        ) and device.identifiers.isdisjoint(zone_identifiers):
+            device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # Platforms set up concurrently; re-push so controller climate can
@@ -235,19 +242,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> No
     await coordinator.controller.close()
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         await async_stop_discovery(hass)
-
-
-@callback
-def _async_remove_stale_zone_devices(
-    hass: HomeAssistant, entry: IZoneConfigEntry, controller: pizone.Controller
-) -> None:
-    """Remove devices for zones the installer has since removed from the system."""
-    device_registry = dr.async_get(hass)
-    zone_identifiers = {
-        (DOMAIN, controller.device_uid, zone.index) for zone in controller.zones
-    }
-    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
-        if any(
-            len(identifier) == 3 for identifier in device.identifiers
-        ) and device.identifiers.isdisjoint(zone_identifiers):
-            device_registry.async_remove_device(device.id)
