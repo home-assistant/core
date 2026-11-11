@@ -235,7 +235,12 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         """Update sensor attributes."""
         super()._async_update_attrs()
         if self.entity_description.key == AZD_INTERFACE:
-            self._attr_native_value = WEBSERVER_INTERFACES.get(self._attr_native_value)
+            interface = self._attr_native_value
+            self._attr_native_value = (
+                WEBSERVER_INTERFACES.get(interface)
+                if isinstance(interface, WebServerInterface)
+                else None
+            )
 
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
