@@ -58,7 +58,10 @@ from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES, DOMAIN
-from .device_tracker import async_client_allowed_fn
+from .device_tracker import (
+    async_client_allowed_fn,
+    async_client_ssid_allowed_fn,
+)
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -96,6 +99,8 @@ class FirewallPolicyScheduleStatus(StrEnum):
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not async_client_ssid_allowed_fn(hub, obj_id):
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
@@ -111,6 +116,8 @@ def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 @callback
 def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not async_client_ssid_allowed_fn(hub, obj_id):
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
