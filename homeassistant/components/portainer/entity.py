@@ -386,13 +386,31 @@ class PortainerDockerDiskSpaceVolumeEntity(PortainerDockerDiskSpaceCoordinatorEn
             f"_{self.volume_name}_{entity_description.key}"
         )
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Also follow the main coordinator, which notices deleted volumes."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.config_entry.runtime_data.async_add_listener(
+                self._handle_coordinator_update
+            )
+        )
+
     @property
     @override
     def available(self) -> bool:
-        """Return if the volume has disk space data."""
-        return super().available and self.volume_usage is not None
+        """Return if the volume still exists and its endpoint has disk space data."""
+        data = self.coordinator.config_entry.runtime_data.data
+        return (
+            super().available
+            and self.endpoint_id in data
+            and self.volume_name in data[self.endpoint_id].volumes
+        )
 
     @property
     def volume_usage(self) -> dict[str, Any] | None:
-        """Return the disk usage item for this volume."""
+        """Return the disk usage item for this volume.
+
+        Docker only measures volumes of the local driver without mount options.
+        """
         return self.coordinator.data[self.endpoint_id].volumes.get(self.volume_name)

@@ -425,7 +425,7 @@ VOLUME_DISK_SPACE_SENSORS: tuple[
     PortainerVolumeDiskSpaceSensorEntityDescription(
         key="volume_size",
         translation_key="volume_size",
-        # Docker reports -1 for volumes of non-local drivers
+        # Docker reports -1 when it fails to walk the volume directory
         value_fn=lambda usage: (
             size if (size := usage["UsageData"]["Size"]) >= 0 else None
         ),
@@ -672,6 +672,6 @@ class PortainerVolumeDiskSpaceSensor(
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if TYPE_CHECKING:
-            assert self.volume_usage is not None
-        return self.entity_description.value_fn(self.volume_usage)
+        if (usage := self.volume_usage) is None:
+            return None
+        return self.entity_description.value_fn(usage)

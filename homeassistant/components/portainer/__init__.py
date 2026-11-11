@@ -353,6 +353,38 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         hass.config_entries.async_update_entry(entry=entry, minor_version=2)
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
+    if entry.minor_version < 3:
+        _async_disable_disk_space_sensors(hass, entry)
+        hass.config_entries.async_update_entry(entry=entry, minor_version=3)
+
+
+# Fixed at the sensors that existed when they became opt-in.
+_DISK_SPACE_TRANSLATION_KEYS = {
+    "container_disk_usage_reclaimable",
+    "container_disk_usage_total_size",
+    "image_disk_usage_reclaimable",
+    "image_disk_usage_total_size",
+    "volume_disk_usage_total_size",
+    "volume_size",
+}
+
+
+@callback
+def _async_disable_disk_space_sensors(
+    hass: HomeAssistant, entry: PortainerConfigEntry
+) -> None:
+    """Disable the disk space sensors, which became opt-in as Docker computes them slowly."""
+    entity_registry = er.async_get(hass)
+    for reg_entry in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if (
+            reg_entry.domain == Platform.SENSOR
+            and reg_entry.translation_key in _DISK_SPACE_TRANSLATION_KEYS
+            and reg_entry.disabled_by is None
+        ):
+            entity_registry.async_update_entity(
+                reg_entry.entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION
+            )
+
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
