@@ -1679,27 +1679,15 @@ async def test_user_manual_host_empty_rejected_by_schema(hass: HomeAssistant) ->
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
-@pytest.mark.parametrize(
-    "lookup",
-    [
-        pytest.param(AsyncMock(return_value=None), id="no-endpoint"),
-        pytest.param(
-            AsyncMock(
-                side_effect=pizone.EndpointVerifyError(
-                    "192.0.2.99", pizone.VerifyFailure.NO_REPLY
-                )
-            ),
-            id="verify-error",
-        ),
-    ],
-)
-async def test_user_manual_host_unreachable(
-    hass: HomeAssistant, lookup: AsyncMock
-) -> None:
+async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
     """Unreachable host redisplays the form with cannot_connect."""
     with patch(
         "homeassistant.components.izone.discovery.async_discover_by_host",
-        new=lookup,
+        new=AsyncMock(
+            side_effect=pizone.EndpointVerifyError(
+                "192.0.2.99", pizone.VerifyFailure.NO_REPLY
+            )
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

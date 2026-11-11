@@ -79,6 +79,43 @@
         "name": "Sleep"
       }
     },
+    "event": {
+      "notification": {
+        "name": "Notification",
+        "state_attributes": {
+          "action": {
+            "name": "Action"
+          },
+          "buttons": {
+            "name": "Buttons"
+          },
+          "event_type": {
+            "state": {
+              "clicked": "Clicked",
+              "closed": "Closed",
+              "sent": "Sent"
+            }
+          },
+          "message": {
+            "name": "Message"
+          },
+          "notification_id": {
+            "name": "Notification ID"
+          },
+          "reason": {
+            "name": "Reason",
+            "state": {
+              "closed": "Closed",
+              "dismissed": "Dismissed",
+              "expired": "Expired"
+            }
+          },
+          "title": {
+            "name": "Title"
+          }
+        }
+      }
+    },
     "media_player": {
       "audio": {
         "name": "Audio"

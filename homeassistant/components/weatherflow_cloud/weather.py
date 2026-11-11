@@ -125,14 +125,25 @@ class WeatherFlowWeatherREST(
         """Return UV Index."""
         return self.local_data.weather.current_conditions.uv
 
+    @property
+    def _station_data(self) -> WeatherFlowDataREST | None:
+        """Return the station data, or None when the API stopped reporting it."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get(self.station_id)
+
     @callback
     @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return [x.ha_forecast for x in self.local_data.weather.forecast.daily]
+        if (data := self._station_data) is None:
+            return None
+        return [x.ha_forecast for x in data.weather.forecast.daily]
 
     @callback
     @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        return [x.ha_forecast for x in self.local_data.weather.forecast.hourly]
+        if (data := self._station_data) is None:
+            return None
+        return [x.ha_forecast for x in data.weather.forecast.hourly]

@@ -1,8 +1,9 @@
 """Weather platform for the Foreca integration."""
 
-from typing import override
+from collections.abc import Callable
+from typing import cast, override
 
-from pyforeca import DailyForecast, HourlyForecast
+from pyforeca import DailyForecast, ForecaError, HourlyForecast
 
 from homeassistant.components.weather import (
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -21,11 +22,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import symbol_to_condition
+from .const import DOMAIN, symbol_to_condition
 from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
 from .entity import ForecaEntity
 
@@ -33,6 +35,7 @@ PARALLEL_UPDATES = 0
 
 _CONFIDENCE = {"g": "good", "y": "normal", "o": "low"}
 _ROUNDING_PRECISION = 2
+_THREE_HOUR_PERIODS = 112
 
 
 async def async_setup_entry(
@@ -230,8 +233,11 @@ class ForecaWeather(
         """Return an hour's values that a Home Assistant forecast cannot hold."""
         if (timestamp := dt_util.parse_datetime(hour.time or "")) is None:
             return None
+        return {"datetime": timestamp.isoformat(), **self._hourly_extra_values(hour)}
+
+    def _hourly_extra_values(self, hour: HourlyForecast) -> dict[str, JsonValueType]:
+        """Return the values of an hourly step that a forecast cannot hold."""
         return {
-            "datetime": timestamp.isoformat(),
             "precipitation_type": hour.precip_type,
             "snow_accumulation": self._snow(hour.snow_accum),
             "snow_depth": self._snow(hour.snow_depth),
@@ -258,6 +264,43 @@ class ForecaWeather(
             "sunrise": _from_epoch(day.sunrise_epoch),
             "sunset": _from_epoch(day.sunset_epoch),
             "confidence": _CONFIDENCE.get(day.confidence or ""),
+            "temperature_ensemble": _percentiles(
+                day.max_temp_ensemble, self._temperature
+            ),
+            "templow_ensemble": _percentiles(day.min_temp_ensemble, self._temperature),
+            "precipitation_ensemble": _percentiles(
+                day.precip_accum_ensemble, self._precipitation
+            ),
+        }
+
+    async def async_get_3_hour_forecast(self) -> ServiceResponse:
+        """Return the forecast in 3-hour steps for the next 14 days."""
+        try:
+            steps = await self.coordinator.client.forecast_3hourly(
+                self.coordinator.location,
+                periods=_THREE_HOUR_PERIODS,
+                dataset="full",
+                rounding=0,
+            )
+        except ForecaError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="three_hour_forecast_error",
+            ) from err
+        dated = [
+            (step, forecast)
+            for step in steps
+            if (forecast := _hourly_to_forecast(step)) is not None
+        ]
+        converted = self._convert_forecast([forecast for _, forecast in dated])
+        return {
+            "forecast": [
+                {
+                    **cast(dict[str, JsonValueType], entry),
+                    **self._hourly_extra_values(step),
+                }
+                for (step, _), entry in zip(dated, converted, strict=True)
+            ]
         }
 
     def _temperature(self, value: float | None) -> float | None:
@@ -282,6 +325,17 @@ class ForecaWeather(
             _ROUNDING_PRECISION,
         )
 
+    def _precipitation(self, value: float | None) -> float | None:
+        """Convert an amount in mm to the entity's precipitation unit."""
+        if value is None:
+            return None
+        return round(
+            UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                value, UnitOfPrecipitationDepth.MILLIMETERS, self._precipitation_unit
+            ),
+            _ROUNDING_PRECISION,
+        )
+
     def _snow(self, value: float | None) -> float | None:
         """Convert a snow thickness in cm to the entity's precipitation unit."""
         if value is None:
@@ -292,6 +346,16 @@ class ForecaWeather(
             ),
             _ROUNDING_PRECISION,
         )
+
+
+def _percentiles(
+    values: dict[str, float | None] | None,
+    convert: Callable[[float | None], float | None],
+) -> dict[str, JsonValueType] | None:
+    """Convert each ensemble percentile, keeping the API's p000-style keys."""
+    if values is None:
+        return None
+    return {key: convert(value) for key, value in values.items()}
 
 
 def _from_epoch(epoch: int | None) -> str | None:
