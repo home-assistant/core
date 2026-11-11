@@ -306,6 +306,7 @@
     }),
     'coord_data': dict({
       'hot-water': dict({
+        'connected': None,
         'name': 'Airzone DHW',
         'on': True,
         'operation': 1,
@@ -321,11 +322,15 @@
         'temp-set': 45,
         'temp-unit': 0,
       }),
+      'mqtt': dict({
+        'online': False,
+      }),
       'num-systems': 4,
       'num-zones': 8,
       'systems': dict({
         '1': dict({
           'available': True,
+          'connected': None,
           'firmware': '3.31',
           'full-name': 'Airzone [1] System',
           'id': 1,
@@ -352,6 +357,7 @@
         }),
         '2': dict({
           'available': True,
+          'connected': None,
           'full-name': 'Airzone [2] System',
           'id': 2,
           'masters': list([
@@ -365,6 +371,7 @@
         }),
         '3': dict({
           'available': True,
+          'connected': None,
           'full-name': 'Airzone [3] System',
           'id': 3,
           'masters': list([
@@ -378,6 +385,7 @@
         }),
         '4': dict({
           'available': True,
+          'connected': None,
           'full-name': 'Airzone [4] System',
           'id': 4,
           'masters': list([
@@ -411,6 +419,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'full-name': 'Airzone [1:1] Salon',
@@ -466,6 +475,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': True,
           'double-set-point': False,
           'floor-demand': True,
@@ -525,6 +535,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'floor-demand': False,
@@ -576,6 +587,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'errors': list([
@@ -629,6 +641,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'full-name': 'Airzone [1:5] Dorm #2',
@@ -676,6 +689,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'full-name': 'Airzone [2:1] Airzone 2:1',
@@ -718,6 +732,7 @@
           'air-demand': True,
           'available': True,
           'cold-stage': 0,
+          'connected': None,
           'cool-temp-max': 90.0,
           'cool-temp-min': 64.0,
           'cool-temp-set': 77.0,
@@ -767,6 +782,7 @@
           'air-demand': False,
           'available': True,
           'cold-stage': 0,
+          'connected': None,
           'cool-temp-max': 30.0,
           'cool-temp-min': 15.0,
           'cool-temp-set': 20.0,
