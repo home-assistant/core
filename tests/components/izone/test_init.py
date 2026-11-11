@@ -1,8 +1,9 @@
 """Tests for iZone config entry setup and unload."""
 
 from asyncio import CancelledError
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pizone import (
     ControllerCommandError,
     ControllerEndpoint,
@@ -11,9 +12,10 @@ from pizone import (
     VerifyFailure,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.izone.const import DOMAIN
+from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -75,6 +77,46 @@ async def test_setup_removes_stale_zone_devices(
         (DOMAIN, "000000001", 0),  # type: ignore[arg-type]
         mock_config_entry.entry_id,
     )
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+@pytest.mark.parametrize(
+    ("zones_total", "reloaded"),
+    [
+        pytest.param(1, False, id="unchanged"),
+        pytest.param(2, True, id="zone_added"),
+        pytest.param(0, True, id="zone_removed"),
+    ],
+)
+async def test_zone_count_change_reloads_entry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    zones_total: int,
+    reloaded: bool,
+) -> None:
+    """A changed zone count from the controller reloads the entry to rebuild zones."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(
+            type(mock_controller),
+            "zones_total",
+            new_callable=PropertyMock,
+            return_value=zones_total,
+        ),
+        patch.object(
+            hass.config_entries, "async_schedule_reload"
+        ) as mock_schedule_reload,
+    ):
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_schedule_reload.called is reloaded
 
 
 async def test_migrate_heals_legacy_domain_unique_id(

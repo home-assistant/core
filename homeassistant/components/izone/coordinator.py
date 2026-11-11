@@ -68,4 +68,7 @@ class IZoneCoordinator(DataUpdateCoordinator[pizone.Controller]):
                 translation_domain=DOMAIN,
                 translation_key="controller_offline",
             )
+        # Zones are only read on connect; a reload rebuilds them after reprogramming.
+        if self.controller.zones_total != len(self.controller.zones):
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
         return self.controller
