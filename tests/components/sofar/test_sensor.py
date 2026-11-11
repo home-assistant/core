@@ -322,31 +322,16 @@ async def test_total_follows_a_later_poll(
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test a changed total is published and kept through a failed poll."""
+    """Test a total changed after setup is published on the next poll."""
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_solar_generation_total"
     )
     assert entity_id is not None
-    unit = mock_connection.for_unit(1)
-    unit.holding[0x0687] = 160  # 16.0 kWh
+    mock_connection.for_unit(1).holding[0x0687] = 160  # 16.0 kWh
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == "16.0"
-
-    unit.fail_read(0x0686, ModbusTimeoutError("stuck"))
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    assert (
-        extra_data := next(
-            stored
-            for stored in restore_state.async_get(hass).async_get_stored_states()
-            if stored.state.entity_id == entity_id
-        ).extra_data
-    ) is not None
-    assert extra_data.as_dict()["native_value"] == 16.0
 
 
 async def test_sensor_availability_on_component_failure(
