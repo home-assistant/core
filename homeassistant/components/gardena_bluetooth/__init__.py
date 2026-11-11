@@ -14,7 +14,7 @@ from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_PRODUCT_TYPE
+from .const import CONF_PERSISTENT_CONNECTION, CONF_PRODUCT_TYPE
 from .coordinator import (
     DeviceUnavailable,
     GardenaBluetoothConfigEntry,
@@ -109,7 +109,9 @@ async def async_migrate_product_type(
     return entry
 
 
-def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
+def get_connection(
+    hass: HomeAssistant, address: str, persistent: bool = False
+) -> CachedConnection:
     """Set up a cached client that keeps connection after last use."""
 
     def _device_lookup() -> BLEDevice:
@@ -120,7 +122,7 @@ def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
             raise DeviceUnavailable("Unable to find device")
         return device
 
-    return CachedConnection(DISCONNECT_DELAY, _device_lookup)
+    return CachedConnection(None if persistent else DISCONNECT_DELAY, _device_lookup)
 
 
 async def async_setup_entry(
@@ -134,7 +136,12 @@ async def async_setup_entry(
     address = entry.data[CONF_ADDRESS]
     product_type = ProductType[entry.data[CONF_PRODUCT_TYPE]]
 
-    client = Client(get_connection(hass, address), product_type)
+    client = Client(
+        get_connection(
+            hass, address, entry.options.get(CONF_PERSISTENT_CONNECTION, False)
+        ),
+        product_type,
+    )
 
     coordinator = GardenaBluetoothCoordinator(
         hass,
@@ -147,6 +154,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_request_refresh()
 
@@ -156,3 +164,10 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def _async_reload_entry(
+    hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
+) -> None:
+    """Reload when connection options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
