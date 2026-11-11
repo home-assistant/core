@@ -240,7 +240,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
-    await _async_migrate_default_config(hass, dashboards_collection)
+    # A YAML dashboard at the default url_path replaces the default storage dashboard
+    if DOMAIN not in hass.data[LOVELACE_DATA].yaml_dashboards:
+        await _async_migrate_default_config(hass, dashboards_collection)
 
     # Ensure lovelace panel is always registered for backwards compatibility
     _async_ensure_default_panel(hass)

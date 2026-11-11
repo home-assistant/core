@@ -220,6 +220,47 @@ async def test_lovelace_migration_completes_when_both_files_exist(
     assert response["result"] == {"views": [{"title": "New"}]}
 
 
+async def test_lovelace_migration_skipped_for_yaml_dashboard(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration is skipped when YAML defines the default dashboard."""
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY_DEFAULT,
+        "data": {"config": {"views": [{"title": "Old"}]}},
+    }
+
+    with patch("homeassistant.components.lovelace.os.rename") as mock_rename:
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "lovelace": {
+                    "dashboards": {
+                        "lovelace": {
+                            "mode": "yaml",
+                            "filename": "ui-lovelace.yaml",
+                            "title": "Overview",
+                        }
+                    }
+                }
+            },
+        )
+
+    mock_rename.assert_not_called()
+    assert "Failed to create dashboard entry during migration" not in caplog.text
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert [item["mode"] for item in response["result"]] == ["yaml"]
+
+
 async def test_lovelace_migration_skipped_when_already_migrated(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
