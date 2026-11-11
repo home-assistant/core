@@ -1290,8 +1290,6 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units = US_CUSTOMARY_SYSTEM
-
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
@@ -1307,6 +1305,7 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
                     climate.HVACMode.HEAT,
                     climate.HVACMode.HEAT_COOL,
                 ],
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 climate.ATTR_MIN_TEMP: 45,
                 climate.ATTR_MAX_TEMP: 95,
             },
@@ -1349,6 +1348,7 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
             {
                 ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
                 climate.ATTR_HVAC_MODES: [],
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
                 climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
             },
@@ -1393,6 +1393,7 @@ async def test_temperature_setting_climate_query_only(
                 climate.ATTR_CURRENT_TEMPERATURE: 21.5,
                 climate.ATTR_CURRENT_HUMIDITY: 48,
                 climate.ATTR_HVAC_MODES: hvac_modes,
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
                 climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
             },
@@ -1439,6 +1440,7 @@ async def test_temperature_setting_climate_not_query_only(
             {
                 ATTR_SUPPORTED_FEATURES: features,
                 climate.ATTR_HVAC_MODES: hvac_modes,
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
                 climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
             },
@@ -1460,8 +1462,6 @@ async def test_temperature_setting_climate_range_fahrenheit_precision(
     place of Celsius precision keeps Google's displayed range aligned with
     Home Assistant's.
     """
-    hass.config.units = US_CUSTOMARY_SYSTEM
-
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
@@ -1470,6 +1470,7 @@ async def test_temperature_setting_climate_range_fahrenheit_precision(
             {
                 ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
                 climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 climate.ATTR_MIN_TEMP: 62,
                 climate.ATTR_MAX_TEMP: 86,
             },
@@ -1490,8 +1491,6 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units = US_CUSTOMARY_SYSTEM
-
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
@@ -1511,6 +1510,7 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
                 ],
                 climate.ATTR_TARGET_TEMP_HIGH: 75,
                 climate.ATTR_TARGET_TEMP_LOW: 65,
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
                 climate.ATTR_MIN_TEMP: 50,
                 climate.ATTR_MAX_TEMP: 80,
             },
@@ -1615,6 +1615,7 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
                 | ClimateEntityFeature.TURN_ON
                 | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
                 climate.ATTR_PRESET_MODE: climate.PRESET_ECO,
@@ -1700,6 +1701,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
                     climate.HVACMode.OFF,
                     climate.HVACMode.HEAT_COOL,
                 ],
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
                 ATTR_TEMPERATURE: 18,
@@ -1748,6 +1750,7 @@ async def test_temperature_setting_action_change(hass: HomeAssistant) -> None:
                 climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
                 climate.ATTR_HVAC_ACTION: climate.HVACAction.IDLE,
                 climate.ATTR_CURRENT_TEMPERATURE: 18,
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
                 ATTR_TEMPERATURE: 18,
@@ -1765,6 +1768,7 @@ async def test_temperature_setting_action_change(hass: HomeAssistant) -> None:
                 climate.ATTR_HVAC_MODES: [climate.HVACMode.OFF, climate.HVACMode.COOL],
                 climate.ATTR_HVAC_ACTION: climate.HVACAction.COOLING,
                 climate.ATTR_CURRENT_TEMPERATURE: 23,
+                climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
                 ATTR_TEMPERATURE: 18,
@@ -1799,13 +1803,17 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("unit_in", "unit_out", "temp_in", "temp_out", "current_in", "current_out"),
     [
-        (METRIC_SYSTEM, "C", "120", 120, "130", 130),
-        (US_CUSTOMARY_SYSTEM, "F", "248", 120, "266", 130),
+        pytest.param(
+            UnitOfTemperature.CELSIUS, "C", "120", 120, "130", 130, id="celsius"
+        ),
+        pytest.param(
+            UnitOfTemperature.FAHRENHEIT, "F", "248", 120, "266", 130, id="fahrenheit"
+        ),
     ],
 )
 async def test_temperature_control_water_heater(
     hass: HomeAssistant,
-    unit_in: UnitSystem,
+    unit_in: UnitOfTemperature,
     unit_out: str,
     temp_in: str,
     temp_out: float,
@@ -1813,17 +1821,11 @@ async def test_temperature_control_water_heater(
     current_out: float,
 ) -> None:
     """Test TemperatureControl trait support for water heater domain."""
-    hass.config.units = unit_in
-
     min_temp = TemperatureConverter.convert(
-        water_heater.DEFAULT_MIN_TEMP,
-        UnitOfTemperature.CELSIUS,
-        unit_in.temperature_unit,
+        water_heater.DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, unit_in
     )
     max_temp = TemperatureConverter.convert(
-        water_heater.DEFAULT_MAX_TEMP,
-        UnitOfTemperature.CELSIUS,
-        unit_in.temperature_unit,
+        water_heater.DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, unit_in
     )
 
     trt = trait.TemperatureControlTrait(
@@ -1836,6 +1838,7 @@ async def test_temperature_control_water_heater(
                 "max_temp": max_temp,
                 "temperature": temp_in,
                 "current_temperature": current_in,
+                water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: unit_in,
             },
         ),
         BASIC_CONFIG,
@@ -1857,31 +1860,23 @@ async def test_temperature_control_water_heater(
 @pytest.mark.parametrize(
     ("unit", "temp_init", "temp_in", "temp_out", "current_init"),
     [
-        (METRIC_SYSTEM, "180", 220, 220, "180"),
-        (US_CUSTOMARY_SYSTEM, "356", 220, 428, "356"),
+        pytest.param(UnitOfTemperature.CELSIUS, "180", 220, 220, "180", id="celsius"),
+        pytest.param(
+            UnitOfTemperature.FAHRENHEIT, "356", 220, 428, "356", id="fahrenheit"
+        ),
     ],
 )
 async def test_temperature_control_water_heater_set_temperature(
     hass: HomeAssistant,
-    unit: UnitSystem,
+    unit: UnitOfTemperature,
     temp_init: str,
     temp_in: float,
     temp_out: float,
     current_init: str,
 ) -> None:
     """Test TemperatureControl trait for water heater SetTemperature."""
-    hass.config.units = unit
-
-    min_temp = TemperatureConverter.convert(
-        40,
-        UnitOfTemperature.CELSIUS,
-        unit.temperature_unit,
-    )
-    max_temp = TemperatureConverter.convert(
-        230,
-        UnitOfTemperature.CELSIUS,
-        unit.temperature_unit,
-    )
+    min_temp = TemperatureConverter.convert(40, UnitOfTemperature.CELSIUS, unit)
+    max_temp = TemperatureConverter.convert(230, UnitOfTemperature.CELSIUS, unit)
 
     trt = trait.TemperatureControlTrait(
         hass,
@@ -1893,6 +1888,7 @@ async def test_temperature_control_water_heater_set_temperature(
                 "max_temp": max_temp,
                 "temperature": temp_init,
                 "current_temperature": current_init,
+                water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: unit,
             },
         ),
         BASIC_CONFIG,

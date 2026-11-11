@@ -424,6 +424,8 @@ def climate_control_device(
     supports_eco: bool = True,
     low: bool = False,
     has_demand: bool = False,
+    ventilation_mode: bool = False,
+    setpoint_temperature_offset_active: bool = False,
 ) -> SHCClimateControl:
     """Build a minimal device double for the climate_controls bucket."""
     device = create_autospec(SHCClimateControl, instance=True, spec_set=True)
@@ -448,6 +450,8 @@ def climate_control_device(
     device.supports_eco = supports_eco
     device.low = low
     device.has_demand = has_demand
+    device.ventilation_mode = ventilation_mode
+    device.setpoint_temperature_offset_active = setpoint_temperature_offset_active
     return device
 
 
@@ -900,6 +904,8 @@ def motion_detector2_device(
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
     smart_sensitivity: dict[str, str] | None = None,
+    binaryswitch: bool = False,
+    multi_level_switch: int = 0,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -923,6 +929,8 @@ def motion_detector2_device(
         if smart_sensitivity
         else None
     )
+    device.binaryswitch = binaryswitch
+    device.multi_level_switch = multi_level_switch
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:
