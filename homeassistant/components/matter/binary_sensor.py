@@ -159,19 +159,20 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
         device_type=(device_types.RainSensor,),
     ),
-    # Generic fallback for a BooleanState cluster on a device type we don't
-    # otherwise recognize (vendor-specific or composed device types): expose
-    # it as a plain (device_class-less) binary sensor rather than not at all.
-    # Must stay last among the BooleanState schemas above so the specific
-    # device types keep priority for their own semantics/device_class.
+    # Keep last among the BooleanState schemas so the device-type schemas take priority.
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="GenericBooleanState",
             translation_key="state",
+            entity_registry_enabled_default=False,
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        required_attributes=(
+            clusters.BooleanState.Attributes.StateValue,
+            clusters.Descriptor.Attributes.ServerList,
+        ),
+        secondary_value_contains=clusters.BooleanState.id,
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
