@@ -16,12 +16,10 @@ TO_REDACT = {
     CONF_PHONE_NUMBER,
     CONF_USER_ID,
     "additional_parameters",
-    "icon",
     "inside_geofence",
     "last_position",
     "lat",
     "lng",
-    "name",
     "serialnumber",
     "token",
 }
@@ -33,7 +31,6 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     return async_redact_data(
         {
-            "entry_data": dict(entry.data),
             "trackers": [
                 {
                     "device": coordinator.device.model_dump(mode="json"),
