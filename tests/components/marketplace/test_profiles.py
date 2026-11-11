@@ -48,7 +48,7 @@ from . import (
     setup_integration,
 )
 from .conftest import MarketplaceResponses
-from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN, TOKEN
+from .const import REPOSITORY_PLUGIN, TOKEN
 
 INTEGRATION_PATH = Path(marketplace_integration.__file__).parent
 
@@ -120,7 +120,6 @@ def test_single_url_is_a_sequence() -> None:
         catalog="https://catalog.example.com",
     )
 
-    assert profile.api == ("https://api.example.com",)
     assert profile.github == ("https://github.example.com",)
     assert profile.raw == ("https://raw.example.com", "https://raw.example.org")
     assert profile.catalog == ("https://catalog.example.com",)
@@ -197,91 +196,6 @@ async def test_github_token_only_goes_to_github(
         (url.host, headers.get("Authorization"))
         for _, url, _, headers in aioclient_mock.mock_calls
     ] == [(host, authorization)]
-
-
-FIRST_API = "https://hamrelay.hasscn.top/https://api.github.com/rate_limit"
-SECOND_API = "https://ghapi.hacs.vip/rate_limit"
-
-
-@pytest.mark.parametrize("download_profile", ["hasscn"])
-@pytest.mark.parametrize(
-    "failure",
-    [
-        pytest.param(
-            AiohttpClientMockResponse("get", URL(FIRST_API), exc=TimeoutError),
-            id="out_of_reach",
-        ),
-        pytest.param(
-            mocked_response(
-                FIRST_API,
-                status=HTTPStatus.TOO_MANY_REQUESTS,
-                json_content={"error": "too many requests"},
-            ),
-            id="rate_limited",
-        ),
-        pytest.param(
-            mocked_response(
-                FIRST_API,
-                status=HTTPStatus.BAD_GATEWAY,
-                json_content={"error": "upstream error"},
-            ),
-            id="upstream_error",
-        ),
-    ],
-)
-async def test_github_api_falls_back_to_the_next_endpoint(
-    marketplace: MarketplaceManager,
-    response_mocker: MarketplaceResponses,
-    aioclient_mock: AiohttpClientMocker,
-    failure: AiohttpClientMockResponse,
-) -> None:
-    """Test an unusable API endpoint falls back to the next one."""
-    response_mocker.add(FIRST_API, failure)
-    aioclient_mock.mock_calls.clear()
-
-    assert await marketplace.async_github_api_method(
-        marketplace.githubapi.generic, endpoint="/rate_limit"
-    )
-
-    assert [url for _, url, _, _ in aioclient_mock.mock_calls] == [
-        URL(FIRST_API),
-        URL(SECOND_API),
-    ]
-
-
-@pytest.mark.parametrize("download_profile", ["hasscn"])
-async def test_repository_object_falls_back_to_the_next_endpoint(
-    marketplace: MarketplaceManager,
-    response_mocker: MarketplaceResponses,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test a repository read falls back when the primary API endpoint fails.
-
-    A repository is registered through this call, so a primary that is down
-    can not stop the registration while the fallback is healthy.
-    """
-    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
-    first = (
-        "https://hamrelay.hasscn.top/https://api.github.com"
-        f"/repos/{REPOSITORY_INTEGRATION}"
-    )
-    response_mocker.add(
-        first,
-        mocked_response(
-            first,
-            status=HTTPStatus.BAD_GATEWAY,
-            json_content={"error": "upstream error"},
-        ),
-    )
-    aioclient_mock.mock_calls.clear()
-
-    repository_object, _ = await repository.async_get_repository_object()
-
-    assert [url for _, url, _, _ in aioclient_mock.mock_calls] == [
-        URL(first),
-        URL(f"https://ghapi.hacs.vip/repos/{REPOSITORY_INTEGRATION}"),
-    ]
-    assert repository_object.full_name == REPOSITORY_INTEGRATION
 
 
 @pytest.mark.parametrize("github_token", [None])

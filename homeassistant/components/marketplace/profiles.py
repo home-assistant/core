@@ -25,7 +25,6 @@ class Endpoint(StrEnum):
     GITHUB = "github"
     RAW = "raw"
     CATALOG = "catalog"
-    API = "api"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,8 +42,8 @@ class DownloadProfile:
     # traffic, so the options and the repair name them.
     operator: str
 
-    # The GitHub REST API. Tried in order, the client is pointed at each one.
-    api: Sequence[str]
+    # The GitHub REST API. A single URL, aiogithubapi takes one base URL.
+    api: str
 
     # Only GitHub itself gets the token of a connected GitHub account
     uses_github_account: bool = False
@@ -92,7 +91,7 @@ GITHUB = DownloadProfile(
     raw="https://raw.githubusercontent.com",
     catalog="https://data-v2.hacs.xyz",
     status_pages={
-        Endpoint.API: GITHUB_STATUS,
+        "api": GITHUB_STATUS,
         Endpoint.GITHUB: GITHUB_STATUS,
         Endpoint.CATALOG: "https://www.cloudflarestatus.com/",
     },
@@ -103,10 +102,7 @@ GITHUB = DownloadProfile(
 CHINA_RELAYS = DownloadProfile(
     id="hasscn",
     operator="the Home Assistant China community (hasscn.top)",
-    api=(
-        "https://hamrelay.hasscn.top/https://api.github.com",
-        "https://ghapi.hacs.vip",
-    ),
+    api="https://hamrelay.hasscn.top/https://api.github.com",
     github=(
         "https://hamrelay.hasscn.top/https://github.com",
         "https://ghrp2.hacs.vip",

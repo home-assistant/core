@@ -30,8 +30,11 @@ async def async_get_config_entry_diagnostics(
             "download_profile": {
                 "id": marketplace.endpoints.profile.id,
                 "endpoints": {
-                    endpoint: marketplace.endpoints.bases(endpoint)
-                    for endpoint in Endpoint
+                    "api": [marketplace.endpoints.profile.api],
+                    **{
+                        endpoint: marketplace.endpoints.bases(endpoint)
+                        for endpoint in Endpoint
+                    },
                 },
             },
             "warning_accepted_users": len(warning_acceptances),

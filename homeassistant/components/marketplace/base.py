@@ -14,12 +14,10 @@ from typing import TYPE_CHECKING, Any, Literal, Self, overload
 from aiogithubapi import (
     GitHubAPI,
     GitHubAuthenticationException,
-    GitHubClientKwarg,
     GitHubConnectionException,
     GitHubException,
     GitHubNotModifiedException,
     GitHubRatelimitException,
-    GitHubResponseModel,
 )
 from aiohttp.client import ClientSession, ClientTimeout
 from awesomeversion import AwesomeVersion
@@ -79,7 +77,6 @@ from .exceptions import (
 )
 from .profiles import (
     DownloadProfile,
-    Endpoint,
     ProfileEndpoints,
     async_suggest_profile,
     async_withdraw_profile_suggestions,
@@ -430,7 +427,7 @@ class MarketplaceManager:
             token=self.configuration.token or "",
             session=self.session,
             client_name=CLIENT_NAME,
-            base_url=self.endpoints.bases(Endpoint.API)[0],
+            base_url=self.configuration.profile.api,
         )
         self.data_client = CatalogClient(
             session=self.session, client_name=CLIENT_NAME, endpoints=self.endpoints
@@ -643,52 +640,6 @@ class MarketplaceManager:
 
         return 0
 
-    def _use_api_base(self, base: str) -> None:
-        """Point the GitHub client at an endpoint of the profile.
-
-        aiogithubapi reads the base URL from its request data on every call and
-        has no setter, so the endpoint to use next is written there directly.
-        """
-        request_data = self.githubapi._client._base_request_data  # noqa: SLF001
-        request_data.kwargs[GitHubClientKwarg.BASE_URL] = base
-
-    async def async_github_api_call[T](
-        self, method: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
-    ) -> T:
-        """Call a GitHub API method on the first endpoint that answers.
-
-        An endpoint that is out of reach, answers with a server error, or
-        refuses because its own rate limit ran out, falls back to the next
-        endpoint of the profile. A refusal of GitHub itself, and a not modified
-        answer, is the same on every endpoint and is raised to the caller.
-        """
-        failed: list[str] = []
-        error: GitHubConnectionException | None = None
-
-        for base in self.endpoints.bases(Endpoint.API):
-            self._use_api_base(base)
-            try:
-                response = await method(*args, **kwargs)
-            except GitHubConnectionException as exception:
-                error = exception
-                failed.append(base)
-                continue
-
-            if isinstance(response, GitHubResponseModel) and (
-                response.status >= 500 or response.status == 429
-            ):
-                error = GitHubConnectionException(f"{base} answered {response.status}")
-                failed.append(base)
-                continue
-
-            self.endpoints.worked(Endpoint.API, base, failed)
-            return response
-
-        # A profile has at least one API endpoint
-        if TYPE_CHECKING:
-            assert error is not None
-        raise error
-
     @overload
     async def async_github_api_method[T](
         self,
@@ -720,10 +671,10 @@ class MarketplaceManager:
         fails the call that hit it. An anonymous rate limit always raises, so
         the action that hit it fails instead of carrying on with stale data.
         """
-        _exception: Exception | None = None
+        _exception = None
 
         try:
-            return await self.async_github_api_call(method, *args, **kwargs)
+            return await method(*args, **kwargs)
         except GitHubAuthenticationException as exception:
             if self.github_connected:
                 self.disable(DisabledReason.INVALID_TOKEN)
