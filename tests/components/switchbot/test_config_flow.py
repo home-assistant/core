@@ -36,6 +36,7 @@ from . import (
     LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
     USER_INPUT,
+    UWB_LOCK_SERVICE_INFO,
     WOCURTAIN3_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
     WOHAND_ENCRYPTED_SERVICE_INFO,
@@ -2055,7 +2056,7 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("sensor_type", ["lock_pro_wifi", "lock_ultra_max"])
+@pytest.mark.parametrize("sensor_type", ["lock_pro_wifi", "lock_ultra_max", "uwb_lock"])
 async def test_options_flow_lock_with_night_latch(
     hass: HomeAssistant, sensor_type: str
 ) -> None:
@@ -2117,3 +2118,26 @@ async def test_options_flow_lock_with_night_latch(
     assert len(mock_setup_entry.mock_calls) == 0
 
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
+
+
+async def test_uwb_lock_uses_ultra_key_verification(hass: HomeAssistant) -> None:
+    """Verify a discovered UWB Lock using the Ultra implementation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=UWB_LOCK_SERVICE_INFO
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    with (
+        patch_async_setup_entry(),
+        patch(
+            "switchbot.SwitchbotLockUltra.verify_encryption_key", return_value=True
+        ) as verify_key,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_KEY_ID: "ff", CONF_ENCRYPTION_KEY: "ff" * 16}
+        )
+        await hass.async_block_till_done()
+    verify_key.assert_awaited_once()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SENSOR_TYPE] == "uwb_lock"
