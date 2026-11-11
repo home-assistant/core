@@ -208,7 +208,7 @@ Use any HTML comments (`<!-- ... -->`) in the template as guidance to understand
 1. **Breaking change section**: If the type is NOT "Breaking change" or "Deprecation", remove the entire `## Breaking change` section (heading and body). Otherwise, describe what breaks, how users can fix it, and why.
 2. **Proposed change section**: Fill in a description of the change extracted from commit messages.
 3. **Type of change**: Check exactly ONE checkbox matching the determined type from Step 7. Leave all others unchecked.
-4. **Additional information**: Fill in any related issue numbers if known.
+4. **Additional information**: Put an issue this PR fixes on the `fixes #` line, and list pull requests that are part of the same change (its documentation, brands, or frontend change) under "This PR belongs together with". Mention any other related issue in the proposed change, never on `fixes #`: that line closes the issue on merge.
 5. **Checklist**: Check boxes based on the conditions in Step 8. Leave manual-verification boxes unchecked for the contributor.
 
 **Important:** Preserve all template structure, options, and link references exactly as they appear in the file — only modify checkbox states and fill in content sections.
@@ -222,4 +222,4 @@ Provide the user with:
 4. **User Action Required** - Remind user to:
    - Review and set manual-verification checkboxes ("I understand the code..." and "Any generated code...") as applicable
    - Consider reviewing two other open PRs
-   - Add any related issue numbers if applicable
+   - List pull requests that belong together with this one, and add this one to the same line in theirs
