@@ -782,13 +782,23 @@ class MatterClosure(MatterEntity, CoverEntity):
         target: clusters.ClosureControl.Enums.TargetPositionEnum,
         fully_at: clusters.ClosureControl.Enums.CurrentPositionEnum,
     ) -> None:
-        """Send MoveTo, unlatching only if currently latched and actually moving.
+        """Send MoveTo, unlatching only if the move actually leaves the current position.
 
         Spec 1.6.0 Sec. 5.4.8.2.4 only needs `latch=False` to unlatch a
         latched closure when the move requires it. Sending it whenever
         remote unlatching is merely supported would unlatch (and desecure,
         per Sec. 5.4.6.5.4) a closure that's already at the requested
         position, e.g. closing an already-closed, latched gate.
+
+        A move can already be pending (MainState Moving/WaitingForMotion)
+        while OverallCurrentState still reports the requested position, e.g.
+        cancelling a pending Open by pressing Close again. `latch=False`
+        there would still unlatch: Sec. 5.4.8.2.2 falls back to the pending
+        OverallTargetState.Latch, which the pending move already cleared.
+        Re-affirming `latch=True` instead asks for the position the closure
+        is already at, so Sec. 5.4.8.2.4 just stops it. Without
+        RemoteUnlatching support there's no way to keep it latched here, so
+        the closure ends up unlatched.
         """
         overall_current_state = self.get_matter_attribute_value(
             clusters.ClosureControl.Attributes.OverallCurrentState
@@ -796,20 +806,20 @@ class MatterClosure(MatterEntity, CoverEntity):
         main_state = self.get_matter_attribute_value(
             clusters.ClosureControl.Attributes.MainState
         )
-        if (
-            main_state
-            not in (
-                clusters.ClosureControl.Enums.MainStateEnum.kMoving,
-                clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion,
-            )
-            and _extract_struct_field(overall_current_state, "position") == fully_at
-        ):
+        move_pending = main_state in (
+            clusters.ClosureControl.Enums.MainStateEnum.kMoving,
+            clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion,
+        )
+        already_at_target = (
+            _extract_struct_field(overall_current_state, "position") == fully_at
+        )
+        if not move_pending and already_at_target:
             return
         command_kwargs: dict[str, Any] = {"position": target}
         if self._motion_latching_supported() and _extract_struct_field(
             overall_current_state, "latch"
         ):
-            command_kwargs["latch"] = False
+            command_kwargs["latch"] = move_pending and already_at_target
         await self.send_device_command(
             clusters.ClosureControl.Commands.MoveTo(**command_kwargs),
             timed_request_timeout_ms=1000,
