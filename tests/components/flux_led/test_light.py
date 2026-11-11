@@ -21,24 +21,16 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
-    CONF_COLORS,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_SPEED_PCT,
-    CONF_TRANSITION,
     CONF_WHITE_CHANNEL_TYPE,
     DOMAIN,
     MIN_CCT_BRIGHTNESS,
     MIN_RGB_BRIGHTNESS,
     TRANSITION_JUMP,
 )
-from homeassistant.components.flux_led.services import (
-    ATTR_BACKGROUND_COLOR,
-    ATTR_FOREGROUND_COLOR,
-    ATTR_LIGHT_SCREEN,
-    ATTR_SENSITIVITY,
-)
+from homeassistant.components.flux_led.services import FluxLedServiceArgument
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -56,13 +48,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_EFFECT,
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -1621,10 +1613,10 @@ async def test_rgb_light_custom_effect_via_service(
         DOMAIN,
         "set_custom_effect",
         {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
-            CONF_SPEED_PCT: 30,
-            CONF_TRANSITION: "jump",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.COLORS: [[0, 0, 255], [255, 0, 0]],
+            FluxLedServiceArgument.SPEED_PCT: 30,
+            FluxLedServiceArgument.TRANSITION: "jump",
         },
         blocking=True,
     )
@@ -1637,9 +1629,9 @@ async def test_rgb_light_custom_effect_via_service(
         DOMAIN,
         "set_zones",
         {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
-            CONF_EFFECT: "running_water",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.COLORS: [[0, 0, 255], [255, 0, 0]],
+            FluxLedServiceArgument.EFFECT: "running_water",
         },
         blocking=True,
     )
@@ -1652,9 +1644,9 @@ async def test_rgb_light_custom_effect_via_service(
         DOMAIN,
         "set_zones",
         {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
-            CONF_SPEED_PCT: 30,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.COLORS: [[0, 0, 255], [255, 0, 0]],
+            FluxLedServiceArgument.SPEED_PCT: 30,
         },
         blocking=True,
     )
@@ -1729,13 +1721,13 @@ async def test_music_mode_service(hass: HomeAssistant) -> None:
         DOMAIN,
         "set_music_mode",
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_EFFECT: 12,
-            ATTR_LIGHT_SCREEN: True,
-            ATTR_SENSITIVITY: 50,
-            ATTR_BRIGHTNESS: 50,
-            ATTR_FOREGROUND_COLOR: [255, 0, 0],
-            ATTR_BACKGROUND_COLOR: [0, 255, 0],
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            FluxLedServiceArgument.EFFECT: 12,
+            FluxLedServiceArgument.LIGHT_SCREEN: True,
+            FluxLedServiceArgument.SENSITIVITY: 50,
+            FluxLedServiceArgument.BRIGHTNESS: 50,
+            FluxLedServiceArgument.FOREGROUND_COLOR: [255, 0, 0],
+            FluxLedServiceArgument.BACKGROUND_COLOR: [0, 255, 0],
         },
         blocking=True,
     )

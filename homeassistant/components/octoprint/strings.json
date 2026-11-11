@@ -5,6 +5,7 @@
       "auth_failed": "Failed to retrieve API key",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The OctoPrint instance at this address is not the one that was originally set up.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -19,6 +20,18 @@
       "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "path": "[%key:component::octoprint::config::step::user::data::path%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::octoprint::config::step::user::data_description::host%]"
         }
       },
       "user": {
@@ -81,6 +94,16 @@
   "exceptions": {
     "error_setting_temperature": {
       "message": "Error setting target {tool} temperature"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed, but the printer could not be reached while importing your YAML configuration. Make sure the printer is running and restart Home Assistant to try the import again, or remove the `{domain}` configuration from your `configuration.yaml` file and set up the integration from the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using YAML is being removed, but an unknown error occurred while importing your YAML configuration. Restart Home Assistant to try the import again, or remove the `{domain}` configuration from your `configuration.yaml` file and set up the integration from the UI.",
+      "title": "[%key:component::octoprint::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
     }
   },
   "services": {

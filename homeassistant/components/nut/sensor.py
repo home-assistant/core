@@ -38,6 +38,7 @@ AMBIENT_SENSORS = {
     "ambient.temperature",
     "ambient.temperature.status",
 }
+UPS_ALARM = "ups.alarm"
 BATTERY_CHARGER_STATUS_OPTIONS = [
     "charged",
     "charging",
@@ -835,8 +836,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "ups.alarm": SensorEntityDescription(
-        key="ups.alarm",
+    UPS_ALARM: SensorEntityDescription(
+        key=UPS_ALARM,
         translation_key="ups_alarm",
     ),
     "ups.beeper.status": SensorEntityDescription(
@@ -1115,7 +1116,7 @@ async def async_setup_entry(
     resources = [
         sensor_id
         for sensor_id in valid_sensor_types
-        if sensor_id in status
+        if (sensor_id in status or sensor_id == UPS_ALARM)
         and (has_ambient_sensors or sensor_id not in AMBIENT_SENSORS)
     ]
 

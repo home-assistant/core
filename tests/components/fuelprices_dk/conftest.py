@@ -1,11 +1,11 @@
 """Common fixtures for Fuelprices.dk tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
-from pybraendstofpriser import Flist
+from pybraendstofpriser import Braendstofpriser, Flist
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.fuelprices_dk.const import (
     CONF_COMPANY,
@@ -32,8 +32,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Create a standard mock config entry with one station subentry."""
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
+    """Create a config entry with station subentries."""
+    stations = load_json_array_fixture("bulk_prices.json", DOMAIN)
     return MockConfigEntry(
         domain=DOMAIN,
         title="Fuelprices.dk",
@@ -42,20 +43,21 @@ def mock_config_entry() -> MockConfigEntry:
         subentries_data=[
             ConfigSubentryData(
                 subentry_type="station",
-                title=f"{TEST_COMPANY} - {TEST_STATION['name']}",
-                unique_id=f"{TEST_COMPANY}_{TEST_STATION['id']}",
+                title=f"{item['company']['company']} - {item['station']['name']}",
+                unique_id=f"{item['company']['company']}_{item['station']['id']}",
                 data={
-                    CONF_COMPANY: TEST_COMPANY,
-                    CONF_STATION: TEST_STATION,
+                    CONF_COMPANY: item["company"]["company"],
+                    CONF_STATION: item["station"],
                 },
             )
+            for item in stations[: getattr(request, "param", 1)]
         ],
     )
 
 
 @pytest.fixture
-def mock_braendstofpriser() -> Generator[AsyncMock]:
-    """Mock the pybraendstofpriser client used by the integration."""
+def mock_braendstofpriser_class() -> Generator[MagicMock]:
+    """Mock the API client constructor."""
     with (
         patch(
             "homeassistant.components.fuelprices_dk.config_flow.Braendstofpriser",
@@ -66,15 +68,24 @@ def mock_braendstofpriser() -> Generator[AsyncMock]:
             new=mock_config_flow_client,
         ),
     ):
-        client = mock_config_flow_client.return_value
-        client.list_companies.return_value = [{"company": TEST_COMPANY}]
-        client.list_stations.return_value = Flist([TEST_STATION])
-        client.get_prices.return_value = {
-            "station": {
-                "id": TEST_STATION["id"],
-                "name": TEST_STATION["name"],
-                "last_update": "2024-01-01T12:00:00",
-            },
-            "prices": TEST_PRICES,
-        }
-        yield client
+        yield mock_config_flow_client
+
+
+@pytest.fixture
+def mock_braendstofpriser(
+    mock_braendstofpriser_class: MagicMock,
+) -> AsyncMock:
+    """Return the API client with station and price responses."""
+    client = mock_braendstofpriser_class.return_value
+    client.list_companies.return_value = [{"company": TEST_COMPANY}]
+    client.list_stations.return_value = Flist([TEST_STATION])
+    client.get_prices_bulk.return_value = load_json_array_fixture(
+        "bulk_prices.json", DOMAIN
+    )[:1]
+    return client
+
+
+@pytest.fixture
+def mock_other_braendstofpriser() -> MagicMock:
+    """Return an API client for a second API key."""
+    return create_autospec(Braendstofpriser, instance=True)

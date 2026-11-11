@@ -5,7 +5,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No devices were found in this Powerfox account."
     },
     "step": {
       "reauth_confirm": {
@@ -110,6 +111,9 @@
     },
     "no_data_error": {
       "message": "No data available for device \"{device_name}\". The device may not have reported data yet."
+    },
+    "no_devices": {
+      "message": "No devices were found in the Powerfox account."
     },
     "privacy_error": {
       "message": "Data for device \"{device_name}\" is restricted due to privacy settings in the Powerfox app."

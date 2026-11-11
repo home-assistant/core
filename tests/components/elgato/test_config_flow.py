@@ -76,7 +76,6 @@ async def test_full_zeroconf_flow_implementation(
     assert len(progress) == 1
     assert progress[0].get("flow_id") == result["flow_id"]
     assert "context" in progress[0]
-    assert progress[0]["context"].get("confirm_only") is True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

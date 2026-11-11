@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["enocean"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/enocean",
   "integration_type": "hub",

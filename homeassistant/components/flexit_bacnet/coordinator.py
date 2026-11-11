@@ -11,8 +11,7 @@ from flexit_bacnet.bacnet import DecodingError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -48,7 +47,7 @@ class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
         try:
             await self.device.update()
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="not_ready",
                 translation_placeholders={

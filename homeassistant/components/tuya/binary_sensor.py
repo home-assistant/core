@@ -253,6 +253,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             device_class=BinarySensorDeviceClass.OCCUPANCY,
             on_value={"presence", "small_move", "large_move", "peaceful"},
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DROP_STATE,
+            translation_key="fall",
+            on_value="drop",
+        ),
     ),
     DeviceCategory.JQBJ: (
         TuyaBinarySensorEntityDescription(

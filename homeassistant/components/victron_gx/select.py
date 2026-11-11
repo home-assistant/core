@@ -73,10 +73,8 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Setting select %s to %s", self._attr_unique_id, option)
-        self._metric.set(option)
+        self._set_metric_value(option)
 
     @staticmethod
     def _normalize_value(value: Any) -> Any:

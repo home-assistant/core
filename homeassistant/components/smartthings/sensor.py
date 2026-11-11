@@ -153,6 +153,18 @@ def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     return state
 
 
+def _power_report_energy(
+    value: dict[str, Any], key: str, *, allow_negative: bool = False
+) -> float | None:
+    """Return an energy value from a power consumption report in kWh.
+
+    Some devices send partial reports or negative placeholder values.
+    """
+    if (energy := value.get(key)) is None or (energy < 0 and not allow_negative):
+        return None
+    return energy / 1000
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSensorEntityDescription(SensorEntityDescription):
     """Describe a SmartThings sensor entity."""
@@ -757,7 +769,7 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["energy"] / 1000,
+                value_fn=lambda value: _power_report_energy(value, "energy"),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
@@ -769,7 +781,7 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.POWER,
                 native_unit_of_measurement=UnitOfPower.WATT,
-                value_fn=lambda value: value["power"],
+                value_fn=lambda value: value.get("power"),
                 extra_state_attributes_fn=power_attributes,
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
@@ -790,7 +802,9 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["deltaEnergy"] / 1000,
+                value_fn=lambda value: _power_report_energy(
+                    value, "deltaEnergy", allow_negative=True
+                ),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
@@ -803,7 +817,9 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["powerEnergy"] / 1000,
+                value_fn=lambda value: _power_report_energy(
+                    value, "powerEnergy", allow_negative=True
+                ),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
@@ -816,7 +832,7 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["energySaved"] / 1000,
+                value_fn=lambda value: _power_report_energy(value, "energySaved"),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None

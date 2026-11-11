@@ -752,6 +752,9 @@ def make_public_camera(
     public.feature_flags.has_mic = flags.has_mic
     public.feature_flags.has_led_status = flags.has_led_status
     public.feature_flags.has_speaker = flags.has_speaker
+    public.has_speaker = flags.has_speaker
+    # No talkback stream until a test starts one.
+    public.talkback_stream = None
     public.feature_flags.video_modes = list(flags.video_modes)
     public.feature_flags.smart_detect_types = list(flags.smart_detect_types)
     public.feature_flags.smart_detect_audio_types = list(

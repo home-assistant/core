@@ -51,10 +51,10 @@ class ONVIFDevice:
     device: ONVIFCamera
     events: EventManager
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ONVIFConfigEntry) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
-        self.config_entry: ConfigEntry = config_entry
+        self.config_entry: ONVIFConfigEntry = config_entry
         self._original_options = dict(config_entry.options)
         self.available: bool = True
 
@@ -68,7 +68,7 @@ class ONVIFDevice:
         self._dt_diff_seconds: float = 0
 
     async def _async_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
+        self, hass: HomeAssistant, entry: ONVIFConfigEntry
     ) -> None:
         """Handle options update."""
         if self._original_options != entry.options:

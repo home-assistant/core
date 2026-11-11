@@ -4,7 +4,7 @@ from typing import Any, override
 
 from velbusaio.channels import Relay as VelbusRelay
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -31,6 +31,7 @@ class VelbusSwitch(VelbusEntity, SwitchEntity):
     """Representation of a switch."""
 
     _channel: VelbusRelay
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
     @override

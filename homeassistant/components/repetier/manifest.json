@@ -3,6 +3,7 @@
   "name": "Repetier-Server",
   "categories": ["computers_network.printers"],
   "codeowners": ["@ShadowBr0ther"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/repetier",
   "iot_class": "local_polling",
   "loggers": ["pyrepetierng"],

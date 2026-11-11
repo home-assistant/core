@@ -8,7 +8,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('harman_luxury', '48b782c2-60ac-40c1-a169-8d7ccb81dcc1')]>,
     'disabled_by': None,
