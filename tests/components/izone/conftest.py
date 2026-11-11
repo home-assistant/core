@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Generator, Iterable
 from contextlib import contextmanager
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from pizone import (
     Controller,
@@ -53,7 +53,10 @@ def create_mock_controller(
     controller.device_uid = device_uid
     controller.device_ip = device_ip
     controller.sys_type = sys_type
-    controller.zones_total = zones_total
+    # Matches pizone right after connect, where zones are built from NoOfZones.
+    type(controller).zones_total = PropertyMock(
+        side_effect=lambda *_: len(controller.zones)
+    )
     controller.zone_ctrl = zone_ctrl
     controller.ras_mode = ras_mode
     controller.free_air_enabled = free_air_enabled
