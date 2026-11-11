@@ -65,6 +65,8 @@ def async_add_device_entities(
 
     @callback
     def _add_new_devices() -> None:
+        # Forget removed devices so they get entities again if re-added.
+        known_devices.intersection_update(coordinator.data)
         new_devices = coordinator.data.keys() - known_devices
         if not new_devices:
             return

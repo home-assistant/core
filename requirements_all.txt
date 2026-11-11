@@ -520,7 +520,7 @@ aiowatttime==2024.6.0
 aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==1.0.1
+aiowebostv==1.0.2
 
 # homeassistant.components.withings
 aiowithings==4.0.1
@@ -2821,7 +2821,7 @@ python-hotspring==4.0.2
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==2.0.1
+python-izone==2.1.0
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
