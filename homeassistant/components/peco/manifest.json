@@ -4,6 +4,7 @@
   "categories": ["local_services"],
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/peco",
   "integration_type": "service",
   "iot_class": "cloud_polling",

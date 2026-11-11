@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class AirQCoordinator(DataUpdateCoordinator):
+class AirQCoordinator(DataUpdateCoordinator[dict]):
     """Coordinator is responsible for querying the device at a specified route."""
 
     config_entry: AirQConfigEntry

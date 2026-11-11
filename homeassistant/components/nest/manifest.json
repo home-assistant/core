@@ -9,6 +9,7 @@
   ],
   "codeowners": ["@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["ffmpeg", "http", "application_credentials"],
   "dhcp": [
     {

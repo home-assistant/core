@@ -1,9 +1,12 @@
 """Functions to generate names for devices and entities."""
 
-from homeassistant.config_entries import ConfigEntry
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from . import BryantEvolutionConfigEntry
 
 
-def sam_device_uid(entry: ConfigEntry) -> str:
+def sam_device_uid(entry: BryantEvolutionConfigEntry) -> str:
     """Return the UID for the SAM device."""
     return entry.entry_id
 

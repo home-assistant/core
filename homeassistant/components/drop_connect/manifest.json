@@ -4,6 +4,7 @@
   "categories": ["water.meters_leak_detection", "water.water_treatment"],
   "codeowners": ["@ChandlerSystems", "@pfrazer"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/drop_connect",
   "integration_type": "hub",

@@ -4,6 +4,7 @@
   "categories": ["messaging_notifications.chat_apps"],
   "codeowners": ["@tkdrob", "@fletcherau"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/slack",
   "integration_type": "service",
   "iot_class": "cloud_push",

@@ -11,6 +11,7 @@ from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -66,6 +67,7 @@ async def async_setup_entry(
 class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_has_entity_name = True
     _attr_name = None
@@ -268,14 +270,10 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     @override
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
-        mute = False
-
-        if self._status is not None:
-            mute = self._status.mute
         if self.is_grouped:
-            mute = self._sync_status.mute_volume is not None
+            return self._sync_status.mute_volume is not None
 
-        return mute
+        return self._status.mute
 
     @property
     def id(self) -> str | None:
@@ -399,11 +397,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     @override
     def shuffle(self) -> bool:
         """Return true if shuffle is active."""
-        shuffle = False
-        if self._status is not None:
-            shuffle = self._status.shuffle
-
-        return shuffle
+        return self._status.shuffle
 
     @property
     @override
@@ -416,7 +410,10 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         if self.entity_id in group_members:
-            raise ServiceValidationError("Cannot join player to itself")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_join_self",
+            )
 
         entity_ids_with_sync_status = self._entity_ids_with_sync_status()
 
@@ -589,7 +586,11 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
                 await self._player.load_preset(preset.id)
                 return
 
-        raise ServiceValidationError(f"Source {source} not found")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="source_not_found",
+            translation_placeholders={"source": source},
+        )
 
     @override
     @bluesound_exception_handler

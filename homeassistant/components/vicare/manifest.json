@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@CFenner", "@lackas"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "dhcp": [
     {
@@ -17,5 +18,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["PyViCare"],
-  "requirements": ["PyViCare==2.64.0"]
+  "requirements": ["PyViCare==2.65.0"]
 }

@@ -69,7 +69,6 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]
     """Implementation of an OpenWeatherMap sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_has_entity_name = True
     _attr_name = None
 

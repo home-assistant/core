@@ -6,6 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.b0 import DeviceAttributes as B0Attributes
 from midealocal.devices.b1 import DeviceAttributes as B1Attributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.ca import DeviceAttributes as CAAttributes, MideaCADevice
@@ -53,6 +54,34 @@ from .const import TEST_DEVICE_ID
                 },
             ),
             id="ac",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.B0,
+                attributes={
+                    B0Attributes.door: False,
+                    B0Attributes.status: "working",
+                    B0Attributes.time_remaining: 1.5,
+                    B0Attributes.mode: "microwave",
+                    B0Attributes.fire_power: "medium_high",
+                    B0Attributes.child_lock: False,
+                },
+            ),
+            id="b0",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.B0,
+                attributes={
+                    B0Attributes.door: False,
+                    B0Attributes.status: "default",
+                    B0Attributes.time_remaining: 0,
+                    B0Attributes.mode: "none",
+                    B0Attributes.fire_power: None,
+                    B0Attributes.child_lock: False,
+                },
+            ),
+            id="b0_idle",
         ),
         pytest.param(
             DummyDevice(

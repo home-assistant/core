@@ -112,7 +112,7 @@
         "name": "Cell {cell} voltage"
       },
       "charge_state": {
-        "name": "Charge state",
+        "name": "Charge stage",
         "state": {
           "absorption": "[%key:component::victron_ble::entity::sensor::device_state::state::absorption%]",
           "active": "[%key:component::victron_ble::entity::sensor::device_state::state::active%]",

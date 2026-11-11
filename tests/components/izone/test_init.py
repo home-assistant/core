@@ -3,16 +3,26 @@
 from asyncio import CancelledError
 from unittest.mock import AsyncMock, Mock, patch
 
-from pizone import ControllerCommandError, ControllerEndpoint, UnpairedBridgeError
+from freezegun.api import FrozenDateTimeFactory
+from pizone import (
+    ControllerCommandError,
+    ControllerEndpoint,
+    DeviceReconfigurationError,
+    EndpointVerifyError,
+    UnpairedBridgeError,
+    VerifyFailure,
+)
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.izone.const import DOMAIN
+from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_load_yaml_exclude, create_mock_controller
+from .conftest import async_load_yaml_exclude, create_mock_controller, create_mock_zone
 
 
 async def test_setup_and_unload(
@@ -39,6 +49,44 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_controller.close.assert_awaited()
     mock_discovery_service.close.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_reconfigured_system_reloads_entry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+) -> None:
+    """A poll that finds the system reprogrammed reloads with the new zones."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("climate.bedroom") is None
+
+    mock_controller.refresh_all.side_effect = DeviceReconfigurationError(
+        {"NoOfZones": (1, 2)}
+    )
+    reprogrammed = create_mock_controller(zones_total=2)
+    reprogrammed.zones = [*mock_zones, create_mock_zone(index=1, name="Bedroom")]
+    mock_discovery_service.create_controller.return_value = reprogrammed
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_controller.close.assert_awaited()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for entity_id in ("climate.izone_controller_000000001", "climate.bedroom"):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 1),  # type: ignore[arg-type]
+        mock_config_entry.entry_id,
+    )
 
 
 async def test_migrate_heals_legacy_domain_unique_id(
@@ -328,6 +376,32 @@ async def test_migrate_missing_host_not_found_retries(
     mock_discovery_service.create_controller.assert_not_awaited()
 
 
+async def test_migrate_missing_host_verify_error_retries(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+) -> None:
+    """A UID whose address fails the HTTP check leaves SETUP_RETRY with its host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_by_uid = AsyncMock(
+        side_effect=EndpointVerifyError(
+            "192.0.2.1", VerifyFailure.NO_REPLY, uid="000000001"
+        )
+    )
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "cannot_connect"
+    assert entry.error_reason_translation_placeholders == {"host": "192.0.2.1"}
+    mock_discovery_service.create_controller.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
     "side_effect",
     [
@@ -463,10 +537,16 @@ async def test_setup_discovery_bind_failure_retries(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "connected"),
     [
-        pytest.param(ConnectionError("gone"), id="connection-error"),
-        pytest.param(ControllerCommandError("rejected"), id="command-rejected"),
+        pytest.param(ConnectionError("gone"), True, id="connection-error"),
+        pytest.param(ControllerCommandError("rejected"), True, id="command-rejected"),
+        pytest.param(None, False, id="system-offline"),
+        pytest.param(
+            DeviceReconfigurationError({"NoOfZones": (1, 2)}),
+            True,
+            id="system-reconfigured",
+        ),
     ],
 )
 async def test_setup_first_refresh_failure_closes_controller(
@@ -474,15 +554,25 @@ async def test_setup_first_refresh_failure_closes_controller(
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
-    side_effect: Exception,
+    side_effect: Exception | None,
+    connected: bool,
 ) -> None:
-    """A failed first refresh closes the controller and retries setup."""
+    """A failed first refresh closes the controller and retries setup.
+
+    This includes a reachable bridge whose iZone system is offline, and a system
+    reprogrammed mid-setup, which must leave the retry backoff to setup.
+    """
     mock_config_entry.add_to_hass(hass)
     mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
+    mock_controller.connected = connected
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_controller.close.assert_awaited()
+    mock_schedule_reload.assert_not_called()
 
 
 async def test_setup_platform_failure_closes_controller(

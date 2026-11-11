@@ -10,6 +10,7 @@
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@g4bri3lDev"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters", "http"],
   "documentation": "https://www.home-assistant.io/integrations/opendisplay",
   "integration_type": "device",

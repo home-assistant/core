@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TOKEN,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -53,6 +54,25 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: MockConfigEntry) 
     assert config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert ("close",) in device.calls
+
+
+async def test_close_on_homeassistant_stop(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the device is closed when Home Assistant stops."""
+    config_entry.add_to_hass(hass)
+    device = DummyDevice(DeviceType.AC)
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=device,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert ("close",) not in device.calls
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
     assert ("close",) in device.calls
 
 
@@ -306,3 +326,33 @@ async def test_migrate_entry_without_discovery_result(hass: HomeAssistant) -> No
     assert entry.minor_version == 2
     assert CONF_MAC not in entry.data
     assert CONF_SN not in entry.data
+
+
+@pytest.mark.parametrize(
+    ("stored_subtype", "expected"),
+    [
+        ("5", 5),
+        ("not-a-number", 0),
+        (None, 0),
+    ],
+)
+async def test_setup_converts_stored_subtype(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    stored_subtype: str | None,
+    expected: int,
+) -> None:
+    """Test a subtype stored as a string is handed to the device as an int."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_SUBTYPE: stored_subtype}
+    )
+    device = DummyDevice(DeviceType.AC)
+    with patch(
+        "homeassistant.components.midea.device_selector",
+        return_value=device,
+    ) as mock_device_selector:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    # subtype is the 10th positional argument of device_selector()
+    assert mock_device_selector.call_args.args[9] == expected

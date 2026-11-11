@@ -14,7 +14,6 @@ from python_open_router import (
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -33,6 +32,7 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
+from . import OpenRouterConfigEntry
 from .const import (
     CONF_OUTPUT_MODALITIES,
     CONF_REASONING,
@@ -86,7 +86,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: OpenRouterConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {

@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import AirTouch4ConfigEntry
+from .coordinator import AirTouch4ConfigEntry, AirtouchDataUpdateCoordinator
 
 AT_TO_HA_STATE = {
     "Heat": HVACMode.HEAT,
@@ -80,7 +80,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirtouchAC(CoordinatorEntity, ClimateEntity):
+class AirtouchAC(CoordinatorEntity[AirtouchDataUpdateCoordinator], ClimateEntity):
     """Representation of an AirTouch 4 ac."""
 
     _attr_has_entity_name = True
@@ -201,7 +201,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
 
-class AirtouchGroup(CoordinatorEntity, ClimateEntity):
+class AirtouchGroup(CoordinatorEntity[AirtouchDataUpdateCoordinator], ClimateEntity):
     """Representation of an AirTouch 4 group."""
 
     _attr_has_entity_name = True
