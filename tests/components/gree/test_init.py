@@ -13,6 +13,7 @@ from greeclimate.network import Response
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant import config_entries
 from homeassistant.components.gree.const import (
     DISCOVERY_SCAN_INTERVAL,
     DISCOVERY_TIMEOUT,
@@ -24,7 +25,9 @@ from homeassistant.components.gree.discovery import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .common import FakeDiscovery, async_setup_gree, build_device_mock
@@ -131,6 +134,62 @@ async def test_background_discovery_requires_confirmation(
     assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     assert all(instance.closed for instance in discovery.instances)
     device().bind.assert_not_awaited()
+
+
+async def test_dhcp_owner_confirmation_starts_device_confirmation(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A confirmed DHCP owner starts discovery without enrolling a device."""
+    matching_device = build_device_mock(
+        name="Gree unit",
+        ipAddress="192.0.2.10",
+        identifier="04:47:CA:AA:BB:CC",
+    )
+    discovery.mock_devices = [matching_device]
+    await hass.async_start()
+    assert await async_setup_component(hass, DOMAIN, {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="gree",
+            ip="192.0.2.10",
+            macaddress="0447caaabbcc",
+        ),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_discovery"
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert not entity_registry.entities
+    device.return_value.bind.assert_not_awaited()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    owner = result["result"]
+    assert owner.unique_id == DOMAIN
+    assert owner.data == {}
+    assert owner.source == config_entries.SOURCE_DHCP
+    assert hass.config_entries.async_entries(DOMAIN) == [owner]
+    assert not entity_registry.entities
+    device.return_value.bind.assert_not_awaited()
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "discovery_confirm"
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
+    assert flows[0]["context"]["unique_id"] == normalize_identifier(
+        matching_device.device_info.mac
+    )
+    assert owner.state is ConfigEntryState.LOADED
+    assert hass.config_entries.async_entries(DOMAIN) == [owner]
+    assert not entity_registry.entities
+    device.return_value.bind.assert_not_awaited()
 
 
 async def test_bare_setup_does_not_start_discovery(

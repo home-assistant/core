@@ -17,6 +17,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_IDENTIFIER, DOMAIN
@@ -58,6 +59,26 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._devices:
             return self.async_abort(reason="no_devices_found")
         return await self.async_step_pick_device()
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Offer persistent discovery only after a matching Gree scan."""
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
+        identifier = normalize_identifier(discovery_info.macaddress)
+
+        try:
+            devices = await async_get_discovery(self.hass).async_scan()
+        except OSError, TimeoutError:
+            return self.async_abort(reason="cannot_connect")
+
+        self._abort_if_unique_id_configured()
+        if (info := devices.get(identifier)) is None or info.ip != discovery_info.ip:
+            return self.async_abort(reason="no_devices_found")
+        return await self.async_step_setup_discovery()
 
     async def async_step_setup_discovery(
         self, user_input: dict[str, Any] | None = None
