@@ -379,7 +379,7 @@ def _async_disable_disk_space_sensors(
         if (
             reg_entry.domain == Platform.SENSOR
             and reg_entry.translation_key in _DISK_SPACE_TRANSLATION_KEYS
-            and reg_entry.disabled_by is None
+            and reg_entry.disabled_by in (None, er.RegistryEntryDisabler.DEVICE)
         ):
             entity_registry.async_update_entity(
                 reg_entry.entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION
