@@ -76,23 +76,17 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(runtime_data.coordinator_for(entity_description.component))
         self.entity_description = entity_description
-        serial = self.coordinator.device.serial_number
-        self._attr_unique_id = self._unique_id(serial)
-        self._attr_device_info = self._device_info(runtime_data, serial)
-
-    def _unique_id(self, serial: str) -> str:
-        """Name the entity by the inverter's serial and its key."""
-        return entity_unique_id(serial, self.entity_description.key)
-
-    def _device_info(
-        self, runtime_data: SofarRuntimeData, serial: str
-    ) -> dr.DeviceInfo:
-        """Place the entity on the inverter, or on the part it measures."""
-        if (part := self.entity_description.part) is None:
-            return self.coordinator.device_info
+        self._attr_unique_id = entity_unique_id(
+            self.coordinator.device.serial_number, entity_description.key
+        )
+        if (part := entity_description.part) is None:
+            self._attr_device_info = self.coordinator.device_info
+            return
         kind, number = part
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, f"{serial}_{kind}_{number}")},
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{self.coordinator.device.serial_number}_{kind}_{number}")
+            },
             via_device_id=runtime_data.inverter_device_id,
             translation_key=kind,
             translation_placeholders={"number": str(number)},
