@@ -4,6 +4,7 @@
   "categories": ["security_safety.locks_access"],
   "codeowners": ["@richardpolzer"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["application_credentials", "http"],
   "documentation": "https://www.home-assistant.io/integrations/ekeybionyx",
   "integration_type": "hub",

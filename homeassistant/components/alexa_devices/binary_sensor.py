@@ -48,7 +48,7 @@ BINARY_SENSORS: Final = (
             coordinator.sensors[device.serial_number][key].value != SENSOR_STATE_OFF
         ),
         is_supported_fn=lambda device, key, coordinator: (
-            coordinator.device_sensor(device.serial_number, key) is not None
+            key in coordinator.supported_sensor_keys(device.serial_number)
         ),
         is_available_fn=lambda device, key, coordinator: (
             device.online

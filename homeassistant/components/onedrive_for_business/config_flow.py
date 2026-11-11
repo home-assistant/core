@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -34,6 +35,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle OneDrive OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+    MINOR_VERSION = 2
 
     client: OneDriveClient
     drive: Drive
@@ -113,19 +115,23 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(self.drive.id)
+        await self.async_set_unique_id(self.drive.id.upper())
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_drive")
+            self._abort_if_drive_mismatch()
             return self.async_update_reload_and_abort(
                 entry=self._get_reauth_entry(),
                 data_updates=data,
             )
 
         if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch(reason="wrong_drive")
+            self._abort_if_drive_mismatch()
         else:
             self._abort_if_unique_id_configured()
+            # Entries that are not migrated yet, like disabled ones, can be lowercase
+            for entry in self._async_current_entries(include_ignore=False):
+                if entry.unique_id and entry.unique_id.upper() == self.unique_id:
+                    return self.async_abort(reason="already_configured")
 
         self._data.update(data)
 
@@ -133,6 +139,17 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return await self.async_step_reconfigure_folder()
 
         return await self.async_step_select_folder()
+
+    def _abort_if_drive_mismatch(self) -> None:
+        """Abort if the drive does not belong to the reauth or reconfigure entry."""
+        entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+        )
+        # Entries that are not migrated yet, like disabled ones, can be lowercase
+        if (entry.unique_id or "").upper() != self.unique_id:
+            raise AbortFlow("wrong_drive")
 
     async def async_step_select_folder(
         self, user_input: dict[str, Any] | None = None

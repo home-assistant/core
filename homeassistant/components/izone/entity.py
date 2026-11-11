@@ -6,10 +6,28 @@ from typing import override
 import pizone
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import IZoneCoordinator
+
+
+def zone_device_info(coordinator: IZoneCoordinator, zone: pizone.Zone) -> DeviceInfo:
+    """Return the device info for a zone, linked via its controller device."""
+    uid = coordinator.controller.device_uid
+    return DeviceInfo(
+        identifiers={(DOMAIN, uid, zone.index)},  # type:ignore[arg-type]
+        manufacturer="IZone",
+        model=zone.type.name.title(),
+        name=zone.name.title(),
+        via_device_id=dr.async_get_device_id_by_identifier(
+            coordinator.hass,
+            (DOMAIN, uid),
+            config_entry_id=coordinator.config_entry.entry_id,
+        ),
+    )
 
 
 class IZoneCoordinatorEntity(CoordinatorEntity[IZoneCoordinator]):
@@ -45,6 +63,12 @@ class IZoneCoordinatorEntity(CoordinatorEntity[IZoneCoordinator]):
                     "uid": self.controller.device_uid,
                     "error": str(ex),
                 },
+            ) from ex
+        except pizone.DeviceReconfigurationError as ex:
+            self.coordinator.async_schedule_reconfigure_reload()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="system_reconfigured",
             ) from ex
         except ConnectionError as ex:
             self.coordinator.async_set_update_error(ex)

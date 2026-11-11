@@ -753,10 +753,18 @@ ZEROCONF = {
     ],
     "_ipp._tcp.local.": [
         {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
+        {
             "domain": "ipp",
         },
     ],
     "_ipps._tcp.local.": [
+        {
+            "domain": "hp_printer",
+            "name": "hp*",
+        },
         {
             "domain": "ipp",
         },
@@ -819,6 +827,12 @@ ZEROCONF = {
             "domain": "lutron_caseta",
             "properties": {
                 "SYSTYPE": "ra2select*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "athena*",
             },
         },
     ],
@@ -934,6 +948,11 @@ ZEROCONF = {
             "domain": "bitvis",
         },
     ],
+    "_powersensor._udp.local.": [
+        {
+            "domain": "powersensor_au",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -983,6 +1002,15 @@ ZEROCONF = {
     "_shelly._tcp.local.": [
         {
             "domain": "shelly",
+        },
+    ],
+    "_ship._tcp.local.": [
+        {
+            "domain": "e3dc",
+            "properties": {
+                "brand": "hager energy",
+                "id": "*",
+            },
         },
     ],
     "_sideplay._tcp.local.": [

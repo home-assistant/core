@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'trackers': list([
+      dict({
+        'additional_parameters': None,
+        'battery': 85,
+        'charging': False,
+        'deep_sleep': None,
+        'energy_saving': dict({
+          'status': 'ok',
+          'value': 1,
+        }),
+        'icon': 'http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg',
+        'inside_geofence': None,
+        'last_position': None,
+        'last_position_accuracy': None,
+        'last_position_timestamp': None,
+        'last_seen': None,
+        'last_seen_timestamp': '2024-01-15T12:30:00Z',
+        'led_activatable': dict({
+          'has_led': True,
+          'nonempty_battery': True,
+          'not_charging': True,
+          'overall': True,
+          'seen_recently': True,
+        }),
+        'led_brightness': dict({
+          'status': 'ok',
+          'value': 50,
+        }),
+        'name': 'Fluffy',
+        'position': dict({
+          'accuracy': 10,
+          'created_at': None,
+          'lat': '**REDACTED**',
+          'lng': '**REDACTED**',
+          'sampled_at': None,
+          'timestamp': '2024-01-15T12:00:00Z',
+        }),
+        'serialnumber': None,
+        'servicebooking': dict({
+          'days_until_servicebooking_ends': None,
+          'has_current_servicebooking': True,
+          'servicebooking_until': '2027-06-30T12:00:00Z',
+        }),
+        'tracker_settings': dict({
+          'features': dict({
+            'energy_saving_mode': True,
+            'flash_light': True,
+            'live_tracking': True,
+            'sleep_mode': False,
+          }),
+          'generation': 'GPS Tracker 2.0',
+          'sales_channel': None,
+          'type': None,
+        }),
+      }),
+    ]),
+  })
+# ---

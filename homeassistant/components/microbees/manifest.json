@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs", "plugs_switches"],
   "codeowners": ["@microBeesTech"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/microbees",
   "integration_type": "hub",
