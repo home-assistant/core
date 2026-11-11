@@ -652,6 +652,43 @@ class MarketplaceManager:
         request_data = self.githubapi._client._base_request_data  # noqa: SLF001
         request_data.kwargs[GitHubClientKwarg.BASE_URL] = base
 
+    async def async_github_api_call[T](
+        self, method: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
+    ) -> T:
+        """Call a GitHub API method on the first endpoint that answers.
+
+        An endpoint that is out of reach, answers with a server error, or
+        refuses because its own rate limit ran out, falls back to the next
+        endpoint of the profile. A refusal of GitHub itself, and a not modified
+        answer, is the same on every endpoint and is raised to the caller.
+        """
+        failed: list[str] = []
+        error: GitHubConnectionException | None = None
+
+        for base in self.endpoints.bases(Endpoint.API):
+            self._use_api_base(base)
+            try:
+                response = await method(*args, **kwargs)
+            except GitHubConnectionException as exception:
+                error = exception
+                failed.append(base)
+                continue
+
+            if isinstance(response, GitHubResponseModel) and (
+                response.status >= 500 or response.status == 429
+            ):
+                error = GitHubConnectionException(f"{base} answered {response.status}")
+                failed.append(base)
+                continue
+
+            self.endpoints.worked(Endpoint.API, base, failed)
+            return response
+
+        # A profile has at least one API endpoint
+        if TYPE_CHECKING:
+            assert error is not None
+        raise error
+
     @overload
     async def async_github_api_method[T](
         self,
@@ -679,55 +716,32 @@ class MarketplaceManager:
     ) -> T | None:
         """Call a GitHub API method.
 
-        An endpoint that fails before it answers falls back to the next one in
-        the profile, like a download does. Without a connected account the call
-        is anonymous, a refusal then only fails the call that hit it. An
-        anonymous rate limit always raises, so the action that hit it fails
-        instead of carrying on with stale data.
+        Without a connected account the call is anonymous, a refusal then only
+        fails the call that hit it. An anonymous rate limit always raises, so
+        the action that hit it fails instead of carrying on with stale data.
         """
-        failed: list[str] = []
         _exception: Exception | None = None
 
-        for base in self.endpoints.bases(Endpoint.API):
-            self._use_api_base(base)
-            try:
-                response = await method(*args, **kwargs)
-            except GitHubAuthenticationException as exception:
-                if self.github_connected:
-                    self.disable(DisabledReason.INVALID_TOKEN)
-                _exception = exception
-            except GitHubRatelimitException as exception:
-                if not self.github_connected:
-                    raise GitHubAnonymousRateLimitError from exception
-                self.disable(DisabledReason.RATE_LIMIT)
-                if raise_exception:
-                    raise GitHubRateLimitError from exception
-                return None
-            except GitHubNotModifiedException:
-                raise
-            except GitHubConnectionException as exception:
-                _exception = exception
-                failed.append(base)
-                continue
-            except GitHubException as exception:
-                _exception = exception
-            except Exception as exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected error calling the GitHub API")
-                _exception = exception
-            else:
-                if isinstance(response, GitHubResponseModel) and response.status >= 500:
-                    # An endpoint answering with a server error is as unusable
-                    # as one that can not be reached
-                    _exception = GitHubConnectionException(
-                        f"{base} answered {response.status}"
-                    )
-                    failed.append(base)
-                    continue
-                self.endpoints.worked(Endpoint.API, base, failed)
-                return response
-
-            # Anything but an endpoint out of reach is the same on all of them
-            break
+        try:
+            return await self.async_github_api_call(method, *args, **kwargs)
+        except GitHubAuthenticationException as exception:
+            if self.github_connected:
+                self.disable(DisabledReason.INVALID_TOKEN)
+            _exception = exception
+        except GitHubRatelimitException as exception:
+            if not self.github_connected:
+                raise GitHubAnonymousRateLimitError from exception
+            self.disable(DisabledReason.RATE_LIMIT)
+            if raise_exception:
+                raise GitHubRateLimitError from exception
+            return None
+        except GitHubNotModifiedException:
+            raise
+        except GitHubException as exception:
+            _exception = exception
+        except Exception as exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error calling the GitHub API")
+            _exception = exception
 
         if raise_exception and _exception is not None:
             raise MarketplaceError(

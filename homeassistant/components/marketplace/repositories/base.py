@@ -1424,8 +1424,10 @@ class Repository:
     ) -> tuple[GitHubRepositoryModel, str | None]:
         """Return the repository and the etag of the response."""
         try:
-            response = await self.marketplace.githubapi.repos.get(
-                self.data.full_name, etag=etag
+            response = await self.marketplace.async_github_api_call(
+                self.marketplace.githubapi.repos.get,
+                self.data.full_name,
+                etag=etag,
             )
         except GitHubNotModifiedException as exception:
             raise NotModifiedError(
