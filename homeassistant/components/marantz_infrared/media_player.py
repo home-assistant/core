@@ -23,6 +23,7 @@ from .entity import MarantzIrEntity
 PARALLEL_UPDATES = 1
 
 SOURCE_TO_CODE: dict[str, MarantzAudioCode] = {
+    "aux": MarantzAudioCode.SOURCE_AUX_1,
     "cd": MarantzAudioCode.SOURCE_CD,
     "coax": MarantzAudioCode.SOURCE_COAX,
     "laserdisc": MarantzAudioCode.SOURCE_LD,

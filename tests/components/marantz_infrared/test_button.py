@@ -70,12 +70,55 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "expected_code"),
+    ("model", "entity_id", "expected_code"),
     [
-        (BUTTON_ENTITY_ID_SPEAKER_AB, MarantzAudioCode.SPEAKER_AB),
-        (BUTTON_ENTITY_ID_SOURCE_DIRECT, MarantzAudioCode.SOURCE_DIRECT),
-        (BUTTON_ENTITY_ID_LOUDNESS, MarantzAudioCode.LOUDNESS),
+        (
+            "pm6006_integrated_amplifier",
+            BUTTON_ENTITY_ID_SPEAKER_AB,
+            MarantzAudioCode.SPEAKER_AB,
+        ),
+        (
+            "pm6006_integrated_amplifier",
+            BUTTON_ENTITY_ID_SOURCE_DIRECT,
+            MarantzAudioCode.SOURCE_DIRECT,
+        ),
+        (
+            "pm6006_integrated_amplifier",
+            BUTTON_ENTITY_ID_LOUDNESS,
+            MarantzAudioCode.LOUDNESS,
+        ),
+        (
+            "pm8006_integrated_amplifier",
+            BUTTON_ENTITY_ID_SPEAKER_A_OFF,
+            MarantzAudioCode.SPEAKER_A_OFF,
+        ),
+        (
+            "pm8006_integrated_amplifier",
+            BUTTON_ENTITY_ID_SPEAKER_A_ON,
+            MarantzAudioCode.SPEAKER_A_ON,
+        ),
+        (
+            "pm8006_integrated_amplifier",
+            BUTTON_ENTITY_ID_SPEAKER_B_OFF,
+            MarantzAudioCode.SPEAKER_B_OFF,
+        ),
+        (
+            "pm8006_integrated_amplifier",
+            BUTTON_ENTITY_ID_SPEAKER_B_ON,
+            MarantzAudioCode.SPEAKER_B_ON,
+        ),
+        (
+            "pm8006_integrated_amplifier",
+            BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON,
+            MarantzAudioCode.POWER_AMP_DIRECT_ON,
+        ),
+        (
+            "pm8006_integrated_amplifier",
+            BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF,
+            MarantzAudioCode.POWER_AMP_DIRECT_OFF,
+        ),
     ],
+    indirect=["model"],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_button_press_sends_correct_code(
@@ -85,41 +128,6 @@ async def test_button_press_sends_correct_code(
     expected_code: MarantzAudioCode,
 ) -> None:
     """Test pressing a button sends the correct IR code."""
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
-    assert mock_infrared_emitter_entity.send_command_calls[0] == expected_code
-
-
-@pytest.mark.parametrize(
-    "model",
-    ["pm8006_integrated_amplifier"],
-    indirect=True,
-)
-@pytest.mark.parametrize(
-    ("entity_id", "expected_code"),
-    [
-        (BUTTON_ENTITY_ID_SPEAKER_A_OFF, MarantzAudioCode.SPEAKER_A_OFF),
-        (BUTTON_ENTITY_ID_SPEAKER_A_ON, MarantzAudioCode.SPEAKER_A_ON),
-        (BUTTON_ENTITY_ID_SPEAKER_B_OFF, MarantzAudioCode.SPEAKER_B_OFF),
-        (BUTTON_ENTITY_ID_SPEAKER_B_ON, MarantzAudioCode.SPEAKER_B_ON),
-        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_ON, MarantzAudioCode.POWER_AMP_DIRECT_ON),
-        (BUTTON_ENTITY_ID_POWER_AMP_DIRECT_OFF, MarantzAudioCode.POWER_AMP_DIRECT_OFF),
-    ],
-)
-@pytest.mark.usefixtures("init_integration")
-async def test_pm8006_button_press_sends_correct_code(
-    hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    entity_id: str,
-    expected_code: MarantzAudioCode,
-) -> None:
-    """Test pressing a PM8006 button sends the correct IR code."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
