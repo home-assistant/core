@@ -6,10 +6,10 @@ from typing import Any, override
 from pyControl4.blind import C4Blind
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -176,4 +176,6 @@ class Control4Cover(Control4Entity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
-        await self._create_blind_api_object().set_level_target(kwargs[ATTR_POSITION])
+        await self._create_blind_api_object().set_level_target(
+            kwargs[CoverServiceArgument.POSITION]
+        )

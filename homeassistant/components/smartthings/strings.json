@@ -196,6 +196,7 @@
           "sound_mode": {
             "state": {
               "adaptive_sound": "Adaptive sound",
+              "amplify": "Amplify",
               "game": "Game",
               "standard": "Standard",
               "surround": "Surround"
@@ -331,6 +332,15 @@
           "pause": "[%key:common::state::paused%]",
           "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
           "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "picture_mode": {
+        "name": "Picture mode",
+        "state": {
+          "dynamic": "Dynamic",
+          "movie": "Movie",
+          "natural": "Natural",
+          "standard": "[%key:component::smartthings::entity::media_player::media_player::state_attributes::sound_mode::state::standard%]"
         }
       },
       "robot_cleaner_cleaning_type": {

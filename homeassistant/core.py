@@ -4,6 +4,7 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
+from annotationlib import Format
 import asyncio
 from collections import UserDict, defaultdict, deque
 from collections.abc import (
@@ -22,6 +23,7 @@ import enum
 import functools
 import inspect
 import logging
+import operator
 import re
 import threading
 import time
@@ -44,10 +46,13 @@ from typing import (
 import probatio
 from propcache.api import cached_property, under_cached_property
 
+# 'typing_extensions.sentinel' is not supported by Pylance yet, requires >2026.4.1
+# Use temporary alias to make the switch easier later.
+from typing_extensions import Sentinel as sentinel
+
 from . import util
 from .const import (
     ATTR_DOMAIN,
-    ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     COMPRESSED_STATE_ATTRIBUTES,
@@ -72,6 +77,7 @@ from .const import (
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     __version__,
 )
 from .exceptions import (
@@ -114,7 +120,7 @@ FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 type CALLBACK_TYPE = Callable[[], None]
 
@@ -179,8 +185,8 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
 
 _OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
 _DOMAIN = r"(?!.+__)" + _OBJECT_ID
-VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
-VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
+VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"\Z")
+VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"\Z")
 
 
 @functools.lru_cache(64)
@@ -212,6 +218,58 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)  # noqa: B010
     return func
+
+
+def _get_hass_identity(obj: HomeAssistant) -> HomeAssistant:
+    """Return the HomeAssistant instance passed in."""
+    return obj
+
+
+_get_hass_public = operator.attrgetter("hass")
+_get_hass_private = operator.attrgetter("_hass")
+
+
+def verify_event_loop_thread[**_P, _R](
+    what: str,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """Report and raise if the decorated function is not called from the event loop.
+
+    The first argument of the decorated function must be either the
+    HomeAssistant instance or an object with a hass or _hass attribute.
+    It may be passed by keyword. Where hass is found is resolved on the
+    first call and then reused.
+    """
+
+    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
+        first_parameter = next(
+            iter(
+                inspect.signature(func, annotation_format=Format.FORWARDREF).parameters
+            )
+        )
+        get_hass: Callable[[Any], HomeAssistant]
+
+        def resolve_get_hass(obj: Any) -> HomeAssistant:
+            nonlocal get_hass
+            if isinstance(obj, HomeAssistant):
+                get_hass = _get_hass_identity
+            elif hasattr(obj, "hass"):
+                get_hass = _get_hass_public
+            else:
+                get_hass = _get_hass_private
+            return get_hass(obj)
+
+        get_hass = resolve_get_hass
+
+        @functools.wraps(func)
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            get_hass(
+                args[0] if args else kwargs[first_parameter]
+            ).verify_event_loop_thread(what)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @callback
@@ -1713,7 +1771,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1730,7 +1788,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 
@@ -1790,7 +1848,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1801,7 +1859,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 
@@ -1965,9 +2023,9 @@ class State:
     @under_cached_property
     def name(self) -> str:
         """Name of this state."""
-        return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
-            "_", " "
-        )
+        return self.attributes.get(
+            EntityStateAttribute.FRIENDLY_NAME
+        ) or self.object_id.replace("_", " ")
 
     @under_cached_property
     def last_changed_timestamp(self) -> float:
@@ -2121,7 +2179,11 @@ class State:
             last_reported = dt_util.parse_datetime(last_reported)
 
         if context := json_dict.get("context"):
-            context = Context(id=context.get("id"), user_id=context.get("user_id"))
+            context = Context(
+                id=context.get("id"),
+                user_id=context.get("user_id"),
+                parent_id=context.get("parent_id"),
+            )
 
         return cls(
             json_dict["entity_id"],
@@ -2690,7 +2752,9 @@ class ServiceRegistry:
         the context. Will return NONE if the service does not exist as there is
         other error handling when calling the service if it does not exist.
         """
-        if not (handler := self._services[domain.lower()][service.lower()]):
+        if (
+            handler := self._services.get(domain.lower(), {}).get(service.lower())
+        ) is None:
             return SupportsResponse.NONE
         return handler.supports_response
 
@@ -2720,6 +2784,7 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_register")
     def async_register(
         self,
         domain: str,
@@ -2743,7 +2808,6 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain,
             service,
@@ -2805,12 +2869,12 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_remove")
     def async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback

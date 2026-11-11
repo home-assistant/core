@@ -18,7 +18,7 @@ def mock_setup_entry():
     """Prevent setup of integration during tests."""
     with patch(
         "homeassistant.components.london_underground.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

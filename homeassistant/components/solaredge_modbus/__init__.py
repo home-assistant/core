@@ -154,8 +154,8 @@ async def async_setup_entry(
     # Registered up front: a meter sub-device can only name the inverter it
     # hangs off once that device has an ID.
     device_info = inverter_device_info(solaredge, serial_number)
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **device_info
+    inverter = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
     # The readings poll already proved the link; a control block that refuses
     # one read leaves its own entities unavailable instead of failing setup.

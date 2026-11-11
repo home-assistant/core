@@ -26,7 +26,7 @@ def _patch_success() -> Generator[None]:
         patch("energyflip.EnergyFlip.get_user_id", return_value="test-id"),
         patch(
             "homeassistant.components.huisbaasje.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -54,7 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_get_user_id,
         patch(
             "homeassistant.components.huisbaasje.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         form_result = await hass.config_entries.flow.async_configure(
@@ -319,7 +319,7 @@ async def test_form_entry_exists(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.huisbaasje.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         form_result = await hass.config_entries.flow.async_configure(

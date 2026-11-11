@@ -1052,6 +1052,7 @@ async def test_blu_trv_update(
     )
 
     mock_blu_trv.blu_trv_update_firmware.assert_called_once_with(200)
+    mock_blu_trv.get_dynamic_components.assert_awaited_once_with()
 
 
 async def test_blu_trv_update_progress(
@@ -1107,6 +1108,14 @@ async def test_blu_trv_update_progress(
 
     async def _update_firmware(trv_id: int) -> None:
         """Report OTA progress while the call is pending."""
+        # The state is published before the first OTA event arrives
+        assert (state := hass.states.get(entity_id))
+        progress.append(
+            (
+                state.attributes[ATTR_IN_PROGRESS],
+                state.attributes[ATTR_UPDATE_PERCENTAGE],
+            )
+        )
         for event in ota_events:
             inject_rpc_device_event(
                 monkeypatch, mock_blu_trv, {"events": [event], "ts": 1789992654.77}
@@ -1129,6 +1138,7 @@ async def test_blu_trv_update_progress(
     )
 
     assert progress == [
+        (True, None),
         (True, 0),
         (True, 19),
         (True, 40),
@@ -1141,6 +1151,71 @@ async def test_blu_trv_update_progress(
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+async def test_blu_trv_update_refreshes_installed_version(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV update entity re-reads the installed version after OTA."""
+    entity_id = "update.trv_name_firmware"
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.2.10"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
+
+    async def _get_dynamic_components() -> None:
+        """Report the new firmware version like the gateway does."""
+        monkeypatch.setitem(mock_blu_trv.status["blutrv:200"], "fw_ver", "v1.3.0")
+
+    mock_blu_trv.get_dynamic_components.side_effect = _get_dynamic_components
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_blu_trv.get_dynamic_components.assert_awaited_once_with()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.3.0"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v1.3.0"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+
+
+@pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
+async def test_blu_trv_update_refresh_errors(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    exc: Exception,
+) -> None:
+    """Test a failed status refresh after OTA does not fail the install."""
+    entity_id = "update.trv_name_firmware"
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.get_dynamic_components.side_effect = exc
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_blu_trv.blu_trv_update_firmware.assert_called_once_with(200)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v1.2.10"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
 
 
 async def test_blu_trv_update_shared_firmware_check(
@@ -1313,6 +1388,7 @@ async def test_blu_trv_update_install_errors(
         )
 
     assert exc_info.value.translation_key == translation_key
+    mock_blu_trv.get_dynamic_components.assert_not_called()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON

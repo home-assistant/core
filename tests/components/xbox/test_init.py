@@ -1,7 +1,9 @@
 """Tests for the Xbox integration."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientError
@@ -293,21 +295,39 @@ async def test_dynamic_devices(
 
 
 @pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("xuid", "subentry_unique_id"),
+    [
+        pytest.param("271958441785640", None, id="account"),
+        pytest.param("2533274913657542", "2533274913657542", id="friend"),
+    ],
+)
 async def test_binary_sensor_deprecation_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
+    xuid: str,
+    subentry_unique_id: str | None,
 ) -> None:
     """Test sensor deprecation issue."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     config_entry.add_to_hass(hass)
+    subentry_id = next(
+        (
+            subentry.subentry_id
+            for subentry in config_entry.subentries.values()
+            if subentry.unique_id == subentry_unique_id
+        ),
+        None,
+    )
     entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
-        f"271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+        f"{xuid}_{XboxBinarySensor.HAS_GAME_PASS}",
         config_entry=config_entry,
+        config_subentry_id=subentry_id,
         suggested_object_id="gsr_ae_subscribed_to_xbox_game_pass",
         disabled_by=None,
     )
@@ -350,10 +370,11 @@ async def test_binary_sensor_deprecation_issue(
     assert (
         repair_issue := issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_entity_271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+            issue_id=f"deprecated_entity_{xuid}_{XboxBinarySensor.HAS_GAME_PASS}",
         )
     )
     assert repair_issue.config_entry_id == config_entry.entry_id
+    assert repair_issue.config_subentry_id == subentry_id
 
     client = await hass_client()
 
@@ -382,7 +403,7 @@ async def test_binary_sensor_deprecation_issue(
 
     assert not issue_registry.async_get_issue(
         DOMAIN,
-        f"deprecated_entity_271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+        f"deprecated_entity_{xuid}_{XboxBinarySensor.HAS_GAME_PASS}",
     )
 
     assert (
@@ -424,3 +445,99 @@ async def test_binary_sensor_deprecation_remove_disabled(
         )
         is None
     )
+
+
+async def _remove_friend_subentry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, subentry_id: str
+) -> None:
+    """Remove the friend subentry."""
+    assert hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+
+
+async def _remove_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, subentry_id: str
+) -> None:
+    """Remove the config entry."""
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("xbox_live_client", "entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("remove_owner", "expected_remaining"),
+    [
+        pytest.param(_remove_friend_subentry, {"271958441785640"}, id="subentry"),
+        pytest.param(_remove_config_entry, set(), id="config_entry"),
+    ],
+)
+async def test_binary_sensor_deprecation_issue_removed_with_owner(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+    remove_owner: Callable[
+        [HomeAssistant, MockConfigEntry, str], Coroutine[Any, Any, None]
+    ],
+    expected_remaining: set[str],
+) -> None:
+    """Test deprecation issues are removed with the subentry or entry owning them."""
+    config_entry.add_to_hass(hass)
+    friend_subentry_id = next(
+        subentry.subentry_id
+        for subentry in config_entry.subentries.values()
+        if subentry.unique_id == "2533274913657542"
+    )
+    for xuid, subentry_id in (
+        ("271958441785640", None),
+        ("2533274913657542", friend_subentry_id),
+    ):
+        entity_registry.async_get_or_create(
+            BINARY_SENSOR_DOMAIN,
+            DOMAIN,
+            f"{xuid}_{XboxBinarySensor.HAS_GAME_PASS}",
+            config_entry=config_entry,
+            config_subentry_id=subentry_id,
+            suggested_object_id=f"game_pass_{xuid}",
+        )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": f"test_{xuid}",
+                    "alias": f"test_{xuid}",
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": f"{BINARY_SENSOR_DOMAIN}.game_pass_{xuid}",
+                    },
+                    "action": {
+                        "action": "automation.turn_on",
+                        "target": {"entity_id": f"automation.test_{xuid}"},
+                    },
+                }
+                for xuid in ("271958441785640", "2533274913657542")
+            ]
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_ids = {
+        xuid: f"deprecated_entity_{xuid}_{XboxBinarySensor.HAS_GAME_PASS}"
+        for xuid in ("271958441785640", "2533274913657542")
+    }
+    assert all(
+        issue_registry.async_get_issue(DOMAIN, issue_id)
+        for issue_id in issue_ids.values()
+    )
+
+    await remove_owner(hass, config_entry, friend_subentry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        xuid
+        for xuid, issue_id in issue_ids.items()
+        if issue_registry.async_get_issue(DOMAIN, issue_id)
+    } == expected_remaining

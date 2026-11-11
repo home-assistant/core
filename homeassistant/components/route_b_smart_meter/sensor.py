@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BRouteConfigEntry
 from .const import (
     ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE,
     ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE,
@@ -25,7 +24,7 @@ from .const import (
     ATTR_API_TOTAL_CONSUMPTION,
     DOMAIN,
 )
-from .coordinator import BRouteData, BRouteUpdateCoordinator
+from .coordinator import BRouteConfigEntry, BRouteData, BRouteUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

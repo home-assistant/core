@@ -1,6 +1,7 @@
 """Test Control4 integration setup and core behaviors."""
 
 import asyncio
+from json import JSONDecodeError
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import client_exceptions
@@ -326,3 +327,43 @@ async def test_token_refresh_bad_credentials(
 
     assert obj.retries == 0
     assert "Control4 credentials are no longer valid" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_c4_account")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(C4Exception("director unavailable"), id="api_error"),
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(JSONDecodeError("Expecting value", "", 0), id="invalid_json"),
+    ],
+)
+async def test_setup_retries_when_first_poll_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_director: MagicMock,
+    exception: Exception,
+) -> None:
+    """Test setup is retried when the director does not answer the first poll."""
+    mock_c4_director.get_all_item_variable_value.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.async_all() == []
+
+
+@pytest.mark.parametrize(
+    "platforms",
+    [[Platform.CLIMATE, Platform.COVER, Platform.LIGHT, Platform.MEDIA_PLAYER]],
+)
+@pytest.mark.usefixtures("mock_c4_account", "mock_room_variables")
+async def test_setup_when_only_rooms_have_variables(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup succeeds when no item has the climate, cover or light variables."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.async_entity_ids() == ["media_player.living_room"]

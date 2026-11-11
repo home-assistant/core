@@ -91,6 +91,8 @@ def fixture_mock_govee_api() -> Generator[AsyncMock]:
     mock_api.listening_addresses = ["10.0.0.7", "192.168.1.2"]
     mock_api.networks = [IPv4Network("10.0.0.0/8"), IPv4Network("192.168.1.0/24")]
     mock_api.bind_failures = []
+    mock_api.protocols = [MagicMock()]
+    mock_api.rebind_failed = AsyncMock(return_value=[])
 
     with (
         patch(
@@ -110,7 +112,7 @@ def fixture_mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.govee_light_local.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

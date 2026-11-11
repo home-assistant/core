@@ -526,7 +526,7 @@ async def test_ssdp_discovery_update_configuration(
     """Test if a discovered bridge is configured but updates with new attributes."""
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -626,7 +626,7 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -650,7 +650,7 @@ async def test_hassio_discovery_update_configuration(
     """Test we can update an existing config entry."""
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

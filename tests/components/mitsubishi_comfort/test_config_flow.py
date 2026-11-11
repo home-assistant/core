@@ -29,11 +29,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.mitsubishi_comfort.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
         patch(
             "homeassistant.components.mitsubishi_comfort.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield mock

@@ -280,8 +280,8 @@ def color_xy_brightness_to_RGB(
 
     Y = brightness
 
-    if vY == 0.0:
-        vY += 1e-11
+    # Avoid overflowing Y / vY to inf (and NaN below) for zero or tiny y.
+    vY = max(vY, 1e-11)
 
     X = (Y / vY) * vX
     Z = (Y / vY) * (1 - vX - vY)
@@ -317,7 +317,7 @@ def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> tuple[int, int, int]:
         return fV, fV, fV
 
     r = g = b = 0
-    h = fH / 60
+    h = (fH % 360) / 60
     f = h - float(math.floor(h))
     p = fB * (1 - fS)
     q = fB * (1 - fS * f)
@@ -542,7 +542,9 @@ def color_temperature_to_rgbww(
     temperature = color_temperature_kelvin_to_mired(
         min(max(temperature, min_kelvin), max_kelvin)
     )
-    mired_range = max_mireds - min_mireds
+    if not (mired_range := max_mireds - min_mireds):
+        # The range is a single color temperature, use the warm channel
+        return (0, 0, 0, 0, brightness)
     cold = ((max_mireds - temperature) / mired_range) * brightness
     warm = brightness - cold
     return (0, 0, 0, round(cold), round(warm))

@@ -4,7 +4,7 @@ from typing import Any, override
 
 import pyvera as veraApi
 
-from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,7 +40,6 @@ class VeraLock(VeraEntity[veraApi.VeraLock], LockEntity):
     ) -> None:
         """Initialize the Vera device."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @override
     def lock(self, **kwargs: Any) -> None:

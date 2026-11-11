@@ -6,14 +6,13 @@ from typing import Any, override
 from pyControl4.climate import C4Climate
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -353,9 +352,9 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        temp = kwargs.get(ATTR_TEMPERATURE)
+        low_temp = kwargs.get(ClimateServiceArgument.TARGET_TEMP_LOW)
+        high_temp = kwargs.get(ClimateServiceArgument.TARGET_TEMP_HIGH)
+        temp = kwargs.get(ClimateServiceArgument.TEMPERATURE)
         if self.hvac_mode == HVACMode.HEAT_COOL:
             if low_temp is not None:
                 await self._set_heat_setpoint(low_temp)

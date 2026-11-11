@@ -26,12 +26,17 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import setup_integration
+from . import mock_director_variables, setup_integration
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 
@@ -62,25 +67,17 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def mock_cover_variables() -> dict:
+def mock_cover_variables() -> dict[int, dict[str, Any]]:
     """Mock cover variable data for default blind state."""
     return _make_cover_data()
 
 
 @pytest.fixture
 def mock_cover_update_variables(
-    mock_cover_variables: dict,
-    mock_c4_director: MagicMock,
+    mock_c4_director: MagicMock, mock_cover_variables: dict[int, dict[str, Any]]
 ) -> None:
-    """Mock the Director API so tests exercise the real Undefined/empty-dict normalization."""
-
-    async def _mock_get_item_variables(item_id: int) -> list[dict[str, Any]]:
-        item_data = mock_cover_variables.get(item_id, {})
-        return [{"varName": name, "value": value} for name, value in item_data.items()]
-
-    mock_c4_director.get_item_variables = AsyncMock(
-        side_effect=_mock_get_item_variables
-    )
+    """Mock the cover variables reported by the director."""
+    mock_director_variables(mock_c4_director, mock_cover_variables)
 
 
 @pytest.fixture
@@ -279,6 +276,12 @@ async def test_cover_not_created_when_no_initial_data(
 @pytest.mark.parametrize(
     ("mock_cover_variables", "expected_position", "expected_state"),
     [
+        pytest.param(
+            {234: {"Fully Open": False}},
+            None,
+            STATE_UNKNOWN,
+            id="level_missing",
+        ),
         pytest.param(
             {234: {"Level": 0}},
             0,

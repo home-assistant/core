@@ -4,8 +4,10 @@ import logging
 
 from aranet4.client import Aranet4Advertisement
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
-from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )

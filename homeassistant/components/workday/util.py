@@ -6,16 +6,19 @@ from typing import TYPE_CHECKING
 
 from holidays import PUBLIC, DateLike, HolidayBase, country_holidays
 
-from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util, slugify
 
 if TYPE_CHECKING:
     from . import WorkdayConfigEntry
-from .const import CONF_REMOVE_HOLIDAYS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 async def async_validate_country_and_province(
@@ -25,8 +28,12 @@ async def async_validate_country_and_province(
     province: str | None,
 ) -> None:
     """Validate country and province."""
+    bad_country_issue_id = f"bad_country-{entry.entry_id}"
+    bad_province_issue_id = f"bad_province-{entry.entry_id}"
 
     if not country:
+        async_delete_issue(hass, DOMAIN, bad_country_issue_id)
+        async_delete_issue(hass, DOMAIN, bad_province_issue_id)
         return
     try:
         with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
@@ -38,7 +45,8 @@ async def async_validate_country_and_province(
         async_create_issue(
             hass,
             DOMAIN,
-            "bad_country",
+            bad_country_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             severity=IssueSeverity.ERROR,
@@ -47,8 +55,10 @@ async def async_validate_country_and_province(
             data={"entry_id": entry.entry_id, "country": None},
         )
         raise ConfigEntryError(f"Selected country {country} is not valid") from ex
+    async_delete_issue(hass, DOMAIN, bad_country_issue_id)
 
     if not province:
+        async_delete_issue(hass, DOMAIN, bad_province_issue_id)
         return
     try:
         with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
@@ -62,13 +72,14 @@ async def async_validate_country_and_province(
         async_create_issue(
             hass,
             DOMAIN,
-            "bad_province",
+            bad_province_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             severity=IssueSeverity.ERROR,
             translation_key="bad_province",
             translation_placeholders={
-                CONF_COUNTRY: country,
+                "country": country,
                 "title": entry.title,
             },
             data={"entry_id": entry.entry_id, "country": country},
@@ -76,6 +87,7 @@ async def async_validate_country_and_province(
         raise ConfigEntryError(
             f"Selected province {province} for country {country} is not valid"
         ) from ex
+    async_delete_issue(hass, DOMAIN, bad_province_issue_id)
 
 
 def validate_dates(holiday_list: list[str]) -> list[str]:
@@ -223,9 +235,9 @@ def add_remove_custom_holidays(
                         severity=IssueSeverity.WARNING,
                         translation_key="bad_date_holiday",
                         translation_placeholders={
-                            CONF_COUNTRY: country or "-",
+                            "country": country or "-",
                             "title": entry.title,
-                            CONF_REMOVE_HOLIDAYS: remove_holiday,
+                            "remove_holidays": remove_holiday,
                         },
                         data={
                             "entry_id": entry.entry_id,
@@ -244,9 +256,9 @@ def add_remove_custom_holidays(
                     severity=IssueSeverity.WARNING,
                     translation_key="bad_named_holiday",
                     translation_placeholders={
-                        CONF_COUNTRY: country or "-",
+                        "country": country or "-",
                         "title": entry.title,
-                        CONF_REMOVE_HOLIDAYS: remove_holiday,
+                        "remove_holidays": remove_holiday,
                     },
                     data={
                         "entry_id": entry.entry_id,

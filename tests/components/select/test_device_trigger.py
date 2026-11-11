@@ -1,8 +1,15 @@
 """The tests for Select device triggers."""
 
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
 from probatio import to_field_list
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -223,6 +230,65 @@ async def test_if_fires_on_state_change(
         service_calls[2].data["some"]
         == f"from-to - device - {entry.entity_id} - option3 - option1 - None - 0"
     )
+
+
+async def test_if_fires_on_state_change_with_for(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the trigger firing only after the option was selected for the duration."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        entry.entity_id, "option1", {"options": ["option1", "option2", "option3"]}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
+                        "type": "current_option_changed",
+                        "to": "option2",
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.for }}"},
+                    },
+                },
+            ]
+        },
+    )
+
+    hass.states.async_set(
+        entry.entity_id, "option2", {"options": ["option1", "option2", "option3"]}
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "0:00:05"
 
 
 async def test_if_fires_on_state_change_legacy(

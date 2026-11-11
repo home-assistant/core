@@ -26,7 +26,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -60,7 +60,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -94,7 +94,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -128,7 +128,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -181,7 +181,7 @@ async def test_flow_user_multiple_entries_allowed(hass: HomeAssistant) -> None:
     }
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

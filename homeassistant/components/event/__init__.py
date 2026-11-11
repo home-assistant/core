@@ -1,19 +1,26 @@
 """Component for handling incoming events as a platform."""
 
 from datetime import timedelta
+from functools import partial
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    _DEPRECATED_ATTR_MULTI_PRESS_COUNT as _DEPRECATED_ATTR_MULTI_PRESS_COUNT,
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
-    ATTR_MULTI_PRESS_COUNT,
+    ATTR_PRESS_COUNT,
     DOMAIN,
     ButtonEventType,
     DoorbellEventType,
@@ -21,7 +28,7 @@ from .const import (
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
 )
-from .entity import EventEntity, EventEntityDescription
+from .entity import EventEntity, EventEntityDescription, EventExtraStoredData
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
@@ -35,6 +42,7 @@ __all__ = [
     "ATTR_EVENT_TYPE",
     "ATTR_EVENT_TYPES",
     "ATTR_MULTI_PRESS_COUNT",
+    "ATTR_PRESS_COUNT",
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
@@ -45,6 +53,7 @@ __all__ = [
     "EventEntityCapabilityAttribute",
     "EventEntityDescription",
     "EventEntityStateAttribute",
+    "EventExtraStoredData",
 ]
 
 # mypy: disallow-any-generics
@@ -59,11 +68,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+
+
+# These can be removed if no deprecated constants are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)

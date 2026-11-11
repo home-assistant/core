@@ -21,7 +21,7 @@ STORED_IP = "192.168.1.122"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.nobo_hub.async_setup_entry", return_value=True
+        "homeassistant.components.nobo_hub.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -30,7 +30,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_unload_entry() -> Generator[AsyncMock]:
     """Override async_unload_entry."""
     with patch(
-        "homeassistant.components.nobo_hub.async_unload_entry", return_value=True
+        "homeassistant.components.nobo_hub.async_unload_entry", return_value=None
     ) as mock_unload_entry:
         yield mock_unload_entry
 

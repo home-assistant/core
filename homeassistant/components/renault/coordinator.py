@@ -13,17 +13,23 @@ from renault_api.kamereon.exceptions import (
     NotSupportedException,
     QuotaLimitException,
 )
-from renault_api.kamereon.models import KamereonVehicleDataAttributes
+from renault_api.kamereon.models import (
+    KamereonVehicleDataAttributes,
+    KamereonVehiclesLink,
+)
+from renault_api.renault_account import RenaultAccount
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, VEHICLE_LIST_SCAN_INTERVAL
 
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
     from .renault_hub import RenaultHub
+
+_LOGGER = logging.getLogger(__name__)
 
 # We have potentially 7 coordinators per vehicle
 _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
@@ -143,3 +149,58 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
         but only updating the `access_denied` and `not_supported` flags.
         """
         await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
+
+
+class RenaultVehicleListCoordinator(DataUpdateCoordinator[list[KamereonVehiclesLink]]):
+    """Handle the list of vehicles linked to the Kamereon account."""
+
+    config_entry: RenaultConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RenaultConfigEntry,
+        hub: RenaultHub,
+        account: RenaultAccount,
+    ) -> None:
+        """Initialise coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{account.account_id} vehicles",
+            update_interval=VEHICLE_LIST_SCAN_INTERVAL,
+        )
+        self._account = account
+        self._hub = hub
+
+    @override
+    async def _async_update_data(self) -> list[KamereonVehiclesLink]:
+        """Fetch the latest vehicle list from the source."""
+        if self._hub.is_throttled():
+            return self.data
+
+        try:
+            async with _PARALLEL_SEMAPHORE:
+                vehicles = await self._account.get_vehicles()
+
+        except QuotaLimitException as err:
+            self._hub.set_throttled()
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="throttled",
+            ) from err
+
+        except NotAuthenticatedException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_expired",
+            ) from err
+
+        except KamereonResponseException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+
+        return vehicles.vehicleLinks or []

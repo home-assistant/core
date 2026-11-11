@@ -51,7 +51,7 @@
     }
   },
   "selector": {
-    "device_class": {
+    "categories": {
       "options": {
         "albanian": "Albanian",
         "armed_forces": "Armed forces",
@@ -68,6 +68,7 @@
         "hindu": "Hindu",
         "islamic": "Islamic",
         "optional": "Optional",
+        "optional_women": "Optional for women",
         "orthodox": "Orthodox",
         "protestant": "Protestant",
         "public": "Public",

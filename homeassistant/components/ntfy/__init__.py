@@ -92,8 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> None
 
     entry.runtime_data = NtfyRuntimeData(coordinator, version)
 
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **coordinator.device_info
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=coordinator.device_info
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

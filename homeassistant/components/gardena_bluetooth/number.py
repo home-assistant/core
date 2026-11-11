@@ -24,7 +24,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import DEGREE, PERCENTAGE, EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
@@ -170,6 +170,7 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
 
     entity_description: GardenaBluetoothNumberEntityDescription
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.get_cached(self.entity_description.char)
@@ -199,7 +200,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
     """Representation of a entity with remaining time."""
 
     _attr_translation_key = "remaining_open_set"
-    _attr_native_unit_of_measurement = "min"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_mode = NumberMode.BOX
     _attr_native_min_value = 0.0
     _attr_native_max_value = 24 * 60

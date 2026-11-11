@@ -7,6 +7,7 @@ from unittest.mock import patch
 from pytest_homeassistant.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from pytest_homeassistant.typing import ClientSessionGenerator
 
+from homeassistant.components.auth import create_auth_code
 from homeassistant.core import HomeAssistant
 
 from . import async_setup_auth
@@ -223,3 +224,31 @@ async def test_link_user_rejects_pkce_code(
     assert resp.status == HTTPStatus.BAD_REQUEST
     assert (await resp.json())["message"] == "Invalid code"
     assert len(info["user"].credentials) == 0
+
+
+async def test_link_user_rejects_removed_credentials(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a code issued before its credentials were removed cannot link them."""
+    info = await async_get_code(hass, aiohttp_client)
+    client = info["client"]
+    headers = {"authorization": f"Bearer {info['access_token']}"}
+    resp = await client.post(
+        "/auth/link_user",
+        json={"client_id": CLIENT_ID, "code": info["code"]},
+        headers=headers,
+    )
+    assert resp.status == HTTPStatus.OK
+    credentials = info["user"].credentials[0]
+    code = create_auth_code(hass, CLIENT_ID, credentials)
+
+    await hass.auth.async_remove_credentials(credentials)
+    resp = await client.post(
+        "/auth/link_user",
+        json={"client_id": CLIENT_ID, "code": code},
+        headers=headers,
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["message"] == "Invalid code"
+    assert info["user"].credentials == []

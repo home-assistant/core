@@ -7,12 +7,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, Control4RuntimeData
+from .coordinator import Control4DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,13 +121,13 @@ class Control4Entity(Entity):
                     )
 
 
-class Control4CoordinatorEntity(CoordinatorEntity[Any]):
+class Control4CoordinatorEntity(CoordinatorEntity[Control4DataUpdateCoordinator]):
     """Coordinator-based entity for Control4 (used by media_player for position polling)."""
 
     def __init__(
         self,
-        entry_data: Control4RuntimeData,
-        coordinator: DataUpdateCoordinator[Any],
+        runtime_data: Control4RuntimeData,
+        coordinator: Control4DataUpdateCoordinator,
         name: str | None,
         idx: int,
         device_name: str | None,
@@ -139,7 +137,7 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self.entry_data = entry_data
+        self.runtime_data = runtime_data
         self._attr_name = name
         self._attr_unique_id = str(idx)
         self._idx = idx
@@ -159,7 +157,7 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
             name=self._device_name,
             via_device_id=dr.async_get_device_id_by_identifier(
                 self.hass,
-                (DOMAIN, self.entry_data.controller_unique_id),
+                (DOMAIN, self.runtime_data.controller_unique_id),
                 config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )

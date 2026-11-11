@@ -3,8 +3,8 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LektricoDeviceDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import LektricoDeviceDataUpdateCoordinator
 
 
 class LektricoEntity(CoordinatorEntity[LektricoDeviceDataUpdateCoordinator]):

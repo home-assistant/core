@@ -15,6 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
+    ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
@@ -43,8 +44,24 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
-    "mode",
-    ["speak", "announce"],
+    ("mode", "service_data", "method", "expected_kwargs"),
+    [
+        pytest.param("speak", {}, "call_alexa_speak", {}, id="speak"),
+        pytest.param(
+            "announce",
+            {},
+            "call_alexa_announcement",
+            {"display_text": None},
+            id="announce",
+        ),
+        pytest.param(
+            "announce",
+            {ATTR_TITLE: "Test Title"},
+            "call_alexa_announcement",
+            {"display_text": "Test Title"},
+            id="announce_with_title",
+        ),
+    ],
 )
 async def test_notify_send_message(
     hass: HomeAssistant,
@@ -52,6 +69,9 @@ async def test_notify_send_message(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mode: str,
+    service_data: dict[str, str],
+    method: str,
+    expected_kwargs: dict[str, str | None],
 ) -> None:
     """Test notify send message."""
     await setup_integration(hass, mock_config_entry)
@@ -68,10 +88,14 @@ async def test_notify_send_message(
         {
             ATTR_ENTITY_ID: entity_id,
             ATTR_MESSAGE: "Test Message",
+            **service_data,
         },
         blocking=True,
     )
 
+    getattr(mock_amazon_devices_client, method).assert_called_once_with(
+        TEST_DEVICE_1, "Test Message", **expected_kwargs
+    )
     assert (state := hass.states.get(entity_id))
     assert state.state == now.isoformat()
 

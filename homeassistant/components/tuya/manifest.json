@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@Tuya", "@zlinoliver"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["ffmpeg"],
   "dhcp": [
     {
@@ -45,7 +46,7 @@
   "iot_class": "cloud_push",
   "loggers": ["tuya_sharing"],
   "requirements": [
-    "tuya-device-handlers==0.0.31",
+    "tuya-device-handlers==0.0.34",
     "tuya-device-sharing-sdk==0.2.15"
   ]
 }

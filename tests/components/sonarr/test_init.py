@@ -97,7 +97,7 @@ async def test_migrate_config_entry(hass: HomeAssistant) -> None:
     assert entry.version == 1
     assert not entry.unique_id
 
-    with patch("homeassistant.components.sonarr.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sonarr.async_setup_entry", return_value=None):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

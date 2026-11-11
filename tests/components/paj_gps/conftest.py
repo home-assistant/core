@@ -21,7 +21,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent the PAJ GPS integration from setting up during config flow tests."""
     with patch(
         "homeassistant.components.paj_gps.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 

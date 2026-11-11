@@ -1,6 +1,6 @@
 """Tests for the Velux cover platform."""
 
-from unittest.mock import ANY, AsyncMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 import pytest
 from pytest_homeassistant.common import (
@@ -45,7 +45,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import update_callback_entity
 
@@ -187,43 +191,97 @@ async def test_window_open_close_stop_services_no_speed(
     mock_window.stop.assert_awaited_once_with(wait_for_completion=False)
 
 
+@pytest.mark.parametrize(
+    ("speed", "velocity"),
+    [
+        pytest.param("slow", Velocity.SILENT, id="slow"),
+        pytest.param("fast", Velocity.FAST, id="fast"),
+        pytest.param("silent", Velocity.SILENT, id="deprecated_silent"),
+        pytest.param("default", None, id="deprecated_default"),
+    ],
+)
 async def test_window_services_with_speed(
-    hass: HomeAssistant, mock_window: AsyncMock
+    hass: HomeAssistant,
+    mock_window: AsyncMock,
+    speed: str,
+    velocity: Velocity | None,
 ) -> None:
-    """Verify open/close/stop services map to device calls with no wait."""
+    """Verify the speed is mapped to the device velocity."""
 
     entity_id = "cover.test_window"
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {"entity_id": entity_id, ATTR_SPEED: "silent"},
+        {"entity_id": entity_id, ATTR_SPEED: speed},
         blocking=True,
     )
     mock_window.open.assert_awaited_once_with(
-        velocity=Velocity.SILENT, wait_for_completion=False
+        velocity=velocity, wait_for_completion=False
     )
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
-        {"entity_id": entity_id, ATTR_SPEED: "fast"},
+        {"entity_id": entity_id, ATTR_SPEED: speed},
         blocking=True,
     )
     mock_window.close.assert_awaited_once_with(
-        velocity=Velocity.FAST, wait_for_completion=False
+        velocity=velocity, wait_for_completion=False
     )
 
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_SPEED: "default", ATTR_POSITION: 50},
+        {"entity_id": entity_id, ATTR_SPEED: speed, ATTR_POSITION: 50},
         blocking=True,
     )
     mock_window.set_position.assert_awaited_once_with(
         ANY,
-        velocity=Velocity.DEFAULT,
+        velocity=velocity,
         wait_for_completion=False,
     )
+
+
+@pytest.mark.parametrize("speed", ["silent", "default"])
+@pytest.mark.usefixtures("mock_window")
+async def test_deprecated_speed_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    speed: str,
+) -> None:
+    """Verify using a deprecated speed creates a repair issue."""
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {"entity_id": "cover.test_window", ATTR_SPEED: speed},
+        blocking=True,
+    )
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_speed_{speed}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"entity_id": "cover.test_window"}
+    assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.parametrize("speed", ["slow", "fast"])
+@pytest.mark.usefixtures("mock_window")
+async def test_standard_speed_no_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    speed: str,
+) -> None:
+    """Verify using a standard speed does not create a repair issue."""
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {"entity_id": "cover.test_window", ATTR_SPEED: speed},
+        blocking=True,
+    )
+
+    assert len(issue_registry.issues) == 0
 
 
 async def test_window_set_cover_position_inversion(
@@ -279,6 +337,48 @@ async def test_window_current_position_and_opening_closing_states(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_CLOSING
+
+
+async def test_window_current_position_while_moving(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """While moving, current_position follows the position estimated by pyvlx."""
+
+    entity_id = "cover.test_window"
+
+    # reported device position is 30, estimated position is 60 -> 40
+    mock_window.is_closing = True
+    mock_window.get_position.side_effect = None
+    mock_window.get_position.return_value = MagicMock(
+        position_percent=60, closed=False, known=True
+    )
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSING
+    assert state.attributes.get("current_position") == 40
+
+
+async def test_window_unknown_position_while_moving(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """An unknown reported position stays unknown while the cover moves."""
+
+    entity_id = "cover.test_window"
+
+    # pyvlx cannot estimate from an unknown position and raises
+    mock_window.position.known = False
+    mock_window.is_closing = True
+    mock_window.get_position.side_effect = PyVLXException(
+        "Position::percent_out_of_range"
+    )
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSING
+    assert state.attributes.get("current_position") is None
 
 
 # Dual roller shutter command tests

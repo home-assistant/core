@@ -44,6 +44,7 @@ def create_mock_tracker() -> Tracker:
         name="Fluffy",
         battery=85,
         charging=False,
+        last_seen_timestamp="2024-01-15T12:30:00Z",
         position=Position(
             lat=52.520008,
             lng=13.404954,
@@ -75,7 +76,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.fressnapf_tracker.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

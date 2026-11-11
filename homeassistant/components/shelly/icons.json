@@ -11,6 +11,18 @@
         "default": "mdi:volume-high"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "manual": "mdi:hand-back-right"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "effect_intensity": {
         "default": "mdi:brightness-percent"
@@ -23,6 +35,14 @@
       },
       "valve_position": {
         "default": "mdi:pipe-valve"
+      }
+    },
+    "select": {
+      "effect_palette": {
+        "default": "mdi:palette"
+      },
+      "led_mode": {
+        "default": "mdi:led-on"
       }
     },
     "sensor": {
@@ -40,6 +60,9 @@
       },
       "gas_detected": {
         "default": "mdi:gas-burner"
+      },
+      "humidity_level": {
+        "default": "mdi:water-outline"
       },
       "illuminance_level": {
         "default": "mdi:brightness-5"
@@ -68,14 +91,32 @@
       "right_slot_vial": {
         "default": "mdi:scent"
       },
+      "runtime_above_power_threshold": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "runtime_above_power_threshold_with_channel_name": {
+        "default": "mdi:timer-alert-outline"
+      },
       "self_test": {
         "default": "mdi:progress-wrench"
       },
       "storage_free_space": {
         "default": "mdi:sd"
       },
+      "switching_cycles": {
+        "default": "mdi:counter"
+      },
+      "switching_cycles_with_channel_name": {
+        "default": "mdi:counter"
+      },
       "tilt": {
         "default": "mdi:angle-acute"
+      },
+      "total_runtime": {
+        "default": "mdi:timer-outline"
+      },
+      "total_runtime_with_channel_name": {
+        "default": "mdi:timer-outline"
       },
       "valve_position": {
         "default": "mdi:pipe-valve"
@@ -85,6 +126,9 @@
       }
     },
     "switch": {
+      "boost": {
+        "default": "mdi:rocket-launch"
+      },
       "camera_privacy": {
         "default": "mdi:eye-outline",
         "state": {

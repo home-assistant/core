@@ -55,7 +55,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.melcloud.async_setup_entry", return_value=True
+        "homeassistant.components.melcloud.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -146,7 +146,7 @@ async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) 
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.melcloud.async_setup_entry", return_value=True
+        "homeassistant.components.melcloud.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -188,7 +188,7 @@ async def test_token_reauthentication(
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -224,7 +224,7 @@ async def test_form_errors_reauthentication(
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -238,7 +238,7 @@ async def test_form_errors_reauthentication(
     mock_login.side_effect = None
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -274,7 +274,7 @@ async def test_client_errors_reauthentication(
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -288,7 +288,7 @@ async def test_client_errors_reauthentication(
     mock_login.side_effect = None
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -326,7 +326,7 @@ async def test_reconfigure_flow(
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -340,7 +340,7 @@ async def test_reconfigure_flow(
     mock_login.side_effect = None
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -383,7 +383,7 @@ async def test_form_errors_reconfigure(
 
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -397,7 +397,7 @@ async def test_form_errors_reconfigure(
     mock_login.side_effect = None
     with patch(
         "homeassistant.components.melcloud.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -22,7 +22,7 @@ from homeassistant.data_entry_flow import FlowResultType
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.vera.async_setup_entry", return_value=True
+        "homeassistant.components.vera.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

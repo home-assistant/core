@@ -1452,7 +1452,7 @@ async def test_bootstrap_dependencies(
     calls: list[str] = []
     assertions: list[bool] = []
 
-    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Assert the mqtt config entry was set up."""
         calls.append("mqtt")
         # assert the integration is not yet set up
@@ -1464,7 +1464,6 @@ async def test_bootstrap_dependencies(
             )
         )
         assertions.append(integration not in hass.config.components)
-        return True
 
     async def async_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Assert the mqtt config entry was set up."""

@@ -45,6 +45,10 @@ AUTH_PROVIDER_SCHEMA = probatio.Schema(
 )
 
 
+class InvalidStepUpError(HomeAssistantError):
+    """Raised when a signed in user could not be verified again."""
+
+
 class AuthProvider:
     """Provider of user authentication."""
 
@@ -126,6 +130,12 @@ class AuthProvider:
 
         Will be used to populate info when creating a new user.
         """
+        raise NotImplementedError
+
+    async def async_verify_step_up(
+        self, user: User, data: Mapping[str, Any], context: AuthFlowContext | None
+    ) -> None:
+        """Verify a signed in user again, raising InvalidStepUpError if it fails."""
         raise NotImplementedError
 
     async def async_initialize(self) -> None:

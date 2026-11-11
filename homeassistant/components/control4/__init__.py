@@ -27,11 +27,13 @@ from .const import (
     CONF_CONTROLLER_UNIQUE_ID,
     DOMAIN,
     RETRY_BACKOFF_MAX_SEC,
+    ROOM_VARIABLES,
     SCHEDULE_REFRESH_ADVANCE_SEC,
     WEBSOCKET_RESYNC_INTERVAL_SEC,
     Control4ConfigEntry,
     Control4RuntimeData,
 )
+from .coordinator import Control4DataUpdateCoordinator
 from .director_utils import director_get_entry_variables
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,6 +162,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 ui_configuration = await runtime_data.director.get_ui_configuration()
             except (TimeoutError, client_exceptions.ClientError) as err:
                 raise ConfigEntryNotReady(err) from err
+
+        runtime_data.room_coordinator = Control4DataUpdateCoordinator(
+            hass, entry, "room", ROOM_VARIABLES
+        )
+        await runtime_data.room_coordinator.async_config_entry_first_refresh()
     except BaseException:
         # Torn down here since async_unload_entry never runs for a failed setup.
         await runtime_data.websocket.sio_disconnect()

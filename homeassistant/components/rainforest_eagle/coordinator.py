@@ -46,7 +46,7 @@ def _discard_invalid_summations(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-class EagleDataCoordinator(DataUpdateCoordinator):
+class EagleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Get the latest data from the Eagle device."""
 
     config_entry: RainforestEagleConfigEntry
@@ -91,7 +91,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
 
         return True
 
-    async def _async_update_data_200(self):
+    async def _async_update_data_200(self) -> dict[str, Any]:
         """Get the latest data from the Eagle-200 device."""
         if (eagle200_meter := self.eagle200_meter) is None:
             hub = aioeagle.EagleHub(
@@ -120,7 +120,7 @@ class EagleDataCoordinator(DataUpdateCoordinator):
             {var["Name"]: var["Value"] for var in data.values()}
         )
 
-    async def _async_update_data_100(self):
+    async def _async_update_data_100(self) -> dict[str, Any]:
         """Get the latest data from the Eagle-100 device."""
         try:
             data = await self.hass.async_add_executor_job(self._fetch_data_100)

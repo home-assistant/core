@@ -209,7 +209,7 @@ async def _test_common_success(hass: HomeAssistant, result: FlowResult) -> None:
         ) as mock_associate,
         patch(
             "homeassistant.components.dormakaba_dkey.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -390,7 +390,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ) as mock_associate,
         patch(
             "homeassistant.components.dormakaba_dkey.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

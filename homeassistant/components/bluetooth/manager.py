@@ -21,6 +21,7 @@ from habluetooth import (
     BluetoothScanningMode,
     HaScanner,
 )
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -55,12 +56,7 @@ from .match import (
     IntegrationMatcher,
     ble_device_matches,
 )
-from .models import (
-    BluetoothCallback,
-    BluetoothCallbackReplay,
-    BluetoothChange,
-    BluetoothServiceInfoBleak,
-)
+from .models import BluetoothCallback, BluetoothCallbackReplay, BluetoothChange
 from .storage import BluetoothStorage
 from .util import async_load_history_from_system
 

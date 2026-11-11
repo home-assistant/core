@@ -45,7 +45,7 @@ def _stable_key(old_key: str) -> str | None:
     return new_key if new_key != old_key else None
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> None:
     """Migrate an old config entry.
 
     Version 1 embedded the location in every device key verbatim, including the
@@ -112,7 +112,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) ->
         hass.config_entries.async_update_entry(entry, version=2)
 
     _LOGGER.debug("Migration to configuration version %s successful", entry.version)
-    return True
 
 
 def _setup_server_device_registry(

@@ -18,7 +18,11 @@ from sofar_modbus.modern.device import SofarInverter
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sofar.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.sofar.const import (
+    DOMAIN,
+    PACKS_SCAN_INTERVAL,
+    SCAN_INTERVAL,
+)
 from homeassistant.components.sofar.sensor import (
     SENSOR_DESCRIPTIONS,
     TOTAL_SENSOR_DESCRIPTIONS,
@@ -27,7 +31,11 @@ from homeassistant.components.sofar.sensor import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er, restore_state
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    restore_state,
+)
 
 from . import (
     MOCK_ENTRY_DATA,
@@ -35,9 +43,20 @@ from . import (
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
+    ONLINE_GROUPS_REGISTER,
+    deny_charge_cutoff,
+    refuse_battery_config_mask,
+    seed_battery_tower,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
+
+# Values the library works out from other battery_config fields.
+DERIVED_KEYS = {
+    "on_grid_discharge_cutoff_soc",
+    "off_grid_discharge_cutoff_soc",
+    "off_grid_recovery_soc",
+}
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -112,7 +131,7 @@ async def test_sensor_entities_created_and_state(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            145,
+            149,
             44,
             id="hybrid",
         ),
@@ -333,6 +352,7 @@ async def test_sensor_availability_on_component_failure(
     [
         pytest.param(description, id=description.key)
         for description in SENSOR_DESCRIPTIONS
+        if description.key not in DERIVED_KEYS
     ],
 )
 async def test_value_fn_reads_the_field_its_key_names(
@@ -344,6 +364,52 @@ async def test_value_fn_reads_the_field_its_key_names(
     sentinel = object()
     with patch.dict(component._values, {description.key: sentinel}):
         assert description.value_fn(device) is sentinel
+
+
+@pytest.mark.parametrize(
+    "hide_charge_cutoff",
+    [
+        pytest.param(deny_charge_cutoff, id="mask_denies"),
+        pytest.param(refuse_battery_config_mask, id="no_mask"),
+    ],
+)
+async def test_charge_cutoff_needs_a_declaring_mask(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hide_charge_cutoff: Callable[[MockModbusUnit], None],
+) -> None:
+    """Test a hybrid gets no charge cut-off unless its mask declares it."""
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    hide_charge_cutoff(unit)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_bat_config_charge_cutoff_soc"
+        )
+        is None
+    )
+    # The rest of the battery config does not need the mask.
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_on_grid_discharge_cutoff_soc"
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(
@@ -361,3 +427,87 @@ async def test_total_fn_reads_the_total_its_key_names(
     total = description.total_fn(device)
     assert total.component is getattr(device, description.component)
     assert total.name == description.key
+
+
+async def _setup_hybrid_with_tower(
+    hass: HomeAssistant, connection: MockModbusConnection, groups: int
+) -> MockConfigEntry:
+    """Set up a hybrid with a BTS tower, sensors only."""
+    seed_hybrid_inverter(connection.for_unit(1))
+    seed_battery_tower(connection.for_unit(1), groups=groups)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.sofar.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: connection.for_unit(
+                unit_id
+            ),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    return entry
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_battery_pack_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a pack's entities match their snapshot, one per cell it has."""
+    pack = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_pack_0_0"),
+        (
+            await _setup_hybrid_with_tower(hass, MockModbusConnection(), groups=1)
+        ).entry_id,
+    )
+    assert pack is not None
+
+    for entity_entry in sorted(
+        er.async_entries_for_device(entity_registry, pack.id),
+        key=lambda entity_entry: entity_entry.entity_id,
+    ):
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
+
+
+async def test_battery_pack_unavailable_while_its_group_is_offline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test one pack going offline leaves the other packs available."""
+    connection = MockModbusConnection()
+    await _setup_hybrid_with_tower(hass, connection, groups=2)
+
+    # Group 1 drops out of the tower's online bitmap.
+    connection.for_unit(1).holding[ONLINE_GROUPS_REGISTER] = 0b01
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert {
+        key: hass.states.get(
+            entity_registry.async_get_entity_id(
+                SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_{key}"
+            )
+        ).state
+        for key in (
+            "battery_pack_0_0_remaining_capacity",
+            "battery_pack_1_0_remaining_capacity",
+        )
+    } == {
+        "battery_pack_0_0_remaining_capacity": "97.8",
+        "battery_pack_1_0_remaining_capacity": STATE_UNAVAILABLE,
+    }

@@ -47,7 +47,7 @@ class SkybellFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
             ),
-            description_placeholders={CONF_EMAIL: self.reauth_email},
+            description_placeholders={"email": self.reauth_email},
             errors=errors,
         )
 

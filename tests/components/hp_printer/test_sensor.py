@@ -49,7 +49,9 @@ async def test_sensors_added_when_data_appears(
 ) -> None:
     """Test sensors are created once the printer first reports their data."""
     mock_hp_printer.update.return_value = HpPrinterData(
-        online=True, device=mock_data.device, status=mock_data.status
+        online=True,
+        device=replace(mock_data.device, manufactured_at=None),
+        status=mock_data.status,
     )
     await setup_integration(hass, mock_config_entry)
 
@@ -77,6 +79,9 @@ async def test_sensors_added_when_data_appears(
     "status",
     [
         pytest.param(HpPrinterStatus(device_status="somethingnew"), id="unknown"),
+        pytest.param(
+            HpPrinterStatus(device_status="unknown"), id="reported_as_unknown"
+        ),
         pytest.param(HpPrinterStatus(device_status=None), id="missing"),
         pytest.param(None, id="no_status"),
     ],

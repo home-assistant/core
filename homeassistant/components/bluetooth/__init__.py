@@ -25,6 +25,7 @@ from bluetooth_adapters import (
 )
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BaseHaRemoteScanner,
     BaseHaScanner,
     BluetoothReachabilityIntent,
@@ -89,7 +90,6 @@ from .const import (
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
 )

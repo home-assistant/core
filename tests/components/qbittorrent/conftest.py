@@ -15,7 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock qbittorrent entry setup."""
     with patch(
-        "homeassistant.components.qbittorrent.async_setup_entry", return_value=True
+        "homeassistant.components.qbittorrent.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

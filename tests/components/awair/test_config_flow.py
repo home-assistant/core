@@ -61,7 +61,7 @@ async def test_invalid_access_token(
         ),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -175,7 +175,7 @@ async def test_reauth(hass: HomeAssistant, user, cloud_devices) -> None:
             side_effect=[user, cloud_devices],
         ),
         patch(
-            "homeassistant.components.awair.async_setup_entry", return_value=True
+            "homeassistant.components.awair.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -224,7 +224,7 @@ async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices) -> N
         ),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         menu_step = await hass.config_entries.flow.async_init(
@@ -254,7 +254,7 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices) -> None:
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         menu_step = await hass.config_entries.flow.async_init(
@@ -315,7 +315,7 @@ async def test_create_local_entry_from_discovery(
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -368,7 +368,7 @@ async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices) -> None
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         confirm_step = await hass.config_entries.flow.async_init(
@@ -415,7 +415,7 @@ async def test_zeroconf_discovery_update_configuration(
     with (
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
     ):
@@ -439,7 +439,7 @@ async def test_zeroconf_during_onboarding(
     with (
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(

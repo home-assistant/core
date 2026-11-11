@@ -9,12 +9,14 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.luftdaten.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 
 
+@pytest.mark.usefixtures("mock_luftdaten")
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_luftdaten: MagicMock,
+    mock_luftdaten_class: MagicMock,
 ) -> None:
     """Test the Luftdaten configuration entry loading/unloading."""
     mock_config_entry.add_to_hass(hass)
@@ -22,6 +24,9 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_luftdaten_class.assert_called_once_with(
+        12345, httpx_client=get_async_client(hass)
+    )
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

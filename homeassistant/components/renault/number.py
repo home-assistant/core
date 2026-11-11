@@ -15,7 +15,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -104,8 +104,9 @@ async def async_setup_entry(
             if description.coordinator in vehicle.coordinators
         )
 
-    for vehicle in config_entry.runtime_data.vehicles.values():
-        _async_add_vehicle(vehicle)
+    config_entry.async_on_unload(
+        config_entry.runtime_data.async_add_vehicle_listener(_async_add_vehicle)
+    )
 
 
 class RenaultNumberEntity[T: KamereonVehicleDataAttributes](
@@ -130,6 +131,7 @@ class RenaultNumberEntity[T: KamereonVehicleDataAttributes](
 NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
     RenaultNumberEntityDescription[KamereonVehicleBatterySocData](
         key="charge_limit_min",
+        entity_category=EntityCategory.CONFIG,
         coordinator="battery_soc",
         update_fn=_set_charge_limit_min,
         device_class=NumberDeviceClass.BATTERY,
@@ -143,6 +145,7 @@ NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
     ),
     RenaultNumberEntityDescription[KamereonVehicleBatterySocData](
         key="charge_limit_target",
+        entity_category=EntityCategory.CONFIG,
         coordinator="battery_soc",
         update_fn=_set_charge_limit_target,
         device_class=NumberDeviceClass.BATTERY,

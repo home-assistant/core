@@ -108,7 +108,7 @@ async def test_sleepy_device_keeps_state(hass: HomeAssistant) -> None:
     assert mass_sensor.attributes[ATTR_ASSUMED_STATE] is True
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_bluetooth")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_f0(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

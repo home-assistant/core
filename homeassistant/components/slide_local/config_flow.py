@@ -149,7 +149,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             if not (errors := await self.async_test_connection(user_input)):
                 await self.async_set_unique_id(self._mac)
                 self._abort_if_unique_id_mismatch(
-                    description_placeholders={CONF_MAC: self._mac}
+                    description_placeholders={"mac": self._mac}
                 )
                 user_input |= {
                     CONF_API_VERSION: self._api_version,
@@ -244,7 +244,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 options={CONF_INVERT_POSITION: False},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={

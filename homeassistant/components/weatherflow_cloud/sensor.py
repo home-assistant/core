@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     UV_INDEX,
@@ -99,7 +100,7 @@ WEBSOCKET_WIND_SENSORS: tuple[
         device_class=SensorDeviceClass.WIND_DIRECTION,
         translation_key="wind_direction",
         value_fn=lambda data: data.wind_direction_degrees,
-        native_unit_of_measurement="°",
+        native_unit_of_measurement=DEGREE,
     ),
 )
 
@@ -486,10 +487,9 @@ class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
 
         if self.device_id is not None:
             # Websocket sensors - have Device IDs
-            return bool(
-                self.coordinator.data
-                and self.coordinator.data[self.station_id][self.device_id] is not None
-            )
+            if (station := self.coordinator.data.get(self.station_id)) is None:
+                return False
+            return station.get(self.device_id) is not None
 
         return True
 

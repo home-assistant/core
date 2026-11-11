@@ -1,6 +1,6 @@
 """Helpers for config validation using probatio."""
 
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Mapping
 import contextlib
 from contextvars import ContextVar
 from datetime import (
@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_FOR_EACH,
     CONF_ID,
@@ -312,6 +313,26 @@ def isdir(value: Any) -> str:
 ensure_list = probatio.EnsureList()
 
 
+def _list_of(item_validator: Callable[[Any], Any]) -> Callable[[Any], list[Any]]:
+    """Validate a list of items, or a single item which is wrapped in a list.
+
+    Unlike All(ensure_list, [item_validator]), errors of a single item have no
+    list index in their path, so the path is valid in the config as written.
+    """
+    list_schema = probatio.Schema([item_validator])
+    # A schema, to raise MultipleInvalid like the list schema does
+    item_schema = probatio.Schema(item_validator)
+
+    def validate(value: Any) -> list[Any]:
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return cast(list[Any], list_schema(value))
+        return [item_schema(value)]
+
+    return validate
+
+
 def entity_id(value: Any) -> str:
     """Validate Entity ID."""
     str_value = string(value).lower()
@@ -349,6 +370,8 @@ def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
         raise probatio.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
+    elif not isinstance(value, Iterable):
+        raise probatio.Invalid("Entity IDs must be a string or a list")
 
     validator = entity_id_or_uuid if allow_uuid else entity_id
     return [validator(ent_id) for ent_id in value]
@@ -365,14 +388,14 @@ def entity_ids_or_uuids(value: str | list) -> list[str]:
 
 
 comp_entity_ids = probatio.Any(
-    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
     entity_ids,
+    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
 )
 
 
 comp_entity_ids_or_uuids = probatio.Any(
-    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
     entity_ids_or_uuids,
+    probatio.All(probatio.Lower, probatio.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
 )
 
 
@@ -445,17 +468,20 @@ def enum(enumClass: type[Enum]) -> probatio.All:
     return probatio.All(probatio.In(enumClass.__members__), enumClass.__getitem__)
 
 
+_WHITESPACE = re.compile(r"\s")
+
+
 def icon(value: Any) -> str:
     """Validate icon."""
-    str_value = str(value)
+    str_value = str(value).strip()
 
-    if ":" in str_value:
+    if ":" in str_value and not _WHITESPACE.search(str_value):
         return str_value
 
     raise probatio.Invalid('Icons should be specified in the form "prefix:name"')
 
 
-_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}$", re.IGNORECASE)
+_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}\Z", re.IGNORECASE)
 
 
 def color_hex(value: Any) -> str:
@@ -470,6 +496,15 @@ def color_hex(value: Any) -> str:
 
 _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
 
+
+def _timedelta(**kwargs: float) -> timedelta:
+    """Create a timedelta, raising Invalid if it is out of range."""
+    try:
+        return timedelta(**kwargs)
+    except OverflowError as err:
+        raise probatio.Invalid("Time period is out of range") from err
+
+
 time_period_dict = probatio.All(
     dict,
     probatio.Schema(
@@ -482,7 +517,7 @@ time_period_dict = probatio.All(
         }
     ),
     probatio.AtLeastOne(*_TIME_PERIOD_DICT_KEYS),
-    lambda value: timedelta(**value),
+    lambda value: _timedelta(**value),
 )
 
 
@@ -545,7 +580,7 @@ def time_period_str(value: str) -> timedelta:
     except ValueError as err:
         raise probatio.Invalid(TIME_PERIOD_ERROR.format(value)) from err
 
-    offset = timedelta(hours=hour, minutes=minute, seconds=second)
+    offset = _timedelta(hours=hour, minutes=minute, seconds=second)
 
     if negative_offset:
         offset *= -1
@@ -556,7 +591,7 @@ def time_period_str(value: str) -> timedelta:
 def time_period_seconds(value: float | str) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
-        return timedelta(seconds=float(value))
+        return _timedelta(seconds=float(value))
     except (ValueError, TypeError) as err:
         raise probatio.Invalid(f"Expected seconds, got {value}") from err
 
@@ -728,13 +763,21 @@ def template_complex(value: Any) -> Any:
     if isinstance(value, list):
         return_list = value.copy()
         for idx, element in enumerate(return_list):
-            return_list[idx] = template_complex(element)
+            try:
+                return_list[idx] = template_complex(element)
+            except probatio.Invalid as err:
+                err.prepend([idx])
+                raise
         return return_list
     if isinstance(value, dict):
-        return {
-            template_complex(key): template_complex(element)
-            for key, element in value.items()
-        }
+        return_dict = {}
+        for key, element in value.items():
+            try:
+                return_dict[template_complex(key)] = template_complex(element)
+            except probatio.Invalid as err:
+                err.prepend([key])
+                raise
+        return return_dict
     if isinstance(value, str) and template_helper.is_template_string(value):
         return template(value)
 
@@ -807,15 +850,25 @@ def socket_timeout(value: Any | None) -> object:
     raise probatio.Invalid("Invalid socket timeout value. float > 0.0 required.")
 
 
+_URL_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+_URL_WHITESPACE = re.compile(r"\s")
+
+
 def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
 ) -> str:
     """Validate a URL."""
-    url_in = str(value)
+    url_in = str(value).strip()
+    # urlparse silently drops tabs/newlines, so check the raw string
+    if _URL_CONTROL_CHARS.search(url_in):
+        raise probatio.Invalid("invalid url")
     parsed = urlparse(url_in)
 
-    if parsed.scheme not in _schema_list:
+    # HTTP clients encode spaces in the userinfo, path and query, but not the host
+    if parsed.scheme not in _schema_list or _URL_WHITESPACE.search(
+        parsed.hostname or ""
+    ):
         raise probatio.Invalid("invalid url")
 
     try:
@@ -842,7 +895,7 @@ def url_no_path(value: Any) -> str:
 
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
-    regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
+    regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)\Z")
     if not regex.match(value):
         raise probatio.Invalid("Invalid X10 Address")
     return str(value).lower()
@@ -909,6 +962,7 @@ def _deprecated_or_removed(
     default: Any | None,
     raise_if_present: bool,
     option_removed: bool,
+    breaks_in_ha_version: str | None = None,
 ) -> Callable[[dict], dict]:
     """Log key as deprecated and provide a replacement (if exists) or fail.
 
@@ -932,6 +986,10 @@ def _deprecated_or_removed(
             else:
                 level = logging.WARNING
                 option_status = "is deprecated"
+                if breaks_in_ha_version:
+                    option_status += (
+                        f" and will be removed in Home Assistant {breaks_in_ha_version}"
+                    )
 
             try:
                 near = (
@@ -978,12 +1036,15 @@ def deprecated(
     replacement_key: str | None = None,
     default: Any | None = None,
     raise_if_present: bool | None = False,
+    breaks_in_ha_version: str | None = None,
 ) -> Callable[[dict], dict]:
     """Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
           or raises an exception
+        - Mentions the version in which the key will be removed, if
+          breaks_in_ha_version is provided
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -996,6 +1057,7 @@ def deprecated(
         default=default,
         raise_if_present=raise_if_present or False,
         option_removed=False,
+        breaks_in_ha_version=breaks_in_ha_version,
     )
 
 
@@ -1263,13 +1325,41 @@ PLATFORM_SCHEMA = probatio.Schema(
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=probatio.ALLOW_EXTRA)
 
 
-TARGET_FIELDS: VolDictType = {
+# The keys which select what a target refers to. A target may additionally
+# contain an exclude block, which uses the same keys.
+TARGET_ID_KEYS = (
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_AREA_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+)
+
+TARGET_ID_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): probatio.All(ensure_list, [strict_entity_id]),
     probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
     probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
 }
+
+TARGET_EXCLUDE_SCHEMA = probatio.Schema(TARGET_ID_FIELDS)
+
+TARGET_FIELDS: VolDictType = {
+    **TARGET_ID_FIELDS,
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
+}
+
+
+def exclude_requires_target(value: dict[str, Any]) -> dict[str, Any]:
+    """Reject a target which only has an exclude block.
+
+    Not part of TARGET_FIELDS, which also validates partial targets while editing.
+    """
+    if CONF_EXCLUDE in value and not any(value.get(key) for key in TARGET_ID_KEYS):
+        raise probatio.Invalid("an exclude block requires a target to exclude from")
+    return value
+
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
@@ -1289,6 +1379,7 @@ ENTITY_SERVICE_FIELDS: VolDictType = {
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
+    probatio.Optional(CONF_EXCLUDE): TARGET_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {
@@ -1331,9 +1422,25 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
         dynamic_template,
         probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
     ),
+    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
+        {
+            probatio.Optional(ATTR_ENTITY_ID): probatio.Any(
+                TARGET_ID_FIELDS[ATTR_ENTITY_ID],
+                dynamic_template,
+                probatio.All(list, template_complex),
+            ),
+            **{
+                probatio.Optional(key): probatio.Any(
+                    dynamic_template,
+                    probatio.All(ensure_list, [probatio.Any(dynamic_template, str)]),
+                )
+                for key in (ATTR_DEVICE_ID, ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID)
+            },
+        }
+    ),
 }
 
-_HAS_ENTITY_SERVICE_FIELD = probatio.AtLeastOne(*ENTITY_SERVICE_FIELDS)
+_HAS_ENTITY_SERVICE_FIELD = probatio.AtLeastOne(*TARGET_ID_KEYS)
 
 
 def is_entity_service_schema(validator: VolSchemaType) -> bool:
@@ -1414,7 +1521,7 @@ def script_action(value: Any) -> dict:
     return ACTION_TYPE_SCHEMAS[action](value)
 
 
-SCRIPT_SCHEMA = probatio.All(ensure_list, [script_action])
+SCRIPT_SCHEMA = _list_of(script_action)
 
 SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     probatio.Optional(CONF_ALIAS): string,
@@ -1471,7 +1578,8 @@ SERVICE_SCHEMA = probatio.All(
             ),
             probatio.Optional(CONF_ENTITY_ID): comp_entity_ids,
             probatio.Optional(CONF_TARGET): probatio.Any(
-                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+                probatio.All(_TARGET_SERVICE_FIELDS_TEMPLATED, exclude_requires_target),
+                dynamic_template,
             ),
             probatio.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
@@ -1601,74 +1709,48 @@ TRIGGER_CONDITION_SCHEMA = probatio.Schema(
     }
 )
 
-AND_CONDITION_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): "and",
-        probatio.Required(CONF_CONDITIONS): probatio.All(
-            ensure_list,
-            # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
-        ),
-    }
+_CONDITION_LIST_SCHEMA = _list_of(
+    # pylint: disable-next=unnecessary-lambda
+    lambda value: CONDITION_SCHEMA(value)
 )
 
-AND_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required("and"): probatio.All(
-            ensure_list,
-            # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
-        ),
-    }
-)
 
-OR_CONDITION_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): "or",
-        probatio.Required(CONF_CONDITIONS): probatio.All(
-            ensure_list,
-            # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
-        ),
-    }
-)
+def _logical_condition_schemas(
+    condition: str, shorthand_key: str
+) -> tuple[probatio.Schema, probatio.Schema]:
+    """Return the schema and the shorthand schema of a logical condition.
 
-OR_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required("or"): probatio.All(
-            ensure_list,
-            # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
+    A shorthand is validated with the shorthand schema only, so the two must
+    differ in nothing but the keys which hold the condition and its children.
+    """
+    return (
+        probatio.Schema(
+            {
+                **CONDITION_BASE_SCHEMA,
+                probatio.Required(CONF_CONDITION): condition,
+                probatio.Required(CONF_CONDITIONS): _CONDITION_LIST_SCHEMA,
+            }
         ),
-    }
-)
+        probatio.Schema(
+            {
+                **CONDITION_BASE_SCHEMA,
+                probatio.Required(shorthand_key): _CONDITION_LIST_SCHEMA,
+            }
+        ),
+    )
 
-NOT_CONDITION_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): "not",
-        probatio.Required(CONF_CONDITIONS): probatio.All(
-            ensure_list,
-            # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
-        ),
-    }
-)
 
-NOT_CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required("not"): probatio.All(
-            ensure_list,
-            # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
-        ),
-    }
+AND_CONDITION_SCHEMA, AND_CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas(
+    "and", "and"
 )
+OR_CONDITION_SCHEMA, OR_CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas(
+    "or", "or"
+)
+NOT_CONDITION_SCHEMA, NOT_CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas(
+    "not", "not"
+)
+# A list of conditions as the condition is a shorthand for an and condition
+CONDITION_SHORTHAND_SCHEMA = _logical_condition_schemas("and", CONF_CONDITION)[1]
 
 DEVICE_CONDITION_BASE_SCHEMA = probatio.Schema(
     {
@@ -1685,41 +1767,6 @@ DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-def expand_condition_shorthand(value: Any | None) -> Any:
-    """Expand boolean condition shorthand notations."""
-
-    if not isinstance(value, dict) or CONF_CONDITIONS in value:
-        return value
-
-    for key, schema in (
-        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
-        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
-        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
-    ):
-        try:
-            schema(value)
-            return {
-                CONF_CONDITION: key,
-                CONF_CONDITIONS: value[key],
-                **{k: value[k] for k in value if k != key},
-            }
-        except probatio.MultipleInvalid:
-            pass
-
-    if isinstance(value.get(CONF_CONDITION), list):
-        try:
-            CONDITION_SHORTHAND_SCHEMA(value)
-            return {
-                CONF_CONDITION: "and",
-                CONF_CONDITIONS: value[CONF_CONDITION],
-                **{k: value[k] for k in value if k != CONF_CONDITION},
-            }
-        except probatio.MultipleInvalid:
-            pass
-
-    return value
-
-
 dynamic_template_condition = probatio.All(
     # Wrap a shorthand template condition in a template condition
     dynamic_template,
@@ -1727,17 +1774,6 @@ dynamic_template_condition = probatio.All(
         CONF_VALUE_TEMPLATE: config,
         CONF_CONDITION: "template",
     },
-)
-
-CONDITION_SHORTHAND_SCHEMA = probatio.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        probatio.Required(CONF_CONDITION): probatio.All(
-            ensure_list,
-            # pylint: disable-next=unnecessary-lambda
-            [lambda value: CONDITION_SCHEMA(value)],
-        ),
-    }
 )
 
 BUILT_IN_CONDITIONS: ValueSchemas = {
@@ -1768,23 +1804,66 @@ def _base_condition_validator(value: Any) -> Any:
     return value
 
 
+def _condition_shorthand(value: Any) -> tuple[str, str, probatio.Schema] | None:
+    """Return the key, the condition and the schema of a condition shorthand."""
+    if not isinstance(value, dict) or CONF_CONDITIONS in value:
+        return None
+
+    if CONF_CONDITION in value:
+        if isinstance(value[CONF_CONDITION], list):
+            return CONF_CONDITION, "and", CONDITION_SHORTHAND_SCHEMA
+        return None
+
+    for key, schema in (
+        ("and", AND_CONDITION_SHORTHAND_SCHEMA),
+        ("or", OR_CONDITION_SHORTHAND_SCHEMA),
+        ("not", NOT_CONDITION_SHORTHAND_SCHEMA),
+    ):
+        if key in value:
+            return key, key, schema
+
+    return None
+
+
+def _condition_validator(
+    default_schema: VolSchemaType | Callable[[Any], dict[str, Any]],
+) -> Callable[[Any], dict[Hashable, Any]]:
+    """Create a validator for a condition, which may be written as a shorthand."""
+    condition_validator = key_value_schemas(
+        CONF_CONDITION,
+        BUILT_IN_CONDITIONS,
+        default_schema,
+        "a condition, a list of conditions or a valid template",
+        list_alternatives=False,
+    )
+
+    # probatio.to_openapi reads this annotation when the schema is serialized
+    # for LLM tools. Keep None in it, or the condition is no longer nullable.
+    def validator(value: Any | None) -> dict[Hashable, Any]:
+        if (shorthand := _condition_shorthand(value)) is None:
+            return condition_validator(value)
+
+        # The shorthand is validated as written, so errors have the path of
+        # the failing child, and the children are validated only once.
+        key, condition, schema = shorthand
+        validated: dict[Hashable, Any] = schema(value)
+        return {
+            CONF_CONDITION: condition,
+            CONF_CONDITIONS: validated.pop(key),
+            **validated,
+        }
+
+    return validator
+
+
 CONDITION_SCHEMA: probatio.Schema = probatio.Schema(
     probatio.Any(
-        probatio.All(
-            expand_condition_shorthand,
-            key_value_schemas(
-                CONF_CONDITION,
-                BUILT_IN_CONDITIONS,
-                _base_condition_validator,
-                "a condition, a list of conditions or a valid template",
-                list_alternatives=False,
-            ),
-        ),
+        _condition_validator(_base_condition_validator),
         dynamic_template_condition,
     )
 )
 
-CONDITIONS_SCHEMA = probatio.All(ensure_list, [CONDITION_SCHEMA])
+CONDITIONS_SCHEMA = _list_of(CONDITION_SCHEMA)
 
 dynamic_template_condition_action = probatio.All(
     # Wrap a shorthand template condition action in a template condition
@@ -1800,18 +1879,8 @@ dynamic_template_condition_action = probatio.All(
 
 
 CONDITION_ACTION_SCHEMA: probatio.Schema = probatio.Schema(
-    probatio.All(
-        expand_condition_shorthand,
-        key_value_schemas(
-            CONF_CONDITION,
-            BUILT_IN_CONDITIONS,
-            probatio.Any(
-                dynamic_template_condition_action,
-                _base_condition_validator,
-            ),
-            "a condition, a list of conditions or a valid template",
-            list_alternatives=False,
-        ),
+    _condition_validator(
+        probatio.Any(dynamic_template_condition_action, _base_condition_validator)
     )
 )
 
@@ -1837,7 +1906,7 @@ def _trigger_pre_validator(value: Any | None) -> Any:
         value = dict(value)
         value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
     elif CONF_PLATFORM not in value:
-        raise probatio.Invalid("required key not provided", [CONF_TRIGGER])
+        raise probatio.RequiredFieldInvalid("required key not provided", [CONF_TRIGGER])
 
     return value
 
@@ -1859,19 +1928,6 @@ _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
-    """Flatten trigger arrays with 'triggers:' sublists into one list."""
-    flatlist = []
-    for t in triggers:
-        if CONF_TRIGGERS in t and len(t) == 1:
-            triggerlist = ensure_list(t[CONF_TRIGGERS])
-            flatlist.extend(triggerlist)
-        else:
-            flatlist.append(t)
-
-    return flatlist
-
-
 # This is first round of validation, we don't want to mutate the config here already,
 # just ensure basics as platform and ID are there.
 def _base_trigger_validator(value: Any) -> Any:
@@ -1879,11 +1935,28 @@ def _base_trigger_validator(value: Any) -> Any:
     return value
 
 
-TRIGGER_SCHEMA = probatio.All(
-    ensure_list,
-    _base_trigger_list_flatten,
-    [probatio.All(_trigger_pre_validator, _base_trigger_validator)],
+_TRIGGER_ITEM_SCHEMA = probatio.All(_trigger_pre_validator, _base_trigger_validator)
+
+_TRIGGER_SUBLIST_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_TRIGGERS): _list_of(_TRIGGER_ITEM_SCHEMA)}
 )
+
+
+def _trigger_list_item(value: Any) -> list[Any]:
+    """Validate an item of a trigger list, a 'triggers:' sublist gives several."""
+    if isinstance(value, dict) and CONF_TRIGGERS in value and len(value) == 1:
+        return cast(list[Any], _TRIGGER_SUBLIST_SCHEMA(value)[CONF_TRIGGERS])
+    return [_TRIGGER_ITEM_SCHEMA(value)]
+
+
+def _flatten_trigger_lists(triggers: list[list[Any]]) -> list[Any]:
+    """Flatten the lists of triggers given by the items of a trigger list."""
+    return [trigger for sublist in triggers for trigger in sublist]
+
+
+# Sublists are validated before they are flattened, so that the path of an error
+# is the position of the trigger in the config as written.
+TRIGGER_SCHEMA = probatio.All(_list_of(_trigger_list_item), _flatten_trigger_lists)
 
 _SCRIPT_DELAY_SCHEMA = probatio.Schema(
     {
@@ -1939,16 +2012,15 @@ _SCRIPT_REPEAT_SCHEMA = probatio.Schema(
 _SCRIPT_CHOOSE_SCHEMA = probatio.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        probatio.Required(CONF_CHOOSE): probatio.All(
-            ensure_list,
-            [
+        probatio.Required(CONF_CHOOSE): _list_of(
+            probatio.Schema(
                 {
                     probatio.Optional(CONF_ALIAS): string,
                     probatio.Remove(CONF_NOTE): str,  # Is only used in frontend
                     probatio.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     probatio.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }
-            ],
+            )
         ),
         probatio.Optional(CONF_DEFAULT): SCRIPT_SCHEMA,
     }
@@ -2017,21 +2089,22 @@ _SCRIPT_SEQUENCE_SCHEMA = probatio.Schema(
     }
 )
 
-_parallel_sequence_action = probatio.All(
-    # Wrap a shorthand sequences in a parallel action
-    SCRIPT_SCHEMA,
-    lambda config: {
-        CONF_SEQUENCE: config,
-    },
-)
+
+def _parallel_branch(value: Any) -> dict[str, Any]:
+    """Validate a parallel branch, wrapping shorthand actions in a sequence."""
+    if (
+        isinstance(value, dict)
+        and CONF_SEQUENCE in value
+        and determine_script_action(value) == SCRIPT_ACTION_SEQUENCE
+    ):
+        return cast(dict[str, Any], _SCRIPT_SEQUENCE_SCHEMA(value))
+    return {CONF_SEQUENCE: SCRIPT_SCHEMA(value)}
+
 
 _SCRIPT_PARALLEL_SCHEMA = probatio.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        probatio.Required(CONF_PARALLEL): probatio.All(
-            ensure_list,
-            [probatio.Any(_SCRIPT_SEQUENCE_SCHEMA, _parallel_sequence_action)],
-        ),
+        probatio.Required(CONF_PARALLEL): _list_of(_parallel_branch),
     }
 )
 

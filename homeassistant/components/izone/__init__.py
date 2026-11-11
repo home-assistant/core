@@ -21,7 +21,12 @@ from .discovery import (
 )
 from .services import async_setup_services
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -126,8 +131,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> Non
         model=controller.sys_type,
         name=f"iZone Controller {controller.device_uid}",
     )
+    zone_identifiers = {
+        (DOMAIN, controller.device_uid, zone.index) for zone in controller.zones
+    }
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if any(
+            len(identifier) == 3 for identifier in device.identifiers
+        ) and device.identifiers.isdisjoint(zone_identifiers):
+            device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Platforms set up concurrently; re-push so controller climate can
+    # resolve zone entity_ids for control_zone_source after that gather.
+    coordinator.async_set_updated_data(controller)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
@@ -189,6 +205,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> N
                 )
             try:
                 resolved = await async_discover_endpoint(hass, unique_id)
+            except pizone.EndpointVerifyError as err:
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"host": err.host},
+                ) from err
             except (OSError, RuntimeError) as err:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,

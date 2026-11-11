@@ -21,6 +21,7 @@ from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
@@ -1098,7 +1099,10 @@ async def test_update_entity_strips_unknown_labels(
 
 
 async def test_update_entity_require_restart(
-    hass: HomeAssistant, client: MockHAClientWebSocket, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test updating entity."""
     created = datetime.fromisoformat("2024-02-14T12:00:00+00:00")
@@ -1106,13 +1110,20 @@ async def test_update_entity_require_restart(
     entity_id = "test_domain.test_platform_1234"
     config_entry = MockConfigEntry(domain="test_platform")
     config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "test_domain",
+        "test_platform",
+        "1234",
+        config_entry=config_entry,
+        disabled_by=RegistryEntryDisabler.USER,
+    )
     platform = MockEntityPlatform(hass)
     platform.config_entry = config_entry
     entity = MockEntity(unique_id="1234")
     await platform.async_add_entities([entity])
 
     state = hass.states.get(entity_id)
-    assert state is not None
+    assert state is None
 
     modified = datetime.fromisoformat("2024-07-20T13:30:00+00:00")
     freezer.move_to(modified)
@@ -1146,7 +1157,7 @@ async def test_update_entity_require_restart(
             "icon": None,
             "id": ANY,
             "labels": [],
-            "modified_at": created.timestamp(),
+            "modified_at": modified.timestamp(),
             "name": None,
             "next_name_part": None,
             "options": {},
@@ -1198,18 +1209,28 @@ async def test_enable_entity_disabled_device(
     assert entity_entry.device_id == device.id
     assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE
 
+    entity_entry = entity_registry.async_update_entity(
+        entity_id, disabled_by=RegistryEntryDisabler.USER
+    )
+
     # UPDATE DISABLED_BY TO NONE
     await client.send_json_auto_id(
         {
             "type": "config/entity_registry/update",
             "entity_id": entity_id,
             "disabled_by": None,
+            "name": "Renamed",
         }
     )
 
     msg = await client.receive_json()
 
-    assert not msg["success"]
+    # The user disable is lifted, but the entity still follows the disabled device
+    assert msg["success"]
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE
+    assert entity_entry.name == "Renamed"
+    assert msg["result"] == {"entity_entry": entity_entry.extended_dict}
 
 
 async def test_update_entity_no_changes(
@@ -1674,6 +1695,113 @@ async def test_get_automatic_entity_ids(
         # no test_domain.unknown in registry
         "test_domain.unknown": None,
     }
+
+
+@pytest.mark.parametrize(
+    ("stored", "overrides", "expected_entity_id"),
+    [
+        pytest.param({}, {}, "sensor.living_room_lamp_power", id="no_overrides"),
+        pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {},
+            "sensor.kitchen_stored",
+            id="stored_without_overrides",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"name": "Energy"}},
+            "sensor.living_room_lamp_energy",
+            id="name",
+        ),
+        pytest.param(
+            {"name": "Stored"},
+            {"sensor.lamp": {"name": None}},
+            "sensor.living_room_lamp_power",
+            id="name_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"area_id": "kitchen"}},
+            "sensor.kitchen_power",
+            id="area",
+        ),
+        pytest.param(
+            {"area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None}},
+            "sensor.living_room_lamp_power",
+            id="area_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.lamp": {"area_id": "kitchen", "name": "Energy"}},
+            "sensor.kitchen_energy",
+            id="name_and_area",
+        ),
+        pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None, "name": None}},
+            "sensor.living_room_lamp_power",
+            id="name_and_area_removed",
+        ),
+        pytest.param(
+            {},
+            {"sensor.other": {"name": "Energy"}},
+            "sensor.living_room_lamp_power",
+            id="other_entity",
+        ),
+    ],
+)
+async def test_get_automatic_entity_ids_overrides(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    stored: dict[str, str],
+    overrides: dict[str, dict[str, str | None]],
+    expected_entity_id: str,
+) -> None:
+    """Test get_automatic_entity_ids uses unsaved name and area changes."""
+    living_room = area_registry.async_create("Living room")
+    area_registry.async_create("Kitchen")
+    config_entry = MockConfigEntry(domain="test_platform")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test_platform", "lamp")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device.id, area_id=living_room.id)
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test_platform",
+        "power",
+        config_entry=config_entry,
+        device_id=device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="sensor.lamp", **stored
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/get_automatic_entity_ids",
+            "entity_ids": ["sensor.lamp"],
+            "overrides": overrides,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"sensor.lamp": expected_entity_id}
+    # overrides are not stored
+    entry = entity_registry.async_get("sensor.lamp")
+    assert entry is not None
+    assert entry.name == stored.get("name")
+    assert entry.area_id == stored.get("area_id")
 
 
 async def test_get_settings(client: MockHAClientWebSocket) -> None:

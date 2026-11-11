@@ -10,6 +10,7 @@
     "@jonathanrobichaud4"
   ],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
   "homekit": {
     "models": ["NL29", "NL42", "NL47", "NL48", "NL52", "NL59", "NL69", "NL81"]
@@ -17,7 +18,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aionanoleaf2"],
-  "requirements": ["aionanoleaf2==1.2.0"],
+  "requirements": ["aionanoleaf2==1.2.1"],
   "ssdp": [
     {
       "st": "Nanoleaf_aurora:light"

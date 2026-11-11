@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiovitesy.api import VitesyDevice, VitesyModeStatus
+from aiovitesy.api import VitesyDevice, VitesyModeStatus, VitesyReading
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -11,6 +11,7 @@ from homeassistant.components.vitesy.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 DEVICE_ID = "80:65:99:34:F9:B4"
+NATEDE_DEVICE_ID = "80:65:99:12:AB:CD"
 EMAIL = "test@example.com"
 USER_ID = "u1"
 
@@ -19,14 +20,14 @@ USER_ID = "u1"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.vitesy.async_setup_entry", return_value=True
+        "homeassistant.components.vitesy.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
 def mock_devices() -> dict[str, VitesyDevice]:
-    """Return a mocked Vitesy account holding a single device."""
+    """Return a mocked Vitesy account holding a Shelfy and a Natede."""
     return {
         DEVICE_ID: VitesyDevice(
             device_id=DEVICE_ID,
@@ -73,7 +74,29 @@ def mock_devices() -> dict[str, VitesyDevice]:
                     "metadata": {"fan": "HIGH", "power": "LOW"},
                 },
             },
-        )
+            readings={"tmp": VitesyReading("TMP01-SY", "tmp", "°C", 9.59)},
+        ),
+        NATEDE_DEVICE_ID: VitesyDevice(
+            device_id=NATEDE_DEVICE_ID,
+            name="Living room Natede",
+            model="NA01AA01",
+            device_type="NATEDE-R1",
+            firmware_version="2.0.0",
+            connected=True,
+            data={"id": NATEDE_DEVICE_ID},
+            measurement={
+                "score": 0.82,
+                "timestamp": "2026-09-10T17:20:12+02:00",
+            },
+            readings={
+                "tmp": VitesyReading("TD01TP-N2", "tmp", "°C", 21.25),
+                "hum": VitesyReading("SN01HU-N2", "hum", "%", 45.0),
+                "voc": VitesyReading("SN02VD-N2", "voc", "ppm", 0.8),
+                "co2": VitesyReading("SN02C2-N2", "co2", "ppm", 612.0),
+                "co": VitesyReading("TGS5141CO-N0", "co", "ppm", 1.2),
+                "pm25": VitesyReading("SY01DS-N2", "pm25", "μg/m³", None),
+            },
+        ),
     }
 
 

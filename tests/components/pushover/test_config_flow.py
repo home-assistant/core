@@ -28,7 +28,7 @@ def mock_pushover():
 def pushover_setup_fixture():
     """Patch pushover setup entry."""
     with patch(
-        "homeassistant.components.pushover.async_setup_entry", return_value=True
+        "homeassistant.components.pushover.async_setup_entry", return_value=None
     ):
         yield
 

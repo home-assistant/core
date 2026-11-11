@@ -9,7 +9,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from . import CONF_IMPORT_PLUGINS, FibaroConfigEntry
+from . import FibaroConfigEntry
+from .const import CONF_IMPORT_PLUGINS
 
 TO_REDACT = {"password"}
 

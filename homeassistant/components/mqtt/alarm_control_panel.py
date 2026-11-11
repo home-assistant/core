@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
-from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
+from .config import MQTT_BASE_SCHEMA
 from .const import (
     ALARM_CONTROL_PANEL_SUPPORTED_FEATURES,
     CONF_CODE_ARM_REQUIRED,
@@ -44,6 +44,7 @@ from .const import (
     DEFAULT_PAYLOAD_ARM_VACATION,
     DEFAULT_PAYLOAD_DISARM,
     DEFAULT_PAYLOAD_TRIGGER,
+    DEFAULT_RETAIN,
     PAYLOAD_NONE,
     REMOTE_CODE,
     REMOTE_CODE_TEXT,

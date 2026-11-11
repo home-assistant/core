@@ -15,6 +15,7 @@ from webrtc_models import RTCIceCandidateInit
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
     Camera,
+    CameraEntityCapabilities,
     CameraEntityDescription,
     CameraEntityFeature,
     WebRTCAnswer,
@@ -28,9 +29,8 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import RingConfigEntry
 from .const import DOMAIN
-from .coordinator import RingDataCoordinator
+from .coordinator import RingConfigEntry, RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, exception_wrap
 
 # Coordinator is used to centralize the data updates
@@ -119,6 +119,11 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = device.motion_detection
         if description.live_stream:
             self._attr_supported_features |= CameraEntityFeature.STREAM
+            # Ring live view sessions are full duplex: the camera plays the
+            # audio track the client sends on the WebRTC connection.
+            self._attr_camera_entity_capabilities = CameraEntityCapabilities(
+                two_way_audio=True
+            )
 
     @callback
     @override

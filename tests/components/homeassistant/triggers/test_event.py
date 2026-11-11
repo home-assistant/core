@@ -7,6 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, mock_component
 
 from homeassistant.components import automation
+from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, script, trigger
@@ -699,6 +701,24 @@ async def test_composite_device_id_logs_warning(
     """Test a composite event_data.device_id filter logs the full warning."""
     with caplog.at_level(logging.WARNING):
         await trigger.async_validate_trigger_config(hass, [_EVENT_TRIGGER])
+    assert caplog.messages == [_expected_composite_warning(*split_devices)]
+
+
+async def test_composite_device_id_logs_warning_enum_keys(
+    hass: HomeAssistant,
+    split_devices: tuple[dr.DeviceEntry, dr.DeviceEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the warning for a config keyed with the trigger argument enum."""
+    with caplog.at_level(logging.WARNING):
+        await event_trigger.async_validate_trigger_config(
+            hass,
+            {
+                EventTriggerArgument.PLATFORM: "event",
+                EventTriggerArgument.EVENT_TYPE: "my_event",
+                EventTriggerArgument.EVENT_DATA: {"device_id": COMPOSITE_ID},
+            },
+        )
     assert caplog.messages == [_expected_composite_warning(*split_devices)]
 
 

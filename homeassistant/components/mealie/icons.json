@@ -24,6 +24,9 @@
     }
   },
   "services": {
+    "add_ingredient": {
+      "service": "mdi:basket-plus"
+    },
     "delete_mealplan": {
       "service": "mdi:food-off"
     },

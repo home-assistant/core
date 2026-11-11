@@ -68,6 +68,16 @@ async def test_user_step(
             "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
         ),
         pytest.param(
+            "mock_async_client_api_key_id_error",
+            "api_key_id_used",
+            id="api_key_id_used",
+        ),
+        pytest.param(
+            "mock_async_client_invalid_key_code_error",
+            "invalid_api_key",
+            id="invalid_api_key_code",
+        ),
+        pytest.param(
             "mock_async_client_connect_error", "cannot_connect", id="cannot_connect"
         ),
     ],
@@ -328,6 +338,16 @@ async def test_reauth_flow(
     [
         pytest.param(
             "mock_async_client_api_error", "invalid_api_key", id="invalid_api_key"
+        ),
+        pytest.param(
+            "mock_async_client_api_key_id_error",
+            "api_key_id_used",
+            id="api_key_id_used",
+        ),
+        pytest.param(
+            "mock_async_client_invalid_key_code_error",
+            "invalid_api_key",
+            id="invalid_api_key_code",
         ),
         pytest.param("mock_async_client_voices_error", "unknown", id="unknown"),
         pytest.param(

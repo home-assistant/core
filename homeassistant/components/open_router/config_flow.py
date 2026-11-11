@@ -8,19 +8,19 @@ from python_open_router import (
     Model,
     OpenRouterClient,
     OpenRouterError,
+    ReasoningEffort,
     SupportedParameter,
 )
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -32,15 +32,48 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
+from . import OpenRouterConfigEntry
 from .const import (
     CONF_OUTPUT_MODALITIES,
-    CONF_PROMPT,
+    CONF_REASONING,
     CONF_WEB_SEARCH,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# No "none" effort: off covers it, also for models without effort levels.
+REASONING_OPTIONS = [
+    "auto",
+    "off",
+    "on",
+    ReasoningEffort.MINIMAL,
+    ReasoningEffort.LOW,
+    ReasoningEffort.MEDIUM,
+    ReasoningEffort.HIGH,
+    ReasoningEffort.XHIGH,
+    ReasoningEffort.MAX,
+]
+
+
+def _reasoning_supported(model: Model, reasoning: str) -> bool:
+    """Return if the model accepts the reasoning setting."""
+    if reasoning == "auto":
+        return True
+    if model.reasoning is None:
+        # Routers such as openrouter/auto have no reasoning options of their
+        # own. They pass the setting on to the model they pick, which may not
+        # allow turning reasoning off.
+        return (
+            reasoning != "off"
+            and SupportedParameter.REASONING in model.supported_parameters
+        )
+    if reasoning == "off":
+        return not model.reasoning.mandatory
+    if reasoning == "on":
+        return True
+    return reasoning in (model.reasoning.supported_efforts or [])
 
 
 class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -53,7 +86,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: OpenRouterConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {
@@ -146,18 +179,22 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
         if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input.get(CONF_LLM_HASS_API) is None:
                 user_input.pop(CONF_LLM_HASS_API, None)
-            if self._is_new:
-                return self.async_create_entry(
-                    title=self.models[user_input[CONF_MODEL]].name, data=user_input
+            model = self.models[user_input[CONF_MODEL]]
+            if not _reasoning_supported(model, user_input[CONF_REASONING]):
+                errors[CONF_REASONING] = "reasoning_not_supported"
+                self.options = user_input
+            elif self._is_new:
+                return self.async_create_entry(title=model.name, data=user_input)
+            else:
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    data=user_input,
                 )
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=user_input,
-            )
 
         try:
             await self._get_models()
@@ -213,7 +250,11 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                     probatio.Optional(
                         CONF_WEB_SEARCH,
@@ -237,8 +278,22 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
+                    probatio.Optional(
+                        CONF_REASONING,
+                        default=self.options.get(
+                            CONF_REASONING,
+                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_REASONING],
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=REASONING_OPTIONS,
+                            translation_key=CONF_REASONING,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             ),
+            errors=errors,
         )
 
 

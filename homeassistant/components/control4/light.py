@@ -6,11 +6,10 @@ from typing import Any, override
 from pyControl4.light import C4Light
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_TRANSITION,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -215,15 +214,18 @@ class Control4Light(Control4Entity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         c4_light = self.create_api_object()
-        transition_length = self._to_rate_ms(kwargs.get(ATTR_TRANSITION))
+        transition_length = self._to_rate_ms(
+            kwargs.get(LightServiceArgument.TRANSITION)
+        )
         if self._is_dimmer:
             brightness = (
                 round(
                     brightness_to_value(
-                        CONTROL4_BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]
+                        CONTROL4_BRIGHTNESS_SCALE,
+                        kwargs[LightServiceArgument.BRIGHTNESS],
                     )
                 )
-                if ATTR_BRIGHTNESS in kwargs
+                if LightServiceArgument.BRIGHTNESS in kwargs
                 else 100
             )
             await c4_light.ramp_to_level(brightness, transition_length)
@@ -234,7 +236,9 @@ class Control4Light(Control4Entity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         c4_light = self.create_api_object()
-        transition_length = self._to_rate_ms(kwargs.get(ATTR_TRANSITION))
+        transition_length = self._to_rate_ms(
+            kwargs.get(LightServiceArgument.TRANSITION)
+        )
         if self._is_dimmer:
             await c4_light.ramp_to_level(0, transition_length)
         else:

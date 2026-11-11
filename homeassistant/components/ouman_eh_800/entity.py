@@ -5,7 +5,7 @@ from typing import override
 
 from ouman_eh_800_api import OumanEndpoint
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +42,7 @@ class OumanEh800Entity(CoordinatorEntity[OumanEh800Coordinator]):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return the device info."""
         return self.coordinator.device_info(self.entity_description.device)
 

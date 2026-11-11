@@ -7,6 +7,7 @@ from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -46,6 +47,16 @@ def login(
         hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME),
     )
     return vicare_api
+
+
+def get_device_identifier(
+    device_config: PyViCareDeviceConfig, device_serial: str | None
+) -> str:
+    """Return the device registry identifier of a device."""
+    gateway_serial = device_config.getConfig().serial
+    if device_serial is not None:
+        return f"{gateway_serial}_{device_serial.replace('-', '_')}"
+    return f"{gateway_serial}_{device_config.getId()}"
 
 
 def get_device_serial(device: PyViCareDevice) -> str | None:
@@ -117,6 +128,17 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
         _LOGGER.debug("No compressors found")
     except AttributeError as error:
         _LOGGER.debug("No compressors found: %s", error)
+    return []
+
+
+def get_rooms(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of rooms."""
+    try:
+        return device.rooms
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No rooms found")
+    except AttributeError as error:
+        _LOGGER.debug("No rooms found: %s", error)
     return []
 
 

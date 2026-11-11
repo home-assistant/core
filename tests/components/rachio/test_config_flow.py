@@ -52,7 +52,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.rachio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -108,7 +108,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.rachio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -152,7 +152,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.rachio.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -270,7 +270,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "homeassistant.components.rachio.config_flow.Rachio",
             return_value=rachio_mock,
         ) as mock_rachio,
-        patch("homeassistant.components.rachio.async_setup_entry", return_value=True),
+        patch("homeassistant.components.rachio.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "new_api_key"}
@@ -338,7 +338,7 @@ async def test_reauth_errors(
                 info=({"status": 200}, {"id": "myid"}),
             ),
         ),
-        patch("homeassistant.components.rachio.async_setup_entry", return_value=True),
+        patch("homeassistant.components.rachio.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "new_api_key"}

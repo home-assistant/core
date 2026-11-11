@@ -23,7 +23,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.esphome import config_flow, dashboard
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_SCANNING_MODE,
@@ -183,7 +183,7 @@ WRONG_NOISE_PSK = "GP+ciK+nVfTQ/gcz6uOdS+oKEdJgesU+jeu8Ssj2how="
 @pytest.fixture(autouse=False)
 def mock_setup_entry():
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         yield
 
 
@@ -1847,19 +1847,6 @@ async def test_user_flow_manual_key_repairs_stale_storage(
     assert await storage.async_get_key("11:22:33:44:55:aa") == VALID_NOISE_PSK
 
 
-async def test_repair_stored_key_without_mac_is_a_no_op(hass: HomeAssistant) -> None:
-    """Test the repair helper does nothing when no MAC is known."""
-    flow = config_flow.EsphomeFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.esphome.config_flow.async_get_encryption_key_storage"
-    ) as mock_storage:
-        await flow._async_repair_stored_key(VALID_NOISE_PSK)
-
-    mock_storage.assert_not_called()
-
-
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
 async def test_reauth_manual_key_is_not_enrolled_in_storage(
     hass: HomeAssistant,
@@ -2587,7 +2574,7 @@ async def test_option_flow_allow_service_calls(
         CONF_SUBSCRIBE_LOGS: False,
     }
     with patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=True
+        "homeassistant.components.esphome.async_setup_entry", return_value=None
     ) as mock_reload:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -2623,7 +2610,7 @@ async def test_option_flow_subscribe_logs(
     }
 
     with patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=True
+        "homeassistant.components.esphome.async_setup_entry", return_value=None
     ) as mock_reload:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -2653,7 +2640,7 @@ async def test_option_flow_shows_saved_scanning_mode_when_proxy_unavailable(
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert CONF_BLUETOOTH_SCANNING_MODE in result["data_schema"].schema
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
@@ -2693,7 +2680,7 @@ async def test_option_flow_hides_bluetooth_scanning_mode_without_proxy(
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert CONF_BLUETOOTH_SCANNING_MODE not in result["data_schema"].schema
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_ALLOW_SERVICE_CALLS: False, CONF_SUBSCRIBE_LOGS: False},
@@ -2723,7 +2710,7 @@ async def test_option_flow_bluetooth_scanning_mode(
         CONF_SUBSCRIBE_LOGS: False,
         CONF_BLUETOOTH_SCANNING_MODE: DEFAULT_BLUETOOTH_SCANNING_MODE,
     }
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={

@@ -16,6 +16,7 @@ from homeassistant.components.lawn_mower import (
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
+    SERVICE_STOP,
     LawnMowerActivity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -116,6 +117,7 @@ class MowerTestCase:
                 MowerTestCase(Charge(), SERVICE_DOCK),
                 MowerTestCase(CleanV2(CleanAction.PAUSE), SERVICE_PAUSE),
                 MowerTestCase(CleanV2(CleanAction.START), SERVICE_START_MOWING),
+                MowerTestCase(CleanV2(CleanAction.STOP), SERVICE_STOP),
             ],
         ),
     ],

@@ -1,6 +1,6 @@
 """Provide common notify constants."""
 
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 import logging
 from typing import TYPE_CHECKING, Final
 
@@ -54,3 +54,20 @@ class NotifyEntityFeature(IntFlag):
     """Supported features of a notify entity."""
 
     TITLE = 1
+
+
+class NotifyService(StrEnum):
+    """Store keys for notify services."""
+
+    NOTIFY = "notify"
+    PERSISTENT_NOTIFICATION = "persistent_notification"
+    SEND_MESSAGE = "send_message"
+
+
+class NotifyServiceArgument(StrEnum):
+    """Store keys for notify service arguments."""
+
+    DATA = "data"
+    MESSAGE = "message"
+    TARGET = "target"
+    TITLE = "title"

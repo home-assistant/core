@@ -87,10 +87,10 @@ def xiaomi_miio_connect_fixture():
             return_value=TEST_CLOUD_DEVICES_1,
         ),
         patch(
-            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=None
         ),
         patch(
-            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=None
         ),
     ):
         yield

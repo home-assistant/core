@@ -3,6 +3,7 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
+from json import JSONDecodeError
 import logging
 from typing import Any
 
@@ -108,7 +109,14 @@ async def _update_variables_for_config_entry(
     entry: Control4ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
     director = entry.runtime_data.director
-    data = await director.get_all_item_variable_value(variable_names)
+    try:
+        data = await director.get_all_item_variable_value(variable_names)
+    except JSONDecodeError:
+        # A subclass of ValueError: an unreadable response is still a failure.
+        raise
+    except ValueError:
+        # pyControl4 raises ValueError when no item has any of the variables.
+        return {}
     result_dict: defaultdict[int, dict[str, Any]] = defaultdict(dict)
     for item in data:
         result_dict[item["id"]][item["varName"]] = item["value"]

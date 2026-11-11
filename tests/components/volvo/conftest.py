@@ -196,7 +196,7 @@ async def setup_integration(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.volvo.async_setup_entry", return_value=True
+        "homeassistant.components.volvo.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

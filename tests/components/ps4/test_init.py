@@ -19,15 +19,15 @@ from homeassistant.components.ps4.const import (
     DOMAIN,
     PS4_DATA,
 )
+from homeassistant.components.ps4.services import PS4ServiceArgument
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
     ATTR_LOCKED,
     CONF_HOST,
     CONF_NAME,
     CONF_REGION,
     CONF_TOKEN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -119,7 +119,7 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.ps4.media_player.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
         patch(mock_flow, return_value=MOCK_FLOW_RESULT),
     ):
@@ -310,7 +310,10 @@ async def test_send_command(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 DOMAIN,
                 "send_command",
-                {ATTR_ENTITY_ID: mock_entity.entity_id, ATTR_COMMAND: mock_command},
+                {
+                    CommonServiceArgument.ENTITY_ID: mock_entity.entity_id,
+                    PS4ServiceArgument.COMMAND: mock_command,
+                },
             )
             await hass.async_block_till_done()
     assert len(mock_service.mock_calls) == len(COMMANDS)

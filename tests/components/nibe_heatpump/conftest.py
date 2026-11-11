@@ -18,7 +18,7 @@ from . import MockConnection
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Make sure we never actually run setup."""
     with patch(
-        "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=True
+        "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

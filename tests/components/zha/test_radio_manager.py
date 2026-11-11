@@ -92,7 +92,7 @@ def mock_create_zigpy_app() -> Generator[MagicMock]:
         yield mock_connect_app
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migrate_matching_port(
     hass: HomeAssistant,
     mock_create_zigpy_app,
@@ -152,7 +152,7 @@ async def test_migrate_matching_port(
     "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(),
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migrate_matching_port_usb(
     hass: HomeAssistant,
     mock_create_zigpy_app,

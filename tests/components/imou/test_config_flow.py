@@ -1,6 +1,6 @@
 """Tests for the Imou config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from pyimouapi.exceptions import (
     ConnectFailedException,
@@ -12,17 +12,23 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.imou.const import (
+    API_URLS,
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_USER,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
+from .const import CONFIG_ENTRY_DATA, TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="127.0.0.1",
@@ -158,6 +164,50 @@ async def test_user_flow_success_per_region(
     assert result["title"] == "Imou"
     assert result["data"] == user_input
     assert result["result"].unique_id == user_input[CONF_APP_ID]
+
+
+@pytest.mark.parametrize(
+    ("region", "host"),
+    [
+        ("sg", "openapi-sg.easy4ip.com"),
+        ("eu", "openapi-fk.easy4ip.com"),
+        ("na", "openapi-or.easy4ip.com"),
+        ("cn", "openapi.lechange.cn"),
+    ],
+)
+async def test_user_flow_uses_region_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    region: str,
+    host: str,
+) -> None:
+    """Login uses the host that matches the selected server region."""
+    user_input = {
+        CONF_APP_ID: f"{TEST_APP_ID}_{region}",
+        CONF_APP_SECRET: TEST_APP_SECRET,
+        CONF_API_URL: region,
+    }
+
+    with patch(
+        "homeassistant.components.imou.config_flow.ImouOpenApiClient",
+        autospec=True,
+    ) as client_cls:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == user_input[CONF_APP_ID]
+    client_cls.assert_called_once_with(
+        user_input[CONF_APP_ID],
+        user_input[CONF_APP_SECRET],
+        host,
+    )
 
 
 async def test_dhcp_discovery_success(
@@ -379,6 +429,56 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data[CONF_APP_SECRET] == NEW_APP_SECRET
     assert mock_config_entry.data[CONF_API_URL] == "eu"
     mock_imou_openapi_client.async_close.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_imou_ha_device_manager")
+async def test_reconfigure_migrates_legacy_region_before_saving(
+    hass: HomeAssistant,
+) -> None:
+    """A disabled legacy entry keeps the region chosen while it is reconfigured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_ENTRY_DATA, CONF_API_URL: "eu"},
+        unique_id=CONFIG_ENTRY_DATA[CONF_APP_ID],
+        minor_version=1,
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.imou.ImouOpenApiClient",
+            autospec=True,
+        ) as client_cls,
+        patch(
+            "homeassistant.components.imou.config_flow.ImouOpenApiClient",
+            new=client_cls,
+        ),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+        assert entry.minor_version == 2
+        assert entry.data[CONF_API_URL] == "na"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_APP_SECRET: NEW_APP_SECRET, CONF_API_URL: "eu"},
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_API_URL] == "eu"
+
+        await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_API_URL] == "eu"
+    client_cls.assert_called_with(
+        CONFIG_ENTRY_DATA[CONF_APP_ID],
+        NEW_APP_SECRET,
+        API_URLS["eu"],
+    )
 
 
 @pytest.mark.parametrize(

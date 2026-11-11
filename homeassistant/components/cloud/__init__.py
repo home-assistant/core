@@ -99,6 +99,9 @@ LLM_PLATFORMS = [
     Platform.CONVERSATION,
 ]
 
+# The platforms that were set up for the entry
+type CloudConfigEntry = ConfigEntry[list[Platform]]
+
 
 SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
     "CLOUD_CONNECTION_STATE"
@@ -320,6 +323,27 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     return f"https://{remote_domain}"
 
 
+@callback
+def async_remote_ui_urls(hass: HomeAssistant) -> list[str]:
+    """Get the remote UI URLs, custom domains first.
+
+    Custom domains are the user facing URLs. The instance domain always
+    works and comes last.
+    """
+    instance_url = async_remote_ui_url(hass)
+    remote = hass.data[DATA_CLOUD].remote
+
+    # A custom domain that failed validation stays in the alias list but is
+    # left out of the certificate, so only the certificate tells which ones work
+    served: set[str] = set()
+    if (certificate := remote.certificate) is not None:
+        served = {certificate.common_name, *(certificate.alternative_names or [])}
+
+    return [f"https://{alias}" for alias in remote.alias or [] if alias in served] + [
+        instance_url
+    ]
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     log_handler = hass.data[DATA_CLOUD_LOG_HANDLER] = await _setup_log_handler(hass)
@@ -432,9 +456,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Clean up after a logout."""
         nonlocal loaded
 
+        # The logout event is not sent here because the tokens aren't cleared yet,
+        # CloudClient.logout_cleanups sends it.
+
         # Forget a pending auto-login, hass_nabucasa cancels it on logout.
-        # No frontend event here, hass_nabucasa publishes LOGOUT before it clears
-        # the tokens, so a client re-reading the status would still see a session.
         hass.data[DATA_PENDING_AUTO_LOGIN] = None
         # Allow _on_start to create a new config entry on the next login.
         loaded = False
@@ -536,8 +561,11 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
     cloud.client.prefs.async_listen_updates(on_prefs_updated)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: CloudConfigEntry) -> None:
     """Set up a config entry."""
+    if entry.title == "Home Assistant Cloud":
+        hass.config_entries.async_update_entry(entry, title="Home Assistant Link")
+
     platforms = PLATFORMS.copy()
     if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
         with suppress(NabuCasaBaseError):
@@ -545,16 +573,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             platforms += LLM_PLATFORMS
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
-    entry.runtime_data = {"platforms": platforms}
+    entry.runtime_data = platforms
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: CloudConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(
-        entry, entry.runtime_data["platforms"]
-    )
+    await hass.config_entries.async_unload_platforms_or_raise(entry, entry.runtime_data)
 
 
 async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:

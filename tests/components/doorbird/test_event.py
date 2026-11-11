@@ -43,24 +43,24 @@ async def test_motion_event(
     assert hass.states.get(relay_1_entity_id).state != STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("event", ["mydoorbird_doorbell", "mydoorbird_motion"])
 @pytest.mark.parametrize(
-    ("renamed_entity_id", "expected_entity_id"),
+    ("event", "renamed_entity_id", "expected_entity_id"),
     [
         pytest.param(
-            "camera.mydoorbird_last_motion", "camera.renamed", id="event_camera"
+            "mydoorbird_doorbell",
+            "image.mydoorbird_last_ring",
+            "image.renamed",
+            id="ring",
         ),
         pytest.param(
-            "camera.mydoorbird_live", "camera.mydoorbird_last_motion", id="live"
-        ),
-        pytest.param(
-            "camera.mydoorbird_last_ring",
-            "camera.mydoorbird_last_motion",
-            id="last_ring",
+            "mydoorbird_motion",
+            "image.mydoorbird_last_motion",
+            "image.renamed",
+            id="motion",
         ),
     ],
 )
-async def test_event_entity_id_after_camera_rename(
+async def test_event_entity_id_after_image_rename(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     doorbird_mocker: DoorbirdMockerType,
@@ -69,13 +69,13 @@ async def test_event_entity_id_after_camera_rename(
     renamed_entity_id: str,
     expected_entity_id: str,
 ) -> None:
-    """Test the fired event carries the camera entity_id after a camera rename."""
+    """Test the fired event carries the image entity_id after an image rename."""
     doorbird_entry = await doorbird_mocker()
     events = async_capture_events(hass, f"doorbird_{event}")
     client = await hass_client()
 
     entity_registry.async_update_entity(
-        renamed_entity_id, new_entity_id="camera.renamed"
+        renamed_entity_id, new_entity_id="image.renamed"
     )
     await hass.async_block_till_done()
     await mock_webhook_call(doorbird_entry.entry, client, event)

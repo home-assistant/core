@@ -49,3 +49,9 @@ class ImageProcessingDeviceClass(StrEnum):
 
     # OCR
     OCR = "ocr"
+
+
+class ImageProcessingService(StrEnum):
+    """Store keys for image processing services."""
+
+    SCAN = "scan"

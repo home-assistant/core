@@ -225,16 +225,17 @@ async def test_sensor_authentication_expired(
     assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
-# scan interval in seconds = (3600 * num_calls) / MAX_CALLS_PER_HOURS
-# MAX_CALLS_PER_HOURS being a constant, for now 60 calls per hour
+# scan interval in seconds = (3600 * num_calls) / (MAX_CALLS_PER_HOURS - 1)
+# MAX_CALLS_PER_HOURS being a constant, for now 60 calls per hour, with one
+# call per hour kept for the vehicle list
 # num_calls = num_coordinator_car_0 + num_coordinator_car_1 + ...
 # + num_coordinator_car_n
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
-        ("zoe_50", 1, 420),  # 7 coordinators => 7 minutes interval
-        ("captur_fuel", 1, 180),  # 3 coordinators => 3 minutes interval
-        ("multi", 2, 540),  # 9 coordinators => 9 minutes interval
+        ("zoe_50", 1, 427),  # 7 coordinators => 7 minutes 7 seconds interval
+        ("captur_fuel", 1, 183),  # 3 coordinators => 3 minutes 3 seconds interval
+        ("multi", 2, 549),  # 9 coordinators => 9 minutes 9 seconds interval
     ],
     indirect=["vehicle_type"],
 )
@@ -265,16 +266,17 @@ async def test_dynamic_scan_interval(
     assert fixtures_with_data["cockpit"].call_count == vehicle_count * 2
 
 
-# scan interval in seconds = (3600 * num_calls) / MAX_CALLS_PER_HOURS
-# MAX_CALLS_PER_HOURS being a constant, for now 60 calls per hour
+# scan interval in seconds = (3600 * num_calls) / (MAX_CALLS_PER_HOURS - 1)
+# MAX_CALLS_PER_HOURS being a constant, for now 60 calls per hour, with one
+# call per hour kept for the vehicle list
 # num_calls = num_coordinator_car_0 + num_coordinator_car_1 + ...
 # + num_coordinator_car_n
 @pytest.mark.parametrize(
     ("vehicle_type", "vehicle_count", "scan_interval"),
     [
-        ("zoe_50", 1, 360),  # (7-1) coordinators => 6 minutes interval
-        ("captur_fuel", 1, 180),  # (4-1) coordinators => 3 minutes interval
-        ("multi", 2, 480),  # (10-2) coordinators => 8 minutes interval
+        ("zoe_50", 1, 366),  # (7-1) coordinators => 6 minutes 6 seconds interval
+        ("captur_fuel", 1, 183),  # (4-1) coordinators => 3 minutes 3 seconds interval
+        ("multi", 2, 488),  # (10-2) coordinators => 8 minutes 8 seconds interval
     ],
     indirect=["vehicle_type"],
 )

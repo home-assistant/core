@@ -54,7 +54,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.rympro.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -113,7 +113,7 @@ async def test_login_error(hass: HomeAssistant, exception, error) -> None:
         ),
         patch(
             "homeassistant.components.rympro.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -178,7 +178,7 @@ async def test_form_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -
         ),
         patch(
             "homeassistant.components.rympro.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -216,7 +216,7 @@ async def test_form_reauth_with_new_account(
         ),
         patch(
             "homeassistant.components.rympro.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

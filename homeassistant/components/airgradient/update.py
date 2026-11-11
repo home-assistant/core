@@ -11,7 +11,7 @@ from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirGradientConfigEntry, AirGradientCoordinator
+from .coordinator import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
 PARALLEL_UPDATES = 1

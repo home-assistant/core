@@ -4,10 +4,11 @@
   "categories": ["computers_network.routers_network"],
   "codeowners": ["@bieniu"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/nextdns",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["nextdns"],
   "quality_scale": "platinum",
-  "requirements": ["nextdns==5.1.0"]
+  "requirements": ["nextdns==5.2.0"]
 }
