@@ -28,7 +28,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_connection() -> MockModbusConnection:
-    """A fake Modbus connection seeded as a ComfoConnect PRO."""
+    """Return a mock Modbus connection that answers like a ComfoConnect PRO."""
     connection = MockModbusConnection()
     seed_gateway(connection.for_unit(1))
     return connection
@@ -53,7 +53,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_get_unit(mock_connection: MockModbusConnection) -> Generator[MagicMock]:
-    """Hand out units on the mock connection when the entry sets up."""
+    """Patch `async_get_unit` to return units of the mock connection."""
     with patch(
         "homeassistant.components.comfoconnect_modbus.async_get_unit",
         side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(

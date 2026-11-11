@@ -35,12 +35,12 @@ MOCK_SERIAL_ENTRY_DATA = {
     CONF_BAUDRATE: 19200,
 }
 
-# Keys are the manual's addresses; ``seed`` shifts them to protocol addresses.
+# The keys are the manual's register numbers. `seed` converts them to addresses.
 # Error flag, standby, ComfoHood, filter dirty
 DISCRETE = {0x0001: True, 0x0002: False, 0x0003: False, 0x0004: False}
 INPUT = {
-    0x0001: 0,  # connected
-    0x0002: 79,  # filter warning
+    0x0001: 0,  # Connection state: connected
+    0x0002: 79,  # Alarm slot 1: filter warning
     0x0007: 175,  # airflow, m³/h
     0x0008: 215,  # room temperature, 0.1 °C
     0x0009: 218,  # extract air temperature
@@ -82,7 +82,7 @@ def seed(
 
 
 def seed_gateway(unit: MockModbusUnit) -> None:
-    """Seed a gateway reaching a ComfoAir Q with two CO₂ sensors."""
+    """Seed a gateway that reaches a ComfoAir Q with two CO₂ sensors."""
     seed(unit, discrete=DISCRETE, input_registers=INPUT, holding=HOLDING, coil=COIL)
 
 

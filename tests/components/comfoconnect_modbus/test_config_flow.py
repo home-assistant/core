@@ -43,7 +43,7 @@ from . import (
 
 
 def _patch_temporary_unit(connection: MockModbusConnection) -> _patch[AsyncMock]:
-    """Stand in for async_get_temporary_unit, handing out a unit on connection."""
+    """Patch `async_get_temporary_unit` to return a unit of ``connection``."""
 
     @asynccontextmanager
     async def _get_temporary_unit(
@@ -60,7 +60,7 @@ def _patch_temporary_unit(connection: MockModbusConnection) -> _patch[AsyncMock]
 
 
 class _RaisingTemporaryUnit:
-    """Stand in for a temporary-unit context whose __aenter__ raises."""
+    """Mock a temporary unit context that raises ``error`` on entry."""
 
     def __init__(self, error: Exception) -> None:
         """Initialize with the error to raise on entry."""
@@ -70,7 +70,7 @@ class _RaisingTemporaryUnit:
         raise self._error
 
     async def __aexit__(self, *args: object) -> None:
-        """No cleanup: entry never succeeded."""
+        """Do nothing because entering never succeeded."""
 
 
 def _gateway() -> MockModbusConnection:
@@ -223,7 +223,7 @@ async def test_user_step_no_ventilation_unit(
     connection = _gateway()
     seed(
         connection.for_unit(1), input_registers={**INPUT, 0x0001: code}
-    )  # connection state
+    )  # Connection state
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with _patch_temporary_unit(connection):
@@ -257,7 +257,7 @@ async def test_user_step_already_configured(
     connection_type: str,
     user_input: dict[str, Any],
 ) -> None:
-    """Test a link an entry already uses is refused before any probe."""
+    """Test the flow aborts before the probe when an entry already uses the link."""
     MockConfigEntry(domain=DOMAIN, data=data).add_to_hass(hass)
     flow_id = await _start_flow(hass, connection_type)
 
@@ -279,7 +279,7 @@ async def test_user_step_already_configured(
 async def test_user_step_same_tcp_gateway_is_a_duplicate(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, user_input: dict[str, Any]
 ) -> None:
-    """Test the unit ID and the host's spelling don't make a new TCP gateway."""
+    """Test a TCP gateway with another unit ID or host spelling is a duplicate."""
     MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA).add_to_hass(hass)
     flow_id = await _start_flow(hass, TYPE_TCP)
 
@@ -292,7 +292,7 @@ async def test_user_step_same_tcp_gateway_is_a_duplicate(
 async def test_user_step_gateway_added_during_the_probe(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test a gateway another flow adds while this one probes is a duplicate."""
+    """Test the flow aborts when another flow adds the gateway during the probe."""
     flow_id = await _start_flow(hass, TYPE_TCP)
     connection = _gateway()
 
@@ -358,7 +358,7 @@ async def test_user_step_serial_other_unit_id_is_new(
 async def test_user_step_no_path_to_unit(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, register_type: str
 ) -> None:
-    """Test a gateway that refuses a read for lack of a unit says so."""
+    """Test a gateway without a path to the unit shows the no path error."""
     connection = _gateway()
     connection.for_unit(1).fail_read(
         address(0x0001), GatewayPathUnavailableError(), register_type=register_type
@@ -380,7 +380,7 @@ async def test_user_step_no_path_to_unit(
 async def test_user_step_keeps_an_ipv6_scope_id(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test only the address part of an IPv6 host is folded to lowercase."""
+    """Test only the address part of an IPv6 host is lowercased."""
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with _patch_temporary_unit(_gateway()):

@@ -25,7 +25,7 @@ def bus() -> MockModbusConnection:
 
 @pytest.fixture
 def connection_class(bus: MockModbusConnection) -> Generator[MagicMock]:
-    """Stand in for the backend core's modbus helper opens connections with."""
+    """Patch `ModbusConnection` in core's modbus helper to return ``bus``."""
     with patch(
         "homeassistant.components.modbus.connection.ModbusConnection",
         return_value=bus,

@@ -13,7 +13,7 @@ from .coordinator import ComfoConnectProDataUpdateCoordinator
 class ComfoConnectProEntityDescription(EntityDescription):
     """Describe a ComfoConnect PRO entity."""
 
-    # `component` names the attribute of ComfoConnectPro that holds the data.
+    # `component` is the attribute of `ComfoConnectPro` that holds the entity's data
     component: str
 
 
@@ -39,7 +39,7 @@ class ComfoConnectProEntity(CoordinatorEntity[ComfoConnectProDataUpdateCoordinat
     @property
     @override
     def available(self) -> bool:
-        """Whether this entity's component answered the most recent poll."""
+        """Return whether the last poll read this entity's component."""
         if not super().available:
             return False
         return self.entity_description.component not in self.coordinator.data.failed

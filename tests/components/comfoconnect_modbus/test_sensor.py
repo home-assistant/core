@@ -91,7 +91,7 @@ async def test_active_error_states(
     state: str,
 ) -> None:
     """Test an alarm slot shows none, a listed alarm, or unknown."""
-    seed(mock_unit, input_registers={**INPUT, 0x0002: code})  # alarm slot 1
+    seed(mock_unit, input_registers={**INPUT, 0x0002: code})  # Alarm slot 1
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -105,7 +105,7 @@ async def test_co2_zone_reading_zero_is_unknown(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a CO₂ zone whose sensor drops out shows unknown, not 0 ppm."""
+    """Test a CO₂ zone that reads 0 shows unknown."""
     seed(mock_unit, input_registers={0x0012: 0})  # CO₂ zone 1
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)

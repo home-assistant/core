@@ -44,7 +44,7 @@ async def test_setup_and_unload(
     init_integration: MockConfigEntry,
     mock_get_unit: MagicMock,
 ) -> None:
-    """Test the entry sets up over a unit from modbus and unloads."""
+    """Test the entry sets up with a unit from the modbus integration and unloads."""
     assert init_integration.state is ConfigEntryState.LOADED
     mock_get_unit.assert_called_once_with(
         hass,
@@ -63,7 +63,7 @@ async def test_setup_over_serial(
     mock_get_unit: MagicMock,
     platforms: list[Platform],
 ) -> None:
-    """Test a serial entry asks for the line settings it stored."""
+    """Test a serial entry requests a unit with its stored serial settings."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SERIAL_ENTRY_DATA)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -85,7 +85,7 @@ async def test_device_info(
     snapshot: SnapshotAssertion,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test the gateway lands in the device registry."""
+    """Test the gateway is added to the device registry."""
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, init_integration.entry_id), init_integration.entry_id
     )
@@ -113,7 +113,7 @@ async def test_setup_retries_without_ventilation_unit(
     mock_unit: MockModbusUnit,
 ) -> None:
     """Test a gateway that lost its ventilation unit retries setup."""
-    seed(mock_unit, input_registers={0x0001: 50})  # connection state
+    seed(mock_unit, input_registers={0x0001: 50})  # Connection state
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -191,7 +191,7 @@ async def test_lost_ventilation_unit_makes_everything_unavailable(
     mock_unit: MockModbusUnit,
 ) -> None:
     """Test a gateway that loses its ventilation unit marks it unavailable."""
-    seed(mock_unit, input_registers={0x0001: 7})  # connection state
+    seed(mock_unit, input_registers={0x0001: 7})  # Connection state
     await _tick(hass, freezer)
 
     assert hass.states.get(AIRFLOW).state == STATE_UNAVAILABLE
@@ -236,7 +236,7 @@ async def test_gateway_refusing_every_read_reports_no_path(
     mock_unit: MockModbusUnit,
     error: type[Exception],
 ) -> None:
-    """Test a gateway that lost its unit and refuses every read says so."""
+    """Test a gateway that refuses every read with a gateway error reports no path."""
     # The first registers of the status, sensor and settings blocks
     mock_unit.fail_read(address(0x0001), error(), register_type="discrete")
     mock_unit.fail_read(address(0x0007), error(), register_type="input")

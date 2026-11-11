@@ -98,26 +98,26 @@ def create_modbus_params(
             device=data[CONF_DEVICE],
             baudrate=data[CONF_BAUDRATE],
             parity=parity,
-            # The gateway takes 2 stop bits without parity and 1 with it.
+            # The gateway takes 2 stop bits without parity and 1 with it
             stopbits=2 if parity == "N" else 1,
         )
     return ModbusTcpParams(host=data[CONF_HOST], port=data[CONF_PORT])
 
 
 def _link_data(connection_type: str, user_input: Mapping[str, Any]) -> dict[str, Any]:
-    """Entry data for a form's input, with the host in one canonical spelling."""
+    """Build the entry data from the form input, with the host in lowercase."""
     data = {CONF_TYPE: connection_type, **user_input}
     if CONF_HOST in data:
-        # Fold the host's case, but keep an IPv6 scope ID such as %Eth0 as typed
+        # Lowercase the host, but keep an IPv6 scope ID such as %Eth0 as typed
         host, percent, scope = data[CONF_HOST].strip().partition("%")
         data[CONF_HOST] = host.lower() + percent + scope
     return data
 
 
 def _link_identity(data: Mapping[str, Any]) -> dict[str, Any]:
-    """The entry data that names the gateway's link, for duplicate checks.
+    """Return the entry data that identifies a gateway, for duplicate checks.
 
-    A TCP gateway may answer on any unit ID, so its identity leaves the ID out.
+    A TCP gateway may answer on any unit ID, so the unit ID counts only for RTU.
     """
     if data[CONF_TYPE] == TYPE_SERIAL:
         keys: tuple[str, ...] = (CONF_TYPE, CONF_DEVICE, CONF_UNIT_ID)
@@ -167,12 +167,12 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
         schema: probatio.Schema,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
-        """Ask for the link settings, then probe the gateway behind them."""
+        """Ask for the link settings, then probe the gateway with them."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             data = _link_data(connection_type, user_input)
-            # The gateway has no serial number, so its link identifies it.
+            # The gateway has no serial number, so the link settings identify it
             self._async_abort_entries_match(_link_identity(data))
             errors, description_placeholders = await self._async_validate(data)
             if not errors:
@@ -192,11 +192,11 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_validate(
         self, data: dict[str, Any]
     ) -> tuple[dict[str, str], dict[str, str]]:
-        """Probe the gateway, returning the errors to show, if any."""
+        """Probe the gateway and return the errors and placeholders to show."""
         try:
             await _async_probe(self.hass, data)
         except NoVentilationUnitError as err:
-            # State OK means the gateway lost its path to the unit after reporting it
+            # With state OK, the gateway reported the unit, then lost its path to it
             if err.code is None or err.state is ConnectionState.OK:
                 return {"base": "no_path_to_unit"}, {}
             return {"base": "no_ventilation_unit"}, {"state": str(err.code)}
@@ -210,7 +210,7 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 def _suggested(user_input: Mapping[str, Any] | None) -> dict[str, Any] | None:
-    """Form input as suggested values, with the baud rate as its option."""
+    """Return the form input as suggested values, with the baud rate as a string."""
     if user_input is None:
         return None
     suggested = dict(user_input)

@@ -31,7 +31,7 @@ PARALLEL_UPDATES = 0
 
 NO_ALARM = "none"
 ALARM_OPTIONS = [NO_ALARM, *(code.name.lower() for code in AlarmCode)]
-# The room sensor is optional, so its two sensors are added separately.
+# `AIR_STREAMS` leaves out the room because the room sensor is optional
 AIR_STREAMS = ("extract", "exhaust", "outdoor", "supply")
 
 
@@ -45,7 +45,7 @@ class ComfoConnectProSensorDescription(
 
 
 def _attribute(component: str, name: str) -> Callable[[ComfoConnectPro], StateType]:
-    """Read ``name`` of ``component``."""
+    """Return a function that reads attribute ``name`` of ``component``."""
 
     def _value(device: ComfoConnectPro) -> StateType:
         value: StateType = getattr(getattr(device, component), name)
@@ -55,7 +55,7 @@ def _attribute(component: str, name: str) -> Callable[[ComfoConnectPro], StateTy
 
 
 def _temperature(stream: str) -> ComfoConnectProSensorDescription:
-    """The temperature sensor of air stream ``stream``."""
+    """Describe the temperature sensor of air stream ``stream``."""
     return ComfoConnectProSensorDescription(
         key=f"{stream}_temperature",
         translation_key=f"{stream}_temperature",
@@ -69,7 +69,7 @@ def _temperature(stream: str) -> ComfoConnectProSensorDescription:
 
 
 def _humidity(stream: str) -> ComfoConnectProSensorDescription:
-    """The humidity sensor of air stream ``stream``."""
+    """Describe the humidity sensor of air stream ``stream``."""
     return ComfoConnectProSensorDescription(
         key=f"{stream}_humidity",
         translation_key=f"{stream}_humidity",
@@ -82,7 +82,7 @@ def _humidity(stream: str) -> ComfoConnectProSensorDescription:
 
 
 def _alarm(slot: int) -> Callable[[ComfoConnectPro], StateType]:
-    """Read alarm slot ``slot`` as a sensor option."""
+    """Return a function that reads alarm slot ``slot`` as a sensor option."""
 
     def _value(device: ComfoConnectPro) -> StateType:
         code = device.status.active_error(slot)
@@ -153,7 +153,7 @@ SENSOR_DESCRIPTIONS: tuple[ComfoConnectProSensorDescription, ...] = (
 
 
 def co2_sensor(zone: int) -> ComfoConnectProSensorDescription:
-    """The CO₂ sensor of ``zone``."""
+    """Describe the CO₂ sensor of ``zone``."""
     return ComfoConnectProSensorDescription(
         key=f"co2_zone_{zone}",
         translation_key="co2_zone",
@@ -162,13 +162,13 @@ def co2_sensor(zone: int) -> ComfoConnectProSensorDescription:
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        # A zone whose sensor drops out reads 0, which is no measurement
+        # Show 0 as unknown because a zone reads 0 when its sensor drops out
         value_fn=lambda device: device.sensors.co2(zone) or None,
     )
 
 
-# Sensors added the first time they report a value: the room sensor's two,
-# which read nothing without a room sensor, and each CO₂ zone's.
+# The sensors in `OPTIONAL_SENSOR_DESCRIPTIONS` are added once they report a value.
+# Units without a room sensor or a zone's CO₂ sensor report nothing for them.
 OPTIONAL_SENSOR_DESCRIPTIONS: tuple[ComfoConnectProSensorDescription, ...] = (
     _temperature("room"),
     _humidity("room"),

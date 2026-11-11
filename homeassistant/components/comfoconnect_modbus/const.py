@@ -13,7 +13,7 @@ DEFAULT_PORT = 502
 DEFAULT_UNIT_ID = 1
 SCAN_INTERVAL = 30
 
-# `BAUDRATES` lists what the gateway's Protocols and services page offers.
+# `BAUDRATES` lists the baud rates that the gateway's Protocols and services page offers
 BAUDRATES = (
     9600,
     14400,
