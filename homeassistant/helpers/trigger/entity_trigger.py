@@ -140,6 +140,8 @@ class EntityTriggerBase(Trigger):
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
+    # When True, indirect target expansion includes hidden entities.
+    _include_hidden_entities: ClassVar[bool] = False
 
     @override
     @classmethod
@@ -439,6 +441,7 @@ class EntityTriggerBase(Trigger):
             self.entity_filter,
             handle_entities_update if self._duration else None,
             primary_entities_only=self._primary_entities_only,
+            include_hidden_entities=self._include_hidden_entities,
         )
 
         @callback
