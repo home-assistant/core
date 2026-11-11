@@ -10,7 +10,11 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 from uuid import uuid4
 
-from aiohasupervisor import SupervisorBadRequestError, SupervisorError
+from aiohasupervisor import (
+    SupervisorBadRequestError,
+    SupervisorError,
+    SupervisorTimeoutError,
+)
 from aiohasupervisor.models import (
     AddonsStats,
     AddonStage,
@@ -225,6 +229,9 @@ async def test_setup_api_ping(
             id="read",
         ),
         pytest.param({"side_effect": SupervisorError("boom")}, [], True, id="error"),
+        pytest.param(
+            {"side_effect": SupervisorTimeoutError("stalled")}, [], True, id="timeout"
+        ),
     ],
 )
 async def test_core_log_reader(
@@ -254,7 +261,7 @@ async def test_core_log_reader(
     msg = await client.receive_json()
     assert msg["event"] == expected
     assert supervisor_client.homeassistant.logs.mock_calls == [
-        call(LogsOptions(lines=50_000), latest=True)
+        call(LogsOptions(lines=50_000), latest=True, read_timeout=30)
     ]
     assert ("Could not read the Home Assistant log" in caplog.text) is logged
 

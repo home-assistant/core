@@ -150,6 +150,9 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
+# Seconds to wait for the next log lines, so a stalled journal does not hang the reader
+CORE_LOG_READ_TIMEOUT = 30
+
 
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
@@ -358,7 +361,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         client = get_supervisor_client(hass)
         try:
             stream = await client.homeassistant.logs(
-                LogsOptions(lines=lines), latest=True
+                LogsOptions(lines=lines),
+                latest=True,
+                read_timeout=CORE_LOG_READ_TIMEOUT,
             )
             async with aclosing(stream):
                 async for line in stream:
