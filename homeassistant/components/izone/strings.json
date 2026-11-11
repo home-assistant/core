@@ -51,6 +51,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "damper_fault": {
+        "name": "Damper fault"
+      },
+      "sensor_fault": {
+        "name": "Sensor fault"
+      }
+    },
     "number": {
       "damper_max": {
         "name": "Damper maximum"
@@ -125,6 +133,9 @@
     },
     "setup_rejected": {
       "message": "iZone controller at {host} rejected setup"
+    },
+    "system_reconfigured": {
+      "message": "The iZone system was reconfigured"
     },
     "unable_to_connect": {
       "message": "Unable to connect to controller {uid}"

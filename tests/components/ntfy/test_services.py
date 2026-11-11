@@ -1,5 +1,7 @@
 """Tests for the ntfy notify platform."""
 
+import errno
+from pathlib import Path
 from typing import Any
 
 from aiontfy import BroadcastAction, HttpAction, Message, ViewAction
@@ -253,6 +255,52 @@ async def test_send_message_validation_errors(
             {CommonServiceArgument.ENTITY_ID: "notify.mytopic", **payload},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_send_message_file_not_found_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test publish message service validation errors."""
+    assert await async_setup_component(hass, "media_source", {})
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "pathlib.Path.read_bytes",
+            side_effect=FileNotFoundError(
+                errno.ENOENT,
+                "No such file or directory",
+                "/media/Epic Sax Guy 10 Hours.mp4",
+            ),
+        ),
+        pytest.raises(ServiceValidationError) as exc,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            NtfyService.PUBLISH,
+            {
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.ATTACH_FILE: {
+                    "media_content_id": (
+                        "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                    ),
+                    "media_content_type": "video/mp4",
+                },
+            },
+            blocking=True,
+        )
+    assert exc.value.translation_key == "os_read_not_found"
+    assert exc.value.translation_placeholders == {
+        "path": str(
+            Path("tests/testing_config/media/Epic Sax Guy 10 Hours.mp4").resolve()
+        )
+    }
 
 
 @pytest.mark.parametrize(

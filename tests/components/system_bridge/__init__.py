@@ -105,6 +105,7 @@ async def setup_integration(
 async def mock_data_listener(
     callback: Callable[[str, Any], Awaitable[None]] | None = None,
     _: bool = False,
+    notification_event_callback: Callable[[Any], Awaitable[None]] | None = None,
     power_state_callback: Callable[[Any], Awaitable[None]] | None = None,
     settings_callback: Callable[[Any], Awaitable[None]] | None = None,
 ):
