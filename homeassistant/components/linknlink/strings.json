@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the eMotion Ultra device."
+        },
+        "description": "Before adding the device, connect it to Wi-Fi with the LinknLink app. The device must be reachable from Home Assistant on the same local network."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "detected_people": {
+        "name": "Detected people"
+      },
+      "nearest_distance": {
+        "name": "Nearest person distance"
+      },
+      "nearest_horizontal_distance": {
+        "name": "Nearest person horizontal distance"
+      },
+      "people_in_zones": {
+        "name": "People in zones"
+      },
+      "zone_people": {
+        "name": "People in zone {zone_number}"
+      }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error communicating with the LinknLink device: {error}"
+    }
+  }
+}
