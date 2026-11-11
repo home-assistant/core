@@ -108,10 +108,10 @@ def _async_store_served(
 
 async def _async_refresh_versions(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
     """Read the firmware versions a setup without the inverter missed."""
-    readings = entry.runtime_data.readings
-    await readings.device.async_read_identity()
+    await entry.runtime_data.readings.device.async_read_identity()
     dr.async_get(hass).async_get_or_create_from_info(
-        config_entry_id=entry.entry_id, device_info=readings.device_info
+        config_entry_id=entry.entry_id,
+        device_info=entry.runtime_data.readings.device_info,
     )
 
 
@@ -127,16 +127,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     assert serial is not None
     _async_remove_stale_sensors(hass, serial)
 
-    unit = async_get_unit(
-        hass,
-        entry,
-        create_modbus_params(entry.data),
-        entry.data[CONF_UNIT_ID],
-    )
-
     stored = entry.data.get(SERVED_COMPONENTS, ())
     device = SofarInverter(
-        unit,
+        async_get_unit(
+            hass,
+            entry,
+            create_modbus_params(entry.data),
+            entry.data[CONF_UNIT_ID],
+        ),
         serial_number=serial,
         has_fault_log=FAULT_LOG in stored,
         has_battery_tower=BATTERY_PACKS in stored,
@@ -170,11 +168,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
-        failure = readings.last_exception
         if not (
             device.connected
-            and isinstance(failure, UpdateFailed)
-            and isinstance(failure.__cause__, ModbusTimeoutError)
+            and isinstance(readings.last_exception, UpdateFailed)
+            and isinstance(readings.last_exception.__cause__, ModbusTimeoutError)
         ):
             raise
         _LOGGER.info(
@@ -210,11 +207,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         _async_store_served(hass, entry, served)
 
     # Up front: a part's device must name an inverter that has an id.
-    inverter = dr.async_get(hass).async_get_or_create_from_info(
-        config_entry_id=entry.entry_id, device_info=readings.device_info
-    )
     entry.runtime_data = SofarRuntimeData(
-        readings, settings, packs, inverter.id, served
+        readings,
+        settings,
+        packs,
+        dr.async_get(hass)
+        .async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=readings.device_info
+        )
+        .id,
+        served,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
