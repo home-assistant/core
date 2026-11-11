@@ -1,26 +1,44 @@
 """Provides the Geocaching DataUpdateCoordinator."""
 
+from dataclasses import dataclass
 from typing import override
 
 from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.geocachingapi import GeocachingApi
-from geocachingapi.models import GeocachingStatus
+from geocachingapi.models import GeocachingCache, GeocachingSettings, GeocachingUser
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ENVIRONMENT, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    ENVIRONMENT,
+    LOGGER,
+    SUBENTRY_TYPE_TRACKED_CACHE,
+    UPDATE_INTERVAL,
+)
 
 type GeocachingConfigEntry = ConfigEntry[GeocachingDataUpdateCoordinator]
 
 
-class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
+@dataclass(frozen=True)
+class GeocachingCoordinatorData:
+    """Data returned by the Geocaching coordinator."""
+
+    user: GeocachingUser
+    nearby_caches: list[GeocachingCache]
+    tracked_caches: dict[str, GeocachingCache]
+
+
+class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingCoordinatorData]):
     """Class to manage fetching Geocaching data from single endpoint."""
 
     config_entry: GeocachingConfigEntry
+    subentry_ids: frozenset[str]
 
     def __init__(
         self,
@@ -31,18 +49,27 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
     ) -> None:
         """Initialize global Geocaching data updater."""
         self.session = session
+        self.subentry_ids = frozenset(entry.subentries)
 
         async def async_token_refresh() -> str:
             await session.async_ensure_token_valid()
             token = session.token["access_token"]
-            LOGGER.debug(str(token))
             return str(token)
 
         client_session = async_get_clientsession(hass)
-
+        settings = GeocachingSettings()
+        settings.set_tracked_caches(
+            {
+                subentry.data[CONF_CODE]
+                for subentry in entry.get_subentries_of_type(
+                    SUBENTRY_TYPE_TRACKED_CACHE
+                )
+            }
+        )
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
             token=session.token["access_token"],
+            settings=settings,
             session=client_session,
             token_refresh_method=async_token_refresh,
         )
@@ -56,11 +83,21 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
         )
 
     @override
-    async def _async_update_data(self) -> GeocachingStatus:
+    async def _async_update_data(self) -> GeocachingCoordinatorData:
         """Fetch the latest Geocaching status."""
         try:
-            return await self.geocaching.update()
+            status = await self.geocaching.update()
         except GeocachingInvalidSettingsError as error:
             raise UpdateFailed(f"Invalid integration configuration: {error}") from error
         except GeocachingApiError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
+
+        return GeocachingCoordinatorData(
+            user=status.user,
+            nearby_caches=status.nearby_caches,
+            tracked_caches={
+                cache.reference_code.strip().upper(): cache
+                for cache in status.tracked_caches
+                if cache.reference_code is not None
+            },
+        )
