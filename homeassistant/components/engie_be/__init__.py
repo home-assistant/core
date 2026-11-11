@@ -345,6 +345,16 @@ def _async_start_tariff_retry(hass: HomeAssistant, entry: EngieBeConfigEntry) ->
     )
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: EngieBeConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Allow removing the device of a business agreement the account no longer lists."""
+    return not any(
+        domain == DOMAIN and ban in entry.runtime_data.relations.data
+        for domain, ban in device_entry.identifiers
+    )
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

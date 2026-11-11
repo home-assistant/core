@@ -18,6 +18,7 @@ from aioengiebelgium import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
@@ -30,6 +31,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BAN,
@@ -1544,9 +1546,12 @@ async def test_empty_relations_keep_households(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    client.async_get_customer_account_relations.return_value = build_relations()
+    client.async_get_customer_account_relations.return_value = CustomerAccountRelations(
+        accounts=()
+    )
     await _sync_households(hass, freezer)
 
+    assert not mock_config_entry.runtime_data.relations.data
     assert BAN in mock_config_entry.runtime_data.households
     assert (
         device_registry.async_get_device_by_identifier(
@@ -1554,3 +1559,33 @@ async def test_empty_relations_keep_households(
         )
         is not None
     )
+
+
+@pytest.mark.usefixtures("mock_engie_client")
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test only the devices of unlisted business agreements can be removed."""
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    active_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert active_device is not None
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, BAN_2)}
+    )
+    ws_client = await hass_ws_client(hass)
+
+    response = await ws_client.remove_device(active_device.id)
+    assert not response["success"]
+    assert device_registry.async_get(active_device.id) is not None
+
+    response = await ws_client.remove_device(stale_device.id)
+    assert response["success"]
+    assert device_registry.async_get(stale_device.id) is None
