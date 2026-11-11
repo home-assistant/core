@@ -20,20 +20,18 @@
       },
       "names": {
         "data": {
-          "title": "Name"
+          "waste_name": "Name"
         },
         "data_description": {
-          "title": "Custom name for this waste type."
+          "waste_name": "Custom name for this waste type."
         },
         "title": "Rename {waste_type}"
       },
       "settings": {
         "data": {
-          "title": "Name",
           "waste_types": "Waste types to show"
         },
         "data_description": {
-          "title": "Name of the device.",
           "waste_types": "Only the selected waste types appear in the calendar and sensors."
         }
       },
@@ -55,7 +53,7 @@
     },
     "sensor": {
       "tomorrow_collection": {
-        "name": "Tomorrow collection"
+        "name": "Tomorrow's collection"
       }
     }
   },
@@ -65,23 +63,24 @@
     }
   },
   "options": {
+    "abort": {
+      "entry_not_loaded": "The integration must be loaded to change its options."
+    },
     "step": {
       "init": {
         "data": {
-          "title": "Name",
           "waste_types": "Waste types to show"
         },
         "data_description": {
-          "title": "Name of the device.",
           "waste_types": "Only the selected waste types appear in the calendar and sensors."
         }
       },
       "names": {
         "data": {
-          "title": "Name"
+          "waste_name": "Name"
         },
         "data_description": {
-          "title": "Custom name for this waste type."
+          "waste_name": "Custom name for this waste type."
         },
         "title": "Rename {waste_type}"
       }

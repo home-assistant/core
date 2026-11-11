@@ -10,7 +10,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_AREA_ID, CONF_MUNICIPALITY, CONF_WASTE_TYPES, DOMAIN
 from .coordinator import JunkerConfigEntry, JunkerDataUpdateCoordinator
-from .junker_api import Collection
+from .junker_api import Collection, slugify_municipality
 
 
 class JunkerEntity(CoordinatorEntity[JunkerDataUpdateCoordinator]):
@@ -27,7 +27,9 @@ class JunkerEntity(CoordinatorEntity[JunkerDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._entry = entry
         area_id = entry.data.get(CONF_AREA_ID, "all")
-        self._identifier = f"{entry.data[CONF_MUNICIPALITY].casefold()}:{area_id}"
+        self._identifier = (
+            f"{slugify_municipality(entry.data[CONF_MUNICIPALITY])}:{area_id}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._identifier)},

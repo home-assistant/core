@@ -8,7 +8,7 @@ from homeassistant.components.junker.junker_api import (
     AreaRequired,
     JunkerClient,
     JunkerError,
-    _slugify_municipality,
+    slugify_municipality,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,7 +18,7 @@ AREA_NAME_KEY = "NOME"  # codespell:ignore nome
 
 def test_slugify_municipality() -> None:
     """Test municipality names are converted to Junker URL slugs."""
-    assert _slugify_municipality("Lodè d'Italia") == "lode-d-italia"
+    assert slugify_municipality("Lodè d'Italia") == "lode-d-italia"
 
 
 def test_extract_events_from_calendar_page() -> None:
@@ -81,7 +81,7 @@ async def test_area_required(
     """Test a municipality with areas requires a selection."""
     aioclient_mock.get(
         URL, text=f'var zone = [{{"ID":1,"{AREA_NAME_KEY}":"Central"}}];'
-    )  # codespell:ignore nome
+    )
     client = JunkerClient(async_get_clientsession(hass), "Test municipality")
     with pytest.raises(AreaRequired) as err:
         await client.async_get_collections()

@@ -1,6 +1,5 @@
 """Config flow for Junker."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -8,6 +7,7 @@ import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -20,8 +20,20 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_AREA_ID, CONF_MUNICIPALITY, CONF_TITLE, CONF_WASTE_TYPES, DOMAIN
-from .junker_api import AreaRequired, Collection, JunkerClient, JunkerError
+from .const import (
+    CONF_AREA_ID,
+    CONF_MUNICIPALITY,
+    CONF_WASTE_NAME,
+    CONF_WASTE_TYPES,
+    DOMAIN,
+)
+from .junker_api import (
+    AreaRequired,
+    Collection,
+    JunkerClient,
+    JunkerError,
+    slugify_municipality,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _LOOKUP_URL = "https://junkerapp.it/cerca-il-tuo-comune/"
@@ -32,23 +44,20 @@ def _waste_types(collections: list[Collection]) -> list[str]:
     return sorted({collection.waste_type for collection in collections})
 
 
-def _settings_schema(
-    waste_types: list[str], defaults: Mapping[str, Any]
-) -> probatio.Schema:
-    """Return the name and waste types schema."""
+def _settings_schema(waste_types: list[str], selected: list[str]) -> probatio.Schema:
+    """Return the waste types checklist schema."""
     return probatio.Schema(
         {
-            probatio.Required(CONF_TITLE, default=defaults[CONF_TITLE]): str,
-            probatio.Required(
-                CONF_WASTE_TYPES, default=defaults[CONF_WASTE_TYPES]
-            ): SelectSelector(SelectSelectorConfig(options=waste_types, multiple=True)),
+            probatio.Required(CONF_WASTE_TYPES, default=selected): SelectSelector(
+                SelectSelectorConfig(options=waste_types, multiple=True)
+            )
         }
     )
 
 
 def _name_schema(default: str) -> probatio.Schema:
     """Return the schema to rename one waste type."""
-    return probatio.Schema({probatio.Required(CONF_TITLE, default=default): str})
+    return probatio.Schema({probatio.Required(CONF_WASTE_NAME, default=default): str})
 
 
 class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -59,10 +68,9 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._municipality = ""
-        self._areas: dict[str, str] = {}
         self._area_id: str | None = None
+        self._areas: dict[str, str] = {}
         self._waste_types: list[str] = []
-        self._name = ""
         self._selected: list[str] = []
         self._names: dict[str, str] = {}
 
@@ -96,8 +104,8 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema({probatio.Required(CONF_MUNICIPALITY): str}),
-            description_placeholders={"lookup_url": _LOOKUP_URL},
             errors=errors,
+            description_placeholders={"lookup_url": _LOOKUP_URL},
         )
 
     async def async_step_area(
@@ -141,23 +149,18 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_settings(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the name and waste types step."""
-        if user_input is not None:
-            self._name = user_input[CONF_TITLE]
-            self._selected = user_input[CONF_WASTE_TYPES]
-            return await self.async_step_names()
-
-        name = (
-            self._municipality
-            if self._area_id is None
-            else f"{self._municipality} ({self._areas[self._area_id]})"
+        """Handle the waste types step."""
+        await self.async_set_unique_id(
+            f"{slugify_municipality(self._municipality)}:{self._area_id or 'all'}"
         )
+        self._abort_if_unique_id_configured()
+        if user_input is not None:
+            self._selected = user_input[CONF_WASTE_TYPES]
+            self._names = {}
+            return await self.async_step_names()
         return self.async_show_form(
             step_id="settings",
-            data_schema=_settings_schema(
-                self._waste_types,
-                {CONF_TITLE: name, CONF_WASTE_TYPES: self._waste_types},
-            ),
+            data_schema=_settings_schema(self._waste_types, self._waste_types),
         )
 
     async def async_step_names(
@@ -165,17 +168,15 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Rename each selected waste type, one at a time."""
         if user_input is not None:
-            self._names[self._selected[len(self._names)]] = user_input[CONF_TITLE]
+            self._names[self._selected[len(self._names)]] = user_input[CONF_WASTE_NAME]
         if len(self._names) == len(self._selected):
-            await self.async_set_unique_id(
-                f"{self._municipality.casefold()}:{self._area_id or 'all'}"
-            )
-            self._abort_if_unique_id_configured()
             data = {CONF_MUNICIPALITY: self._municipality}
+            title = self._municipality
             if self._area_id is not None:
                 data[CONF_AREA_ID] = self._area_id
+                title = f"{self._municipality} ({self._areas[self._area_id]})"
             return self.async_create_entry(
-                title=self._name, data=data, options={CONF_WASTE_TYPES: self._names}
+                title=title, data=data, options={CONF_WASTE_TYPES: self._names}
             )
         waste_type = self._selected[len(self._names)]
         return self.async_show_form(
@@ -195,29 +196,28 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
 class JunkerOptionsFlow(OptionsFlowWithReload):
     """Handle Junker options."""
 
-    _name = ""
-    _selected: list[str] = []
-    _names: dict[str, str]
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        self._selected: list[str] = []
+        self._names: dict[str, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Edit the name and waste types."""
+        """Edit the waste types."""
+        if self.config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
         if user_input is not None:
-            self._name = user_input[CONF_TITLE]
             self._selected = user_input[CONF_WASTE_TYPES]
             self._names = {}
             return await self.async_step_names()
 
-        waste_types = _waste_types(self.config_entry.runtime_data.data)
-        defaults = {
-            CONF_TITLE: self.config_entry.title,
-            CONF_WASTE_TYPES: list(
-                self.config_entry.options.get(CONF_WASTE_TYPES, waste_types)
-            ),
-        }
+        current = self.config_entry.options.get(CONF_WASTE_TYPES, {})
         return self.async_show_form(
-            step_id="init", data_schema=_settings_schema(waste_types, defaults)
+            step_id="init",
+            data_schema=_settings_schema(
+                _waste_types(self.config_entry.runtime_data.data), list(current)
+            ),
         )
 
     async def async_step_names(
@@ -225,11 +225,8 @@ class JunkerOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Rename each selected waste type, one at a time."""
         if user_input is not None:
-            self._names[self._selected[len(self._names)]] = user_input[CONF_TITLE]
+            self._names[self._selected[len(self._names)]] = user_input[CONF_WASTE_NAME]
         if len(self._names) == len(self._selected):
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, title=self._name
-            )
             return self.async_create_entry(data={CONF_WASTE_TYPES: self._names})
         waste_type = self._selected[len(self._names)]
         current = self.config_entry.options.get(CONF_WASTE_TYPES, {})

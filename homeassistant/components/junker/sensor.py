@@ -14,6 +14,7 @@ from .coordinator import JunkerConfigEntry, JunkerDataUpdateCoordinator
 from .entity import JunkerEntity
 
 PARALLEL_UPDATES = 0
+
 _ATTR_WASTE_TYPES = "waste_types"
 
 
@@ -50,7 +51,7 @@ class JunkerDaysSensor(JunkerEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._name = name
+        self._waste_type = waste_type
         self._attr_name = name
         self._attr_unique_id = f"{self._identifier}_{waste_type.casefold()}"
 
@@ -62,8 +63,8 @@ class JunkerDaysSensor(JunkerEntity, SensorEntity):
         return next(
             (
                 (collection.date - today).days
-                for collection in self.collections
-                if collection.waste_type == self._name and collection.date > today
+                for collection in self.coordinator.data
+                if collection.waste_type == self._waste_type and collection.date > today
             ),
             None,
         )

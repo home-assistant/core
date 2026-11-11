@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-PREFIX = "test municipality:all"
+PREFIX = "test-municipality:all"
 
 
 def _state(hass: HomeAssistant, unique_id: str):

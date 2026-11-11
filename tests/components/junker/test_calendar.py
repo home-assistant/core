@@ -16,9 +16,8 @@ async def test_calendar_event(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test the calendar exposes the next collection."""
-    entity_registry: er.EntityRegistry
     entity_id = entity_registry.async_get_entity_id(
-        "calendar", DOMAIN, "test municipality:all"
+        "calendar", DOMAIN, "test-municipality:all"
     )
     state = hass.states.get(entity_id)
     assert state.attributes["message"] == "Kitchen"
@@ -31,9 +30,8 @@ async def test_get_events(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test fetching the calendar events of a range."""
-    entity_registry: er.EntityRegistry
     entity_id = entity_registry.async_get_entity_id(
-        "calendar", DOMAIN, "test municipality:all"
+        "calendar", DOMAIN, "test-municipality:all"
     )
     start = dt_util.now()
     response = await hass.services.async_call(

@@ -43,7 +43,7 @@ class Collection:
     waste_type: str
 
 
-def _slugify_municipality(municipality: str) -> str:
+def slugify_municipality(municipality: str) -> str:
     """Convert a municipality name into Junker's URL format."""
     normalized = unicodedata.normalize("NFD", municipality)
     without_accents = "".join(
@@ -65,7 +65,7 @@ class JunkerClient:
 
     async def async_get_collections(self) -> list[Collection]:
         """Return the municipality's scheduled waste collections."""
-        slug = _slugify_municipality(self._municipality)
+        slug = slugify_municipality(self._municipality)
         path = f"{slug}/calendario"
         if self._area_id is not None:
             path = f"{slug}/{self._area_id}/calendario"
@@ -91,9 +91,7 @@ class JunkerClient:
         """Parse the areas embedded in a calendar page."""
         try:
             areas = json.loads(raw_areas)
-            return [
-                Area(id=area["ID"], name=area[_AREA_NAME_KEY]) for area in areas
-            ]  # codespell:ignore nome
+            return [Area(id=area["ID"], name=area[_AREA_NAME_KEY]) for area in areas]
         except (KeyError, TypeError, json.JSONDecodeError) as err:
             raise JunkerError("Invalid area data in Junker calendar") from err
 

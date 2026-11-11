@@ -68,9 +68,11 @@ class JunkerCalendar(JunkerEntity, CalendarEntity):
         start_date: dt.datetime,
         end_date: dt.datetime,
     ) -> list[CalendarEvent]:
-        """Return calendar events in the requested range."""
+        """Return calendar events overlapping the requested range."""
+        events = (_event_from_collection(c) for c in self.collections)
         return [
-            _event_from_collection(collection)
-            for collection in self.collections
-            if start_date.date() <= collection.date <= end_date.date()
+            event
+            for event in events
+            if event.start_datetime_local < end_date
+            and event.end_datetime_local > start_date
         ]

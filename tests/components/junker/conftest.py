@@ -55,7 +55,7 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
         title=TEST_MUNICIPALITY,
         data={CONF_MUNICIPALITY: TEST_MUNICIPALITY},
         options={CONF_WASTE_TYPES: {"Organic waste": "Kitchen", "Paper": "Cardboard"}},
-        unique_id=f"{TEST_MUNICIPALITY.casefold()}:all",
+        unique_id="test-municipality:all",
     )
     entry.add_to_hass(hass)
     return entry
