@@ -220,7 +220,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9',
+    'state': '12',
   })
 # ---
 # name: test_entities[sensor.mock_title_completed_torrents-entry]
@@ -271,7 +271,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': '7',
   })
 # ---
 # name: test_entities[sensor.mock_title_connection_status-entry]
