@@ -948,6 +948,23 @@ class AvmWrapper(FritzBoxTools):
 
         return bool(await self.hass.async_add_executor_job(wrap_external_ipv6))
 
+    async def async_addon_infos_supported(self) -> bool:
+        """Check if the WAN interface provides transmission rate and traffic data."""
+
+        if not self.device_is_router:
+            return False
+
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self.connection.call_action, "WANCommonIFC1", "GetAddonInfos")
+            )
+        except FritzConnectionException:
+            LOGGER.debug(
+                "Transmission rate and traffic data not supported by the device"
+            )
+            return False
+        return True
+
     async def async_get_connection_info(self) -> ConnectionInfo:
         """Return ConnectionInfo data."""
 
@@ -957,6 +974,7 @@ class AvmWrapper(FritzBoxTools):
             mesh_role=self.mesh_role,
             wan_enabled=self.device_is_router,
             ipv6_active=await self.async_ipv6_active(),
+            addon_infos_supported=await self.async_addon_infos_supported(),
         )
         LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",

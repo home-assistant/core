@@ -9,7 +9,6 @@ import sys
 from typing import Any
 from unittest.mock import ANY, patch
 
-from _pytest.python_api import ApproxBase
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -702,7 +701,7 @@ def _circular_mean(values: Iterable[StatisticData]) -> dict[str, float]:
 
 def _circular_mean_approx(
     values: Iterable[StatisticData], tolerance: float | None = None
-) -> ApproxBase:
+) -> pytest.Approx:
     return pytest.approx(_circular_mean(values)["mean"], abs=tolerance)
 
 

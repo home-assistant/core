@@ -128,7 +128,7 @@ async def test_set_memo_text(
 
     # Test with unfound module
     controller.return_value.get_module.return_value = None
-    with pytest.raises(ServiceValidationError, match="Module with address 2 not found"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_MEMO_TEXT,
@@ -139,6 +139,8 @@ async def test_set_memo_text(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "module_not_found"
+    assert exc_info.value.translation_placeholders == {"address": "2"}
 
 
 async def test_clear_cache(

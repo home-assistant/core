@@ -45,6 +45,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.NUMBER,
@@ -177,11 +178,8 @@ async def async_setup_entry(
     if coordinator.data.system is None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="timeout",
-            translation_placeholders={
-                "title": entry.title,
-                "host": entry.data[CONF_HOST],
-            },
+            translation_key="no_data_received",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         )
 
     # Fetch initial data so we have data when entities subscribe

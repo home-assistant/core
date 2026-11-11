@@ -4,7 +4,6 @@ from homeassistant.const import Platform
 
 CONF_SYSTEM_ID = "system_id"
 CONF_REVERSE = "reverse"
-CONF_TARGET_NAME = "target_name"
 CONF_REVERSED_TARGET_IDS = "reversed_target_ids"
 CONF_TARGET_ID = "target_id"
 

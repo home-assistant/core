@@ -50,6 +50,7 @@ async def test_validation_grid_power_valid(
         "energy_sources": [[]],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -91,6 +92,7 @@ async def test_validation_grid_power_wrong_unit(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -167,6 +169,7 @@ async def test_validation_home_power(
         "energy_sources": [issues],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -208,6 +211,7 @@ async def test_validation_grid_power_wrong_state_class(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -245,6 +249,7 @@ async def test_validation_grid_power_entity_missing(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -278,6 +283,7 @@ async def test_validation_grid_power_entity_unavailable(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -319,6 +325,7 @@ async def test_validation_grid_power_entity_non_numeric(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -362,6 +369,7 @@ async def test_validation_grid_power_wrong_device_class(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -410,6 +418,7 @@ async def test_validation_grid_power_different_units(
         "energy_sources": [[], []],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -444,6 +453,7 @@ async def test_validation_grid_power_external_statistics(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }
 
 
@@ -478,4 +488,5 @@ async def test_validation_grid_power_recorder_untracked(
         ],
         "device_consumption": [],
         "device_consumption_water": [],
+        "device_consumption_gas": [],
     }

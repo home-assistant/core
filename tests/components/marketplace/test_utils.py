@@ -10,6 +10,7 @@ import pytest
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.enums import RepositoryFile
 from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.profiles import Endpoint
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.marketplace.utils import filters, path, regex, version
 from homeassistant.components.marketplace.utils.decorator import (
@@ -22,7 +23,9 @@ from homeassistant.components.marketplace.utils.tree import (
     tree_entry_is_directory,
 )
 from homeassistant.components.marketplace.utils.url import (
+    RemoteFile,
     github_archive,
+    github_listed_release_asset,
     github_raw_file,
     github_release_asset,
     ref_version,
@@ -55,13 +58,33 @@ def test_extract_repository_from_url(url: str, expected: str | None) -> None:
 
 
 def test_github_release_asset() -> None:
-    """Test the download URL of a release asset."""
-    assert (
-        github_release_asset(
-            repository="owner/repo", version="1.0.0", filename="example.zip"
-        )
-        == "https://github.com/owner/repo/releases/download/1.0.0/example.zip"
-    )
+    """Test the release asset to download."""
+    assert github_release_asset(
+        repository="owner/repo", version="1.0.0", filename="example.zip"
+    ) == RemoteFile(Endpoint.GITHUB, "owner/repo/releases/download/1.0.0/example.zip")
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        pytest.param(
+            "https://github.com/owner/repo/releases/download/v1%23stable/my%20card.js",
+            "owner/repo/releases/download/v1%23stable/my%20card.js",
+            id="encoded_by_github",
+        ),
+        pytest.param(
+            "https://github.com/other/repo/releases/download/v1/card.js",
+            "owner/repo/releases/download/v1/card.js",
+            id="other_repository",
+        ),
+        pytest.param(None, "owner/repo/releases/download/v1/card.js", id="no_url"),
+    ],
+)
+def test_github_listed_release_asset(url: str | None, expected: str) -> None:
+    """Test a listed asset keeps the path GitHub encoded, only within the repository."""
+    assert github_listed_release_asset(
+        repository="owner/repo", version="v1", filename="card.js", url=url
+    ) == RemoteFile(Endpoint.GITHUB, expected)
 
 
 @pytest.mark.parametrize(
@@ -70,35 +93,34 @@ def test_github_release_asset() -> None:
         pytest.param(
             "1.0.0",
             "heads",
-            "https://github.com/owner/repo/archive/refs/heads/1.0.0.zip",
+            "owner/repo/archive/refs/heads/1.0.0.zip",
             id="branch",
         ),
         pytest.param(
             "1.0.0",
             "tags",
-            "https://github.com/owner/repo/archive/refs/tags/1.0.0.zip",
+            "owner/repo/archive/refs/tags/1.0.0.zip",
             id="tag",
         ),
         pytest.param(
             "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
             "heads",
-            "https://github.com/owner/repo/archive/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b.zip",
+            "owner/repo/archive/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b.zip",
             id="sha-heads",
         ),
         pytest.param(
             "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
             "tags",
-            "https://github.com/owner/repo/archive/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b.zip",
+            "owner/repo/archive/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b.zip",
             id="sha-tags",
         ),
     ],
 )
 def test_github_archive(version_string: str, variant: str, expected: str) -> None:
-    """Test the download URL of a repository archive."""
-    assert (
-        github_archive(repository="owner/repo", version=version_string, variant=variant)
-        == expected
-    )
+    """Test the repository archive to download."""
+    assert github_archive(
+        repository="owner/repo", version=version_string, variant=variant
+    ) == RemoteFile(Endpoint.GITHUB, expected)
 
 
 async def test_is_safe(marketplace: MarketplaceManager) -> None:
@@ -263,10 +285,9 @@ def test_tree_entry(full_path: str, expected_path: str, expected_filename: str) 
     assert tree_entry_directory(entry) == expected_path
     assert tree_entry_filename(entry) == expected_filename
     assert not tree_entry_is_directory(entry)
-    assert (
-        github_raw_file(repository="test/test", ref="main", path=full_path)
-        == f"https://raw.githubusercontent.com/test/test/main/{full_path}"
-    )
+    assert github_raw_file(
+        repository="test/test", ref="main", path=full_path
+    ) == RemoteFile(Endpoint.RAW, f"test/test/main/{full_path}")
 
 
 async def test_concurrent_limits_running_calls() -> None:
