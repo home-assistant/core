@@ -567,6 +567,11 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             data = family_to_entry_data(self._family, self._gateways)
             data[CONF_ENTRY_KIND] = ENTRY_KIND_MAGIC_FAMILY
             if self._existing_entry is not None:
+                for flow in self._async_in_progress(include_uninitialized=True):
+                    if flow["flow_id"] != self.flow_id and (
+                        flow["context"].get("unique_id") == self.unique_id
+                    ):
+                        self.hass.config_entries.flow.async_abort(flow["flow_id"])
                 return self.async_update_reload_and_abort(
                     self._existing_entry,
                     data=data,

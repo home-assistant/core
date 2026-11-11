@@ -118,6 +118,17 @@ async def test_latest_import_wins_over_unfinished_flow(
         for flow in hass.config_entries.flow.async_progress()
     )
 
+    stale = await import_to_confirm()
+    latest = await import_to_confirm()
+
+    result = await hass.config_entries.flow.async_configure(latest["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert all(
+        flow["flow_id"] != stale["flow_id"]
+        for flow in hass.config_entries.flow.async_progress()
+    )
+
 
 async def test_duplicate_family(
     hass: HomeAssistant,
