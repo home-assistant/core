@@ -56,15 +56,13 @@ SUPPORTED_AUDIO_CODECS: Final = ["aac", "mp3", "vorbis", "wma"]
 
 
 class AudioTranscodeTarget(NamedTuple):
-    """How to request and describe a stream transcoded to an audio codec."""
+    """Combines codec, container, and mime type information for audio transcoding."""
 
     codec: str  # codec name passed to the Jellyfin (ffmpeg) transcoder
     container: str  # transcoding container that can hold this codec
     mime_type: str  # mime type of the resulting stream
 
 
-# Jellyfin defaults the transcoding container to mp3 regardless of the requested
-# codec, so the container must be passed explicitly for every codec but mp3.
 AUDIO_TRANSCODE_TARGETS: Final = {
     "aac": AudioTranscodeTarget("aac", "aac", "audio/aac"),
     "mp3": AudioTranscodeTarget("mp3", "mp3", "audio/mpeg"),
