@@ -1187,16 +1187,33 @@ async def test_invalid_service_calls_folder_duplicates(hass: HomeAssistant) -> N
         )
 
 
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(HassioService.BACKUP_PARTIAL, {}, id="backup"),
+        pytest.param(
+            HassioService.RESTORE_PARTIAL,
+            {HassioServiceArgument.SLUG: "test"},
+            id="restore",
+        ),
+    ],
+)
+@pytest.mark.parametrize("folder", ["bogus", "homeassistant"])
 @pytest.mark.usefixtures("hassio_env", "supervisor_client")
-async def test_partial_backup_invalid_folder(hass: HomeAssistant) -> None:
-    """Test that an unknown folder name is rejected."""
+async def test_partial_invalid_folder(
+    hass: HomeAssistant,
+    service: HassioService,
+    service_data: dict[str, str],
+    folder: str,
+) -> None:
+    """Test that an unknown or the removed legacy folder name is rejected."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(Invalid, match="expected Folder"):
         await hass.services.async_call(
             DOMAIN,
-            HassioService.BACKUP_PARTIAL,
-            {HassioServiceArgument.FOLDERS: ["bogus"]},
+            service,
+            {**service_data, HassioServiceArgument.FOLDERS: [folder]},
         )
 
 
