@@ -18,6 +18,7 @@ from .coordinator import (
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
+    OmadaVpnPoliciesCoordinator,
 )
 
 
@@ -25,6 +26,7 @@ class OmadaSiteController:
     """Controller for the Omada SDN site."""
 
     _gateway_coordinator: OmadaGatewayCoordinator | None = None
+    _vpn_policies_coordinator: OmadaVpnPoliciesCoordinator | None = None
 
     def __init__(
         self,
@@ -66,6 +68,10 @@ class OmadaSiteController:
                 self._hass, self._config_entry, self._omada_client, gateway.mac
             )
             await self._gateway_coordinator.async_config_entry_first_refresh()
+            self._vpn_policies_coordinator = OmadaVpnPoliciesCoordinator(
+                self._hass, self._config_entry, self._omada_client
+            )
+            await self._vpn_policies_coordinator.async_config_entry_first_refresh()
 
         await self.clients_coordinator.async_config_entry_first_refresh()
 
@@ -157,3 +163,8 @@ class OmadaSiteController:
     def clients_coordinator(self) -> OmadaClientsCoordinator:
         """Gets the coordinator for site's clients."""
         return self._clients_coordinator
+
+    @property
+    def vpn_policies_coordinator(self) -> OmadaVpnPoliciesCoordinator | None:
+        """Gets the coordinator for site's VPN policies, or None if there is no gateway."""
+        return self._vpn_policies_coordinator

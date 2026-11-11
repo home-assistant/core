@@ -125,7 +125,7 @@ class FireServiceRotaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialise re-authentication."""
         await self.async_set_unique_id(entry_data[CONF_USERNAME])
         self._existing_entry = {**entry_data}
-        self._description_placeholders = {CONF_USERNAME: entry_data[CONF_USERNAME]}
+        self._description_placeholders = {"username": entry_data[CONF_USERNAME]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

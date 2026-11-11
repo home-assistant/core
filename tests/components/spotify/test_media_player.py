@@ -21,8 +21,9 @@ from spotifyaio import (
     RepeatMode as SpotifyRepeatMode,
     SpotifyConnectionError,
     SpotifyNotFoundError,
+    SpotifyRateLimitError,
 )
-from spotifyaio.models import Devices
+from spotifyaio.models import Devices, ProductType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -45,6 +46,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.spotify import DOMAIN
+from homeassistant.components.spotify.media_player import SUPPORT_SPOTIFY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -61,7 +63,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -127,6 +129,56 @@ async def test_restricted_device(
     assert (
         state.attributes["supported_features"] == MediaPlayerEntityFeature.SELECT_SOURCE
     )
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    ("product", "supported_features", "model"),
+    [
+        pytest.param(
+            ProductType.PREMIUM, SUPPORT_SPOTIFY, "Spotify premium", id="premium"
+        ),
+        pytest.param(
+            ProductType.FREE, MediaPlayerEntityFeature(0), "Spotify free", id="free"
+        ),
+        pytest.param(None, SUPPORT_SPOTIFY, None, id="unknown"),
+    ],
+)
+async def test_product(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    product: ProductType | None,
+    supported_features: MediaPlayerEntityFeature,
+    model: str | None,
+) -> None:
+    """Test the supported features and device model per Spotify product."""
+    mock_spotify.return_value.get_current_user.return_value.product = product
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.attributes["supported_features"] == supported_features
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1112264111"), mock_config_entry.entry_id
+    )
+    assert device
+    assert device.model == model
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_unknown_volume(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player with an unknown device volume."""
+    mock_spotify.return_value.get_playback.return_value.device.volume_percent = None
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.state == MediaPlayerState.PLAYING
+    assert ATTR_MEDIA_VOLUME_LEVEL not in state.attributes
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -205,6 +257,7 @@ async def test_normal_playlist(
     "error",
     [
         pytest.param(SpotifyConnectionError(), id="connection"),
+        pytest.param(SpotifyRateLimitError(), id="rate-limit"),
         pytest.param(MissingField("name", str, Playlist), id="missing-playlist-name"),
     ],
 )
@@ -213,7 +266,7 @@ async def test_fetching_playlist_does_not_fail(
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    error: SpotifyConnectionError | MissingField,
+    error: SpotifyConnectionError | SpotifyRateLimitError | MissingField,
 ) -> None:
     """Test failing fetching playlist does not fail update."""
     mock_spotify.return_value.get_playlist.side_effect = error
@@ -246,6 +299,7 @@ async def test_playlist_item_schema_error_does_not_block_setup(
     playlist_items = playlist_data.pop("tracks")
     for playlist_item in playlist_items["items"]:
         playlist_item["item"] = playlist_item.pop("track")
+    playlist_items["items"][0]["added_at"] = "invalid"
     playlist_data[items_key] = playlist_items
     playlist_json = json.dumps(playlist_data)
 

@@ -236,7 +236,7 @@ async def async_discover_endpoint(
 
 async def async_discover_by_host(
     hass: HomeAssistant, host: str
-) -> pizone.ControllerEndpoint | None:
+) -> pizone.ControllerEndpoint:
     """HTTP-probe a controller at *host* for config-flow validation.
 
     Starts shared discovery if needed.

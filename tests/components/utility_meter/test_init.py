@@ -991,7 +991,47 @@ async def test_migration_2_1(
     assert entities == expected_entities
 
     assert utility_meter_config_entry.version == 2
-    assert utility_meter_config_entry.minor_version == 2
+    assert utility_meter_config_entry.minor_version == 3
+
+
+@pytest.mark.parametrize(
+    ("offset", "expected_offset"),
+    [
+        pytest.param(0, 0, id="zero"),
+        pytest.param(27, 27, id="max"),
+        pytest.param(28, 27, id="clamped"),
+    ],
+)
+async def test_migration_2_2_clamps_offset(
+    hass: HomeAssistant, offset: int, expected_offset: int
+) -> None:
+    """Test migration from v2.2 clamps an offset above 27 days."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "My utility meter",
+            "net_consumption": False,
+            "offset": offset,
+            "periodically_resetting": True,
+            "source": "sensor.test",
+            "tariffs": [],
+        },
+        title="My utility meter",
+        version=2,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 3
+    assert config_entry.options["offset"] == expected_offset
 
 
 async def test_migration_from_future_version(

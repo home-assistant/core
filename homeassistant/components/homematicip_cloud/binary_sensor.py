@@ -16,6 +16,7 @@ from homematicip.device import (
     AccelerationSensor,
     ContactInterface,
     Device,
+    DoorLockSensor,
     FullFlushContactInterface,
     FullFlushContactInterface6,
     MotionDetectorIndoor,
@@ -247,6 +248,21 @@ WATER_SUPPLY_STOP_DESCRIPTIONS: tuple[
     ),
 )
 
+DOOR_LOCK_SENSOR_DESCRIPTIONS: tuple[
+    HmipBinarySensorDescription[DoorLockSensor],
+    ...,
+] = (
+    HmipBinarySensorDescription(
+        key="lock",
+        device_class=BinarySensorDeviceClass.LOCK,
+        channel_value_fn=lambda channel: (
+            None if channel.lockState is None else channel.lockState != LockState.LOCKED
+        ),
+        channel=1,
+        channel_type=FunctionalChannelType.DOOR_LOCK_SENSOR_CHANNEL,
+    ),
+)
+
 BATTERY_SENSOR_DESCRIPTION = HmipBinarySensorDescription[Device](
     key="battery",
     device_class=BinarySensorDeviceClass.BATTERY,
@@ -270,6 +286,7 @@ SIMPLE_BINARY_SENSOR_DESCRIPTIONS: dict[
     (PluggableMainsFailureSurveillance,): MAINS_FAILURE_SENSOR_DESCRIPTIONS,
     (WallMountedThermostatPro,): WALL_THERMOSTAT_DESCRIPTIONS,
     (WaterSupplyStop,): WATER_SUPPLY_STOP_DESCRIPTIONS,
+    (DoorLockSensor,): DOOR_LOCK_SENSOR_DESCRIPTIONS,
 }
 
 

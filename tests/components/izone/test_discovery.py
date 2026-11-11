@@ -27,7 +27,6 @@ def _mock_pizone_service() -> Mock:
     service.close = AsyncMock()
     service.discover_all = AsyncMock(return_value=[])
     service.discover_by_uid = AsyncMock(return_value=None)
-    service.discover_by_host = AsyncMock(return_value=None)
     return service
 
 

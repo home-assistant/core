@@ -48,7 +48,7 @@ from homeassistant.components.labs import (
     async_is_preview_feature_enabled,
     async_subscribe_preview_feature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
@@ -113,6 +113,7 @@ from .helpers import (
 )
 from .models import (
     TeslemetryChargeOnSolarStore,
+    TeslemetryConfigEntry,
     TeslemetryData,
     TeslemetryEnergyData,
     TeslemetryVehicleData,
@@ -137,8 +138,6 @@ PLATFORMS: Final = [
 _VEHICLE_ISSUE_ID_PATTERN = re.compile(
     f"({'|'.join(map(re.escape, VEHICLE_ISSUE_LEARN_MORE))})_"
 )
-
-type TeslemetryConfigEntry = ConfigEntry[TeslemetryData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -291,7 +290,7 @@ def _async_update_vehicle_repairs(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"{issue_type}_{vin}",
+                f"{issue_type}_{entry.entry_id}_{vin}",
                 config_entry_id=entry.entry_id,
                 is_fixable=True,
                 severity=ir.IssueSeverity.WARNING,
@@ -482,7 +481,6 @@ async def _async_resolve_local_control(
         return False, None, cloud_energy_site
     subentry_id = _find_energy_subentry_id(entry, site_id)
     if subentry_id is None:
-        ir.async_delete_issue(hass, DOMAIN, gateway_issue_id(site_id))
         return True, None, cloud_energy_site
     # A local-gateway failure for one site must not tear down the integration.
     try:
@@ -497,7 +495,7 @@ async def _async_resolve_local_control(
             exc_info=True,
         )
         # Whether the gateway is found is unknown
-        ir.async_keep_issue(hass, DOMAIN, gateway_issue_id(site_id))
+        ir.async_keep_issue(hass, DOMAIN, gateway_issue_id(entry.entry_id, site_id))
         return True, subentry_id, cloud_energy_site
     return True, subentry_id, api
 
@@ -526,7 +524,9 @@ async def _async_resolve_energy_site_api(
             err,
         )
         ir.async_delete_issue(
-            hass, DOMAIN, gateway_issue_id(cloud_energy_site.energy_site_id)
+            hass,
+            DOMAIN,
+            gateway_issue_id(entry.entry_id, cloud_energy_site.energy_site_id),
         )
     except PowerwallError as err:
         # Another device may have taken the old address, so any refusal is a lead.
@@ -535,7 +535,9 @@ async def _async_resolve_energy_site_api(
         )
     else:
         ir.async_delete_issue(
-            hass, DOMAIN, gateway_issue_id(cloud_energy_site.energy_site_id)
+            hass,
+            DOMAIN,
+            gateway_issue_id(entry.entry_id, cloud_energy_site.energy_site_id),
         )
     local_energy_site = PowerwallEnergySite(powerwall_client)
     return EnergySiteRouter(local_energy_site, cloud_energy_site)
@@ -552,7 +554,7 @@ async def _async_rediscover_gateway(
 ) -> PowerwallClient:
     """Return a client at the gateway's new address, or the stale client if not found."""
     site_id = cloud_energy_site.energy_site_id
-    issue_id = gateway_issue_id(site_id)
+    issue_id = gateway_issue_id(entry.entry_id, site_id)
     try:
         host = await cloud_energy_site.find_gateway_address()
     except (ClientError, TeslaFleetError) as err:
@@ -602,6 +604,10 @@ async def _async_rediscover_gateway(
         DOMAIN,
         issue_id,
         config_entry_id=entry.entry_id,
+        # The subentry can be removed while the gateway lookup is awaited
+        config_subentry_id=(
+            subentry.subentry_id if subentry.subentry_id in entry.subentries else None
+        ),
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key=ISSUE_GATEWAY_NOT_FOUND,

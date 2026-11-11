@@ -15,9 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
-from .models import ELKM1Data
+from .models import ElkM1ConfigEntry, ELKM1Data
 
 
 async def async_setup_entry(

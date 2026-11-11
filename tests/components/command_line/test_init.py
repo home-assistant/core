@@ -21,17 +21,13 @@ from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.components.command_line.notify import (
     async_get_service as async_get_notify_service,
 )
+from homeassistant.components.command_line.services import CommandLineService
 from homeassistant.components.command_line.utils import build_shell_template_issue_id
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     BaseNotificationService,
 )
-from homeassistant.const import (
-    SERVICE_RELOAD,
-    STATE_ON,
-    STATE_OPEN,
-    __version__ as HA_VERSION,
-)
+from homeassistant.const import STATE_ON, STATE_OPEN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -107,7 +103,7 @@ async def test_reload_service(
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            CommandLineService.RELOAD,
             {},
             blocking=True,
         )
@@ -126,7 +122,7 @@ async def test_reload_service(
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            CommandLineService.RELOAD,
             {},
             blocking=True,
         )
@@ -175,7 +171,9 @@ async def test_reload_prunes_stale_template_issue(
 
     yaml_path = get_fixture_path("configuration_empty.yaml", "command_line")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CommandLineService.RELOAD, {}, blocking=True
+        )
         await hass.async_block_till_done()
 
     assert not any(
@@ -227,7 +225,9 @@ async def test_reload_keeps_valid_template_issue_and_ignore_state(
         patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
         mock_asyncio_subprocess_run(b"safe_value\n"),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CommandLineService.RELOAD, {}, blocking=True
+        )
         await hass.async_block_till_done(wait_background_tasks=True)
 
     kept_issue = issue_registry.issues.get((DOMAIN, issue.issue_id))
@@ -294,7 +294,9 @@ async def test_reload_keeps_issues_of_entities_set_up_again(
             async_get_service_later,
         ),
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CommandLineService.RELOAD, {}, blocking=True
+        )
         notify_setup.set()
         await hass.async_block_till_done(wait_background_tasks=True)
 

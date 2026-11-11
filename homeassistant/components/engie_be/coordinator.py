@@ -15,6 +15,8 @@ from aioengiebelgium import (
     EngieBeError,
     EpexGranularity,
     EpexSlot,
+    MonthlyPeaks,
+    Peak,
     PricePeriod,
     PriceSlot,
     bare_ean,
@@ -27,7 +29,13 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EPEX_SCAN_INTERVAL, LOGGER, PRICES_SCAN_INTERVAL
+from .const import (
+    DOMAIN,
+    EPEX_SCAN_INTERVAL,
+    LOGGER,
+    PEAKS_SCAN_INTERVAL,
+    PRICES_SCAN_INTERVAL,
+)
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
@@ -271,6 +279,92 @@ def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
         epex_slots_cover_day(data.slots(granularity), day, granularity)
         for granularity in EpexGranularity
     )
+
+
+@dataclass(frozen=True)
+class EngieBePeaksData:
+    """Capacity tariff peaks of one business agreement."""
+
+    monthly: MonthlyPeaks
+    previous_month: MonthlyPeaks | None
+
+    @property
+    def peak(self) -> Peak | None:
+        """Return the peak to display, falling back to the previous month early in the month."""
+        if self.monthly.peak_of_the_month is not None:
+            return self.monthly.peak_of_the_month
+        if self.previous_month is not None:
+            return self.previous_month.peak_of_the_month
+        return None
+
+    @property
+    def is_fallback(self) -> bool:
+        """Return True when the displayed peak belongs to the previous month."""
+        return self.monthly.peak_of_the_month is None and self.peak is not None
+
+    @property
+    def peak_month(self) -> str | None:
+        """Return the YYYY-MM month the displayed peak belongs to."""
+        if self.monthly.peak_of_the_month is not None:
+            source = self.monthly
+        elif (
+            self.previous_month is not None
+            and self.previous_month.peak_of_the_month is not None
+        ):
+            source = self.previous_month
+        else:
+            return None
+        return f"{source.year}-{source.month:02d}"
+
+
+class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
+    """Coordinator that fetches capacity tariff peaks for one business agreement."""
+
+    config_entry: EngieBeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: EngieBeConfigEntry,
+        client: EngieBeClient,
+        ban: str,
+    ) -> None:
+        """Initialize the peaks coordinator for one business agreement."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_peaks_{mask_identifier(ban)}",
+            update_interval=PEAKS_SCAN_INTERVAL,
+        )
+        self.client = client
+        self.ban = ban
+
+    @override
+    async def _async_update_data(self) -> EngieBePeaksData:
+        """Fetch this month's peaks, plus last month's when this month has no peak yet."""
+        today = dt_util.now(BRUSSELS_TIME_ZONE).date()
+        try:
+            monthly = await self.client.async_get_monthly_peaks(
+                self.ban, today.year, today.month
+            )
+            previous_month: MonthlyPeaks | None = None
+            if monthly.peak_of_the_month is None:
+                prev_year, prev_month = (
+                    (today.year - 1, 12)
+                    if today.month == 1
+                    else (today.year, today.month - 1)
+                )
+                previous_month = await self.client.async_get_monthly_peaks(
+                    self.ban, prev_year, prev_month
+                )
+        except EngieBeAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
+        except EngieBeError as err:
+            raise UpdateFailed(str(err)) from err
+        return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
 
 class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):

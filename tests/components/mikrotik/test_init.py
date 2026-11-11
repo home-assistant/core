@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from librouteros.exceptions import ConnectionClosed, LibRouterosError, TrapError
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import (
@@ -26,8 +27,9 @@ from homeassistant.components.mikrotik.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
 from . import build_mock_command, setup_integration, setup_mikrotik_entry
@@ -35,6 +37,8 @@ from .conftest import MockConfigEntryFactory
 from .const import (
     ARP_DATA,
     BRIDGE1_INTERFACE,
+    DEVICE_1_WIRELESS,
+    DEVICE_2_DHCP,
     DHCP_DATA,
     ETHER1_INTERFACE,
     INTERFACE_DATA,
@@ -480,3 +484,188 @@ async def test_stale_interface_device_removed_on_coordinator_update(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, TEST_SERIAL_NUMBER), config_entry_id=config_entry.entry_id
     )
+
+
+# Upper-case hex digits, as reported by the hub, check the MAC normalization
+CONNECTED_CLIENT_MAC = "0A:BB:CC:DD:EE:01"
+
+
+async def _setup_entry_with_connected_client(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an entry with interfaces and one connected wireless client."""
+    config_entry = await setup_mikrotik_entry(
+        hass,
+        interface_data=INTERFACE_DATA,
+        wireless_data=[{**DEVICE_1_WIRELESS, "mac-address": CONNECTED_CLIENT_MAC}],
+    )
+    assert await async_setup_component(hass, "config", {})
+    return config_entry
+
+
+@pytest.mark.parametrize(
+    "lookup",
+    [
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, CONNECTED_CLIENT_MAC)}},
+            id="connected_client",
+        ),
+        pytest.param({"identifiers": {(DOMAIN, TEST_SERIAL_NUMBER)}}, id="hub"),
+        pytest.param(
+            {"identifiers": {_interface_identifier(ETHER1_INTERFACE)}},
+            id="interface",
+        ),
+    ],
+)
+async def test_remove_config_entry_device_refused(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    lookup: dict[str, set[tuple[str, str]]],
+) -> None:
+    """Test hub, interface and connected client devices cannot be removed."""
+    config_entry = await _setup_entry_with_connected_client(hass)
+    # The client device comes from the (disabled) tracker's device info
+    [device_entry] = device_registry.async_get_devices(
+        config_entry_id=config_entry.entry_id, **lookup
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+
+    assert not response["success"]
+    assert device_registry.async_get(device_entry.id) is not None
+
+
+async def test_remove_config_entry_device_stale_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a client device unknown to the hub can be removed."""
+    config_entry = await _setup_entry_with_connected_client(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:09")},
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device_entry.id) is None
+
+
+@pytest.mark.parametrize(
+    ("lookup", "removable"),
+    [
+        pytest.param(
+            {"connections": {(dr.CONNECTION_NETWORK_MAC, CONNECTED_CLIENT_MAC)}},
+            True,
+            id="client",
+        ),
+        pytest.param({"identifiers": {(DOMAIN, TEST_SERIAL_NUMBER)}}, False, id="hub"),
+        pytest.param(
+            {"identifiers": {_interface_identifier(ETHER1_INTERFACE)}},
+            False,
+            id="interface",
+        ),
+    ],
+)
+async def test_remove_config_entry_device_entry_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    lookup: dict[str, set[tuple[str, str]]],
+    removable: bool,
+) -> None:
+    """Test only client devices can be removed while the entry is unloaded."""
+    config_entry = await _setup_entry_with_connected_client(hass)
+    [device_entry] = device_registry.async_get_devices(
+        config_entry_id=config_entry.entry_id, **lookup
+    )
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+
+    assert response["success"] is removable
+    assert (device_registry.async_get(device_entry.id) is None) is removable
+
+
+async def test_remove_departed_client_and_rediscover(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a departed client can be removed and is re-created when it returns."""
+    mac = DEVICE_2_DHCP["mac-address"]
+    connection = (dr.CONNECTION_NETWORK_MAC, mac)
+    inactive_lease = {
+        key: value for key, value in DEVICE_2_DHCP.items() if key != "active-address"
+    }
+    config_entry = await setup_mikrotik_entry(
+        hass, force_dhcp=True, dhcp_data=[DEVICE_2_DHCP], wireless_data=[]
+    )
+    assert await async_setup_component(hass, "config", {})
+    client = await hass_ws_client(hass)
+
+    def hub_command(dhcp_data: list[dict[str, Any]]) -> Callable[..., Any]:
+        return build_mock_command(
+            {
+                MIKROTIK_SERVICES[IDENTITY]: [{"name": "Mikrotik"}],
+                MIKROTIK_SERVICES[ROUTERBOARD]: ROUTERBOARD_DATA,
+                MIKROTIK_SERVICES[DHCP]: dhcp_data,
+            }
+        )
+
+    async def poll(dhcp_data: list[dict[str, Any]], delay: timedelta) -> None:
+        with patch.object(
+            mikrotik.coordinator.MikrotikData,
+            "command",
+            new=hub_command(dhcp_data),
+        ):
+            freezer.tick(delay)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    def client_entries() -> tuple[dr.DeviceEntry | None, str | None]:
+        return (
+            device_registry.async_get_device_by_connection(
+                connection, config_entry.entry_id
+            ),
+            entity_registry.async_get_entity_id("device_tracker", DOMAIN, mac),
+        )
+
+    # The client left, but is still within the detection time
+    await poll([inactive_lease], timedelta(minutes=4))
+    device_entry, _ = client_entries()
+    assert device_entry is not None
+    response = await client.remove_device(device_entry.id)
+    assert not response["success"]
+
+    await poll([inactive_lease], timedelta(minutes=2))
+    response = await client.remove_device(device_entry.id)
+    assert response["success"]
+    assert client_entries() == (None, None)
+
+    # The inactive lease must not re-create the removed client
+    await poll([inactive_lease], timedelta(seconds=10))
+    assert client_entries() == (None, None)
+
+    # Not even after a reload, which starts without any in-memory client state
+    with patch.object(
+        mikrotik.coordinator.MikrotikData,
+        "command",
+        new=hub_command([inactive_lease]),
+    ):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert client_entries() == (None, None)
+
+    await poll([DEVICE_2_DHCP], timedelta(seconds=10))
+    device_entry, entity_id = client_entries()
+    assert device_entry is not None
+    assert entity_id is not None

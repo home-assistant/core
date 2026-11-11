@@ -996,6 +996,15 @@ ZEROCONF = {
             "domain": "shelly",
         },
     ],
+    "_ship._tcp.local.": [
+        {
+            "domain": "e3dc",
+            "properties": {
+                "brand": "hager energy",
+                "id": "*",
+            },
+        },
+    ],
     "_sideplay._tcp.local.": [
         {
             "domain": "ecobee",

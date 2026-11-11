@@ -166,7 +166,9 @@ async def test_device_entry_not_loaded(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-    second_entry = mock_entry_encrypted_factory(sensor_type="keypad_vision")
+    second_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, title="Not loaded", unique_id="112233445566"
+    )
     second_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(

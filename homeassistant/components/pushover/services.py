@@ -6,7 +6,7 @@ import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import ATTR_ENTRY_ID, ATTR_TAG, DOMAIN, SERVICE_CANCEL
 
@@ -25,9 +25,7 @@ async def _async_cancel_service_handler(call: ServiceCall) -> None:
     """Cancel emergency notifications for the targeted config entry."""
     hass = call.hass
     entry_id: str = call.data[ATTR_ENTRY_ID]
-    entry: PushoverConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
-    if entry is None:
-        raise ServiceValidationError(f"Pushover config entry {entry_id} does not exist")
+    entry: PushoverConfigEntry = service.async_get_config_entry(hass, DOMAIN, entry_id)
 
     notify_service = entry.runtime_data.notify_service
     if notify_service is None:

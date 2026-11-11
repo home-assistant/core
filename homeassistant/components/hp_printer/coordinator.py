@@ -6,7 +6,7 @@ from typing import override
 from aiohpprinter import HpPrinter, HpPrinterData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -33,7 +33,10 @@ class HpPrinterDataUpdateCoordinator(DataUpdateCoordinator[HpPrinterData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = HpPrinter(
-            config_entry.data[CONF_HOST], async_get_clientsession(hass)
+            config_entry.data[CONF_HOST],
+            async_get_clientsession(hass),
+            port=config_entry.data.get(CONF_PORT),
+            ssl=config_entry.data[CONF_SSL],
         )
 
     @override

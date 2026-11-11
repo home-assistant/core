@@ -392,10 +392,21 @@ async def test_sleeping_block_device_online(
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping block device online."""
-    await init_integration(hass, 1, data={})
+    # A device with the same MAC owned by another entry must be ignored
+    other_entry = await init_integration(
+        hass, 1, data={}, skip_setup=True, unique_id="shelly"
+    )
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
+    )
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "other", config_entry=other_entry, device_id=other_device.id
+    )
 
     monkeypatch.setitem(
         mock_block_device.settings,

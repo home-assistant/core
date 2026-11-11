@@ -287,3 +287,19 @@ async def test_charging_current_max_limited_by_connector(
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes["max"] == 16.0
+
+
+async def test_limits_without_attachment_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+) -> None:
+    """Test the limits fall back to the device values without attachment info."""
+    del mock_nrgkick_api.get_info.return_value["connector"]
+
+    await setup_integration(hass, mock_config_entry, platforms=[Platform.NUMBER])
+
+    assert (state := hass.states.get("number.nrgkick_test_charging_current"))
+    assert state.attributes["max"] == 32.0
+    assert (state := hass.states.get("number.nrgkick_test_phase_count"))
+    assert state.attributes["max"] == 3.0

@@ -11,7 +11,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -21,7 +20,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.typing import Undefined
 
-from . import list_input_devices
+from . import KeyboardRemoteConfigEntry, list_input_devices
 from .const import (
     CONF_DEVICE_DESCRIPTOR,
     CONF_DEVICE_NAME,
@@ -245,7 +244,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: KeyboardRemoteConfigEntry,
     ) -> KeyboardRemoteOptionsFlow:
         """Get the options flow for this handler."""
         return KeyboardRemoteOptionsFlow()
@@ -416,7 +415,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_imported_entry(
         self, descriptor: str | None, name: str | None
-    ) -> ConfigEntry | None:
+    ) -> KeyboardRemoteConfigEntry | None:
         """Return the entry an earlier import of this YAML block created."""
         for entry in self._async_current_entries():
             if entry.source != SOURCE_IMPORT:
@@ -431,7 +430,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_adopt_or_abort(
         self,
-        entry: ConfigEntry,
+        entry: KeyboardRemoteConfigEntry,
         descriptor: str | None,
         device_path: str | None,
         device_name: str | None,

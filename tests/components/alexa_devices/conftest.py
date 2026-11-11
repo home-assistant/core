@@ -120,5 +120,5 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id=TEST_USER_ID,
         version=1,
-        minor_version=3,
+        minor_version=4,
     )

@@ -75,7 +75,7 @@ MEDIA_PLAYER_DESCRIPTION: Final[MediaPlayerEntityDescription] = (
     MediaPlayerEntityDescription(
         key="media",
         translation_key="media",
-        device_class=MediaPlayerDeviceClass.RECEIVER,
+        device_class=MediaPlayerDeviceClass.SPEAKER,
     )
 )
 

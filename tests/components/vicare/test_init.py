@@ -164,7 +164,7 @@ async def test_migrate_entry_token_failure(hass: HomeAssistant) -> None:
 async def test_migrate_entry_creates_repair_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test migration creates a repair issue for redirect URI update."""
+    """Test migration creates a repair issue linked to the entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
@@ -193,6 +193,12 @@ async def test_migrate_entry_creates_repair_issue(
     issue = issue_registry.async_get_issue(DOMAIN, "update_redirect_uri")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "update_redirect_uri") is None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

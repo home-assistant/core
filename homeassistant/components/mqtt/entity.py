@@ -327,6 +327,8 @@ def async_setup_entity_entry_helper(  # noqa: C901
                 hass,
                 DOMAIN,
                 subentry_id,
+                config_entry_id=entry.entry_id,
+                config_subentry_id=subentry_id,
                 issue_domain=DOMAIN,
                 is_fixable=True,
                 severity=IssueSeverity.WARNING,

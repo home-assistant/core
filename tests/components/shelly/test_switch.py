@@ -968,6 +968,60 @@ async def test_cury_switch_availability(
     assert state.state == STATE_ON
 
 
+async def test_rpc_fan_boost_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC fan boost switch."""
+    monkeypatch.setattr(mock_rpc_device, "config", {"fan:0": {"id": 0}})
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "status",
+        {"fan:0": {"id": 0, "mode": "auto", "boost": {"active": False}}},
+    )
+    entity_id = f"{SWITCH_DOMAIN}.test_name_boost"
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-fan:0-fan_boost"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.fan_boost.assert_called_once_with(0)
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "fan:0", "boost", {"active": True}
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.fan_stop_boost.assert_called_once_with(0)
+
+    # Boost is only possible in auto mode
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "fan:0", "mode", "manual")
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_ev_charging_switch(
     hass: HomeAssistant,
     mock_rpc_device: Mock,

@@ -1,5 +1,6 @@
 """Helpers for generating issues."""
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -25,6 +26,28 @@ def raise_mirrored_entries(
             translation_placeholders={"entity": text},
             learn_more_url="https://github.com/home-assistant/core/pull/67631",
         )
+
+
+def raise_mirrored_observations(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    observations: list[Observation],
+    key: str,
+    entity: str,
+) -> None:
+    """Raise an issue if a config entry has a pair of mirrored observations."""
+    if len(observations) != 2 or not observations[0].is_mirror(observations[1]):
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"mirrored_entry/{config_entry.entry_id}/{key}",
+        config_entry_id=config_entry.entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="mirrored_observation",
+        translation_placeholders={"name": config_entry.title, "entity": entity},
+    )
 
 
 # Should deprecate in some future version (2022.10 at time of

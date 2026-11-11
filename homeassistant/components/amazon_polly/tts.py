@@ -1,6 +1,7 @@
 """Support for the Amazon Polly text to speech service."""
 
 from collections import defaultdict
+from enum import StrEnum
 import logging
 from typing import Any, Final, override
 
@@ -11,6 +12,7 @@ import probatio
 from homeassistant.components.tts import (
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TextToSpeechCommonOption,
     TtsAudioType,
 )
 from homeassistant.const import ATTR_CREDENTIALS, CONF_PROFILE_NAME
@@ -49,6 +51,13 @@ from .const import (
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+
+class AmazonPollyTextToSpeechOption(StrEnum):
+    """Store keys for the Amazon Polly text-to-speech options."""
+
+    ENGINE = "engine"
+
 
 PLATFORM_SCHEMA: Final = TTS_PLATFORM_SCHEMA.extend(
     {
@@ -178,13 +187,16 @@ class AmazonPollyProvider(Provider):
     @override
     def default_options(self) -> dict[str, str]:
         """Return dict include default options."""
-        return {CONF_VOICE: self.default_voice, CONF_ENGINE: self.default_engine}
+        return {
+            TextToSpeechCommonOption.VOICE: self.default_voice,
+            AmazonPollyTextToSpeechOption.ENGINE: self.default_engine,
+        }
 
     @property
     @override
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
-        return [CONF_VOICE, CONF_ENGINE]
+        return [TextToSpeechCommonOption.VOICE, AmazonPollyTextToSpeechOption.ENGINE]
 
     @override
     def get_tts_audio(
@@ -194,13 +206,13 @@ class AmazonPollyProvider(Provider):
         options: dict[str, Any],
     ) -> TtsAudioType:
         """Request TTS file from Polly."""
-        voice_id = options.get(CONF_VOICE, self.default_voice)
+        voice_id = options.get(TextToSpeechCommonOption.VOICE, self.default_voice)
         voice_in_dict = self.all_voices[voice_id]
         if language != voice_in_dict.get("LanguageCode"):
             _LOGGER.error("%s does not support the %s language", voice_id, language)
             return None, None
 
-        engine = options.get(CONF_ENGINE, self.default_engine)
+        engine = options.get(AmazonPollyTextToSpeechOption.ENGINE, self.default_engine)
         if voice_id not in self.all_engines[engine]:
             _LOGGER.error("%s does not support the %s engine", voice_id, engine)
             return None, None

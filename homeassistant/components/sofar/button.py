@@ -7,12 +7,12 @@ from typing import override
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 1
 
@@ -53,6 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sofar button platform."""
+    async_remove_unserved_entities(hass, entry, Platform.BUTTON, BUTTON_DESCRIPTIONS)
     runtime_data = entry.runtime_data
     added: set[str] = set()
 

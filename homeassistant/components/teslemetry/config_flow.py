@@ -55,7 +55,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -66,7 +65,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
+from . import _BLE_KEY_ERRORS
 from .const import (
     BLE_ADVERTISEMENT_TIMEOUT,
     CLIENT_ID,
@@ -85,7 +84,7 @@ from .helpers import (
     async_verify_local_gateway,
     cloud_energy_site,
 )
-from .models import TeslemetryEnergyData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData
 
 
 class PowerwallSetupError(Exception):
@@ -120,7 +119,7 @@ class OAuth2FlowHandler(
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: TeslemetryConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentry types supported by this integration."""
         return {
@@ -168,7 +167,7 @@ class OAuth2FlowHandler(
         )
 
     def _async_apply_token(
-        self, entry: ConfigEntry, data: dict[str, Any]
+        self, entry: TeslemetryConfigEntry, data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Store the refreshed token and reload the entry exactly once."""
         if entry.state is not ConfigEntryState.LOADED:

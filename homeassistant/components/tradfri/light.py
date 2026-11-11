@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
@@ -97,6 +97,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # supports_hsb_xy_color is False for color bulbs that also report mireds
         return self._device_data.raw.color_hue is not None
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""
@@ -106,8 +107,6 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return true if light is on."""
-        if not self._device_data:
-            return False
         return self._device_data.state
 
     @property
@@ -124,15 +123,13 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        if not self._device_data:
-            return None
         return cast(int, self._device_data.dimmer)
 
     @property
     @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        if not self._device_data or not (color_temp := self._device_data.color_temp):
+        if not (color_temp := self._device_data.color_temp):
             return None
         return color_util.color_temperature_mired_to_kelvin(color_temp)
 

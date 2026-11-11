@@ -1379,7 +1379,8 @@ SITE_ID = 123456
 HOST = "192.168.91.1"
 NEW_HOST = "192.168.91.2"
 PASSWORD = "abcde"
-GATEWAY_ISSUE_ID = f"gateway_not_found_{SITE_ID}"
+ENTRY_ID = "01JTESLEMETRYENTRY00000000"
+GATEWAY_ISSUE_ID = f"gateway_not_found_{ENTRY_ID}_{SITE_ID}"
 
 # aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
@@ -1393,14 +1394,17 @@ _TEST_RSA_KEY_PEM = rsa.generate_private_key(
 )
 
 
-def _entry_with_powerwall() -> MockConfigEntry:
+def _entry_with_powerwall(
+    entry_id: str = ENTRY_ID, unique_id: str = UNIQUE_ID
+) -> MockConfigEntry:
     """Return a config entry whose energy site subentry is already paired."""
     entry = mock_config_entry()
     return MockConfigEntry(
         domain=entry.domain,
+        entry_id=entry_id,
         version=entry.version,
         minor_version=entry.minor_version,
-        unique_id=entry.unique_id,
+        unique_id=unique_id,
         data=dict(entry.data),
         subentries_data=[
             ConfigSubentryData(
@@ -1842,10 +1846,86 @@ async def test_local_gateway_not_found_raises_repair(
     assert issue.is_fixable
     assert issue.translation_key == "gateway_not_found"
     assert issue.translation_placeholders == {"site": "Energy Site"}
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.config_subentry_id == subentry.subentry_id
     assert issue.data == {
         "entry_id": entry.entry_id,
         "subentry_id": subentry.subentry_id,
     }
+
+
+async def test_gateway_repair_deleted_with_subentry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """Removing the energy site subentry deletes its gateway repair."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=None))
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is not None
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        assert hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+
+    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+
+
+async def test_gateway_repair_not_linked_to_subentry_removed_during_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """A subentry removed during the gateway lookup isn't linked to the repair."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    subentry = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0]
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+
+    async def _remove_subentry_and_find_nothing() -> None:
+        hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+
+    with patch.object(hass.config_entries, "async_schedule_reload"):
+        await _setup_entry_with_powerwall(
+            hass, entry, AsyncMock(side_effect=_remove_subentry_and_find_nothing)
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.config_subentry_id is None
+
+
+async def test_gateway_repairs_per_entry_for_shared_site(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_powerwall_connect: AsyncMock,
+) -> None:
+    """Two accounts sharing an energy site keep separate gateway repairs."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = PowerwallConnectionError("unreachable")
+    await _setup_entry_with_powerwall(hass, entry, AsyncMock(return_value=None))
+    ir.async_ignore_issue(hass, DOMAIN, GATEWAY_ISSUE_ID, True)
+
+    other_entry = _entry_with_powerwall("01JTESLEMETRYOTHER00000000", "other-account")
+    other_entry.add_to_hass(hass)
+    mock_powerwall_connect.side_effect = None
+    await _setup_entry_with_powerwall(hass, other_entry, AsyncMock(return_value=None))
+
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.dismissed_version is not None
+
+    await hass.config_entries.async_remove(other_entry.entry_id)
+
+    issue = issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 async def test_gateway_repair_cleared_on_first_local_poll(
@@ -1996,26 +2076,27 @@ async def test_local_gateway_repair_cleared_without_subentry(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """The gateway repair clears once the site is no longer set up for local control."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        GATEWAY_ISSUE_ID,
-        is_fixable=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="gateway_not_found",
-        translation_placeholders={"site": "Energy Site"},
-    )
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    issue_id = _create_gateway_issue(hass, SITE_ID, entry.entry_id, entry.entry_id)
 
-    await _setup_account_no_subentry(hass)
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, GATEWAY_ISSUE_ID) is None
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 def _create_gateway_issue(
-    hass: HomeAssistant, site_id: int, entry_id: str, config_entry_id: str | None
+    hass: HomeAssistant,
+    site_id: int,
+    entry_id: str,
+    config_entry_id: str | None,
+    issue_id: str | None = None,
 ) -> str:
     """Create a gateway repair issue owned by the given config entry."""
-    issue_id = f"gateway_not_found_{site_id}"
+    issue_id = issue_id or f"gateway_not_found_{entry_id}_{site_id}"
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -2088,7 +2169,8 @@ async def test_stale_gateway_repairs_deleted_on_setup(
     """Gateway repairs of the entry's sites which aren't set up are deleted.
 
     Gateway repairs owned by another config entry, or created before issues were
-    linked to their config entry, are left alone.
+    linked to their config entry, are left alone. Linked repairs keyed by site
+    only, from before repairs were keyed by config entry, are deleted.
     """
     entry = mock_config_entry()
     entry.add_to_hass(hass)
@@ -2096,8 +2178,17 @@ async def test_stale_gateway_repairs_deleted_on_setup(
     other_entry.add_to_hass(hass)
     # Site 98765 is in the products but without access, 111 is gone
     stale_issue_ids = [
-        _create_gateway_issue(hass, site_id, entry.entry_id, entry.entry_id)
-        for site_id in (98765, 111)
+        *(
+            _create_gateway_issue(hass, site_id, entry.entry_id, entry.entry_id)
+            for site_id in (98765, 111)
+        ),
+        _create_gateway_issue(
+            hass,
+            SITE_ID,
+            entry.entry_id,
+            entry.entry_id,
+            issue_id=f"gateway_not_found_{SITE_ID}",
+        ),
     ]
     kept_issue_ids = [
         _create_gateway_issue(hass, 222, other_entry.entry_id, other_entry.entry_id),

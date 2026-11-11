@@ -242,7 +242,7 @@ class KodiEntity(MediaPlayerEntity):
         if self._no_active_players:
             return MediaPlayerState.IDLE
 
-        if self._properties["speed"] == 0:
+        if self._properties.get("speed") == 0:
             return MediaPlayerState.PAUSED
 
         return MediaPlayerState.PLAYING

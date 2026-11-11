@@ -22,12 +22,14 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
+    ClimateEntityCapabilityAttribute,
     HVACMode,
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.temperature.trigger import TRIGGERS
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+    WaterHeaterCapabilityAttribute,
 )
 from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE,
@@ -43,6 +45,12 @@ from homeassistant.core import HomeAssistant
 
 _SENSOR_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+}
+_CLIMATE_UNIT_ATTRIBUTES = {
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+}
+_WATER_HEATER_UNIT_ATTRIBUTES = {
+    WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
 _WEATHER_UNIT_ATTRIBUTES = {
     ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
@@ -256,6 +264,7 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_all(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
@@ -263,6 +272,7 @@ async def test_temperature_trigger_sensor_crossed_threshold_behavior_all(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -302,6 +312,7 @@ async def test_temperature_trigger_climate_behavior_each(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -341,6 +352,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_first(
             HVACMode.AUTO,
             CLIMATE_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -383,6 +395,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_all(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
@@ -390,6 +403,7 @@ async def test_temperature_trigger_climate_crossed_threshold_behavior_all(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -429,6 +443,7 @@ async def test_temperature_trigger_water_heater_behavior_each(
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -468,6 +483,7 @@ async def test_temperature_trigger_water_heater_crossed_threshold_behavior_first
             "eco",
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_WATER_HEATER_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
     ],
@@ -870,3 +886,81 @@ async def test_temperature_trigger_unit_conversion_weather(
     await hass.async_block_till_done()
     assert len(calls) == 1
     calls.clear()
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "state", "temperature_attribute", "unit_attribute"),
+    [
+        pytest.param(
+            "climate.test",
+            HVACMode.AUTO,
+            CLIMATE_ATTR_CURRENT_TEMPERATURE,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT,
+            id="climate",
+        ),
+        pytest.param(
+            "water_heater.test",
+            "eco",
+            WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT,
+            id="water_heater",
+        ),
+    ],
+)
+async def test_temperature_trigger_unit_conversion_temperature_unit_attribute(
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str,
+    temperature_attribute: str,
+    unit_attribute: str,
+) -> None:
+    """Test the trigger uses the temperature_unit attribute, not the system unit."""
+    calls: list[str] = []
+
+    # The system unit is °C, the entity reports in °F
+    hass.states.async_set(
+        entity_id,
+        state,
+        {
+            temperature_attribute: 70,
+            unit_attribute: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass,
+        "temperature.crossed_threshold",
+        {
+            "threshold": {
+                "type": "above",
+                "value": {"number": 25, "unit_of_measurement": "°C"},
+            }
+        },
+        {CONF_ENTITY_ID: [entity_id]},
+        calls,
+    )
+
+    # 70°F = 21.1°C, below 25°C - should NOT trigger
+    hass.states.async_set(
+        entity_id,
+        state,
+        {
+            temperature_attribute: 70,
+            unit_attribute: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 80°F = 26.7°C, above 25°C - should trigger
+    hass.states.async_set(
+        entity_id,
+        state,
+        {
+            temperature_attribute: 80,
+            unit_attribute: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1

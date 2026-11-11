@@ -7,6 +7,7 @@ import probatio
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_SHUFFLE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
 )
@@ -152,6 +153,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(ATTR_ARTIST): cv.string,
             probatio.Optional(ATTR_ALBUM): cv.string,
             probatio.Optional(ATTR_RADIO_MODE): probatio.Coerce(bool),
+            probatio.Optional(ATTR_MEDIA_SHUFFLE): cv.boolean,
             probatio.Optional(ATTR_START_ITEM): cv.string,
             probatio.Optional(ATTR_USERNAME): cv.string,
         },

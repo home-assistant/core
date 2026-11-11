@@ -22,7 +22,7 @@ class SystemBridgeData:
     """System Bridge Data."""
 
     audio: Audio | None = None
-    battery: Battery = field(default_factory=Battery)
+    battery: Battery | None = None
     cpu: CPU = field(default_factory=CPU)
     disks: Disks | None = None
     displays: list[Display] = field(default_factory=list[Display])

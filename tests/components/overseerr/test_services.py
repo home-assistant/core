@@ -9,23 +9,13 @@ from python_overseerr import OverseerrConnectionError
 from python_overseerr.models import MediaType
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.overseerr.const import (
-    ATTR_MEDIA_ID,
-    ATTR_MEDIA_TYPE,
-    ATTR_QUERY,
-    ATTR_REQUESTED_BY,
-    ATTR_SEASONS,
-    ATTR_SORT_ORDER,
-    ATTR_STATUS,
-    DOMAIN,
-)
+from homeassistant.components.overseerr.const import DOMAIN
 from homeassistant.components.overseerr.services import (
-    SERVICE_GET_REQUESTS,
-    SERVICE_REQUEST_MEDIA,
-    SERVICE_SEARCH_MEDIA,
+    OverseerrService,
+    OverseerrServiceArgument,
     parse_seasons_input,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -44,12 +34,12 @@ async def test_service_get_requests(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_REQUESTS,
+        OverseerrService.GET_REQUESTS,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_STATUS: "approved",
-            ATTR_SORT_ORDER: "added",
-            ATTR_REQUESTED_BY: 1,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OverseerrServiceArgument.STATUS: "approved",
+            OverseerrServiceArgument.SORT_ORDER: "added",
+            OverseerrServiceArgument.REQUESTED_BY: 1,
         },
         blocking=True,
         return_response=True,
@@ -76,8 +66,8 @@ async def test_service_get_requests_no_meta(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_REQUESTS,
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
+        OverseerrService.GET_REQUESTS,
+        {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -99,10 +89,10 @@ async def test_service_search_media(
     # Test with a query containing spaces
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEARCH_MEDIA,
+        OverseerrService.SEARCH_MEDIA,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_QUERY: "test query with spaces",
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OverseerrServiceArgument.QUERY: "test query with spaces",
         },
         blocking=True,
         return_response=True,
@@ -130,12 +120,12 @@ async def test_service_request_media(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_REQUEST_MEDIA,
+        OverseerrService.REQUEST_MEDIA,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_MEDIA_TYPE: "tv",
-            ATTR_MEDIA_ID: "123456789",
-            ATTR_SEASONS: "1",
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            OverseerrServiceArgument.MEDIA_TYPE: "tv",
+            OverseerrServiceArgument.MEDIA_ID: "123456789",
+            OverseerrServiceArgument.SEASONS: "1",
         },
         blocking=True,
         return_response=True,
@@ -148,7 +138,7 @@ async def test_service_request_media(
     ("service", "payload", "function", "exception", "raised_exception", "message"),
     [
         (
-            SERVICE_GET_REQUESTS,
+            OverseerrService.GET_REQUESTS,
             {},
             "get_requests",
             OverseerrConnectionError("Timeout"),
@@ -156,16 +146,20 @@ async def test_service_request_media(
             "Error connecting to the Seerr instance: Timeout",
         ),
         (
-            SERVICE_SEARCH_MEDIA,
-            {ATTR_QUERY: "test"},
+            OverseerrService.SEARCH_MEDIA,
+            {OverseerrServiceArgument.QUERY: "test"},
             "search",
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
             "Error connecting to the Seerr instance: Timeout",
         ),
         (
-            SERVICE_REQUEST_MEDIA,
-            {ATTR_MEDIA_TYPE: "tv", ATTR_MEDIA_ID: "123456789", ATTR_SEASONS: "1"},
+            OverseerrService.REQUEST_MEDIA,
+            {
+                OverseerrServiceArgument.MEDIA_TYPE: "tv",
+                OverseerrServiceArgument.MEDIA_ID: "123456789",
+                OverseerrServiceArgument.SEASONS: "1",
+            },
             "create_request",
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
@@ -194,7 +188,8 @@ async def test_services_connection_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id}
+            | payload,
             blocking=True,
             return_response=True,
         )
@@ -203,11 +198,15 @@ async def test_services_connection_error(
 @pytest.mark.parametrize(
     ("service", "payload"),
     [
-        (SERVICE_GET_REQUESTS, {}),
-        (SERVICE_SEARCH_MEDIA, {ATTR_QUERY: "test"}),
+        (OverseerrService.GET_REQUESTS, {}),
+        (OverseerrService.SEARCH_MEDIA, {OverseerrServiceArgument.QUERY: "test"}),
         (
-            SERVICE_REQUEST_MEDIA,
-            {ATTR_MEDIA_TYPE: "tv", ATTR_MEDIA_ID: "123456789", ATTR_SEASONS: "1"},
+            OverseerrService.REQUEST_MEDIA,
+            {
+                OverseerrServiceArgument.MEDIA_TYPE: "tv",
+                OverseerrServiceArgument.MEDIA_ID: "123456789",
+                OverseerrServiceArgument.SEASONS: "1",
+            },
         ),
     ],
 )
@@ -229,7 +228,8 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry2.entry_id}
+            | payload,
             blocking=True,
             return_response=True,
         )
@@ -239,7 +239,7 @@ async def test_service_entry_availability(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_CONFIG_ENTRY_ID: "bad-config_id"} | payload,
+            {CommonServiceArgument.CONFIG_ENTRY_ID: "bad-config_id"} | payload,
             blocking=True,
             return_response=True,
         )

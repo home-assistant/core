@@ -12,7 +12,6 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
     DOMAIN as TRACKER_DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -54,7 +53,12 @@ SENSORS_TYPE_COUNT = "sensors_count"
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_device_identifier(entry: ConfigEntry) -> tuple[str, str]:
+def unnamed_client_name(mac: str) -> str:
+    """Return the tracker name of a client without a name."""
+    return mac.replace(":", "_")
+
+
+def get_device_identifier(entry: AsusWrtConfigEntry) -> tuple[str, str]:
     """Return the device registry identifier of the router."""
     return (DOMAIN, entry.unique_id or "AsusWRT")
 
@@ -142,7 +146,7 @@ class AsusWrtDevInfo:
         utc_point_in_time = dt_util.utcnow()
         if dev_info:
             if not self._name:
-                self._name = dev_info.name or self._mac.replace(":", "_")
+                self._name = dev_info.name or None
             self._ip_address = dev_info.ip
             self._last_activity = utc_point_in_time
             self._connected = True
@@ -184,7 +188,7 @@ class AsusWrtDevInfo:
 class AsusWrtRouter:
     """Representation of a AsusWrt router."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: AsusWrtConfigEntry) -> None:
         """Initialize a AsusWrt router."""
         self.hass = hass
         self._entry = entry
@@ -268,7 +272,10 @@ class AsusWrtRouter:
                     entry.entity_id, new_unique_id=device_mac
                 )
 
-            self._devices[device_mac] = AsusWrtDevInfo(device_mac, entry.original_name)
+            name = entry.original_name
+            if name == unnamed_client_name(device_mac):
+                name = None
+            self._devices[device_mac] = AsusWrtDevInfo(device_mac, name)
 
         # Migrate entities to new unique id format
         self._migrate_entities_unique_id()

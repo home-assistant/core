@@ -257,8 +257,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up SMHI sensor platform."""
 
-    coordinator = entry.runtime_data[0]
-    fire_coordinator = entry.runtime_data[1]
+    coordinator = entry.runtime_data.coordinator
+    fire_coordinator = entry.runtime_data.fire_coordinator
     location = entry.data
     entities: list[SMHIWeatherSensor | SMHIFireSensor] = []
     entities.extend(

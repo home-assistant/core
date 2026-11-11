@@ -37,7 +37,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
-    from . import TeslemetryConfigEntry
+    from .models import TeslemetryConfigEntry
 
 from .const import DOMAIN, LOGGER
 from .helpers import async_update_device_sw_version, flatten, gateway_issue_id
@@ -304,7 +304,11 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 if not self._local_reached:
                     self._local_reached = True
                     ir.async_delete_issue(
-                        self.hass, DOMAIN, gateway_issue_id(self.api.energy_site_id)
+                        self.hass,
+                        DOMAIN,
+                        gateway_issue_id(
+                            self.config_entry.entry_id, self.api.energy_site_id
+                        ),
                     )
             self.data = self._merged()
             # Not async_set_updated_data: availability stays with the stream.

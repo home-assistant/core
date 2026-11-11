@@ -10,8 +10,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity
+from .models import ElkM1ConfigEntry
 
 
 async def async_setup_entry(

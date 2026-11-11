@@ -49,10 +49,16 @@ SITE_ID = 123456
 HOST = "192.168.91.1"
 NEW_HOST = "192.168.91.2"
 PASSWORD = "abcde"
-GATEWAY_ISSUE_ID = f"gateway_not_found_{SITE_ID}"
+ENTRY_ID = "01JTESLEMETRYENTRY00000000"
+GATEWAY_ISSUE_ID = f"gateway_not_found_{ENTRY_ID}_{SITE_ID}"
 FIND_GATEWAY_ADDRESS = (
     "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address"
 )
+
+
+def _vehicle_issue_id(entry: MockConfigEntry) -> str:
+    """Return the id of the key repair issue of the vehicle."""
+    return f"key_{entry.entry_id}_{VEHICLE_VIN}"
 
 
 def _metadata_with_issue(issue: str | None) -> dict[str, Any]:
@@ -90,8 +96,11 @@ async def test_repair_issue_created(
         entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    issue = issue_registry.async_get_issue(DOMAIN, f"{issue_type}_{VEHICLE_VIN}")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"{issue_type}_{entry.entry_id}_{VEHICLE_VIN}"
+    )
     assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
     assert issue.translation_key == issue_type
     assert issue.data == {
         "entry_id": entry.entry_id,
@@ -115,9 +124,11 @@ async def test_no_repair_issue(
         entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is None
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is None
     assert (
-        issue_registry.async_get_issue(DOMAIN, f"streaming_toggle_{VEHICLE_VIN}")
+        issue_registry.async_get_issue(
+            DOMAIN, f"streaming_toggle_{entry.entry_id}_{VEHICLE_VIN}"
+        )
         is None
     )
 
@@ -134,7 +145,7 @@ async def test_repair_issue_auto_resolves(
     ):
         entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is not None
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is not None
 
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.metadata",
@@ -144,7 +155,7 @@ async def test_repair_issue_auto_resolves(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is None
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is None
 
 
 @pytest.mark.parametrize(
@@ -170,7 +181,7 @@ async def test_repair_issue_removed_when_vehicle_no_longer_available(
     ):
         entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is not None
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is not None
 
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.metadata",
@@ -180,7 +191,7 @@ async def test_repair_issue_removed_when_vehicle_no_longer_available(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is None
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is None
 
 
 async def test_ignored_repair_issue_kept_while_valid(
@@ -189,12 +200,12 @@ async def test_ignored_repair_issue_kept_while_valid(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test an ignored repair issue survives metadata polls and reloads."""
-    issue_id = f"key_{VEHICLE_VIN}"
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.metadata",
         return_value=_metadata_with_issue("key"),
     ):
         entry = await setup_platform(hass, [])
+        issue_id = _vehicle_issue_id(entry)
         ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
         issue = issue_registry.async_get_issue(DOMAIN, issue_id)
         assert issue is not None
@@ -222,8 +233,8 @@ async def test_stale_repair_issues_deleted_on_setup(
     """Test repair issues of vehicles gone from the account are deleted on setup.
 
     Repair issues owned by another config entry, or created before issues were
-    linked to their config entry, are left alone. The latter are linked once the
-    issue is created again.
+    linked to their config entry, are left alone. Linked repair issues keyed by
+    vehicle only, from before issues were keyed by config entry, are deleted.
     """
     entry = mock_config_entry()
     entry.add_to_hass(hass)
@@ -233,7 +244,7 @@ async def test_stale_repair_issues_deleted_on_setup(
         ("key_GONE", entry.entry_id),
         ("key_OTHER_ACCOUNT", other_entry.entry_id),
         ("key_GONE_UNLINKED", None),
-        (f"key_{VEHICLE_VIN}", None),
+        (f"key_{VEHICLE_VIN}", entry.entry_id),
     ):
         ir.async_create_issue(
             hass,
@@ -261,7 +272,8 @@ async def test_stale_repair_issues_deleted_on_setup(
     assert issue_registry.async_get_issue(DOMAIN, "key_GONE") is None
     assert issue_registry.async_get_issue(DOMAIN, "key_OTHER_ACCOUNT")
     assert issue_registry.async_get_issue(DOMAIN, "key_GONE_UNLINKED")
-    issue = issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}")
+    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is None
+    issue = issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry))
     assert issue is not None
     assert issue.config_entry_id == entry.entry_id
 
@@ -282,7 +294,7 @@ async def test_repair_fix_flow(
         entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    issue_id = f"key_{VEHICLE_VIN}"
+    issue_id = _vehicle_issue_id(entry)
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
@@ -309,6 +321,46 @@ async def test_repair_fix_flow(
         result = await process_repair_fix_flow(client, flow_id, json={})
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_repair_issues_per_entry_for_shared_vehicle(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Two accounts sharing a vehicle keep separate repair issues."""
+    base = mock_config_entry()
+    other_entry = MockConfigEntry(
+        domain=base.domain,
+        version=base.version,
+        minor_version=base.minor_version,
+        unique_id="other-account",
+        data=dict(base.data),
+    )
+    other_entry.add_to_hass(hass)
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_issue("key"),
+    ):
+        # Setting up the domain sets up both entries
+        entry = await setup_platform(hass, [])
+    assert entry.state is ConfigEntryState.LOADED
+    assert other_entry.state is ConfigEntryState.LOADED
+    ir.async_ignore_issue(hass, DOMAIN, _vehicle_issue_id(entry), True)
+
+    for config_entry in (entry, other_entry):
+        issue = issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(config_entry))
+        assert issue is not None
+        assert issue.config_entry_id == config_entry.entry_id
+        assert issue.data is not None
+        assert issue.data["entry_id"] == config_entry.entry_id
+
+    await hass.config_entries.async_remove(other_entry.entry_id)
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(other_entry)) is None
+    )
+    issue = issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry))
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 @pytest.mark.parametrize(
@@ -350,6 +402,7 @@ async def _setup_entry_with_lost_gateway(hass: HomeAssistant) -> MockConfigEntry
     base = mock_config_entry()
     entry = MockConfigEntry(
         domain=base.domain,
+        entry_id=ENTRY_ID,
         version=base.version,
         minor_version=base.minor_version,
         unique_id=base.unique_id,

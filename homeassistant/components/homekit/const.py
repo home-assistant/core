@@ -110,10 +110,6 @@ HOMEKIT_MODE_BRIDGE = "bridge"
 DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
-# #### HomeKit Component Services ####
-SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
-SERVICE_HOMEKIT_UNPAIR = "unpair"
-
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"
 BRIDGE_NAME = "Home Assistant Bridge"

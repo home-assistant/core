@@ -185,6 +185,17 @@ class RpcRelaySwitch(RpcSwitch):
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
 
 
+class RpcFanBoostSwitch(RpcSwitch):
+    """Entity that controls the fan boost on RPC based Shelly devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # The device rejects boost in manual mode
+        return super().available and self.status["mode"] == "auto"
+
+
 class RpcLedStripSwitch(RpcSwitch):
     """Entity that controls a LED strip effect option on RPC based Shelly devices."""
 
@@ -440,6 +451,16 @@ RPC_SWITCHES = {
         method_on="cury_set_away_mode",
         method_off="cury_set_away_mode",
         method_params_fn=lambda id, value: (id, value),
+    ),
+    "fan_boost": RpcSwitchDescription(
+        key="fan",
+        sub_key="boost",
+        translation_key="boost",
+        is_on=lambda status: status["boost"]["active"],
+        method_on="fan_boost",
+        method_off="fan_stop_boost",
+        method_params_fn=lambda id, _: (id,),
+        entity_class=RpcFanBoostSwitch,
     ),
     "ledstrip_reverse": RpcSwitchDescription(
         key="ledstrip",

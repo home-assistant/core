@@ -132,7 +132,7 @@ async def test_authentication_error(
             blocking=True,
         )
 
-        assert config_entry_reauth.assert_called
+        config_entry_reauth.assert_called()
 
 
 async def test_action_execution_failure(hass: HomeAssistant) -> None:

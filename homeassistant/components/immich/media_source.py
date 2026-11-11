@@ -21,7 +21,7 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 
@@ -173,7 +173,7 @@ class ImmichMediaSource(MediaSource):
         )
 
     async def _async_build_immich(
-        self, item: MediaSourceItem, entries: list[ConfigEntry]
+        self, item: MediaSourceItem, entries: list[ImmichConfigEntry]
     ) -> tuple[str, list[BrowseMediaSource]]:
         """Return the title and the children of the browsed item."""
 

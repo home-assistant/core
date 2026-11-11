@@ -440,7 +440,7 @@ class MqttValueTemplate:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
             # Created again when the entity_id is changed in place
-            if self._value_template.hass and (
+            if (
                 not self._template_state
                 or self._template_state.entity_id != self._entity.entity_id
             ):

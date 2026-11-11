@@ -3628,7 +3628,7 @@ async def test_blueprint_automation_override(
                 "a_number": 5,
             },
             "Blueprint 'Call service based on event' generated invalid automation",
-            "value should be a string at 'actions[0].action'",
+            "value should be a string at 'actions.action'",
         ),
     ],
 )

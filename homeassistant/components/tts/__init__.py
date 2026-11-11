@@ -47,6 +47,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.os_error import os_read_error, os_write_error
 from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util import language as language_util, ulid as ulid_util
 
@@ -1057,12 +1058,12 @@ class SpeechManager:
         try:
             self.cache_dir = _init_tts_cache_dir(self.hass, self.cache_dir)
         except OSError as err:
-            raise HomeAssistantError(f"Can't init cache dir {err}") from err
+            raise os_write_error(err, self.hass.config.path(self.cache_dir)) from err
 
         try:
             return _get_cache_files(self.cache_dir)
         except OSError as err:
-            raise HomeAssistantError(f"Can't read cache dir {err}") from err
+            raise os_read_error(err, self.cache_dir) from err
 
     async def async_init_cache(self) -> None:
         """Init config folder and load file cache."""
@@ -1634,7 +1635,7 @@ class SpeechManager:
             data = await self.hass.async_add_executor_job(load_speech)
         except OSError as err:
             del self.file_cache[cache_key]
-            raise HomeAssistantError(f"Can't read {voice_file}") from err
+            raise os_read_error(err, voice_file) from err
 
         yield data
 
