@@ -44,6 +44,7 @@ CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
 CONF_AUDIO_PACKET_SIZE = "audio_packet_size"
+CONF_CAMERA_MODE = "camera_mode"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
@@ -65,7 +66,6 @@ CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
 CONF_MAX_WIDTH = "max_width"
-CONF_SECURE_VIDEO = "secure_video"
 CONF_STREAM_ADDRESS = "stream_address"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
@@ -78,7 +78,6 @@ CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 CONF_STREAM_COUNT = "stream_count"
 
 # #### Config Defaults ####
-DEFAULT_SECURE_VIDEO = False
 DEFAULT_SUPPORT_AUDIO = False
 DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
 DEFAULT_AUDIO_MAP = "0:a:0"
@@ -111,6 +110,12 @@ HOMEKIT_MODE_ACCESSORY = "accessory"
 HOMEKIT_MODE_BRIDGE = "bridge"
 DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
+
+# #### Camera Modes ####
+CAMERA_MODE_STANDARD = "standard"
+CAMERA_MODE_SECURE_VIDEO = "secure_video"
+DEFAULT_CAMERA_MODE = CAMERA_MODE_STANDARD
+CAMERA_MODES = [CAMERA_MODE_STANDARD, CAMERA_MODE_SECURE_VIDEO]
 
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"

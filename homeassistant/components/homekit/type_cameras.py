@@ -52,15 +52,16 @@ from homeassistant.util.async_ import create_eager_task
 
 from .accessories import TYPES, HomeDriver
 from .const import (
+    CAMERA_MODE_SECURE_VIDEO,
     CHAR_MOTION_DETECTED,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_CAMERA_MODE,
     CONF_LINKED_MOTION_SENSOR,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
-    CONF_SECURE_VIDEO,
     CONF_STREAM_ADDRESS,
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
@@ -72,10 +73,10 @@ from .const import (
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
+    DEFAULT_CAMERA_MODE,
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
-    DEFAULT_SECURE_VIDEO,
     DEFAULT_STREAM_COUNT,
     DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
@@ -285,7 +286,7 @@ CONFIG_DEFAULTS = {
     CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
     CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
     CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
-    CONF_SECURE_VIDEO: DEFAULT_SECURE_VIDEO,
+    CONF_CAMERA_MODE: DEFAULT_CAMERA_MODE,
 }
 
 
@@ -351,7 +352,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
         self.secure_video = False
         self._recording_attributes: list[VideoAttributes] = []
-        if config[CONF_SECURE_VIDEO]:
+        if config[CONF_CAMERA_MODE] == CAMERA_MODE_SECURE_VIDEO:
             if not config.get(CONF_LINKED_MOTION_SENSOR):
                 _LOGGER.warning(
                     "%s: HomeKit Secure Video needs a linked motion sensor", entity_id

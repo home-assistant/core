@@ -845,9 +845,7 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
     # Bridged cameras cannot record to HomeKit Secure Video.
-    assert "camera_secure_video" not in {
-        str(key) for key in result2["data_schema"].schema
-    }
+    assert "camera_mode" not in {str(key) for key in result2["data_schema"].schema}
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
@@ -986,19 +984,20 @@ async def test_options_flow_with_camera_secure_video(hass: HomeAssistant) -> Non
 
     result = await _async_options_flow_to_cameras(hass, config_entry)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"camera_secure_video": ["camera.front"]}
+        result["flow_id"], user_input={"camera_mode": "secure_video"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options["entity_config"] == {
-        "camera.front": {"secure_video": True}
+        "camera.front": {"camera_mode": "secure_video"}
     }
 
     result = await _async_options_flow_to_cameras(hass, config_entry)
-    assert _get_schema_default(result["data_schema"].schema, "camera_secure_video") == [
-        "camera.front"
-    ]
+    assert (
+        _get_schema_default(result["data_schema"].schema, "camera_mode")
+        == "secure_video"
+    )
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"camera_secure_video": []}
+        result["flow_id"], user_input={"camera_mode": "standard"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options["entity_config"] == {}

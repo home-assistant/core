@@ -8,11 +8,12 @@ from pytest_homeassistant.components.diagnostics import get_diagnostics_for_conf
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.homekit.const import (
+    CAMERA_MODE_SECURE_VIDEO,
+    CONF_CAMERA_MODE,
     CONF_DEVICES,
     CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
     CONF_LINKED_MOTION_SENSOR,
-    CONF_SECURE_VIDEO,
     CONF_STREAM_SOURCE,
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
@@ -685,7 +686,7 @@ async def test_config_entry_secure_video_camera(
                 "camera.front": {
                     CONF_STREAM_SOURCE: "rtsp://cam",
                     CONF_LINKED_MOTION_SENSOR: "binary_sensor.motion",
-                    CONF_SECURE_VIDEO: True,
+                    CONF_CAMERA_MODE: CAMERA_MODE_SECURE_VIDEO,
                 }
             }
         },

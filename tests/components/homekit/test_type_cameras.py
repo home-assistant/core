@@ -39,15 +39,17 @@ from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.homekit.accessories import HomeBridge, HomeDriver
 from homeassistant.components.homekit.const import (
     AUDIO_CODEC_COPY,
+    CAMERA_MODE_SECURE_VIDEO,
+    CAMERA_MODE_STANDARD,
     CHAR_MOTION_DETECTED,
     CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CONF_AUDIO_CODEC,
+    CONF_CAMERA_MODE,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
-    CONF_SECURE_VIDEO,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
@@ -1595,7 +1597,7 @@ CAMERA_ENTITY = "camera.front"
 SECURE_VIDEO_CONFIG = {
     CONF_STREAM_SOURCE: "rtsp://cam",
     CONF_LINKED_MOTION_SENSOR: MOTION_SENSOR,
-    CONF_SECURE_VIDEO: True,
+    CONF_CAMERA_MODE: CAMERA_MODE_SECURE_VIDEO,
 }
 
 
@@ -1716,7 +1718,9 @@ async def test_camera_secure_video_keeps_motion_iid(
         return acc.iid_manager.get_iid(service.get_characteristic(CHAR_MOTION_DETECTED))
 
     before = motion_iid(
-        await _secure_video_camera(hass, run_driver, **{CONF_SECURE_VIDEO: False})
+        await _secure_video_camera(
+            hass, run_driver, **{CONF_CAMERA_MODE: CAMERA_MODE_STANDARD}
+        )
     )
     assert motion_iid(await _secure_video_camera(hass, run_driver)) == before
 
