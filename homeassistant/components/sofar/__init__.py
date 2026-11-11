@@ -127,14 +127,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     assert serial is not None
     _async_remove_stale_sensors(hass, serial)
 
+    unit = async_get_unit(
+        hass,
+        entry,
+        create_modbus_params(entry.data),
+        entry.data[CONF_UNIT_ID],
+    )
+
     stored = entry.data.get(SERVED_COMPONENTS, ())
     device = SofarInverter(
-        async_get_unit(
-            hass,
-            entry,
-            create_modbus_params(entry.data),
-            entry.data[CONF_UNIT_ID],
-        ),
+        unit,
         serial_number=serial,
         has_fault_log=FAULT_LOG in stored,
         has_battery_tower=BATTERY_PACKS in stored,
@@ -207,16 +209,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         _async_store_served(hass, entry, served)
 
     # Up front: a part's device must name an inverter that has an id.
+    inverter = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=readings.device_info
+    )
     entry.runtime_data = SofarRuntimeData(
-        readings,
-        settings,
-        packs,
-        dr.async_get(hass)
-        .async_get_or_create_from_info(
-            config_entry_id=entry.entry_id, device_info=readings.device_info
-        )
-        .id,
-        served,
+        readings, settings, packs, inverter.id, served
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
