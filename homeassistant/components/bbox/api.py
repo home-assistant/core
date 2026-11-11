@@ -4,6 +4,7 @@ Targets the local HTTP API of recent Bbox firmwares (``/api/v1/``,
 reachable at ``mabbox.bytel.fr``, which the box resolves to itself).
 """
 
+from asyncio import gather
 import logging
 from typing import Any
 
@@ -149,5 +150,10 @@ class BboxApi:
     async def get_ip_stats_and_info(
         self,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
-        """Return WAN statistics and device information in one round trip."""
-        return await self.get_ip_stats(), await self.get_bbox_info()
+        """Return WAN statistics and device information in one round trip.
+
+        The two endpoints are requested concurrently, so the worst case
+        stays a single request/login/retry chain instead of the sum of
+        both.
+        """
+        return await gather(self.get_ip_stats(), self.get_bbox_info())

@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
-from .api import BboxApi, BboxError
+from .api import BboxApi, BboxConnectionError, BboxError
 from .const import DEFAULT_HOST, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -224,19 +224,28 @@ class BboxData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from the Bbox."""
+        """Get the latest data from the Bbox.
+
+        Raises BboxError when the fetch fails: setup stops without
+        entities, and entity updates keep their last known value.
+        """
 
         future = None
         try:
             future = run_coroutine_threadsafe(self._async_fetch(), self._hass.loop)
             self.data, self.router_infos = future.result(REQUEST_TIMEOUT)
-        except (BboxError, TimeoutError) as error:
-            # Do not leave the abandoned fetch running under a bridge
-            # timeout: it would keep hitting the Bbox for a discarded
-            # result.
+        except BboxError:
+            # Do not leave the abandoned fetch running: it would keep
+            # hitting the Bbox for a discarded result.
             if future is not None:
                 future.cancel()
-            _LOGGER.error(error)
-            self.data = None
-            self.router_infos = None
-            return False
+            raise
+        except TimeoutError as error:
+            # The bridge wait expired: cancel the fetch and surface a
+            # typed error instead of swallowing it, so the stored
+            # payloads are never read while cleared.
+            if future is not None:
+                future.cancel()
+            raise BboxConnectionError(
+                f"Bbox fetch did not complete in {REQUEST_TIMEOUT} seconds"
+            ) from error
