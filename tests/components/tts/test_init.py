@@ -881,10 +881,10 @@ async def test_service_clear_cache_days_missing_file(
 
 
 @pytest.mark.parametrize(
-    ("failing_call", "expected_log", "expected_files"),
+    ("failing_call", "expected_log"),
     [
-        pytest.param("stat", "Can't check", [OLD_CACHE_FILE], id="stat"),
-        pytest.param("remove", "Can't remove", [], id="remove"),
+        pytest.param("stat", "Can't check", id="stat"),
+        pytest.param("remove", "Can't remove", id="remove"),
     ],
 )
 async def test_service_clear_cache_days_file_error(
@@ -894,9 +894,8 @@ async def test_service_clear_cache_days_file_error(
     caplog: pytest.LogCaptureFixture,
     failing_call: str,
     expected_log: str,
-    expected_files: list[str],
 ) -> None:
-    """Test clear cache logs files it can't check or remove."""
+    """Test clear cache keeps files it can't check or remove for a later call."""
     await hass.async_add_executor_job(
         _write_cache_file, mock_tts_cache_dir / OLD_CACHE_FILE, 31
     )
@@ -913,9 +912,19 @@ async def test_service_clear_cache_days_file_error(
             blocking=True,
         )
 
-    assert list(hass.data[tts.DATA_TTS_MANAGER].file_cache.values()) == expected_files
+    assert list(hass.data[tts.DATA_TTS_MANAGER].file_cache.values()) == [OLD_CACHE_FILE]
     assert (mock_tts_cache_dir / OLD_CACHE_FILE).is_file()
     assert f"{expected_log} cache file '{OLD_CACHE_FILE}': No access" in caplog.text
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts.SERVICE_CLEAR_CACHE,
+        {TextToSpeechServiceArgument.DAYS: 30},
+        blocking=True,
+    )
+
+    assert hass.data[tts.DATA_TTS_MANAGER].file_cache == {}
+    assert not (mock_tts_cache_dir / OLD_CACHE_FILE).is_file()
 
 
 @pytest.mark.parametrize(
@@ -1387,6 +1396,51 @@ async def test_service_clear_cache_days_concurrent_load(
     )
 
     assert cache_file.is_file()
+
+
+async def test_service_clear_cache_days_concurrent_regenerate(
+    hass: HomeAssistant,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test a message regenerated during clear cache isn't indexed without a file."""
+    cache_file = mock_tts_cache_dir / DOORBELL_CACHE_FILE
+    await hass.async_add_executor_job(_write_cache_file, cache_file, 31)
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+    caches: list[tts.TTSCache] = []
+    add_executor_job = hass.async_add_executor_job
+
+    async def regenerate_and_remove(
+        remove_files: Callable[[dict[str, str]], dict[str, str]],
+        files: dict[str, str],
+    ) -> dict[str, str]:
+        caches.append(
+            manager.async_cache_message_in_memory(
+                "tts.test", "There is someone at the door.", True, "en_US", {}
+            )
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        return await add_executor_job(remove_files, files)
+
+    def add_job(target: Callable[..., Any], *args: Any) -> asyncio.Future[Any]:
+        if getattr(target, "__name__", None) == "remove_files":
+            return asyncio.ensure_future(regenerate_and_remove(target, *args))
+        return add_executor_job(target, *args)
+
+    with patch.object(hass, "async_add_executor_job", side_effect=add_job):
+        await hass.services.async_call(
+            tts.DOMAIN,
+            tts.SERVICE_CLEAR_CACHE,
+            {TextToSpeechServiceArgument.DAYS: 30},
+            blocking=True,
+        )
+
+    assert b"".join([chunk async for chunk in caches[0].async_stream_data()]) == (
+        MOCK_DATA
+    )
+    assert manager.file_cache == {}
+    assert not cache_file.is_file()
 
 
 class MockProviderEmpty(MockTTSProvider):

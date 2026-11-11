@@ -1044,6 +1044,7 @@ class SpeechManager:
         self.cache_dir = cache_dir
         self.memory_cache_maxage = memory_cache_maxage
         self.file_cache: dict[str, str] = {}
+        self._files_pending_removal: set[str] = set()
         self.mem_cache: dict[str, TTSCache] = {}
         self.token_to_stream: dict[str, ResultStream] = {}
         self.converted_override_cache: dict[
@@ -1114,15 +1115,18 @@ class SpeechManager:
                 unused.append(cache_key)
             return unused
 
-        def remove_files(files: list[str]) -> None:
-            """Remove files from filesystem."""
-            for filename in files:
+        def remove_files(files: dict[str, str]) -> dict[str, str]:
+            """Remove files from filesystem and return the ones that failed."""
+            failed = {}
+            for cache_key, filename in files.items():
                 try:
                     os.remove(os.path.join(self.cache_dir, filename))
                 except FileNotFoundError:
                     pass
                 except OSError as err:
                     _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
+                    failed[cache_key] = filename
+            return failed
 
         # Messages in the memory cache are in use
         unused = await self.hass.async_add_executor_job(
@@ -1135,13 +1139,19 @@ class SpeechManager:
         )
         # Unindex before removing, so a request started meanwhile regenerates
         # the audio instead of reading a removed file
-        files = [
-            filename
+        files = {
+            cache_key: filename
             for cache_key in unused
             if cache_key not in self.mem_cache
             and (filename := self.file_cache.pop(cache_key, None))
-        ]
-        await self.hass.async_add_executor_job(remove_files, files)
+        }
+        self._files_pending_removal.update(files.values())
+        try:
+            failed = await self.hass.async_add_executor_job(remove_files, files)
+        finally:
+            self._files_pending_removal.difference_update(files.values())
+        for cache_key, filename in failed.items():
+            self.file_cache.setdefault(cache_key, filename)
 
     @callback
     def async_get_cache_file_path(self, cache_key: str) -> Path | None:
@@ -1508,6 +1518,10 @@ class SpeechManager:
             raise HomeAssistantError(
                 f"TTS filename '{filename}' from {engine_instance.name} is invalid!"
             )
+
+        # Writing now could race the removal of the old file with this name
+        if filename in self._files_pending_removal:
+            return
 
         if cache.extension == "mp3":
             name = (
