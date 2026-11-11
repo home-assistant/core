@@ -121,7 +121,7 @@ async def test_alert_expires(
     # The feed keeps returning the same alert after it has expired at 18:00.
     freezer.move_to("2026-01-01T18:00:01+00:00")
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -140,7 +140,7 @@ async def test_alert_withdrawn(
     mock_meteoalert.return_value.get_alert.return_value = None
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
