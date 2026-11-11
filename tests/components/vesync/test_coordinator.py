@@ -16,7 +16,6 @@ from homeassistant.components.vesync.const import (
 from homeassistant.components.vesync.coordinator import VeSyncDataCoordinator
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
