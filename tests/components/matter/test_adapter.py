@@ -497,12 +497,18 @@ async def test_get_clean_name() -> None:
         (3, "Living Room"),
         (4, "Bedroom"),
         (5, None),
+        (6, None),
+        (7, None),
+        (8, "Bedroom"),
     ],
     ids=[
         "plug_in_room",
         "other_vendor_in_same_room",
         "device_in_other_room",
         "device_without_room",
+        "conflicting_room_names",
+        "blank_room_name",
+        "nul_padded_room_name",
     ],
 )
 async def test_get_suggested_area(endpoint_id: int, area_name: str | None) -> None:
@@ -510,10 +516,24 @@ async def test_get_suggested_area(endpoint_id: int, area_name: str | None) -> No
 
     Endpoints 2 and 3 (from different vendors) are grouped under the "Living Room" Room,
     endpoint 4 under "Bedroom", and endpoint 5 is only listed under a Zone group
-    (type kZone, not kRoom), so it gets no suggestion.
+    (type kZone, not kRoom), so it gets no suggestion. Endpoint 6 is listed under both
+    "Living Room" and "Office", a conflict that also gets no suggestion. Endpoint 7's
+    Room has a blank (NUL-only) name, and endpoint 8's Room name is NUL-padded and
+    resolves to "Bedroom" once cleaned.
     """
     node = create_node_from_fixture("mock_bridge_rooms")
     assert get_suggested_area(node.endpoints[endpoint_id]) == area_name
+
+
+async def test_get_suggested_area_composed_device_partial_room() -> None:
+    """Test get_suggested_area resolves a composed device from a single part's Room.
+
+    The composed device at endpoint 2 (parts 3 and 4) is only listed via part
+    endpoint 3 in the "Office" Room, so it must still resolve through
+    get_compose_child_ids() rather than only matching the parent endpoint.
+    """
+    node = create_node_from_fixture("mock_composed_bridge_room")
+    assert get_suggested_area(node.endpoints[2]) == "Office"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_bridge_rooms"])
@@ -523,13 +543,11 @@ async def test_get_suggested_area(endpoint_id: int, area_name: str | None) -> No
         (2, "Living Room"),
         (3, "Living Room"),
         (4, "Bedroom"),
-        (5, None),
     ],
     ids=[
         "plug_in_room",
         "other_vendor_in_same_room",
         "device_in_other_room",
-        "device_without_room",
     ],
 )
 async def test_device_registry_suggested_area(
@@ -539,7 +557,7 @@ async def test_device_registry_suggested_area(
     matter_client: MagicMock,
     matter_node: MatterNode,
     endpoint_id: int,
-    area_name: str | None,
+    area_name: str,
 ) -> None:
     """Test a bridged device is created with the area its bridge's Actions cluster suggests."""
     entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
@@ -547,12 +565,33 @@ async def test_device_registry_suggested_area(
         identifier_for(matter_client, matter_node, endpoint_id), entry_id
     )
     assert device_entry is not None
-    if area_name is None:
-        assert device_entry.area_id is None
-    else:
-        assert (
-            device_entry.area_id == area_registry.async_get_area_by_name(area_name).id
-        )
+    assert device_entry.area_id == area_registry.async_get_area_by_name(area_name).id
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_bridge_rooms"])
+async def test_device_registry_no_suggested_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a device outside any Room gets no area, and no area is created for a Zone.
+
+    Endpoint 5 is only listed under the "Ground Floor" Zone group (type kZone, not
+    kRoom), so it must not get an area, and that Zone's name must not itself become
+    an area.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    device_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 5), entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.area_id is None
+    assert {area.name for area in area_registry.async_list_areas()} == {
+        "Living Room",
+        "Bedroom",
+    }
 
 
 async def test_bad_node_not_crash_integration(

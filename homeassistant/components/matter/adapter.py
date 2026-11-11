@@ -58,7 +58,7 @@ def get_suggested_area(endpoint: MatterEndpoint) -> str | None:
         for endpoint_list in actions.endpointLists:
             if endpoint_list.type != clusters.Actions.Enums.EndpointListTypeEnum.kRoom:
                 continue
-            if not candidate_ids & set(endpoint_list.endpoints):
+            if not candidate_ids & set(endpoint_list.endpoints or ()):
                 continue
             if room_name := get_clean_name(endpoint_list.name):
                 room_names.add(room_name)
