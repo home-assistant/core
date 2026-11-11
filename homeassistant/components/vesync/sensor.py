@@ -1,7 +1,7 @@
 """Support for voltage, power & energy sensors for VeSync outlets."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 from typing import override
 
@@ -309,7 +309,12 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
             self._fryer_state = (
                 device.state_chamber_2 if chamber == 2 else device.state_chamber_1
             )
-            self._attr_translation_placeholders = {"basket": str(chamber)}
+            if device.is_dual_chamber:
+                self.entity_description = replace(
+                    description,
+                    translation_key=f"{description.translation_key}_basket",
+                )
+                self._attr_translation_placeholders = {"basket": str(chamber)}
             if chamber == 2:
                 self._attr_unique_id += "-chamber_2"
 

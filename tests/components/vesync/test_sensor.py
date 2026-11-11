@@ -82,7 +82,7 @@ async def test_cook_status(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.cs158_af_air_fryer_cooking_basket_1_cooking_status")
+    state = hass.states.get("sensor.cs158_af_air_fryer_cooking_cooking_status")
     assert state is not None
     assert state.state == expected_state
 
@@ -143,6 +143,15 @@ async def test_dual_chamber_sensors(
         )
         if entity.domain == SENSOR_DOMAIN
     ]
+    assert {
+        entity.unique_id: entity.original_name
+        for entity in entities
+        if entity.unique_id
+        in {"dual_fryer-current_temp", "dual_fryer-current_temp-chamber_2"}
+    } == {
+        "dual_fryer-current_temp": "Basket 1 current temperature",
+        "dual_fryer-current_temp-chamber_2": "Basket 2 current temperature",
+    }
     sensor_keys = {
         "cook_status",
         "current_temp",
