@@ -18,5 +18,4 @@ ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".smhi_{}"
 LOGGER = logging.getLogger(__package__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=31)
-RADAR_SCAN_INTERVAL = timedelta(minutes=5)
 TIMEOUT = 10

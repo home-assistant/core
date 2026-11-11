@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
@@ -18,6 +18,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import async_get_image
+from homeassistant.components.smhi.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -52,18 +53,14 @@ async def test_image_setup(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "load_int")
 async def test_image_cached_per_radar_update(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
     mock_radar_client: MagicMock,
     get_radar_data: SMHIRadar,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the radar image is fetched once for each radar update."""
-    client = await hass_client()
-
     for _ in range(2):
-        resp = await client.get(f"/api/image_proxy/{ENTITY_ID}")
-        assert resp.status == HTTPStatus.OK
-        assert await resp.read() == b"radar image"
+        image = await async_get_image(hass, ENTITY_ID)
+        assert image.content == b"radar image"
     assert mock_radar_client.async_get_image.call_count == 1
 
     new_valid_time = datetime(2026, 11, 10, 18, 40, tzinfo=UTC)
@@ -72,7 +69,7 @@ async def test_image_cached_per_radar_update(
         "valid_time": new_valid_time,
     }
     mock_radar_client.async_get_image.return_value = b"new radar image"
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -80,9 +77,8 @@ async def test_image_cached_per_radar_update(
     assert state
     assert state.state == new_valid_time.isoformat()
 
-    resp = await client.get(f"/api/image_proxy/{ENTITY_ID}")
-    assert resp.status == HTTPStatus.OK
-    assert await resp.read() == b"new radar image"
+    image = await async_get_image(hass, ENTITY_ID)
+    assert image.content == b"new radar image"
     assert mock_radar_client.async_get_image.call_count == 2
 
 

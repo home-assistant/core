@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, RADAR_SCAN_INTERVAL, TIMEOUT
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
 type SMHIConfigEntry = ConfigEntry[SMHIRuntimeData]
 
@@ -162,7 +162,7 @@ class SMHIRadarDataUpdateCoordinator(DataUpdateCoordinator[SMHIRadar]):
             LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=RADAR_SCAN_INTERVAL,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self._smhi_radar_api = SMHIRadarImage(
             config_entry.data[CONF_LOCATION][CONF_LONGITUDE],

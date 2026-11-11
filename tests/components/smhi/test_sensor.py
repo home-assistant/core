@@ -18,6 +18,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.smhi.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -160,7 +161,7 @@ async def test_radar_sensor_values(
         "dbz": dbz,
         "precipitation": precipitation,
     }
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -184,7 +185,7 @@ async def test_radar_sensor_unavailable(
 ) -> None:
     """Test the radar sensor becomes unavailable when the radar fails."""
     mock_radar_client.async_get_radar.side_effect = SmhiRadarException("boom")
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -193,7 +194,7 @@ async def test_radar_sensor_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
     mock_radar_client.async_get_radar.side_effect = None
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
