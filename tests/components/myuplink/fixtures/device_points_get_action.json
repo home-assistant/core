@@ -1,0 +1,36 @@
+[
+  {
+    "category": "NIBEF F730 CU 3x400V",
+    "parameterId": "40004",
+    "parameterName": "Current outd temp (BT1)",
+    "parameterUnit": "°C",
+    "writable": false,
+    "timestamp": "2024-02-09T10:56:12+00:00",
+    "value": -9.3,
+    "strVal": "-9.3°C",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1,
+    "enumValues": [],
+    "scaleValue": "0.1",
+    "zoneId": null
+  },
+  {
+    "category": "NIBEF F730 CU 3x400V",
+    "parameterId": "40008",
+    "parameterName": "Supply line (BT2)",
+    "parameterUnit": "°C",
+    "writable": false,
+    "timestamp": "2024-02-09T10:58:51+00:00",
+    "value": 39.7,
+    "strVal": "39.7°C",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1,
+    "enumValues": [],
+    "scaleValue": "0.1",
+    "zoneId": null
+  }
+]

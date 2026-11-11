@@ -160,23 +160,23 @@ async def async_get_datapoints(call: ServiceCall) -> ServiceResponse:
     return {
         "devicepoints": [
             {
-                "category": item["category"],
-                "parameter_id": item["parameterId"],
-                "parameter_name": item["parameterName"],
-                "parameter_unit": item["parameterUnit"],
-                "value": item["value"],
-                "str_value": item["strVal"],
-                "timestamp": item["timestamp"],
-                "min_value": item["minValue"],
-                "max_value": item["maxValue"],
-                "step_value": item["stepValue"],
-                "scale_value": item["scaleValue"],
-                "writable": item["writable"],
-                "enum_values": item["enumValues"],
-                "smart_home_categories": item["smartHomeCategories"],
-                "zone_id": item["zoneId"],
+                "category": point["category"],
+                "parameter_id": point["parameterId"],
+                "parameter_name": point["parameterName"],
+                "parameter_unit": point["parameterUnit"],
+                "value": point["value"],
+                "str_value": point["strVal"],
+                "timestamp": point["timestamp"],
+                "min_value": point["minValue"],
+                "max_value": point["maxValue"],
+                "step_value": point["stepValue"],
+                "scale_value": point["scaleValue"],
+                "writable": point["writable"],
+                "enum_values": point["enumValues"],
+                "smart_home_categories": point["smartHomeCategories"],
+                "zone_id": point["zoneId"],
             }
-            for item in dev_points
+            for point in dev_points
         ]
     }
 
