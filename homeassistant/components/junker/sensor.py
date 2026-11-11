@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import UnitOfTime
+from homeassistant.const import MAX_LENGTH_STATE_STATE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -98,7 +98,7 @@ class JunkerTomorrowSensor(JunkerEntity, SensorEntity):
     @override
     def native_value(self) -> str:
         """Return the waste types collected tomorrow."""
-        return ", ".join(self._tomorrow())
+        return ", ".join(self._tomorrow())[:MAX_LENGTH_STATE_STATE]
 
     @property
     @override

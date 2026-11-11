@@ -1,12 +1,13 @@
 """The Junker integration."""
 
+from junker_api import JunkerClient
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_AREA_ID, CONF_MUNICIPALITY
 from .coordinator import JunkerConfigEntry, JunkerDataUpdateCoordinator
-from .junker_api import JunkerClient
 
 _PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR]
 

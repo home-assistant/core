@@ -4,12 +4,13 @@ from datetime import timedelta
 import logging
 from typing import override
 
+from junker_api import Collection, JunkerClient, JunkerError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .junker_api import Collection, JunkerClient, JunkerError
 
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_INTERVAL = timedelta(days=1)

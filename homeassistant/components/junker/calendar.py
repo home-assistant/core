@@ -3,6 +3,8 @@
 import datetime as dt
 from typing import override
 
+from junker_api import Collection
+
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -10,7 +12,6 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import JunkerConfigEntry, JunkerDataUpdateCoordinator
 from .entity import JunkerEntity
-from .junker_api import Collection
 
 PARALLEL_UPDATES = 0
 

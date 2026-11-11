@@ -8,5 +8,6 @@
   "documentation": "https://www.home-assistant.io/integrations/junker",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "requirements": ["junker-api==0.1.0"]
 }

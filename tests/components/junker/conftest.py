@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import date
 from unittest.mock import AsyncMock, Mock, patch
 
+from junker_api import Collection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -12,7 +13,6 @@ from homeassistant.components.junker.const import (
     CONF_WASTE_TYPES,
     DOMAIN,
 )
-from homeassistant.components.junker.junker_api import Collection
 from homeassistant.core import HomeAssistant
 
 TEST_MUNICIPALITY = "Test municipality"

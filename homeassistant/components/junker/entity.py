@@ -2,6 +2,8 @@
 
 from typing import override
 
+from junker_api import Collection, slugify_municipality
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import async_track_time_change
@@ -10,7 +12,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_AREA_ID, CONF_MUNICIPALITY, CONF_WASTE_TYPES, DOMAIN
 from .coordinator import JunkerConfigEntry, JunkerDataUpdateCoordinator
-from .junker_api import Collection, slugify_municipality
 
 
 class JunkerEntity(CoordinatorEntity[JunkerDataUpdateCoordinator]):

@@ -3,10 +3,17 @@
 import logging
 from typing import Any, override
 
+from junker_api import (
+    AreaRequired,
+    Collection,
+    JunkerClient,
+    JunkerConnectionError,
+    JunkerError,
+    slugify_municipality,
+)
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -27,14 +34,7 @@ from .const import (
     CONF_WASTE_TYPES,
     DOMAIN,
 )
-from .junker_api import (
-    AreaRequired,
-    Collection,
-    JunkerClient,
-    JunkerConnectionError,
-    JunkerError,
-    slugify_municipality,
-)
+from .coordinator import JunkerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 _LOOKUP_URL = "https://junkerapp.it/cerca-il-tuo-comune/"
@@ -193,7 +193,7 @@ class JunkerConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> JunkerOptionsFlow:
+    def async_get_options_flow(config_entry: JunkerConfigEntry) -> JunkerOptionsFlow:
         """Return the options flow."""
         return JunkerOptionsFlow()
 

@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from junker_api import Area, AreaRequired, JunkerConnectionError, JunkerError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -11,12 +12,6 @@ from homeassistant.components.junker.const import (
     CONF_WASTE_NAME,
     CONF_WASTE_TYPES,
     DOMAIN,
-)
-from homeassistant.components.junker.junker_api import (
-    Area,
-    AreaRequired,
-    JunkerConnectionError,
-    JunkerError,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant

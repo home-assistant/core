@@ -2,10 +2,10 @@
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.junker.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.junker.const import CONF_WASTE_TYPES, DOMAIN
+from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -55,3 +55,21 @@ async def test_midnight_refresh(
     await hass.async_block_till_done()
 
     assert _state(hass, "tomorrow_collection").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.freeze_time("2026-11-10 20:00:00")
+@pytest.mark.usefixtures("mock_junker_client")
+async def test_tomorrow_state_is_bounded(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a long tomorrow state is truncated while attributes stay complete."""
+    names = {"Organic waste": "A" * 128, "Paper": "B" * 128}
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_WASTE_TYPES: names}
+    )
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = _state(hass, "tomorrow_collection")
+    assert len(state.state) == MAX_LENGTH_STATE_STATE
+    assert state.attributes["waste_types"] == list(names.values())

@@ -2,7 +2,8 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components.junker.junker_api import JunkerError
+from junker_api import JunkerError
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
