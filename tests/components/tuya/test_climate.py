@@ -42,6 +42,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.tuya.const import TUYA_HA_SIGNAL_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import (
@@ -50,6 +51,8 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -1442,6 +1445,119 @@ async def test_infrared_ac_temperature_rounded_to_step(
         mock_device.id, ("T", 23)
     )
     assert hass.states.get(IR_AC_ENTITY_ID).attributes[ATTR_TEMPERATURE] == 23
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_previous_settle_check_skipped(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the settle check of an action does not run during the next one."""
+    mock_device.status.update({"power": True, "mode": "4", "temp": 25, "wind": "1"})
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: IR_AC_ENTITY_ID},
+        blocking=True,
+    )
+    freezer.tick(9)
+    shown: list[str] = []
+    async_track_state_change_event(
+        hass, IR_AC_ENTITY_ID, lambda event: shown.append(event.data["new_state"].state)
+    )
+
+    def _report_and_settle_while_sending(
+        device_id: str, commands: list[dict[str, Any]]
+    ) -> None:
+        """Report cool and pass the previous settle time while in cool."""
+        if commands[0] == {"code": "M", "value": 0}:
+            mock_device.status.update({"power": True, "mode": "0"})
+            async_dispatcher_send(
+                hass,
+                f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{mock_device.id}",
+                ["power", "mode"],
+                None,
+            )
+            freezer.tick(2)
+            async_fire_time_changed(hass)
+
+    mock_manager.send_commands.side_effect = _report_and_settle_while_sending
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: IR_AC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
+        blocking=True,
+    )
+    assert mock_manager.send_commands.call_args_list[-3:] == _ir_commands(
+        mock_device.id, ("M", 0), ("F", 0), ("M", 3)
+    )
+    assert HVACMode.COOL not in shown
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.FAN_ONLY
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_first_report_after_command(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a first report arriving while commands settle is shown later."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: IR_AC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    # The first report arrives while the commands settle, with another state.
+    report = {"power": True, "mode": "0", "temp": 24, "wind": "0"}
+    mock_device.status.update(report)
+    await notification_helper.async_send_device_update(mock_device, report)
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.HEAT
+
+    freezer.tick(11)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.COOL
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_rejected_temperature_shown(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test an accepted mode is shown when the following temperature fails."""
+    mock_restore_cache_with_extra_data(
+        hass, _ir_restore(HVACMode.OFF, {"M": 0, "T": 24, "F": 0})
+    )
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    mock_manager.send_commands.side_effect = _reject_commands(("T", 19))
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: IR_AC_ENTITY_ID,
+                ATTR_TEMPERATURE: 19,
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
+    # The accepted mode command powered the unit on in heat.
+    assert mock_manager.send_commands.call_args_list == _ir_commands(
+        mock_device.id, ("M", 1), ("T", 19)
+    )
+    assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.HEAT
 
 
 @pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
