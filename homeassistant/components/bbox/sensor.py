@@ -1,11 +1,10 @@
 """Support for Bbox Bouygues Modem Router."""
 
+from asyncio import run_coroutine_threadsafe
 from datetime import timedelta
 import logging
 
 import probatio
-import pybbox
-import requests
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -14,13 +13,23 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_MONITORED_VARIABLES, CONF_NAME, UnitOfDataRate
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    UnitOfDataRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
+
+from .api import BboxApi, BboxError
+from .const import DEFAULT_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +38,8 @@ ATTRIBUTION = "Powered by Bouygues Telecom"
 DEFAULT_NAME = "Bbox"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
+REQUEST_TIMEOUT = 10  # seconds
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -84,6 +95,10 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        # The Bbox only needs the password for endpoints like the hosts
+        # list; the WAN and device endpoints answer without it.
+        probatio.Optional(CONF_PASSWORD, default=""): cv.string,
     }
 )
 
@@ -98,9 +113,9 @@ def setup_platform(
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
     try:
-        bbox_data = BboxData()
+        bbox_data = BboxData(hass, config[CONF_HOST], config[CONF_PASSWORD])
         bbox_data.update()
-    except requests.exceptions.HTTPError as error:
+    except BboxError as error:
         _LOGGER.error(error)
         return
 
@@ -183,20 +198,36 @@ class BboxSensor(SensorEntity):
 class BboxData:
     """Get data from the Bbox."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, password: str | None) -> None:
         """Initialize the data object."""
+        self._hass = hass
+        self._host = host
+        self._password = password
+        self._api: BboxApi | None = None
         self.data = None
         self.router_infos = None
+
+    async def _async_fetch(self):
+        """Fetch the stats and the device info from the event loop.
+
+        The session and the api client must be created on the event loop:
+        this method only runs there, through the bridge in :meth:`update`.
+        """
+        if self._api is None:
+            self._api = BboxApi(
+                async_get_clientsession(self._hass), self._password, self._host
+            )
+        return await self._api.get_ip_stats_and_info()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Bbox."""
 
         try:
-            box = pybbox.Bbox()
-            self.data = box.get_ip_stats()
-            self.router_infos = box.get_bbox_info()
-        except requests.exceptions.HTTPError as error:
+            self.data, self.router_infos = run_coroutine_threadsafe(
+                self._async_fetch(), self._hass.loop
+            ).result(REQUEST_TIMEOUT)
+        except (BboxError, TimeoutError) as error:
             _LOGGER.error(error)
             self.data = None
             self.router_infos = None
