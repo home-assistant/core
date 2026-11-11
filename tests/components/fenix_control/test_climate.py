@@ -3,6 +3,7 @@
 import asyncio
 import dataclasses
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -921,6 +922,85 @@ async def test_hvac_mode_during_holiday(
     state = hass.states.get(ENTITY_ID)
     assert state.state == hvac_mode
     assert state.attributes[ATTR_HVAC_MODES] == [hvac_mode]
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "service_data", "translation_key"),
+    [
+        (
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: PRESET_DEFROST},
+            "holiday_active",
+        ),
+        # Home Assistant checks the feature again when the command gets its turn
+        (
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 21.5},
+            "missing_target_temperature_entity_feature",
+        ),
+    ],
+)
+async def test_queued_command_rejected_when_holiday_starts(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    service: str,
+    service_data: dict[str, Any],
+    translation_key: str,
+) -> None:
+    """Test a command waiting behind another isn't sent once a holiday is found."""
+    sending = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_set_preset_mode(*args: object) -> None:
+        sending.set()
+        await release.wait()
+
+    mock_fenix_client.set_preset_mode.side_effect = slow_set_preset_mode
+    first = asyncio.create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_BOOST},
+            blocking=True,
+        )
+    )
+    await asyncio.wait_for(sending.wait(), 1)
+    # Accepted while the controls are still offered, then waits for the first
+    queued = asyncio.create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    # A poll finds the holiday while the first command is still being sent
+    polled = asyncio.Event()
+
+    async def holiday_devices(*args: object) -> list[Device]:
+        polled.set()
+        return [HOLIDAY_DEVICE]
+
+    mock_fenix_client.get_devices.side_effect = holiday_devices
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await asyncio.wait_for(polled.wait(), 1)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES] == 0
+    release.set()
+    await first
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await queued
+    assert exc_info.value.translation_key == translation_key
+    mock_fenix_client.set_preset_mode.assert_awaited_once()
+    mock_fenix_client.set_setpoint.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration")

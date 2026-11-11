@@ -323,12 +323,6 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        # A holiday locks the controls; Home Assistant still lets the current
-        # mode be selected again
-        if self.device.holiday_active:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="holiday_active"
-            )
         await self._async_set_preset_mode(
             HVAC_MODE_TO_PRESET_MODE[hvac_mode], "set_hvac_mode_failed"
         )
@@ -345,9 +339,23 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
             PRESET_TO_PRESET_MODE[preset_mode], "set_preset_mode_failed"
         )
 
+    def _raise_if_holiday(self) -> None:
+        """Reject a command while a holiday locks the controls.
+
+        Home Assistant doesn't offer the controls then, but it lets the current
+        HVAC mode be selected again, and a mode or preset command may already
+        be waiting when a poll finds a new holiday. A waiting temperature
+        command is rejected by Home Assistant itself.
+        """
+        if self.device.holiday_active:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="holiday_active"
+            )
+
     async def _async_set_preset_mode(
         self, mode: PresetMode, translation_key: str
     ) -> None:
+        self._raise_if_holiday()
         try:
             await self.coordinator.client.set_preset_mode(self._device_id, mode)
         except FenixControlError as err:
