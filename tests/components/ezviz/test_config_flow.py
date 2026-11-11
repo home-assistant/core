@@ -965,6 +965,25 @@ async def test_mfa_unknown_exception(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_mfa_cloud_account_added_meanwhile(
+    hass: HomeAssistant,
+    mock_ezviz_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the verification code step aborts if a cloud account was added."""
+    result = await _start_user_flow_until_mfa(hass, mock_ezviz_client)
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "123456"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_account"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_mfa(
     hass: HomeAssistant,
     mock_ezviz_client: MagicMock,

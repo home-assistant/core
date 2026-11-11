@@ -473,6 +473,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(), data_updates=auth_data
                         )
+                    # Another flow can add a cloud account while this flow waits
+                    # for the code.
+                    for item in self._async_current_entries():
+                        if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
+                            return self.async_abort(reason="already_configured_account")
                     return self.async_create_entry(
                         title=self.unique_id,
                         data=auth_data,
