@@ -7,8 +7,8 @@
     'area_id': None,
     'capabilities': dict({
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),
@@ -49,8 +49,8 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),
@@ -72,8 +72,8 @@
     'area_id': None,
     'capabilities': dict({
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),
@@ -114,8 +114,8 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),
@@ -137,8 +137,8 @@
     'area_id': None,
     'capabilities': dict({
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),
@@ -179,8 +179,8 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),
@@ -202,8 +202,8 @@
     'area_id': None,
     'capabilities': dict({
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),
@@ -244,8 +244,8 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
-        <ButtonEventType.MULTI_PRESS_END: 'multi_press_end'>,
+        <ButtonEventType.SINGLE_PRESS: 'single_press'>,
+        <ButtonEventType.MULTI_PRESS: 'multi_press'>,
         <ButtonEventType.LONG_PRESS_START: 'long_press_start'>,
         <ButtonEventType.LONG_PRESS_END: 'long_press_end'>,
       ]),

@@ -1,17 +1,30 @@
 """Services for Agent DVR."""
 
+from enum import StrEnum
+
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service
 
 from .const import DOMAIN
 
+
+class AgentDvrService(StrEnum):
+    """Store keys for Agent DVR services."""
+
+    START_RECORDING = "start_recording"
+    STOP_RECORDING = "stop_recording"
+    ENABLE_ALERTS = "enable_alerts"
+    DISABLE_ALERTS = "disable_alerts"
+    SNAPSHOT = "snapshot"
+
+
 CAMERA_SERVICES = {
-    "enable_alerts": "async_enable_alerts",
-    "disable_alerts": "async_disable_alerts",
-    "start_recording": "async_start_recording",
-    "stop_recording": "async_stop_recording",
-    "snapshot": "async_snapshot",
+    AgentDvrService.ENABLE_ALERTS: "async_enable_alerts",
+    AgentDvrService.DISABLE_ALERTS: "async_disable_alerts",
+    AgentDvrService.START_RECORDING: "async_start_recording",
+    AgentDvrService.STOP_RECORDING: "async_stop_recording",
+    AgentDvrService.SNAPSHOT: "async_snapshot",
 }
 
 

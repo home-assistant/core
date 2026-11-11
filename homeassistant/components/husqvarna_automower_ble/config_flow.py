@@ -224,14 +224,16 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         self.mower_name = title
 
-        try:
-            errors: dict[str, str] = {}
+        errors: dict[str, str] = {}
 
+        try:
             (channel_id, mower) = await self.connect_mower(device)
 
             response_result = await mower.connect(device)
             await mower.disconnect()
-
+        except TimeoutError, BleakError:
+            return self.async_abort(reason="cannot_connect")
+        else:
             if response_result is not ResponseResult.OK:
                 LOGGER.debug("cannot connect, response: %s", response_result)
 
@@ -267,8 +269,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     errors=errors,
                 )
-        except TimeoutError, BleakError:
-            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=title,
@@ -318,6 +318,13 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 response_result = await mower.connect(device)
                 await mower.disconnect()
+
+            except TimeoutError, BleakError:
+                # We don't want to abort a reauth flow when we can't connect, so
+                # we just show the form again with an error.
+                errors["base"] = "cannot_connect"
+
+            else:
                 if (
                     response_result is ResponseResult.INVALID_PIN
                     or response_result is ResponseResult.NOT_ALLOWED
@@ -330,11 +337,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reauth_entry(),
                         data=reauth_entry.data | {CONF_PIN: self.pin},
                     )
-
-            except TimeoutError, BleakError:
-                # We don't want to abort a reauth flow when we can't connect, so
-                # we just show the form again with an error.
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="reauth_confirm",

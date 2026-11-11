@@ -5,6 +5,7 @@
   "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@fabaff", "@gjohansson-ST"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/scrape",
   "iot_class": "cloud_polling",
   "requirements": ["beautifulsoup4==4.15.0", "lxml==6.1.3"]

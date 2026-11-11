@@ -8,6 +8,7 @@ from music_assistant_models.enums import MediaType
 from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import SearchResults
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import (
@@ -89,6 +90,8 @@ async def test_search_action_with_username(
         limit=5,
         library_only=False,
         user="user_user",
+        providers=None,
+        require_schema=None,
     )
 
 
@@ -170,6 +173,52 @@ async def test_search_action_with_unknown_username(
 
 
 @pytest.mark.parametrize(
+    ("other_entry_domain", "config_entry_id", "translation_key"),
+    [
+        pytest.param(
+            "other", "nonexistent", "service_config_entry_not_found", id="not_found"
+        ),
+        pytest.param(
+            "other",
+            "other_entry",
+            "service_config_entry_wrong_domain",
+            id="wrong_domain",
+        ),
+        pytest.param(
+            DOMAIN,
+            "other_entry",
+            "service_config_entry_not_loaded",
+            id="not_loaded",
+        ),
+    ],
+)
+async def test_search_action_invalid_config_entry(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    other_entry_domain: str,
+    config_entry_id: str,
+    translation_key: str,
+) -> None:
+    """Test the search action with a config entry that can't be used."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    # Added but not set up
+    MockConfigEntry(domain=other_entry_domain, entry_id="other_entry").add_to_hass(hass)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {
+                ATTR_CONFIG_ENTRY_ID: config_entry_id,
+                ATTR_SEARCH_NAME: "test",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize(
     "media_type",
     [
         "artist",
@@ -194,13 +243,42 @@ async def test_get_library_action(
         SERVICE_GET_LIBRARY,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_FAVORITE: False,
             ATTR_MEDIA_TYPE: media_type,
         },
         blocking=True,
         return_response=True,
     )
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("favorite", "expected"),
+    [(True, True), (False, False), (None, None)],
+)
+async def test_get_library_action_favorite_filter(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    favorite: bool | None,
+    expected: bool | None,
+) -> None:
+    """Test the favorite filter is forwarded as given: a like, a dislike or absent."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    data = {ATTR_CONFIG_ENTRY_ID: entry.entry_id, ATTR_MEDIA_TYPE: "album"}
+    if favorite is not None:
+        data[ATTR_FAVORITE] = favorite
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LIBRARY,
+        data,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert (
+        music_assistant_client.music.get_library_albums.call_args.kwargs["favorite"]
+        is expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -231,7 +309,6 @@ async def test_get_library_action_with_username(
         SERVICE_GET_LIBRARY,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-            ATTR_FAVORITE: False,
             ATTR_MEDIA_TYPE: media_type,
             ATTR_USERNAME: "user_user",
         },

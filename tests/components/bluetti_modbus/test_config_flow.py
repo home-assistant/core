@@ -1,5 +1,7 @@
 """Tests for the BLUETTI Modbus config flow."""
 
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from typing import Any
 from unittest.mock import patch
 
@@ -328,24 +330,83 @@ async def test_reconfigure_flow(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_reconfigure_flow_cannot_connect(
+@contextmanager
+def _failing_requests(unit: MockModbusUnit, error: Exception) -> Iterator[None]:
+    """Make every request to the unit raise until the context exits."""
+    unit.fail_requests(error)
+    yield
+    unit.fail_requests(None)
+
+
+@contextmanager
+def _zero_serial(unit: MockModbusUnit) -> Iterator[None]:
+    """Make the unit report serial 0 until the context exits."""
+    unit.holding[SERIAL_ADDRESS] = 0
+    yield
+    unit.holding[SERIAL_ADDRESS] = int(SERIAL)
+
+
+@contextmanager
+def _other_model(unit: MockModbusUnit) -> Iterator[None]:
+    """Make the unit report another model until the context exits."""
+    field = get_device("balco260").get_field("d_inverter_type")
+    assert field is not None
+    for offset, word in enumerate(field.encode("EP2000")):
+        unit.holding[field.address + offset] = word
+    yield
+    for offset, word in enumerate(field.encode("Balco260")):
+        unit.holding[field.address + offset] = word
+
+
+@contextmanager
+def _link_settings_in_use(unit: MockModbusUnit) -> Iterator[None]:
+    """Make the link look claimed with other settings until the context exits."""
+    with patch(
+        "homeassistant.components.bluetti_modbus.config_flow.async_get_temporary_unit",
+        return_value=_ConflictingUnit(),
+    ):
+        yield
+
+
+@pytest.mark.parametrize(
+    ("failure", "error"),
+    [
+        pytest.param(
+            lambda unit: _failing_requests(unit, ModbusTimeoutError("timed out")),
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            lambda unit: _failing_requests(unit, ValueError("unexpected")),
+            "unknown",
+            id="unknown",
+        ),
+        pytest.param(_zero_serial, "invalid_serial", id="invalid_serial"),
+        pytest.param(_other_model, "unsupported_device", id="unsupported_device"),
+        pytest.param(
+            _link_settings_in_use, "link_settings_in_use", id="link_settings_in_use"
+        ),
+    ],
+)
+async def test_reconfigure_flow_recovers_from_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    failure: Callable[[MockModbusUnit], AbstractContextManager[None]],
+    error: str,
 ) -> None:
-    """A device that can't be read surfaces cannot_connect, then the flow recovers."""
+    """A failed probe surfaces its form error, then the flow recovers."""
     await setup_integration(hass, mock_config_entry)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
-    mock_modbus_unit.fail_requests(ModbusTimeoutError("timed out"))
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], _user_input(host=NEW_HOST)
-    )
+    with failure(mock_modbus_unit):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _user_input(host=NEW_HOST)
+        )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-    mock_modbus_unit.fail_requests(None)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], _user_input(host=NEW_HOST)
     )

@@ -33,6 +33,7 @@
   "categories": ["lighting.led_strips_controllers"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/led_ble",
   "integration_type": "device",

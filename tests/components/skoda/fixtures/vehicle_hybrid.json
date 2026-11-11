@@ -6,12 +6,16 @@
       "mileageInKm": 23140,
       "carCapturedTimestamp": "2024-01-10T11:55:00Z"
     },
+    "parkingPosition": {
+      "state": "IN_MOTION"
+    },
     "charging": {
       "isVehicleInSavedLocation": true,
       "status": {
         "chargingRateInKilometersPerHour": 0.0,
         "chargePowerInKw": 0.0,
         "state": "CONSERVING",
+        "plugConnectionState": "CONNECTED",
         "chargeType": "OFF",
         "battery": {
           "remainingCruisingRangeInMeters": 61000,
@@ -49,6 +53,41 @@
       "startMode": "HEATING",
       "durationInSeconds": 1200,
       "carCapturedTimestamp": "2024-01-10T11:55:00Z"
-    }
+    },
+    "status": {
+      "overall": {
+        "doorsLocked": "OPENED",
+        "locked": "NO",
+        "doors": "OPEN",
+        "windows": "UNKNOWN",
+        "lights": "ON"
+      },
+      "detail": {
+        "sunroof": "UNSUPPORTED",
+        "trunk": "OPEN",
+        "bonnet": "CLOSED"
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "operations": [
+      {
+        "name": "startCharging"
+      },
+      {
+        "name": "stopCharging"
+      },
+      {
+        "name": "setChargingLimit"
+      },
+      {
+        "name": "setChargeMode"
+      },
+      {
+        "name": "startAirConditioning"
+      },
+      {
+        "name": "stopAirConditioning"
+      }
+    ]
   }
 }

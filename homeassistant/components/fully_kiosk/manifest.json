@@ -5,6 +5,7 @@
   "categories": ["computers_network"],
   "codeowners": ["@cgarwood"],
   "config_flow": true,
+  "connectivity": ["mqtt", "network"],
   "dhcp": [
     {
       "registered_devices": true
@@ -15,5 +16,5 @@
   "iot_class": "local_polling",
   "mqtt": ["fully/deviceInfo/+"],
   "quality_scale": "bronze",
-  "requirements": ["python-fullykiosk==0.0.15"]
+  "requirements": ["python-fullykiosk==0.0.17"]
 }

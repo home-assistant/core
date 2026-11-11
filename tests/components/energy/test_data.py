@@ -101,7 +101,7 @@ async def test_energy_preferences_empty_store(hass: HomeAssistant) -> None:
     assert manager.data is None
 
 
-async def test_energy_preferences_migration_from_old_version(
+async def test_energy_preferences_migration_from_version_1_1(
     hass: HomeAssistant,
 ) -> None:
     """Test that device_consumption_water is added when migrating from v1.1 to v1.2."""
@@ -123,6 +123,31 @@ async def test_energy_preferences_migration_from_old_version(
     assert manager.data is not None
     assert "device_consumption_water" in manager.data
     assert manager.data["device_consumption_water"] == []
+
+
+async def test_energy_preferences_migration_from_version_1_3(
+    hass: HomeAssistant,
+) -> None:
+    """Test that device_consumption_gas is added when migrating from v1.3 to v1.4."""
+    # Create version 1.3 data without device_consumption_gas (old version)
+    old_data = {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+    # Save with old version (1.3) - migration will run to upgrade to 1.4
+    old_store = storage.Store(hass, 1, "energy", minor_version=3)
+    await old_store.async_save(old_data)
+
+    # Load with manager - should trigger migration
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    # Verify the field was added by migration
+    assert manager.data is not None
+    assert "device_consumption_gas" in manager.data
+    assert manager.data["device_consumption_gas"] == []
 
 
 async def test_battery_power_config_inverted_sets_stat_rate(

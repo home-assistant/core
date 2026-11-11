@@ -64,14 +64,19 @@
           "title": "Configure device options"
         },
         "reconfigure": {
+          "menu_options": {
+            "reconfigure_options": "Configure device options",
+            "replace_device": "Replace device"
+          },
+          "title": "Reconfigure device"
+        },
+        "replace_device": {
           "data": {
             "event_code": "Event code",
             "replace_device": "Or take over an already-configured device"
           },
-          "data_description": {
-            "event_code": "Change this only if the physical device was replaced with new hardware."
-          },
-          "title": "Reconfigure device"
+          "description": "Point this device at new hardware, keeping its entities and their history.",
+          "title": "Replace device"
         },
         "user": {
           "data": {

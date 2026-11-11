@@ -14,11 +14,6 @@ if TYPE_CHECKING:
     from .core import Recorder  # noqa: F401
 
 
-SQLITE_URL_PREFIX = "sqlite://"
-MARIADB_URL_PREFIX = "mariadb://"
-MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
-MYSQLDB_URL_PREFIX = "mysql://"
-MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
 DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
@@ -43,10 +38,6 @@ ALL_DOMAIN_EXCLUDE_ATTRS: set[str] = {
     EntityStateAttribute.RESTORED,
     EntityStateAttribute.SUPPORTED_FEATURES,
 }
-
-ATTR_KEEP_DAYS = "keep_days"
-ATTR_REPACK = "repack"
-ATTR_APPLY_FILTER = "apply_filter"
 
 KEEPALIVE_TIME = 30
 
