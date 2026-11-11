@@ -227,10 +227,16 @@ async def test_notify_platform(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "expected_title"),
+    ("service_data", "expected_kwargs"),
     [
-        pytest.param({ATTR_MESSAGE: "Hello", ATTR_TITLE: "Title"}, "Title", id="title"),
-        pytest.param({ATTR_MESSAGE: "Hello"}, None, id="no_title"),
+        pytest.param(
+            {ATTR_MESSAGE: "Hello", ATTR_TITLE: "Title"},
+            {"title": "Title", "content": "Hello"},
+            id="title",
+        ),
+        pytest.param(
+            {ATTR_MESSAGE: "Hello"}, {"title": None, "content": "Hello"}, id="no_title"
+        ),
     ],
 )
 async def test_entity_send_message(
@@ -238,7 +244,7 @@ async def test_entity_send_message(
     mock_client: MagicMock,
     config_entry: MockConfigEntry,
     service_data: dict[str, str],
-    expected_title: str | None,
+    expected_kwargs: dict[str, Any],
 ) -> None:
     """Test sending a message through the notify entity of the current app."""
     await setup_integration(hass, config_entry)
@@ -247,9 +253,7 @@ async def test_entity_send_message(
     await send_entity_message(hass, service_data)
 
     mock_client.assert_called_once_with(api_token="token")
-    mock_client.return_value.send_task.assert_called_once_with(
-        title=expected_title, content="Hello"
-    )
+    mock_client.return_value.send_task.assert_called_once_with(**expected_kwargs)
 
 
 @pytest.mark.parametrize(
