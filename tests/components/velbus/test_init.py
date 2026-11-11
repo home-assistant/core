@@ -1,14 +1,16 @@
 """Tests for the Velbus component initialisation."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.velbus import (
+    RECONNECT_SCAN_COOLDOWN,
     VelbusConfigEntry,
     async_remove_config_entry_device,
 )
@@ -19,6 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TU
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import init_integration
 from .const import PORT_TCP
@@ -602,3 +605,27 @@ async def test_reconnect_scan_is_registered(
 
     await debouncer.function()
     controller.return_value.scan.assert_awaited_once_with()
+
+
+async def test_reconnect_scan_debouncer_shutdown_on_unload(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Pending reconnect scans are cancelled when the config entry unloads."""
+    await init_integration(hass, config_entry)
+    debouncer = config_entry.runtime_data.reconnect_scan_debouncer
+    assert debouncer is not None
+
+    debouncer.async_schedule_call()
+    controller.return_value.scan.reset_mock()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=RECONNECT_SCAN_COOLDOWN + 1)
+    )
+    await hass.async_block_till_done()
+
+    controller.return_value.scan.assert_not_called()

@@ -100,6 +100,7 @@ def _register_bus_listeners(hass: HomeAssistant, entry: VelbusConfigEntry) -> No
         function=reconnect_scan,
     )
     entry.runtime_data.reconnect_scan_debouncer = debouncer
+    entry.async_on_unload(debouncer.async_shutdown)
 
     async def on_connect() -> None:
         """Schedule a bus scan after the connection comes back."""
