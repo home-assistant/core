@@ -17,8 +17,10 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
-        },
-        "description": "If your devices were previously configured together, add each device again."
+        }
+      },
+      "setup_discovery": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     }
   },

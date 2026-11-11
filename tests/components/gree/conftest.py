@@ -4,10 +4,27 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.gree.const import DISCOVERY_TIMEOUT
+from homeassistant.components.gree.const import DISCOVERY_TIMEOUT, DOMAIN
+from homeassistant.core import HomeAssistant
 
 from .common import FakeDiscovery, build_device_mock
+
+
+@pytest.fixture
+def discovery_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Restore the persistent integration-wide discovery entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+        unique_id=DOMAIN,
+        title="Gree discovery",
+        data={},
+    )
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture

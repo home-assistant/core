@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Enroll one explicitly selected Gree device."""
+    """Set up Gree discovery and enroll individual devices."""
 
     VERSION = 2
     MINOR_VERSION = 1
@@ -41,7 +41,15 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Find available devices for selection."""
+        """Set up discovery before scanning for individual devices."""
+        if (
+            self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
+            is None
+        ):
+            await self.async_set_unique_id(DOMAIN)
+            self._abort_if_unique_id_configured()
+            return await self.async_step_setup_discovery()
+
         try:
             devices = await async_get_discovery(self.hass).async_scan()
         except OSError, TimeoutError:
@@ -50,6 +58,16 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._devices:
             return self.async_abort(reason="no_devices_found")
         return await self.async_step_pick_device()
+
+    async def async_step_setup_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm setting up persistent device discovery."""
+        if user_input is not None:
+            await self.async_set_unique_id(DOMAIN)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title="Gree discovery", data={})
+        return self.async_show_form(step_id="setup_discovery")
 
     def _available_devices(
         self, devices: dict[str, DeviceInfo]

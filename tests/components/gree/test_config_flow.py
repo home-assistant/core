@@ -1,4 +1,4 @@
-"""Tests for per-device Gree enrollment."""
+"""Tests for Gree discovery and per-device enrollment."""
 
 import asyncio
 from typing import Any
@@ -22,7 +22,7 @@ from homeassistant.helpers import discovery_flow, entity_registry as er
 
 from .common import build_device_mock
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "discovery_entry")
 
 
 def add_entry(
@@ -59,10 +59,87 @@ async def test_user_shows_candidates(hass: HomeAssistant, device: MagicMock) -> 
     device().bind.assert_not_awaited()
 
 
+async def test_initial_user_add_persists_discovery_without_devices(
+    hass: HomeAssistant,
+    discovery_entry: MockConfigEntry,
+    discovery: MagicMock,
+    device: MagicMock,
+) -> None:
+    """Initial setup creates a discovery owner only after explicit confirmation."""
+    discovery.mock_devices.clear()
+    await hass.config_entries.async_remove(discovery_entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_discovery"
+    assert not hass.config_entries.async_entries(DOMAIN)
+    device().bind.assert_not_awaited()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
+    assert result["result"].version == 2
+    assert result["result"].minor_version == 1
+    assert result["data"] == {}
+    assert hass.config_entries.async_entries(DOMAIN) == [result["result"]]
+    device().bind.assert_not_awaited()
+
+
+async def test_concurrent_initial_user_flows_create_one_discovery_entry(
+    hass: HomeAssistant, discovery_entry: MockConfigEntry
+) -> None:
+    """Unique-ID flow rules prevent two initial discovery owners."""
+    await hass.config_entries.async_remove(discovery_entry.entry_id)
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert first["type"] is FlowResultType.FORM
+    assert first["step_id"] == "setup_discovery"
+    assert second["type"] is FlowResultType.ABORT
+    assert second["reason"] == "already_in_progress"
+    created = await hass.config_entries.flow.async_configure(first["flow_id"], {})
+    assert created["type"] is FlowResultType.CREATE_ENTRY
+    assert created["result"].unique_id == DOMAIN
+    assert hass.config_entries.async_entries(DOMAIN) == [created["result"]]
+
+
+async def test_initial_setup_rechecks_existing_discovery_entry(
+    hass: HomeAssistant, discovery_entry: MockConfigEntry
+) -> None:
+    """A setup form cannot overwrite a discovery owner created before submission."""
+    await hass.config_entries.async_remove(discovery_entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["step_id"] == "setup_discovery"
+
+    winner = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+        unique_id=DOMAIN,
+        title="Gree discovery",
+        data={},
+    )
+    winner.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [winner]
+
+
 @pytest.mark.parametrize("onboarded", [True, False])
 async def test_discovery_requires_confirmation(
     hass: HomeAssistant,
     device: MagicMock,
+    discovery_entry: MockConfigEntry,
     onboarded: bool,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -84,7 +161,7 @@ async def test_discovery_requires_confirmation(
         "identifier": data["identifier"],
         "host": data["host"],
     }
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     assert not entity_registry.entities
     device().bind.assert_not_awaited()
 
@@ -116,7 +193,7 @@ async def test_scan_selects_only_one_device(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "aabbcc112244"
     assert result["data"] == device_info_to_data(other.device_info)
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert device.call_args.args[0].mac == other.device_info.mac
     assert device.call_args.args[0].ip == other.device_info.ip
     assert device.call_args.args[0].port == other.device_info.port
@@ -165,7 +242,7 @@ async def test_scan_filters_configured_identities(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == other.device_info.mac
     assert hass.config_entries.async_get_entry(known.entry_id) is known
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 3
 
 
 async def test_all_candidates_configured(
@@ -200,6 +277,7 @@ async def test_all_candidates_configured(
 async def test_selected_validation_failure(
     hass: HomeAssistant,
     device: MagicMock,
+    discovery_entry: MockConfigEntry,
     failure: type[Exception],
     error: str,
     step: str,
@@ -221,7 +299,7 @@ async def test_selected_validation_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == step
     assert result["errors"] == {"base": error}
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     device().close.assert_called_once_with()
 
     result = await hass.config_entries.flow.async_configure(
@@ -251,7 +329,10 @@ async def start_selected_step(
 
 @pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
 async def test_validation_cancelled(
-    hass: HomeAssistant, device: MagicMock, step: str
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    step: str,
 ) -> None:
     """Cancellation propagates rather than becoming a connection error form."""
     data = device_info_to_data(device().device_info)
@@ -269,7 +350,7 @@ async def test_validation_cancelled(
     ):
         await hass.config_entries.flow.async_configure(result["flow_id"], submission)
     device().close.assert_called_once_with()
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
 
 
 @pytest.mark.parametrize(
@@ -407,10 +488,12 @@ async def test_explicit_selection_replaces_ignore(
     assert result["result"].source == config_entries.SOURCE_USER
     assert result["result"].data == data
     assert hass.config_entries.async_get_entry(ignored.entry_id) is None
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
-async def test_background_deduplication(hass: HomeAssistant, device: MagicMock) -> None:
+async def test_background_deduplication(
+    hass: HomeAssistant, device: MagicMock, discovery_entry: MockConfigEntry
+) -> None:
     """Alternate identifier spellings share one discovery confirmation."""
     data = device_info_to_data(device().device_info)
     first = await start_selected_step(hass, "discovery_confirm", data)
@@ -424,7 +507,9 @@ async def test_background_deduplication(hass: HomeAssistant, device: MagicMock) 
 
 
 async def test_pending_discovery_endpoint_update(
-    hass: HomeAssistant, device: MagicMock
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
 ) -> None:
     """Rediscovery refreshes one confirmation without binding before consent."""
     data = device_info_to_data(device().device_info)
@@ -439,7 +524,7 @@ async def test_pending_discovery_endpoint_update(
     duplicate = await start_selected_step(hass, "discovery_confirm", observed)
     assert duplicate["reason"] == "already_in_progress"
     assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     device().bind.assert_not_awaited()
     placeholders = {
         "name": observed["name"],
@@ -462,7 +547,7 @@ async def test_pending_discovery_endpoint_update(
     assert result["data"] == {**observed, CONF_IDENTIFIER: data[CONF_IDENTIFIER]}
     assert result["title"] == observed["name"]
     assert result["result"].unique_id == normalize_identifier(data[CONF_IDENTIFIER])
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert device.call_args.args[0].ip == observed[CONF_HOST]
     assert device.call_args.args[0].port == observed[CONF_PORT]
     assert device.call_args.args[0].mac == data[CONF_IDENTIFIER]
@@ -515,13 +600,13 @@ async def test_pending_discovery_failure_endpoint_update(
     result = await hass.config_entries.flow.async_configure(pending["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == observed
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert device.call_args.args[0].ip == observed[CONF_HOST]
     assert device.call_args.args[0].port == observed[CONF_PORT]
 
 
 async def test_failed_manual_selection_does_not_block_rediscovery(
-    hass: HomeAssistant, device: MagicMock
+    hass: HomeAssistant, device: MagicMock, discovery_entry: MockConfigEntry
 ) -> None:
     """Failed manual enrollment cannot suppress discovery at a new endpoint."""
     data = device_info_to_data(device().device_info)
@@ -540,7 +625,7 @@ async def test_failed_manual_selection_does_not_block_rediscovery(
     discovered = await start_selected_step(hass, "discovery_confirm", observed)
     assert discovered["type"] is FlowResultType.FORM
     assert discovered["step_id"] == "discovery_confirm"
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     device().bind.assert_not_awaited()
 
     result = await hass.config_entries.flow.async_configure(discovered["flow_id"], {})
@@ -556,7 +641,10 @@ async def test_failed_manual_selection_does_not_block_rediscovery(
 
 @pytest.mark.parametrize("failure", [None, DeviceTimeoutError])
 async def test_pending_discovery_update_during_validation(
-    hass: HomeAssistant, device: MagicMock, failure: type[Exception] | None
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    failure: type[Exception] | None,
 ) -> None:
     """An in-flight snapshot cannot enroll or restore an obsolete endpoint."""
     data = device_info_to_data(device().device_info)
@@ -591,14 +679,14 @@ async def test_pending_discovery_update_during_validation(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["description_placeholders"]["host"] == observed[CONF_HOST]
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     device().bind.assert_not_awaited()
     refreshed = await hass.config_entries.flow.async_configure(pending["flow_id"])
     assert refreshed["description_placeholders"]["host"] == observed[CONF_HOST]
     result = await hass.config_entries.flow.async_configure(pending["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == observed
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert device.call_args.args[0].ip == observed[CONF_HOST]
     assert device.call_args.args[0].port == observed[CONF_PORT]
     device().bind.assert_awaited_once_with()
@@ -646,7 +734,7 @@ async def test_pending_discovery_metadata_during_validation(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {**observed, CONF_IDENTIFIER: data[CONF_IDENTIFIER]}
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     device().close.assert_called_once_with()
 
 
@@ -666,13 +754,16 @@ async def test_user_can_enroll_pending_background_candidate(
         flow["flow_id"]
         for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     }
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     device().bind.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
 async def test_entry_created_during_validation(
-    hass: HomeAssistant, device: MagicMock, step: str
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    step: str,
 ) -> None:
     """Another winning flow is never replaced after the network await."""
     data = device_info_to_data(device().device_info)
@@ -699,14 +790,14 @@ async def test_entry_created_during_validation(
             }[step],
         )
     assert result["reason"] == "already_configured"
-    assert hass.config_entries.async_entries(DOMAIN) == winners
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry, *winners]
     assert winners[0].data[CONF_HOST] == "192.0.2.99"
     schedule.assert_not_called()
     device().close.assert_called_once_with()
 
 
 async def test_pick_device_rejects_unoffered_identity(
-    hass: HomeAssistant, device: MagicMock
+    hass: HomeAssistant, device: MagicMock, discovery_entry: MockConfigEntry
 ) -> None:
     """The selector accepts only identities in the server-side scan results."""
     result = await start_selected_step(
@@ -717,14 +808,17 @@ async def test_pick_device_rejects_unoffered_identity(
             result["flow_id"], {CONF_DEVICE: "not-a-discovered-device"}
         )
     device().bind.assert_not_awaited()
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
 
 
 @pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
 async def test_candidate_configured_before_submission(
-    hass: HomeAssistant, device: MagicMock, step: str
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    step: str,
 ) -> None:
-    """A candidate enrolled after the form appears is not bound or replaced."""
+    """A concurrently configured device cannot be rebound or have its endpoint replaced."""
     data = device_info_to_data(device().device_info)
     result = await start_selected_step(hass, step, data)
     entry = add_entry(hass, {**data, CONF_HOST: "192.0.2.99"})
@@ -736,7 +830,7 @@ async def test_candidate_configured_before_submission(
         }[step],
     )
     assert result["reason"] == "already_configured"
-    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry, entry]
     assert entry.data[CONF_HOST] == "192.0.2.99"
     device().bind.assert_not_awaited()
 
@@ -760,7 +854,9 @@ async def test_known_entry_precedes_pending_flow_check(
     device().bind.assert_not_awaited()
 
 
-async def test_scan_cancellation_propagates(hass: HomeAssistant) -> None:
+async def test_scan_cancellation_propagates(
+    hass: HomeAssistant, discovery_entry: MockConfigEntry
+) -> None:
     """A cancelled scan does not become an empty-LAN or connection error."""
     with patch(
         "homeassistant.components.gree.config_flow.async_get_discovery"
@@ -770,11 +866,11 @@ async def test_scan_cancellation_propagates(hass: HomeAssistant) -> None:
             await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
             )
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
 
 
 async def test_concurrent_user_and_discovery_validation(
-    hass: HomeAssistant, device: MagicMock
+    hass: HomeAssistant, device: MagicMock, discovery_entry: MockConfigEntry
 ) -> None:
     """Two consenting flows racing through binding leave exactly one entry."""
     data = device_info_to_data(device().device_info)
@@ -816,6 +912,9 @@ async def test_concurrent_user_and_discovery_validation(
     assert user_result["type"] is FlowResultType.CREATE_ENTRY
     assert user_result["result"].unique_id == "aabbcc112233"
     assert background_result["reason"] == "already_configured"
-    assert hass.config_entries.async_entries(DOMAIN) == [user_result["result"]]
+    assert hass.config_entries.async_entries(DOMAIN) == [
+        discovery_entry,
+        user_result["result"],
+    ]
     assert user_result["result"].data == data
     assert device().close.call_count == 2

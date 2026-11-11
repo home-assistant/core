@@ -1,4 +1,4 @@
-"""Test removal and rediscovery of legacy Gree config entries."""
+"""Test migration and rediscovery of legacy Gree config entries."""
 
 from unittest.mock import MagicMock
 
@@ -10,15 +10,25 @@ from homeassistant.components.gree.discovery import (
     device_info_to_data,
     normalize_identifier,
 )
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
-def _add_legacy_entry(hass: HomeAssistant) -> MockConfigEntry:
+def _add_legacy_entry(
+    hass: HomeAssistant,
+    disabled_by: ConfigEntryDisabler | None = None,
+) -> MockConfigEntry:
     """Add a shared v1 entry as if restored from storage."""
-    entry = MockConfigEntry(domain=DOMAIN, version=1, unique_id="gree", data={})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id="gree",
+        data={},
+        disabled_by=disabled_by,
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -26,7 +36,7 @@ def _add_legacy_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.mark.parametrize(
     "identifiers", [(), ("legacy-device",)], ids=["empty", "populated"]
 )
-async def test_legacy_entry_is_removed_without_replacement(
+async def test_legacy_entry_becomes_persistent_discovery_owner(
     hass: HomeAssistant,
     device: MagicMock,
     discovery: MagicMock,
@@ -34,9 +44,22 @@ async def test_legacy_entry_is_removed_without_replacement(
     entity_registry: er.EntityRegistry,
     identifiers: tuple[str, ...],
 ) -> None:
-    """Removing a v1 entry cleans its registry records without binding a device."""
+    """Migration retains the owner, clears legacy records, and never enrolls devices."""
     discovery.mock_devices.clear()
     source = _add_legacy_entry(hass)
+    other = MockConfigEntry(domain="example", version=2, unique_id="other", data={})
+    other.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other.entry_id,
+        identifiers={("example", "other")},
+    )
+    other_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "example",
+        "other",
+        config_entry=other,
+        device_id=other_device.id,
+    )
     for identifier in identifiers:
         old_device = device_registry.async_get_or_create(
             config_entry_id=source.entry_id,
@@ -53,16 +76,59 @@ async def test_legacy_entry_is_removed_without_replacement(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.config_entries.async_get_entry(source.entry_id) is None
-    assert not hass.config_entries.async_entries(DOMAIN)
-    assert not device_registry.devices
-    assert not entity_registry.entities
+    assert hass.config_entries.async_get_entry(source.entry_id) is source
+    assert source.version == 2
+    assert source.minor_version == 1
+    assert source.unique_id == DOMAIN
+    assert source.data == {}
+    assert hass.config_entries.async_entries(DOMAIN) == [source]
+    assert not dr.async_entries_for_config_entry(device_registry, source.entry_id)
+    assert not er.async_entries_for_config_entry(entity_registry, source.entry_id)
+    assert dr.async_entries_for_config_entry(device_registry, other.entry_id) == [
+        other_device
+    ]
+    assert er.async_entries_for_config_entry(entity_registry, other.entry_id) == [
+        other_entity
+    ]
     assert not hass.states.async_all("climate")
+    assert not hass.config_entries.flow.async_progress()
     device().bind.assert_not_awaited()
     device().update_state.assert_not_awaited()
 
 
-async def test_removed_legacy_device_can_be_enrolled_after_discovery_confirmation(
+async def test_disabled_legacy_entry_converts_when_enabled(
+    hass: HomeAssistant,
+    discovery: MagicMock,
+) -> None:
+    """A disabled source converts only when enabled and can stop discovery again."""
+    discovery.mock_devices.clear()
+    source = _add_legacy_entry(hass, ConfigEntryDisabler.USER)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert source.state is ConfigEntryState.NOT_LOADED
+    assert source.version == 1
+    assert source.disabled_by is ConfigEntryDisabler.USER
+    assert not discovery.instances
+
+    await hass.config_entries.async_set_disabled_by(source.entry_id, None)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert source.state is ConfigEntryState.LOADED
+    assert source.version == 2
+    assert source.minor_version == 1
+    assert source.unique_id == DOMAIN
+    assert source.data == {}
+    assert hass.config_entries.async_get_entry(source.entry_id) is source
+
+    await hass.config_entries.async_set_disabled_by(
+        source.entry_id, ConfigEntryDisabler.USER
+    )
+    assert source.state is ConfigEntryState.NOT_LOADED
+    assert source.disabled_by is ConfigEntryDisabler.USER
+    assert hass.config_entries.async_entries(DOMAIN) == [source]
+
+
+async def test_migrated_legacy_device_can_be_enrolled_after_discovery_confirmation(
     hass: HomeAssistant,
     device: MagicMock,
     discovery: MagicMock,
@@ -88,8 +154,12 @@ async def test_removed_legacy_device_can_be_enrolled_after_discovery_confirmatio
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.config_entries.async_get_entry(source.entry_id) is None
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_get_entry(source.entry_id) is source
+    assert source.version == 2
+    assert source.minor_version == 1
+    assert source.unique_id == DOMAIN
+    assert source.data == {}
+    assert hass.config_entries.async_entries(DOMAIN) == [source]
     assert not device_registry.devices
     assert not entity_registry.entities
     flows = hass.config_entries.flow.async_progress()
@@ -108,6 +178,6 @@ async def test_removed_legacy_device_can_be_enrolled_after_discovery_confirmatio
     assert entry.version == 2
     assert entry.unique_id == normalize_identifier(candidate.device_info.mac)
     assert entry.data == device_info_to_data(candidate.device_info)
-    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert hass.config_entries.async_entries(DOMAIN) == [source, entry]
     candidate.bind.assert_awaited()
     candidate.close.assert_called()

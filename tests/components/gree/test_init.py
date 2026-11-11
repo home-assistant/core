@@ -11,7 +11,7 @@ from greeclimate.device import DeviceInfo
 from greeclimate.discovery import Discovery as RealDiscovery
 from greeclimate.network import Response
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.gree.const import (
     DISCOVERY_SCAN_INTERVAL,
@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import async_setup_gree, build_device_mock
+from .common import FakeDiscovery, async_setup_gree, build_device_mock
 
 
 @pytest.fixture(autouse=True)
@@ -86,10 +86,26 @@ async def test_independent_entries(
     second_device.close.assert_not_called()
 
 
+async def test_device_entry_does_not_own_discovery_timer(
+    hass: HomeAssistant,
+    discovery: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A device entry uses the shared scanner without scheduling background scans."""
+    await async_setup_gree(hass)
+    scan_count = discovery.call_count
+
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert discovery.call_count == scan_count
+
+
 async def test_background_discovery_requires_confirmation(
     hass: HomeAssistant,
     device: MagicMock,
     discovery: MagicMock,
+    discovery_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -102,7 +118,8 @@ async def test_background_discovery_requires_confirmation(
     assert len(flows) == 1
     assert flows[0]["step_id"] == "discovery_confirm"
     assert flows[0]["context"]["unique_id"] == device().device_info.mac
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert discovery_entry.state is ConfigEntryState.LOADED
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     assert not device_registry.devices
     assert not entity_registry.entities
     device().bind.assert_not_awaited()
@@ -111,9 +128,98 @@ async def test_background_discovery_requires_confirmation(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(hass.config_entries.flow.async_progress()) == 1
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     assert all(instance.closed for instance in discovery.instances)
     device().bind.assert_not_awaited()
+
+
+async def test_bare_setup_does_not_start_discovery(
+    hass: HomeAssistant, discovery: MagicMock
+) -> None:
+    """Discovery scans are owned by the persistent discovery entry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert not discovery.instances
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_empty_scan_keeps_discovery_entry(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery: MagicMock,
+    discovery_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An empty observation does not remove the persistent discovery owner."""
+    discovery.mock_devices.clear()
+    await hass.async_start()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert discovery_entry.state is ConfigEntryState.LOADED
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
+    assert not hass.config_entries.flow.async_progress()
+
+    discovery.mock_devices.append(device())
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(hass.config_entries.flow.async_progress()) == 1
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
+    device().bind.assert_not_awaited()
+
+
+async def test_discovery_unload_cancels_periodic_scan_and_timer(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery: MagicMock,
+    discovery_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Unloading blocks late offers and removes the timer before a clean reload."""
+    info = device().device_info
+    started = asyncio.Event()
+
+    async def late_scan(**kwargs: object) -> list[DeviceInfo]:
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            return [info]
+        return []
+
+    active = Mock(scan=AsyncMock(side_effect=late_scan), close=Mock())
+    discovery.side_effect = [
+        FakeDiscovery(mock_devices=[]),
+        active,
+        FakeDiscovery(mock_devices=discovery.mock_devices),
+        FakeDiscovery(mock_devices=discovery.mock_devices),
+    ]
+    await hass.async_start()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await started.wait()
+    assert discovery.call_count == 2
+
+    assert await hass.config_entries.async_unload(discovery_entry.entry_id)
+    assert discovery_entry.state is ConfigEntryState.NOT_LOADED
+    active.close.assert_called_once()
+    assert not hass.config_entries.flow.async_progress()
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert discovery.call_count == 2
+
+    await hass.config_entries.async_setup(discovery_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert discovery.call_count == 3
+    assert len(hass.config_entries.flow.async_progress()) == 1
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert discovery.call_count == 4
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_scan_empty_targets(hass: HomeAssistant, discovery: MagicMock) -> None:
@@ -259,6 +365,7 @@ async def test_stop_during_endpoint_creation_closes_late_transport(
     hass: HomeAssistant,
     discovery: MagicMock,
     device: MagicMock,
+    discovery_entry: MockConfigEntry,
 ) -> None:
     """A delayed library connection cannot reopen scanning after stop."""
     started = asyncio.Event()
@@ -319,12 +426,13 @@ async def test_stop_during_endpoint_creation_closes_late_transport(
     assert transport.is_closing()
     assert await scanner.async_scan() == {}
     assert not hass.config_entries.flow.async_progress()
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
 
 
 async def test_background_scan_network_error_retries(
     hass: HomeAssistant,
     discovery: MagicMock,
+    discovery_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -339,15 +447,19 @@ async def test_background_scan_network_error_retries(
     assert "Unable to discover Gree devices" in caplog.text
     assert not hass.config_entries.flow.async_progress()
     assert all(instance.closed for instance in discovery.instances)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
     freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(hass.config_entries.flow.async_progress()) == 1
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
 
 
 async def test_background_scan_cannot_create_flows_after_stop(
-    hass: HomeAssistant, discovery: MagicMock, device: MagicMock
+    hass: HomeAssistant,
+    discovery: MagicMock,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
 ) -> None:
     """Even a late scan completion cannot offer devices during shutdown."""
     started = asyncio.Event()
@@ -368,7 +480,7 @@ async def test_background_scan_cannot_create_flows_after_stop(
     await hass.async_stop()
     active.close.assert_called()
     assert not hass.config_entries.flow.async_progress()
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
 
 
 async def test_ha_stop_closes_devices_and_scanner(
