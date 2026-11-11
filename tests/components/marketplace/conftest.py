@@ -78,6 +78,8 @@ MIRRORED_HOSTS = {
 }
 # These serve raw content below /raw, the rest is what github.com serves
 GITHUB_MIRRORS = ("ghrp.hacs.vip", "ghrp2.hacs.vip")
+# These relays take the full original URL as their path
+FULL_URL_PROXIES = ("gh-proxy.org", "hamrelay.hasscn.top")
 
 
 def _fixture_key(url: URL) -> str:
@@ -88,8 +90,8 @@ def _fixture_key(url: URL) -> str:
     host = MIRRORED_HOSTS.get(url.host, url.host)
     path = url.path
 
-    # A public proxy takes the full URL as its path
-    if host == "gh-proxy.org":
+    # A relay or public proxy takes the full URL as its path
+    if host in FULL_URL_PROXIES:
         proxied = URL(path.removeprefix("/"))
         host, path = proxied.host, proxied.path
     if host in GITHUB_MIRRORS:
