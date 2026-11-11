@@ -39,7 +39,11 @@
           'timestamp': '2024-01-15T12:00:00Z',
         }),
         'serialnumber': None,
-        'servicebooking': None,
+        'servicebooking': dict({
+          'days_until_servicebooking_ends': None,
+          'has_current_servicebooking': True,
+          'servicebooking_until': '2027-06-30T12:00:00Z',
+        }),
         'tracker_settings': dict({
           'features': dict({
             'energy_saving_mode': True,
