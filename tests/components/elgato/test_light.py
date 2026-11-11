@@ -1,5 +1,7 @@
 """Tests for the Elgato Key Light light platform."""
 
+import dataclasses
+from typing import Any
 from unittest.mock import MagicMock
 
 from elgato import ElgatoConnectionError, ElgatoError
@@ -18,6 +20,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -121,6 +124,34 @@ async def test_light_change_state_temperature(
     mock_elgato.light.assert_called_with(
         on=True, brightness=100, temperature=None, hue=10.1, saturation=20.2
     )
+
+
+async def test_light_state_after_successive_commands(
+    hass: HomeAssistant,
+    mock_elgato: MagicMock,
+) -> None:
+    """Test each command shows its new state right away, also in quick succession."""
+
+    def _device_applies(**kwargs: Any) -> None:
+        mock_elgato.state.return_value = dataclasses.replace(
+            mock_elgato.state.return_value, on=kwargs["on"]
+        )
+
+    mock_elgato.light.side_effect = _device_applies
+
+    for service, expected in (
+        (SERVICE_TURN_OFF, STATE_OFF),
+        (SERVICE_TURN_ON, STATE_ON),
+        (SERVICE_TURN_OFF, STATE_OFF),
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "light.frenck"},
+            blocking=True,
+        )
+        assert (state := hass.states.get("light.frenck"))
+        assert state.state == expected
 
 
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
