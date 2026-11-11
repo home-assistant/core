@@ -85,8 +85,9 @@ class StatisticUsage(TypedDict):
 class DatabaseUsage(TypedDict):
     """Space used in the recorder database.
 
-    total_bytes is the size on disk, free_bytes included. Byte figures per
-    table and row are None when the engine cannot report table sizes.
+    total_bytes is the size of the database, free_bytes included, without the
+    SQLite write-ahead log. Byte figures per table and row are None when the
+    engine cannot report table sizes.
     """
 
     generated_at: datetime
@@ -140,14 +141,18 @@ def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
 
 
 def _postgresql_table_bytes(session: Session) -> tuple[dict[str, int], int, None]:
-    """Return bytes per table and the database size, catalogs included."""
+    """Return bytes per table and the database size, catalogs included.
+
+    Tables are those unqualified names resolve to through the search_path.
+    """
     table_bytes = {
         table: int(size)
         for table, size in session.execute(
             text(
                 "SELECT c.relname, pg_total_relation_size(c.oid) FROM pg_class AS c "
                 "JOIN pg_namespace AS n ON n.oid = c.relnamespace "
-                "WHERE n.nspname = current_schema() AND c.relkind = 'r'"
+                "WHERE c.relkind = 'r' AND pg_table_is_visible(c.oid) "
+                "AND n.nspname NOT IN ('pg_catalog', 'information_schema')"
             )
         ).all()
     }

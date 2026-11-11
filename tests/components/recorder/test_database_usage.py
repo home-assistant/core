@@ -1,6 +1,8 @@
 """Test the recorder database usage report."""
 
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
+import sqlite3
 import threading
 from typing import Any
 from unittest.mock import patch
@@ -56,6 +58,21 @@ POWER_ATTRIBUTES = {
     "unit_of_measurement": "W",
 }
 BYTES_MATCHER = path_type({r".*bytes": (int,), "duration": (float,)}, regex=True)
+
+
+def _sqlite_has_dbstat() -> bool:
+    """Return if SQLite is built with the dbstat table."""
+    with closing(sqlite3.connect(":memory:")) as connection:
+        return ("ENABLE_DBSTAT_VTAB",) in connection.execute(
+            "PRAGMA compile_options"
+        ).fetchall()
+
+
+@pytest.fixture
+def skip_without_table_sizes(recorder_db_url: str) -> None:
+    """Skip tests of byte figures on SQLite built without dbstat."""
+    if recorder_db_url.startswith("sqlite") and not _sqlite_has_dbstat():
+        pytest.skip("SQLite is built without dbstat")
 
 
 async def _record_data(hass: HomeAssistant) -> None:
@@ -131,6 +148,7 @@ def _by_id(rows: list[dict[str, Any]], key: str) -> dict[str | None, dict[str, A
     return {row[key]: row for row in rows}
 
 
+@pytest.mark.usefixtures("skip_without_table_sizes")
 async def test_database_usage(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -156,7 +174,7 @@ async def test_database_usage(
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("skip_by_db_engine", "skip_without_table_sizes")
 async def test_database_usage_sqlite_size(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -290,40 +308,55 @@ def _add_unattributed_rows(instance: Recorder) -> None:
         )
 
 
-async def test_database_usage_attribution(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Test shared, orphaned and ownerless rows are each counted once."""
+async def _async_unattributed_usage(
+    instance: Recorder, hass: HomeAssistant
+) -> DatabaseUsage:
+    """Return the report of a database with rows without a known owner."""
     hass.states.async_set("sensor.first", "1", {"shared": True})
     hass.states.async_set("sensor.second", "1", {"other": True})
     await async_wait_recording_done(hass)
-    await recorder_mock.async_add_executor_job(_add_unattributed_rows, recorder_mock)
+    await instance.async_add_executor_job(_add_unattributed_rows, instance)
+    return await instance.async_add_executor_job(get_database_usage, instance)
 
-    usage = await recorder_mock.async_add_executor_job(
-        get_database_usage, recorder_mock
-    )
 
-    _assert_spread(usage, "states", "state_attributes", "statistics")
-    entities = _by_id(usage["entities"], "entity_id")
-    assert {
-        entity_id: (row["states"], row["attributes_bytes"] > 0)
-        for entity_id, row in entities.items()
-    } == {
-        # Shared attributes are counted once, so the spread above adds up
-        "sensor.first": (2, True),
-        "sensor.second": (2, True),
-        None: (1, True),
+async def test_database_usage_attribution(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test rows without a known owner are counted under None."""
+    usage = await _async_unattributed_usage(recorder_mock, hass)
+
+    assert {(row["entity_id"], row["states"]) for row in usage["entities"]} == {
+        ("sensor.first", 2),
+        ("sensor.second", 2),
+        (None, 1),
     }
-    assert usage["statistics"] == [
-        {
-            "statistic_id": None,
-            "source": None,
-            "statistics": 1,
-            "statistics_short_term": 0,
-            "statistics_bytes": usage["statistics"][0]["statistics_bytes"],
-            "statistics_short_term_bytes": 0,
-        }
-    ]
+    assert [
+        (
+            row["statistic_id"],
+            row["source"],
+            row["statistics"],
+            row["statistics_short_term"],
+        )
+        for row in usage["statistics"]
+    ] == [(None, None, 1, 0)]
+
+
+@pytest.mark.usefixtures("skip_without_table_sizes")
+async def test_database_usage_attribution_bytes(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test shared, orphaned and ownerless rows are each counted once."""
+    usage = await _async_unattributed_usage(recorder_mock, hass)
+
+    # Shared attributes are counted once, so the spread adds up
+    _assert_spread(usage, "states", "state_attributes", "statistics")
+    assert {
+        row["entity_id"]: row["attributes_bytes"] > 0 for row in usage["entities"]
+    } == {"sensor.first": True, "sensor.second": True, None: True}
+    assert [
+        (row["statistics_bytes"] > 0, row["statistics_short_term_bytes"])
+        for row in usage["statistics"]
+    ] == [(True, 0)]
 
 
 @pytest.mark.parametrize("repack", [False, True])
@@ -348,13 +381,16 @@ async def test_database_usage_after_purge(
     await async_wait_purge_done(hass)
     result = await _async_usage(client, refresh=True)
 
-    _assert_spread(result, "states", "state_attributes", "statistics")
-    assert [
-        (row["entity_id"], row["states"], row["attributes_bytes"] > 0)
-        for row in result["entities"]
-    ] == [("sensor.busy", 1, True)]
+    assert [(row["entity_id"], row["states"]) for row in result["entities"]] == [
+        ("sensor.busy", 1)
+    ]
+    assert {
+        (row["statistic_id"], row["statistics"], row["statistics_short_term"])
+        for row in result["statistics"]
+    } == {("sensor.busy", 3, 0), ("test:external", 1, 0)}
 
 
+@pytest.mark.usefixtures("skip_without_table_sizes")
 async def test_database_usage_weighting(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
