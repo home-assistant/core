@@ -3,7 +3,6 @@
 from collections.abc import Generator
 import copy
 import json
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -112,11 +111,10 @@ async def test_run_select_setup(
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
 
-    if caplog.at_level(logging.DEBUG):
-        async_fire_mqtt_message(hass, topic, "")
-        await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, topic, "")
+    await hass.async_block_till_done()
 
-        assert "Ignoring empty payload" in caplog.text
+    assert "Ignoring empty payload" in caplog.text
 
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
