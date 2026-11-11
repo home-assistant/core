@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import INFRARED_BRIGHTNESS, INFRARED_LEVELS
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
-from .util import THEME_OPTIONS
+from .util import THEME_OPTIONS, THEME_SELECT_OPTIONS
 
 PARALLEL_UPDATES = 1
 
@@ -25,7 +25,7 @@ THEME_ENTITY = SelectEntityDescription(
     key="theme",
     translation_key="theme",
     entity_category=EntityCategory.CONFIG,
-    options=THEME_OPTIONS,
+    options=THEME_SELECT_OPTIONS,
 )
 
 MOOD_ENTITY = SelectEntityDescription(

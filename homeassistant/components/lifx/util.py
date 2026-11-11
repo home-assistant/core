@@ -49,6 +49,18 @@ THEME_OPTIONS = sorted(
 )
 
 
+def _theme_select_sort_key(slug: str) -> tuple[str, str, bool]:
+    """Order themes as the app does, with each rename alias after its successor."""
+    return *_theme_sort_key(slug), ThemeLibrary.get(slug).disposition == "renamed"
+
+
+# The Theme select offered rename aliases before the rename, so automations may
+# still pick them
+THEME_SELECT_OPTIONS = sorted(
+    ThemeLibrary.get_available_themes(), key=_theme_select_sort_key
+)
+
+
 def resolve_renamed_theme(name: str) -> Theme:
     """Return a library theme, following a rename to the theme it became.
 

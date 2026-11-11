@@ -2144,15 +2144,23 @@ def test_theme_selectors_use_the_labelled_options(service: str) -> None:
 
 
 def test_theme_labels_name_category_and_theme() -> None:
-    """Test each dropdown label is the app's category and name."""
+    """Test each dropdown label is the app's category and name.
+
+    Only the Theme select offers rename aliases, so only it labels them.
+    """
     strings = _load_strings()
 
     assert strings["selector"]["theme"]["options"] == {
         slug: _theme_label(slug) for slug in THEME_OPTIONS
     }
     assert strings["entity"]["select"]["theme"]["state"] == {
-        slug: f"[%key:component::lifx::selector::theme::options::{slug}%]"
-        for slug in THEME_OPTIONS
+        **{
+            slug: f"[%key:component::lifx::selector::theme::options::{slug}%]"
+            for slug in THEME_OPTIONS
+        },
+        "aurora_borealis": "Nature > Aurora Borealis (renamed to Aurora)",
+        "energising": "Moods > Energising (renamed to Energizing)",
+        "forest": "Nature > Forest (renamed to Forrest)",
     }
 
 

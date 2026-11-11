@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import LIFXService, LIFXServiceArgument
-from homeassistant.components.lifx.util import THEME_OPTIONS
+from homeassistant.components.lifx.util import THEME_OPTIONS, THEME_SELECT_OPTIONS
 from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -58,7 +58,7 @@ async def test_theme_select(
     state = hass.states.get(THEME_ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_OPTIONS] == THEME_OPTIONS
+    assert state.attributes[ATTR_OPTIONS] == THEME_SELECT_OPTIONS
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -78,6 +78,38 @@ async def test_theme_select(
     state = hass.states.get(THEME_ENTITY_ID)
     assert state
     assert state.state == "intense"
+
+
+@pytest.mark.parametrize(
+    ("alias", "successor"),
+    [
+        ("aurora_borealis", "aurora"),
+        ("energising", "energizing"),
+        ("forest", "forrest"),
+    ],
+)
+async def test_theme_select_accepts_a_renamed_theme(
+    hass: HomeAssistant, alias: str, successor: str
+) -> None:
+    """Test a theme the select offered before its rename still paints its successor.
+
+    Automations written before the rename pick the alias, so the select keeps it.
+    """
+    device = create_mock_multizone_light()
+    _record_theme(device)
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        "select_option",
+        {ATTR_ENTITY_ID: THEME_ENTITY_ID, "option": alias},
+        blocking=True,
+    )
+
+    assert device.apply_theme.await_args.args[0].slug == successor
+    state = hass.states.get(THEME_ENTITY_ID)
+    assert state
+    assert state.state == successor
 
 
 async def test_theme_select_clears_when_the_light_changes(
