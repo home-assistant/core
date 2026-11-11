@@ -1209,6 +1209,36 @@ async def test_media_player_play_media_shuffle(
     )
 
 
+async def test_media_player_play_media_radio_mode_string(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that radio mode accepts a boolean string and rejects an invalid value."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    service_data = {
+        ATTR_ENTITY_ID: "media_player.test_player_1",
+        ATTR_MEDIA_ID: "spotify://playlist/1234",
+    }
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {**service_data, ATTR_RADIO_MODE: "maybe"},
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {**service_data, ATTR_RADIO_MODE: "false"},
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args.kwargs["radio_mode"] is False
+
+
 async def test_media_player_standard_play_media_default_user(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
@@ -1284,6 +1314,36 @@ async def test_media_player_play_announcement_action(
         tts_engine=None,
         language=None,
     )
+
+
+async def test_media_player_play_announcement_use_pre_announce_string(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that use_pre_announce accepts a boolean string and rejects an invalid value."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    service_data = {
+        ATTR_ENTITY_ID: "media_player.test_player_1",
+        ATTR_URL: "http://blah.com/announcement.mp3",
+    }
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ANNOUNCEMENT,
+            {**service_data, ATTR_USE_PRE_ANNOUNCE: "maybe"},
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_ANNOUNCEMENT,
+        {**service_data, ATTR_USE_PRE_ANNOUNCE: "false"},
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args.kwargs["pre_announce"] is False
 
 
 @pytest.mark.parametrize(
@@ -1469,6 +1529,36 @@ async def test_media_player_transfer_queue_action(
         auto_play=None,
         require_schema=25,
     )
+
+
+async def test_media_player_transfer_queue_auto_play_string(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that auto_play accepts a boolean string and rejects an invalid value."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    service_data = {
+        ATTR_ENTITY_ID: "media_player.test_player_1",
+        ATTR_SOURCE_PLAYER: "media_player.my_super_test_player_2",
+    }
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRANSFER_QUEUE,
+            {**service_data, ATTR_AUTO_PLAY: "maybe"},
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRANSFER_QUEUE,
+        {**service_data, ATTR_AUTO_PLAY: "false"},
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args.kwargs["auto_play"] is False
 
 
 async def test_media_player_get_queue_action(
