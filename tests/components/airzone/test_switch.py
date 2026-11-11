@@ -2,7 +2,13 @@
 
 from unittest.mock import patch
 
-from aioairzone.const import API_DATA, API_ON, API_SYSTEM_ID, API_ZONE_ID
+from aioairzone.const import (
+    API_ANTI_FREEZE,
+    API_DATA,
+    API_ON,
+    API_SYSTEM_ID,
+    API_ZONE_ID,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -35,6 +41,51 @@ async def test_airzone_create_switches(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
     state = hass.states.get("switch.salon")
+    assert state.state == STATE_OFF
+
+
+async def test_airzone_create_anti_freeze_switches(hass: HomeAssistant) -> None:
+    """Test creation of anti-freeze switches."""
+
+    await async_init_integration(hass)
+
+    assert hass.states.get("switch.salon_anti_freeze") is None
+
+    state = hass.states.get("switch.dorm_1_anti_freeze")
+    assert state.state == STATE_ON
+
+    state = hass.states.get("switch.dorm_2_anti_freeze")
+    assert state.state == STATE_OFF
+
+
+async def test_airzone_anti_freeze_switch_off(hass: HomeAssistant) -> None:
+    """Test anti-freeze switch off."""
+
+    await async_init_integration(hass)
+
+    put_hvac_off = {
+        API_DATA: [
+            {
+                API_SYSTEM_ID: 1,
+                API_ZONE_ID: 3,
+                API_ANTI_FREEZE: False,
+            }
+        ]
+    }
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+        return_value=put_hvac_off,
+    ) as mock_put:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.dorm_1_anti_freeze"},
+            blocking=True,
+        )
+
+    mock_put.assert_called_once()
+    state = hass.states.get("switch.dorm_1_anti_freeze")
     assert state.state == STATE_OFF
 
 
