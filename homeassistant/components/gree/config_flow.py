@@ -86,14 +86,39 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Validate only the explicitly selected candidate."""
+        """Refresh a failed selection before validating the chosen device."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._selected = self._devices[user_input[CONF_DEVICE]]
-            result, error = await self._async_validate_selected()
-            if result:
-                return result
-            errors["base"] = error
+            selected_identifier = user_input[CONF_DEVICE]
+            selected = self._devices[selected_identifier]
+            if self._selected is None:
+                self._selected = selected
+            else:
+                await self.async_set_unique_id(
+                    normalize_identifier(selected[CONF_IDENTIFIER]),
+                    raise_on_progress=False,
+                )
+                self._abort_if_unique_id_configured()
+                try:
+                    devices = await async_get_discovery(self.hass).async_scan()
+                except OSError, TimeoutError:
+                    self._abort_if_unique_id_configured()
+                    errors["base"] = "cannot_connect"
+                else:
+                    self._abort_if_unique_id_configured()
+                    if (info := devices.get(selected_identifier)) is None:
+                        errors["base"] = "cannot_connect"
+                    else:
+                        self._selected = {
+                            **device_info_to_data(info),
+                            CONF_IDENTIFIER: selected[CONF_IDENTIFIER],
+                        }
+                        self._devices[selected_identifier] = self._selected
+            if not errors:
+                result, error = await self._async_validate_selected()
+                if result:
+                    return result
+                errors["base"] = error
         choices = {
             identifier: (
                 f"{data[CONF_NAME] or data[CONF_IDENTIFIER]} "

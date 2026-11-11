@@ -639,6 +639,157 @@ async def test_failed_manual_selection_does_not_block_rediscovery(
     }
 
 
+async def test_failed_manual_selection_refreshes_candidate_before_retry(
+    hass: HomeAssistant, device: MagicMock, discovery: MagicMock
+) -> None:
+    """A manual retry binds the selected identity at its latest endpoint."""
+    binding_device = device()
+    binding_device.device_info.mac = "AA:BB:CC:11:22:33"
+    data = device_info_to_data(binding_device.device_info)
+    manual = await start_selected_step(hass, "pick_device", data)
+    binding_device.bind.side_effect = DeviceTimeoutError
+    failed = await hass.config_entries.flow.async_configure(
+        manual["flow_id"], {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])}
+    )
+    assert failed["errors"] == {"base": "cannot_connect"}
+    binding_device.bind.reset_mock()
+    binding_device.bind.side_effect = None
+
+    updated = build_device_mock(
+        "Updated unit", "192.0.2.2", "aa-bb-cc-11-22-33", port=7001
+    )
+    discovery.mock_devices = [updated]
+    result = await hass.config_entries.flow.async_configure(
+        manual["flow_id"], {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])}
+    )
+
+    expected = {
+        **device_info_to_data(updated.device_info),
+        CONF_IDENTIFIER: data[CONF_IDENTIFIER],
+    }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == expected
+    assert result["result"].unique_id == normalize_identifier(data[CONF_IDENTIFIER])
+    assert device.call_args.args[0].ip == "192.0.2.2"
+    assert device.call_args.args[0].port == 7001
+    assert device.call_args.args[0].mac == data[CONF_IDENTIFIER]
+    binding_device.bind.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(None, id="selected-device-missing"),
+        pytest.param(OSError, id="scan-error"),
+        pytest.param(TimeoutError, id="scan-timeout"),
+    ],
+)
+async def test_failed_manual_retry_without_fresh_candidate(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    failure: type[Exception] | None,
+) -> None:
+    """Missing responders and failed retry scans keep the pick-device form."""
+    binding_device = device()
+    data = device_info_to_data(binding_device.device_info)
+    manual = await start_selected_step(hass, "pick_device", data)
+    binding_device.bind.side_effect = DeviceTimeoutError
+    failed = await hass.config_entries.flow.async_configure(
+        manual["flow_id"], {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])}
+    )
+    assert failed["errors"] == {"base": "cannot_connect"}
+    binding_device.bind.reset_mock()
+    binding_device.bind.side_effect = None
+
+    scanner = MagicMock(async_scan=AsyncMock(return_value={}, side_effect=failure))
+    with patch(
+        "homeassistant.components.gree.config_flow.async_get_discovery",
+        return_value=scanner,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            manual["flow_id"],
+            {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_device"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
+    scanner.async_scan.assert_awaited_once_with()
+    binding_device.bind.assert_not_awaited()
+
+    recovered = await hass.config_entries.flow.async_configure(
+        manual["flow_id"],
+        {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])},
+    )
+    assert recovered["type"] is FlowResultType.CREATE_ENTRY
+    assert recovered["data"] == data
+    assert recovered["result"].unique_id == normalize_identifier(data[CONF_IDENTIFIER])
+    assert hass.config_entries.async_entries(DOMAIN) == [
+        discovery_entry,
+        recovered["result"],
+    ]
+    binding_device.bind.assert_awaited_once_with()
+
+
+async def test_manual_retry_rechecks_entry_after_scan(
+    hass: HomeAssistant, device: MagicMock, discovery_entry: MockConfigEntry
+) -> None:
+    """A config entry created during retry scanning wins over the selection."""
+    binding_device = device()
+    data = device_info_to_data(binding_device.device_info)
+    manual = await start_selected_step(hass, "pick_device", data)
+    binding_device.bind.side_effect = DeviceTimeoutError
+    failed = await hass.config_entries.flow.async_configure(
+        manual["flow_id"], {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])}
+    )
+    assert failed["errors"] == {"base": "cannot_connect"}
+    binding_device.bind.reset_mock()
+    binding_device.bind.side_effect = None
+
+    winning_results: list[dict[str, Any]] = []
+
+    winner_device = build_device_mock()
+
+    async def scan_and_add_winner() -> dict[str, Any]:
+        winner_flow = await start_selected_step(hass, "discovery_confirm", data)
+        with patch(
+            "homeassistant.components.gree.config_flow.Device",
+            return_value=winner_device,
+        ):
+            winner_result = await hass.config_entries.flow.async_configure(
+                winner_flow["flow_id"], {}
+            )
+        winning_results.append(winner_result)
+        return {}
+
+    scanner = MagicMock(async_scan=AsyncMock(side_effect=scan_and_add_winner))
+    with patch(
+        "homeassistant.components.gree.config_flow.async_get_discovery",
+        return_value=scanner,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            manual["flow_id"],
+            {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])},
+        )
+
+    assert winning_results[0]["type"] is FlowResultType.CREATE_ENTRY
+    assert winning_results[0]["data"] == data
+    assert winning_results[0]["result"].unique_id == normalize_identifier(
+        data[CONF_IDENTIFIER]
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [
+        discovery_entry,
+        winning_results[0]["result"],
+    ]
+    scanner.async_scan.assert_awaited_once_with()
+    binding_device.bind.assert_not_awaited()
+    winner_device.bind.assert_awaited_once_with()
+
+
 @pytest.mark.parametrize("failure", [None, DeviceTimeoutError])
 async def test_pending_discovery_update_during_validation(
     hass: HomeAssistant,

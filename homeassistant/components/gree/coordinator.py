@@ -32,6 +32,8 @@ from .const import (
 from .discovery import async_get_discovery
 
 _LOGGER = logging.getLogger(__name__)
+INITIAL_STATE_TIMEOUT = 10
+
 
 type GreeConfigEntry = ConfigEntry[DeviceDataUpdateCoordinator]
 
@@ -66,6 +68,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_response_time: datetime = utcnow()
         self._last_error_time: datetime | None = None
         self._device_task: asyncio.Task | None = None
+        self._initial_state_event = asyncio.Event()
         super().__init__(
             hass,
             _LOGGER,
@@ -97,12 +100,14 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def device_state_updated(self, *args: Any) -> None:
-        """Publish a device reply and reset response freshness."""
+        """Publish device replies and reset response freshness."""
         if self._shutdown_requested:
             return
         _LOGGER.debug("Device state updated: %s", json_dumps(args))
         self._error_count = 0
         self._last_response_time = utcnow()
+        if self.device.has_valid_state:
+            self._initial_state_event.set()
         self.async_set_updated_data(self.device.raw_properties)
 
     @override
@@ -132,7 +137,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update the state of the device."""
+        """Wait for a valid first response before publishing device state."""
         _LOGGER.debug(
             "Updating device state: %s, error count: %d", self.name, self._error_count
         )
@@ -158,6 +163,15 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         " unavailable, could not send update request"
                     ) from error
             else:
+                if not self.device.has_valid_state:
+                    try:
+                        async with asyncio.timeout(INITIAL_STATE_TIMEOUT):
+                            await self._initial_state_event.wait()
+                    except TimeoutError as error:
+                        raise UpdateFailed(
+                            f"Device {self.name} did not provide initial state"
+                        ) from error
+
                 # raise update failed if time for more than
                 # MAX_ERRORS has passed since last update
                 now = utcnow()

@@ -107,6 +107,8 @@ def build_device_mock(
         handlers[response] = handler
 
     def emit_response(response: Response) -> None:
+        if response in (Response.RESULT, Response.DATA):
+            device.has_valid_state = True
         if handler := handlers.get(response):
             handler()
 

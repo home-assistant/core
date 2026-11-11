@@ -85,6 +85,80 @@ async def test_initial_state_timeout_does_not_create_entities(
     assert hass.states.async_all(SWITCH_DOMAIN) == []
 
 
+async def test_initial_state_response_timeout_after_successful_send(
+    hass: HomeAssistant, device: Mock
+) -> None:
+    """A successful send without a valid response keeps setup retryable."""
+    device().has_valid_state = False
+    device().raw_properties = {}
+
+    with patch("homeassistant.components.gree.coordinator.INITIAL_STATE_TIMEOUT", 0):
+        entry = await async_setup_gree(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.states.async_all(CLIMATE_DOMAIN) == []
+    assert hass.states.async_all(SWITCH_DOMAIN) == []
+    device().update_state.assert_awaited_once_with()
+    device().close.assert_called_once_with()
+    assert device().closed
+
+
+async def test_initial_state_waits_for_response_before_creating_entities(
+    hass: HomeAssistant, device: Mock
+) -> None:
+    """Setup waits for valid device data before creating entities."""
+    device().has_valid_state = False
+    device().raw_properties = {}
+    status_sent = asyncio.Event()
+
+    async def send_status() -> None:
+        status_sent.set()
+
+    device().update_state.side_effect = send_status
+    setup = asyncio.create_task(async_setup_gree(hass))
+    await status_sent.wait()
+
+    assert not setup.done()
+    assert hass.states.async_all(CLIMATE_DOMAIN) == []
+    assert hass.states.async_all(SWITCH_DOMAIN) == []
+
+    device().power = True
+    device().raw_properties["Pow"] = 1
+    device().emit_response(Response.DATA)
+    entry = await setup
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID_1).state == HVACMode.AUTO
+
+
+async def test_shutdown_during_initial_state_wait_cancels_setup(
+    hass: HomeAssistant, device: Mock
+) -> None:
+    """Shutdown cancels first-state waiting and retires the device."""
+    device().has_valid_state = False
+    device().raw_properties = {}
+    status_sent = asyncio.Event()
+
+    async def send_status() -> None:
+        status_sent.set()
+
+    device().update_state.side_effect = send_status
+    setup = asyncio.create_task(async_setup_gree(hass))
+    await status_sent.wait()
+    assert not setup.done()
+    assert hass.states.async_all(CLIMATE_DOMAIN) == []
+    assert hass.states.async_all(SWITCH_DOMAIN) == []
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    with pytest.raises(asyncio.CancelledError):
+        await setup
+
+    device().close.assert_called_once_with()
+    assert device().closed
+    assert hass.states.async_all(CLIMATE_DOMAIN) == []
+    assert hass.states.async_all(SWITCH_DOMAIN) == []
+
+
 async def test_initial_state_timeout_after_bind_response_is_allowed(
     hass: HomeAssistant, device: Mock
 ) -> None:
