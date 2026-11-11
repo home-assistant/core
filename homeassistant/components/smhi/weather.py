@@ -90,7 +90,7 @@ async def async_setup_entry(
     """Add a weather entity from map location."""
     location = config_entry.data
 
-    coordinator = config_entry.runtime_data[0]
+    coordinator = config_entry.runtime_data.coordinator
 
     entity = SmhiWeather(
         location[CONF_LOCATION][CONF_LATITUDE],
