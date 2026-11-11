@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
-from switchbot import LockStatus, SwitchbotOperationError
+from switchbot import LockStatus, SwitchbotLockUltra, SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
@@ -156,6 +156,7 @@ async def test_lock_ultra_max_entities(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert isinstance(entry.runtime_data.device, SwitchbotLockUltra)
     assert hass.states.get("lock.test_name") is not None
     assert hass.states.get("binary_sensor.test_name") is not None
     assert hass.states.get("sensor.test_name_battery") is not None
@@ -229,6 +230,7 @@ async def test_lock_ultra_half_lock_state_shows_locked(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
+        assert isinstance(entry.runtime_data.device, SwitchbotLockUltra)
         lock_state = hass.states.get("lock.test_name")
         assert lock_state is not None
         assert lock_state.state == LockState.LOCKED

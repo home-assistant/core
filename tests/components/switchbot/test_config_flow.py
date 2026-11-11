@@ -239,7 +239,9 @@ async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
 
     with (
         patch_async_setup_entry() as mock_setup_entry,
-        patch("switchbot.SwitchbotLock.verify_encryption_key", return_value=True),
+        patch(
+            "switchbot.SwitchbotLockUltra.verify_encryption_key", return_value=True
+        ) as verify_key,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -250,6 +252,7 @@ async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    verify_key.assert_awaited_once()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SENSOR_TYPE] == "lock_ultra_max"
     assert result["result"].unique_id == "aabbccddeeff"
