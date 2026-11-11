@@ -9,9 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AsusWrtConfigEntry
-from .router import AsusWrtDevInfo, AsusWrtRouter
-
-DEFAULT_DEVICE_NAME = "Unknown device"
+from .router import AsusWrtDevInfo, AsusWrtRouter, unnamed_client_name
 
 
 async def async_setup_entry(
@@ -71,7 +69,7 @@ class AsusWrtDevice(ScannerEntity):
         """Initialize a AsusWrt device."""
         self._router = router
         self._device = device
-        self._attr_name = device.name or DEFAULT_DEVICE_NAME
+        self._attr_name = device.name or unnamed_client_name(device.mac)
 
     @override
     async def async_prepare_to_add_to_hass(self) -> None:

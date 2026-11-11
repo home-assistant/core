@@ -5,14 +5,15 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from onedrive_personal_sdk.const import DriveState
 from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import Folder
+from onedrive_personal_sdk.models.items import Drive, Folder
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, async_get_manager
@@ -23,10 +24,15 @@ from homeassistant.components.onedrive_for_business.const import (
     DOMAIN,
     OAUTH2_TOKEN,
 )
+from homeassistant.components.onedrive_for_business.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -373,3 +379,108 @@ async def test_1_1_to_1_2_migration_duplicate_config_entry(
         entity_registry.async_get(old_entity.entity_id).unique_id
         == "mock_drive_id_total_size"
     )
+
+
+@pytest.mark.parametrize(
+    ("drive_state", "issue_keys"),
+    [
+        (DriveState.NORMAL, set()),
+        (DriveState.NEARING, set()),
+        (DriveState.CRITICAL, {"drive_almost_full"}),
+        (DriveState.EXCEEDED, {"drive_full"}),
+    ],
+)
+async def test_data_cap_issues(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_drive: Drive,
+    drive_state: DriveState,
+    issue_keys: set[str],
+) -> None:
+    """Make sure we get issues for high data usage."""
+    assert mock_drive.quota
+    mock_drive.quota.state = drive_state
+
+    await setup_integration(hass, mock_config_entry)
+
+    issues = {
+        issue_id: issue
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+    }
+    assert set(issues) == {f"{key}_{mock_config_entry.entry_id}" for key in issue_keys}
+    assert {issue.translation_key for issue in issues.values()} == issue_keys
+    assert {issue.translation_placeholders["name"] for issue in issues.values()} <= {
+        mock_config_entry.title
+    }
+    assert {issue.config_entry_id for issue in issues.values()} <= {
+        mock_config_entry.entry_id
+    }
+
+
+@pytest.mark.parametrize(
+    ("initial_state", "new_state", "issue_keys"),
+    [
+        (DriveState.CRITICAL, DriveState.NORMAL, set()),
+        (DriveState.EXCEEDED, DriveState.NEARING, set()),
+        (DriveState.CRITICAL, DriveState.EXCEEDED, {"drive_full"}),
+        (DriveState.EXCEEDED, DriveState.CRITICAL, {"drive_almost_full"}),
+    ],
+)
+async def test_data_cap_issues_resolved(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_drive: Drive,
+    freezer: FrozenDateTimeFactory,
+    initial_state: DriveState,
+    new_state: DriveState,
+    issue_keys: set[str],
+) -> None:
+    """Test data cap issues are deleted when the quota state changes."""
+    assert mock_drive.quota
+    mock_drive.quota.state = initial_state
+    await setup_integration(hass, mock_config_entry)
+
+    mock_drive.quota.state = new_state
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert {
+        issue_id for domain, issue_id in issue_registry.issues if domain == DOMAIN
+    } == {f"{key}_{mock_config_entry.entry_id}" for key in issue_keys}
+
+
+async def test_data_cap_issues_per_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_drive: Drive,
+) -> None:
+    """Test each entry gets its own data cap issue, removed with the entry."""
+    assert mock_drive.quota
+    mock_drive.quota.state = DriveState.EXCEEDED
+    other_entry = MockConfigEntry(
+        title="Jane Doe's OneDrive",
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id="other_drive_id",
+        minor_version=mock_config_entry.minor_version,
+    )
+    other_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
+
+    for entry in (mock_config_entry, other_entry):
+        issue = issue_registry.async_get_issue(DOMAIN, f"drive_full_{entry.entry_id}")
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_placeholders["name"] == entry.title
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        issue_id for domain, issue_id in issue_registry.issues if domain == DOMAIN
+    } == {f"drive_full_{other_entry.entry_id}"}

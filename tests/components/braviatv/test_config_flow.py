@@ -18,11 +18,18 @@ from homeassistant.components.braviatv.const import (
     DOMAIN,
     NICKNAME_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, ConfigEntryDisabler
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_IGNORE,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    ConfigEntryDisabler,
+)
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import instance_id
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -150,6 +157,47 @@ async def test_ssdp_discovery_exist(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("macaddress", "ip", "reason", "expected_host", "reload_count"),
+    [
+        ("aabbccddeeff", "10.0.0.2", "already_configured", "10.0.0.2", 1),
+        ("aabbccddeeff", "bravia-host", "already_configured", "bravia-host", 0),
+        ("001122334455", "10.0.0.2", "no_devices_found", "bravia-host", 0),
+    ],
+)
+async def test_dhcp_discovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    macaddress: str,
+    ip: str,
+    reason: str,
+    expected_host: str,
+    reload_count: int,
+) -> None:
+    """Test that DHCP discovery updates the host of a known device only."""
+    # Ignored entries have no data, so the DHCP step must skip them
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, data={}, unique_id="ignored_tv_uuid"
+    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_setup_entry.reset_mock()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(hostname="bravia", ip=ip, macaddress=macaddress),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert mock_config_entry.data[CONF_HOST] == expected_host
+    assert mock_setup_entry.call_count == reload_count
 
 
 async def test_user_invalid_host(hass: HomeAssistant) -> None:

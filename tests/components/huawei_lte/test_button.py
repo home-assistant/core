@@ -10,7 +10,10 @@ from homeassistant.components.huawei_lte.const import (
     BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
     BUTTON_KEY_RESTART,
     DOMAIN,
-    SERVICE_SUSPEND_INTEGRATION,
+)
+from homeassistant.components.huawei_lte.services import (
+    HuaweiLteService,
+    HuaweiLteServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -42,8 +45,8 @@ async def test_clear_traffic_statistics(hass: HomeAssistant) -> None:
     client.monitoring.set_clear_traffic.reset_mock()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SUSPEND_INTEGRATION,
-        {CONF_URL: MOCK_CONF_URL},
+        HuaweiLteService.SUSPEND_INTEGRATION,
+        {HuaweiLteServiceArgument.URL: MOCK_CONF_URL},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -74,8 +77,8 @@ async def test_restart(hass: HomeAssistant) -> None:
     client.device.set_control.reset_mock()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SUSPEND_INTEGRATION,
-        {CONF_URL: MOCK_CONF_URL},
+        HuaweiLteService.SUSPEND_INTEGRATION,
+        {HuaweiLteServiceArgument.URL: MOCK_CONF_URL},
         blocking=True,
     )
     await hass.async_block_till_done()

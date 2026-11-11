@@ -31,14 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import (
-    API_METRIC,
-    ATTR_DIRECTION,
-    ATTR_SPEED,
-    ATTR_VALUE,
-    ATTRIBUTION,
-    CONDITION_MAP,
-)
+from .const import API_METRIC, ATTR_DIRECTION, ATTR_SPEED, ATTR_VALUE, CONDITION_MAP
 from .coordinator import (
     AccuWeatherConfigEntry,
     AccuWeatherDailyForecastDataUpdateCoordinator,
@@ -46,6 +39,7 @@ from .coordinator import (
     AccuWeatherHourlyForecastDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
+from .entity import AccuWeatherEntity
 
 PARALLEL_UPDATES = 1
 
@@ -56,19 +50,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a AccuWeather weather entity from a config_entry."""
-    async_add_entities([AccuWeatherEntity(entry.runtime_data)])
+    async_add_entities([AccuWeatherWeather(entry.runtime_data)])
 
 
-class AccuWeatherEntity(
+class AccuWeatherWeather(
     CoordinatorWeatherEntity[
         AccuWeatherObservationDataUpdateCoordinator,
         AccuWeatherDailyForecastDataUpdateCoordinator,
         AccuWeatherHourlyForecastDataUpdateCoordinator,
-    ]
+    ],
+    AccuWeatherEntity[AccuWeatherObservationDataUpdateCoordinator],
 ):
     """Define an AccuWeather entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, accuweather_data: AccuWeatherData) -> None:
@@ -85,8 +79,6 @@ class AccuWeatherEntity(
         self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
         self._attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
         self._attr_unique_id = accuweather_data.coordinator_observation.location_key
-        self._attr_attribution = ATTRIBUTION
-        self._attr_device_info = accuweather_data.coordinator_observation.device_info
         self._attr_supported_features = (
             WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
         )

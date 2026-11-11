@@ -201,7 +201,7 @@ async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> 
         translation_key="fake_key",
     )
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = repairs_flow_manager(hass)
 
     flow = await repairs.async_init(
         "fake_integration", context={"issue_id": str(flow_type)}
@@ -235,7 +235,7 @@ async def test_issue_id_setter_getter_deprecation(
         translation_key="fake_key",
     )
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = repairs_flow_manager(hass)
 
     result = await repairs.async_init(
         "fake_integration", context={"issue_id": "context_issue"}

@@ -16,13 +16,13 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.rest.const import DOMAIN
+from homeassistant.components.rest.services import RestService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PACKAGES,
     CONF_PAYLOAD,
     CONF_RESOURCE,
-    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     UnitOfInformation,
 )
@@ -281,7 +281,7 @@ async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            RestService.RELOAD,
             {},
             blocking=True,
         )
@@ -331,7 +331,7 @@ async def test_reload_and_remove_all(
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            RestService.RELOAD,
             {},
             blocking=True,
         )
@@ -376,7 +376,7 @@ async def test_reload_fails_to_read_configuration(
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            RestService.RELOAD,
             {},
             blocking=True,
         )
