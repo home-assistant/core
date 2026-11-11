@@ -10,6 +10,7 @@ from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     CleanPathPreferenceMapping,
     RoborockDockDustCollectionModeCode,
+    SCWindMapping,
     WaterLevelMapping,
     ZeoProgram,
 )
@@ -272,6 +273,59 @@ def q7_device(fake_devices: list[FakeDevice]) -> FakeDevice:
     """Get the fake Q7 vacuum device."""
     # The Q7 is the fourth device in the list (index 3) based on HOME_DATA
     return fake_devices[3]
+
+
+async def test_q7_suction_power(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the Q7 suction power selector uses the vacuum fan speed."""
+    entity_id = "select.roborock_q7_suction_power"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["options"] == [
+        "quiet",
+        "balanced",
+        "turbo",
+        "max",
+        "max_plus",
+    ]
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    assert registry_entry.entity_category == "config"
+
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "turbo"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    assert q7_device.b01_q7_properties
+    q7_device.b01_q7_properties.set_fan_speed.assert_awaited_once_with(
+        SCWindMapping.STRONG
+    )
+
+
+async def test_q7_suction_power_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test device errors are reported when changing suction power."""
+    assert q7_device.b01_q7_properties
+    q7_device.b01_q7_properties.set_fan_speed.side_effect = RoborockException
+    with pytest.raises(HomeAssistantError, match="Error while calling suction_power"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "turbo"},
+            blocking=True,
+            target={"entity_id": "select.roborock_q7_suction_power"},
+        )
 
 
 async def test_update_success_q7_water_level(
