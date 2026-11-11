@@ -240,15 +240,14 @@ def _generate_historical_response(
     Each entity's states are serialized as soon as they are complete, so the
     states of all entities are never kept as Python objects at the same time.
     """
-    last_time_ts = 0.0
 
-    def _serialize(entity_id: str, state_list: list[dict[str, Any]]) -> bytes:
-        nonlocal last_time_ts
-        if (
-            state_last_time := state_list[-1][COMPRESSED_STATE_LAST_UPDATED]
-        ) > last_time_ts:
-            last_time_ts = cast(float, state_last_time)
-        return b"%b:%b" % (json_bytes(entity_id), json_bytes(state_list))
+    def _serialize(
+        entity_id: str, state_list: list[dict[str, Any]]
+    ) -> tuple[float, bytes]:
+        return (
+            cast(float, state_list[-1][COMPRESSED_STATE_LAST_UPDATED]),
+            b"%b:%b" % (json_bytes(entity_id), json_bytes(state_list)),
+        )
 
     serialized_states = history.get_significant_states_serialized(
         hass,
@@ -260,6 +259,9 @@ def _generate_historical_response(
         minimal_response,
         no_attributes,
         _serialize,
+    )
+    last_time_ts = max(
+        (state_last_time for state_last_time, _ in serialized_states), default=0.0
     )
 
     if last_time_ts == 0:
@@ -279,7 +281,7 @@ def _generate_historical_response(
             msg_id,
             b'{"states":{%b},"start_time":%b,"end_time":%b}'
             % (
-                b",".join(serialized_states),
+                b",".join(states for _, states in serialized_states),
                 json_bytes(start_time.timestamp()),
                 json_bytes(last_time_dt.timestamp()),
             ),

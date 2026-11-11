@@ -301,10 +301,13 @@ def get_significant_states_serialized[_T](
     def _collect(
         entity_states: Iterable[tuple[str, list[State | dict[str, Any]]]],
     ) -> list[_T]:
-        serialized = {
-            entity_id: serialize(entity_id, cast(list[dict[str, Any]], states))
-            for entity_id, states in entity_states
-        }
+        serialized: dict[str, _T] = {}
+        for entity_id, states in entity_states:
+            serialized[entity_id] = serialize(
+                entity_id, cast(list[dict[str, Any]], states)
+            )
+            # Free the states before the next entity's states are built
+            del states
         return [
             serialized[entity_id]
             for entity_id in dict.fromkeys(entity_ids)
