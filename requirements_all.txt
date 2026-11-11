@@ -1721,7 +1721,7 @@ motionblinds==0.6.31
 motionblindsble==0.1.4
 
 # homeassistant.components.motioneye
-motioneye-client==0.4.1
+motioneye-client==0.4.2
 
 # homeassistant.components.bang_olufsen
 mozart-api==6.2.0.44.0
