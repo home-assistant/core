@@ -1215,7 +1215,7 @@ AGENTS.md @home-assistant/core
 /tests/components/meteo_france/ @oncleben31 @Quentame
 /homeassistant/components/meteo_lt/ @xE1H
 /tests/components/meteo_lt/ @xE1H
-/homeassistant/components/meteoalarm/ @rolfberkenbosch
+/homeassistant/components/meteoalarm/ @rolfberkenbosch @mastermc0 @jjprz
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
 /homeassistant/components/metoffice/ @MrHarcombe @avee87

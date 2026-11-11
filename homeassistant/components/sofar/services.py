@@ -153,7 +153,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def _handle_set_feed_in_limit(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "feed_in")
-        device = entry.runtime_data.readings.device
         max_power = call.data[SofarServiceArgument.MAX_POWER]
         if max_power % 100:
             raise ServiceValidationError(
@@ -162,7 +161,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         await _write(
             entry,
-            device.feed_in.async_write_limit(
+            entry.runtime_data.readings.device.feed_in.async_write_limit(
                 enum_member(FeedinLimitationMode, call.data[SofarServiceArgument.MODE]),
                 int(max_power),
             ),
@@ -170,10 +169,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def _handle_set_active_power_limit(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "active_power_control")
-        device = entry.runtime_data.readings.device
         await _write(
             entry,
-            device.active_power_control.async_write_active_power_limit(
+            entry.runtime_data.readings.device.active_power_control.async_write_active_power_limit(
                 call.data[SofarServiceArgument.ENABLED],
                 call.data[SofarServiceArgument.LIMIT],
             ),
@@ -181,10 +179,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def _handle_set_passive_mode_timeout(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "passive")
-        device = entry.runtime_data.readings.device
         await _write(
             entry,
-            device.passive.async_write_timeout(
+            entry.runtime_data.readings.device.passive.async_write_timeout(
                 call.data[SofarServiceArgument.TIMEOUT],
                 enum_member(
                     PassiveModeTimeoutAction, call.data[SofarServiceArgument.ACTION]
@@ -194,10 +191,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def _handle_set_passive_mode_power(call: ServiceCall) -> None:
         entry = _get_entry(hass, call, "passive")
-        device = entry.runtime_data.readings.device
         await _write(
             entry,
-            device.passive.async_write_power(
+            entry.runtime_data.readings.device.passive.async_write_power(
                 call.data[SofarServiceArgument.GRID_POWER],
                 call.data[SofarServiceArgument.BATTERY_POWER_MIN],
                 call.data[SofarServiceArgument.BATTERY_POWER_MAX],

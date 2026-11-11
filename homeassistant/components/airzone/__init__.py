@@ -83,8 +83,7 @@ async def _async_migrate_unique_ids(
 async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Set up Airzone from a config entry."""
     options = ConnectionOptions(
-        entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
+        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
         entry.data[CONF_ID],
     )
 
