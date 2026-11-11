@@ -1,3 +1,8 @@
+get_3_hour_forecast:
+  target:
+    entity:
+      domain: weather
+      integration: foreca
 get_forecasts_extra:
   target:
     entity:

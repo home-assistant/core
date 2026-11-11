@@ -75,7 +75,7 @@ async def prepare_webhook_setup(
 def load_goals_fixture(fixture: str = "withings/goals.json") -> Goals:
     """Return goals from fixture."""
     goals_json = load_json_object_fixture(fixture)
-    return Goals.from_api(goals_json)
+    return Goals.from_dict(goals_json)
 
 
 def load_measurements_fixture(
@@ -83,7 +83,7 @@ def load_measurements_fixture(
 ) -> list[MeasurementGroup]:
     """Return measurement from fixture."""
     meas_json = load_json_array_fixture(fixture)
-    return [MeasurementGroup.from_api(measurement) for measurement in meas_json]
+    return [MeasurementGroup.from_dict(measurement) for measurement in meas_json]
 
 
 def load_activity_fixture(
@@ -91,7 +91,7 @@ def load_activity_fixture(
 ) -> list[Activity]:
     """Return activities from fixture."""
     activity_json = load_json_array_fixture(fixture)
-    return [Activity.from_api(activity) for activity in activity_json]
+    return [Activity.from_dict(activity) for activity in activity_json]
 
 
 def load_workout_fixture(
@@ -99,7 +99,7 @@ def load_workout_fixture(
 ) -> list[Workout]:
     """Return workouts from fixture."""
     workouts_json = load_json_array_fixture(fixture)
-    return [Workout.from_api(workout) for workout in workouts_json]
+    return [Workout.from_dict(workout) for workout in workouts_json]
 
 
 def load_sleep_fixture(
@@ -107,7 +107,7 @@ def load_sleep_fixture(
 ) -> list[SleepSummary]:
     """Return sleep summaries from fixture."""
     sleep_json = load_json_array_fixture("withings/sleep_summaries.json")
-    return [SleepSummary.from_api(sleep_summary) for sleep_summary in sleep_json]
+    return [SleepSummary.from_dict(sleep_summary) for sleep_summary in sleep_json]
 
 
 def load_device_fixture(
@@ -115,4 +115,4 @@ def load_device_fixture(
 ) -> list[Device]:
     """Return sleep summaries from fixture."""
     devices_json = load_json_array_fixture(fixture)
-    return [Device.from_api(device) for device in devices_json]
+    return [Device.from_dict(device) for device in devices_json]

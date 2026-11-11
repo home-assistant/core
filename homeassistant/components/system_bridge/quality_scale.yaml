@@ -21,9 +21,7 @@ rules:
   docs-triggers:
     status: exempt
     comment: The integration does not provide triggers.
-  entity-event-setup:
-    status: exempt
-    comment: Entities only get updates through the coordinator.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done

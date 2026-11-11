@@ -662,6 +662,7 @@ async def test_power_state_while_waiting_for_registration(
     async def listen_then_sleep(
         callback: Any = None,
         _: bool = False,
+        notification_event_callback: Any = None,
         power_state_callback: Any = None,
     ) -> None:
         await registering.wait()
@@ -696,6 +697,7 @@ async def test_power_state_from_running_listener(
     async def listen_then_sleep(
         callback: Any = None,
         _: bool = False,
+        notification_event_callback: Any = None,
         power_state_callback: Any = None,
     ) -> None:
         await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))

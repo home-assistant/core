@@ -1,6 +1,7 @@
 """Constants for the Overkiz (by Somfy) integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Final
 
@@ -193,3 +194,16 @@ OVERKIZ_UNIT_TO_HA: dict[str, str] = {
     MeasuredValueType.VOLUME_IN_GALLON: UnitOfVolume.GALLONS,
     MeasuredValueType.VOLUME_IN_LITER: UnitOfVolume.LITERS,
 }
+
+
+class OverkizService(StrEnum):
+    """Store keys for Overkiz services."""
+
+    SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
+
+
+class OverkizServiceArgument(StrEnum):
+    """Store keys for Overkiz service arguments."""
+
+    POSITION = "position"
+    TILT_POSITION = "tilt_position"

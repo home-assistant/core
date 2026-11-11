@@ -5,7 +5,7 @@
       'data': dict({
         'has_password': True,
         'host': '**REDACTED**',
-        'password': 'pwd',
+        'password': '**REDACTED**',
         'timeout': 30,
       }),
       'disabled_by': None,
