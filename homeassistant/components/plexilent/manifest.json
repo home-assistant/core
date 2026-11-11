@@ -1,0 +1,13 @@
+{
+  "domain": "plexilent",
+  "name": "Plexilent",
+  "categories": ["lighting.lighting_systems"],
+  "codeowners": ["@plexilentpvtltd"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/plexilent",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyplexilent"],
+  "quality_scale": "bronze",
+  "requirements": ["pyplexilent==0.1.1"]
+}
