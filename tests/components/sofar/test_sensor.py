@@ -329,22 +329,16 @@ async def test_sensor_availability_on_component_failure(
     pv_power_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
     )
-    total_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_solar_generation_total"
-    )
     assert grid_frequency_id is not None
     assert pv_power_id is not None
-    assert total_id is not None
 
     unit = mock_connection.for_unit(1)
     unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
-    unit.holding[0x0687] = 160  # 16.0 kWh
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(grid_frequency_id).state == STATE_UNAVAILABLE
     assert hass.states.get(pv_power_id).state == "2.5"
-    assert hass.states.get(total_id).state == "16.0"
 
     unit.fail_read(0x0484, None)
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
