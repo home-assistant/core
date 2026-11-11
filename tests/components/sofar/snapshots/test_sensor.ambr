@@ -217,7 +217,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '87',
+    'state': '88',
   })
 # ---
 # name: test_all_entities[sensor.battery_1_state_of_health-entry]
@@ -381,7 +381,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '52.0',
+    'state': '52.5',
   })
 # ---
 # name: test_all_entities[sensor.battery_3_charge_cycle-entry]
@@ -2058,7 +2058,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '73',
+    'state': '70',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_battery_config_end_of_discharge-entry]
@@ -4018,7 +4018,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '49.9',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_heatsink_temperature_1-entry]
@@ -6192,7 +6192,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '27',
+    'state': '30',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_passive_mode_grid_power-entry]
@@ -7474,7 +7474,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '16.0',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_system_state-entry]
@@ -9959,6 +9959,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '97.8',
+    'state': '97.0',
   })
 # ---

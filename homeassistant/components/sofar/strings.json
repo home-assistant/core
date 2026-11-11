@@ -1142,7 +1142,7 @@
       "description": "Sets the battery's cut-off levels, as shown on the SofarCloud app's battery parameters page. The inverter stores each change, so avoid calling this often. Only for inverters with battery storage.",
       "fields": {
         "charge_cutoff_soc": {
-          "description": "The charge level at which the battery stops charging. Left unchanged when omitted. Not every inverter supports it.",
+          "description": "The charge level at which the battery stops charging. 60 to 100%. Left unchanged when omitted. Not every inverter supports it.",
           "name": "Charge cut-off state of charge"
         },
         "config_entry_id": {
@@ -1150,15 +1150,15 @@
           "name": "Inverter"
         },
         "off_grid_discharge_cutoff_soc": {
-          "description": "The charge level at which the battery stops discharging during a grid outage. At most the on-grid cut-off.",
+          "description": "The charge level at which the battery stops discharging during a grid outage. 10 to 30%, at most the on-grid cut-off.",
           "name": "Off-grid discharge cut-off state of charge"
         },
         "off_grid_recovery_soc": {
-          "description": "The charge level the battery recharges to before it discharges off-grid again. At least 5% above the off-grid cut-off.",
+          "description": "The charge level the battery recharges to before it discharges off-grid again. 15 to 100%, at least 5% above the off-grid cut-off.",
           "name": "Off-grid discharge recovery state of charge"
         },
         "on_grid_discharge_cutoff_soc": {
-          "description": "The charge level at which the battery stops discharging while the grid is up.",
+          "description": "The charge level at which the battery stops discharging while the grid is up. 10 to 100%.",
           "name": "On-grid discharge cut-off state of charge"
         }
       },
