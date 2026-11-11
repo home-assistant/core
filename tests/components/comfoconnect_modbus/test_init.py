@@ -44,7 +44,7 @@ async def test_setup_and_unload(
     init_integration: MockConfigEntry,
     mock_get_unit: MagicMock,
 ) -> None:
-    """Test the entry sets up with a unit from the modbus integration and unloads."""
+    """Test that the entry sets up and unloads."""
     assert init_integration.state is ConfigEntryState.LOADED
     mock_get_unit.assert_called_once_with(
         hass,
@@ -63,7 +63,7 @@ async def test_setup_over_serial(
     mock_get_unit: MagicMock,
     platforms: list[Platform],
 ) -> None:
-    """Test a serial entry requests a unit with its stored serial settings."""
+    """Test that a serial entry connects with its serial settings."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SERIAL_ENTRY_DATA)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -85,7 +85,7 @@ async def test_device_info(
     snapshot: SnapshotAssertion,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test the gateway is added to the device registry."""
+    """Test that the gateway gets added to the device registry."""
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, init_integration.entry_id), init_integration.entry_id
     )
@@ -98,7 +98,7 @@ async def test_setup_retries_when_unreachable(
     mock_config_entry: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test an unreachable gateway retries setup."""
+    """Test that setup retries when the gateway is unreachable."""
     mock_unit.fail_requests(ModbusConnectionError())
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -112,7 +112,7 @@ async def test_setup_retries_without_ventilation_unit(
     mock_config_entry: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a gateway that lost its ventilation unit retries setup."""
+    """Test that setup retries when the gateway has no ventilation unit."""
     seed(mock_unit, input_registers={0x0001: 50})  # Connection state
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -130,7 +130,7 @@ async def test_failed_component_goes_unavailable(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test only the entities of a refused block go unavailable."""
+    """Test that only the entities of a failed read go unavailable."""
     # Airflow, the first register of the sensor block
     mock_unit.fail_read(
         address(0x0007), IllegalDataAddressError(), register_type="input"
@@ -154,7 +154,7 @@ async def test_dead_link_makes_everything_unavailable(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a dropped link marks the gateway unavailable until it answers."""
+    """Test that entities go unavailable while the link is down."""
     mock_unit.fail_requests(ModbusConnectionError())
     await _tick(hass, freezer)
 
@@ -172,7 +172,7 @@ async def test_every_component_failing_marks_the_poll_failed(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a poll where no component answers fails as a whole."""
+    """Test that the poll fails when every read fails."""
     error = IllegalDataAddressError()
     # The first registers of the status, sensor and settings blocks
     mock_unit.fail_read(address(0x0001), error, register_type="input")
@@ -190,7 +190,7 @@ async def test_lost_ventilation_unit_makes_everything_unavailable(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a gateway that loses its ventilation unit marks it unavailable."""
+    """Test that entities go unavailable while the ventilation unit is lost."""
     seed(mock_unit, input_registers={0x0001: 7})  # Connection state
     await _tick(hass, freezer)
 
@@ -205,7 +205,7 @@ async def test_lost_ventilation_unit_makes_everything_unavailable(
 async def test_setup_fails_when_the_link_is_held_with_other_settings(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test setup fails with the modbus error when the link is in use with other settings."""
+    """Test that setup fails when the link is in use with other settings."""
     mock_config_entry.add_to_hass(hass)
     placeholders = {
         "endpoint": "192.168.1.100:502",
@@ -236,7 +236,7 @@ async def test_gateway_refusing_every_read_reports_no_path(
     mock_unit: MockModbusUnit,
     error: type[Exception],
 ) -> None:
-    """Test a gateway that refuses every read with a gateway error reports no path."""
+    """Test that the poll reports no path when the gateway refuses every read."""
     # The first registers of the status, sensor and settings blocks
     mock_unit.fail_read(address(0x0001), error(), register_type="discrete")
     mock_unit.fail_read(address(0x0007), error(), register_type="input")
@@ -256,7 +256,7 @@ async def test_dead_link_keeps_the_modbus_error(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a lost link chains the Modbus error to the failure."""
+    """Test that a poll failure keeps the Modbus error as its cause."""
     mock_unit.fail_requests(ModbusConnectionError("socket closed"))
     await _tick(hass, freezer)
 

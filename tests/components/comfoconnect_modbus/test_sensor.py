@@ -27,7 +27,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test every sensor and its state."""
+    """Test that all sensors get created with their states."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
@@ -37,7 +37,7 @@ async def test_co2_zone_added_when_it_reports(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a CO₂ zone that starts reporting gets its sensor."""
+    """Test that a CO₂ zone sensor gets created when it first reports."""
     assert hass.states.get("sensor.comfoair_co2_zone_2") is None
 
     seed(mock_unit, input_registers={0x0013: 455})  # CO₂ zone 2
@@ -56,7 +56,7 @@ async def test_room_sensors_added_when_they_report(
     mock_unit: MockModbusUnit,
     platforms: list[Platform],
 ) -> None:
-    """Test a unit without a room sensor gets the room sensors once one reports."""
+    """Test that room sensors get created when they first report."""
     # Room temperature and room humidity
     seed(mock_unit, input_registers={0x0008: 0, 0x000D: 0})
     await setup_integration(hass, mock_config_entry, platforms)
@@ -90,7 +90,7 @@ async def test_active_error_states(
     code: int,
     state: str,
 ) -> None:
-    """Test an alarm slot shows none, a listed alarm, or unknown."""
+    """Test that an alarm slot shows none, the alarm, or unknown."""
     seed(mock_unit, input_registers={**INPUT, 0x0002: code})  # Alarm slot 1
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
@@ -105,7 +105,7 @@ async def test_co2_zone_reading_zero_is_unknown(
     init_integration: MockConfigEntry,
     mock_unit: MockModbusUnit,
 ) -> None:
-    """Test a CO₂ zone that reads 0 shows unknown."""
+    """Test that a CO₂ zone reading 0 shows unknown."""
     seed(mock_unit, input_registers={0x0012: 0})  # CO₂ zone 1
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)

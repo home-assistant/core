@@ -139,7 +139,7 @@ async def test_user_step_success(
     expected_params: ModbusSerialParams | ModbusTcpParams,
     expected_data: dict[str, Any],
 ) -> None:
-    """Test each connection type probes the gateway and creates an entry."""
+    """Test that both connection types create an entry."""
     flow_id = await _start_flow(hass, connection_type)
 
     with _patch_temporary_unit(_gateway()) as mock_temporary_unit:
@@ -164,7 +164,7 @@ async def test_user_step_success(
 async def test_user_step_probe_error(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, error: Exception, base: str
 ) -> None:
-    """Test a failed probe shows the error, then recovers."""
+    """Test that the flow shows an error and recovers when the probe fails."""
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with patch(
@@ -189,7 +189,7 @@ async def test_user_step_probe_error(
 async def test_serial_step_error_suggests_the_baud_rate_option(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test a failed serial probe shows the baud rate as one of its options."""
+    """Test that the serial form keeps the baud rate after a failed probe."""
     flow_id = await _start_flow(hass, TYPE_SERIAL)
 
     with patch(
@@ -219,7 +219,7 @@ async def test_serial_step_error_suggests_the_baud_rate_option(
 async def test_user_step_no_ventilation_unit(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, code: int, state: str
 ) -> None:
-    """Test a gateway without a ventilation unit shows its connection state."""
+    """Test that the flow shows the connection state when no unit is reachable."""
     connection = _gateway()
     seed(
         connection.for_unit(1), input_registers={**INPUT, 0x0001: code}
@@ -257,7 +257,7 @@ async def test_user_step_already_configured(
     connection_type: str,
     user_input: dict[str, Any],
 ) -> None:
-    """Test the flow aborts before the probe when an entry already uses the link."""
+    """Test that the flow aborts when the link is already configured."""
     MockConfigEntry(domain=DOMAIN, data=data).add_to_hass(hass)
     flow_id = await _start_flow(hass, connection_type)
 
@@ -279,7 +279,7 @@ async def test_user_step_already_configured(
 async def test_user_step_same_tcp_gateway_is_a_duplicate(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, user_input: dict[str, Any]
 ) -> None:
-    """Test a TCP gateway with another unit ID or host spelling is a duplicate."""
+    """Test that another unit ID or host spelling is the same TCP gateway."""
     MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA).add_to_hass(hass)
     flow_id = await _start_flow(hass, TYPE_TCP)
 
@@ -292,7 +292,7 @@ async def test_user_step_same_tcp_gateway_is_a_duplicate(
 async def test_user_step_gateway_added_during_the_probe(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test the flow aborts when another flow adds the gateway during the probe."""
+    """Test that the flow aborts when the gateway gets added during the probe."""
     flow_id = await _start_flow(hass, TYPE_TCP)
     connection = _gateway()
 
@@ -319,7 +319,7 @@ async def test_user_step_gateway_added_during_the_probe(
 async def test_user_step_normalizes_the_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test the host is stored stripped and in lowercase."""
+    """Test that the host gets stored stripped and in lowercase."""
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with _patch_temporary_unit(_gateway()):
@@ -334,7 +334,7 @@ async def test_user_step_normalizes_the_host(
 async def test_user_step_serial_other_unit_id_is_new(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test a second unit ID on the same RS-485 bus is a second gateway."""
+    """Test that another unit ID on the same serial port is a new gateway."""
     MockConfigEntry(domain=DOMAIN, data=MOCK_SERIAL_ENTRY_DATA).add_to_hass(hass)
     flow_id = await _start_flow(hass, TYPE_SERIAL)
 
@@ -358,7 +358,7 @@ async def test_user_step_serial_other_unit_id_is_new(
 async def test_user_step_no_path_to_unit(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, register_type: str
 ) -> None:
-    """Test a gateway without a path to the unit shows the no path error."""
+    """Test that the flow shows an error when the gateway has no path to the unit."""
     connection = _gateway()
     connection.for_unit(1).fail_read(
         address(0x0001), GatewayPathUnavailableError(), register_type=register_type
@@ -380,7 +380,7 @@ async def test_user_step_no_path_to_unit(
 async def test_user_step_keeps_an_ipv6_scope_id(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test only the address part of an IPv6 host is lowercased."""
+    """Test that an IPv6 host gets lowercased except for its scope ID."""
     flow_id = await _start_flow(hass, TYPE_TCP)
 
     with _patch_temporary_unit(_gateway()):

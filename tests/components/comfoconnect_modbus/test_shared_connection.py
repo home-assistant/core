@@ -49,7 +49,7 @@ async def _set_up_both(hass: HomeAssistant) -> tuple[MockConfigEntry, MockConfig
 async def test_two_gateways_share_one_serial_connection(
     hass: HomeAssistant, connection_class: MagicMock
 ) -> None:
-    """Test two units on one bus load over a single connection."""
+    """Test that two gateways on one serial port share a connection."""
     first, second = await _set_up_both(hass)
 
     assert first.state is ConfigEntryState.LOADED
