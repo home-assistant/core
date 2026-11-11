@@ -46,6 +46,9 @@ from .const import (
     CONF_URL_SECURITY,
     CONF_WEATHER_AREAS,
     DOMAIN,
+    EVENT_TYPE_CANCEL_SET_POINT,
+    EVENT_TYPE_SET_POINT,
+    EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
     NETATMO_CREATE_LEGACY_SENSOR,
@@ -580,6 +583,19 @@ async def async_setup_entry(
     )
 
     @callback
+    def _create_therm_setpoint_mode_sensor(netatmo_device: NetatmoRoom) -> None:
+        if not netatmo_device.room.climate_type:
+            return
+
+        async_add_entities([NetatmoThermSetpointModeSensor(netatmo_device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_CLIMATE, _create_therm_setpoint_mode_sensor
+        )
+    )
+
+    @callback
     def _create_setpoint_end_time_sensor(netatmo_device: NetatmoRoom) -> None:
         if not netatmo_device.room.climate_type:
             return
@@ -929,6 +945,106 @@ class NetatmoRoomSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
 
         self._attr_available = True
         self._attr_native_value = getattr(self.device, self.entity_description.key)
+
+        self.async_write_ha_state()
+
+
+# Raw Netatmo setpoint mode values, as returned by the API / pyatmo.
+THERM_SETPOINT_MODE_OPTIONS = [
+    "away",
+    "hg",
+    "home",
+    "manual",
+    "max",
+    "off",
+    "schedule",
+]
+
+
+class NetatmoThermSetpointModeSensor(NetatmoRoomEntity, NetatmoLegacyReachableSensor):
+    """Implementation of a Netatmo room setpoint mode sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "therm_setpoint_mode"
+    _attr_options = THERM_SETPOINT_MODE_OPTIONS
+
+    def __init__(self, netatmo_room: NetatmoRoom) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_room)
+
+        self._signal_name = netatmo_room.signal_name
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: self._signal_name,
+                },
+            ]
+        )
+
+        self._attr_unique_id = f"{self.device.entity_id}-therm_setpoint_mode"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        for event_type in (
+            EVENT_TYPE_SET_POINT,
+            EVENT_TYPE_THERM_MODE,
+            EVENT_TYPE_CANCEL_SET_POINT,
+        ):
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"signal-{DOMAIN}-webhook-{event_type}",
+                    self._handle_webhook_event,
+                )
+            )
+
+    @callback
+    def _handle_webhook_event(self, event: dict) -> None:
+        """Handle webhook events, which arrive faster than the next poll."""
+        data = event["data"]
+
+        if self.home.entity_id != data["home_id"]:
+            return
+
+        home = data["home"]
+
+        if self.home.entity_id != home["id"]:
+            return
+
+        if data["event_type"] == EVENT_TYPE_THERM_MODE:
+            home_mode = home[EVENT_TYPE_THERM_MODE]
+            if home_mode in ("away", "hg"):
+                self._attr_native_value = home_mode
+                self.async_write_ha_state()
+            return
+
+        for room in home.get("rooms", []):
+            if room["id"] != self.device.entity_id:
+                continue
+
+            if data["event_type"] == EVENT_TYPE_SET_POINT:
+                self._attr_native_value = room["therm_setpoint_mode"]
+                self.async_write_ha_state()
+            elif data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT:
+                self.data_handler.async_force_update(self._signal_name)
+            return
+
+    @callback
+    @override
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if self._async_set_unavailable_if_unreachable():
+            return
+
+        self._attr_available = True
+        self._attr_native_value = (
+            self.device.therm_setpoint_mode or self.device.cooling_setpoint_mode
+        )
 
         self.async_write_ha_state()
 
