@@ -1738,6 +1738,30 @@ async def test_infrared_ac_learns_from_field_reports(
 
 
 @pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
+async def test_infrared_ac_learns_only_from_reported_fields(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+) -> None:
+    """Test fields kept from a report in another mode are not learned."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    full = {"power": True, "mode": "0", "temp": 22, "wind": "3"}
+    mock_device.status.update(full)
+    await notification_helper.async_send_device_update(mock_device, full)
+
+    # A report of the mode alone: the other fields belong to cool.
+    mock_device.status.update({"mode": "4"})
+    await notification_helper.async_send_device_update(mock_device, {"mode": "4"})
+    state = hass.states.get(IR_AC_ENTITY_ID)
+    assert state.state == HVACMode.DRY
+    assert state.attributes["fan_modes"] == ["low"]
+    entity = hass.data["climate"].get_entity(IR_AC_ENTITY_ID)
+    assert HVACMode.DRY not in entity._fixed_temperatures
+
+
+@pytest.mark.parametrize("mock_device_code", ["infrared_ac_47peys"])
 @pytest.mark.parametrize(
     "order",
     [
@@ -1764,8 +1788,6 @@ async def test_infrared_ac_partial_startup_reports(
         await notification_helper.async_send_device_update(
             mock_device, {code: full[code]}
         )
-        if code == "power" or code == order[-1]:
-            continue
         # Without power, the fields are kept but the unit is not shown on.
         if "power" not in mock_device.status:
             assert hass.states.get(IR_AC_ENTITY_ID).state == HVACMode.OFF

@@ -676,15 +676,21 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         return fan_mode if fan_mode in allowed else allowed[0]
 
     @callback
-    def _async_sync_from_status(self, codes: set[str] | None = None) -> bool:
+    def _async_sync_from_status(
+        self, codes: set[str] | None = None, learn: set[str] | None = None
+    ) -> bool:
         """Update the state from the remote state reported by the cloud.
 
         Only the given status codes are applied (all by default): the others
         may be older than the commands sent, and the assumed state is kept.
+        Fan speeds and locked temperatures are learned only from the codes in
+        learn (the codes just reported, all by default): fields kept from
+        earlier reports may belong to another mode.
         Return True if the cloud reports the remote state.
         """
         status = self.device.status
         use = _IR_AC_STATUS_CODES if codes is None else codes
+        seen = use if learn is None else learn
         # Power may be reported after the other fields at startup: the fields
         # are kept meanwhile and the state is shown once power is known.
         reports_power = _IR_AC_STATUS_POWER in status
@@ -722,14 +728,14 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
             # may be an older report, as long as a field is fresh.
             if (
                 fan_mode is not None
-                and _IR_AC_STATUS_FAN in use
+                and _IR_AC_STATUS_FAN in seen
                 and hvac_mode in _IR_AC_MODE_FAN_MODES
             ):
                 self._seen_fan_modes.setdefault(hvac_mode, set()).add(fan_mode)
             if (
                 hvac_mode in _IR_AC_FIXED_TEMPERATURE_MODES
                 and temperature is not None
-                and _IR_AC_STATUS_TEMPERATURE in use
+                and _IR_AC_STATUS_TEMPERATURE in seen
             ):
                 self._fixed_temperatures[hvac_mode] = temperature
         if _IR_AC_STATUS_POWER in use and reports_power:
@@ -758,7 +764,8 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         """Follow changes of the remote state (for example from the Tuya app)."""
         if not set(updated_status_properties) & _IR_AC_STATUS_CODES:
             return False
-        self._fresh_status_codes |= set(updated_status_properties) & _IR_AC_STATUS_CODES
+        reported = set(updated_status_properties) & _IR_AC_STATUS_CODES
+        self._fresh_status_codes |= reported
         if self._sending or (
             self.hass.loop.time() < self._settle_until
             and not self._status_matches_sent()
@@ -770,7 +777,7 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         # Only the codes reported since the last command (kept across partial
         # reports): the others may be older than the commands.
         self._remote_reports_state = self._async_sync_from_status(
-            self._fresh_status_codes
+            self._fresh_status_codes, reported
         )
         return True
 
@@ -806,7 +813,7 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity, RestoreEntity):
         if (
             self._fresh_status_codes
             and not self._status_matches_sent()
-            and self._async_sync_from_status(self._fresh_status_codes)
+            and self._async_sync_from_status(self._fresh_status_codes, set())
         ):
             self._remote_reports_state = True
             self.async_write_ha_state()
