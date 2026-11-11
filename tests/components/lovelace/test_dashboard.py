@@ -870,6 +870,26 @@ async def _create_dashboard(
     return response["result"]["id"]
 
 
+def _store_dashboard(hass_storage: dict[str, Any]) -> None:
+    """Store a dashboard to load at setup."""
+    hass_storage[dashboard.DASHBOARDS_STORAGE_KEY] = {
+        "version": 1,
+        "key": dashboard.DASHBOARDS_STORAGE_KEY,
+        "data": {
+            "items": [
+                {
+                    "id": "created_url_path",
+                    "url_path": "created-url-path",
+                    "title": "Storage",
+                    "mode": "storage",
+                    "require_admin": False,
+                    "show_in_sidebar": True,
+                }
+            ]
+        },
+    }
+
+
 async def test_storage_dashboard_change_url_path(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1102,22 +1122,7 @@ async def test_storage_dashboard_change_url_path_after_conflict(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test a dashboard blocked by a YAML dashboard registers after a rename."""
-    hass_storage[dashboard.DASHBOARDS_STORAGE_KEY] = {
-        "version": 1,
-        "key": dashboard.DASHBOARDS_STORAGE_KEY,
-        "data": {
-            "items": [
-                {
-                    "id": "created_url_path",
-                    "url_path": "created-url-path",
-                    "title": "Storage",
-                    "mode": "storage",
-                    "require_admin": False,
-                    "show_in_sidebar": True,
-                }
-            ]
-        },
-    }
+    _store_dashboard(hass_storage)
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1152,6 +1157,85 @@ async def test_storage_dashboard_change_url_path_after_conflict(
     assert hass.data[frontend.DATA_PANELS]["created-url-path"].config == {
         "mode": "yaml"
     }
+
+
+async def test_storage_dashboard_change_url_path_after_panel_conflict(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a dashboard blocked by another integration's panel leaves it alone."""
+    _store_dashboard(hass_storage)
+    for key in (
+        f"{frontend.DOMAIN}.system_data",
+        f"{frontend.DOMAIN}.user_data_{hass_admin_user.id}",
+    ):
+        hass_storage[key] = {
+            "version": 1,
+            "key": key,
+            "data": {"core": {"default_panel": "created-url-path"}},
+        }
+    frontend.async_register_built_in_panel(
+        hass, "iframe", frontend_url_path="created-url-path", sidebar_title="Other"
+    )
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_ws_client(hass)
+
+    # A plain update must not take over the other panel either.
+    for msg_id, update in (
+        (1, {"title": "Renamed"}),
+        (2, {"url_path": "renamed-url-path"}),
+    ):
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "lovelace/dashboards/update",
+                "dashboard_id": "created_url_path",
+                **update,
+            }
+        )
+        assert (await client.receive_json())["success"]
+        assert hass.data[frontend.DATA_PANELS]["created-url-path"].sidebar_title == (
+            "Other"
+        )
+
+    assert hass.data[frontend.DATA_PANELS]["renamed-url-path"].config == {
+        "mode": "storage"
+    }
+    await client.send_json({"id": 3, "type": "frontend/get_system_data", "key": "core"})
+    response = await client.receive_json()
+    assert response["result"]["value"]["default_panel"] == "created-url-path"
+    await client.send_json({"id": 4, "type": "frontend/get_user_data", "key": "core"})
+    response = await client.receive_json()
+    assert response["result"]["value"]["default_panel"] == "created-url-path"
+
+
+async def test_storage_dashboard_delete_after_panel_conflict(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test deleting a dashboard blocked by another panel keeps that panel."""
+    _store_dashboard(hass_storage)
+    frontend.async_register_built_in_panel(
+        hass, "iframe", frontend_url_path="created-url-path", sidebar_title="Other"
+    )
+    assert await async_setup_component(hass, "frontend", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/delete",
+            "dashboard_id": "created_url_path",
+        }
+    )
+
+    assert (await client.receive_json())["success"]
+    assert hass.data[frontend.DATA_PANELS]["created-url-path"].sidebar_title == (
+        "Other"
+    )
 
 
 async def test_storage_dashboard_change_url_path_free_form_user_data(

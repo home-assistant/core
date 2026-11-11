@@ -217,6 +217,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # A renamed dashboard is still registered under its previous url path.
     storage_url_paths: dict[str, str] = {}
+    # Another integration can own the url path of a stored dashboard.
+    registered_panels: set[str] = set()
     # Keeps quick successive renames migrating default panels in order.
     default_panel_lock = asyncio.Lock()
 
@@ -228,7 +230,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if change_type == collection.CHANGE_REMOVED:
             storage_url_paths.pop(item_id, None)
-            frontend.async_remove_panel(hass, url_path)
+            if item_id in registered_panels:
+                registered_panels.remove(item_id)
+                frontend.async_remove_panel(hass, url_path)
             await hass.data[LOVELACE_DATA].dashboards.pop(url_path).async_delete()
             # Re-register default lovelace panel if the "lovelace" dashboard was deleted
             if url_path == DOMAIN:
@@ -265,10 +269,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             dashboards = hass.data[LOVELACE_DATA].dashboards
             old_url_path = storage_url_paths[item_id]
-            update = old_url_path == url_path
-            if not update:
-                renamed_from = old_url_path
-                frontend.async_remove_panel(hass, old_url_path)
+            owns_panel = item_id in registered_panels
+            update = owns_panel and old_url_path == url_path
+            if old_url_path != url_path:
+                if owns_panel:
+                    renamed_from = old_url_path
+                    frontend.async_remove_panel(hass, old_url_path)
                 dashboards[url_path] = dashboards.pop(old_url_path)
             dashboards[url_path].config = item
 
@@ -277,7 +283,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             _register_panel(hass, url_path, MODE_STORAGE, item, update)
         except ValueError:
+            registered_panels.discard(item_id)
             _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
+            return
+        registered_panels.add(item_id)
 
         # Only after the rename is complete, as this waits for storage.
         if renamed_from is not None:
