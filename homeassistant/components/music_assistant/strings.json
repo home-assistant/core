@@ -177,6 +177,9 @@
       "equalizer_mid": {
         "name": "Equalizer mid"
       },
+      "queue_playback_speed": {
+        "name": "Playback speed"
+      },
       "subwoofer_volume": {
         "name": "Subwoofer volume"
       },

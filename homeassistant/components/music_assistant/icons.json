@@ -4,6 +4,11 @@
       "favorite_now_playing": {
         "default": "mdi:heart-plus"
       }
+    },
+    "number": {
+      "queue_playback_speed": {
+        "default": "mdi:speedometer"
+      }
     }
   },
   "services": {

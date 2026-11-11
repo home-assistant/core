@@ -1,8 +1,10 @@
 """Test Music Assistant number entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from music_assistant_models.enums import EventType
+from music_assistant_models.media_items import Audiobook
+from music_assistant_models.queue_item import QueueItem
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +15,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -149,3 +151,71 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform number"
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_queue_playback_speed(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the playback speed number sets the speed of the player's own queue."""
+    music_assistant_client.server_info.schema_version = 101
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "number.test_player_1_playback_speed"
+    # nothing whose speed can change is playing
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    queue = music_assistant_client.player_queues._queues["00:00:00:00:00:01"]
+    queue.current_item = QueueItem(
+        queue_id="00:00:00:00:00:01",
+        queue_item_id="queue_item_1",
+        name="Book 1",
+        duration=3600,
+        media_item=Audiobook(
+            item_id="book_1",
+            provider="library",
+            name="Book 1",
+            provider_mappings=set(),
+        ),
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert float(state.state) == 1.0
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1.5},
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/set_playback_speed",
+        queue_id="00:00:00:00:00:01",
+        speed=1.5,
+        queue_item_id=None,
+        require_schema=101,
+    )
+
+
+async def test_queue_playback_speed_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the playback speed number is added disabled, also before its queue exists."""
+    music_assistant_client.server_info.schema_version = 101
+    # the server adds the queue after the player
+    with patch(
+        "tests.components.music_assistant.common.create_player_queues_from_fixture",
+        return_value=[],
+    ):
+        await setup_integration_from_fixtures(hass, music_assistant_client)
+    entry = entity_registry.async_get("number.test_player_1_playback_speed")
+    assert entry
+    assert entry.unique_id == "00:00:00:00:00:01_queue_playback_speed"
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
