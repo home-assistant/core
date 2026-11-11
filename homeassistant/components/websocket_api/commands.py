@@ -1113,6 +1113,7 @@ async def handle_subscribe_trigger(
     try:
         trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
     except probatio.Invalid as err:
+        err.prepend(["trigger"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1179,6 +1180,7 @@ async def handle_test_condition(
         config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1237,6 +1239,7 @@ async def handle_subscribe_condition(
         condition_config = await async_validate_condition_config(hass, msg["condition"])
         condition = await async_condition_from_config(hass, condition_config)
     except probatio.Invalid as err:
+        err.prepend(["condition"])
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
         return
     except HomeAssistantError as err:
@@ -1319,7 +1322,11 @@ async def handle_execute_script(
     # Circular dep
     from homeassistant.helpers.script import Script, async_validate_actions_config  # noqa: PLC0415
 
-    script_config = await async_validate_actions_config(hass, msg["sequence"])
+    try:
+        script_config = await async_validate_actions_config(hass, msg["sequence"])
+    except probatio.Invalid as err:
+        err.prepend(["sequence"])
+        raise
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)

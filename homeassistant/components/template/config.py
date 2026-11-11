@@ -406,14 +406,22 @@ async def async_validate_config_section(
     validated_config = await _async_resolve_template_config(hass, config)
 
     if CONF_TRIGGERS in validated_config:
-        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGERS]
-        )
+        try:
+            validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
+                hass, validated_config[CONF_TRIGGERS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_TRIGGERS])
+            raise
 
     if CONF_CONDITIONS in validated_config:
-        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
-            hass, validated_config[CONF_CONDITIONS]
-        )
+        try:
+            validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, validated_config[CONF_CONDITIONS]
+            )
+        except probatio.Invalid as err:
+            err.prepend([CONF_CONDITIONS])
+            raise
 
     return validated_config
 

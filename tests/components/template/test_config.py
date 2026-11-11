@@ -980,10 +980,8 @@ async def test_trigger_variables_requires_trigger(
                 "binary_sensor": {"name": "test", "state": "{{ true }}"},
             },
             "Invalid config for 'template':"
-            " Invalid trigger 'not_a_platform' specified '', got"
-            " {'triggers': [{'trigger': 'event', 'event_type': 'valid'},"
-            " {'trigger': 'not_a_platform'}],"
-            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            " Invalid trigger 'not_a_platform' specified 'triggers->1', got"
+            " {'trigger': 'not_a_platform'}",
             id="trigger",
         ),
         pytest.param(
@@ -1005,12 +1003,8 @@ async def test_trigger_variables_requires_trigger(
             },
             "Invalid config for 'template':"
             " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            " '', got"
-            " {'triggers': {'trigger': 'event', 'event_type': 'valid'},"
-            " 'conditions': [{'condition': 'state', 'entity_id': 'sensor.foo',"
-            " 'state': 'on'}, {'condition': 'state',"
-            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}],"
-            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            " 'conditions->1', got {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}",
             id="condition",
         ),
     ],
