@@ -3,19 +3,22 @@
 from asyncio import CancelledError
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pizone import (
     ControllerCommandError,
     ControllerEndpoint,
+    DeviceReconfigurationError,
     EndpointVerifyError,
     UnpairedBridgeError,
     VerifyFailure,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.izone.const import DOMAIN
+from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
@@ -45,6 +48,34 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_controller.close.assert_awaited()
     mock_discovery_service.close.assert_awaited()
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_reconfigured_system_reloads_entry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+) -> None:
+    """A poll that finds the system reprogrammed reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_controller.refresh_all.side_effect = DeviceReconfigurationError(
+        {"NoOfZones": (1, 2)}
+    )
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+    assert (
+        hass.states.get("climate.izone_controller_000000001").state == STATE_UNAVAILABLE
+    )
 
 
 async def test_migrate_heals_legacy_domain_unique_id(

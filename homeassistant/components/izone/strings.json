@@ -134,6 +134,9 @@
     "setup_rejected": {
       "message": "iZone controller at {host} rejected setup"
     },
+    "system_reconfigured": {
+      "message": "The iZone system was reconfigured; reloading the integration"
+    },
     "unable_to_connect": {
       "message": "Unable to connect to controller {uid}"
     },

@@ -64,6 +64,14 @@ class IZoneCoordinatorEntity(CoordinatorEntity[IZoneCoordinator]):
                     "error": str(ex),
                 },
             ) from ex
+        except pizone.DeviceReconfigurationError as ex:
+            self.hass.config_entries.async_schedule_reload(
+                self.coordinator.config_entry.entry_id
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="system_reconfigured",
+            ) from ex
         except ConnectionError as ex:
             self.coordinator.async_set_update_error(ex)
             raise HomeAssistantError(

@@ -63,6 +63,12 @@ class IZoneCoordinator(DataUpdateCoordinator[pizone.Controller]):
                 translation_key="refresh_rejected",
                 translation_placeholders={"error": str(err)},
             ) from err
+        except pizone.DeviceReconfigurationError as err:
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="system_reconfigured",
+            ) from err
         if not self.controller.connected:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

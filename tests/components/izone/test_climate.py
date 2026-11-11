@@ -1,10 +1,10 @@
 """Tests for iZone climate platform."""
 
 import logging
-from unittest.mock import AsyncMock, Mock, PropertyMock
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pizone import Controller, ControllerCommandError, Zone
+from pizone import Controller, ControllerCommandError, DeviceReconfigurationError, Zone
 import probatio
 import pytest
 from pytest_homeassistant.common import (
@@ -806,6 +806,33 @@ async def test_controller_command_error_handling(
     assert err.value.translation_key == translation_key
     is_unavailable = hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
     assert is_unavailable is expect_unavailable
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_command_on_reconfigured_system_reloads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+) -> None:
+    """A command refused because the system was reprogrammed reloads the entry."""
+    mock_controller.set_fan = AsyncMock(
+        side_effect=DeviceReconfigurationError({"NoOfZones": (1, 2)})
+    )
+    with (
+        patch.object(
+            hass.config_entries, "async_schedule_reload"
+        ) as mock_schedule_reload,
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_FAN_MODE: "low"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "system_reconfigured"
+    mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("init_integration")
