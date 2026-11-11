@@ -1,7 +1,7 @@
 """The tests for the Prometheus exporter."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 from unittest import mock
@@ -10,6 +10,8 @@ from freezegun import freeze_time
 import prometheus_client
 from prometheus_client.utils import floatToGoString
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -103,9 +105,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
@@ -833,6 +832,13 @@ async def test_climate(
     ).withValue(0.0).assert_in_metrics(body)
 
     EntityMetric(
+        metric_name="climate_current_temperature_celsius",
+        domain="climate",
+        friendly_name="Fritz!DECT",
+        entity="climate.fritzdect",
+    ).withValue(25.0).assert_in_metrics(body)
+
+    EntityMetric(
         metric_name="climate_preset_mode",
         domain="climate",
         friendly_name="Ecobee",
@@ -947,6 +953,20 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+    ).withValue(60.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_current_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Boiler",
+        entity="water_heater.boiler",
+    ).withValue(55.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Boiler",
+        entity="water_heater.boiler",
     ).withValue(60.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -2040,7 +2060,7 @@ async def sensor_fixture(
         suggested_object_id="radio_energy",
         original_name="Radio Energy",
     )
-    with freeze_time(datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
+    with freeze_time(dt.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
         set_state_with_entry(hass, sensor_3, 14)
     data["sensor_3"] = sensor_3
 
@@ -2163,6 +2183,7 @@ async def climate_fixture(
         ATTR_TEMPERATURE: 20,
         ATTR_CURRENT_TEMPERATURE: 25,
         ATTR_HVAC_ACTION: climate.HVACAction.HEATING,
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
     }
     set_state_with_entry(
         hass, climate_1, climate.HVACAction.HEATING, climate_1_attributes
@@ -2189,6 +2210,7 @@ async def climate_fixture(
         ATTR_PRESET_MODES: ["away", "home", "sleep"],
         ATTR_FAN_MODE: "auto",
         ATTR_FAN_MODES: ["auto", "on"],
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
     }
     set_state_with_entry(
         hass, climate_2, climate.HVACAction.HEATING, climate_2_attributes
@@ -2205,9 +2227,12 @@ async def climate_fixture(
         original_name="Fritz!DECT",
     )
     climate_3_attributes = {
-        ATTR_TEMPERATURE: 0,
-        ATTR_CURRENT_TEMPERATURE: 22,
+        ATTR_TEMPERATURE: 32,
+        ATTR_CURRENT_TEMPERATURE: 77,
         ATTR_HVAC_ACTION: climate.HVACAction.OFF,
+        climate.ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.FAHRENHEIT
+        ),
     }
     set_state_with_entry(hass, climate_3, climate.HVACAction.OFF, climate_3_attributes)
     data["climate_3"] = climate_3
@@ -2296,10 +2321,31 @@ async def water_heater_fixture(
         WATER_HEATER_ATTR_OPERATION_MODE: "eco",
         WATER_HEATER_ATTR_OPERATION_LIST: ["eco", "performance"],
         WATER_HEATER_ATTR_AWAY_MODE: "on",
+        water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.CELSIUS
+        ),
     }
     set_state_with_entry(hass, wh_1, "eco", wh_attributes)
     data["water_heater_1"] = wh_1
     data["water_heater_1_attributes"] = wh_attributes
+
+    wh_2 = entity_registry.async_get_or_create(
+        domain=water_heater.DOMAIN,
+        platform="test",
+        unique_id="water_heater_2",
+        suggested_object_id="boiler",
+        original_name="Boiler",
+    )
+    wh_2_attributes = {
+        WATER_HEATER_ATTR_CURRENT_TEMPERATURE: 131,
+        ATTR_TEMPERATURE: 140,
+        water_heater.WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: (
+            UnitOfTemperature.FAHRENHEIT
+        ),
+    }
+    set_state_with_entry(hass, wh_2, "eco", wh_2_attributes)
+    data["water_heater_2"] = wh_2
+    data["water_heater_2_attributes"] = wh_2_attributes
 
     await hass.async_block_till_done()
     return data

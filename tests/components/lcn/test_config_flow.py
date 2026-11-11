@@ -9,9 +9,10 @@ from pypck.connection import (
     PchkLicenseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.lcn.config_flow import LcnFlowHandler, validate_connection
+from homeassistant.components.lcn.config_flow import validate_connection
 from homeassistant.components.lcn.const import (
     CONF_ACKNOWLEDGE,
     CONF_DIM_MODE,
@@ -29,8 +30,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONFIG_DATA = {
     CONF_IP_ADDRESS: "127.0.0.1",
@@ -51,22 +50,11 @@ IMPORT_DATA = {
 }
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
-    flow = LcnFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
-
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
 async def test_step_user(hass: HomeAssistant) -> None:
     """Test for user step."""
     with (
         patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
-        patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
     ):
         data = CONNECTION_DATA.copy()
         result = await hass.config_entries.flow.async_init(
@@ -149,6 +137,17 @@ async def test_step_user_error(
         assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
 
+    with (
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+
 
 async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test for reconfigure step."""
@@ -161,7 +160,7 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
 
     with (
         patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
-        patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -208,6 +207,19 @@ async def test_step_reconfigure_error(
 
         assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
+
+    with (
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_DATA.copy(),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_validate_connection() -> None:

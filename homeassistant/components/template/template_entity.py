@@ -153,6 +153,8 @@ class TemplateEntity(AbstractTemplateEntity):
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._self_ref_update_count = 0
+        self._writing_render_state = False
+        self._render_states: list[State] = []
         self._attr_unique_id = unique_id
         self._preview_callback: (
             Callable[
@@ -274,6 +276,7 @@ class TemplateEntity(AbstractTemplateEntity):
 
         return TemplateStateFromEntityId(self.hass, entity_id)
 
+    @callback
     @override
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
@@ -419,8 +422,16 @@ class TemplateEntity(AbstractTemplateEntity):
 
         entity_id = event and event.data["entity_id"]
 
-        if entity_id and entity_id == self.entity_id:
-            self._self_ref_update_count += 1
+        if event and entity_id == self.entity_id:
+            new_state = event.data["new_state"]
+            # Only count states written by a render, rate limited renders run later
+            if self._writing_render_state:
+                self._add_render_state(new_state)
+                self._self_ref_update_count += 1
+            elif any(new_state is state for state in self._render_states):
+                self._self_ref_update_count += 1
+            else:
+                self._self_ref_update_count = 1
         else:
             self._self_ref_update_count = 0
 
@@ -446,7 +457,7 @@ class TemplateEntity(AbstractTemplateEntity):
                     errors.append(update.result)
 
         if not self._preview_callback:
-            self.async_write_ha_state()
+            self._async_write_render_state()
             return
 
         if errors:
@@ -454,6 +465,33 @@ class TemplateEntity(AbstractTemplateEntity):
             return
 
         self._async_preview_update()
+
+    @callback
+    def _async_write_render_state(self) -> None:
+        """Write a state resulting from a template render.
+
+        Use this instead of async_write_ha_state for any write caused by a
+        render, including deferred ones like delays, otherwise loops through
+        that write are treated as external updates and not detected.
+        """
+        # Outside of an event dispatch, the bus delivers our own state change
+        # synchronously during this write, before the new state can be recorded
+        writing_render_state = self._writing_render_state
+        self._writing_render_state = True
+        try:
+            self.async_write_ha_state()
+        finally:
+            self._writing_render_state = writing_render_state
+        self._add_render_state(self.hass.states.get(self.entity_id))
+
+    @callback
+    def _add_render_state(self, state: State | None) -> None:
+        """Remember a state written by a render for loop detection."""
+        if state is None or any(state is known for known in self._render_states):
+            return
+        self._render_states.append(state)
+        # A loop is stopped after this many renders, older states can't be pending
+        del self._render_states[: -(len(self._template_attrs) + 1)]
 
     @callback
     def _async_preview_update(self) -> None:
@@ -514,9 +552,17 @@ class TemplateEntity(AbstractTemplateEntity):
             log_fn=log_fn,
             has_super_template=has_availability_template,
         )
-        self.async_on_remove(result_info.async_remove)
         self._template_result_info = result_info
+        # Started again on entity_id changes, register the cleanup only once
+        if self._async_remove_template_result_info not in (self._on_remove or ()):
+            self.async_on_remove(self._async_remove_template_result_info)
         result_info.async_refresh()
+
+    @callback
+    def _async_remove_template_result_info(self) -> None:
+        """Stop tracking the templates."""
+        if self._template_result_info is not None:
+            self._template_result_info.async_remove()
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -607,6 +653,21 @@ class TemplateEntity(AbstractTemplateEntity):
 
         async_at_start(self.hass, self._async_template_startup)
         await self.async_restore_last_state()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-track the templates, `this` was bound to the old entity_id.
+
+        The state is written first, `this.state` must exist when rendering.
+        """
+        super().async_entity_id_changed(old_entity_id)
+        self.async_write_ha_state()
+        if self._template_result_info is None:
+            # Not started yet, the startup will use the new entity_id
+            return
+        self._template_result_info.async_remove()
+        self._async_template_startup(None)
 
     async def async_update(self) -> None:
         """Call for forced update."""

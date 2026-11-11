@@ -31,7 +31,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> None:
     """Set up LetPot from a config entry."""
 
     auth = AuthenticationInfo(
@@ -91,14 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        for coordinator in entry.runtime_data:
-            await coordinator.device_client.unsubscribe(
-                coordinator.device.serial_number
-            )
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    for coordinator in entry.runtime_data:
+        await coordinator.device_client.unsubscribe(coordinator.device.serial_number)

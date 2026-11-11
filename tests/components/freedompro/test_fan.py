@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
@@ -16,8 +18,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 uid = (
     "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"

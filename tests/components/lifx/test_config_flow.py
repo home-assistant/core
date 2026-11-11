@@ -7,12 +7,14 @@ from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import AsyncMock, patch
 
 from lifx import (
+    Device,
     DiscoveredDevice,
     LifxDeviceNotFoundError,
     LifxUnsupportedDeviceError,
     Light,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lifx import DOMAIN
@@ -25,31 +27,25 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import DHCP_FORMATTED_MAC, IP_ADDRESS, LABEL, SERIAL
-from .helpers import LEGACY_SERIAL
-
-from tests.common import MockConfigEntry
+from .helpers import LEGACY_SERIAL, create_mock_device_without_state, create_mock_light
 
 OLD_IP_ADDRESS = "127.0.0.2"
 
-DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
-DeviceMutator = Callable[[Light], None]
+type DiscoveryData = DhcpServiceInfo | ZeroconfServiceInfo | dict[str, str]
 
 
-def _remove_light_state(mock_light: Light) -> None:
-    """Remove the state returned after refresh."""
-    mock_light.state = None
-
-
-def _fail_light_refresh(mock_light: Light) -> None:
-    """Fail the public state refresh."""
-    mock_light.refresh_state.side_effect = OSError("refresh failed")
+def _create_light_failing_refresh() -> Light:
+    """Create a light whose state refresh fails."""
+    light = create_mock_light()
+    light.refresh_state.side_effect = OSError("refresh failed")
+    return light
 
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override config entry setup."""
     with patch(
-        "homeassistant.components.lifx.async_setup_entry", return_value=True
+        "homeassistant.components.lifx.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -769,6 +765,7 @@ async def test_manual_hostname_is_stored_as_an_address(
     find_by_ip.assert_awaited_once_with(IP_ADDRESS)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(
@@ -803,7 +800,7 @@ async def test_manual_serial_creates_version_2_entry(
 
 
 async def test_manual_serial_that_answers_no_broadcast(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_light: Light
 ) -> None:
     """Test a serial no device answers for returns to the form."""
     result = await hass.config_entries.flow.async_init(
@@ -820,6 +817,16 @@ async def test_manual_serial_that_answers_no_broadcast(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.lifx.config_flow.find_by_serial",
+        return_value=mock_light,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_SERIAL: SERIAL}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_host_and_serial_connects_directly(
@@ -851,7 +858,9 @@ async def test_manual_host_and_serial_connects_directly(
     assert result["result"].unique_id == SERIAL
 
 
-async def test_manual_setup_rejects_a_malformed_serial(hass: HomeAssistant) -> None:
+async def test_manual_setup_rejects_a_malformed_serial(
+    hass: HomeAssistant, mock_light: Light
+) -> None:
     """Test the manual step reports a serial it cannot act on."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -863,6 +872,16 @@ async def test_manual_setup_rejects_a_malformed_serial(hass: HomeAssistant) -> N
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_SERIAL: "invalid_serial"}
+
+    with patch(
+        "homeassistant.components.lifx.config_flow.find_by_serial",
+        return_value=mock_light,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_SERIAL: SERIAL}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_host_while_discovery_is_pending(
@@ -893,6 +912,7 @@ async def test_manual_host_while_discovery_is_pending(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(
@@ -935,26 +955,25 @@ async def test_manual_host_cannot_connect(
 
 
 @pytest.mark.parametrize(
-    "mutate_device",
+    "factory",
     [
-        pytest.param(_remove_light_state, id="missing-state"),
-        pytest.param(_fail_light_refresh, id="refresh-error"),
+        pytest.param(create_mock_device_without_state, id="missing-state"),
+        pytest.param(_create_light_failing_refresh, id="refresh-error"),
     ],
 )
 async def test_manual_host_cannot_read_device_state(
     hass: HomeAssistant,
-    mock_light: Light,
-    mutate_device: DeviceMutator,
+    factory: Callable[[], Device],
 ) -> None:
     """Test manual setup rejects a device whose state cannot be read."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    mutate_device(mock_light)
+    device = factory()
 
     with patch(
         "homeassistant.components.lifx.config_flow.find_by_ip",
-        return_value=mock_light,
+        return_value=device,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -963,7 +982,17 @@ async def test_manual_host_cannot_read_device_state(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-    mock_light.close.assert_awaited_once_with()
+    device.close.assert_awaited_once_with()
+
+    with patch(
+        "homeassistant.components.lifx.config_flow.find_by_ip",
+        return_value=create_mock_light(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_pick_broadcast_discovered_device(
@@ -990,6 +1019,7 @@ async def test_pick_broadcast_discovered_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 async def test_pick_device_without_discovery_results(hass: HomeAssistant) -> None:

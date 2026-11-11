@@ -96,7 +96,7 @@ class NetioDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Netio.OUTPUT]])
             configuration_url=device_base_url(self.config_entry.data),
         )
         if mac := agent.get("MAC"):
-            self.device_info["connections"] = {
+            self.device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
             }
 

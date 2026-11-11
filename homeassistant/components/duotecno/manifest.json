@@ -1,8 +1,10 @@
 {
   "domain": "duotecno",
   "name": "Duotecno",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@cereal2nd"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/duotecno",
   "integration_type": "hub",
   "iot_class": "local_push",

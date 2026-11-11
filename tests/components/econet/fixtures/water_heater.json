@@ -1,0 +1,16 @@
+{
+  "device_name": "device_1",
+  "device_type": "WH",
+  "serial_number": "serial_1",
+  "@NAME": { "value": "Gas Water Heater" },
+  "@TYPE": "gasWaterHeater",
+  "@CONNECTED": true,
+  "@SETPOINT": {
+    "value": 120,
+    "constraints": { "lowerLimit": 90, "upperLimit": 140 }
+  },
+  "@RUNNING": "",
+  "@ALERTCOUNT": 0,
+  "@SIGNAL": { "value": -73 },
+  "@VALVESTATUS": { "title": "Shut-OFF Valve - Open" }
+}

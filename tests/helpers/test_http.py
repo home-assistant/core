@@ -4,10 +4,9 @@ from http import HTTPStatus
 
 from aiohttp import web
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE, HomeAssistantView
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(

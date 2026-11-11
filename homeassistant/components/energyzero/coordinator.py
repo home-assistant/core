@@ -55,7 +55,7 @@ class EnergyZeroData(NamedTuple):
 class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
     """Class to manage fetching EnergyZero data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: EnergyZeroConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: EnergyZeroConfigEntry) -> None:
         """Initialize global EnergyZero data updater."""

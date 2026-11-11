@@ -14,6 +14,9 @@
         "data": {
           "address": "[%key:common::config_flow::data::device%]"
         },
+        "data_description": {
+          "address": "Select the Qingping device you want to set up"
+        },
         "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
     }

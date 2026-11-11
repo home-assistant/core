@@ -13,9 +13,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):

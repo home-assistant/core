@@ -87,14 +87,21 @@ class SolarEdgeModbusDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @override
     async def _async_update_data(self) -> UpdateReport:
         """Poll the inverter, reporting what answered."""
-        report = await self._async_poll()
-
-        # A sub-system that just fell silent gets a second chance: SolarEdge
-        # answers a single request late often enough that one blip should not
-        # blank its entities. One that has been silent a while does not, so a
-        # sub-system that is really gone cannot double every poll from here on.
-        if report.failed.keys() - self._silent:
-            report = await self._async_retry(report)
+        try:
+            report = await self._async_poll()
+        except UpdateFailed:
+            if not self.last_update_success:
+                raise
+            # A timeout on the first sub-system aborts the poll before anything
+            # else is read, so it arrives here rather than in report.failed.
+            report = await self._async_poll()
+        else:
+            # A sub-system that just fell silent gets a second chance: SolarEdge
+            # answers a single request late often enough that one blip should not
+            # blank its entities. One that has been silent a while does not, so a
+            # sub-system that is really gone cannot double every poll from here on.
+            if report.failed.keys() - self._silent:
+                report = await self._async_retry(report)
 
         # An address can move to another inverter, and its measurements are not
         # this one's however the entities reading them are named. Checked on
@@ -168,9 +175,17 @@ class SolarEdgeModbusRuntimeData:
     settings: SolarEdgeModbusDataUpdateCoordinator
     device_info: DeviceInfo
     inverter_device_id: str
+
     # What was attached when this entry was built, to notice a swap: a meter
     # replaced by another one leaves the count alone.
     attachments: frozenset[str]
+
+    # Blocks that answered nothing while setting up and nothing again on the
+    # first check after it. Asking costs a full timeout each, which on a shared
+    # link is time every other inverter spends waiting, so they are taken for
+    # absent until the entry loads again. Empty until that first check, so a
+    # block that was merely busy at setup still gets picked up.
+    settled_silent_blocks: frozenset[str] = frozenset()
 
     @property
     def solaredge(self) -> SolarEdge:

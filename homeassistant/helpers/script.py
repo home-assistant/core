@@ -1,7 +1,7 @@
 """Helpers to execute scripts."""
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Mapping, Sequence
 from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
@@ -111,7 +112,7 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
-from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
+from .typing import ConfigType, TemplateVarsType, Undefined
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -134,6 +135,17 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 
 ATTR_CUR = "current"
 ATTR_MAX = "max"
+
+# Configuration errors which should cause the script to stop also when
+# continue_on_error is True.
+CONFIGURATION_ERRORS = (
+    probatio.Invalid,
+    exceptions.TemplateError,
+    exceptions.ServiceNotFound,
+    exceptions.InvalidEntityFormatError,
+    exceptions.NoEntitySpecifiedError,
+    exceptions.ConditionError,
+)
 
 DATA_SCRIPTS: HassKey[dict[int, ScriptData]] = HassKey("helpers.script")
 DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
@@ -322,6 +334,61 @@ REPEAT_WARN_ITERATIONS = 5000
 REPEAT_TERMINATE_ITERATIONS = 10000
 
 
+type _BlockKind = Literal["triggers", "conditions", "actions"]
+
+_EACH = object()
+
+# The blocks of triggers, conditions and actions nested in an action, by action
+# type: the path to the dicts holding the blocks, then the key and kind of each
+# block. _EACH stands for every index of a list. Blocks are validated in order.
+# Blocks not in _OPTIONAL_BLOCKS are required by the action's schema.
+_NESTED_BLOCKS: dict[
+    str, tuple[tuple[tuple[Any, ...], tuple[tuple[str, _BlockKind], ...]], ...]
+] = {
+    cv.SCRIPT_ACTION_CHOOSE: (
+        ((), ((CONF_DEFAULT, "actions"),)),
+        (
+            (CONF_CHOOSE, _EACH),
+            ((CONF_CONDITIONS, "conditions"), (CONF_SEQUENCE, "actions")),
+        ),
+    ),
+    cv.SCRIPT_ACTION_IF: (
+        (
+            (),
+            ((CONF_IF, "conditions"), (CONF_THEN, "actions"), (CONF_ELSE, "actions")),
+        ),
+    ),
+    cv.SCRIPT_ACTION_PARALLEL: (
+        ((CONF_PARALLEL, _EACH), ((CONF_SEQUENCE, "actions"),)),
+    ),
+    cv.SCRIPT_ACTION_REPEAT: (
+        (
+            (CONF_REPEAT,),
+            (
+                (CONF_UNTIL, "conditions"),
+                (CONF_WHILE, "conditions"),
+                (CONF_SEQUENCE, "actions"),
+            ),
+        ),
+    ),
+    cv.SCRIPT_ACTION_SEQUENCE: (((), ((CONF_SEQUENCE, "actions"),)),),
+    cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: (((), ((CONF_WAIT_FOR_TRIGGER, "triggers"),)),),
+}
+
+_OPTIONAL_BLOCKS = frozenset({CONF_DEFAULT, CONF_ELSE, CONF_UNTIL, CONF_WHILE})
+
+
+def _nested_block_containers(config: Any, key_path: tuple[Any, ...]) -> list[Any]:
+    """Return the dicts found at key_path in an action."""
+    containers = [config]
+    for key in key_path:
+        if key is _EACH:
+            containers = [item for container in containers for item in container]
+        else:
+            containers = [container[key] for container in containers]
+    return containers
+
+
 async def async_validate_actions_config(
     hass: HomeAssistant, actions: list[ConfigType]
 ) -> list[ConfigType]:
@@ -338,76 +405,34 @@ async def async_validate_action_config(
     action_type = cv.determine_script_action(config)
 
     if action_type in STATIC_VALIDATION_ACTION_TYPES:
-        pass
+        return config
 
-    elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
-        config = await device_action.async_validate_action_config(hass, config)
+    if action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
+        return await device_action.async_validate_action_config(hass, config)
 
-    elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        config = await condition.async_validate_condition_config(hass, config)
+    if action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
+        return await condition.async_validate_condition_config(hass, config)
 
-    elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
-        config[
-            CONF_WAIT_FOR_TRIGGER
-        ] = await trigger_helper.async_validate_trigger_config(
-            hass, config[CONF_WAIT_FOR_TRIGGER]
-        )
-
-    elif action_type == cv.SCRIPT_ACTION_REPEAT:
-        if CONF_UNTIL in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_UNTIL]
-            )
-            config[CONF_REPEAT][CONF_UNTIL] = conditions
-        if CONF_WHILE in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_WHILE]
-            )
-            config[CONF_REPEAT][CONF_WHILE] = conditions
-        config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_REPEAT][CONF_SEQUENCE]
-        )
-
-    elif action_type == cv.SCRIPT_ACTION_CHOOSE:
-        if CONF_DEFAULT in config:
-            config[CONF_DEFAULT] = await async_validate_actions_config(
-                hass, config[CONF_DEFAULT]
-            )
-
-        for choose_conf in config[CONF_CHOOSE]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, choose_conf[CONF_CONDITIONS]
-            )
-            choose_conf[CONF_CONDITIONS] = conditions
-            choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, choose_conf[CONF_SEQUENCE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_IF:
-        config[CONF_IF] = await condition.async_validate_conditions_config(
-            hass, config[CONF_IF]
-        )
-        config[CONF_THEN] = await async_validate_actions_config(hass, config[CONF_THEN])
-        if CONF_ELSE in config:
-            config[CONF_ELSE] = await async_validate_actions_config(
-                hass, config[CONF_ELSE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_PARALLEL:
-        for parallel_conf in config[CONF_PARALLEL]:
-            parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, parallel_conf[CONF_SEQUENCE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_SEQUENCE:
-        config[CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_SEQUENCE]
-        )
-
-    else:
+    if action_type not in _NESTED_BLOCKS:
         raise ValueError(f"No validation for {action_type}")
 
+    for key_path, blocks in _NESTED_BLOCKS[action_type]:
+        for container in _nested_block_containers(config, key_path):
+            for key, kind in blocks:
+                if key in _OPTIONAL_BLOCKS and key not in container:
+                    continue
+                container[key] = await _BLOCK_VALIDATORS[kind](hass, container[key])
+
     return config
+
+
+_BLOCK_VALIDATORS: dict[
+    _BlockKind, Callable[[HomeAssistant, list[Any]], Coroutine[Any, Any, list[Any]]]
+] = {
+    "triggers": trigger_helper.async_validate_trigger_config,
+    "conditions": condition.async_validate_conditions_config,
+    "actions": async_validate_actions_config,
+}
 
 
 class _HaltScript(Exception):
@@ -429,7 +454,7 @@ class _StopScript(_HaltScript):
         self,
         message: str,
         response: Any,
-        conversation_response: str | UndefinedType | None = UNDEFINED,
+        conversation_response: str | Undefined | None = Undefined,
     ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
@@ -459,7 +484,7 @@ class _ScriptRun:
         self._started = False
         self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
-        self._conversation_response: str | UndefinedType | None = UNDEFINED
+        self._conversation_response: str | Undefined | None = Undefined
 
     def _changed(self) -> None:
         if not self._stop.done():
@@ -522,7 +547,7 @@ class _ScriptRun:
             response = err.response
 
             # Bubble up child conversation response
-            if err.conversation_response is not UNDEFINED:
+            if err.conversation_response is not Undefined:
                 self._conversation_response = err.conversation_response
 
         except Exception:
@@ -553,7 +578,7 @@ class _ScriptRun:
                     enabled = self._action[CONF_ENABLED]
                     if isinstance(enabled, Template):
                         try:
-                            enabled = enabled.async_render(limited=True)
+                            enabled = enabled.async_render(self._variables)
                         except exceptions.TemplateError as ex:
                             self._handle_exception(
                                 trace_element,
@@ -617,19 +642,9 @@ class _ScriptRun:
         if isinstance(exception, _StopScript):
             raise exception
 
-        # These are incorrect scripts, and not runtime errors that need to
-        # be handled and thus cannot be stopped by `continue_on_error`.
-        if isinstance(
-            exception,
-            (
-                probatio.Invalid,
-                exceptions.TemplateError,
-                exceptions.ServiceNotFound,
-                exceptions.InvalidEntityFormatError,
-                exceptions.NoEntitySpecifiedError,
-                exceptions.ConditionError,
-            ),
-        ):
+        # These are configuration errors which should cause the script to
+        # stop also when `continue_on_error` is True.
+        if isinstance(exception, CONFIGURATION_ERRORS):
             raise exception
 
         # Only Home Assistant errors can be ignored.
@@ -702,7 +717,7 @@ class _ScriptRun:
                 eager_start=True,
             )
         )
-        if result and result.conversation_response is not UNDEFINED:
+        if result and result.conversation_response is not Undefined:
             self._conversation_response = result.conversation_response
 
     ## Flow control actions ##
@@ -802,7 +817,11 @@ class _ScriptRun:
         self._script.last_action = self._action.get(
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
-        cond = await self._async_get_condition(self._action)
+        # The enabled option was already rendered with the run variables when
+        # this step started, don't let the condition render it again.
+        cond = await self._async_get_condition(
+            {key: value for key, value in self._action.items() if key != CONF_ENABLED}
+        )
         try:
             trace_element = trace_stack_top(trace_stack_cv)
             if trace_element:
@@ -1080,17 +1099,24 @@ class _ScriptRun:
             params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
         ) or params[CONF_DOMAIN] in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
-        response_data = await self._async_run_long_action(
-            self._hass.async_create_task_internal(
-                self._hass.services.async_call(
-                    **params,
-                    blocking=True,
-                    context=self._context,
-                    return_response=return_response,
-                ),
-                eager_start=True,
+        try:
+            response_data = await self._async_run_long_action(
+                self._hass.async_create_task_internal(
+                    self._hass.services.async_call(
+                        **params,
+                        blocking=True,
+                        context=self._context,
+                        return_response=return_response,
+                    ),
+                    eager_start=True,
+                )
             )
-        )
+        except (*CONFIGURATION_ERRORS, exceptions.HomeAssistantError):
+            raise
+        except Exception as ex:
+            if not self._action.get(CONF_CONTINUE_ON_ERROR, False):
+                raise
+            raise exceptions.HomeAssistantError(ex) from ex
         if response_variable:
             self._variables[response_variable] = response_data
 
@@ -1185,7 +1211,7 @@ class _ScriptRun:
 
     def _get_pos_time_period_template(self, key: str) -> timedelta:
         try:
-            return cv.positive_time_period(  # type: ignore[no-any-return]
+            return cv.positive_time_period(
                 template.render_complex(self._action[key], self._variables)
             )
         except (exceptions.TemplateError, probatio.Invalid) as ex:
@@ -1464,10 +1490,12 @@ type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
-    """Extract referenced IDs."""
+    """Extract referenced IDs, including those in an exclude block."""
     # Data may not exist, or be a template
     if not isinstance(data, dict):
         return
+
+    _referenced_extract_ids(data.get(CONF_EXCLUDE), key, found)
 
     item_ids = data.get(key)
 
@@ -1496,7 +1524,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
-    conversation_response: str | UndefinedType | None
+    conversation_response: str | Undefined | None
     service_response: ServiceResponse
     variables: Mapping[str, Any]
 

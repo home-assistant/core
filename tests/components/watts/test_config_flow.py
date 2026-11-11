@@ -3,16 +3,16 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components.watts.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -29,7 +29,11 @@ async def test_full_flow(
     assert "url" in result
     assert OAUTH2_AUTHORIZE in result.get("url", "")
     assert "response_type=code" in result.get("url", "")
-    assert "scope=" in result.get("url", "")
+    assert URL(result["url"]).query["scope"] == (
+        "openid offline_access "
+        "https://visionlogin.onmicrosoft.com/vision/homeassistant.read "
+        "https://visionlogin.onmicrosoft.com/vision/brand.watts"
+    )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

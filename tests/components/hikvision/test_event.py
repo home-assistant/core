@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from pyhik.constants import SENSOR_MAP
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -23,8 +24,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry
 
 MOTION_ENTITY_ID = "event.front_camera_motion"
 LINE_CROSSING_ENTITY_ID = "event.front_camera_line_crossing"
@@ -79,6 +78,7 @@ async def test_events_created(
     assert state.attributes[ATTR_EVENT_TYPES] == [
         "triggered",
         "human",
+        "others",
         "pet",
         "vehicle",
     ]
@@ -119,6 +119,7 @@ async def test_events_no_sensors(
     [
         pytest.param("human", "human", id="human"),
         pytest.param("vehicle", "vehicle", id="vehicle"),
+        pytest.param("others", "others", id="others"),
         pytest.param("pet", "pet", id="pet"),
         pytest.param(None, "triggered", id="no_detection_target"),
         pytest.param("bicycle", "triggered", id="unrecognized_detection_target"),

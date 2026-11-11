@@ -7,6 +7,7 @@ from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCE
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
     SynologyDSMAPINoDataException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
@@ -56,6 +57,9 @@ DEFAULT_BACKUP_PATH = "ha_backup"
 
 ENTITY_UNIT_LOAD = "load"
 
+# Package Center does not list these packages
+HIDDEN_PACKAGE_INSTALL_TYPE = "system_hidden"
+
 SHARED_SUFFIX = "_shared"
 
 # Signals
@@ -70,6 +74,7 @@ SERVICES = [
 ]
 
 SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginInvalidException,

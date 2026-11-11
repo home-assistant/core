@@ -9,6 +9,7 @@ from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -50,6 +51,7 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         """Initialize device."""
         super().__init__(coordinator)
         self._state = coordinator.state
+        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA

@@ -242,7 +242,7 @@ async def test_block_event_custom_name(
     )
     await init_integration(hass, 1)
     # num_outputs is 2, device name and custom name is used
-    assert hass.states.get("event.test_channel_input")
+    assert hass.states.get("event.test_name_test_channel_input")
 
 
 async def test_block_event_custom_name_single_output(

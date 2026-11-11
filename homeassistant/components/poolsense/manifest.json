@@ -1,8 +1,10 @@
 {
   "domain": "poolsense",
   "name": "PoolSense",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@haemishkyd"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/poolsense",
   "integration_type": "device",
   "iot_class": "cloud_polling",

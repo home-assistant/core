@@ -3,8 +3,8 @@
 import logging
 from typing import override
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import TICK
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import TICK
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA, DOMAIN
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
@@ -64,7 +64,7 @@ def encode_rf_packet(
                          0x00 followed by a 2-byte big-endian tick count
 
     Each pulse is expressed as multiples of the Broadlink timing unit
-    (about 30.45 µs, ``broadlink.remote.TICK``), which is the timing
+    (about 30.45 µs, ``broadlink_async.remote.TICK``), which is the timing
     resolution of the RF front-end.
     """
     buf = bytearray([type_byte, repeat_count, 0, 0])
@@ -87,9 +87,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink radio frequency transmitter."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device: BroadlinkDevice = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     async_add_entities([BroadlinkRadioFrequency(device)])
 
 

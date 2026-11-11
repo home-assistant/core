@@ -143,7 +143,6 @@ def _install(args: list[str], env: dict[str, str]) -> str | None:
 def install_package(
     package: str,
     upgrade: bool = True,
-    target: str | None = None,
     constraints: str | None = None,
     timeout: int | None = None,
 ) -> bool:
@@ -173,10 +172,7 @@ def install_package(
         args.append("--upgrade")
     if constraints is not None:
         args += ["--constraint", constraints]
-    if target:
-        abs_target = os.path.abspath(target)
-        args += ["--target", abs_target]
-    elif (
+    if (
         not is_virtual_env()
         and not (any(var in env for var in _UV_ENV_PYTHON_VARS))
         and (abs_target := site.getusersitepackages())
@@ -221,26 +217,6 @@ def install_package(
 
     _LOGGER.error("Unable to install package %s: %s", package, stderr)
     return False
-
-
-async def async_get_user_site(deps_dir: str) -> str:
-    """Return user local library path.
-
-    This function is a coroutine.
-    """
-    env = os.environ.copy()
-    env["PYTHONUSERBASE"] = os.path.abspath(deps_dir)
-    args = [sys.executable, "-m", "site", "--user-site"]
-    process = await asyncio.create_subprocess_exec(
-        *args,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
-        env=env,
-        close_fds=False,  # required for posix_spawn
-    )
-    stdout, _ = await process.communicate()
-    return stdout.decode().strip()
 
 
 async def async_get_installed_packages() -> list[InstalledPackage]:

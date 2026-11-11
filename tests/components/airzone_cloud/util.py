@@ -113,12 +113,11 @@ from aioairzone_cloud.const import (
 )
 from aioairzone_cloud.device import Device
 from aioairzone_cloud.webserver import WebServer
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 WS_ID = "11:22:33:44:55:66"
 WS_ID_AIDOO = "11:22:33:44:55:67"

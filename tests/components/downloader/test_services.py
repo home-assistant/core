@@ -11,6 +11,7 @@ from requests_mock import Mocker
 from homeassistant.components.downloader.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -161,3 +162,16 @@ async def test_download_exceptions(
             DOMAIN, "download_file", {"url": download_url}, blocking=True
         )
     await download_failed.wait()
+
+
+async def test_download_not_loaded(hass: HomeAssistant) -> None:
+    """Test the action raises when no config entry is loaded."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {"url": "http://example.com/file.txt"},
+            blocking=True,
+        )

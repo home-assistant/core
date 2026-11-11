@@ -4,6 +4,8 @@ from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.opendisplay import BASE_PLATFORMS, FLEX_PLATFORMS
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
@@ -20,9 +22,6 @@ from . import (
     make_binary_inputs,
     make_button_device_config,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.fixture(autouse=True)

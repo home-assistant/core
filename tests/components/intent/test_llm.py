@@ -1,19 +1,27 @@
 """Tests for the intent LLM tools platform (generic intents)."""
 
+from unittest.mock import patch
+
+import probatio
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import llm as intent_llm
 from homeassistant.components.intent.timers import async_register_timer_handler
+from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.valve import ValveDeviceClass
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-
 COVER_ENTITY_ID = "cover.test"
+LLM_AGENT_ID = "conversation.test_llm_agent"
 
 
 @pytest.fixture(autouse=True)
@@ -49,6 +57,24 @@ async def test_generic_intents_exposed(hass: HomeAssistant) -> None:
     names = await _tool_names(hass)
     assert "intent__HassTurnOn" in names
     assert "intent__HassTurnOff" in names
+
+
+async def test_device_class_enum_has_a_stable_order(hass: HomeAssistant) -> None:
+    """Test the device class enum has a stable order."""
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tool = next(tool for tool in result.tools if tool.name == "intent__HassTurnOn")
+    schema = probatio.to_openapi(tool.parameters)
+    assert schema["properties"]["device_class"]["items"]["enum"] == [
+        device_class.value
+        for device_class_enum in (
+            ButtonDeviceClass,
+            CoverDeviceClass,
+            MediaPlayerDeviceClass,
+            SwitchDeviceClass,
+            ValveDeviceClass,
+        )
+        for device_class in device_class_enum
+    ]
 
 
 async def test_turn_on_uses_domain_when_name_blank(hass: HomeAssistant) -> None:
@@ -175,3 +201,79 @@ async def test_no_prompt_without_exposed_entities(hass: HomeAssistant) -> None:
 async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     """Test the platform returns None for an unsupported API."""
     assert intent_llm.async_get_tools(hass, _llm_context(), "other") is None
+
+
+@pytest.mark.parametrize(
+    ("assistant", "agent_id", "offered"),
+    [
+        pytest.param("conversation", LLM_AGENT_ID, True, id="conversation_agent"),
+        pytest.param("conversation", None, False, id="no_agent"),
+        pytest.param("ai_task", "ai_task.test", False, id="ai_task"),
+    ],
+)
+async def test_schedule_command_requires_conversation_agent(
+    hass: HomeAssistant, assistant: str, agent_id: str | None, offered: bool
+) -> None:
+    """Test the schedule command tool needs an agent to run the command later."""
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="en",
+        assistant=assistant,
+        device_id=None,
+        agent_id=agent_id,
+    )
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    names = {tool.name for tool in result.tools}
+    assert ("intent__schedule_command" in names) is offered
+
+
+async def test_schedule_command_runs_on_same_agent(hass: HomeAssistant) -> None:
+    """Test a scheduled command runs on the same agent as the same user."""
+    request_context = Context(user_id="test_user")
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=request_context,
+        language="en",
+        assistant="conversation",
+        device_id="test_device",
+        agent_id=LLM_AGENT_ID,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    with patch("homeassistant.components.conversation.async_converse") as mock_converse:
+        result = await api.async_call_tool(
+            llm.ToolInput(
+                "intent__schedule_command",
+                {"command": " Turn off the kitchen light ", "seconds": 0},
+            )
+        )
+        await hass.async_block_till_done()
+
+    assert result.data == {"success": True}
+    mock_converse.assert_called_once()
+    assert mock_converse.call_args.args[1] == "Turn off the kitchen light"
+    assert mock_converse.call_args.kwargs["agent_id"] == LLM_AGENT_ID
+    assert mock_converse.call_args.kwargs["device_id"] == "test_device"
+    command_context = mock_converse.call_args.kwargs["context"]
+    assert command_context.user_id == request_context.user_id
+    assert command_context.parent_id == request_context.id
+
+
+async def test_prompt_offers_schedule_command_without_timers(
+    hass: HomeAssistant,
+) -> None:
+    """Test the prompt points a device without timers to scheduled commands."""
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="en",
+        assistant="conversation",
+        device_id=None,
+        agent_id=LLM_AGENT_ID,
+    )
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    assert (
+        "This device is not able to start timers. It can still run a command"
+        " later with intent__schedule_command."
+    ) in result.prompt

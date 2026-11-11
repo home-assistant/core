@@ -4,14 +4,15 @@ from unittest.mock import ANY, AsyncMock
 
 from hole.exceptions import HoleError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import pi_hole, switch
-from homeassistant.components.pi_hole.const import (
-    CONF_STATISTICS_ONLY,
-    SERVICE_DISABLE,
-    SERVICE_DISABLE_ATTR_DURATION,
-)
+from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
 from homeassistant.components.pi_hole.coordinator import PiHoleData
+from homeassistant.components.pi_hole.services import (
+    PiHoleService,
+    PiHoleServiceArgument,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,8 +34,6 @@ from . import (
     _create_mocked_hole,
     _patch_init_hole,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -366,8 +365,8 @@ async def test_disable_service_call(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             pi_hole.DOMAIN,
-            SERVICE_DISABLE,
-            {ATTR_ENTITY_ID: "all", SERVICE_DISABLE_ATTR_DURATION: "00:00:01"},
+            PiHoleService.DISABLE,
+            {ATTR_ENTITY_ID: "all", PiHoleServiceArgument.DURATION: "00:00:01"},
             blocking=True,
         )
 

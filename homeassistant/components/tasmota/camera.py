@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_REMOVE_DISCOVER_COMPONENT
+from .const import DATA_REMOVE_DISCOVER_COMPONENT, DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaEntity
 
@@ -88,12 +88,16 @@ class TasmotaCamera(
 
         except TimeoutError as err:
             raise HomeAssistantError(
-                f"Timeout getting camera image from {self.name}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="camera_image_timeout",
+                translation_placeholders={"entity_id": self.entity_id},
             ) from err
 
         except aiohttp.ClientError as err:
             raise HomeAssistantError(
-                f"Error getting new camera image from {self.name}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="camera_image_error",
+                translation_placeholders={"entity_id": self.entity_id},
             ) from err
 
         return None

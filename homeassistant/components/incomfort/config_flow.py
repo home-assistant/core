@@ -46,7 +46,7 @@ CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -57,7 +57,7 @@ DHCP_CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -65,7 +65,7 @@ DHCP_CONFIG_SCHEMA = probatio.Schema(
 
 REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -158,7 +158,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_dhcp_auth({CONF_HOST: self._discovered_host})
         return self.async_show_form(
             step_id="dhcp_confirm",
-            description_placeholders={CONF_HOST: self._discovered_host},
+            description_placeholders={"host": self._discovered_host},
         )
 
     async def async_step_dhcp_auth(
@@ -179,7 +179,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="dhcp_auth",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={CONF_HOST: self._discovered_host},
+            description_placeholders={"host": self._discovered_host},
         )
 
     @override

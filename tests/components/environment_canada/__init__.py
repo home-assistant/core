@@ -4,11 +4,11 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.environment_canada.const import CONF_STATION, DOMAIN
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_LATITUDE: 55.55,

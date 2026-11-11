@@ -54,7 +54,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
-        probatio.Required(CONF_OPTIONS): cv.ensure_list,
+        probatio.Required(CONF_OPTIONS): probatio.EnsureList(),
         probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)

@@ -10,10 +10,7 @@ from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -22,8 +19,6 @@ from .const import (
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
-    SERVICE_DISABLE_AUTOLOCK,
-    SERVICE_ENABLE_AUTOLOCK,
 )
 from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
@@ -35,18 +30,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator = entry.runtime_data
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_DISABLE_AUTOLOCK,
-        None,
-        VerisureDoorlock.disable_autolock.__name__,
-    )
-    platform.async_register_entity_service(
-        SERVICE_ENABLE_AUTOLOCK,
-        None,
-        VerisureDoorlock.enable_autolock.__name__,
-    )
 
     async_add_entities(
         VerisureDoorlock(coordinator, serial_number)
@@ -185,7 +168,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
     def _update_lock_attributes(self) -> None:
         """Update lock state, changed by, and method from coordinator data."""
-        lock_data = self.coordinator.data["locks"][self.serial_number]
+        if (
+            lock_data := self.coordinator.data["locks"].get(self.serial_number)
+        ) is None:
+            return
         self._attr_is_locked = lock_data["lockStatus"] == "LOCKED"
         self._attr_changed_by = lock_data.get("user", {}).get("name")
         self._changed_method = lock_data["lockMethod"]

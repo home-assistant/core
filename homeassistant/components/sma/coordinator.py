@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pysma import (
     SmaAuthenticationException,
@@ -14,12 +14,14 @@ from pysma import (
 from pysma.helpers import DeviceInfo
 from pysma.sensor import Sensors
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import SMAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +37,12 @@ class SMACoordinatorData:
 class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
     """Data Update Coordinator for SMA."""
 
-    config_entry: ConfigEntry
+    config_entry: SMAConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SMAConfigEntry,
         sma: SMAWebConnect,
     ) -> None:
         """Initialize the SMA Data Update Coordinator."""

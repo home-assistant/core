@@ -23,8 +23,6 @@ from homeassistant.config import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
-    ATTR_ICON,
-    ATTR_NAME,
     CONF_ICON,
     CONF_MAC,
     CONF_NAME,
@@ -115,7 +113,7 @@ PLATFORM_SCHEMA_BASE: Final[probatio.Schema] = cv.PLATFORM_SCHEMA_BASE.extend(
 
 SERVICE_SEE_PAYLOAD_SCHEMA: Final[probatio.Schema] = probatio.Schema(
     probatio.All(
-        cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID),
+        probatio.AtLeastOne(ATTR_MAC, ATTR_DEV_ID),
         {
             ATTR_MAC: cv.string,
             ATTR_DEV_ID: cv.string,
@@ -255,6 +253,8 @@ async def async_setup_integration(
         data.pop("battery_status", None)
         await tracker.async_see(**data)
 
+    # Cannot be moved: actions are registered per legacy platform
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
     )
@@ -779,6 +779,7 @@ class DeviceTracker:
                 device.async_write_ha_state()
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class Device(RestoreEntity):
     """Base class for a tracked device."""
 
@@ -1082,9 +1083,9 @@ def update_config(path: str, dev_id: str, device: Device) -> None:
     with open(path, "a", encoding="utf8") as out:
         device_config = {
             device.dev_id: {
-                ATTR_NAME: device.name,
-                ATTR_MAC: device.mac,
-                ATTR_ICON: device.icon,
+                CONF_NAME: device.name,
+                CONF_MAC: device.mac,
+                CONF_ICON: device.icon,
                 "picture": device.config_picture,
                 "track": device.track,
             }

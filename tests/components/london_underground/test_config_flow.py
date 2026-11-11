@@ -9,10 +9,9 @@ from homeassistant.components.london_underground.const import (
     DEFAULT_LINES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -112,70 +111,5 @@ async def test_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_yaml_import(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_london_underground_client,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a YAML sensor is imported and becomes an operational config entry."""
-    # Set up via YAML which will trigger import and set up the config entry
-    IMPORT_DATA = {
-        "platform": "london_underground",
-        "line": ["Central", "Piccadilly", "Victoria", "Bakerloo", "Northern"],
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "London Underground"
-    assert result["data"] == {}
-    assert result["options"] == {
-        CONF_LINE: ["Central", "Piccadilly", "Victoria", "Bakerloo", "Northern"]
-    }
-
-
-async def test_failed_yaml_import_connection(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_london_underground_client,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a YAML sensor is imported and becomes an operational config entry."""
-    # Set up via YAML which will trigger import and set up the config entry
-    mock_london_underground_client.update.side_effect = asyncio.TimeoutError
-    IMPORT_DATA = {
-        "platform": "london_underground",
-        "line": ["Central", "Piccadilly", "Victoria", "Bakerloo", "Northern"],
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_failed_yaml_import_already_configured(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_london_underground_client,
-    caplog: pytest.LogCaptureFixture,
-    mock_config_entry,
-) -> None:
-    """Test a YAML sensor is imported and becomes an operational config entry."""
-    # Set up via YAML which will trigger import and set up the config entry
-
-    IMPORT_DATA = {
-        "platform": "london_underground",
-        "line": ["Central", "Piccadilly", "Victoria", "Bakerloo", "Northern"],
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_DATA
-    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

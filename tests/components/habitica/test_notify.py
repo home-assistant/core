@@ -10,6 +10,12 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaGroupMembersResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import DOMAIN
@@ -29,13 +35,6 @@ from .conftest import (
     ERROR_NOT_AUTHORIZED,
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
 )
 
 

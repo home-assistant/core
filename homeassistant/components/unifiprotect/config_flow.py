@@ -161,7 +161,7 @@ def _build_api_key_schema() -> probatio.Schema:
             probatio.Required(
                 CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
             ): _BOOL_SELECTOR,
-            probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+            probatio.Required(probatio.Secret(CONF_API_KEY)): _PASSWORD_SELECTOR,
         }
     )
 
@@ -179,7 +179,7 @@ API_KEY_SCHEMA = _build_api_key_schema()
 DISCOVERY_API_KEY_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
-        probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): _PASSWORD_SELECTOR,
     }
 )
 # Reauth flow: only credentials, connection settings preserved
@@ -191,7 +191,7 @@ API_KEY_DOCUMENTATION_URL = (
 )
 # Reauth flow for public-API-only entries: the API key is the only credential
 REAUTH_API_KEY_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR}
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): _PASSWORD_SELECTOR}
 )
 
 

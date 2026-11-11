@@ -10,16 +10,21 @@ from brunt import BruntClientAsync
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
-REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:
@@ -92,8 +97,8 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 description_placeholders={
-                    CONF_USERNAME: username,
-                    CONF_NAME: reauth_entry.title,
+                    "username": username,
+                    "name": reauth_entry.title,
                 },
             )
         user_input[CONF_USERNAME] = username
@@ -104,8 +109,8 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=REAUTH_SCHEMA,
                 errors=errors,
                 description_placeholders={
-                    CONF_USERNAME: username,
-                    CONF_NAME: reauth_entry.title,
+                    "username": username,
+                    "name": reauth_entry.title,
                 },
             )
 

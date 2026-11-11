@@ -130,17 +130,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hot Spring select entities."""
     coordinator = entry.runtime_data
-    async_add_entities(
+    entities: list[HotSpringJetSelectEntity | HotSpringHeatingModeSelectEntity] = [
         HotSpringJetSelectEntity(coordinator, description, jet.jet_id)
         for description in JET_DESCRIPTIONS
         for jet in coordinator.data.jets.values()
         if description.exists_fn(jet)
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         HotSpringHeatingModeSelectEntity(coordinator, description)
         for description in HEATING_MODE_DESCRIPTIONS
         if description.exists_fn(coordinator.data)
     )
+    async_add_entities(entities)
 
 
 class HotSpringJetSelectEntity(HotSpringEntity, SelectEntity):

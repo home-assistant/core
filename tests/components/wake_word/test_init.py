@@ -7,6 +7,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -16,16 +25,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import mock_wake_word_entity_platform
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
-from tests.typing import WebSocketGenerator
 
 TEST_DOMAIN = "test"
 
@@ -114,21 +113,19 @@ async def mock_config_entry_setup(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WAKE_WORD]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_forward_entry_unload(
             config_entry, Platform.WAKE_WORD
         )
-        return True
 
     mock_integration(
         hass,

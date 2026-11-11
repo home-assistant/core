@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockEntity
+
 from homeassistant.components.vacuum import (
     Segment,
     StateVacuumEntity,
@@ -11,8 +13,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockEntity
 
 
 class MockVacuum(MockEntity, StateVacuumEntity):
@@ -63,19 +63,18 @@ class MockVacuum(MockEntity, StateVacuumEntity):
 
 async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.VACUUM]
     )
-    return True
 
 
 async def help_async_unload_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Unload test config emntry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, [Platform.VACUUM]
     )
 

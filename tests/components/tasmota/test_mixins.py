@@ -6,14 +6,13 @@ from unittest.mock import call
 
 from hatasmota.const import CONF_MAC
 from hatasmota.utils import config_get_state_online, get_topic_tele_will
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.core import HomeAssistant
 
 from .test_common import DEFAULT_CONFIG
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_availability_poll_state_once(

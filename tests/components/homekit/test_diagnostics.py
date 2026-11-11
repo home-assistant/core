@@ -3,6 +3,9 @@
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.homekit.const import (
     CONF_DEVICES,
@@ -16,10 +19,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
@@ -122,7 +121,7 @@ async def test_config_entry_running(
                             {
                                 "format": "string",
                                 "iid": 9,
-                                "perms": ["pr", "ev"],
+                                "perms": ["pr"],
                                 "type": "37",
                                 "value": "01.01.00",
                             }
@@ -234,7 +233,7 @@ async def test_config_entry_accessory(
                             {
                                 "format": "string",
                                 "iid": 9,
-                                "perms": ["pr", "ev"],
+                                "perms": ["pr"],
                                 "type": "37",
                                 "value": "01.01.00",
                             }
@@ -411,7 +410,7 @@ async def test_config_entry_with_trigger_accessory(
                             {
                                 "format": "string",
                                 "iid": 9,
-                                "perms": ["pr", "ev"],
+                                "perms": ["pr"],
                                 "type": "37",
                                 "value": "01.01.00",
                             }

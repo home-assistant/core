@@ -189,6 +189,7 @@ class ISYBacklightSelectEntity(ISYAuxControlEntity, SelectEntity, RestoreEntity)
             },
             key=self.unique_id,
         )
+        self.async_on_remove(self._memory_change_handler.unsubscribe)
 
     @callback
     def async_on_memory_write(self, event: NodeChangedEvent, key: str) -> None:

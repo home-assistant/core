@@ -132,11 +132,11 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
                         username=user_input[CONF_USERNAME],
                         password=user_input[CONF_PASSWORD],
                     )
-
-                # If login was successful pass username/password to next step
-                return await self.async_step_pick_cloud_device()
             except LoginError:
                 errors["base"] = "api_error"
+            else:
+                # If login was successful pass username/password to next step
+                return await self.async_step_pick_cloud_device()
 
         return self.async_show_form(
             step_id="cloud_api",
@@ -144,7 +144,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
         )

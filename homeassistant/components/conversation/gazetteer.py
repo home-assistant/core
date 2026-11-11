@@ -27,7 +27,7 @@ from gazetteer_matcher import (
 )
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import (
     area_registry as ar,
@@ -129,7 +129,7 @@ def async_build_home(hass: HomeAssistant) -> Home:
                 else None
             ),
         }
-        if device_class := state.attributes.get(ATTR_DEVICE_CLASS):
+        if device_class := state.attributes.get(EntityStateAttribute.DEVICE_CLASS):
             spec["device_class"] = device_class
         entities[state.entity_id] = spec
 
@@ -219,7 +219,7 @@ class GazetteerFallback:
         frames resolved. A rebuild replaces the matcher rather than changing it, so
         the one handed back keeps describing what was acted on.
         """
-        matcher = await self._async_get_matcher()
+        matcher = await self.async_get_matcher()
         interpret = partial(
             matcher.interpret,
             text,
@@ -260,7 +260,7 @@ class GazetteerFallback:
         """Drop what a conversation was about, once it is over."""
         self._previous_targets.pop(conversation_id, None)
 
-    async def _async_get_matcher(self) -> GazetteerMatcher:
+    async def async_get_matcher(self) -> GazetteerMatcher:
         """Return the matcher, rebuilt from the registries if the home has changed."""
         if self._matcher is not None and self._built_home == self._wanted_home:
             return self._matcher

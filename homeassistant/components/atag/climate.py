@@ -50,7 +50,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     def __init__(self, coordinator: AtagDataUpdateCoordinator, atag_id: str) -> None:
         """Initialize an Atag climate device."""
         super().__init__(coordinator, atag_id)
-        self._attr_temperature_unit = coordinator.atag.climate.temp_unit
+        self._attr_native_temperature_unit = coordinator.atag.climate.temp_unit
 
     @property
     @override
@@ -67,13 +67,13 @@ class AtagThermostat(AtagEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.atag.climate.temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.atag.climate.target_temperature
 

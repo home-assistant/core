@@ -11,6 +11,7 @@ from midealocal.devices.fa import DeviceAttributes as FAAttributes, MideaFADevic
 from midealocal.devices.x40 import DeviceAttributes as X40Attributes
 from midealocal.exceptions import SocketException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -36,8 +37,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _assert_service_call(

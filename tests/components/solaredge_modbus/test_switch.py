@@ -5,6 +5,7 @@ from unittest.mock import patch
 from modbus_connection import IllegalDataAddressError
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
 NEGATIVE_SITE_LIMIT_ENTITY = "switch.solaredge_se10000h_negative_site_limit"

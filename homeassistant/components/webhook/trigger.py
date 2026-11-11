@@ -35,7 +35,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         probatio.Required(CONF_PLATFORM): "webhook",
         probatio.Required(CONF_WEBHOOK_ID): cv.template,
         probatio.Optional(CONF_ALLOWED_METHODS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.All(probatio.Upper, probatio.In(SUPPORTED_METHODS))],
             probatio.Unique(),
         ),
@@ -89,9 +89,7 @@ async def async_attach_trigger(
     if trigger_info:
         variables = trigger_info.get("variables")
     webhook_id_template: Template = config[CONF_WEBHOOK_ID]
-    webhook_id: str = webhook_id_template.async_render(
-        variables, limited=True, parse_result=False
-    )
+    webhook_id: str = webhook_id_template.async_render(variables, parse_result=False)
     local_only = config.get(CONF_LOCAL_ONLY, True)
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
     job = HassJob(action)

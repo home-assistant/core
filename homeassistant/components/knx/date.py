@@ -32,6 +32,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .storage.entity_store_schema import DateKnxConfig, KnxEntityData
+from .storage.knx_selector import state_and_passive
 
 
 async def async_setup_entry(
@@ -139,10 +140,10 @@ class KnxUiDate(_KNXDate, KnxUiEntity):
         knx_conf = config.knx
         self._device = XknxDateDevice(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             localtime=False,
             group_address=knx_conf.ga_date.write,
-            group_address_state=knx_conf.ga_date.state_and_passive(),
+            group_address_state=state_and_passive(knx_conf.ga_date),
             respond_to_read=knx_conf.respond_to_read,
             sync_state=knx_conf.sync_state,
         )

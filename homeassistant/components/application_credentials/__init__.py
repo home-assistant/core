@@ -54,7 +54,9 @@ DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 CREATE_FIELDS: VolDictType = {
     probatio.Required(CONF_DOMAIN): cv.string,
     probatio.Required(CONF_CLIENT_ID): probatio.All(cv.string, probatio.Strip),
-    probatio.Required(CONF_CLIENT_SECRET): probatio.All(cv.string, probatio.Strip),
+    probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): probatio.All(
+        cv.string, probatio.Strip
+    ),
     probatio.Optional(CONF_AUTH_DOMAIN): cv.string,
     probatio.Optional(CONF_NAME): cv.string,
 }

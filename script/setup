@@ -43,3 +43,9 @@ logger:
     homeassistant.components.cloud: debug
 " >> config/configuration.yaml
 fi
+
+if ! grep -R "debug_console" config/configuration.yaml >> /dev/null; then
+echo "
+debug_console:
+" >> config/configuration.yaml
+fi

@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
@@ -28,7 +27,7 @@ from .helpers import (
     handle_command,
     handle_vehicle_command,
 )
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 OFF = "off"
 LOW = "low"
@@ -137,10 +136,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ),
         # Heated third row only on Model X (value 3) that actually has a third
         # row; some 5-seat Model X also report 3 but have no third row.
-        # third_row_seats is a string ("None" when absent), not a bool.
         supported_fn=lambda data: (
-            data.get("rear_seat_heaters") == 3
-            and data.get("third_row_seats", "None") != "None"
+            data.get("rear_seat_heaters") == 3 and bool(data.get("third_row_seats"))
         ),
         entity_registry_enabled_default=False,
         options=[
@@ -157,10 +154,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         ),
         # Heated third row only on Model X (value 3) that actually has a third
         # row; some 5-seat Model X also report 3 but have no third row.
-        # third_row_seats is a string ("None" when absent), not a bool.
         supported_fn=lambda data: (
-            data.get("rear_seat_heaters") == 3
-            and data.get("third_row_seats", "None") != "None"
+            data.get("rear_seat_heaters") == 3 and bool(data.get("third_row_seats"))
         ),
         entity_registry_enabled_default=False,
         options=[
@@ -357,7 +352,7 @@ class TeslemetryStreamingSelectEntity(
         )
 
         self.async_on_remove(
-            self.vehicle.stream_vehicle.listen_HvacACEnabled(self._climate_callback)
+            self.vehicle.stream_vehicle.listen_HvacPower(self._climate_callback)
         )
 
     def _value_callback(self, value: int | None) -> None:
@@ -371,9 +366,9 @@ class TeslemetryStreamingSelectEntity(
             self._attr_current_option = None
         self.async_write_ha_state()
 
-    def _climate_callback(self, value: bool | None) -> None:
+    def _climate_callback(self, value: str | None) -> None:
         """Update the value of the entity."""
-        self._climate = bool(value)
+        self._climate = value in {"On", "Precondition"}
 
 
 class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
@@ -405,6 +400,7 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.api.operation(option))
         self._attr_current_option = option
+        self.coordinator.async_set_command_value(self.key, option)
         self.async_write_ha_state()
 
 
@@ -461,4 +457,5 @@ class TeslemetryExportRuleSelectEntity(
             self.api.grid_import_export(customer_preferred_export_rule=option)
         )
         self._attr_current_option = option
+        self.coordinator.async_set_command_value(self.key, option)
         self.async_write_ha_state()

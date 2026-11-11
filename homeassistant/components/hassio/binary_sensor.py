@@ -39,7 +39,6 @@ ADDON_ENTITY_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_registry_enabled_default=False,
         key="state",
-        translation_key="state",
         value_fn=lambda entity: (
             entity.coordinator.data.addons[entity.addon_slug].addon.state
             == AddonState.STARTED

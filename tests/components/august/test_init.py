@@ -4,6 +4,8 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError, InvalidAuth
 
@@ -43,9 +45,6 @@ from .mocks import (
     mock_august_config_entry,
     mock_client_credentials,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_august_api_is_failing(hass: HomeAssistant) -> None:

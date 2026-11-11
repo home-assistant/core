@@ -26,7 +26,7 @@ from .const import (
 SHARKIQ_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(
             CONF_REGION, default=SHARKIQ_REGION_DEFAULT
         ): selector.SelectSelector(

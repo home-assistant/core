@@ -60,20 +60,8 @@
     "entity_not_grouped": {
       "message": "Entity {entity_id} is not joined to a group"
     },
-    "integration_not_loaded": {
-      "message": "The HEOS integration is not loaded"
-    },
     "not_heos_media_player": {
       "message": "Entity {entity_id} is not a HEOS media player entity"
-    },
-    "sign_in_auth_error": {
-      "message": "Failed to sign in: Invalid username and/or password"
-    },
-    "sign_in_error": {
-      "message": "Unable to sign in: {error}"
-    },
-    "sign_out_error": {
-      "message": "Unable to sign out: {error}"
     },
     "unable_to_connect": {
       "message": "Unable to connect to {host}"
@@ -86,12 +74,6 @@
     },
     "unsupported_media_content_id": {
       "message": "Unsupported media_content_id: {media_content_id}"
-    }
-  },
-  "issues": {
-    "sign_in_out_deprecated": {
-      "description": "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release. Enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically.",
-      "title": "HEOS Actions Deprecated"
     }
   },
   "options": {
@@ -162,24 +144,6 @@
         }
       },
       "name": "Remove from queue"
-    },
-    "sign_in": {
-      "description": "Signs in to a HEOS account.",
-      "fields": {
-        "password": {
-          "description": "The password of the HEOS account.",
-          "name": "[%key:common::config_flow::data::password%]"
-        },
-        "username": {
-          "description": "The username or email of the HEOS account.",
-          "name": "[%key:common::config_flow::data::username%]"
-        }
-      },
-      "name": "Sign in"
-    },
-    "sign_out": {
-      "description": "Signs out of the HEOS account.",
-      "name": "Sign out"
     }
   }
 }

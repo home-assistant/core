@@ -85,6 +85,9 @@
     },
     "invalid_credentials": {
       "message": "Invalid provisioning credentials."
+    },
+    "unload_failed": {
+      "message": "Error while unloading the EnergyID entry."
     }
   }
 }

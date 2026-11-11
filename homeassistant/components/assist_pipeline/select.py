@@ -14,6 +14,11 @@ from .runtime import KEY_ASSIST_PIPELINE, AssistDevice
 from .vad import VadSensitivity
 
 
+def indexed_select_key(key: str, index: int) -> str:
+    """Return the entity description key of the index-th select named key."""
+    return key if index == 0 else f"{key}_{index + 1}"
+
+
 @callback
 def get_chosen_pipeline(
     hass: HomeAssistant, domain: str, unique_id_prefix: str
@@ -80,7 +85,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         if index >= 1:
             self.entity_description = replace(
                 self.entity_description,
-                key=f"pipeline_{index + 1}",
+                key=indexed_select_key("pipeline", index),
                 translation_key="pipeline_n",
                 translation_placeholders={"index": str(index + 1)},
             )

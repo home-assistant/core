@@ -11,10 +11,11 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.util import yaml as yaml_util
 
 from . import importer, models
-from .const import DOMAIN
+from .const import BLUEPRINT_FOLDER, DOMAIN
 from .errors import BlueprintException, FailedToLoad, FileAlreadyExists
 from .schemas import BLUEPRINT_SCHEMA
 
@@ -196,8 +197,9 @@ async def ws_save_blueprint(
         connection.send_error(msg["id"], "already_exists", "File already exists")
         return
     except OSError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
-        return
+        raise os_write_error(
+            err, hass.config.path(BLUEPRINT_FOLDER, domain, path)
+        ) from err
 
     connection.send_result(
         msg["id"],

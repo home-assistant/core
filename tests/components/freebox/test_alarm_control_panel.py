@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 from .const import DATA_HOME_ALARM_GET_VALUE, DATA_HOME_GET_NODES
-
-from tests.common import async_fire_time_changed
 
 
 async def test_alarm_changed_from_external(

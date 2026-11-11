@@ -1,10 +1,9 @@
 """Tests for the ness_alarm component."""
 
 from types import MappingProxyType
-from unittest.mock import AsyncMock, patch
 
 from nessclient import ArmingMode, ArmingState
-import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import (
@@ -13,19 +12,19 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.ness_alarm.const import (
-    ATTR_OUTPUT_ID,
     CONF_SHOW_HOME_MODE,
     CONF_ZONE_NUMBER,
     DOMAIN,
-    SERVICE_AUX,
-    SERVICE_PANIC,
     SUBENTRY_TYPE_ZONE,
+)
+from homeassistant.components.ness_alarm.services import (
+    NessAlarmService,
+    NessAlarmServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_STATE,
     CONF_HOST,
     CONF_PORT,
     CONF_TYPE,
@@ -36,10 +35,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
@@ -57,8 +52,8 @@ async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
     await hass.async_block_till_done()
 
     # Services should be registered
-    assert hass.services.has_service(DOMAIN, SERVICE_PANIC)
-    assert hass.services.has_service(DOMAIN, SERVICE_AUX)
+    assert hass.services.has_service(DOMAIN, NessAlarmService.PANIC)
+    assert hass.services.has_service(DOMAIN, NessAlarmService.AUX)
 
     # Alarm panel should be created
     assert hass.states.get("alarm_control_panel.alarm_panel")
@@ -203,7 +198,10 @@ async def test_panic_service_with_config_entry(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PANIC, blocking=True, service_data={ATTR_CODE: "1234"}
+        DOMAIN,
+        NessAlarmService.PANIC,
+        blocking=True,
+        service_data={NessAlarmServiceArgument.CODE: "1234"},
     )
     mock_nessclient.panic.assert_awaited_once_with("1234")
 
@@ -224,7 +222,10 @@ async def test_aux_service_with_config_entry(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_AUX, blocking=True, service_data={ATTR_OUTPUT_ID: 1}
+        DOMAIN,
+        NessAlarmService.AUX,
+        blocking=True,
+        service_data={NessAlarmServiceArgument.OUTPUT_ID: 1},
     )
     mock_nessclient.aux.assert_awaited_once_with(1, True)
 
@@ -246,9 +247,12 @@ async def test_aux_service_with_state_false(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_AUX,
+        NessAlarmService.AUX,
         blocking=True,
-        service_data={ATTR_OUTPUT_ID: 2, ATTR_STATE: False},
+        service_data={
+            NessAlarmServiceArgument.OUTPUT_ID: 2,
+            NessAlarmServiceArgument.STATE: False,
+        },
     )
     mock_nessclient.aux.assert_awaited_once_with(2, False)
 
@@ -598,35 +602,3 @@ async def test_alarm_panel_home_mode_enabled_by_default(
     assert supported & AlarmControlPanelEntityFeature.ARM_HOME
     assert supported & AlarmControlPanelEntityFeature.ARM_AWAY
     assert supported & AlarmControlPanelEntityFeature.TRIGGER
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_yaml_import_triggers_flow(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test that YAML configuration triggers import flow."""
-    with patch(
-        "homeassistant.components.ness_alarm.config_flow.Client",
-        return_value=AsyncMock(),
-    ):
-        config = {
-            DOMAIN: {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 1992,
-            }
-        }
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-
-        # Check that a config entry was created from the import
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
-        assert entries[0].data[CONF_HOST] == "192.168.1.100"
-        assert entries[0].data[CONF_PORT] == 1992
-
-        # Check that a deprecation repair issue was created
-        issue = issue_registry.async_get_issue(
-            "homeassistant", f"deprecated_yaml_{DOMAIN}"
-        )
-        assert issue is not None
-        assert issue.severity == "warning"

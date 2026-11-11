@@ -1,7 +1,7 @@
 """Support for MQTT time platform."""
 
 from collections.abc import Callable
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -76,7 +76,7 @@ async def async_setup_entry(
 class MqttTimeEntity(MqttEntity, TimeEntity):
     """Representation of the MQTT time entity."""
 
-    _attr_native_value: datetime.time | None = None
+    _attr_native_value: dt.time | None = None
     _attributes_extra_blocked = MQTT_TIME_ATTRIBUTES_BLOCKED
     _default_name = DEFAULT_NAME
     _entity_id_format = time.ENTITY_ID_FORMAT
@@ -150,7 +150,7 @@ class MqttTimeEntity(MqttEntity, TimeEntity):
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @override
-    async def async_set_value(self, value: datetime.time) -> None:
+    async def async_set_value(self, value: dt.time) -> None:
         """Change the time."""
         payload = self._command_template(value.isoformat(), {"value": value})
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

@@ -1,8 +1,8 @@
 """Entity for Firmata devices."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from . import FirmataConfigEntry
 from .board import FirmataPinType
 from .const import DOMAIN, FIRMATA_MANUFACTURER
 from .pin import FirmataBoardPin
@@ -35,7 +35,7 @@ class FirmataPinEntity(FirmataEntity):
     def __init__(
         self,
         api: FirmataBoardPin,
-        config_entry: ConfigEntry,
+        config_entry: FirmataConfigEntry,
         name: str,
         pin: FirmataPinType,
     ) -> None:

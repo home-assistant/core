@@ -1,10 +1,17 @@
 """Tests for the Sofar select platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -12,22 +19,20 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.sofar.const import DOMAIN
+from homeassistant.components.sofar.const import DOMAIN, PACKS_SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
-    MOCK_USER_INPUT,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _setup_hybrid(
@@ -39,7 +44,7 @@ async def _setup_hybrid(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -64,7 +69,7 @@ async def _setup_pv(
     connection = MockModbusConnection()
     seed_pv_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT, title=MOCK_MODEL
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_ENTRY_DATA, title=MOCK_MODEL
     )
     entry.add_to_hass(hass)
     with (
@@ -84,11 +89,18 @@ async def _setup_pv(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hybrid_entities(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the select entities a hybrid inverter serves."""
-    entry, _ = await _setup_hybrid(hass)
+    """Test the select entities a hybrid inverter serves after a poll."""
+    entry, connection = await _setup_hybrid(hass)
+    unit = connection.for_unit(1)
+    unit.holding[0x1110] = 1  # charger mode -> time of use
+    unit.holding[0x1029] = 2  # EPS -> enable cold start
+    freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 

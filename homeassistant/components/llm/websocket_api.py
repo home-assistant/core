@@ -30,5 +30,14 @@ def websocket_list_apis(
     """
     connection.send_result(
         msg["id"],
-        {"apis": [{"id": api.id, "name": api.name} for api in async_get_apis(hass)]},
+        {
+            "apis": [
+                {
+                    "id": api.id,
+                    "name": api.name,
+                    "requires_admin": api.requires_admin,
+                }
+                for api in async_get_apis(hass)
+            ]
+        },
     )

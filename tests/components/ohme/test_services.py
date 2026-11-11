@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from ohme import ChargeSlot
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ohme.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_list_charge_slots(

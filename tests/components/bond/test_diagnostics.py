@@ -1,12 +1,12 @@
 """Test bond diagnostics."""
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import ceiling_fan_with_breeze, setup_platform
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

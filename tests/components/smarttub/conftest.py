@@ -4,14 +4,13 @@ from typing import Any
 from unittest.mock import create_autospec, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import smarttub
 
 from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

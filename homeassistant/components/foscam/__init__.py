@@ -10,16 +10,28 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import DEFAULT_RTSP_PORT
-from .const import CONF_RTSP_PORT, LOGGER
+from .const import CONF_RTSP_PORT, DOMAIN, LOGGER
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [Platform.CAMERA, Platform.NUMBER, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Foscam integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> None:
     """Set up foscam from a config entry."""
 
     session = FoscamCamera(
@@ -40,15 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -84,8 +94,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> 
         )
 
     LOGGER.debug("Migration to version %s successful", entry.version)
-
-    return True
 
 
 async def async_migrate_entities(hass: HomeAssistant, entry: FoscamConfigEntry) -> None:

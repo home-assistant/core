@@ -10,6 +10,7 @@ from actron_neo_api.rt import (
     RealtimeTransportType,
 )
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.actron_air.coordinator import (
     POLL_INTERVAL,
@@ -20,8 +21,6 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CLIMATE_ENTITY_ID = "climate.test_system"
 

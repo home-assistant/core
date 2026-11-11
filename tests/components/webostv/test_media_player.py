@@ -3,9 +3,13 @@
 from datetime import timedelta
 from http import HTTPStatus
 
+import aiohttp
 from aiowebostv import WebOsTvPairError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -73,10 +77,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
 from .const import CHANNEL_2, ENTITY_ID, TV_NAME
-
-from tests.common import async_fire_time_changed, mock_restore_cache
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def mock_scan_interval(
@@ -585,11 +585,23 @@ async def test_app_id(hass: HomeAssistant, client) -> None:
     assert hass.states.get(ENTITY_ID).attributes[ATTR_APP_ID] == "com.webos.app.home"
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(ConnectionResetError(), id="connection_reset"),
+        pytest.param(
+            aiohttp.ClientOSError(104, "Connection reset by peer"),
+            id="client_os_error",
+        ),
+    ],
+)
 async def test_client_disconnected(
     hass: HomeAssistant,
     client,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
 ) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
@@ -618,11 +630,13 @@ async def test_client_disconnected(
     )
 
     client.is_connected.return_value = False
-    client.connect.side_effect = TimeoutError
+    client.tv_state.is_on = False
+    client.connect.side_effect = side_effect
 
     await mock_scan_interval(hass, freezer)
 
-    assert "TimeoutError" not in caplog.text
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+    assert type(side_effect).__name__ not in caplog.text
 
 
 async def test_client_key_update_on_connect(
