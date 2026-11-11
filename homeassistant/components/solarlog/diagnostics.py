@@ -3,13 +3,14 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .coordinator import SolarlogConfigEntry
 
 TO_REDACT = [
     CONF_HOST,
+    CONF_PASSWORD,
 ]
 
 

@@ -73,8 +73,6 @@ def async_note_integration_discovery(
     hass: HomeAssistant, endpoint: pizone.ControllerEndpoint
 ) -> None:
     """Start a config flow when discovery reports an unclaimed endpoint."""
-    if endpoint.uid in yaml_excluded_uids(hass):
-        return
     discovery_flow.async_create_flow(
         hass,
         DOMAIN,

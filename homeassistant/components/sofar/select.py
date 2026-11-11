@@ -60,11 +60,10 @@ async def async_setup_entry(
     """Set up the Sofar select platform."""
     async_remove_unserved_entities(hass, entry, Platform.SELECT, SELECT_DESCRIPTIONS)
     runtime_data = entry.runtime_data
-    served = runtime_data.served_components
     async_add_entities(
         SofarSelect(runtime_data, description)
         for description in SELECT_DESCRIPTIONS
-        if description.component in served
+        if description.component in runtime_data.served_components
     )
 
 
