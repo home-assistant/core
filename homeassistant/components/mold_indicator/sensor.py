@@ -159,7 +159,10 @@ class MoldIndicator(HelperEntity, SensorEntity):
             CONF_OUTDOOR_TEMP: outdoor_temp_sensor,
             CONF_INDOOR_HUMIDITY: indoor_humidity_sensor,
         }
-        self._attr_source_entity_ids_or_uuids = list(self._entities.values())
+        # The config flow preview can leave a source entity empty
+        self._attr_source_entity_ids = [
+            entity_id for entity_id in self._entities.values() if entity_id
+        ]
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._attr_available = False

@@ -1,6 +1,6 @@
 """Helpers for helper integrations."""
 
-from collections.abc import Callable, Collection, Coroutine, Sequence
+from collections.abc import Callable, Collection, Coroutine
 from typing import Any, override
 
 from homeassistant.const import EntityCapabilityAttribute
@@ -21,22 +21,14 @@ class HelperEntity(Entity):
     added to the capability attributes of the platform.
     """
 
-    _attr_source_entity_ids_or_uuids: Sequence[str] = ()
+    _attr_source_entity_ids: list[str]
 
     @property
     def source_entity_ids(self) -> list[str]:
         """Return the entity IDs of the source entities."""
-        entity_registry = er.async_get(self.hass)
-        return [
-            entity_id
-            for entity_id_or_uuid in self._attr_source_entity_ids_or_uuids
-            if entity_id_or_uuid
-            and (
-                entity_id := er.async_resolve_entity_id(
-                    entity_registry, entity_id_or_uuid
-                )
-            )
-        ]
+        if hasattr(self, "_attr_source_entity_ids"):
+            return self._attr_source_entity_ids
+        return []
 
     @property
     @override
