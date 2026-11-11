@@ -74,6 +74,13 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, NeoPoolBinarySensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=_gpio_ok("MBF_PAR_PH_ACID_RELAY_GPIO"),
     ),
+    "pH Base Pump": NeoPoolBinarySensorEntityDescription(
+        key="pH Base Pump",
+        translation_key="ph_base_pump",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=_gpio_ok("MBF_PAR_PH_BASE_RELAY_GPIO"),
+    ),
     "Filtration Pump": NeoPoolBinarySensorEntityDescription(
         key="Filtration Pump",
         translation_key="filtration_pump",
