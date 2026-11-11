@@ -68,6 +68,11 @@ def _fetched_epex_days(client: MagicMock) -> list[date]:
     ]
 
 
+def _no_agreements_issue_id(entry: MockConfigEntry) -> str:
+    """Return the no-active-agreements issue id for an entry."""
+    return f"no_active_agreements_{entry.entry_id}"
+
+
 @pytest.mark.usefixtures("mock_engie_client")
 async def test_setup_and_unload(
     hass: HomeAssistant,
@@ -293,18 +298,19 @@ async def test_setup_without_active_agreements(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"no_active_agreements_{mock_config_entry.entry_id}"
+        DOMAIN, _no_agreements_issue_id(mock_config_entry)
     )
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.is_fixable is False
     assert issue.translation_key == "no_active_agreements"
     assert issue.translation_placeholders == {"email": EMAIL}
-    assert issue.learn_more_url == "https://www.engie.be"
+    assert issue.learn_more_url == (
+        "https://www.engie.be/nl/support/faq/contract/aanvragen/klant-worden/"
+    )
     assert issue.config_entry_id == mock_config_entry.entry_id
 
 
-@pytest.mark.usefixtures("mock_engie_client")
 async def test_no_active_agreements_issue_cleared_on_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -320,7 +326,7 @@ async def test_no_active_agreements_issue_cleared_on_reload(
     await hass.async_block_till_done()
     assert (
         issue_registry.async_get_issue(
-            DOMAIN, f"no_active_agreements_{mock_config_entry.entry_id}"
+            DOMAIN, _no_agreements_issue_id(mock_config_entry)
         )
         is not None
     )

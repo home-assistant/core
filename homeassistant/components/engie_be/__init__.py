@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
             config_entry_id=entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            learn_more_url="https://www.engie.be",
+            learn_more_url="https://www.engie.be/nl/support/faq/contract/aanvragen/klant-worden/",
             translation_key="no_active_agreements",
             translation_placeholders={"email": entry.data[CONF_EMAIL]},
         )
