@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
@@ -39,8 +39,10 @@ type GreeConfigEntry = ConfigEntry[DeviceDataUpdateCoordinator]
 
 
 async def async_bind_device(hass: HomeAssistant, device: Device) -> None:
-    """Open the scan-gated firmware window before binding the saved device."""
+    """Open the scan-gated firmware window and bind unless HA is shutting down."""
     await async_get_discovery(hass).async_scan(wait_for=0)
+    if hass.is_stopping or hass.state is CoreState.stopped:
+        raise asyncio.CancelledError
     await device.bind()
 
 

@@ -15,7 +15,7 @@ from homeassistant.components.gree.const import UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 
 from .common import async_setup_gree, build_device_mock
 
@@ -392,3 +392,35 @@ async def test_shutdown_during_scan_does_not_bind(
     device().bind.assert_not_awaited()
     scanner.async_scan.assert_awaited_once_with(wait_for=0)
     assert hass.states.async_all(CLIMATE_DOMAIN) == []
+
+
+async def test_shutdown_after_scan_returns_does_not_bind(
+    hass: HomeAssistant, device: Mock
+) -> None:
+    """Stop after a completed scan prevents binding and leaves setup failed."""
+    started = asyncio.Event()
+    finish_scan = asyncio.Event()
+
+    async def scan(*, wait_for: int) -> dict:
+        started.set()
+        await finish_scan.wait()
+        return {}
+
+    scanner = Mock(async_scan=AsyncMock(side_effect=scan))
+    with patch(
+        "homeassistant.components.gree.coordinator.async_get_discovery",
+        return_value=scanner,
+    ):
+        setup = asyncio.create_task(async_setup_gree(hass))
+        await started.wait()
+        hass.set_state(CoreState.stopping)
+        finish_scan.set()
+        entry = await setup
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    scanner.async_scan.assert_awaited_once_with(wait_for=0)
+    device().bind.assert_not_awaited()
+    device().update_state.assert_not_awaited()
+    device().close.assert_called_once_with()
+    assert hass.states.async_all(CLIMATE_DOMAIN) == []
+    assert hass.states.async_all(SWITCH_DOMAIN) == []

@@ -2,7 +2,7 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import pytest
@@ -11,6 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.gree.const import CONF_IDENTIFIER, DOMAIN
 from homeassistant.components.gree.discovery import (
+    async_get_discovery,
     device_info_to_data,
     normalize_identifier,
 )
@@ -19,6 +20,7 @@ from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import discovery_flow, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import build_device_mock
 
@@ -410,6 +412,91 @@ async def test_validation_cancelled(
     ):
         await hass.config_entries.flow.async_configure(result["flow_id"], submission)
     device().close.assert_called_once_with()
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
+
+
+@pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
+async def test_shutdown_during_selected_binding(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery: MagicMock,
+    discovery_entry: MockConfigEntry,
+    step: str,
+) -> None:
+    """Shutdown cancels active and queued selected bindings before bind."""
+    await hass.async_start()
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    first_candidate = build_device_mock()
+    second_candidate = build_device_mock("Other unit", "192.0.2.2", "AA:BB:CC:11:22:44")
+    discovery.mock_devices = [first_candidate, second_candidate]
+    first_data = device_info_to_data(first_candidate.device_info)
+    second_data = device_info_to_data(second_candidate.device_info)
+    first_flow = await start_selected_step(hass, step, first_data)
+    second_flow = await start_selected_step(hass, step, second_data)
+    first_submission = {
+        "pick_device": {CONF_DEVICE: normalize_identifier(first_data[CONF_IDENTIFIER])},
+        "discovery_confirm": {},
+    }[step]
+    second_submission = {
+        "pick_device": {
+            CONF_DEVICE: normalize_identifier(second_data[CONF_IDENTIFIER])
+        },
+        "discovery_confirm": {},
+    }[step]
+
+    first_bound_device = build_device_mock()
+    second_bound_device = build_device_mock(
+        "Other unit", "192.0.2.2", "AA:BB:CC:11:22:44"
+    )
+    device.side_effect = [first_bound_device, second_bound_device]
+
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def delayed_scan(**kwargs: Any) -> list[Any]:
+        started.set()
+        await release.wait()
+        return [first_candidate.device_info, second_candidate.device_info]
+
+    active = Mock(scan=AsyncMock(side_effect=delayed_scan), close=Mock())
+    discovery.side_effect = [active]
+    scanner = async_get_discovery(hass)
+    scan_requests: asyncio.Queue[None] = asyncio.Queue()
+    original_scan = scanner.async_scan
+
+    async def selected_scan(*, wait_for: int) -> dict[str, Any]:
+        scan_requests.put_nowait(None)
+        return await original_scan(wait_for=wait_for)
+
+    with patch.object(scanner, "async_scan", side_effect=selected_scan):
+        active_selection = asyncio.create_task(
+            hass.config_entries.flow.async_configure(
+                first_flow["flow_id"], first_submission
+            )
+        )
+        await scan_requests.get()
+        await started.wait()
+        queued_selection = asyncio.create_task(
+            hass.config_entries.flow.async_configure(
+                second_flow["flow_id"], second_submission
+            )
+        )
+        await scan_requests.get()
+
+        await hass.async_stop()
+        release.set()
+        results = await asyncio.gather(
+            active_selection, queued_selection, return_exceptions=True
+        )
+
+    assert all(isinstance(result, asyncio.CancelledError) for result in results)
+    active.scan.assert_awaited_once()
+    active.close.assert_called()
+    first_bound_device.close.assert_called_once_with()
+    second_bound_device.close.assert_called_once_with()
+    first_bound_device.bind.assert_not_awaited()
+    second_bound_device.bind.assert_not_awaited()
     assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
 
 
