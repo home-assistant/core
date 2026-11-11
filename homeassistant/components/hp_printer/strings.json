@@ -32,6 +32,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "cloud_registered": {
+        "name": "Cloud registered"
+      },
+      "cloud_services": {
+        "name": "Cloud services"
+      },
+      "ethernet": {
+        "name": "Ethernet"
+      },
+      "usb": {
+        "name": "USB"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      }
+    },
     "sensor": {
       "black_counterfeit_refills": {
         "name": "Black counterfeit refills"
