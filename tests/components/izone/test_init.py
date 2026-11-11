@@ -536,6 +536,11 @@ async def test_setup_discovery_bind_failure_retries(
         pytest.param(ConnectionError("gone"), True, id="connection-error"),
         pytest.param(ControllerCommandError("rejected"), True, id="command-rejected"),
         pytest.param(None, False, id="system-offline"),
+        pytest.param(
+            DeviceReconfigurationError({"NoOfZones": (1, 2)}),
+            True,
+            id="system-reconfigured",
+        ),
     ],
 )
 async def test_setup_first_refresh_failure_closes_controller(
@@ -548,15 +553,20 @@ async def test_setup_first_refresh_failure_closes_controller(
 ) -> None:
     """A failed first refresh closes the controller and retries setup.
 
-    This includes a reachable bridge whose iZone system is offline.
+    This includes a reachable bridge whose iZone system is offline, and a system
+    reprogrammed mid-setup, which must leave the retry backoff to setup.
     """
     mock_config_entry.add_to_hass(hass)
     mock_controller.refresh_all = AsyncMock(side_effect=side_effect)
     mock_controller.connected = connected
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_controller.close.assert_awaited()
+    mock_schedule_reload.assert_not_called()
 
 
 async def test_setup_platform_failure_closes_controller(
