@@ -88,7 +88,7 @@ rules:
     comment: The only entity uses the device name directly via _attr_name = None.
   exception-translations:
     status: exempt
-    comment: This integration does not raise any exceptions.
+    comment: This integration does not raise any custom exceptions.
   icon-translations:
     status: exempt
     comment: This integration does not use custom icons.
