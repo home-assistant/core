@@ -4,22 +4,26 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 
 from homeassistant.components.recorder.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import (
-    ClientSessionGenerator,
-    RecorderInstanceContextManager,
-    RecorderInstanceGenerator,
-)
-
 OLDER_CORRUPTION = "2026-01-01T00:00:00+00:00"
 NEWER_CORRUPTION = "2026-02-01T00:00:00+00:00"
-LATER_CORRUPTION = "2026-03-01T00:00:00+00:00"
+LATER_CORRUPTION = "2026-03-01T00:00:00.123456+00:00"
+CLOCK_BACK_CORRUPTION = "2025-12-01T00:00:00+00:00"
+DIRECTORY_TIME = "2026-01-15T00:00:00+00:00"
 ISSUE_ID = f"corrupt_database_files_{NEWER_CORRUPTION}"
 
 
@@ -56,9 +60,15 @@ async def test_corrupt_database_files_repair(
     """Test the issue for kept corrupt database files and deleting them."""
     db_file = Path(recorder_db_url.removeprefix("sqlite:///"))
     corrupt_files = await hass.async_add_executor_job(_write_corrupt_files, db_file)
-    # A similar name that move_away_broken_database never writes must be kept.
-    unrelated_file = db_file.with_name(f"other.db.corrupt.{NEWER_CORRUPTION}")
-    await hass.async_add_executor_job(unrelated_file.write_bytes, b"keep")
+    # Names that move_away_broken_database never writes must be kept.
+    unrelated_files = [
+        db_file.with_name(f"other.db.corrupt.{NEWER_CORRUPTION}"),
+        db_file.with_name(f"{db_file.name}.corrupt.manual-backup"),
+    ]
+    for unrelated_file in unrelated_files:
+        await hass.async_add_executor_job(unrelated_file.write_bytes, b"keep")
+    unrelated_dir = db_file.with_name(f"{db_file.name}.corrupt.{DIRECTORY_TIME}")
+    await hass.async_add_executor_job(unrelated_dir.mkdir)
 
     await async_setup_recorder_instance(hass)
     await hass.async_block_till_done()
@@ -76,17 +86,22 @@ async def test_corrupt_database_files_repair(
     client = await hass_client()
     flow = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     assert flow["step_id"] == "confirm"
-    # A corruption after the issue was shown must not be deleted with it.
-    later_file = db_file.with_name(f"{db_file.name}.corrupt.{LATER_CORRUPTION}")
-    await hass.async_add_executor_job(later_file.write_bytes, b"")
+    # Corruptions after the issue was shown must not be deleted with it,
+    # even when the clock went back in between.
+    later_files = [
+        db_file.with_name(f"{db_file.name}.corrupt.{LATER_CORRUPTION}"),
+        db_file.with_name(f"{db_file.name}-wal.corrupt.{CLOCK_BACK_CORRUPTION}"),
+    ]
+    for later_file in later_files:
+        await hass.async_add_executor_job(later_file.write_bytes, b"")
 
     result = await process_repair_fix_flow(client, flow["flow_id"])
     assert result["type"] == "create_entry"
 
     for corrupt_file in corrupt_files:
         assert not await hass.async_add_executor_job(corrupt_file.exists)
-    assert await hass.async_add_executor_job(unrelated_file.exists)
-    assert await hass.async_add_executor_job(later_file.exists)
+    for kept_path in (*unrelated_files, unrelated_dir, *later_files):
+        assert await hass.async_add_executor_job(kept_path.exists)
     assert await hass.async_add_executor_job(db_file.exists)
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID) is None
 

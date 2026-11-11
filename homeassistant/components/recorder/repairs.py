@@ -1,21 +1,21 @@
 """Repairs for the recorder."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.recorder import get_instance
 
 from .const import LOGGER
-from .util import (
-    CORRUPT_DATABASE_ISSUE_PREFIX,
-    dburl_to_path,
-    delete_corrupt_database_files,
-    get_instance,
-)
+from .util import dburl_to_path, delete_corrupt_database_files
 
 
 class CorruptDatabaseFilesRepairFlow(ConfirmRepairFlow):
     """Delete the corrupt database files after the user confirms."""
+
+    def __init__(self, names: list[str]) -> None:
+        """Initialize the flow with the files the issue was created for."""
+        self._names = names
 
     @override
     async def async_step_confirm(
@@ -29,7 +29,7 @@ class CorruptDatabaseFilesRepairFlow(ConfirmRepairFlow):
             await self.hass.async_add_executor_job(
                 delete_corrupt_database_files,
                 dburl_to_path(get_instance(self.hass).db_url),
-                self.issue_id.removeprefix(f"{CORRUPT_DATABASE_ISSUE_PREFIX}_"),
+                self._names,
             )
         except OSError:
             LOGGER.exception("Could not delete the corrupt database files")
@@ -41,4 +41,6 @@ async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, Any] | None
 ) -> CorruptDatabaseFilesRepairFlow:
     """Create a fix flow for the only fixable recorder issue."""
-    return CorruptDatabaseFilesRepairFlow()
+    if TYPE_CHECKING:
+        assert data is not None
+    return CorruptDatabaseFilesRepairFlow(data["files"].split("/"))

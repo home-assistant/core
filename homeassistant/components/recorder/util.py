@@ -9,6 +9,8 @@ import glob
 import logging
 import os
 from pathlib import Path
+import re
+import stat
 import time
 from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, NoReturn, cast
 
@@ -69,6 +71,10 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 
 CORRUPT_DATABASE_ISSUE_PREFIX = "corrupt_database_files"
+# The UTC isoformat() time that move_away_broken_database appends.
+CORRUPT_DATABASE_TIME = re.compile(
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?\+00:00"
+)
 
 
 # Our minimum versions for each database
@@ -433,11 +439,18 @@ def find_corrupt_database_files(dbfile: str) -> dict[Path, int]:
     path = Path(dbfile).resolve()
     corrupt_files: dict[Path, int] = {}
     for postfix in SQLITE3_POSTFIXES:
-        for corrupt_file in path.parent.glob(
-            f"{glob.escape(path.name + postfix)}.corrupt.*"
-        ):
-            with contextlib.suppress(FileNotFoundError):
-                corrupt_files[corrupt_file] = corrupt_file.stat().st_size
+        prefix = f"{path.name}{postfix}.corrupt."
+        for corrupt_file in path.parent.glob(f"{glob.escape(prefix)}*"):
+            if not CORRUPT_DATABASE_TIME.fullmatch(
+                corrupt_file.name.removeprefix(prefix)
+            ):
+                continue
+            try:
+                file_stat = corrupt_file.stat()
+            except FileNotFoundError:
+                continue
+            if stat.S_ISREG(file_stat.st_mode):
+                corrupt_files[corrupt_file] = file_stat.st_size
     return corrupt_files
 
 
@@ -446,12 +459,11 @@ def _corruption_time(corrupt_file: Path) -> str:
     return corrupt_file.name.rpartition(".corrupt.")[2]
 
 
-def delete_corrupt_database_files(dbfile: str, newest: str) -> None:
-    """Delete the kept corrupt database files up to the given corruption time."""
-    for corrupt_file in find_corrupt_database_files(dbfile):
-        # Keep files from a newer corruption the user hasn't been shown yet.
-        if _corruption_time(corrupt_file) <= newest:
-            corrupt_file.unlink(missing_ok=True)
+def delete_corrupt_database_files(dbfile: str, names: Iterable[str]) -> None:
+    """Delete the given corrupt database files next to the database."""
+    directory = Path(dbfile).resolve().parent
+    for name in names:
+        (directory / name).unlink(missing_ok=True)
 
 
 @callback
@@ -472,6 +484,8 @@ def async_update_corrupt_database_issue(
             severity=ir.IssueSeverity.WARNING,
             learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
             translation_key="corrupt_database_files",
+            # The fix flow deletes only these files; "/" can't be in a file name.
+            data={"files": "/".join(file.name for file in corrupt_files)},
             translation_placeholders={
                 "count": str(len(corrupt_files)),
                 "size": f"{sum(corrupt_files.values()) / 1_000_000:.1f}",
