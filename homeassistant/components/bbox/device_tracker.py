@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -35,12 +35,6 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         # The hosts list requires an authenticated session on recent
         # firmwares.
         probatio.Required(CONF_PASSWORD): cv.string,
-        # The scanner fetches at most once per MIN_TIME_BETWEEN_SCANS; the
-        # legacy platform default of SCAN_INTERVAL (12s) would just redo
-        # the same cached scan.
-        probatio.Optional(CONF_SCAN_INTERVAL, default=MIN_TIME_BETWEEN_SCANS): (
-            cv.time_period
-        ),
     }
 )
 

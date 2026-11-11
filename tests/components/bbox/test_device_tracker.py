@@ -16,7 +16,7 @@ from homeassistant.components.bbox.device_tracker import (
 from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -40,10 +40,9 @@ def test_platform_schema_requires_password() -> None:
 
 
 def test_platform_schema_defaults() -> None:
-    """Test the platform defaults for host and scan interval."""
+    """Test the platform default for host."""
     config = PLATFORM_SCHEMA({"platform": "bbox", "password": PASSWORD})
     assert config[CONF_HOST] == DEFAULT_HOST
-    assert config[CONF_SCAN_INTERVAL] == timedelta(seconds=60)
 
 
 async def test_scanner(
