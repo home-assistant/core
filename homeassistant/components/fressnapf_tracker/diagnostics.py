@@ -3,25 +3,17 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_CUSTOMER_ID, CONF_PHONE_NUMBER, CONF_USER_ID
 from .coordinator import FressnapfTrackerConfigEntry
 
 TO_REDACT = {
-    CONF_ACCESS_TOKEN,
-    CONF_CUSTOMER_ID,
-    CONF_EMAIL,
-    CONF_PHONE_NUMBER,
-    CONF_USER_ID,
     "additional_parameters",
     "inside_geofence",
     "last_position",
     "lat",
     "lng",
     "serialnumber",
-    "token",
 }
 
 
@@ -32,10 +24,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "trackers": [
-                {
-                    "device": coordinator.device.model_dump(mode="json"),
-                    "data": coordinator.data.model_dump(mode="json"),
-                }
+                coordinator.data.model_dump(mode="json")
                 for coordinator in entry.runtime_data
             ],
         },
