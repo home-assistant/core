@@ -58,7 +58,9 @@ rules:
     comment: The integration has examples in the documentation, but more could be added (e.g. automation examples for each entity type, examples using device triggers, etc.).
   docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: done
+  docs-supported-functions:
+    status: todo
+    comment: The climate documentation does not describe target-temperature controls, supported HVAC modes, Eco presets, or fan controls.
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: done
