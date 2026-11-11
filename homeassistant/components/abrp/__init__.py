@@ -63,7 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
     )
 
     device_registry = dr.async_get(hass)
-    known: set[int] = set()
 
     @callback
     def _async_sync_vehicles() -> None:
@@ -76,8 +75,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
             model: str | Undefined | None = Undefined
             if (display := raw.display) is not None:
                 manufacturer, model = display.manufacturer, display.model_name
-            elif raw.vehicle_id not in known:
-                # A known vehicle keeps what an earlier poll resolved.
+            elif (
+                device := device_registry.async_get_device_by_identifier(
+                    identifier, entry.entry_id
+                )
+            ) is None or (
+                device.manufacturer is None and device.model != raw.vehicle_model
+            ):
+                # A model resolved by an earlier poll is kept, also across reloads.
                 model = raw.vehicle_model
                 _LOGGER.info(
                     "No display metadata for vehicle %d (typecode %s); the device "
@@ -107,7 +112,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbrpConfigEntry) -> None
         if stale:
             # Reload so a vehicle that comes back gets its entities again.
             hass.config_entries.async_schedule_reload(entry.entry_id)
-        known.update(raw.vehicle_id for raw in garage_coordinator.data)
         stream.set_vehicle_ids({raw.vehicle_id for raw in garage_coordinator.data})
 
     _async_sync_vehicles()

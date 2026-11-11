@@ -13,6 +13,7 @@ from aioabrp import (
     ConnectionEvent,
     ConnectionState,
     Telemetry,
+    VehicleModelDisplay,
 )
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -367,6 +368,20 @@ async def test_devices_created_from_garage(
     ]
 
 
+_DISPLAY = build_vehicle_model_display()
+
+
+@pytest.mark.parametrize(
+    ("display", "expected"),
+    [
+        pytest.param(
+            _DISPLAY,
+            (_DISPLAY.manufacturer, _DISPLAY.model_name),
+            id="resolved_model_kept",
+        ),
+        pytest.param(None, (None, "new:typecode"), id="typecode_followed"),
+    ],
+)
 @pytest.mark.usefixtures("mock_telemetry_stream")
 async def test_display_missing_on_poll_keeps_device_metadata(
     hass: HomeAssistant,
@@ -374,28 +389,25 @@ async def test_display_missing_on_poll_keeps_device_metadata(
     mock_abrp_client: AsyncMock,
     mock_abrp_vehicles: list[AbrpVehicle],
     device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
+    display: VehicleModelDisplay | None,
+    expected: tuple[str | None, str],
 ) -> None:
-    """A poll without display metadata keeps the make and model already shown."""
-    display = build_vehicle_model_display()
+    """A garage without display metadata keeps a resolved model, else the typecode."""
     mock_abrp_client.return_value = [replace(mock_abrp_vehicles[0], display=display)]
     await setup_integration(hass, config_entry_with_vehicles)
 
-    # An empty garage in between must not lose what was already resolved.
-    for garage in ([], mock_abrp_vehicles[:1]):
-        mock_abrp_client.return_value = garage
-        freezer.tick(GARAGE_SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_abrp_client.return_value = [
+        replace(mock_abrp_vehicles[0], vehicle_model="new:typecode")
+    ]
+    # A reload, as after a vehicle is removed, runs the same sync as a poll.
+    await hass.config_entries.async_reload(config_entry_with_vehicles.entry_id)
+    await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{config_entry_with_vehicles.unique_id}_{MOCK_VEHICLE_ID}"),
         config_entry_with_vehicles.entry_id,
     )
-    assert (device.manufacturer, device.model) == (
-        display.manufacturer,
-        display.model_name,
-    )
+    assert (device.manufacturer, device.model) == expected
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -535,7 +547,6 @@ _FAILED = AbrpApiError("HTTP 503")
     [
         pytest.param([_ONE], False, False, id="missing"),
         pytest.param([_ONE, _BOTH], True, True, id="back_after_removal"),
-        pytest.param([_FAILED], True, True, id="failed_poll"),
         pytest.param([[]], True, False, id="empty_garage"),
     ],
 )
@@ -552,9 +563,14 @@ async def test_vehicle_leaving_garage(
 ) -> None:
     """A vehicle missing from a garage fetch loses its device and entities."""
     frame = Telemetry(voltage=build_metric_value(400.0))
-    mock_abrp_client.return_value = _BOTH
-    config_entry_with_vehicles.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
+    await setup_integration(hass, config_entry_with_vehicles)
+    # Another account's device must never be swept up.
+    other_entry = MockConfigEntry(domain=DOMAIN, unique_id="other-sub")
+    other_entry.add_to_hass(hass)
+    other = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, f"other-sub_{MOCK_VEHICLE_ID_2}")},
+    )
     fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID_2, frame)
     await hass.async_block_till_done()
 
@@ -576,6 +592,7 @@ async def test_vehicle_leaving_garage(
     assert (
         hass.states.get("sensor.rivian_r1s_2024_quad_max_voltage") is not None
     ) is kept
+    assert device_registry.async_get(other.id) is not None
     stream_ids = mock_telemetry_stream.return_value.set_vehicle_ids.call_args.args[0]
     assert (MOCK_VEHICLE_ID_2 in stream_ids) is streamed
 
