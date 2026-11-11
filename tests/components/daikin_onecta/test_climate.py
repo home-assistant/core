@@ -5,7 +5,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from daikin_onecta import ClimateControlClient
+from daikin_onecta import ClimateControlClient, OnectaAuthenticationError
 from daikin_onecta.models import ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -1307,13 +1307,18 @@ async def test_set_preset_mode_publishes_successful_disable() -> None:
     coordinator.async_update_listeners.assert_called_once_with()
 
 
-@pytest.mark.parametrize("patch_result", [True, False])
+@pytest.mark.parametrize(
+    ("patch_result", "token_rejected"),
+    [(True, False), (False, False), (False, True)],
+)
 async def test_climate_service_updates_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     patch_result: bool,
+    token_rejected: bool,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate services through the Home Assistant integration API."""
     setpoint = SimpleNamespace(
@@ -1395,6 +1400,21 @@ async def test_climate_service_updates_entity_state(
     assert child_entry.parent_device_id == gateway_entry.id
     assert entity_registry.async_get(entity_id).device_id == child_entry.id
 
+    if token_rejected:
+        # Exercise the real climate adapter and coordinator command handling.
+        monkeypatch.setattr(
+            DaikinClimate,
+            "_async_execute_climate_command",
+            _ACTUAL_ASYNC_EXECUTE_CLIMATE_COMMAND,
+        )
+        coordinator.client.patch_characteristic = AsyncMock(
+            side_effect=OnectaAuthenticationError(
+                status=401,
+                method="PATCH",
+                path="/v1/gateway-devices/gateway/management-points/zone",
+            )
+        )
+
     service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -1403,23 +1423,39 @@ async def test_climate_service_updates_entity_state(
     )
     if patch_result:
         await service_call
-        assert (
-            hass.states.get(entity_id).attributes[
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
-            ]
-            == 21
-        )
+        expected_temperature = 21
     else:
-        with pytest.raises(HomeAssistantError, match="Failed to set the temperature"):
+        with pytest.raises(HomeAssistantError) as err:
             await service_call
+        assert err.value.translation_domain == DOMAIN
+        assert err.value.translation_key == "set_temperature_failed"
+        expected_temperature = 20
 
-    device.patch.assert_awaited_once_with(
-        "gateway",
-        "zone",
-        "temperatureControl",
-        "/operationModes/heating/setpoints/roomTemperature",
-        21,
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert (
+        state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
+        == expected_temperature
     )
+
+    if token_rejected:
+        coordinator.client.patch_characteristic.assert_awaited_once_with(
+            "gateway",
+            "zone",
+            "temperatureControl",
+            21,
+            path="/operationModes/heating/setpoints/roomTemperature",
+        )
+        device.patch.assert_not_awaited()
+        assert coordinator.last_patch_call is None
+    else:
+        device.patch.assert_awaited_once_with(
+            "gateway",
+            "zone",
+            "temperatureControl",
+            "/operationModes/heating/setpoints/roomTemperature",
+            21,
+        )
 
     device.async_update_device_registry.reset_mock()
     coordinator.async_update_listeners()
