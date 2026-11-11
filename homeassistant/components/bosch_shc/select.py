@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     OutdoorSirenService,
+    SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
     SHCMotionDetector2,
     SHCOutdoorSiren,
@@ -18,10 +19,12 @@ from boschshcpy import (
 )
 from boschshcpy.device import SHCDevice
 from boschshcpy.services_impl import (
+    DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
+    SmartSensitivityControlService,
     SmokeSensitivityService,
     SwitchConfiguration,
     TerminalConfiguration,
@@ -326,6 +329,72 @@ OUTPUT_MODE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
 )
 
 
+def _smart_sensitivity_current_option(
+    device: SHCMotionDetector2,
+    context: SmartSensitivityControlService.SmartSensitivityContext,
+    options: Sequence[str] | None,
+) -> str | None:
+    """Read the manual sensitivity level of a smart sensitivity context."""
+    if (sensitivity := device.get_smart_sensitivity(context)) is None:
+        return None
+    level = str(sensitivity.get("manualLevel", "")).lower()
+    return level if options is not None and level in options else None
+
+
+SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
+    SHCMotionDetector2
+](
+    key="smart_sensitivity_security_level",
+    translation_key="smart_sensitivity_security_level",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: _smart_sensitivity_current_option(
+        device, SmartSensitivityControlService.SmartSensitivityContext.SECURITY, options
+    ),
+    select_option_fn=lambda device, option: device.set_smart_sensitivity_manual_level(
+        SmartSensitivityControlService.SmartSensitivityContext.SECURITY,
+        SmartSensitivityControlService.MotionSensitivity[option.upper()],
+    ),
+)
+
+SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
+    SHCMotionDetector2
+](
+    key="smart_sensitivity_comfort_level",
+    translation_key="smart_sensitivity_comfort_level",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: _smart_sensitivity_current_option(
+        device, SmartSensitivityControlService.SmartSensitivityContext.COMFORT, options
+    ),
+    select_option_fn=lambda device, option: device.set_smart_sensitivity_manual_level(
+        SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
+        SmartSensitivityControlService.MotionSensitivity[option.upper()],
+    ),
+)
+
+
+def _dimmer_phase_control_select_option(
+    device: SHCMicromoduleDimmer, option: str
+) -> None:
+    """Write the dimmer's phase-control mode."""
+    device.edge_phase_control_mode = DimmerConfigurationService.EdgePhaseControlMode[
+        option.upper()
+    ]
+
+
+DIMMER_PHASE_CONTROL_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleDimmer](
+    key="dimmer_phase_control",
+    translation_key="dimmer_phase_control",
+    entity_category=EntityCategory.CONFIG,
+    options=["trailing", "leading"],
+    current_option_fn=lambda device, options: (
+        mode.name.lower() if (mode := device.edge_phase_control_mode) else None
+    ),
+    select_option_fn=_dimmer_phase_control_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -519,6 +588,33 @@ async def async_setup_entry(
         )
         for relay in session.device_helper.micromodule_relays
         if relay.supports_switch_configuration and relay.output_mode is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=description,
+        )
+        for detector in session.device_helper.motion_detectors2
+        if detector.supports_smart_sensitivity
+        for description in (
+            SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION,
+            SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION,
+        )
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=dimmer,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=DIMMER_PHASE_CONTROL_DESCRIPTION,
+        )
+        for dimmer in session.device_helper.micromodule_dimmers
+        if dimmer.supports_dimmer_configuration
+        and dimmer.edge_phase_control_mode is not None
     )
 
     async_add_entities(entities)

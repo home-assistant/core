@@ -552,7 +552,7 @@ async def test_stream_error_falls_back(
         states = get_states(hass, zero, four)
     assert expected["media_player.test"]
     assert_dict_of_states_equal_without_context_and_last_changed(expected, states)
-    assert "Error reading states, retrying" in caplog.text
+    assert "Error reading rows, retrying" in caplog.text
 
 
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")

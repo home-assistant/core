@@ -187,9 +187,25 @@ async def async_setup_entry(
         len(incomplete),
     )
 
-    await asyncio.gather(
-        *(c.async_config_entry_first_refresh() for c in coordinators.values())
+    results = await asyncio.gather(
+        *(c.async_config_entry_first_refresh() for c in coordinators.values()),
+        return_exceptions=True,
     )
+    failures: list[ConfigEntryNotReady] = []
+    for result in results:
+        if isinstance(result, ConfigEntryNotReady):
+            failures.append(result)
+        elif isinstance(result, BaseException):
+            raise result
+    if failures and len(failures) == len(results):
+        raise failures[0]
+    for coordinator, result in zip(coordinators.values(), results, strict=True):
+        if isinstance(result, ConfigEntryNotReady):
+            _LOGGER.error(
+                "Error fetching initial data for %s: %s",
+                coordinator.device.name,
+                result,
+            )
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

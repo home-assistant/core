@@ -23,6 +23,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 cv.string, cv.matches_regex(r"^\d{4,8}$")
             ),
             probatio.Optional("notify_on_use", default=True): cv.boolean,
+            probatio.Optional("start_datetime"): cv.datetime,
+            probatio.Optional("end_datetime"): cv.datetime,
         },
         func=SERVICE_ADD_CODE,
     )

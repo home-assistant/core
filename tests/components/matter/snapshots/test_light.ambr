@@ -1,4 +1,86 @@
 # serializer version: 1
+# name: test_lights[aqara_led_strip_t2][light.aqara_led_strip_t2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 9009,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000002D6-MatterNodeDevice'), ('matter', 'serial_serial_726')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.aqara_led_strip_t2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': 'light',
+    'unique_id': '00000000000004D2-00000000000002D6-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[aqara_led_strip_t2][light.aqara_led_strip_t2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.XY: 'xy'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara LED Strip T2',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
+        82.105,
+        7.451,
+      ),
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 9009,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
+        248,
+        255,
+        236,
+      ),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
+        0.327774,
+        0.349442,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.aqara_led_strip_t2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_lights[aqara_light_switch_h2_us_4099][light.aqara_smart_wall_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

@@ -5,9 +5,9 @@ from typing import Any
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.environment_canada.const import (
-    DOMAIN,
-    SERVICE_ENVIRONMENT_CANADA_FORECASTS,
+from homeassistant.components.environment_canada.const import DOMAIN
+from homeassistant.components.environment_canada.services import (
+    EnvironmentCanadaService,
 )
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
@@ -71,7 +71,7 @@ async def test_get_environment_canada_raw_forecast_data(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENVIRONMENT_CANADA_FORECASTS,
+        EnvironmentCanadaService.GET_FORECASTS,
         {
             "entity_id": "weather.home_forecast",
         },

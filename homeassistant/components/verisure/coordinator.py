@@ -44,7 +44,7 @@ def _requires_mfa_reauth(exc: VerisureLoginError) -> bool:
     return _MFA_REQUIRED_MESSAGE in str(exc)
 
 
-class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
+class VerisureDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """A Verisure Data Update Coordinator."""
 
     config_entry: VerisureConfigEntry
@@ -223,16 +223,17 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureError as err:
             raise UpdateFailed(f"Could not read overview: {err}") from err
 
-        def unpack(overview: list, value: str) -> dict | list:
-            unpacked: dict | list | None = next(
+        def unpack(overview: list, value: str) -> dict | list | None:
+            """Return a field from the batched response, or None if it is missing."""
+            return next(
                 (
-                    item["data"]["installation"][value]
+                    installation[value]
                     for item in overview
-                    if value in item.get("data", {}).get("installation", {})
+                    if (installation := (item.get("data") or {}).get("installation"))
+                    and value in installation
                 ),
                 None,
             )
-            return unpacked or []
 
         # Store data in a way Home Assistant can easily consume it
         self._overview = overview
@@ -242,23 +243,23 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             "broadband": unpack(overview, "broadband"),
             "cameras": {
                 device["device"]["deviceLabel"]: device
-                for device in unpack(overview, "cameras")
+                for device in unpack(overview, "cameras") or []
             },
             "climate": {
                 device["device"]["deviceLabel"]: device
-                for device in unpack(overview, "climates")
+                for device in unpack(overview, "climates") or []
             },
             "door_window": {
                 device["device"]["deviceLabel"]: device
-                for device in unpack(overview, "doorWindows")
+                for device in unpack(overview, "doorWindows") or []
             },
             "locks": {
                 device["device"]["deviceLabel"]: device
-                for device in unpack(overview, "smartLocks")
+                for device in unpack(overview, "smartLocks") or []
             },
             "smart_plugs": {
                 device["device"]["deviceLabel"]: device
-                for device in unpack(overview, "smartplugs")
+                for device in unpack(overview, "smartplugs") or []
             },
         }
 

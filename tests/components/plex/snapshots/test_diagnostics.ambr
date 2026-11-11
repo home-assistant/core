@@ -1,0 +1,137 @@
+# serializer version: 1
+# name: test_diagnostics[ignore_new_shared_users]
+  dict({
+    'monitored_users': 1,
+    'options': dict({
+      'ignore_new_shared_users': True,
+    }),
+    'server': dict({
+      'accounts': 3,
+      'has_token': True,
+      'my_plex': True,
+      'my_plex_mapping_state': 'mapped',
+      'my_plex_signin_state': 'ok',
+      'my_plex_subscription': True,
+      'platform': 'Linux',
+      'platform_version': '20.04.1 LTS (Focal Fossa)',
+      'transcoder_audio': True,
+      'transcoder_video': True,
+      'verify_ssl': True,
+      'version': '1.20.4.3517-ab5e1197c',
+    }),
+    'sessions': list([
+      dict({
+        'media_content_type': 'movie',
+        'media_duration': 9000,
+        'media_library_title': 'Movies',
+        'player_platform': 'Android',
+        'player_product': 'Plex for Android (TV)',
+        'player_version': '8.9.2.21619',
+        'state': 'playing',
+      }),
+    ]),
+    'websocket_state': 'connected',
+  })
+# ---
+# name: test_diagnostics[new_shared_users]
+  dict({
+    'monitored_users': 2,
+    'options': dict({
+      'ignore_new_shared_users': False,
+    }),
+    'server': dict({
+      'accounts': 3,
+      'has_token': True,
+      'my_plex': True,
+      'my_plex_mapping_state': 'mapped',
+      'my_plex_signin_state': 'ok',
+      'my_plex_subscription': True,
+      'platform': 'Linux',
+      'platform_version': '20.04.1 LTS (Focal Fossa)',
+      'transcoder_audio': True,
+      'transcoder_video': True,
+      'verify_ssl': True,
+      'version': '1.20.4.3517-ab5e1197c',
+    }),
+    'sessions': list([
+      dict({
+        'media_content_type': 'movie',
+        'media_duration': 9000,
+        'media_library_title': 'Movies',
+        'player_platform': 'Android',
+        'player_product': 'Plex for Android (TV)',
+        'player_version': '8.9.2.21619',
+        'state': 'playing',
+      }),
+    ]),
+    'websocket_state': 'connected',
+  })
+# ---
+# name: test_diagnostics[no_saved_users]
+  dict({
+    'monitored_users': 3,
+    'options': dict({
+    }),
+    'server': dict({
+      'accounts': 3,
+      'has_token': True,
+      'my_plex': True,
+      'my_plex_mapping_state': 'mapped',
+      'my_plex_signin_state': 'ok',
+      'my_plex_subscription': True,
+      'platform': 'Linux',
+      'platform_version': '20.04.1 LTS (Focal Fossa)',
+      'transcoder_audio': True,
+      'transcoder_video': True,
+      'verify_ssl': True,
+      'version': '1.20.4.3517-ab5e1197c',
+    }),
+    'sessions': list([
+      dict({
+        'media_content_type': 'movie',
+        'media_duration': 9000,
+        'media_library_title': 'Movies',
+        'player_platform': 'Android',
+        'player_product': 'Plex for Android (TV)',
+        'player_version': '8.9.2.21619',
+        'state': 'playing',
+      }),
+    ]),
+    'websocket_state': 'connected',
+  })
+# ---
+# name: test_diagnostics[saved_users]
+  dict({
+    'monitored_users': 3,
+    'options': dict({
+      'ignore_new_shared_users': False,
+      'use_episode_art': False,
+    }),
+    'server': dict({
+      'accounts': 3,
+      'has_token': True,
+      'my_plex': True,
+      'my_plex_mapping_state': 'mapped',
+      'my_plex_signin_state': 'ok',
+      'my_plex_subscription': True,
+      'platform': 'Linux',
+      'platform_version': '20.04.1 LTS (Focal Fossa)',
+      'transcoder_audio': True,
+      'transcoder_video': True,
+      'verify_ssl': True,
+      'version': '1.20.4.3517-ab5e1197c',
+    }),
+    'sessions': list([
+      dict({
+        'media_content_type': 'movie',
+        'media_duration': 9000,
+        'media_library_title': 'Movies',
+        'player_platform': 'Android',
+        'player_product': 'Plex for Android (TV)',
+        'player_version': '8.9.2.21619',
+        'state': 'playing',
+      }),
+    ]),
+    'websocket_state': 'connected',
+  })
+# ---
