@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 from http import HTTPStatus
+from itertools import repeat
 import time
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -11,12 +12,14 @@ from aioabrp import (
     AbrpVehicle,
     ConnectionEvent,
     ConnectionState,
+    Telemetry,
 )
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.abrp.const import ABRP_APP_KEY, DOMAIN, OAUTH2_TOKEN
 from homeassistant.components.abrp.coordinator import GARAGE_SCAN_INTERVAL
@@ -27,6 +30,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import (
@@ -35,8 +39,11 @@ from .conftest import (
     MOCK_VEHICLE_MODEL_2,
     MOCK_VEHICLE_NAME,
     MOCK_VEHICLE_NAME_2,
+    SENSOR_TEST_SUB,
+    build_metric_value,
     build_vehicle_model_display,
     fire_connection,
+    fire_frame,
     stream_auth,
 )
 
@@ -505,3 +512,107 @@ async def test_vehicle_added_to_garage_appears_without_reload(
         {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
     )
     assert caplog.text.count(f"No display metadata for vehicle {MOCK_VEHICLE_ID}") == 1
+
+
+_ONE = [
+    AbrpVehicle(
+        vehicle_id=MOCK_VEHICLE_ID, name=MOCK_VEHICLE_NAME, vehicle_model="model"
+    )
+]
+_BOTH = [
+    *_ONE,
+    AbrpVehicle(
+        vehicle_id=MOCK_VEHICLE_ID_2, name=MOCK_VEHICLE_NAME_2, vehicle_model="model"
+    ),
+]
+_FAILED = AbrpApiError("HTTP 503")
+
+
+@pytest.mark.parametrize(
+    ("polls", "kept", "streamed"),
+    [
+        pytest.param([_ONE], False, False, id="missing"),
+        pytest.param([_ONE, _BOTH], True, True, id="back_after_removal"),
+        pytest.param([_FAILED], True, True, id="failed_poll"),
+        pytest.param([[]], True, False, id="empty_garage"),
+    ],
+)
+async def test_vehicle_leaving_garage(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    mock_telemetry_stream: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    polls: list[list[AbrpVehicle] | Exception],
+    kept: bool,
+    streamed: bool,
+) -> None:
+    """A vehicle missing from a garage fetch loses its device and entities."""
+    frame = Telemetry(voltage=build_metric_value(400.0))
+    mock_abrp_client.return_value = _BOTH
+    config_entry_with_vehicles.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID_2, frame)
+    await hass.async_block_till_done()
+
+    for poll in polls:
+        # Repeated, so a reload's setup fetch gets the same garage.
+        mock_abrp_client.side_effect = repeat(poll)
+        freezer.tick(GARAGE_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    # A reload after a removal starts without telemetry.
+    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID_2, frame)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID_2}"),
+        config_entry_with_vehicles.entry_id,
+    )
+    assert (device is not None) is kept
+    assert (
+        hass.states.get("sensor.rivian_r1s_2024_quad_max_voltage") is not None
+    ) is kept
+    stream_ids = mock_telemetry_stream.return_value.set_vehicle_ids.call_args.args[0]
+    assert (MOCK_VEHICLE_ID_2 in stream_ids) is streamed
+
+
+@pytest.mark.parametrize(
+    ("garage", "vehicle_id", "removable", "streams"),
+    [
+        pytest.param(_ONE, MOCK_VEHICLE_ID, False, 1, id="in_garage"),
+        pytest.param(_ONE, MOCK_VEHICLE_ID_2, True, 2, id="left_garage"),
+        pytest.param(_FAILED, MOCK_VEHICLE_ID, True, 0, id="not_loaded"),
+    ],
+)
+async def test_remove_device(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    mock_telemetry_stream: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    garage: list[AbrpVehicle] | Exception,
+    vehicle_id: int,
+    removable: bool,
+    streams: int,
+) -> None:
+    """Only a device whose vehicle has left the garage can be deleted by hand."""
+    assert await async_setup_component(hass, "config", {})
+    mock_abrp_client.side_effect = repeat(garage)
+    config_entry_with_vehicles.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_vehicles.entry_id,
+        identifiers={(DOMAIN, f"{SENSOR_TEST_SUB}_{vehicle_id}")},
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id)
+    await hass.async_block_till_done()
+
+    assert response["success"] is removable
+    assert (device_registry.async_get(device.id) is None) is removable
+    # Deleting from a loaded entry reloads it, which starts a second stream.
+    assert mock_telemetry_stream.call_count == streams
