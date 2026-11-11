@@ -4,7 +4,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from comfoconnect_pro_modbus import ComfoConnectPro, NoVentilationUnitError
+from comfoconnect_pro_modbus import (
+    ComfoConnectPro,
+    ConnectionState,
+    NoVentilationUnitError,
+)
 from modbus_connection import ModbusError, ModbusSerialParams, ModbusTcpParams
 import probatio
 
@@ -176,7 +180,9 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id=connection_type,
-            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                schema, _suggested(user_input)
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -188,7 +194,8 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await _async_probe(self.hass, data)
         except NoVentilationUnitError as err:
-            if err.code is None:
+            # State OK means the gateway lost its path to the unit after reporting it
+            if err.code is None or err.state is ConnectionState.OK:
                 return {"base": "no_path_to_unit"}, {}
             return {"base": "no_ventilation_unit"}, {"state": str(err.code)}
         except (ModbusError, HomeAssistantError) as err:
@@ -198,3 +205,13 @@ class ComfoConnectProConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected error while probing the gateway")
             return {"base": "unknown"}, {}
         return {}, {}
+
+
+def _suggested(user_input: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Form input as suggested values, with the baud rate as its option."""
+    if user_input is None:
+        return None
+    suggested = dict(user_input)
+    if CONF_BAUDRATE in suggested:
+        suggested[CONF_BAUDRATE] = str(suggested[CONF_BAUDRATE])
+    return suggested

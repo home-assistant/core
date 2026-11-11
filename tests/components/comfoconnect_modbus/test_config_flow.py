@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import AsyncMock, _patch, patch
 
+from comfoconnect_pro_modbus.model import address
 from modbus_connection import (
     GatewayPathUnavailableError,
     ModbusSerialParams,
@@ -185,6 +186,35 @@ async def test_user_step_probe_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_serial_step_error_suggests_the_baud_rate_option(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a failed serial probe shows the baud rate as one of its options."""
+    flow_id = await _start_flow(hass, TYPE_SERIAL)
+
+    with patch(
+        "homeassistant.components.comfoconnect_modbus.config_flow.async_get_temporary_unit",
+        return_value=_RaisingTemporaryUnit(ModbusTimeoutError("timed out")),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, MOCK_SERIAL_INPUT
+        )
+
+    assert result["errors"] == {"base": "cannot_connect"}
+    # The schema stores the baud rate as an int, but the selector offers strings
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_BAUDRATE)
+        == "19200"
+    )
+
+    with _patch_temporary_unit(_gateway()):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, MOCK_SERIAL_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 @pytest.mark.parametrize(("code", "state"), [(50, "50"), (7, "7")])
 async def test_user_step_no_ventilation_unit(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, code: int, state: str
@@ -289,13 +319,22 @@ async def test_user_step_serial_other_unit_id_is_new(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    "register_type",
+    [
+        # The connection state, read first
+        pytest.param("input", id="state"),
+        # The error flag, read with the status once the state reads OK
+        pytest.param("discrete", id="status"),
+    ],
+)
 async def test_user_step_no_path_to_unit(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, register_type: str
 ) -> None:
-    """Test a gateway that refuses the state read for lack of a unit says so."""
+    """Test a gateway that refuses a read for lack of a unit says so."""
     connection = _gateway()
     connection.for_unit(1).fail_read(
-        0, GatewayPathUnavailableError(), register_type="input"
+        address(0x0001), GatewayPathUnavailableError(), register_type=register_type
     )
     flow_id = await _start_flow(hass, TYPE_TCP)
 
