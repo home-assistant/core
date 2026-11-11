@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
 import glob
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -454,11 +455,6 @@ def find_corrupt_database_files(dbfile: str) -> dict[Path, int]:
     return corrupt_files
 
 
-def _corruption_time(corrupt_file: Path) -> str:
-    """Return the ISO time move_away_broken_database put in the file name."""
-    return corrupt_file.name.rpartition(".corrupt.")[2]
-
-
 def delete_corrupt_database_files(dbfile: str, names: Iterable[str]) -> None:
     """Delete the given corrupt database files next to the database."""
     directory = Path(dbfile).resolve().parent
@@ -473,9 +469,10 @@ def async_update_corrupt_database_issue(
     """Create or delete the repair issue for kept corrupt database files."""
     issue_id: str | None = None
     if corrupt_files:
-        # A new corruption gets a new issue, so ignoring an older one doesn't hide it.
-        newest = max(_corruption_time(file) for file in corrupt_files)
-        issue_id = f"{CORRUPT_DATABASE_ISSUE_PREFIX}_{newest}"
+        # Joined with "/", which can't be in a file name.
+        names = "/".join(sorted(file.name for file in corrupt_files))
+        # Other files get a new issue, so ignoring an older one doesn't hide them.
+        issue_id = f"{CORRUPT_DATABASE_ISSUE_PREFIX}_{hashlib.sha256(names.encode()).hexdigest()[:16]}"
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -484,8 +481,8 @@ def async_update_corrupt_database_issue(
             severity=ir.IssueSeverity.WARNING,
             learn_more_url="https://www.home-assistant.io/integrations/recorder/#handling-disk-corruption-and-hardware-failures",
             translation_key="corrupt_database_files",
-            # The fix flow deletes only these files; "/" can't be in a file name.
-            data={"files": "/".join(file.name for file in corrupt_files)},
+            # The fix flow deletes only these files.
+            data={"files": names},
             translation_placeholders={
                 "count": str(len(corrupt_files)),
                 "size": f"{sum(corrupt_files.values()) / 1_000_000:.1f}",

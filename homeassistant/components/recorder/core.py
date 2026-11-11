@@ -1510,11 +1510,14 @@ class Recorder(threading.Thread):
 
         if using_file_sqlite:
             validate_or_move_away_sqlite_database(self.db_url)
-            self.hass.add_job(
-                async_update_corrupt_database_issue,
-                self.hass,
-                find_corrupt_database_files(dburl_to_path(self.db_url)),
-            )
+            try:
+                corrupt_files = find_corrupt_database_files(dburl_to_path(self.db_url))
+            except OSError:
+                _LOGGER.exception("Could not look for corrupt database files")
+            else:
+                self.hass.add_job(
+                    async_update_corrupt_database_issue, self.hass, corrupt_files
+                )
 
         assert not self.engine
         self.engine = create_engine(engine_url, **kwargs, future=True)
