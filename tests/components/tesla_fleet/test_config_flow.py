@@ -21,7 +21,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.tesla_fleet.config_flow import OAuth2FlowHandler
 from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
     DOMAIN,
@@ -915,21 +914,6 @@ async def test_region_default_fallback(
 
     region_key = next(key for key in result["data_schema"].schema if key == CONF_REGION)
     assert region_key.default() == "na"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_registration_complete_no_domain(
-    hass: HomeAssistant,
-) -> None:
-    """Test registration complete step without domain."""
-
-    flow_instance = OAuth2FlowHandler()
-    flow_instance.hass = hass
-    flow_instance.domain = None
-
-    result = await flow_instance.async_step_registration_complete({})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "domain_input"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

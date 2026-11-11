@@ -1,7 +1,7 @@
 """Helpers to execute scripts."""
 
 import asyncio
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Mapping, Sequence
 from contextvars import ContextVar
 from copy import copy
 from dataclasses import dataclass
@@ -334,6 +334,61 @@ REPEAT_WARN_ITERATIONS = 5000
 REPEAT_TERMINATE_ITERATIONS = 10000
 
 
+type _BlockKind = Literal["triggers", "conditions", "actions"]
+
+_EACH = object()
+
+# The blocks of triggers, conditions and actions nested in an action, by action
+# type: the path to the dicts holding the blocks, then the key and kind of each
+# block. _EACH stands for every index of a list. Blocks are validated in order.
+# Blocks not in _OPTIONAL_BLOCKS are required by the action's schema.
+_NESTED_BLOCKS: dict[
+    str, tuple[tuple[tuple[Any, ...], tuple[tuple[str, _BlockKind], ...]], ...]
+] = {
+    cv.SCRIPT_ACTION_CHOOSE: (
+        ((), ((CONF_DEFAULT, "actions"),)),
+        (
+            (CONF_CHOOSE, _EACH),
+            ((CONF_CONDITIONS, "conditions"), (CONF_SEQUENCE, "actions")),
+        ),
+    ),
+    cv.SCRIPT_ACTION_IF: (
+        (
+            (),
+            ((CONF_IF, "conditions"), (CONF_THEN, "actions"), (CONF_ELSE, "actions")),
+        ),
+    ),
+    cv.SCRIPT_ACTION_PARALLEL: (
+        ((CONF_PARALLEL, _EACH), ((CONF_SEQUENCE, "actions"),)),
+    ),
+    cv.SCRIPT_ACTION_REPEAT: (
+        (
+            (CONF_REPEAT,),
+            (
+                (CONF_UNTIL, "conditions"),
+                (CONF_WHILE, "conditions"),
+                (CONF_SEQUENCE, "actions"),
+            ),
+        ),
+    ),
+    cv.SCRIPT_ACTION_SEQUENCE: (((), ((CONF_SEQUENCE, "actions"),)),),
+    cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: (((), ((CONF_WAIT_FOR_TRIGGER, "triggers"),)),),
+}
+
+_OPTIONAL_BLOCKS = frozenset({CONF_DEFAULT, CONF_ELSE, CONF_UNTIL, CONF_WHILE})
+
+
+def _nested_block_containers(config: Any, key_path: tuple[Any, ...]) -> list[Any]:
+    """Return the dicts found at key_path in an action."""
+    containers = [config]
+    for key in key_path:
+        if key is _EACH:
+            containers = [item for container in containers for item in container]
+        else:
+            containers = [container[key] for container in containers]
+    return containers
+
+
 async def async_validate_actions_config(
     hass: HomeAssistant, actions: list[ConfigType]
 ) -> list[ConfigType]:
@@ -350,76 +405,34 @@ async def async_validate_action_config(
     action_type = cv.determine_script_action(config)
 
     if action_type in STATIC_VALIDATION_ACTION_TYPES:
-        pass
+        return config
 
-    elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
-        config = await device_action.async_validate_action_config(hass, config)
+    if action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
+        return await device_action.async_validate_action_config(hass, config)
 
-    elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        config = await condition.async_validate_condition_config(hass, config)
+    if action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
+        return await condition.async_validate_condition_config(hass, config)
 
-    elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
-        config[
-            CONF_WAIT_FOR_TRIGGER
-        ] = await trigger_helper.async_validate_trigger_config(
-            hass, config[CONF_WAIT_FOR_TRIGGER]
-        )
-
-    elif action_type == cv.SCRIPT_ACTION_REPEAT:
-        if CONF_UNTIL in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_UNTIL]
-            )
-            config[CONF_REPEAT][CONF_UNTIL] = conditions
-        if CONF_WHILE in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_WHILE]
-            )
-            config[CONF_REPEAT][CONF_WHILE] = conditions
-        config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_REPEAT][CONF_SEQUENCE]
-        )
-
-    elif action_type == cv.SCRIPT_ACTION_CHOOSE:
-        if CONF_DEFAULT in config:
-            config[CONF_DEFAULT] = await async_validate_actions_config(
-                hass, config[CONF_DEFAULT]
-            )
-
-        for choose_conf in config[CONF_CHOOSE]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, choose_conf[CONF_CONDITIONS]
-            )
-            choose_conf[CONF_CONDITIONS] = conditions
-            choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, choose_conf[CONF_SEQUENCE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_IF:
-        config[CONF_IF] = await condition.async_validate_conditions_config(
-            hass, config[CONF_IF]
-        )
-        config[CONF_THEN] = await async_validate_actions_config(hass, config[CONF_THEN])
-        if CONF_ELSE in config:
-            config[CONF_ELSE] = await async_validate_actions_config(
-                hass, config[CONF_ELSE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_PARALLEL:
-        for parallel_conf in config[CONF_PARALLEL]:
-            parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, parallel_conf[CONF_SEQUENCE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_SEQUENCE:
-        config[CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_SEQUENCE]
-        )
-
-    else:
+    if action_type not in _NESTED_BLOCKS:
         raise ValueError(f"No validation for {action_type}")
 
+    for key_path, blocks in _NESTED_BLOCKS[action_type]:
+        for container in _nested_block_containers(config, key_path):
+            for key, kind in blocks:
+                if key in _OPTIONAL_BLOCKS and key not in container:
+                    continue
+                container[key] = await _BLOCK_VALIDATORS[kind](hass, container[key])
+
     return config
+
+
+_BLOCK_VALIDATORS: dict[
+    _BlockKind, Callable[[HomeAssistant, list[Any]], Coroutine[Any, Any, list[Any]]]
+] = {
+    "triggers": trigger_helper.async_validate_trigger_config,
+    "conditions": condition.async_validate_conditions_config,
+    "actions": async_validate_actions_config,
+}
 
 
 class _HaltScript(Exception):
