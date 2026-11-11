@@ -330,6 +330,7 @@
     }),
     'coord_data': dict({
       'hot-water': dict({
+        'connected': None,
         'name': 'Airzone DHW',
         'on': True,
         'operation': 1,
@@ -345,11 +346,15 @@
         'temp-set': 45,
         'temp-unit': 0,
       }),
+      'mqtt': dict({
+        'online': False,
+      }),
       'num-systems': 4,
       'num-zones': 8,
       'systems': dict({
         '1': dict({
           'available': True,
+          'connected': None,
           'eco-adapt': 'off',
           'firmware': '3.31',
           'full-name': 'Airzone [1] System',
@@ -377,6 +382,7 @@
         }),
         '2': dict({
           'available': True,
+          'connected': None,
           'full-name': 'Airzone [2] System',
           'id': 2,
           'masters': list([
@@ -390,6 +396,7 @@
         }),
         '3': dict({
           'available': True,
+          'connected': None,
           'eco-adapt': 'off',
           'full-name': 'Airzone [3] System',
           'id': 3,
@@ -404,6 +411,7 @@
         }),
         '4': dict({
           'available': True,
+          'connected': None,
           'eco-adapt': 'off',
           'full-name': 'Airzone [4] System',
           'id': 4,
@@ -438,6 +446,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'full-name': 'Airzone [1:1] Salon',
@@ -495,6 +504,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': True,
           'double-set-point': False,
           'eco-adapt': 'off',
@@ -558,6 +568,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'eco-adapt': 'a_p',
@@ -613,6 +624,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'eco-adapt': 'off',
@@ -670,6 +682,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'eco-adapt': 'off',
@@ -719,6 +732,7 @@
             0,
             1,
           ]),
+          'connected': None,
           'demand': False,
           'double-set-point': False,
           'full-name': 'Airzone [2:1] Airzone 2:1',
@@ -763,6 +777,7 @@
           'available': True,
           'cold-demand': False,
           'cold-stage': 0,
+          'connected': None,
           'cool-temp-max': 90.0,
           'cool-temp-min': 64.0,
           'cool-temp-set': 77.0,
@@ -816,6 +831,7 @@
           'available': True,
           'cold-demand': False,
           'cold-stage': 0,
+          'connected': None,
           'cool-temp-max': 30.0,
           'cool-temp-min': 15.0,
           'cool-temp-set': 20.0,

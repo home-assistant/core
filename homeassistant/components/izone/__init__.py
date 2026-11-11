@@ -131,6 +131,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> Non
         model=controller.sys_type,
         name=f"iZone Controller {controller.device_uid}",
     )
+    zone_identifiers = {
+        (DOMAIN, controller.device_uid, zone.index) for zone in controller.zones
+    }
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if any(
+            len(identifier) == 3 for identifier in device.identifiers
+        ) and device.identifiers.isdisjoint(zone_identifiers):
+            device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # Platforms set up concurrently; re-push so controller climate can
