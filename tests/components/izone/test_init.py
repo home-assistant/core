@@ -51,6 +51,43 @@ async def test_setup_and_unload(
     mock_discovery_service.close.assert_awaited()
 
 
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_setup_removes_stale_zone_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Zone devices the controller no longer reports are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+    controller_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001")},
+    )
+    live_zone_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001", 0)},  # type: ignore[arg-type]
+        via_device_id=controller_device.id,
+    )
+    stale_zone_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "000000001", 5)},  # type: ignore[arg-type]
+        via_device_id=controller_device.id,
+    )
+
+    with patch.object(
+        device_registry,
+        "async_remove_device",
+        wraps=device_registry.async_remove_device,
+    ) as remove_device:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    remove_device.assert_called_once_with(stale_zone_device.id)
+    assert device_registry.async_get(stale_zone_device.id) is None
+    assert device_registry.async_get(controller_device.id) is not None
+    assert device_registry.async_get(live_zone_device.id) is not None
+
+
 @pytest.mark.usefixtures("mock_create_discovery")
 async def test_reconfigured_system_reloads_entry(
     hass: HomeAssistant,
