@@ -31,6 +31,12 @@
       },
       "floor_demand": {
         "name": "Floor demand"
+      },
+      "cold_demand": {
+        "name": "Cold demand"
+      },
+      "heat_demand": {
+        "name": "Heat demand"
       }
     },
     "select": {
@@ -97,6 +103,16 @@
       },
       "thermostat_signal": {
         "name": "Signal strength"
+      },
+      "eco_adapt": {
+        "name": "Eco-Adapt",
+        "state": {
+          "a": "A",
+          "a_p": "A+",
+          "a_pp": "A++",
+          "manual": "Manual",
+          "off": "[%key:common::state::off%]"
+        }
       }
     }
   }
