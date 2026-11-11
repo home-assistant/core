@@ -761,7 +761,7 @@ bosch-alarm-mode2==0.4.11
 bosch-shc-camera-client==0.7.0
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.25
+boschshcpy==0.6.26
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
