@@ -58,10 +58,10 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Failed to communicate with device"
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "invalid_auth": {
-      "message": "Invalid access token"
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
   "services": {

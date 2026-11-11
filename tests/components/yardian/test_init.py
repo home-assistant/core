@@ -11,7 +11,7 @@ from pyyardian import NetworkException, NotAuthorizedException
 from homeassistant.components.yardian.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, STATE_ON
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -43,6 +43,7 @@ async def test_setup_retries_client_creation(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == "Failed to connect"
     assert mock_config_entry.error_reason_translation_key == "cannot_connect"
     assert mock_config_entry.error_reason_translation_domain == DOMAIN
     session = async_get_clientsession(hass)
@@ -56,23 +57,18 @@ async def test_setup_retries_client_creation(
     assert not hass.states.async_all()
     assert not session.closed
 
+    mock_yardian_client_create.side_effect = None
     freezer.tick(dt.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_yardian_client_create.await_count == 2
-    mock_yardian_client.fetch_device_state.assert_not_awaited()
-    mock_yardian_client.fetch_oper_info.assert_not_awaited()
-    assert not hass.states.async_all()
-
-    mock_yardian_client_create.side_effect = None
-    freezer.tick(dt.timedelta(seconds=20))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_yardian_client_create.await_count == 3
+    assert mock_yardian_client_create.await_count == 2
+    mock_yardian_client_create.assert_awaited_with(
+        session,
+        mock_config_entry.data[CONF_HOST],
+        token=mock_config_entry.data[CONF_ACCESS_TOKEN],
+    )
     mock_yardian_client.fetch_device_state.assert_awaited_once()
     mock_yardian_client.fetch_oper_info.assert_awaited_once()
     assert hass.states.get(ZONE_SWITCH_ENTITY_ID).state == STATE_ON
@@ -80,56 +76,13 @@ async def test_setup_retries_client_creation(
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [
-        pytest.param(NetworkException("offline"), id="network"),
-        pytest.param(TimeoutError(), id="timeout"),
-    ],
-)
-async def test_startup_retries_client_creation(
-    hass: HomeAssistant,
-    mock_yardian_client: AsyncMock,
-    mock_yardian_client_create: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    exception: Exception,
-) -> None:
-    """Test a setup failure before startup retries when Home Assistant starts."""
-    hass.set_state(CoreState.not_running)
-    mock_yardian_client_create.side_effect = exception
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
-    assert mock_config_entry.error_reason_translation_domain == DOMAIN
-    mock_yardian_client_create.assert_awaited_once()
-    mock_yardian_client.fetch_device_state.assert_not_awaited()
-    mock_yardian_client.fetch_oper_info.assert_not_awaited()
-    assert not hass.states.async_all()
-
-    mock_yardian_client_create.side_effect = None
-    freezer.tick(dt.timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_yardian_client_create.assert_awaited_once()
-
-    await hass.async_start()
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_yardian_client_create.await_count == 2
-    mock_yardian_client.fetch_device_state.assert_awaited_once()
-    mock_yardian_client.fetch_oper_info.assert_awaited_once()
-    assert hass.states.get(ZONE_SWITCH_ENTITY_ID).state == STATE_ON
-
-
-@pytest.mark.parametrize(
     ("exception", "reason", "translation_key"),
     [
         pytest.param(
-            NotAuthorizedException(), "Invalid access token", "invalid_auth", id="auth"
+            NotAuthorizedException(),
+            "Invalid authentication",
+            "invalid_auth",
+            id="auth",
         ),
         pytest.param(ValueError("unexpected"), None, None, id="unexpected"),
     ],
