@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bmx_ble import BM2Generation
+from bmx_ble.battery import Battery
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -11,7 +13,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
-from homeassistant.components.bmx_monitor.const import DOMAIN
+from homeassistant.components.bmx_monitor.const import CONF_BATTERY_TYPE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -149,20 +151,21 @@ async def test_setup_validation_failure(
     coordinator.assert_not_called()
 
 
-@pytest.mark.parametrize("connectable", [True, False])
-@pytest.mark.parametrize("has_active_path", [True, False])
+@pytest.mark.parametrize(
+    "connectable",
+    [pytest.param(True, id="advertiser"), pytest.param(False, id="other-path")],
+)
 async def test_poll_callback(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     connectable: bool,
-    has_active_path: bool,
 ) -> None:
-    """Poll the advertising device, another active path, or passive fallback."""
+    """Poll the advertising device or another connectable path to it."""
     info = MagicMock()
     info.address = ADDRESS
     info.device.address = ADDRESS
     info.connectable = connectable
-    active_device = MagicMock() if has_active_path else None
+    active_device = MagicMock()
     data = MagicMock()
     data.async_poll_sensors = AsyncMock()
     with (
@@ -186,12 +189,40 @@ async def test_poll_callback(
     assert find_device.call_count == int(not connectable)
 
 
+async def test_poll_callback_without_connectable_path(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """A poll that finds no connectable path fails instead of using old data."""
+    info = MagicMock()
+    info.device.address = ADDRESS
+    info.connectable = False
+    data = MagicMock()
+    data.async_poll_sensors = AsyncMock()
+    with (
+        patch.object(integration, "async_address_present", return_value=True),
+        patch.object(integration, "async_last_service_info", return_value=info),
+        patch.object(
+            integration, "async_validate_device", return_value="valid_passive"
+        ),
+        patch.object(integration, "BMxBluetoothDeviceData", return_value=data),
+        patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+        patch.object(integration, "async_ble_device_from_address", return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        poll = coordinator.call_args.kwargs["poll_method"]
+        with pytest.raises(RuntimeError, match="No connectable path"):
+            await poll(info)
+    data.async_poll_sensors.assert_not_awaited()
+
+
 @pytest.mark.parametrize(
-    ("state", "needed", "expected"),
+    ("state", "needed", "has_path", "expected"),
     [
-        (CoreState.starting, True, False),
-        (CoreState.running, False, False),
-        (CoreState.running, True, True),
+        pytest.param(CoreState.starting, True, True, False, id="starting"),
+        pytest.param(CoreState.running, False, True, False, id="not-needed"),
+        pytest.param(CoreState.running, True, False, False, id="no-connectable-path"),
+        pytest.param(CoreState.running, True, True, True, id="due"),
     ],
 )
 async def test_poll_gate(
@@ -199,10 +230,12 @@ async def test_poll_gate(
     entry: MockConfigEntry,
     state: CoreState,
     needed: bool,
+    has_path: bool,
     expected: bool,
 ) -> None:
-    """Poll only while HA runs and the device's schedule permits it."""
+    """Poll only while HA runs, a read is due and a connectable path exists."""
     info = MagicMock()
+    info.device.address = ADDRESS
     data = MagicMock()
     data.poll_needed.return_value = needed
     with (
@@ -215,11 +248,59 @@ async def test_poll_gate(
         patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
         patch.object(hass.config_entries, "async_forward_entry_setups"),
         patch.object(hass, "state", state),
+        patch.object(
+            integration,
+            "async_ble_device_from_address",
+            return_value=MagicMock() if has_path else None,
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         needs_poll = coordinator.call_args.kwargs["needs_poll_method"]
         assert needs_poll(info, 12.0) is expected
     assert data.poll_needed.call_count == int(state is CoreState.running)
+
+
+ENHANCED_MANUFACTURER_ID = 27928
+ENHANCED_BODY = bytes.fromhex("95185a633bc8fafdea8897c7c435")
+
+
+async def test_setup_seeds_generation(hass: HomeAssistant) -> None:
+    """The setup advertisement sets the generation before the first poll check."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ADDRESS,
+        options={CONF_BATTERY_TYPE: Battery.leadacid.value},
+    )
+    entry.add_to_hass(hass)
+    info = MagicMock()
+    info.device.address = ADDRESS
+    info.manufacturer_data = {ENHANCED_MANUFACTURER_ID: ENHANCED_BODY}
+    info.raw = (
+        bytes([len(ENHANCED_BODY) + 3, 0xFF])
+        + ENHANCED_MANUFACTURER_ID.to_bytes(2, "little")
+        + ENHANCED_BODY
+    )
+    with (
+        patch.object(integration, "async_address_present", return_value=True),
+        patch.object(integration, "async_last_service_info", return_value=info),
+        patch.object(
+            integration, "async_validate_device", return_value="valid_passive"
+        ),
+        patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+        patch.object(
+            integration, "async_ble_device_from_address", return_value=MagicMock()
+        ),
+        patch.object(hass, "state", CoreState.running),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        kwargs = coordinator.call_args.kwargs
+        assert kwargs["update_method"].__self__.bm2_generation is (
+            BM2Generation.ENHANCED
+        )
+        # Enhanced with a chosen chemistry never connects, even before any
+        # advertisement reaches the coordinator.
+        assert not kwargs["needs_poll_method"](info, None)
 
 
 @pytest.mark.parametrize(

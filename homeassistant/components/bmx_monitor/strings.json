@@ -112,16 +112,12 @@
       },
       "init": {
         "data": {
-          "battery_type": "Battery chemistry",
-          "rate_limit": "Minimum time between reads",
-          "rate_limit_mode": "Rate limit mode"
+          "battery_type": "Battery chemistry"
         },
         "data_description": {
-          "battery_type": "Select the type of battery that is being monitored.",
-          "rate_limit": "In seconds. A Bluetooth read that would start sooner than this after the previous read is skipped. This never schedules extra reads.",
-          "rate_limit_mode": "Choose when the minimum time between reads applies. Charging state comes from the latest reading."
+          "battery_type": "Select the type of battery that is being monitored."
         },
-        "description": "Sensors are updated by reading the BM2 over Bluetooth. A read is triggered when a BM2 advertisement is received (at most once every 10 seconds), or after 60 seconds if no advertisement has triggered one. The rate limit lengthens the minimum time between reads, for example when the BM2 advertises frequently.\n\nIt is recommended to select the appropriate battery chemistry as the BM2 by default has some strange definitions of overall status.",
+        "description": "Sensors are updated from BM2 advertisements. When the advertisements do not carry everything needed, the BM2 is also read over Bluetooth, at most once every 30 seconds.\n\nIt is recommended to select the appropriate battery chemistry as the BM2 by default has some strange definitions of overall status.",
         "title": "Options"
       }
     }
@@ -137,14 +133,6 @@
         "leadacid": "Lead-acid",
         "lifepo4": "LiFePO4",
         "lithiumion": "Lithium-ion"
-      }
-    },
-    "rate_selector": {
-      "options": {
-        "always": "Always limit sensor updates",
-        "never": "Never limit sensor updates",
-        "when_charging": "Only limit when charging",
-        "when_not_charging": "Only limit when not charging"
       }
     }
   }

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak import BLEDevice
+from bleak.exc import BleakError
 from bmx_ble import BM2Generation, BM2Protocol, BM2Reading
 from bmx_ble.battery import BATTERY_PROFILES, Battery, BatteryReading
 import pytest
@@ -18,11 +19,12 @@ from homeassistant.components.bmx_monitor.const import (
     CONF_CUSTOM_FLOATING_VOLTAGE,
     CONF_CUSTOM_LOW_VOLTAGE,
     CONF_CUSTOM_NUMPY_VOLTS,
-    CONF_RATE_LIMIT,
-    CONF_RATE_LIMIT_MODE,
     DOMAIN,
 )
-from homeassistant.components.bmx_monitor.device_data import BMxBluetoothDeviceData
+from homeassistant.components.bmx_monitor.device_data import (
+    MIN_POLL_INTERVAL,
+    BMxBluetoothDeviceData,
+)
 
 ADDRESS = "AA:BB:CC:DD:EE:FF"
 
@@ -45,7 +47,8 @@ def test_advertisement_metadata(device: BMxBluetoothDeviceData) -> None:
         patch.object(device, "set_device_type") as model,
         patch.object(device, "set_device_name") as name,
         patch.object(device, "set_title") as title,
-        patch.object(device, "process_advertisement") as decode,
+        patch.object(device, "process_advertisement", return_value=None) as decode,
+        patch.object(device, "update_sensor") as publish,
     ):
         device._start_update(info)
     manufacturer.assert_called_once_with("Shenzhen Leagend Optoelectronics")
@@ -54,42 +57,74 @@ def test_advertisement_metadata(device: BMxBluetoothDeviceData) -> None:
     assert name.call_args == title.call_args
     assert "BM2 battery monitor" in name.call_args.args[0]
     decode.assert_called_once_with(info.manufacturer_data, raw=info.raw)
+    publish.assert_not_called()
 
 
 @pytest.mark.parametrize(
-    ("ignored", "last_poll", "mode", "charging", "expected"),
+    ("generation", "battery", "last_poll", "expected"),
     [
-        (True, None, "never", False, False),
-        (False, None, "always", False, True),
-        (False, 0.0, "never", False, True),
-        (False, 0.0, "when_not_charging", True, True),
-        (False, 0.0, "when_charging", False, True),
-        (False, 9.999, "always", False, False),
-        (False, 10.0, "always", False, True),
-        (False, 10.001, "always", False, True),
-        (False, 9.999, "when_not_charging", False, False),
-        (False, 10.0, "when_not_charging", False, True),
-        (False, 10.001, "when_not_charging", False, True),
-        (False, 9.999, "when_charging", True, False),
-        (False, 10.0, "when_charging", True, True),
-        (False, 10.001, "when_charging", True, True),
+        pytest.param(
+            BM2Generation.UNKNOWN, Battery.leadacid, None, True, id="unknown-first"
+        ),
+        pytest.param(
+            BM2Generation.LEGACY, Battery.automatic, None, True, id="legacy-auto-first"
+        ),
+        pytest.param(
+            BM2Generation.LEGACY,
+            Battery.leadacid,
+            MIN_POLL_INTERVAL - 0.1,
+            False,
+            id="legacy-chosen-too-soon",
+        ),
+        pytest.param(
+            BM2Generation.LEGACY,
+            Battery.leadacid,
+            MIN_POLL_INTERVAL,
+            True,
+            id="legacy-chosen-due",
+        ),
+        pytest.param(
+            BM2Generation.ENHANCED,
+            Battery.automatic,
+            MIN_POLL_INTERVAL,
+            True,
+            id="enhanced-auto-due",
+        ),
+        pytest.param(
+            BM2Generation.ENHANCED,
+            Battery.leadacid,
+            None,
+            False,
+            id="enhanced-chosen-never",
+        ),
+        pytest.param(
+            BM2Generation.ENHANCED,
+            Battery.custom,
+            None,
+            False,
+            id="enhanced-custom-never",
+        ),
     ],
 )
 def test_poll_schedule(
     device: BMxBluetoothDeviceData,
-    ignored: bool,
+    generation: BM2Generation,
+    battery: Battery,
     last_poll: float | None,
-    mode: str,
-    charging: bool,
     expected: bool,
 ) -> None:
-    """Respect in-progress reads, first polls, charging modes and limits."""
+    """Connect only for data the advertisement lacks, at a fixed interval."""
     device.entry = MockConfigEntry(
-        domain=DOMAIN, options={CONF_RATE_LIMIT_MODE: mode, CONF_RATE_LIMIT: 10}
+        domain=DOMAIN, options={CONF_BATTERY_TYPE: battery.value}
     )
-    device._ignore_advertisement = ignored
-    device._charging = charging
+    device._bm2_generation = generation
     assert device.poll_needed(MagicMock(address=ADDRESS), last_poll) is expected
+
+
+def test_no_poll_while_reading(device: BMxBluetoothDeviceData) -> None:
+    """An advertisement during a read must not queue a second connection."""
+    device._ignore_advertisement = True
+    assert not device.poll_needed(MagicMock(address=ADDRESS), None)
 
 
 @pytest.mark.parametrize(
@@ -127,16 +162,18 @@ def test_custom_chemistry_is_independent(device: BMxBluetoothDeviceData) -> None
 
 
 @pytest.mark.parametrize(
-    ("status", "expected", "charging"),
-    [(4, "charging", True), (2, "normal", False), (99, "unknown", False)],
+    ("status", "expected"),
+    [(4, "charging"), (2, "normal"), (99, "unknown")],
 )
 def test_automatic_reading(
-    device: BMxBluetoothDeviceData, status: int, expected: str, charging: bool
+    device: BMxBluetoothDeviceData, status: int, expected: str
 ) -> None:
     """Automatic mode publishes monitor values and known generation."""
     device._bm2_generation = BM2Generation.ENHANCED
     with patch.object(device, "update_sensor") as publish:
-        device._apply_reading(BM2Reading(12.5, 67, status, "active"))
+        device._apply_reading(
+            BM2Reading(12.5, 67, status, "active"), device._battery_profile()
+        )
     values = {
         call.kwargs["key"]: call.kwargs["native_value"]
         for call in publish.call_args_list
@@ -148,7 +185,6 @@ def test_automatic_reading(
         "battery_status": expected,
         "bm2_generation": str(BM2Generation.ENHANCED),
     }
-    assert device._charging is charging
 
 
 def test_partial_reading_preserves_unavailable_fields(
@@ -156,7 +192,9 @@ def test_partial_reading_preserves_unavailable_fields(
 ) -> None:
     """Legacy percentage-only packets do not overwrite voltage or status."""
     with patch.object(device, "update_sensor") as publish:
-        device._apply_reading(BM2Reading(None, 45, None, "advertisement"))
+        device._apply_reading(
+            BM2Reading(None, 45, None, "advertisement"), device._battery_profile()
+        )
     values = {
         call.kwargs["key"]: call.kwargs["native_value"]
         for call in publish.call_args_list
@@ -170,7 +208,9 @@ def test_chemistry_adjusts_reading(device: BMxBluetoothDeviceData) -> None:
         domain=DOMAIN, options={CONF_BATTERY_TYPE: Battery.leadacid.value}
     )
     with patch.object(device, "update_sensor") as publish:
-        device._apply_reading(BM2Reading(12.06, 99, None, "advertisement"))
+        device._apply_reading(
+            BM2Reading(12.06, 99, None, "advertisement"), device._battery_profile()
+        )
     values = {
         call.kwargs["key"]: call.kwargs["native_value"]
         for call in publish.call_args_list
@@ -180,17 +220,17 @@ def test_chemistry_adjusts_reading(device: BMxBluetoothDeviceData) -> None:
     assert values["battery_chemistry"] == "Lead-acid"
 
 
-@pytest.mark.parametrize("ble_device", [None, BLEDevice(ADDRESS, "BM2", {})])
 async def test_poll_publishes_protocol_reading(
-    device: BMxBluetoothDeviceData, ble_device: BLEDevice | None
+    device: BMxBluetoothDeviceData,
 ) -> None:
-    """Publish the library reading for active and passive-only paths."""
+    """Publish the library's GATT reading."""
+    ble_device = BLEDevice(ADDRESS, "BM2", {})
     reading = BM2Reading(12.5, 60, 2, "active")
     with patch.object(
         BM2Protocol, "async_poll", new_callable=AsyncMock, return_value=reading
     ) as poll:
         update = await device.async_poll_sensors(ble_device)
-    poll.assert_awaited_once_with(device, ble_device)
+    poll.assert_awaited_once_with(ble_device)
     assert isinstance(update, SensorUpdate)
     values = {
         key.key: value.native_value for key, value in update.entity_values.items()
@@ -222,7 +262,7 @@ def test_reading_interpretation_is_delegated(device: BMxBluetoothDeviceData) -> 
         ) as interpret,
         patch.object(device, "update_sensor") as publish,
     ):
-        device._apply_reading(raw)
+        device._apply_reading(raw, BATTERY_PROFILES[Battery.automatic])
     interpret.assert_called_once_with(raw, BATTERY_PROFILES[Battery.automatic])
     values = {
         call.kwargs["key"]: call.kwargs["native_value"]
@@ -234,11 +274,19 @@ def test_reading_interpretation_is_delegated(device: BMxBluetoothDeviceData) -> 
         "battery_percent": 80,
         "battery_status": "floating",
     }
-    assert device._charging is True
 
 
-def test_missing_status_preserves_charging(device: BMxBluetoothDeviceData) -> None:
-    """A partial fallback must not reset the last known charging state."""
-    device._charging = True
-    device._apply_reading(BM2Reading(None, 45, None, "advertisement"))
-    assert device._charging is True
+async def test_failed_poll_raises(device: BMxBluetoothDeviceData) -> None:
+    """A failed read propagates and publishes nothing."""
+    with (
+        patch.object(
+            BM2Protocol,
+            "async_poll",
+            new_callable=AsyncMock,
+            side_effect=BleakError("connection failed"),
+        ),
+        patch.object(device, "update_sensor") as publish,
+        pytest.raises(BleakError, match="connection failed"),
+    ):
+        await device.async_poll_sensors(BLEDevice(ADDRESS, "BM2", {}))
+    publish.assert_not_called()

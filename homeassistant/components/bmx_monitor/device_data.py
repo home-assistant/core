@@ -13,6 +13,7 @@ from bmx_ble.battery import (
     custom_battery_profile,
     get_battery_profile,
     interpret_reading,
+    needs_active_read,
 )
 from habluetooth import BluetoothServiceInfoBleak
 from home_assistant_bluetooth import BluetoothServiceInfo
@@ -30,8 +31,6 @@ from .const import (
     CONF_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
     CONF_CUSTOM_LOW_VOLTAGE,
     CONF_CUSTOM_NUMPY_VOLTS,
-    CONF_RATE_LIMIT,
-    CONF_RATE_LIMIT_MODE,
     DEFAULT_BATTERY_TYPE,
     DEFAULT_CUSTOM_BATTERY_CHEMISTRY,
     DEFAULT_CUSTOM_CHARGING_VOLTAGE,
@@ -40,11 +39,12 @@ from .const import (
     DEFAULT_CUSTOM_FLOATING_VOLTAGE,
     DEFAULT_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
     DEFAULT_CUSTOM_LOW_VOLTAGE,
-    DEFAULT_RATE_LIMIT,
-    DEFAULT_RATE_LIMIT_MODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Seconds between GATT connections; advertisements trigger them, never a timer.
+MIN_POLL_INTERVAL = 30
 
 
 class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
@@ -55,22 +55,12 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         BluetoothData.__init__(self)
         BM2Protocol.__init__(self)
 
-        # If True, the latest interpreted status says the battery is charging
-        # or floating.
-        self._charging = False
-
         # Populated by __init__.py immediately after construction.
         self.entry: ConfigEntry
 
     @override
     def _start_update(self, data: BluetoothServiceInfo) -> None:
-        """Process an advertisement.
-
-        Device metadata is refreshed and, where possible, the newer encrypted
-        BM2 telemetry frame is decoded and cached.  Sensor values are deliberately
-        not published here; the cache is only consumed when the scheduled active
-        poll fails (or no connectable Bluetooth path exists).
-        """
+        """Refresh device metadata and publish this advertisement's reading."""
         _LOGGER.debug("New advertisement - %s", data)
 
         address = data.address
@@ -85,58 +75,33 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         self.set_device_name(name)
         self.set_title(name)
 
-        self.process_advertisement(
+        reading = self.process_advertisement(
             data.manufacturer_data,
             raw=data.raw if isinstance(data, BluetoothServiceInfoBleak) else None,
         )
+        if reading is None:
+            return
+        profile = self._battery_profile()
+        # A legacy device's own percentage disagrees with the chosen curve.
+        if reading.generation is BM2Generation.LEGACY and profile.volts_to_percent:
+            return
+        self._apply_reading(reading, profile)
 
     def poll_needed(
         self,
         service_info: BluetoothServiceInfo,
         last_poll: float | None,
     ) -> bool:
-        """Return True when the coordinator should perform its scheduled poll. last_poll is the number of seconds since, well, the last poll!"""
+        """Return whether to connect for data the advertisement cannot provide.
 
-        _LOGGER.debug(
-            "Inside 'poll_needed' for %s, _ignore_advertisement=%s, _charging=%s",
-            service_info.address,
-            self._ignore_advertisement,
-            self._charging,
-        )
-
-        if self._ignore_advertisement:
+        last_poll is the number of seconds since the previous poll.
+        """
+        # A poll is running; the debouncer would otherwise queue a duplicate.
+        if self.ignore_advertisement:
             return False
-
-        if last_poll is None:
-            return True
-
-        rate_limit_mode = self.entry.options.get(
-            CONF_RATE_LIMIT_MODE, DEFAULT_RATE_LIMIT_MODE
-        )
-
-        if rate_limit_mode == "never":
-            return True
-
-        if (rate_limit_mode == "when_not_charging" and self._charging) or (
-            rate_limit_mode == "when_charging" and not self._charging
-        ):
-            return True
-
-        rate_limit = self.entry.options.get(
-            CONF_RATE_LIMIT,
-            DEFAULT_RATE_LIMIT,
-        )
-
-        poll_needed = last_poll >= rate_limit
-
-        _LOGGER.debug(
-            "Poll rate limited for %s: rate_limit=%s, last_poll=%s, poll_needed=%s",
-            service_info.address,
-            rate_limit,
-            last_poll,
-            poll_needed,
-        )
-        return poll_needed
+        if not needs_active_read(self.bm2_generation, self._battery_profile()):
+            return False
+        return last_poll is None or last_poll >= MIN_POLL_INTERVAL
 
     def _battery_profile(self) -> BatteryProfile:
         """Map entry options to a library battery profile."""
@@ -176,14 +141,13 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
             ),
         )
 
-    def _apply_reading(self, reading: BM2Reading) -> None:
-        """Apply available fields and publish a decoded reading.
+    def _apply_reading(self, reading: BM2Reading, profile: BatteryProfile) -> None:
+        """Publish the fields a reading carries.
 
-        Advertisement fallback can be partial.  Legacy advertisements carry
-        percentage but no voltage/status, so unavailable fields are deliberately
-        left at their previous Home Assistant values.
+        Advertisements are partial, so missing fields keep their previous
+        Home Assistant values.
         """
-        interpreted = interpret_reading(reading, self._battery_profile())
+        interpreted = interpret_reading(reading, profile)
         voltage = interpreted.voltage
         percentage = interpreted.percentage
         status = interpreted.status
@@ -210,8 +174,6 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
                 device_class=SensorDeviceClass.VOLTAGE,
             )
 
-        # Automatic-via-BM2 passive packets do not expose a decoded status.
-        # Leave the previous status intact instead of inventing one.
         if status is not None:
             self.update_sensor(
                 key="battery_status",
@@ -219,8 +181,6 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
                 native_value=status,
                 device_class=None,
             )
-        if interpreted.charging is not None:
-            self._charging = interpreted.charging
 
         if self._bm2_generation is not BM2Generation.UNKNOWN:
             self.update_sensor(
@@ -240,8 +200,8 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
             status,
         )
 
-    async def async_poll_sensors(self, ble_device: BLEDevice | None) -> SensorUpdate:
-        """Publish an active reading or the cached advertisement fallback."""
-        reading = await BM2Protocol.async_poll(self, ble_device)
-        self._apply_reading(reading)
+    async def async_poll_sensors(self, ble_device: BLEDevice) -> SensorUpdate:
+        """Read the BM2 over GATT and publish the result."""
+        reading = await self.async_poll(ble_device)
+        self._apply_reading(reading, self._battery_profile())
         return self._finish_update()

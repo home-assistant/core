@@ -5,7 +5,7 @@ import logging
 from typing import Literal
 
 from bleak.exc import BleakError
-from bmx_ble import BM2Generation
+from bmx_ble import BM2Generation, BM2Protocol
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -14,8 +14,6 @@ from homeassistant.components.bluetooth import (
     async_process_advertisements,
 )
 from homeassistant.core import HomeAssistant
-
-from .device_data import BMxBluetoothDeviceData as DeviceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +26,12 @@ type ValidationResult = Literal[
 
 
 def advertisement_is_bm2(
-    device: DeviceData, discovery_info: BluetoothServiceInfoBleak
+    device: BM2Protocol, discovery_info: BluetoothServiceInfoBleak
 ) -> bool:
     """Return whether this advertisement proves BM2 identity."""
-    device.update(discovery_info)
+    device.process_advertisement(
+        discovery_info.manufacturer_data, raw=discovery_info.raw
+    )
     return device.bm2_generation is not BM2Generation.UNKNOWN
 
 
@@ -40,7 +40,7 @@ async def async_validate_device(
 ) -> ValidationResult:
     """Validate BM2 identity, preserving uncertainty when a connection fails."""
     address = discovery_info.address
-    device = DeviceData()
+    device = BM2Protocol()
 
     if advertisement_is_bm2(device, discovery_info):
         _LOGGER.debug(

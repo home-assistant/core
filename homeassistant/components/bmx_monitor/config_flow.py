@@ -32,11 +32,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    selector,
-)
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     BATTERY_TYPES,
@@ -51,8 +47,6 @@ from .const import (
     CONF_CUSTOM_LOW_VOLTAGE,
     CONF_CUSTOM_NUMPY_PERCENT,
     CONF_CUSTOM_NUMPY_VOLTS,
-    CONF_RATE_LIMIT,
-    CONF_RATE_LIMIT_MODE,
     DEFAULT_BATTERY_TYPE,
     DEFAULT_CUSTOM_BATTERY_CHEMISTRY,
     DEFAULT_CUSTOM_CHARGING_VOLTAGE,
@@ -61,10 +55,7 @@ from .const import (
     DEFAULT_CUSTOM_FLOATING_VOLTAGE,
     DEFAULT_CUSTOM_HUNDRED_PERCENT_VOLTAGE,
     DEFAULT_CUSTOM_LOW_VOLTAGE,
-    DEFAULT_RATE_LIMIT,
-    DEFAULT_RATE_LIMIT_MODE,
     DOMAIN,
-    RATE_LIMIT_MODES,
 )
 from .validation import async_validate_device
 
@@ -453,26 +444,6 @@ class BMxOptionsFlow(OptionsFlowWithReload):
                         CONF_BATTERY_TYPE, DEFAULT_BATTERY_TYPE
                     ),
                 ): battery_type_selector(),
-                probatio.Required(
-                    CONF_RATE_LIMIT_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_RATE_LIMIT_MODE, DEFAULT_RATE_LIMIT_MODE
-                    ),
-                ): selector(
-                    {
-                        "select": {
-                            "options": RATE_LIMIT_MODES,
-                            "multiple": False,
-                            "translation_key": "rate_selector",
-                        }
-                    }
-                ),
-                probatio.Required(
-                    CONF_RATE_LIMIT,
-                    default=self.config_entry.options.get(
-                        CONF_RATE_LIMIT, DEFAULT_RATE_LIMIT
-                    ),
-                ): probatio.All(probatio.Coerce(int), probatio.Range(min=10, max=120)),
             }
         )
 

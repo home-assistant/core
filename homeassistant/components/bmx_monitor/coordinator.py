@@ -1,70 +1,45 @@
-"""Schedule an active read or passive fallback, respecting rate limits."""
+"""Bluetooth coordinator that considers polling on every BM2 advertisement."""
 
-from datetime import datetime, timedelta
 from typing import override
 
-from bluetooth_data_tools import monotonic_time_coarse
 from sensor_state_data import SensorUpdate
 
 from homeassistant.components.bluetooth import (
-    async_address_present,
-    async_last_service_info,
+    BluetoothServiceInfoBleak,
+    async_register_advertisement_callback,
 )
 from homeassistant.components.bluetooth.active_update_processor import (
     ActiveBluetoothProcessorCoordinator,
 )
-from homeassistant.core import CALLBACK_TYPE, CoreState, callback
-from homeassistant.helpers.event import async_track_time_interval
-
-FALLBACK_CHECK_INTERVAL = timedelta(seconds=10)
-FALLBACK_POLL_INTERVAL = 60
+from homeassistant.core import CALLBACK_TYPE, callback
 
 
 class BMxBluetoothCoordinator(ActiveBluetoothProcessorCoordinator[SensorUpdate]):
-    """Use one debouncer for advertisement-triggered and fallback reads."""
+    """Active coordinator that also sees advertisements HA deduplicates.
 
-    _cancel_fallback: CALLBACK_TYPE | None = None
+    A BM2 can repeat an identical advertisement for hours, which never reaches
+    the coordinator's own Bluetooth callback, so reads would otherwise stall.
+    """
 
     @callback
     @override
     def async_start(self) -> CALLBACK_TYPE:
-        """Start Bluetooth subscriptions and the fallback timer."""
-        cancel = super().async_start()
-        self._cancel_fallback = async_track_time_interval(
-            self.hass, self._async_schedule_poll, FALLBACK_CHECK_INTERVAL
+        """Start Bluetooth subscriptions, including every raw advertisement."""
+        cancel_coordinator = super().async_start()
+        cancel_advertisements = async_register_advertisement_callback(
+            self.hass, self._async_poll_if_needed, self.address
         )
-        return cancel
+
+        @callback
+        def _async_cancel() -> None:
+            cancel_advertisements()
+            cancel_coordinator()
+
+        return _async_cancel
 
     @callback
-    def _async_schedule_poll(self, _: datetime) -> None:
-        """Request an active read after a quiet interval, respecting rate limits."""
-        if self.hass.state is not CoreState.running or self.hass.is_stopping:
-            return
-        if not async_address_present(self.hass, self.address, connectable=False):
-            return
-        service_info = async_last_service_info(
-            self.hass, self.address, connectable=False
-        )
-        if service_info is None:
-            return
-        # Cached service-info timestamps may stop advancing after deduplication.
-        age = (
-            monotonic_time_coarse() - self._last_poll
-            if self._last_poll is not None
-            else None
-        )
-        if age is not None and age < FALLBACK_POLL_INTERVAL:
-            return
-        if not self._needs_poll_method(service_info, age):
-            return
-        self._last_service_info = service_info
-        self._debounced_poll.async_schedule_call()
-
-    @callback
-    @override
-    def _async_stop(self) -> None:
-        """Cancel the fallback timer and pending Bluetooth reads."""
-        if self._cancel_fallback is not None:
-            self._cancel_fallback()
-            self._cancel_fallback = None
-        super()._async_stop()
+    def _async_poll_if_needed(self, service_info: BluetoothServiceInfoBleak) -> None:
+        """Schedule a debounced read when this advertisement makes one due."""
+        if self.needs_poll(service_info):
+            self._last_service_info = service_info
+            self._debounced_poll.async_schedule_call()

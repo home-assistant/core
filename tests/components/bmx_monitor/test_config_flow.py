@@ -38,11 +38,7 @@ from homeassistant.components.bmx_monitor.const import (
     CONF_CUSTOM_LOW_VOLTAGE,
     CONF_CUSTOM_NUMPY_PERCENT,
     CONF_CUSTOM_NUMPY_VOLTS,
-    CONF_RATE_LIMIT,
-    CONF_RATE_LIMIT_MODE,
     DEFAULT_BATTERY_TYPE,
-    DEFAULT_RATE_LIMIT,
-    DEFAULT_RATE_LIMIT_MODE,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
@@ -561,11 +557,7 @@ async def test_options_custom_voltage_out_of_range(
     result = await manager.async_init(entry.entry_id)
     result = await manager.async_configure(
         result["flow_id"],
-        {
-            CONF_BATTERY_TYPE: Battery.custom.value,
-            CONF_RATE_LIMIT_MODE: DEFAULT_RATE_LIMIT_MODE,
-            CONF_RATE_LIMIT: DEFAULT_RATE_LIMIT,
-        },
+        {CONF_BATTERY_TYPE: Battery.custom.value},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_battery_details"
@@ -632,11 +624,7 @@ async def test_options_regular(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    options = {
-        CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE,
-        CONF_RATE_LIMIT_MODE: DEFAULT_RATE_LIMIT_MODE,
-        CONF_RATE_LIMIT: DEFAULT_RATE_LIMIT,
-    }
+    options = {CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE}
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], options
     )
@@ -647,19 +635,21 @@ async def test_options_regular(hass: HomeAssistant) -> None:
 
 
 async def test_options_switch_from_custom(hass: HomeAssistant) -> None:
-    """Changing to a standard chemistry removes obsolete custom thresholds."""
+    """Changing to a standard chemistry removes obsolete options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=ADDRESS,
-        options={CONF_BATTERY_TYPE: Battery.custom.value, **CUSTOM_DETAILS},
+        options={
+            CONF_BATTERY_TYPE: Battery.custom.value,
+            **CUSTOM_DETAILS,
+            # Saved by earlier versions, which had a rate limit option.
+            "rate_limit_mode": "always",
+            "rate_limit": 60,
+        },
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    options = {
-        CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE,
-        CONF_RATE_LIMIT_MODE: DEFAULT_RATE_LIMIT_MODE,
-        CONF_RATE_LIMIT: DEFAULT_RATE_LIMIT,
-    }
+    options = {CONF_BATTERY_TYPE: DEFAULT_BATTERY_TYPE}
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], options
     )
@@ -676,11 +666,7 @@ async def test_options_custom_error_and_retry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {
-            CONF_BATTERY_TYPE: Battery.custom.value,
-            CONF_RATE_LIMIT_MODE: DEFAULT_RATE_LIMIT_MODE,
-            CONF_RATE_LIMIT: 12,
-        },
+        {CONF_BATTERY_TYPE: Battery.custom.value},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_battery_details"
@@ -694,7 +680,7 @@ async def test_options_custom_error_and_retry(hass: HomeAssistant) -> None:
         result["flow_id"], CUSTOM_DETAILS.copy()
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_RATE_LIMIT] == 12
+    assert result["data"][CONF_BATTERY_TYPE] == Battery.custom.value
     assert result["data"][CONF_CUSTOM_NUMPY_VOLTS] == [11.0, 11.5, 12.3, 12.8]
 
     assert entry.unique_id == ADDRESS
@@ -724,7 +710,7 @@ async def test_protocol_validation(
     device.async_validate_active = AsyncMock(return_value=active_result)
     ble_device = MagicMock()
     with (
-        patch.object(protocol_validation, "DeviceData", return_value=device),
+        patch.object(protocol_validation, "BM2Protocol", return_value=device),
         patch.object(
             protocol_validation, "async_process_advertisements", new_callable=AsyncMock
         ) as listen,
@@ -760,7 +746,7 @@ async def test_validation_cannot_connect(
         side_effect=active_path if isinstance(active_path, Exception) else None
     )
     with (
-        patch.object(protocol_validation, "DeviceData", return_value=device),
+        patch.object(protocol_validation, "BM2Protocol", return_value=device),
         patch.object(
             protocol_validation,
             "async_process_advertisements",
@@ -804,7 +790,7 @@ async def test_second_advertisement_proves_identity(
         assert callback(service_info)
 
     with (
-        patch.object(protocol_validation, "DeviceData", return_value=device),
+        patch.object(protocol_validation, "BM2Protocol", return_value=device),
         patch.object(protocol_validation, "advertisement_is_bm2", side_effect=check),
         patch.object(
             protocol_validation, "async_process_advertisements", side_effect=receive
@@ -889,7 +875,7 @@ async def test_validation_programming_error_propagates(
     device.bm2_generation = BM2Generation.UNKNOWN
     device.async_validate_active = AsyncMock(side_effect=error("Unexpected defect"))
     with (
-        patch.object(protocol_validation, "DeviceData", return_value=device),
+        patch.object(protocol_validation, "BM2Protocol", return_value=device),
         patch.object(
             protocol_validation,
             "async_process_advertisements",

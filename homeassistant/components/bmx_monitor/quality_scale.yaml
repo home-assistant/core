@@ -7,11 +7,8 @@ rules:
   appropriate-polling:
     status: done
     comment: |
-      Reads are driven by BLE advertisements via ActiveBluetoothProcessorCoordinator,
-      with its 10 second debounce. A fixed fallback read runs only when the device has
-      been seen and no read has happened for 60 seconds. The rate limit option never
-      schedules reads; it only skips reads that would start sooner than the configured
-      10-120 seconds after the previous one.
+      Advertisement-driven. GATT connections, only for data the advertisement lacks,
+      are limited by a fixed integration-owned minimum interval of 30 seconds.
   brands: done
   common-modules: done
   config-flow-test-coverage: done

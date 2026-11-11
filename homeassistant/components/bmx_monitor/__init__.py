@@ -11,11 +11,10 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_last_service_info,
     async_process_advertisements,
-    async_register_advertisement_callback,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .coordinator import BMxBluetoothCoordinator
@@ -67,34 +66,39 @@ async def async_setup_entry(
 
     device_data = BMxBluetoothDeviceData()
     device_data.entry = config_entry
+    # Learn the generation now so the first advertisement decides correctly.
+    device_data.process_advertisement(
+        service_info.manufacturer_data, raw=service_info.raw
+    )
 
     def _needs_poll(
         service_info: BluetoothServiceInfoBleak,
         last_poll: float | None,
     ) -> bool:
-        """Return whether this advertisement should trigger a scheduled update."""
-        return hass.state is CoreState.running and device_data.poll_needed(
-            service_info, last_poll
+        """Return whether this advertisement should trigger a GATT read."""
+        return (
+            hass.state is CoreState.running
+            and device_data.poll_needed(service_info, last_poll)
+            and async_ble_device_from_address(
+                hass, service_info.device.address, connectable=True
+            )
+            is not None
         )
 
     async def _async_poll(
         service_info: BluetoothServiceInfoBleak,
     ) -> SensorUpdate:
-        """Try to find a connectable path, otherwise use passive fallback."""
-        connectable_device = None
-
+        """Read the BM2 over GATT through a connectable path."""
         if service_info.connectable:
             connectable_device = service_info.device
+        elif device := async_ble_device_from_address(
+            hass, service_info.device.address, connectable=True
+        ):
+            connectable_device = device
         else:
-            connectable_device = async_ble_device_from_address(
-                hass,
-                service_info.device.address,
-                connectable=True,
+            raise RuntimeError(
+                f"No connectable path to {service_info.device.address} is available"
             )
-
-        # async_poll_sensors(None) is intentional.  BMxBluetoothDeviceData will treat
-        # "no connectable path" exactly like a failed active connection and use
-        # the cached advertisement if the newer telemetry packet was decoded.
         return await device_data.async_poll_sensors(connectable_device)
 
     coordinator = config_entry.runtime_data = BMxBluetoothCoordinator(
@@ -108,19 +112,6 @@ async def async_setup_entry(
         # Accept advertisements from non-connectable scanners/proxies.  When a
         # connectable path is available it is still preferred for the GATT read.
         connectable=False,
-    )
-
-    @callback
-    def _async_refresh_passive_cache(service_info: BluetoothServiceInfoBleak) -> None:
-        """Keep the passive fallback fresh while the broadcast is unchanged."""
-        device_data.process_advertisement(
-            service_info.manufacturer_data, raw=service_info.raw
-        )
-
-    config_entry.async_on_unload(
-        async_register_advertisement_callback(
-            hass, _async_refresh_passive_cache, address
-        )
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

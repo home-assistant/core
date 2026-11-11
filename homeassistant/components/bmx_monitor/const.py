@@ -6,10 +6,6 @@ DOMAIN = "bmx_monitor"
 
 CONF_BATTERY_TYPE = "battery_type"
 DEFAULT_BATTERY_TYPE = Battery.automatic.value
-CONF_RATE_LIMIT_MODE = "rate_limit_mode"
-DEFAULT_RATE_LIMIT_MODE = "never"
-CONF_RATE_LIMIT = "rate_limit"
-DEFAULT_RATE_LIMIT = 60
 CONF_CUSTOM_BATTERY_CHEMISTRY = "custom_battery_chemistry"
 DEFAULT_CUSTOM_BATTERY_CHEMISTRY = "Custom battery"
 CONF_CUSTOM_CRITICAL_VOLTAGE = "custom_critical_voltage"
@@ -30,13 +26,6 @@ CONF_CUSTOM_NUMPY_PERCENT = "custom_numpy_percent"
 GATT_TIMEOUT = 20
 
 BM_NAMES = ["Battery Monitor", "Li Battery Monitor", "ZX-1689"]
-
-RATE_LIMIT_MODES = [
-    "never",
-    "when_charging",
-    "when_not_charging",
-    "always",
-]
 
 BATTERY_TYPES = [
     Battery.automatic.value,
