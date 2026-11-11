@@ -209,7 +209,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.13.1
+aioaquarite==0.13.2
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -520,7 +520,7 @@ aiowatttime==2024.6.0
 aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==1.0.2
+aiowebostv==1.1.0
 
 # homeassistant.components.withings
 aiowithings==4.0.1
@@ -761,7 +761,7 @@ bosch-alarm-mode2==0.4.11
 bosch-shc-camera-client==0.7.0
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.26
+boschshcpy==0.6.27
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
