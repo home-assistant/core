@@ -4,12 +4,6 @@ from datetime import timedelta
 
 DOMAIN = "picnic"
 
-SERVICE_ADD_PRODUCT_TO_CART = "add_product"
-
-ATTR_PRODUCT_ID = "product_id"
-ATTR_PRODUCT_NAME = "product_name"
-ATTR_GTIN = "gtin"
-ATTR_AMOUNT = "amount"
 ATTR_PRODUCT_IDENTIFIERS = "product_identifiers"
 
 COUNTRY_CODES = ["NL", "DE", "BE", "FR"]

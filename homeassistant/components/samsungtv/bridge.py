@@ -366,25 +366,29 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     async def _async_send_key(self, key: str) -> None:
         """Send a key using legacy protocol."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    if remote := await self._async_get_remote():
-                        await remote.control(key)
-                    break
-                except UnauthorizedError:
-                    raise
-                except ConnectionFailure:
-                    self._remote = None
-        except (ResponseError, UnauthorizedError) as err:
-            # We got a response so it's on.
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="error_sending_command",
-                translation_placeholders={"error": repr(err), "host": self.host},
-            ) from err
+        # recreate connection if connection was dead
+        retry_count = 1
+        for attempt in range(retry_count + 1):
+            try:
+                if remote := await self._async_get_remote():
+                    await remote.control(key)
+            except (ResponseError, UnauthorizedError) as err:
+                # We got a response so it's on.
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="error_sending_command",
+                    translation_placeholders={"error": repr(err), "host": self.host},
+                ) from err
+            except ConnectionFailure as err:
+                self._remote = None
+                if attempt == retry_count:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={"host": self.host},
+                    ) from err
+            else:
+                return
 
     @override
     async def _async_send_power_off(self) -> None:
@@ -427,24 +431,31 @@ class SamsungTVWSBaseBridge[
 
     async def _async_send_commands(self, commands: list[_CommandT]) -> None:
         """Send the commands using websocket protocol."""
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    if remote := await self._async_get_remote():
-                        await remote.send_commands(commands)  # type: ignore[arg-type]
-                    break
-                except (
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
+        # recreate connection if connection was dead
+        retry_count = 1
+        for attempt in range(retry_count + 1):
+            try:
+                if remote := await self._async_get_remote():
+                    await remote.send_commands(commands)  # type: ignore[arg-type]
+            except (BrokenPipeError, WebSocketException) as err:
+                # BrokenPipe can occur when the commands is sent to fast
+                # WebSocketException can occur when timed out
+                self._remote = None
+                if attempt == retry_count:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={"host": self.host},
+                    ) from err
+            except OSError as err:
+                # Different reasons, e.g. hostname not resolveable
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="send_command_failed",
+                    translation_placeholders={"host": self.host},
+                ) from err
+            else:
+                return
 
     async def _async_get_remote(self) -> _RemoteT | None:
         """Create or return a remote control instance."""
@@ -492,6 +503,15 @@ class SamsungTVWSBridge(
             self.token = entry_data.get(CONF_TOKEN)
         self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
+        self._connection_failure_logged = False
+
+    def _log_connection_failure(self, msg: str, *args: Any) -> None:
+        """Log a connection failure once until the connection is restored."""
+        if self._connection_failure_logged:
+            LOGGER.debug(msg, *args)
+            return
+        LOGGER.warning(msg, *args)
+        self._connection_failure_logged = True
 
     def _get_device_spec(self, key: str) -> Any | None:
         """Check if a flag exists in latest device info."""
@@ -635,10 +655,8 @@ class SamsungTVWSBridge(
                 self._notify_reauth_callback()
                 self._remote = None
             except ConnectionClosedError as err:
-                LOGGER.warning(
-                    "Failed to get remote for %s: %s",
-                    self.host,
-                    repr(err),
+                self._log_connection_failure(
+                    "Failed to get remote for %s: %s", self.host, repr(err)
                 )
                 self._remote = None
             except ConnectionFailure as err:
@@ -650,7 +668,7 @@ class SamsungTVWSBridge(
                         error_details,
                     )
                 else:
-                    LOGGER.warning(
+                    self._log_connection_failure(
                         "Unexpected ConnectionFailure trying to get remote for %s, "
                         "please report this issue: %s",
                         self.host,
@@ -662,6 +680,9 @@ class SamsungTVWSBridge(
                 self._remote = None
             else:
                 LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
+                if self._connection_failure_logged:
+                    LOGGER.info("Connection to %s restored", self.host)
+                    self._connection_failure_logged = False
                 if self._device_info is None:
                     # Initialise device info on first connect
                     await self.async_device_info()

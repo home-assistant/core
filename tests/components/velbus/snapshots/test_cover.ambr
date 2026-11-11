@@ -24,7 +24,7 @@
     'object_id_base': 'CoverName',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': 'CoverName',
     'platform': 'velbus',
@@ -40,6 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement CoverName',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
@@ -77,7 +78,7 @@
     'object_id_base': 'CoverNameNoPos',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': 'CoverNameNoPos',
     'platform': 'velbus',
@@ -93,6 +94,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement CoverNameNoPos',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,

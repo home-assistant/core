@@ -61,6 +61,7 @@ from aioairzone.const import (
     API_ZONE_ID,
     DEFAULT_SYSTEM_ID,
 )
+from aioairzone.exceptions import IaqSensorNotAvailable
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone.const import DOMAIN
@@ -398,6 +399,10 @@ async def async_init_integration(
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable(),
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",

@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TeslemetryConfigEntry
 from .const import TeslemetryClimateSide
 from .entity import (
     TeslemetryRootEntity,
@@ -34,7 +33,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 DEFAULT_MIN_TEMP = 15
 DEFAULT_MAX_TEMP = 28

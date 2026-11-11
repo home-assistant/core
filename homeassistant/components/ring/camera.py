@@ -15,6 +15,7 @@ from webrtc_models import RTCIceCandidateInit
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
     Camera,
+    CameraEntityCapabilities,
     CameraEntityDescription,
     CameraEntityFeature,
     WebRTCAnswer,
@@ -118,6 +119,11 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = device.motion_detection
         if description.live_stream:
             self._attr_supported_features |= CameraEntityFeature.STREAM
+            # Ring live view sessions are full duplex: the camera plays the
+            # audio track the client sends on the WebRTC connection.
+            self._attr_camera_entity_capabilities = CameraEntityCapabilities(
+                two_way_audio=True
+            )
 
     @callback
     @override
