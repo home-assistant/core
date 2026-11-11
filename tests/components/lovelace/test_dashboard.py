@@ -940,6 +940,9 @@ async def test_storage_dashboard_change_url_path(
     [
         pytest.param({"url_path": "path"}, "invalid_format", id="no_hyphen"),
         pytest.param(
+            {"url_path": "", "allow_single_word": True}, "invalid_format", id="empty"
+        ),
+        pytest.param(
             {"url_path": "other-url-path"}, "home_assistant_error", id="in_use"
         ),
     ],
@@ -1182,3 +1185,37 @@ async def test_storage_dashboard_change_url_path_free_form_user_data(
     assert "renamed-url-path" in hass.data[frontend.DATA_PANELS]
     await client.send_json({"id": 3, "type": "frontend/get_user_data", "key": "core"})
     assert (await client.receive_json())["result"]["value"] is True
+
+
+async def test_storage_dashboard_change_url_path_concurrent(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test two dashboards can't claim the same url path at the same time."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    dashboard_id = await _create_dashboard(client)
+    other_id = await _create_dashboard(client, "other-url-path", msg_id=2)
+
+    # Sent back to back, so the second is validated before the first is applied.
+    for msg_id, item_id in ((3, dashboard_id), (4, other_id)):
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "lovelace/dashboards/update",
+                "dashboard_id": item_id,
+                "url_path": "renamed-url-path",
+            }
+        )
+    responses = {
+        msg["id"]: msg for msg in [await client.receive_json() for _ in range(2)]
+    }
+
+    assert responses[3]["success"]
+    assert responses[4]["error"]["code"] == "home_assistant_error"
+    assert "other-url-path" in hass.data[frontend.DATA_PANELS]
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert {item["url_path"] for item in response["result"]} == {
+        "renamed-url-path",
+        "other-url-path",
+    }

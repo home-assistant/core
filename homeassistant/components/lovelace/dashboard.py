@@ -289,7 +289,10 @@ class DashboardsCollection(collection.DictStorageCollection):
         if not allow_single_word and "-" not in url_path:
             raise probatio.Invalid("Url path needs to contain a hyphen (-)")
 
-        if async_panel_exists(self.hass, url_path):
+        # Items are stored before their panel is registered, so check both.
+        if async_panel_exists(self.hass, url_path) or any(
+            item[CONF_URL_PATH] == url_path for item in self.data.values()
+        ):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="url_already_exists",

@@ -1,5 +1,6 @@
 """Support for the Lovelace UI."""
 
+import asyncio
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -216,6 +217,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # A renamed dashboard is still registered under its previous url path.
     storage_url_paths: dict[str, str] = {}
+    # Keeps quick successive renames migrating default panels in order.
+    default_panel_lock = asyncio.Lock()
 
     async def storage_dashboard_changed(
         change_type: str, item_id: str, item: dict
@@ -278,7 +281,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Only after the rename is complete, as this waits for storage.
         if renamed_from is not None:
-            await _async_update_default_panel(hass, renamed_from, url_path)
+            async with default_panel_lock:
+                await _async_update_default_panel(hass, renamed_from, url_path)
 
     # Process YAML dashboards
     for url_path, dashboard_conf in hass.data[LOVELACE_DATA].yaml_dashboards.items():

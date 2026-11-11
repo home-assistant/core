@@ -97,7 +97,7 @@ STORAGE_DASHBOARD_CREATE_FIELDS: VolDictType = {
 
 STORAGE_DASHBOARD_UPDATE_FIELDS: VolDictType = {
     **DASHBOARD_BASE_UPDATE_FIELDS,
-    probatio.Optional(CONF_URL_PATH): cv.string,
+    probatio.Optional(CONF_URL_PATH): probatio.All(cv.string, probatio.Length(min=1)),
     probatio.Optional(CONF_ALLOW_SINGLE_WORD): bool,
 }
 
