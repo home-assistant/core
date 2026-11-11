@@ -5,7 +5,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from daikin_onecta import ClimateControlClient, OnectaAuthenticationError
+from daikin_onecta import ClimateControlClient
 from daikin_onecta.models import ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -1401,19 +1401,22 @@ async def test_climate_service_updates_entity_state(
     assert entity_registry.async_get(entity_id).device_id == child_entry.id
 
     if token_rejected:
-        # Exercise the real climate adapter and coordinator command handling.
+        # Exercise the pinned library's real request contract and the climate
+        # adapter using a simulated API rejection.
         monkeypatch.setattr(
             DaikinClimate,
             "_async_execute_climate_command",
             _ACTUAL_ASYNC_EXECUTE_CLIMATE_COMMAND,
         )
-        coordinator.client.patch_characteristic = AsyncMock(
-            side_effect=OnectaAuthenticationError(
-                status=401,
-                method="PATCH",
-                path="/v1/gateway-devices/gateway/management-points/zone",
-            )
-        )
+        response = MagicMock(status=401, headers={})
+        response.text = AsyncMock(return_value="Unauthorized")
+        request_context = MagicMock()
+        request_context.__aenter__ = AsyncMock(return_value=response)
+        request_context.__aexit__ = AsyncMock(return_value=None)
+        session = MagicMock()
+        session.request = MagicMock(return_value=request_context)
+        coordinator.client._session = session
+        coordinator.client._token_provider = AsyncMock(return_value="test-token")
 
     service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -1440,13 +1443,20 @@ async def test_climate_service_updates_entity_state(
     )
 
     if token_rejected:
-        coordinator.client.patch_characteristic.assert_awaited_once_with(
-            "gateway",
-            "zone",
-            "temperatureControl",
-            21,
-            path="/operationModes/heating/setpoints/roomTemperature",
+        request = coordinator.client._session.request
+        request.assert_called_once()
+        assert request.call_args.args == (
+            "PATCH",
+            "https://api.onecta.daikineurope.com/v1/gateway-devices/gateway/"
+            "management-points/zone/characteristics/temperatureControl",
         )
+        assert request.call_args.kwargs["headers"]["Authorization"] == (
+            "Bearer test-token"
+        )
+        assert request.call_args.kwargs["json"] == {
+            "value": 21,
+            "path": "/operationModes/heating/setpoints/roomTemperature",
+        }
         device.patch.assert_not_awaited()
         assert coordinator.last_patch_call is None
     else:

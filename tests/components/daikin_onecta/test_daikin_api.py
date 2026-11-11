@@ -3,20 +3,24 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import RequestInfo
 from daikin_onecta import (
     OnectaApiError,
     OnectaAuthenticationError,
+    OnectaClient,
     OnectaConnectionError,
     OnectaRateLimitError,
 )
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from yarl import URL
 
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestReauthError
 from homeassistant.util import dt as dt_util
 
 
@@ -132,6 +136,35 @@ async def test_write_authentication_error(
         assert not await api.async_execute_command(command)
 
     start_reauth.assert_not_called()
+    assert api.last_patch_call is None
+
+
+async def test_write_preserves_oauth_token_rejection(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Propagate token-provider OAuth failures from the pinned client unchanged."""
+    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
+    url = URL("https://idp.onecta.daikineurope.com/v1/oidc/token")
+    token_error = OAuth2TokenRequestReauthError(
+        domain=config_entry.domain,
+        request_info=RequestInfo(url=url, method="POST", headers={}, real_url=url),
+        status=401,
+        message="invalid_grant",
+    )
+
+    async def token_provider() -> str:
+        raise token_error
+
+    api._client = OnectaClient(MagicMock(), token_provider)
+
+    async def command(client: OnectaClient) -> None:
+        await client.patch_characteristic("gateway", "zone", "temperatureControl", 21)
+
+    with pytest.raises(OAuth2TokenRequestReauthError) as err:
+        await api.async_execute_command(command)
+
+    assert err.value is token_error
     assert api.last_patch_call is None
 
 
