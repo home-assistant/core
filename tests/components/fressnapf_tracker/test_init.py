@@ -11,10 +11,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.fressnapf_tracker import invalid_tracker_issue_id
 from homeassistant.components.fressnapf_tracker.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.json import json_dumps
 
 from .conftest import MOCK_SERIAL_NUMBER
 
@@ -117,12 +119,13 @@ async def test_invalid_tracker(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(issue_registry.issues) == 1
 
-    issue_id = (
-        f"invalid_fressnapf_tracker_{mock_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}"
-    )
+    issue_id = invalid_tracker_issue_id(mock_config_entry.entry_id, MOCK_SERIAL_NUMBER)
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.config_entry_id == mock_config_entry.entry_id
+    # The issue is appended to diagnostics downloads without redaction,
+    # so nothing in it may contain the serial number
+    assert MOCK_SERIAL_NUMBER not in json_dumps(issue.to_json())
 
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -140,7 +143,7 @@ async def test_invalid_tracker_already_exists(
     ir.async_create_issue(
         hass,
         DOMAIN,
-        f"invalid_fressnapf_tracker_{mock_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}",
+        invalid_tracker_issue_id(mock_config_entry.entry_id, MOCK_SERIAL_NUMBER),
         config_entry_id=mock_config_entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
@@ -153,6 +156,38 @@ async def test_invalid_tracker_already_exists(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_malformed_tracker")
+async def test_invalid_tracker_legacy_issue_replaced(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an issue with the serial number in its ID is replaced."""
+    mock_config_entry.add_to_hass(hass)
+    legacy_issue_id = (
+        f"invalid_fressnapf_tracker_{mock_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}"
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        legacy_issue_id,
+        config_entry_id=mock_config_entry.entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="invalid_fressnapf_tracker",
+        translation_placeholders={"tracker_id": MOCK_SERIAL_NUMBER},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    assert issue_registry.async_get_issue(DOMAIN, legacy_issue_id) is None
+    assert issue_registry.async_get_issue(
+        DOMAIN, invalid_tracker_issue_id(mock_config_entry.entry_id, MOCK_SERIAL_NUMBER)
+    )
 
 
 @pytest.mark.usefixtures("mock_auth_client", "mock_api_client_malformed_tracker")
@@ -175,7 +210,7 @@ async def test_invalid_tracker_shared_between_entries(
     assert len(issue_registry.issues) == 2
     for entry in entries:
         issue = issue_registry.async_get_issue(
-            DOMAIN, f"invalid_fressnapf_tracker_{entry.entry_id}_{MOCK_SERIAL_NUMBER}"
+            DOMAIN, invalid_tracker_issue_id(entry.entry_id, MOCK_SERIAL_NUMBER)
         )
         assert issue is not None
         assert issue.config_entry_id == entry.entry_id
@@ -185,5 +220,5 @@ async def test_invalid_tracker_shared_between_entries(
     assert len(issue_registry.issues) == 1
     assert issue_registry.async_get_issue(
         DOMAIN,
-        f"invalid_fressnapf_tracker_{mock_email_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}",
+        invalid_tracker_issue_id(mock_email_config_entry.entry_id, MOCK_SERIAL_NUMBER),
     )
