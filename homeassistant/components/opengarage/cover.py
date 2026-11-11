@@ -1,5 +1,6 @@
 """Platform for the opengarage.io cover component."""
 
+from datetime import datetime, timedelta
 import logging
 from typing import Any, cast, override
 
@@ -11,6 +12,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
@@ -30,6 +32,10 @@ STATES_MAP: dict[int, str] = {
     3: CoverState.CLOSING,
     4: CoverState.OPENING,
 }
+
+# After a command, the device keeps reporting the old state until the door
+# starts moving. Stop waiting if it still has not moved after this long.
+MOVEMENT_TIMEOUT = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -56,6 +62,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         """Initialize the cover."""
         self._state: str | None = None
         self._state_before_move: str | None = None
+        self._movement_deadline: datetime | None = None
 
         super().__init__(coordinator, device_id)
 
@@ -89,6 +96,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         if self._state in [CoverState.CLOSED, CoverState.CLOSING]:
             return
         self._state_before_move = self._state
+        self._movement_deadline = dt_util.utcnow() + MOVEMENT_TIMEOUT
         self._state = CoverState.CLOSING
         self.async_write_ha_state()
         await self._push_button()
@@ -99,6 +107,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         if self._state in [CoverState.OPEN, CoverState.OPENING]:
             return
         self._state_before_move = self._state
+        self._movement_deadline = dt_util.utcnow() + MOVEMENT_TIMEOUT
         self._state = CoverState.OPENING
         self.async_write_ha_state()
         await self._push_button()
@@ -110,12 +119,15 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         status = self.coordinator.data
 
         state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
-        if self._state_before_move is not None:
-            if self._state_before_move != state:
-                self._state = state
-                self._state_before_move = None
-        else:
-            self._state = state
+        if (
+            self._movement_deadline is not None
+            and dt_util.utcnow() < self._movement_deadline
+            and state == self._state_before_move
+        ):
+            return
+        self._state = state
+        self._state_before_move = None
+        self._movement_deadline = None
 
     @property
     @override
@@ -142,4 +154,5 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
         self._state = self._state_before_move
         self._state_before_move = None
+        self._movement_deadline = None
         self.async_write_ha_state()

@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -147,6 +148,48 @@ async def test_cover_command_from_stopped(
 
     await _simulate_door_state(hass, mock_opengarage, final_door_state)
     assert hass.states.get("cover.garage_abcdef").state == final_state
+
+
+@pytest.mark.parametrize(
+    ("door_state", "service", "moving_state", "door_state_name"),
+    [
+        (2, SERVICE_OPEN_COVER, STATE_OPENING, STATE_OPEN),
+        (2, SERVICE_CLOSE_COVER, STATE_CLOSING, STATE_OPEN),
+        (0, SERVICE_OPEN_COVER, STATE_OPENING, STATE_CLOSED),
+        (1, SERVICE_CLOSE_COVER, STATE_CLOSING, STATE_OPEN),
+    ],
+    ids=["open_from_stopped", "close_from_stopped", "open", "close"],
+)
+async def test_cover_command_without_movement(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_opengarage: MagicMock,
+    init_integration: MockConfigEntry,
+    door_state: int,
+    service: str,
+    moving_state: str,
+    door_state_name: str,
+) -> None:
+    """Test a command that never moves the door does not leave it moving."""
+    mock_opengarage.push_button.return_value = 1
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "cover.garage_abcdef"},
+        blocking=True,
+    )
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    # The door may not start moving straight away.
+    freezer.tick(timedelta(seconds=50))
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+    assert hass.states.get("cover.garage_abcdef").state == moving_state
+
+    freezer.tick(timedelta(seconds=11))
+    await _simulate_door_state(hass, mock_opengarage, door_state)
+    assert hass.states.get("cover.garage_abcdef").state == door_state_name
 
 
 async def test_cover_command_with_firmware_transition(
