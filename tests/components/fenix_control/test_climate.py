@@ -836,8 +836,9 @@ async def test_holiday_locks_controls(
     assert state.state == HVACMode.AUTO
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.AUTO]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    # Without supported features Home Assistant omits these attributes
-    assert ATTR_HVAC_ACTION not in state.attributes
+    # The thermostat still reports whether it heats
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    # Without the preset feature Home Assistant omits the attribute
     assert ATTR_PRESET_MODE not in state.attributes
 
     with pytest.raises(ServiceValidationError) as exc_info:
@@ -863,6 +864,7 @@ async def test_holiday_locks_controls(
         (PresetMode.MANUAL, None, None),
         (PresetMode.OFF, 0, HVACAction.OFF),
         (PresetMode.OFF, 2, HVACAction.OFF),
+        (PresetMode.OFF, None, HVACAction.OFF),
     ],
 )
 async def test_hvac_action(
@@ -883,6 +885,24 @@ async def test_hvac_action(
 
     # Home Assistant omits the attribute when the action is unknown
     assert hass.states.get(ENTITY_ID).attributes.get(ATTR_HVAC_ACTION) == hvac_action
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_hvac_action_during_holiday(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the thermostat reports heating during a holiday."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(HOLIDAY_DEVICE, hvac_state=1),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
 
 
 @pytest.mark.usefixtures("init_integration")

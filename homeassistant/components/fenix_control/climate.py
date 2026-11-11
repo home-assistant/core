@@ -211,13 +211,11 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     @property
     @override
     def hvac_action(self) -> HVACAction | None:
-        """Return whether the thermostat is heating."""
-        # The thermostat still heats during a holiday, but the cloud doesn't say
-        # when: the heating state field then carries the holiday mode instead
-        if self.device.holiday_active or self.device.hvac_state is None:
-            return None
+        """Return whether the thermostat is heating, also during a holiday."""
         if self.hvac_mode is HVACMode.OFF:
             return HVACAction.OFF
+        if self.device.hvac_state is None:
+            return None
         try:
             return HVAC_STATE_TO_HVAC_ACTION[HvacState(self.device.hvac_state)]
         except ValueError:
