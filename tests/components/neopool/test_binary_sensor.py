@@ -83,8 +83,8 @@ async def test_pool_cover_inverts_hardware_value(
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_ENABLE": 1,
         "Pool Cover": True,
-        "Filtration Pump": True,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
@@ -95,8 +95,8 @@ async def test_pool_cover_inverts_hardware_value(
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_ENABLE": 1,
         "Pool Cover": False,
-        "Filtration Pump": True,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
@@ -117,8 +117,8 @@ async def test_pool_cover_none_yields_unknown(
 
     mock_neopool_client.async_read_all.return_value = {
         **MOCK_POOL_DATA,
+        "MBF_PAR_HIDRO_COVER_ENABLE": 1,
         "Pool Cover": None,
-        "Filtration Pump": True,
     }
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
@@ -128,26 +128,27 @@ async def test_pool_cover_none_yields_unknown(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("pump_state", [False, None])
-async def test_pool_cover_unknown_when_filtration_not_running(
+@pytest.mark.parametrize("enable_value", [0, None])
+async def test_pool_cover_unknown_when_detection_disabled(
     hass: HomeAssistant,
     mock_config_entry_binary_sensor: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    pump_state: bool | None,
+    enable_value: int | None,
 ) -> None:
-    """Cover reads unknown unless the pump is confirmed running.
+    """Cover reads unknown when cover detection is disabled or missing.
 
-    The device only reports the cover bit while filtration runs, so an idle
-    (False) or unknown (None) pump state must not surface a stale open/closed.
+    MBF_PAR_HIDRO_COVER_ENABLE=0 means the controller is not tracking the cover,
+    so the raw bit is not meaningful and must not surface as on/off.
     """
     await setup_integration(hass, mock_config_entry_binary_sensor)
 
-    mock_neopool_client.async_read_all.return_value = {
-        **MOCK_POOL_DATA,
-        "Pool Cover": False,
-        "Filtration Pump": pump_state,
-    }
+    data: dict = {**MOCK_POOL_DATA, "Pool Cover": False}
+    if enable_value is None:
+        data.pop("MBF_PAR_HIDRO_COVER_ENABLE", None)
+    else:
+        data["MBF_PAR_HIDRO_COVER_ENABLE"] = enable_value
+    mock_neopool_client.async_read_all.return_value = data
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)

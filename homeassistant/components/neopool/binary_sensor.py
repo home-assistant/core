@@ -56,9 +56,10 @@ def _gpio_ok(gpio_key: str) -> _SupportedFn:
 def _pool_cover_open(data: dict[str, Any], hass: HomeAssistant) -> bool | None:
     """Invert the raw cover state for the OPENING device class.
 
-    The cover bit is only valid while filtration runs; otherwise report unknown.
+    The cover bit is only valid when cover detection is enabled
+    (MBF_PAR_HIDRO_COVER_ENABLE != 0); otherwise report unknown.
     """
-    if data.get("Filtration Pump") is not True:
+    if not data.get("MBF_PAR_HIDRO_COVER_ENABLE"):
         return None
     value = data.get("Pool Cover")
     if value is None:
