@@ -1,17 +1,22 @@
 """Test the acaia config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
+from homeassistant.components.acaia.const import (
+    CONF_IDLE_TIMEOUT,
+    CONF_IS_NEW_STYLE_SCALE,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 service_info = BluetoothServiceInfo(
@@ -233,3 +238,48 @@ async def test_no_bluetooth_devices(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_options_flow_defaults_and_reload(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the options flow stores the options and reloads the entry."""
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {CONF_IDLE_TIMEOUT: 0}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_IDLE_TIMEOUT: 15.0},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert init_integration.options == {CONF_IDLE_TIMEOUT: 15}
+    assert init_integration.state is ConfigEntryState.LOADED
+    # The reload released the connection of the previous coordinator.
+    mock_scale.disconnect.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {CONF_IDLE_TIMEOUT: -1},
+        {CONF_IDLE_TIMEOUT: 121},
+    ],
+)
+async def test_options_flow_rejects_out_of_range_timeout(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    user_input: dict[str, Any],
+) -> None:
+    """Test the idle timeout has to be in range."""
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=user_input
+        )

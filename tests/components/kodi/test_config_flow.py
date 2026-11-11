@@ -1,9 +1,11 @@
 """Test the Kodi config flow."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from unittest.mock import ANY, AsyncMock, PropertyMock, patch
+from typing import Any
+from unittest.mock import ANY, AsyncMock, MagicMock, PropertyMock, patch
 
+from pykodi.kodi import KodiWSConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -828,3 +830,80 @@ async def test_reauth_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_PASSWORD] == "new_password"
+
+
+def _ws_probe_factory(probe: MagicMock) -> Callable[..., Any]:
+    """Return a connection factory that hands out the given WebSocket probe."""
+
+    def factory(host: str, port: int, ws_port: int | None, *args: Any, **kwargs: Any):
+        if ws_port is None:
+            return MockConnection()
+        return probe
+
+    return factory
+
+
+def _ws_probe(close_error: Exception | None = None) -> MagicMock:
+    """Return a connected WebSocket probe."""
+    probe = MagicMock(spec=KodiWSConnection)
+    probe.connected = True
+    probe.close.side_effect = close_error
+    return probe
+
+
+@pytest.mark.parametrize(
+    "close_error",
+    [pytest.param(None, id="closed"), pytest.param(TimeoutError(), id="close_error")],
+)
+async def test_ws_probe_closed_after_success(
+    hass: HomeAssistant, user_flow: str, close_error: Exception | None
+) -> None:
+    """Test the WebSocket probe is closed after a successful check."""
+    probe = _ws_probe(close_error)
+    with (
+        patch(
+            "homeassistant.components.kodi.config_flow.Kodi.ping",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            side_effect=_ws_probe_factory(probe),
+        ),
+        patch(
+            "homeassistant.components.kodi.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
+        await hass.async_block_till_done()
+
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    probe.close.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    "close_error",
+    [pytest.param(None, id="closed"), pytest.param(TimeoutError(), id="close_error")],
+)
+async def test_ws_probe_closed_after_failure(
+    hass: HomeAssistant, user_flow: str, close_error: Exception | None
+) -> None:
+    """Test the WebSocket probe is closed when the check fails."""
+    probe = _ws_probe(close_error)
+    probe.connect.side_effect = CannotConnectError
+    with (
+        patch(
+            "homeassistant.components.kodi.config_flow.Kodi.ping",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            side_effect=_ws_probe_factory(probe),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "ws_port"
+    probe.close.assert_awaited_once_with()

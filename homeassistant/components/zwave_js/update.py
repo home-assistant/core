@@ -283,17 +283,14 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
             # If we have an available firmware update that is a higher version than
             # what's on the node, we should advertise it, otherwise the installed
             # version is the latest.
-            if (
-                available_firmware_updates
-                and (
-                    latest_firmware := max(
-                        available_firmware_updates,
-                        key=lambda x: AwesomeVersion(x.version),
-                    )
-                )
-                and AwesomeVersion(latest_firmware.version)
-                > AwesomeVersion(self.node.firmware_version)
-            ):
+            latest_firmware = max(
+                available_firmware_updates,
+                key=lambda x: AwesomeVersion(x.version),
+                default=None,
+            )
+            if latest_firmware is not None and AwesomeVersion(
+                latest_firmware.version
+            ) > AwesomeVersion(self.node.firmware_version):
                 self._latest_version_firmware = latest_firmware
                 self._attr_latest_version = latest_firmware.version
                 self.async_write_ha_state()

@@ -2,11 +2,11 @@
   "domain": "meteoalarm",
   "name": "MeteoAlarm",
   "categories": ["weather_alerts.public_warnings"],
-  "codeowners": ["@rolfberkenbosch"],
+  "codeowners": ["@rolfberkenbosch", "@mastermc0", "@jjprz"],
   "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
   "iot_class": "cloud_polling",
-  "loggers": ["meteoalertapi"],
+  "loggers": ["meteoalarmapi"],
   "quality_scale": "legacy",
-  "requirements": ["meteoalertapi==0.3.1"]
+  "requirements": ["meteoalarmapi==0.4.0"]
 }

@@ -15,14 +15,16 @@ from aiohpprinter import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.hp_printer.const import DOMAIN
+from homeassistant.components.hp_printer.const import DOMAIN, SECTION_ADVANCED_SETTINGS
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import HOST, SERIAL_NUMBER, TITLE
+
+USER_INPUT = {CONF_HOST: HOST, SECTION_ADVANCED_SETTINGS: {CONF_SSL: False}}
 
 NEW_HOST = "192.168.1.13"
 
@@ -48,12 +50,12 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST}
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
-    assert result["data"] == {CONF_HOST: HOST}
+    assert result["data"] == {CONF_HOST: HOST, CONF_SSL: False}
     assert result["result"].unique_id == SERIAL_NUMBER
 
     assert mock_setup_entry.call_count == 1
@@ -72,7 +74,7 @@ async def test_user_flow_title_falls_back_to_host(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST}
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -104,7 +106,7 @@ async def test_user_flow_cannot_connect(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST}
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -112,7 +114,7 @@ async def test_user_flow_cannot_connect(
 
     getattr(mock_hp_printer, endpoint).side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST}
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -131,7 +133,7 @@ async def test_user_flow_missing_serial_number(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST}
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -149,11 +151,32 @@ async def test_user_flow_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST}
+        result["flow_id"], USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_ssl_and_port(
+    hass: HomeAssistant, mock_hp_printer: AsyncMock
+) -> None:
+    """Test the flow stores the advanced connection settings."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            SECTION_ADVANCED_SETTINGS: {CONF_SSL: True, CONF_PORT: 8443},
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: HOST, CONF_SSL: True, CONF_PORT: 8443}
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 @pytest.mark.usefixtures("mock_hp_printer")
@@ -169,7 +192,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
-    assert result["data"] == {CONF_HOST: NEW_HOST}
+    assert result["data"] == {CONF_HOST: NEW_HOST, CONF_SSL: False}
     assert result["result"].unique_id == SERIAL_NUMBER
     assert mock_setup_entry.call_count == 1
 
@@ -238,7 +261,7 @@ async def test_zeroconf_flow_updates_host(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data == {CONF_HOST: NEW_HOST}
+    assert mock_config_entry.data == {CONF_HOST: NEW_HOST, CONF_SSL: False}
 
 
 async def test_zeroconf_flow_known_host(
