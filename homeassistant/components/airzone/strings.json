@@ -29,6 +29,9 @@
       "air_demand": {
         "name": "Air demand"
       },
+      "cloud_connected": {
+        "name": "Cloud"
+      },
       "cold_demand": {
         "name": "Cold demand"
       },
@@ -106,6 +109,13 @@
           "a_pp": "A++",
           "manual": "Manual",
           "off": "[%key:common::state::off%]"
+        }
+      },
+      "interface": {
+        "name": "Network interface",
+        "state": {
+          "ethernet": "Ethernet",
+          "wifi": "Wi-Fi"
         }
       },
       "rssi": {

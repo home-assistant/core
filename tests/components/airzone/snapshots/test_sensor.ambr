@@ -170,6 +170,66 @@
     'state': '43',
   })
 # ---
+# name: test_airzone_create_sensors[sensor.airzone_webserver_network_interface-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ethernet',
+        'wifi',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('airzone', '6e7a0798c1734ba81d26ced0e690eaec_ws')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.airzone_webserver_network_interface',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network interface',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Network interface',
+    'platform': 'airzone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'interface',
+    'unique_id': 'airzone_unique_id_ws_interface',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_airzone_create_sensors[sensor.airzone_webserver_network_interface-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airzone WebServer Network interface',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ethernet',
+        'wifi',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.airzone_webserver_network_interface',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ethernet',
+  })
+# ---
 # name: test_airzone_create_sensors[sensor.airzone_webserver_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
