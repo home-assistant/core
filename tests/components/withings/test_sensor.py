@@ -84,7 +84,7 @@ async def test_basal_metabolic_rate(
     )
     measurements[0]["measures"][0].update(value=value, unit=unit)
     withings.get_measurement_in_period.return_value = [
-        MeasurementGroup.from_api(group) for group in measurements
+        MeasurementGroup.from_dict(group) for group in measurements
     ]
 
     await setup_integration(hass, polling_config_entry, False)
@@ -150,7 +150,7 @@ async def test_basal_metabolic_rate_added_and_updated_on_refresh(
     measurements[0]["date"] += 600
     measurements[0]["measures"][0].update(value=21005, unit=-1)
     withings.get_measurement_since.return_value = [
-        MeasurementGroup.from_api(group) for group in measurements
+        MeasurementGroup.from_dict(group) for group in measurements
     ]
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)

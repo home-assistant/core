@@ -7984,6 +7984,80 @@
     'state': '1879163',
   })
 # ---
+# name: test_all_entities[sensor.model5_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charge',
+        'discharge',
+        'standby',
+        'ready',
+        'precharge',
+        'initialization',
+        'safetycheck',
+        'shutdown',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('vicare', 'gateway5_deviceId5')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model5_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ess_state',
+    'unique_id': 'gateway5_deviceId5-ess_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.model5_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model5 Battery state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charge',
+        'discharge',
+        'standby',
+        'ready',
+        'precharge',
+        'initialization',
+        'safetycheck',
+        'shutdown',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model5_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'shutdown',
+  })
+# ---
 # name: test_all_entities[sensor.model7_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
