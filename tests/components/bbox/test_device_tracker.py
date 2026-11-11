@@ -79,6 +79,26 @@ async def test_scanner_is_throttled(
     assert aioclient_mock.call_count == 2
 
 
+async def test_scanner_clears_cache_on_failure(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a failed scan drops the cached list instead of replaying it."""
+    freezer.move_to("2026-11-11T15:00:00+00:00")
+    aioclient_mock.get(HOSTS_URL, json=HOSTS_RESPONSE)
+    scanner = await hass.async_add_executor_job(BboxDeviceScanner, hass, HOST, PASSWORD)
+    devices = await hass.async_add_executor_job(scanner.scan_devices)
+    assert devices == [ACTIVE_MAC]
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(HOSTS_URL, exc=ClientConnectionError("boom"))
+    freezer.tick(timedelta(seconds=61))
+    devices = await hass.async_add_executor_job(scanner.scan_devices)
+    assert devices == []
+    assert scanner.get_device_name(ACTIVE_MAC) is None
+
+
 async def test_scanner_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
