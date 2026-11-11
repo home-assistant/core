@@ -134,6 +134,9 @@
     "setup_rejected": {
       "message": "iZone controller at {host} rejected setup"
     },
+    "system_reconfigured": {
+      "message": "The iZone system was reconfigured"
+    },
     "unable_to_connect": {
       "message": "Unable to connect to controller {uid}"
     },
@@ -145,6 +148,10 @@
     "deprecated_airflow_action": {
       "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Damper minimum** and **Damper maximum** number entities of each zone with the `number.set_value` action instead, and update any automations or scripts that use `{action}`.",
       "title": "The `{action}` action is being removed"
+    },
+    "yaml_exclude_unused": {
+      "description": "iZone now sets up each controller as its own entry, so the `exclude` option in the `izone:` section of your `configuration.yaml` file is no longer needed and has no effect. Controllers that were listed in it now show up as discovered devices. Add them, or select **Ignore** to hide them.\n\nRemove `exclude` from your `configuration.yaml` file and restart Home Assistant to fix this issue.",
+      "title": "The iZone `exclude` option no longer has any effect"
     }
   },
   "services": {

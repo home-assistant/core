@@ -1,5 +1,6 @@
 """The tests for the hassio component."""
 
+from collections.abc import AsyncIterator
 from dataclasses import replace
 from datetime import timedelta
 import logging
@@ -9,7 +10,11 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 from uuid import uuid4
 
-from aiohasupervisor import SupervisorBadRequestError, SupervisorError
+from aiohasupervisor import (
+    SupervisorBadRequestError,
+    SupervisorError,
+    SupervisorTimeoutError,
+)
 from aiohasupervisor.models import (
     AddonsStats,
     AddonStage,
@@ -20,6 +25,7 @@ from aiohasupervisor.models import (
     HomeAssistantOptions,
     InstalledAddon,
     InstalledAddonComplete,
+    LogsOptions,
     MountsInfo,
     MountState,
     MountType,
@@ -34,7 +40,6 @@ from freezegun.api import FrozenDateTimeFactory
 from probatio import Invalid
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 from yarl import URL
 
@@ -91,6 +96,16 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
+
+
+def _stream(text: str) -> AsyncIterator[str]:
+    """Return the lines of a log as the client streams them."""
+
+    async def _lines() -> AsyncIterator[str]:
+        for line in text.splitlines():
+            yield line
+
+    return _lines()
 
 
 @pytest.fixture(autouse=True)
@@ -190,13 +205,12 @@ async def test_setup_api_ping(
     assert is_hassio(hass)
 
 
-@pytest.mark.usefixtures("supervisor_client")
 @pytest.mark.parametrize(
-    ("response", "expected", "logged"),
+    ("logs", "expected", "logged"),
     [
         pytest.param(
             {
-                "text": (
+                "return_value": _stream(
                     "2026-10-29 10:00:00.000 INFO (MainThread) [homeassistant.setup]"
                     " Setup\n"
                     "2026-10-29 10:00:01.000 ERROR (MainThread)"
@@ -214,24 +228,25 @@ async def test_setup_api_ping(
             False,
             id="read",
         ),
-        pytest.param({"exc": aiohttp.ClientError()}, [], True, id="error"),
+        pytest.param({"side_effect": SupervisorError("boom")}, [], True, id="error"),
+        pytest.param(
+            {"side_effect": SupervisorTimeoutError("stalled")}, [], True, id="timeout"
+        ),
     ],
 )
 async def test_core_log_reader(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
-    response: dict[str, Any],
+    logs: dict[str, Any],
     expected: list[str],
     logged: bool,
 ) -> None:
     """Test the raw log starts with the Supervisor journal without a log file."""
     caplog.set_level(logging.DEBUG, logger="homeassistant.components.hassio")
     hass.data[KEY_DATA_LOGGING] = None
-    aioclient_mock.get(
-        "http://127.0.0.1/core/logs/latest", params={"lines": 5000}, **response
-    )
+    supervisor_client.homeassistant.logs.configure_mock(**logs)
     with patch.dict(os.environ, MOCK_ENVIRON):
         assert await async_setup_component(hass, "system_log", {})
         assert await async_setup_component(hass, DOMAIN, {})
@@ -245,6 +260,9 @@ async def test_core_log_reader(
     assert msg["success"]
     msg = await client.receive_json()
     assert msg["event"] == expected
+    assert supervisor_client.homeassistant.logs.mock_calls == [
+        call(LogsOptions(lines=50_000), latest=True, read_timeout=30)
+    ]
     assert ("Could not read the Home Assistant log" in caplog.text) is logged
 
 

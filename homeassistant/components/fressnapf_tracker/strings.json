@@ -105,6 +105,9 @@
     "sensor": {
       "last_seen": {
         "name": "Last seen"
+      },
+      "subscription_end": {
+        "name": "Subscription end"
       }
     },
     "switch": {

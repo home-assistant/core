@@ -51,18 +51,16 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     @property
     def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
-        serial = self.device.serial_number
-        identity = self.device.identity
         info = dr.DeviceInfo(
-            identifiers={(DOMAIN, serial)},
+            identifiers={(DOMAIN, self.device.serial_number)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
-            serial_number=serial,
+            serial_number=self.device.serial_number,
         )
-        if identity.hardware_version:
-            info.hw_version = identity.hardware_version
-        if identity.software_version:
-            info.sw_version = identity.software_version
+        if self.device.identity.hardware_version:
+            info.hw_version = self.device.identity.hardware_version
+        if self.device.identity.software_version:
+            info.sw_version = self.device.identity.software_version
         return info
 
     @override

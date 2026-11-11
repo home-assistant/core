@@ -109,7 +109,10 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         agreements = {
             agreement.business_agreement_number: agreement
@@ -169,7 +172,10 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         new_eans = list(
             dict.fromkeys(
@@ -363,7 +369,10 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
         return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
 

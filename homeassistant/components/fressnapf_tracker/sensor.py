@@ -59,6 +59,17 @@ SENSOR_ENTITY_DESCRIPTIONS: tuple[FressnapfTrackerSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _parse_timestamp(data.last_seen_timestamp),
     ),
+    FressnapfTrackerSensorDescription(
+        key="subscription_end",
+        translation_key="subscription_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: (
+            _parse_timestamp(data.servicebooking.servicebooking_until)
+            if data.servicebooking is not None
+            else None
+        ),
+    ),
 )
 
 
