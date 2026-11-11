@@ -177,28 +177,31 @@ class SystemBridgeCommandButton(SystemBridgeEntity, ButtonEntity):
         super().__init__(coordinator, api_port, f"{COMMAND_KEY_PREFIX}{command_id}")
         self._command_id = command_id
         # Kept so the button still has a name once the command is gone
-        self._command_name = ""
-        if (command := self._command) is not None:
-            self._command_name = command.name
+        self._command_name = self._command.name
 
     @property
-    def _command(self) -> SettingsCommandDefinition | None:
-        """Return the saved command, if it is still in the allowlist."""
-        return (self.coordinator.data.commands or {}).get(self._command_id)
+    def _command(self) -> SettingsCommandDefinition:
+        """Return the saved command. Only valid while the button is available."""
+        commands = self.coordinator.data.commands
+        if TYPE_CHECKING:
+            assert commands is not None
+        return commands[self._command_id]
 
     @property
     @override
     def name(self) -> str:
         """Return the command's name, which can change in the allowlist."""
-        if (command := self._command) is not None:
-            self._command_name = command.name
+        if self.available:
+            self._command_name = self._command.name
         return self._command_name
 
     @property
     @override
     def available(self) -> bool:
         """Return True if the command is still in the allowlist."""
-        return super().available and self._command is not None
+        return super().available and self._command_id in (
+            self.coordinator.data.commands or {}
+        )
 
     @override
     async def async_press(self) -> None:
