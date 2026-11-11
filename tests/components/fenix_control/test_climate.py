@@ -888,6 +888,42 @@ async def test_hvac_action(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "holiday_mode", "hvac_mode"),
+    [
+        # A WiFi Box reports mode 7 in every holiday, a TFT in a Sunday holiday
+        (7, 8, HVACMode.AUTO),
+        (7, 2, HVACMode.AUTO),
+        (None, 2, HVACMode.AUTO),
+        (int(PresetMode.DEFROST), 5, HVACMode.AUTO),
+        (7, 1, HVACMode.OFF),
+        (int(PresetMode.OFF), 1, HVACMode.OFF),
+    ],
+)
+async def test_hvac_mode_during_holiday(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: int | None,
+    holiday_mode: int,
+    hvac_mode: HVACMode,
+) -> None:
+    """Test a holiday shows auto, or off if it turns the heating off."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(
+            HOLIDAY_DEVICE, preset_mode=preset_mode, holiday_mode=holiday_mode
+        ),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == hvac_mode
+    assert state.attributes[ATTR_HVAC_MODES] == [hvac_mode]
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_hvac_action_during_holiday(
     hass: HomeAssistant,
     mock_fenix_client: MagicMock,
@@ -918,11 +954,6 @@ async def test_hvac_action_during_holiday(
             dataclasses.replace(DEVICE, preset_mode=3),
             [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT],
             id="unrecognized",
-        ),
-        pytest.param(
-            dataclasses.replace(HOLIDAY_DEVICE, preset_mode=None),
-            [],
-            id="holiday",
         ),
     ],
 )

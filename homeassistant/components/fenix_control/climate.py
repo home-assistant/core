@@ -4,7 +4,7 @@ import dataclasses
 import math
 from typing import Any, override
 
-from pyfenixcontrol import FenixControlError, HvacState, PresetMode
+from pyfenixcontrol import FenixControlError, HolidayMode, HvacState, PresetMode
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -186,6 +186,15 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the HVAC mode; holiday, defrost and boost follow the program."""
+        if self.device.holiday_active:
+            # The mode a thermostat reports during a holiday depends on the
+            # device type and on what the holiday does; some values are unknown
+            if (
+                self.device.holiday_mode == HolidayMode.OFF
+                or self.device.preset_mode == PresetMode.OFF
+            ):
+                return HVACMode.OFF
+            return HVACMode.AUTO
         match self.device.preset_mode:
             case PresetMode.OFF:
                 return HVACMode.OFF
