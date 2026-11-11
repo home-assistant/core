@@ -773,41 +773,43 @@ def _async_schedule_service_events(hass: HomeAssistant) -> None:
 async def _async_notify_service_events(hass: HomeAssistant) -> None:
     """Send the listeners the difference since the descriptions last sent."""
     event_state = hass.data[SERVICE_EVENT_STATE]
-    while event_state.dirty:
-        event_state.dirty = False
-        descriptions = await async_get_all_descriptions(hass, registered_only=False)
-        last_descriptions = event_state.last_descriptions
-        event_state.last_descriptions = descriptions
+    try:
+        while event_state.dirty:
+            event_state.dirty = False
+            descriptions = await async_get_all_descriptions(hass, registered_only=False)
+            last_descriptions = event_state.last_descriptions
+            event_state.last_descriptions = descriptions
 
-        changed: dict[str, dict[str, Any]] = {}
-        removed: dict[str, set[str]] = {}
-        if last_descriptions is not None:
-            for domain, domain_descriptions in descriptions.items():
-                last_domain_descriptions = last_descriptions.get(domain, {})
-                if domain_changed := {
-                    service: description
-                    for service, description in domain_descriptions.items()
-                    if last_domain_descriptions.get(service) is not description
-                }:
-                    changed[domain] = domain_changed
-            for domain, last_domain_descriptions in last_descriptions.items():
-                if domain_removed := set(last_domain_descriptions).difference(
-                    descriptions.get(domain, {})
-                ):
-                    removed[domain] = domain_removed
+            changed: dict[str, dict[str, Any]] = {}
+            removed: dict[str, set[str]] = {}
+            if last_descriptions is not None:
+                for domain, domain_descriptions in descriptions.items():
+                    last_domain_descriptions = last_descriptions.get(domain, {})
+                    if domain_changed := {
+                        service: description
+                        for service, description in domain_descriptions.items()
+                        if last_domain_descriptions.get(service) is not description
+                    }:
+                        changed[domain] = domain_changed
+                for domain, last_domain_descriptions in last_descriptions.items():
+                    if domain_removed := set(last_domain_descriptions).difference(
+                        descriptions.get(domain, {})
+                    ):
+                        removed[domain] = domain_removed
 
-        awaiting_snapshot = event_state.awaiting_snapshot
-        event_state.awaiting_snapshot = []
-        no_removed: dict[str, set[str]] = {}
-        for listener in event_state.listeners.copy():
-            try:
-                if listener in awaiting_snapshot:
-                    await listener(descriptions, no_removed)
-                elif changed or removed:
-                    await listener(changed, removed)
-            except Exception:
-                _LOGGER.exception("Error while notifying service event listener")
-    event_state.running = False
+            awaiting_snapshot = event_state.awaiting_snapshot
+            event_state.awaiting_snapshot = []
+            no_removed: dict[str, set[str]] = {}
+            for listener in event_state.listeners.copy():
+                try:
+                    if listener in awaiting_snapshot:
+                        await listener(descriptions, no_removed)
+                    elif changed or removed:
+                        await listener(changed, removed)
+                except Exception:
+                    _LOGGER.exception("Error while notifying service event listener")
+    finally:
+        event_state.running = False
 
 
 async def async_declare_service(hass: HomeAssistant, service: str) -> None:
