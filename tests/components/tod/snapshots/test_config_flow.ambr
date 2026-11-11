@@ -1,0 +1,414 @@
+# serializer version: 1
+# name: test_config_flow[sun-to-time]
+  dict({
+    'after': dict({
+      'event': 'sunrise',
+    }),
+    'before': dict({
+      'time': '07:00',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_config_flow[sun]
+  dict({
+    'after': dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    'before': dict({
+      'event': 'sunset',
+      'offset': dict({
+        'minutes': 30,
+      }),
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_config_flow[time-to-sun]
+  dict({
+    'after': dict({
+      'time': '17:00',
+    }),
+    'before': dict({
+      'event': 'sunset',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_config_flow[time]
+  dict({
+    'after': dict({
+      'time': '10:00',
+    }),
+    'before': dict({
+      'time': '18:00',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_form
+  dict({
+    'selector': dict({
+      'choose': dict({
+        'choices': dict({
+          'sun': dict({
+            'selector': dict({
+              'object': dict({
+                'fields': dict({
+                  'event': dict({
+                    'required': True,
+                    'selector': dict({
+                      'select': dict({
+                        'custom_value': False,
+                        'mode': 'dropdown',
+                        'multiple': False,
+                        'options': list([
+                          'sunrise',
+                          'sunset',
+                        ]),
+                        'sort': False,
+                        'translation_key': 'sun_event',
+                      }),
+                    }),
+                  }),
+                  'offset': dict({
+                    'selector': dict({
+                      'duration': dict({
+                        'enable_second': True,
+                        'mode': 'offset',
+                      }),
+                    }),
+                  }),
+                }),
+                'multiple': False,
+                'translation_key': 'transition',
+              }),
+            }),
+          }),
+          'time': dict({
+            'selector': dict({
+              'time': dict({
+              }),
+            }),
+          }),
+        }),
+        'translation_key': 'transition',
+      }),
+    }),
+  })
+# ---
+# name: test_options[mixed-sun-to-time]
+  tuple(
+    'sun',
+    dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    'time',
+    '12:00',
+  )
+# ---
+# name: test_options[mixed-sun-to-time].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <TodEntityStateAttribute.AFTER: 'after'>: '2022-03-16T04:57:53.192841-07:00',
+      <TodEntityStateAttribute.BEFORE: 'before'>: '2022-03-16T13:00:00-07:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My tod',
+      <TodEntityStateAttribute.NEXT_UPDATE: 'next_update'>: '2022-03-16T04:57:53.192841-07:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_tod',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[mixed-sun-to-time][options]
+  dict({
+    'after': dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    'before': dict({
+      'time': '13:00',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_options[mixed-sun-to-time][reopened]
+  tuple(
+    dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    '13:00',
+  )
+# ---
+# name: test_options[mixed-time-to-sun]
+  tuple(
+    'time',
+    '12:00',
+    'sun',
+    dict({
+      'event': 'sunset',
+      'offset': dict({
+        'minutes': 30,
+      }),
+    }),
+  )
+# ---
+# name: test_options[mixed-time-to-sun].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <TodEntityStateAttribute.AFTER: 'after'>: '2022-03-16T12:00:00-07:00',
+      <TodEntityStateAttribute.BEFORE: 'before'>: '2022-03-16T18:57:27.925823-07:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My tod',
+      <TodEntityStateAttribute.NEXT_UPDATE: 'next_update'>: '2022-03-16T12:00:00-07:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_tod',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[mixed-time-to-sun][options]
+  dict({
+    'after': dict({
+      'time': '12:00',
+    }),
+    'before': dict({
+      'event': 'sunset',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_options[mixed-time-to-sun][reopened]
+  tuple(
+    '12:00',
+    dict({
+      'event': 'sunset',
+    }),
+  )
+# ---
+# name: test_options[remove-sun-offset]
+  tuple(
+    'sun',
+    dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    'sun',
+    dict({
+      'event': 'sunset',
+      'offset': dict({
+        'minutes': 30,
+      }),
+    }),
+  )
+# ---
+# name: test_options[remove-sun-offset].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <TodEntityStateAttribute.AFTER: 'after'>: '2022-03-16T04:57:53.192841-07:00',
+      <TodEntityStateAttribute.BEFORE: 'before'>: '2022-03-16T18:57:27.925823-07:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My tod',
+      <TodEntityStateAttribute.NEXT_UPDATE: 'next_update'>: '2022-03-16T04:57:53.192841-07:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_tod',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[remove-sun-offset][options]
+  dict({
+    'after': dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    'before': dict({
+      'event': 'sunset',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_options[remove-sun-offset][reopened]
+  tuple(
+    dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    dict({
+      'event': 'sunset',
+    }),
+  )
+# ---
+# name: test_options[sun-to-time]
+  tuple(
+    'sun',
+    dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    'sun',
+    dict({
+      'event': 'sunset',
+      'offset': dict({
+        'minutes': 30,
+      }),
+    }),
+  )
+# ---
+# name: test_options[sun-to-time].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <TodEntityStateAttribute.AFTER: 'after'>: '2022-03-16T04:57:53.192841-07:00',
+      <TodEntityStateAttribute.BEFORE: 'before'>: '2022-03-16T17:05:00-07:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My tod',
+      <TodEntityStateAttribute.NEXT_UPDATE: 'next_update'>: '2022-03-16T04:57:53.192841-07:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_tod',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[sun-to-time][options]
+  dict({
+    'after': dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    'before': dict({
+      'time': '17:05',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_options[sun-to-time][reopened]
+  tuple(
+    dict({
+      'event': 'sunrise',
+      'offset': dict({
+        'hours': -2,
+      }),
+    }),
+    '17:05',
+  )
+# ---
+# name: test_options[time-to-sun]
+  tuple(
+    'time',
+    '10:00',
+    'time',
+    '18:05',
+  )
+# ---
+# name: test_options[time-to-sun].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <TodEntityStateAttribute.AFTER: 'after'>: '2022-03-16T10:00:00-07:00',
+      <TodEntityStateAttribute.BEFORE: 'before'>: '2022-03-16T06:57:27.925823-07:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My tod',
+      <TodEntityStateAttribute.NEXT_UPDATE: 'next_update'>: '2022-03-16T10:00:00-07:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_tod',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[time-to-sun][options]
+  dict({
+    'after': dict({
+      'time': '10:00',
+    }),
+    'before': dict({
+      'event': 'sunset',
+      'offset': dict({
+        'hours': -12,
+      }),
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_options[time-to-sun][reopened]
+  tuple(
+    '10:00',
+    dict({
+      'event': 'sunset',
+      'offset': dict({
+        'hours': -12,
+      }),
+    }),
+  )
+# ---
+# name: test_options[time]
+  tuple(
+    'time',
+    '10:00',
+    'time',
+    '18:05',
+  )
+# ---
+# name: test_options[time].2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <TodEntityStateAttribute.AFTER: 'after'>: '2022-03-16T10:00:00-07:00',
+      <TodEntityStateAttribute.BEFORE: 'before'>: '2022-03-16T17:05:00-07:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My tod',
+      <TodEntityStateAttribute.NEXT_UPDATE: 'next_update'>: '2022-03-16T10:00:00-07:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_tod',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_options[time][options]
+  dict({
+    'after': dict({
+      'time': '10:00',
+    }),
+    'before': dict({
+      'time': '17:05',
+    }),
+    'name': 'My tod',
+  })
+# ---
+# name: test_options[time][reopened]
+  tuple(
+    '10:00',
+    '17:05',
+  )
+# ---

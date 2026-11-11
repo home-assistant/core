@@ -31,6 +31,13 @@ async def test_setup_and_remove_config_entry(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert config_entry.version == 2
+    assert config_entry.options == {
+        "after": {"time": "10:00:00"},
+        "before": {"time": "18:05:00"},
+        "name": "My tod",
+    }
+
     # Check the entity is registered in the entity registry
     assert entity_registry.async_get(tod_entity_id) is not None
 

@@ -3,8 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "after_time": "On time",
-          "before_time": "Off time",
+          "after": "On time",
+          "before": "Off time",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "Create a binary sensor that turns on or off depending on the time.",
@@ -16,8 +16,34 @@
     "step": {
       "init": {
         "data": {
-          "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
-          "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
+          "after": "[%key:component::tod::config::step::user::data::after%]",
+          "before": "[%key:component::tod::config::step::user::data::before%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "sun_event": {
+      "options": {
+        "sunrise": "Sunrise",
+        "sunset": "Sunset"
+      }
+    },
+    "transition": {
+      "choices": {
+        "sun": "Sun",
+        "time": "Time"
+      },
+      "fields": {
+        "event": {
+          "name": "Sun event"
+        },
+        "offset": {
+          "description": "Adjust the sun event by a positive or negative duration.",
+          "name": "Offset"
+        },
+        "time": {
+          "name": "Time"
         }
       }
     }
