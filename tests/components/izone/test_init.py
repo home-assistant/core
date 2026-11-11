@@ -20,6 +20,7 @@ from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_load_yaml_exclude, create_mock_controller, create_mock_zone
 
@@ -54,6 +55,7 @@ async def test_setup_and_unload(
 async def test_reconfigured_system_reloads_entry(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_discovery_service: Mock,
     mock_controller: Mock,
@@ -81,6 +83,10 @@ async def test_reconfigured_system_reloads_entry(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "000000001", 1),  # type: ignore[arg-type]
+        mock_config_entry.entry_id,
+    )
 
 
 async def test_migrate_heals_legacy_domain_unique_id(
