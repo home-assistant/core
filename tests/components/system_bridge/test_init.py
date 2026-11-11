@@ -318,23 +318,28 @@ async def test_version_check_failure(
     assert mock_config_entry.state is expected_state
 
 
-async def test_unsupported_version_creates_issue(
+@pytest.mark.usefixtures("mock_websocket_client")
+async def test_unsupported_version_issue_deleted_once_supported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test an issue is raised when the System Bridge version is unsupported."""
+    """Test the unsupported version issue goes once the host is updated."""
+    issue_id = f"system_bridge_{mock_config_entry.entry_id}_unsupported_version"
     mock_version.check_supported.return_value = False
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"system_bridge_{mock_config_entry.entry_id}_unsupported_version"
-    )
+    mock_version.check_supported.return_value = True
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.usefixtures("mock_version")
