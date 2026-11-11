@@ -7,7 +7,7 @@ from types import MappingProxyType, SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pyvesync import VeSync
 from pyvesync.auth import VeSyncAuth
@@ -21,11 +21,11 @@ from pyvesync.devices.vesynchumidifier import VeSyncHumid200S, VeSyncHumid200300
 
 from homeassistant.components.vesync import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .common import DEVICE_CATEGORIES, mock_multiple_device_responses
+from .common import DEVICE_CATEGORIES, mock_firmware, mock_multiple_device_responses
 
 
 @pytest.fixture(autouse=True)
@@ -317,6 +317,56 @@ async def humidifier_config_entry(
     await hass.async_block_till_done()
 
     return entry
+
+
+@pytest.fixture
+async def rgb_humidifier_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> MockConfigEntry:
+    """Set up an RGB humidifier using the real library and mocked cloud responses."""
+    devices = await async_load_json_object_fixture(hass, "vesync-devices.json", DOMAIN)
+    device = next(
+        device
+        for device in devices["result"]["list"]
+        if device["deviceType"] == "Classic200S"
+    )
+    device.update(
+        cid="rgb-humidifier",
+        deviceName="OasisMist",
+        deviceType="LUH-O451S-WEU",
+        deviceRegion="EU",
+        deviceStatus="off",
+        subDeviceNo=None,
+    )
+    devices["result"]["list"] = [device]
+    devices["result"].update(total=1, pageSize=1, pageNo=1)
+    aioclient_mock.post(
+        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices", json=devices
+    )
+    details = await async_load_json_object_fixture(
+        hass, "humidifier-detail.json", DOMAIN
+    )
+    details["result"]["result"].update(
+        enabled=False,
+        rgbNightLight={
+            "action": "off",
+            "brightness": 100,
+            "colorMode": "color",
+            "red": 255,
+            "green": 0,
+            "blue": 64,
+        },
+    )
+    aioclient_mock.post(
+        "https://smartapi.vesync.com/cloud/v2/deviceManaged/bypassV2", json=details
+    )
+    mock_firmware(aioclient_mock)
+    with patch("homeassistant.components.vesync.PLATFORMS", [Platform.LIGHT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
 
 
 @pytest.fixture
