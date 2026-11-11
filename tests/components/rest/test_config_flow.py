@@ -356,10 +356,12 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     assert result["errors"][CONF_STATE_CLASS] == "state_class_validation_error"
     assert result["description_placeholders"]["state_class"] == "measurement"
 
+    user_input = get_subentry_data[SENSOR_DATA]["data"] | {
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATE
+    }
+    del user_input[CONF_UNIT_OF_MEASUREMENT]
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        get_subentry_data[SENSOR_DATA]["data"]
-        | {CONF_DEVICE_CLASS: SensorDeviceClass.DATE},
+        result["flow_id"], user_input
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"][CONF_STATE_CLASS] == "state_class_validation_error"
@@ -373,6 +375,19 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"][CONF_STATE_CLASS] == "state_class_validation_error"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        get_subentry_data[SENSOR_DATA]["data"]
+        | {
+            CONF_DEVICE_CLASS: SensorDeviceClass.DATE,
+            CONF_UNIT_OF_MEASUREMENT: UnitOfVolume.LITERS,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert (
+        result["errors"][CONF_UNIT_OF_MEASUREMENT]
+        == "unit_provided_non_numeric_device_class_error"
+    )
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
