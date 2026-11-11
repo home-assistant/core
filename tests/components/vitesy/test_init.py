@@ -169,3 +169,33 @@ async def test_new_device_is_added(
         "sensor.living_room_shelfy_air_quality_score",
     ):
         assert hass.states.get(entity_id) is not None, entity_id
+
+
+async def test_readded_device_is_added_again(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_devices: dict[str, VitesyDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device re-added to the account gets its entities back."""
+    device_id = "80:65:99:34:F9:B5"
+    device = replace(
+        mock_devices[DEVICE_ID], device_id=device_id, name="Living room Shelfy"
+    )
+    mock_devices[device_id] = device
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "sensor.living_room_shelfy_air_quality_score"
+    assert hass.states.get(entity_id) is not None
+
+    del mock_devices[device_id]
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    mock_devices[device_id] = device
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is not None
