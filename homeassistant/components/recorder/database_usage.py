@@ -121,15 +121,27 @@ def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
     dialect = session.get_bind().dialect
     if TYPE_CHECKING:
         assert isinstance(dialect, MySQLDialect)
+    stats_expiry = None
     if not dialect.is_mariadb:
         # MySQL caches these sizes for a day by default, MariaDB does not
+        stats_expiry = session.execute(
+            text("SELECT @@SESSION.information_schema_stats_expiry")
+        ).scalar_one()
         session.execute(text("SET SESSION information_schema_stats_expiry = 0"))
-    rows = session.execute(
-        text(
-            "SELECT table_name, data_length + index_length, data_free "
-            "FROM information_schema.tables WHERE table_schema = DATABASE()"
-        )
-    ).all()
+    try:
+        rows = session.execute(
+            text(
+                "SELECT table_name, data_length + index_length, data_free "
+                "FROM information_schema.tables WHERE table_schema = DATABASE()"
+            )
+        ).all()
+    finally:
+        # The session setting would otherwise stay on the pooled connection
+        if stats_expiry is not None:
+            session.execute(
+                text("SET SESSION information_schema_stats_expiry = :expiry"),
+                {"expiry": stats_expiry},
+            )
     table_bytes = {table: int(size or 0) for table, size, _ in rows}
     table_free = [int(free or 0) for _, _, free in rows]
     # Tables in the shared system tablespace each report its free space

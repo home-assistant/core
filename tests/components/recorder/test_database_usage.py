@@ -30,7 +30,6 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.database_usage import (
     CACHE_TIME,
-    DATA_DATABASE_USAGE,
     REFRESH_INTERVAL,
     DatabaseUsage,
     _attribute_lengths,
@@ -547,11 +546,10 @@ async def test_database_usage_slow_run(
     assert await _async_usage(client) == report
 
 
-async def test_database_usage_single_flight(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Test a cancelled request leaves the run to the requests still waiting."""
-    cache = hass.data[DATA_DATABASE_USAGE]
+@pytest.mark.usefixtures("recorder_mock")
+async def test_database_usage_single_flight(hass_ws_client: WebSocketGenerator) -> None:
+    """Test concurrent refresh requests share one run."""
+    client = await hass_ws_client()
     release = threading.Event()
 
     def blocked_usage(instance: Recorder) -> DatabaseUsage:
@@ -562,15 +560,19 @@ async def test_database_usage_single_flight(
         "homeassistant.components.recorder.database_usage.get_database_usage",
         side_effect=blocked_usage,
     ) as mock_usage:
-        first = hass.async_create_task(cache.async_refresh(recorder_mock))
-        second = hass.async_create_task(cache.async_refresh(recorder_mock))
-        first.cancel()
+        for _ in range(2):
+            await client.send_json_auto_id(
+                {"type": "recorder/database_usage", "refresh": True}
+            )
+        # Messages are handled in order, so both requests wait once the pong is back
+        await client.send_json_auto_id({"type": "ping"})
+        assert (await client.receive_json())["type"] == "pong"
         release.set()
-        usage = await second
+        responses = [await client.receive_json() for _ in range(2)]
 
-    assert first.cancelled()
     assert mock_usage.call_count == 1
-    assert cache.usage is usage
+    assert all(response["success"] for response in responses)
+    assert responses[0]["result"] == responses[1]["result"]
 
 
 @pytest.mark.usefixtures("recorder_mock")
