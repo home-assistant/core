@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '2',
   })
 # ---
 # name: test_entities[sensor.mock_title_all_time_download-entry]
@@ -220,7 +220,58 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '9',
+  })
+# ---
+# name: test_entities[sensor.mock_title_completed_torrents-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('qbittorrent', '01K6E7464PTQKDE24VAJQZPTH2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_completed_torrents',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Completed torrents',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Completed torrents',
+    'platform': 'qbittorrent',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'completed_torrents',
+    'unique_id': '01K6E7464PTQKDE24VAJQZPTH2-completed_torrents',
+    'unit_of_measurement': 'torrents',
+  })
+# ---
+# name: test_entities[sensor.mock_title_completed_torrents-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Completed torrents',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'torrents',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_completed_torrents',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
   })
 # ---
 # name: test_entities[sensor.mock_title_connection_status-entry]
@@ -610,7 +661,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '2',
   })
 # ---
 # name: test_entities[sensor.mock_title_status-entry]

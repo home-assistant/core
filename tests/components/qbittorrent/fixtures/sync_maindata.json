@@ -384,6 +384,39 @@
       "uploaded": 0,
       "uploaded_session": 0,
       "upspeed": 0
+    },
+    "cb48f83c1f1f7bb781e9c4af1602a14df7a915f0": {
+      "amount_left": 0,
+      "completed": 257091916,
+      "completion_on": 1751896934,
+      "downloaded": 257091916,
+      "name": "ubuntu-stoppedUP",
+      "progress": 1,
+      "size": 257091916,
+      "state": "stoppedUP",
+      "total_size": 257091916
+    },
+    "cb48f83c1f1f7bb781e9c4af1602a14df7a915f1": {
+      "amount_left": 0,
+      "completed": 257091916,
+      "completion_on": 1751896934,
+      "downloaded": 257091916,
+      "name": "ubuntu-pausedUP",
+      "progress": 1,
+      "size": 257091916,
+      "state": "pausedUP",
+      "total_size": 257091916
+    },
+    "cb48f83c1f1f7bb781e9c4af1602a14df7a915f2": {
+      "amount_left": 0,
+      "completed": 257091916,
+      "completion_on": 1751896934,
+      "downloaded": 257091916,
+      "name": "ubuntu-uploading",
+      "progress": 1,
+      "size": 257091916,
+      "state": "uploading",
+      "total_size": 257091916
     }
   },
   "trackers": {
