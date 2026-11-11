@@ -41,11 +41,11 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Set up discovery before scanning for individual devices."""
-        if (
-            self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
-            is None
-        ):
+        """Confirm discovery setup when its owner is missing or ignored."""
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, DOMAIN
+        )
+        if entry is None or entry.source == SOURCE_IGNORE:
             await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
             return await self.async_step_setup_discovery()

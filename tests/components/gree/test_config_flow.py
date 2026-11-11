@@ -49,13 +49,30 @@ def add_entry(
     return entry
 
 
-async def test_user_shows_candidates(hass: HomeAssistant, device: MagicMock) -> None:
-    """Adding an entry shows discovered candidates before opening a connection."""
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled"),
+        pytest.param(ConfigEntryDisabler.USER, id="disabled"),
+    ],
+)
+async def test_user_shows_candidates(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    disabled_by: ConfigEntryDisabler | None,
+) -> None:
+    """An existing non-ignored owner is preserved during manual device setup."""
+    await hass.config_entries.async_set_disabled_by(
+        discovery_entry.entry_id, disabled_by
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pick_device"
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
+    assert discovery_entry.disabled_by is disabled_by
     device().bind.assert_not_awaited()
 
 
@@ -85,6 +102,49 @@ async def test_initial_user_add_persists_discovery_without_devices(
     assert result["data"] == {}
     assert hass.config_entries.async_entries(DOMAIN) == [result["result"]]
     device().bind.assert_not_awaited()
+
+
+async def test_user_replaces_ignored_discovery_only_after_confirmation(
+    hass: HomeAssistant,
+    discovery_entry: MockConfigEntry,
+    discovery: MagicMock,
+) -> None:
+    """Cancel preserves an ignored owner; confirmation replaces it."""
+    await hass.config_entries.async_remove(discovery_entry.entry_id)
+    ignored = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+    )
+    ignored.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_discovery"
+    assert hass.config_entries.async_entries(DOMAIN) == [ignored]
+    assert not discovery.instances
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    assert hass.config_entries.async_entries(DOMAIN) == [ignored]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = result["result"]
+    assert entry.unique_id == DOMAIN
+    assert entry.source == config_entries.SOURCE_USER
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.data == {}
+    assert hass.config_entries.async_get_entry(ignored.entry_id) is None
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
 
 
 async def test_concurrent_initial_user_flows_create_one_discovery_entry(
