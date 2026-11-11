@@ -1,5 +1,6 @@
 """Tests for iZone climate platform."""
 
+import asyncio
 import logging
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
@@ -814,24 +815,31 @@ async def test_command_on_reconfigured_system_reloads(
     mock_config_entry: MockConfigEntry,
     mock_controller: Mock,
 ) -> None:
-    """A command refused because the system was reprogrammed reloads the entry."""
+    """Commands refused because the system was reprogrammed reload the entry once."""
     mock_controller.set_fan = AsyncMock(
         side_effect=DeviceReconfigurationError({"NoOfZones": (1, 2)})
     )
-    with (
-        patch.object(
-            hass.config_entries, "async_schedule_reload"
-        ) as mock_schedule_reload,
-        pytest.raises(HomeAssistantError) as err,
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_FAN_MODE: "low"},
-            blocking=True,
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        results = await asyncio.gather(
+            *(
+                hass.services.async_call(
+                    CLIMATE_DOMAIN,
+                    SERVICE_SET_FAN_MODE,
+                    {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_FAN_MODE: fan_mode},
+                    blocking=True,
+                )
+                for fan_mode in ("low", "high")
+            ),
+            return_exceptions=True,
         )
 
-    assert err.value.translation_key == "system_reconfigured"
+    assert all(
+        isinstance(result, HomeAssistantError)
+        and result.translation_key == "system_reconfigured"
+        for result in results
+    )
     mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 

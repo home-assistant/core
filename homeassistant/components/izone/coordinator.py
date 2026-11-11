@@ -7,7 +7,7 @@ from typing import override
 import pizone
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -45,6 +45,7 @@ class IZoneCoordinator(DataUpdateCoordinator[pizone.Controller]):
             update_interval=UPDATE_INTERVAL,
         )
         self.controller = controller
+        self._reload_scheduled = False
 
     @override
     async def _async_update_data(self) -> pizone.Controller:
@@ -64,7 +65,7 @@ class IZoneCoordinator(DataUpdateCoordinator[pizone.Controller]):
                 translation_placeholders={"error": str(err)},
             ) from err
         except pizone.DeviceReconfigurationError as err:
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            self.async_schedule_reconfigure_reload()
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="system_reconfigured",
@@ -75,3 +76,11 @@ class IZoneCoordinator(DataUpdateCoordinator[pizone.Controller]):
                 translation_key="controller_offline",
             )
         return self.controller
+
+    @callback
+    def async_schedule_reconfigure_reload(self) -> None:
+        """Reload once to rebuild the zones of a reprogrammed system."""
+        if self._reload_scheduled:
+            return
+        self._reload_scheduled = True
+        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
