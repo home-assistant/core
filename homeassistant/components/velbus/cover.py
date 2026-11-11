@@ -9,11 +9,13 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+from .entity_discovery import async_setup_platform_discovery, discover_cover_entities
 
 PARALLEL_UPDATES = 0
 
@@ -23,11 +25,9 @@ async def async_setup_entry(
     entry: VelbusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Velbus switch based on config_entry."""
-    await entry.runtime_data.scan_task
-    async_add_entities(
-        VelbusCover(channel)
-        for channel in entry.runtime_data.controller.get_all_cover()
+    """Set up Velbus cover based on config_entry."""
+    await async_setup_platform_discovery(
+        hass, entry, async_add_entities, discover_cover_entities, Platform.COVER
     )
 
 

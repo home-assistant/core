@@ -8,11 +8,13 @@ from velbusaio.channels import (
 )
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity
+from .entity_discovery import async_setup_platform_discovery, discover_event_entities
 
 EVENT_SHORT_PRESS = "short_press"
 EVENT_LONG_PRESS = "long_press"
@@ -27,10 +29,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus event entities based on config entry."""
-    await entry.runtime_data.scan_task
-    async_add_entities(
-        VelbusButtonEvent(channel)
-        for channel in entry.runtime_data.controller.get_all_button()
+    await async_setup_platform_discovery(
+        hass, entry, async_add_entities, discover_event_entities, Platform.EVENT
     )
 
 

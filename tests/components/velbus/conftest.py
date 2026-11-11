@@ -1,7 +1,8 @@
 """Fixtures for the Velbus tests."""
 
+import asyncio
 from collections.abc import Generator
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -90,6 +91,66 @@ def mock_controller(
             99: mock_module_subdevices,
         }
         cont.get_module.return_value = mock_module_subdevices
+        cont._module_found_callbacks = []
+        cont._scan_complete_callbacks = []
+        cont._connect_callbacks = []
+
+        def add_module_found_callback(callback) -> None:
+            cont._module_found_callbacks.append(callback)
+
+        def remove_module_found_callback(callback) -> None:
+            cont._module_found_callbacks.remove(callback)
+
+        def add_scan_complete_callback(callback) -> None:
+            cont._scan_complete_callbacks.append(callback)
+
+        def remove_scan_complete_callback(callback) -> None:
+            cont._scan_complete_callbacks.remove(callback)
+
+        def add_connect_callback(callback) -> None:
+            cont._connect_callbacks.append(callback)
+
+        def remove_connect_callback(callback) -> None:
+            cont._connect_callbacks.remove(callback)
+
+        cont.add_module_found_callback = MagicMock(
+            side_effect=add_module_found_callback
+        )
+        cont.remove_module_found_callback = MagicMock(
+            side_effect=remove_module_found_callback
+        )
+        cont.add_scan_complete_callback = MagicMock(
+            side_effect=add_scan_complete_callback
+        )
+        cont.remove_scan_complete_callback = MagicMock(
+            side_effect=remove_scan_complete_callback
+        )
+        cont.add_connect_callback = MagicMock(side_effect=add_connect_callback)
+        cont.remove_connect_callback = MagicMock(side_effect=remove_connect_callback)
+
+        def _active_module_addresses() -> set[int]:
+            addresses = set(cont.get_modules().keys())
+            for getter in (
+                cont.get_all_binary_sensor,
+                cont.get_all_button,
+                cont.get_all_switch,
+                cont.get_all_climate,
+                cont.get_all_select,
+                cont.get_all_sensor,
+                cont.get_all_light,
+                cont.get_all_led,
+                cont.get_all_cover,
+            ):
+                for channel in getter.return_value:
+                    addresses.add(channel.get_module_address())
+            return addresses
+
+        async def start() -> None:
+            await asyncio.sleep(0)
+            for callback in cont._scan_complete_callbacks:
+                await callback(_active_module_addresses())
+
+        cont.start = AsyncMock(side_effect=start)
         yield controller
 
 
