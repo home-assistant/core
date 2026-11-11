@@ -13,7 +13,7 @@ from neopool_modbus.capabilities import (
     is_ph_module_present,
     is_redox_module_present,
 )
-from neopool_modbus.registers import is_valid_relay_gpio
+from neopool_modbus.registers import HIDRO_COVER_ENABLE_BIT, is_valid_relay_gpio
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -57,9 +57,10 @@ def _pool_cover_open(data: dict[str, Any], hass: HomeAssistant) -> bool | None:
     """Invert the raw cover state for the OPENING device class.
 
     The cover bit is only valid when cover detection is enabled
-    (MBF_PAR_HIDRO_COVER_ENABLE != 0); otherwise report unknown.
+    (the HIDRO_COVER_ENABLE bit of the shared register, which also packs the
+    temperature-shutdown flag); otherwise report unknown.
     """
-    if not data.get("MBF_PAR_HIDRO_COVER_ENABLE"):
+    if not int(data.get("MBF_PAR_HIDRO_COVER_ENABLE", 0) or 0) & HIDRO_COVER_ENABLE_BIT:
         return None
     value = data.get("Pool Cover")
     if value is None:

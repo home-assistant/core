@@ -128,7 +128,7 @@ async def test_pool_cover_none_yields_unknown(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("enable_value", [0, None])
+@pytest.mark.parametrize("enable_value", [0, 0x2, None])
 async def test_pool_cover_unknown_when_detection_disabled(
     hass: HomeAssistant,
     mock_config_entry_binary_sensor: MockConfigEntry,
@@ -136,10 +136,13 @@ async def test_pool_cover_unknown_when_detection_disabled(
     freezer: FrozenDateTimeFactory,
     enable_value: int | None,
 ) -> None:
-    """Cover reads unknown when cover detection is disabled or missing.
+    """Cover reads unknown when the cover-enable bit is clear or missing.
 
-    MBF_PAR_HIDRO_COVER_ENABLE=0 means the controller is not tracking the cover,
-    so the raw bit is not meaningful and must not surface as on/off.
+    MBF_PAR_HIDRO_COVER_ENABLE packs the cover-detection flag and the
+    temperature-shutdown flag in one register. Only the cover-enable bit means
+    the controller is tracking the cover; a cleared register (0), the
+    temperature-shutdown bit alone (0x2) or a missing register must not surface
+    a stale open/closed state.
     """
     await setup_integration(hass, mock_config_entry_binary_sensor)
 
