@@ -72,13 +72,14 @@ class TopicExplorer:
         stats.qos = msg.qos
         if (messages := self.new_messages.get(msg.topic)) is None:
             messages = self.new_messages[msg.topic] = deque(maxlen=MESSAGES_PER_TOPIC)
-        if self.buffered_payload_size >= MAX_SNAPSHOT_PAYLOAD_SIZE:
+        text = _decode(payload, truncated)
+        evicted = (
+            len(messages[0]["payload"]) if len(messages) == MESSAGES_PER_TOPIC else 0
+        )
+        if self.buffered_payload_size - evicted + len(text) > MAX_SNAPSHOT_PAYLOAD_SIZE:
             self.dropped_payloads += 1
             return
-        if len(messages) == MESSAGES_PER_TOPIC:
-            self.buffered_payload_size -= len(messages[0]["payload"])
-        text = _decode(payload, truncated)
-        self.buffered_payload_size += len(text)
+        self.buffered_payload_size += len(text) - evicted
         messages.append(
             {
                 "topic": msg.topic,

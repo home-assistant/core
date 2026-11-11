@@ -320,37 +320,68 @@ async def test_explorer_payload_budget(
     assert event["total"]["dropped_payloads"] == 2
 
 
-async def test_explorer_payload_budget_frees_evicted(
+@pytest.mark.parametrize(
+    ("budget", "messages", "payloads", "dropped"),
+    [
+        pytest.param(
+            8,
+            [("a", "1234"), ("b", "56789")],
+            ["1234"],
+            1,
+            id="overflow",
+        ),
+        pytest.param(
+            5,
+            [("a", str(value)) for value in range(6)],
+            ["1", "2", "3", "4", "5"],
+            0,
+            id="replacement_when_full",
+        ),
+        pytest.param(
+            5,
+            [*(("a", str(value)) for value in range(5)), ("a", "56")],
+            ["0", "1", "2", "3", "4"],
+            1,
+            id="replacement_overflow",
+        ),
+        pytest.param(
+            6,
+            [*(("a", str(value)) for value in range(7)), ("b", "x")],
+            ["2", "3", "4", "5", "6", "x"],
+            0,
+            id="evicted_frees_budget",
+        ),
+    ],
+)
+async def test_explorer_payload_budget_boundary(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     freezer: FrozenDateTimeFactory,
+    budget: int,
+    messages: list[tuple[str, str]],
+    payloads: list[str],
+    dropped: int,
 ) -> None:
-    """Test a payload pushed out of a topic's samples frees its budget."""
+    """Test a payload is buffered only if it fits after evicting an older one."""
     await mqtt_mock_entry()
     client = await hass_ws_client(hass)
-    with patch("homeassistant.components.mqtt.explorer.MAX_SNAPSHOT_PAYLOAD_SIZE", 6):
+    with patch(
+        "homeassistant.components.mqtt.explorer.MAX_SNAPSHOT_PAYLOAD_SIZE", budget
+    ):
         await client.send_json({"id": 5, "type": "mqtt/explorer/subscribe"})
         assert (await client.receive_json())["success"]
         await client.receive_json()
 
-        for value in range(7):
-            async_fire_mqtt_message(hass, "a", str(value))
-        async_fire_mqtt_message(hass, "b", "x")
+        for topic, payload in messages:
+            async_fire_mqtt_message(hass, topic, payload)
         await hass.async_block_till_done()
         freezer.tick(timedelta(seconds=2))
         async_fire_time_changed(hass)
         event = (await client.receive_json())["event"]
 
-    assert [message["payload"] for message in event["messages"]] == [
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "x",
-    ]
-    assert event["total"]["dropped_payloads"] == 0
+    assert [message["payload"] for message in event["messages"]] == payloads
+    assert event["total"]["dropped_payloads"] == dropped
 
 
 async def test_explorer_topic_limit(
