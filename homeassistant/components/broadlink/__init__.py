@@ -5,7 +5,7 @@ from broadlink_async.magic import Family, GatewaySet
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -88,7 +88,13 @@ async def _async_setup_magic_entry(
 ) -> None:
     """Set up one imported Magic Home family."""
     family = family_from_entry_data(dict(entry.data))
-    listener = await async_get_gateway_listener(hass)
+    try:
+        listener = await async_get_gateway_listener(hass)
+    except OSError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_listen",
+        ) from err
     gateway_set = GatewaySet(
         family,
         gateways_from_entry_data(dict(entry.data)),

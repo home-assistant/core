@@ -144,6 +144,9 @@
     }
   },
   "exceptions": {
+    "cannot_listen": {
+      "message": "Home Assistant could not listen on UDP port 12346 for Magic Home gateways. Ensure the port is available."
+    },
     "command_not_found": {
       "message": "Command not found: {command}"
     },
