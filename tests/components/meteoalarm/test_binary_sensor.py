@@ -77,6 +77,23 @@ async def test_no_active_alert(
     assert hass.states.get(ENTITY_ID) == snapshot
 
 
+async def test_alert_without_expires(
+    hass: HomeAssistant, mock_meteoalert: MagicMock
+) -> None:
+    """Test an alert without an expiration time is active."""
+    alert = dict(ALERT)
+    del alert["expires"]
+    mock_meteoalert.return_value.get_alert.return_value = alert
+
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["event"] == ALERT["event"]
+    assert "expires" not in state.attributes
+
+
 async def test_defaults(hass: HomeAssistant, mock_meteoalert: MagicMock) -> None:
     """Test the default name and language."""
     config = {

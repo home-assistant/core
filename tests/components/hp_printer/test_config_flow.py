@@ -281,3 +281,105 @@ async def test_zeroconf_flow_known_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_hp_printer.device.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("advanced_settings", "expected_data"),
+    [
+        pytest.param(
+            {CONF_SSL: False},
+            {CONF_HOST: NEW_HOST, CONF_SSL: False},
+            id="host",
+        ),
+        pytest.param(
+            {CONF_SSL: True, CONF_PORT: 8443},
+            {CONF_HOST: NEW_HOST, CONF_SSL: True, CONF_PORT: 8443},
+            id="ssl_and_port",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_hp_printer", "mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    advanced_settings: dict[str, bool | int],
+    expected_data: dict[str, str | bool | int],
+) -> None:
+    """Test the reconfigure flow updates the connection settings."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: NEW_HOST, SECTION_ADVANCED_SETTINGS: advanced_settings},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == expected_data
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_hp_printer: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow recovers after the printer could not be reached."""
+    mock_config_entry.add_to_hass(hass)
+    mock_hp_printer.device.side_effect = HpPrinterConnectionError
+    user_input = {CONF_HOST: NEW_HOST, SECTION_ADVANCED_SETTINGS: {CONF_SSL: False}}
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_hp_printer.device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_HOST: NEW_HOST, CONF_SSL: False}
+
+
+@pytest.mark.parametrize(
+    ("serial_number", "reason"),
+    [
+        pytest.param("OTHER_SERIAL", "unique_id_mismatch", id="other_printer"),
+        pytest.param(None, "missing_serial_number", id="no_serial_number"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_other_printer(
+    hass: HomeAssistant,
+    mock_hp_printer: AsyncMock,
+    mock_device: HpPrinterDevice,
+    mock_config_entry: MockConfigEntry,
+    serial_number: str | None,
+    reason: str,
+) -> None:
+    """Test the reconfigure flow aborts when the host is not the configured printer."""
+    mock_config_entry.add_to_hass(hass)
+    mock_hp_printer.device.return_value = replace(
+        mock_device, serial_number=serial_number
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: NEW_HOST, SECTION_ADVANCED_SETTINGS: {CONF_SSL: False}},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert mock_config_entry.data == {CONF_HOST: HOST, CONF_SSL: False}
