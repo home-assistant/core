@@ -8,18 +8,13 @@ from pytest_homeassistant.common import get_fixture_path
 from homeassistant import config as hass_config
 from homeassistant.components.demo import lock as demo_lock
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
-    LockState,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -202,8 +197,8 @@ async def test_service_calls_openable(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_OPEN,
-        {ATTR_ENTITY_ID: "lock.lock_group"},
+        LockService.OPEN,
+        {CommonServiceArgument.ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
     assert hass.states.get("lock.openable_lock").state == LockState.OPEN
@@ -211,8 +206,8 @@ async def test_service_calls_openable(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {ATTR_ENTITY_ID: "lock.lock_group"},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
     assert hass.states.get("lock.openable_lock").state == LockState.LOCKED
@@ -220,8 +215,8 @@ async def test_service_calls_openable(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: "lock.lock_group"},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
     assert hass.states.get("lock.openable_lock").state == LockState.UNLOCKED
@@ -255,8 +250,8 @@ async def test_service_calls_basic(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {ATTR_ENTITY_ID: "lock.lock_group"},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
     assert hass.states.get("lock.basic_lock").state == LockState.LOCKED
@@ -264,8 +259,8 @@ async def test_service_calls_basic(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: "lock.lock_group"},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
     assert hass.states.get("lock.basic_lock").state == LockState.UNLOCKED
@@ -274,8 +269,8 @@ async def test_service_calls_basic(hass: HomeAssistant) -> None:
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_OPEN,
-            {ATTR_ENTITY_ID: "lock.lock_group"},
+            LockService.OPEN,
+            {CommonServiceArgument.ENTITY_ID: "lock.lock_group"},
             blocking=True,
         )
 
@@ -441,8 +436,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     # Test controlling the nested group
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {ATTR_ENTITY_ID: "lock.nested_group"},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.nested_group"},
         blocking=True,
     )
     assert hass.states.get("lock.front_door").state == LockState.LOCKED
@@ -479,8 +474,11 @@ async def test_service_call_all_exclude_nested_group(hass: HomeAssistant) -> Non
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"}},
+        LockService.LOCK,
+        {
+            CommonServiceArgument.ENTITY_ID: "all",
+            CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"},
+        },
         blocking=True,
     )
     assert hass.states.get("lock.openable_lock").state == LockState.LOCKED

@@ -45,13 +45,7 @@ from .const import (
     ATTR_VALUE,
     ATTR_WAIT_FOR_RESULT,
     DOMAIN,
-    SERVICE_CLEAR_LOCK_USERCODE,
-    SERVICE_PING,
-    SERVICE_REFRESH_VALUE,
-    SERVICE_RESET_METER,
-    SERVICE_SET_CONFIG_PARAMETER,
-    SERVICE_SET_LOCK_USERCODE,
-    SERVICE_SET_VALUE,
+    ZWaveJSService,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
@@ -61,18 +55,18 @@ from .device_automation_helpers import (
 from .helpers import async_get_node_from_device_id, get_value_state_schema
 
 ACTION_TYPES = {
-    SERVICE_CLEAR_LOCK_USERCODE,
-    SERVICE_PING,
-    SERVICE_REFRESH_VALUE,
-    SERVICE_RESET_METER,
-    SERVICE_SET_CONFIG_PARAMETER,
-    SERVICE_SET_LOCK_USERCODE,
-    SERVICE_SET_VALUE,
+    ZWaveJSService.CLEAR_LOCK_USERCODE,
+    ZWaveJSService.PING,
+    ZWaveJSService.REFRESH_VALUE,
+    ZWaveJSService.RESET_METER,
+    ZWaveJSService.SET_CONFIG_PARAMETER,
+    ZWaveJSService.SET_LOCK_USERCODE,
+    ZWaveJSService.SET_VALUE,
 }
 
 CLEAR_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): SERVICE_CLEAR_LOCK_USERCODE,
+        probatio.Required(CONF_TYPE): ZWaveJSService.CLEAR_LOCK_USERCODE,
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
     }
@@ -80,13 +74,13 @@ CLEAR_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 PING_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): SERVICE_PING,
+        probatio.Required(CONF_TYPE): ZWaveJSService.PING,
     }
 )
 
 REFRESH_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): SERVICE_REFRESH_VALUE,
+        probatio.Required(CONF_TYPE): ZWaveJSService.REFRESH_VALUE,
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Optional(ATTR_REFRESH_ALL_VALUES, default=False): cv.boolean,
     }
@@ -94,7 +88,7 @@ REFRESH_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): SERVICE_RESET_METER,
+        probatio.Required(CONF_TYPE): ZWaveJSService.RESET_METER,
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Optional(ATTR_METER_TYPE): probatio.Coerce(int),
         probatio.Optional(ATTR_VALUE): probatio.Coerce(int),
@@ -103,7 +97,7 @@ RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
+        probatio.Required(CONF_TYPE): ZWaveJSService.SET_CONFIG_PARAMETER,
         probatio.Required(ATTR_ENDPOINT, default=0): probatio.Coerce(int),
         probatio.Required(ATTR_CONFIG_PARAMETER): probatio.Any(int, str),
         probatio.Required(ATTR_CONFIG_PARAMETER_BITMASK): probatio.Any(None, int, str),
@@ -114,7 +108,7 @@ SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 SET_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): SERVICE_SET_LOCK_USERCODE,
+        probatio.Required(CONF_TYPE): ZWaveJSService.SET_LOCK_USERCODE,
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Required(ATTR_CODE_SLOT): probatio.Coerce(int),
         probatio.Required(ATTR_USERCODE): cv.string,
@@ -123,7 +117,7 @@ SET_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 SET_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): SERVICE_SET_VALUE,
+        probatio.Required(CONF_TYPE): ZWaveJSService.SET_VALUE,
         probatio.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
         probatio.Required(ATTR_PROPERTY): probatio.Any(int, str),
         probatio.Optional(ATTR_PROPERTY_KEY): probatio.Any(
@@ -178,15 +172,15 @@ async def async_get_actions(
         # endpoint child devices which would otherwise duplicate the parent's list.
         actions.extend(
             [
-                {**base_action, CONF_TYPE: SERVICE_SET_VALUE},
-                {**base_action, CONF_TYPE: SERVICE_PING},
+                {**base_action, CONF_TYPE: ZWaveJSService.SET_VALUE},
+                {**base_action, CONF_TYPE: ZWaveJSService.PING},
             ]
         )
         actions.extend(
             [
                 {
                     **base_action,
-                    CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
+                    CONF_TYPE: ZWaveJSService.SET_CONFIG_PARAMETER,
                     ATTR_ENDPOINT: config_value.endpoint,
                     ATTR_CONFIG_PARAMETER: config_value.property_,
                     ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
@@ -211,12 +205,12 @@ async def async_get_actions(
         ):
             continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.id}
-        actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
+        actions.append({**entity_action, CONF_TYPE: ZWaveJSService.REFRESH_VALUE})
         if entry.domain == LOCK_DOMAIN:
             actions.extend(
                 [
-                    {**entity_action, CONF_TYPE: SERVICE_SET_LOCK_USERCODE},
-                    {**entity_action, CONF_TYPE: SERVICE_CLEAR_LOCK_USERCODE},
+                    {**entity_action, CONF_TYPE: ZWaveJSService.SET_LOCK_USERCODE},
+                    {**entity_action, CONF_TYPE: ZWaveJSService.CLEAR_LOCK_USERCODE},
                 ]
             )
 
@@ -244,14 +238,14 @@ async def async_get_actions(
         actions.append(
             {
                 **base_action,
-                CONF_TYPE: SERVICE_RESET_METER,
+                CONF_TYPE: ZWaveJSService.RESET_METER,
                 CONF_SUBTYPE: f"Endpoint {endpoint} (All)",
             }
         )
         actions.extend(
             {
                 **base_action,
-                CONF_TYPE: SERVICE_RESET_METER,
+                CONF_TYPE: ZWaveJSService.RESET_METER,
                 ATTR_METER_TYPE: meter_type,
                 CONF_SUBTYPE: f"Endpoint {endpoint} ({meter_type.name})",
             }
@@ -282,10 +276,10 @@ async def async_call_action_from_config(
     # Entity services (including refresh value which is a fake entity service) expect
     # just an entity ID
     if action_type in (
-        SERVICE_REFRESH_VALUE,
-        SERVICE_SET_LOCK_USERCODE,
-        SERVICE_CLEAR_LOCK_USERCODE,
-        SERVICE_RESET_METER,
+        ZWaveJSService.REFRESH_VALUE,
+        ZWaveJSService.SET_LOCK_USERCODE,
+        ZWaveJSService.CLEAR_LOCK_USERCODE,
+        ZWaveJSService.RESET_METER,
     ):
         service_data.pop(ATTR_DEVICE_ID)
     await hass.services.async_call(
@@ -301,7 +295,7 @@ async def async_get_action_capabilities(
     node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
 
     # Add additional fields to the automation action UI
-    if action_type == SERVICE_CLEAR_LOCK_USERCODE:
+    if action_type == ZWaveJSService.CLEAR_LOCK_USERCODE:
         return {
             "extra_fields": probatio.Schema(
                 {
@@ -310,7 +304,7 @@ async def async_get_action_capabilities(
             )
         }
 
-    if action_type == SERVICE_SET_LOCK_USERCODE:
+    if action_type == ZWaveJSService.SET_LOCK_USERCODE:
         return {
             "extra_fields": probatio.Schema(
                 {
@@ -320,7 +314,7 @@ async def async_get_action_capabilities(
             )
         }
 
-    if action_type == SERVICE_RESET_METER:
+    if action_type == ZWaveJSService.RESET_METER:
         return {
             "extra_fields": probatio.Schema(
                 {
@@ -329,7 +323,7 @@ async def async_get_action_capabilities(
             )
         }
 
-    if action_type == SERVICE_REFRESH_VALUE:
+    if action_type == ZWaveJSService.REFRESH_VALUE:
         return {
             "extra_fields": probatio.Schema(
                 {
@@ -338,7 +332,7 @@ async def async_get_action_capabilities(
             )
         }
 
-    if action_type == SERVICE_SET_VALUE:
+    if action_type == ZWaveJSService.SET_VALUE:
         return {
             "extra_fields": probatio.Schema(
                 {
@@ -359,7 +353,7 @@ async def async_get_action_capabilities(
             )
         }
 
-    if action_type == SERVICE_SET_CONFIG_PARAMETER:
+    if action_type == ZWaveJSService.SET_CONFIG_PARAMETER:
         value_id = get_value_id_str(
             node,
             CommandClass.CONFIGURATION,

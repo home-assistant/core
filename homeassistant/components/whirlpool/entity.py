@@ -82,7 +82,7 @@ class WhirlpoolOvenEntity(WhirlpoolEntity):
         if oven.get_oven_cavity_exists(
             OvenCavity.Upper
         ) and oven.get_oven_cavity_exists(OvenCavity.Lower):
-            return "_upper" if cavity == OvenCavity.Upper else "_lower"
+            return "_upper" if cavity is OvenCavity.Upper else "_lower"
         return ""
 
     def __init__(
