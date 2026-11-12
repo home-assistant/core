@@ -28,13 +28,13 @@ from homeassistant.components.solaredge_modbus.const import (
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -643,8 +643,8 @@ async def test_concurrent_control_writes_keep_both_changes(
         ),
         hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
             blocking=True,
         ),
     )

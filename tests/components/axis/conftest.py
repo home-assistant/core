@@ -148,10 +148,13 @@ def fixture_request(
     param_properties_status_code: int,
     param_ports_payload: str,
     mqtt_status_code: int,
+    basic_auth_challenge: bool,
 ) -> Callable[[str], None]:
     """Mock default Vapix requests responses."""
 
     def __mock_default_requests(host: str) -> None:
+        auth_challenge_sent = False
+
         def _url_pattern(path: str) -> re.Pattern[str]:
             return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}$")
 
@@ -169,6 +172,7 @@ def fixture_request(
         async def _param_cgi_response(
             _method: str, url: URL, data: dict[str, Any] | None
         ) -> AiohttpClientMockResponse:
+            nonlocal auth_challenge_sent
             group = (data or {}).get("group")
             if group == "root.Brand":
                 return _text_response(url, param_brand_payload)
@@ -181,6 +185,15 @@ def fixture_request(
             if group == "root.Output":
                 return _text_response(url, PORTS_RESPONSE)
             if group == "root.Properties":
+                if basic_auth_challenge and not auth_challenge_sent:
+                    auth_challenge_sent = True
+                    return AiohttpClientMockResponse(
+                        "post",
+                        url,
+                        text="",
+                        headers={"WWW-Authenticate": 'Basic realm="Axis"'},
+                        status=401,
+                    )
                 return _text_response(
                     url, param_properties_payload, param_properties_status_code
                 )
@@ -303,6 +316,12 @@ def fixture_param_ports_data() -> str:
 def fixture_param_properties_status_code() -> int:
     """Property parameter status code."""
     return 200
+
+
+@pytest.fixture
+def basic_auth_challenge() -> bool:
+    """Whether the VAPIX mock challenges once with Basic authentication."""
+    return False
 
 
 @pytest.fixture(name="mqtt_status_code")
