@@ -13,7 +13,7 @@ from energyid_webhooks.directives import (
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energyid.const import CONF_ENABLE_DIRECTIVES, DOMAIN
-from homeassistant.components.energyid.services import SERVICE_GET_DIRECTIVE_SCHEDULE
+from homeassistant.components.energyid.services import EnergyIDService
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -81,7 +81,7 @@ async def test_get_directive_schedule(
     )
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_DIRECTIVE_SCHEDULE,
+        EnergyIDService.GET_DIRECTIVE_SCHEDULE,
         {},
         target={ATTR_ENTITY_ID: registry_entry.entity_id},
         blocking=True,
@@ -162,7 +162,7 @@ async def test_get_directive_schedule_skips_unavailable_directive(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_DIRECTIVE_SCHEDULE,
+        EnergyIDService.GET_DIRECTIVE_SCHEDULE,
         {},
         target={ATTR_ENTITY_ID: list(entity_ids.values())},
         blocking=True,
