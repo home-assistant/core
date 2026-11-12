@@ -20,7 +20,12 @@ from uiprotect.data import (
 )
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 from uiprotect.data.public_devices import PublicSensor, SensorFeatureCapability
-from uiprotect.data.types import EventButtonType, SensorAlarmType
+from uiprotect.data.types import (
+    AlarmHubInputStatus,
+    AlarmHubTamperStatus,
+    EventButtonType,
+    SensorAlarmType,
+)
 
 from homeassistant.components.event import (
     DoorbellEventType,
@@ -37,9 +42,7 @@ from homeassistant.helpers.event import async_call_at
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SOURCE,
-    ATTR_INPUT,
     ATTR_SMART_DETECT_TYPES,
-    ATTR_STATUS,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -61,6 +64,9 @@ from .entity import (
 )
 
 PARALLEL_UPDATES = 0
+
+ATTR_INPUT = "input"
+ATTR_STATUS = "status"
 
 # Per-entity cap on tracked event ids for fire dedup (far above realistic
 # concurrent/recent events per camera per category).
@@ -730,11 +736,16 @@ def _alarm_hub_terminals(hub: LinkStation) -> set[int] | None:
 
 # Statuses that report an input or the hub going back to rest. Only entry
 # inputs have an event type of their own for that.
-_ALARM_HUB_REST_STATUSES = frozenset({"normal", "restored"})
+_ALARM_HUB_REST_STATUSES = frozenset(
+    {AlarmHubInputStatus.NORMAL, AlarmHubTamperStatus.RESTORED}
+)
 
 
-def _alarm_hub_event_triggered(event: ProtectEvent) -> bool:
-    """Return whether an alarm hub event reports something being triggered."""
+def _alarm_hub_event_fires(event: ProtectEvent) -> bool:
+    """Return whether an alarm hub event is fired.
+
+    A return to rest is skipped, except the closing of an entry input.
+    """
     if event.type is EventType.ALARM_HUB_ENTRY_CLOSED:
         return True
     metadata = event.metadata
@@ -770,6 +781,7 @@ class ProtectAlarmHubEventEntity(
     """
 
     _attr_name = None  # device name is the entity name
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID})
     _ufp_uses_public = True
     _ufp_requires_events_ws = True
 
@@ -790,8 +802,11 @@ class ProtectAlarmHubEventEntity(
 
     @callback
     def _async_hub_event(self, event: ProtectEvent) -> None:
+        if not _alarm_hub_event_fires(event):
+            return
         input_id = _alarm_hub_event_input(event)
-        if input_id in self._input_ids or not _alarm_hub_event_triggered(event):
+        if event.type in _ALARM_HUB_INPUT_EVENT_TYPES and input_id in self._input_ids:
+            # The entity of that input fires it.
             return
         event_data = _alarm_hub_event_data(event)
         hub = self._ufp_public_obj
@@ -807,6 +822,7 @@ class ProtectAlarmHubInputEventEntity(
 ):
     """The event entity of one input of a UniFi Protect alarm hub."""
 
+    _unrecorded_attributes = frozenset({ATTR_EVENT_ID})
     _ufp_uses_public = True
     _ufp_requires_events_ws = True
 
@@ -814,6 +830,7 @@ class ProtectAlarmHubInputEventEntity(
         self, data: ProtectData, hub: LinkStation, input_id: int, name: str | None
     ) -> None:
         """Initialize the alarm hub input event entity."""
+        # The input type can change in Protect, so every type is declared.
         description = EventEntityDescription(
             key=f"input_{input_id}",
             translation_key="alarm_hub_input",
@@ -840,7 +857,7 @@ class ProtectAlarmHubInputEventEntity(
     def _async_input_event(self, event: ProtectEvent) -> None:
         if _alarm_hub_event_input(event) != self._input_id:
             return
-        if not _alarm_hub_event_triggered(event):
+        if not _alarm_hub_event_fires(event):
             return
         self._fire_once(
             event,
@@ -855,7 +872,8 @@ def _async_alarm_hub_event_entities(
 ) -> list[ProtectDeviceEntity]:
     """Build the event entities of one alarm hub.
 
-    Every enabled input with a numbered terminal gets its own entity.
+    Every enabled input with a numbered terminal gets its own entity. A hub
+    that lists no terminals gets one for every enabled input.
     """
     terminals = _alarm_hub_terminals(hub)
     inputs = {

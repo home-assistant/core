@@ -339,15 +339,15 @@
           "event_type": {
             "state": {
               "battery_connected": "Battery connected",
-              "battery_low": "Battery low",
+              "battery_low": "[%key:component::unifiprotect::entity::event::maintenance::state_attributes::event_type::state::battery_low%]",
               "button_press": "Button pressed",
               "device_tamper": "Hub tampered",
               "entry_closed": "Entry closed",
               "entry_opened": "Entry opened",
-              "glass_break": "Glass break",
-              "motion": "Motion",
+              "glass_break": "[%key:component::unifiprotect::entity::event::sound_detection::state_attributes::event_type::state::glass_break%]",
+              "motion": "[%key:component::unifiprotect::entity::event::motion_detection::state_attributes::event_type::state::motion%]",
               "relay_switched": "Relay switched",
-              "smoke": "Smoke",
+              "smoke": "[%key:component::unifiprotect::entity::event::alarm::state_attributes::event_type::state::smoke%]",
               "tamper": "Tampered"
             }
           }
@@ -361,9 +361,9 @@
               "button_press": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::button_press%]",
               "entry_closed": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::entry_closed%]",
               "entry_opened": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::entry_opened%]",
-              "glass_break": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::glass_break%]",
-              "motion": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::motion%]",
-              "smoke": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::smoke%]",
+              "glass_break": "[%key:component::unifiprotect::entity::event::sound_detection::state_attributes::event_type::state::glass_break%]",
+              "motion": "[%key:component::unifiprotect::entity::event::motion_detection::state_attributes::event_type::state::motion%]",
+              "smoke": "[%key:component::unifiprotect::entity::event::alarm::state_attributes::event_type::state::smoke%]",
               "tamper": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::tamper%]"
             }
           }

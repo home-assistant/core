@@ -14,7 +14,6 @@ from uiprotect.data import (
     Fob,
     FobAwayState,
     Light,
-    LinkStation,
     ModelType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
@@ -686,8 +685,6 @@ def _async_public_entities(
         return [
             ProtectFobSensor(data, device, description) for description in FOB_SENSORS
         ]
-    if isinstance(device, LinkStation):
-        return []
     return list(
         async_all_device_entities(
             data,

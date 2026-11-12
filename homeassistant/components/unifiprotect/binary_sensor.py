@@ -8,7 +8,6 @@ from typing import cast, override
 from uiprotect.data import (
     NVR,
     Fob,
-    LinkStation,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -803,8 +802,6 @@ async def async_setup_entry(
                 ProtectFobBinarySensor(data, device, description)
                 for description in FOB_BINARY_SENSORS
             )
-            return
-        if isinstance(device, LinkStation):
             return
         async_add_entities(_async_model_entities(data, public_device=device))
 
