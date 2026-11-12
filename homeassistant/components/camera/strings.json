@@ -35,6 +35,15 @@
     }
   },
   "exceptions": {
+    "camera_not_found": {
+      "message": "Camera {entity_id} not found."
+    },
+    "camera_off": {
+      "message": "Camera {entity_id} is off."
+    },
+    "image_unavailable": {
+      "message": "Unable to get image."
+    },
     "path_not_allowed": {
       "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
     },

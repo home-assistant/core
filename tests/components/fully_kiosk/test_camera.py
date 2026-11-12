@@ -58,4 +58,4 @@ async def test_camera(
 
     with pytest.raises(HomeAssistantError) as error:
         await async_get_image(hass, entity_camera)
-    assert error.value.args[0] == "Camera is off"
+    assert error.value.translation_key == "camera_off"
