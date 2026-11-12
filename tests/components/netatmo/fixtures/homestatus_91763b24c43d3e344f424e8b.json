@@ -314,7 +314,7 @@
           "id": "2940411577",
           "reachable": true,
           "therm_measured_temperature": 27,
-          "heating_power_request": 0,
+          "heating_power_request": 35,
           "therm_setpoint_temperature": 7,
           "therm_setpoint_mode": "hg",
           "therm_setpoint_start_time": 0,

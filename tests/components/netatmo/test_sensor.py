@@ -317,3 +317,61 @@ async def test_setpoint_end_time_sensor(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("updated_value", "expected"),
+    [
+        pytest.param(80, "80", id="new_value"),
+        pytest.param(None, "unknown", id="reset"),
+    ],
+)
+async def test_heating_power_request_sensor_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    updated_value: int | None,
+    expected: str,
+) -> None:
+    """Test the heating power request sensor shows and then follows the polled value."""
+    cocina_heating_power_request: int | None = 35
+
+    def set_cocina_heating_power_request(payload: dict[str, Any]) -> None:
+        """Set the cocina valve heating power request in the backend response."""
+        if not isinstance(payload.get("body"), dict):
+            return
+
+        for room in payload["body"].get("home", {}).get("rooms", []):
+            if room["id"] == "2940411577":
+                room["heating_power_request"] = cocina_heating_power_request
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Return backend data with the cocina heating power request."""
+        kwargs["msg_callback"] = set_cocina_heating_power_request
+        return await fake_post_request(hass, *args, **kwargs)
+
+    entity_id = "sensor.cocina_cocina_heating_power_request"
+
+    with (
+        selected_platforms([Platform.SENSOR]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(entity_id).state == "35"
+
+        cocina_heating_power_request = updated_value
+        # Poll several times so the coordinator's API throttling does not hide the update
+        for _ in range(11):
+            freezer.tick(timedelta(seconds=30))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == expected
