@@ -1062,8 +1062,7 @@ async def test_reload_without_entry(
     # Setup the MQTT integration without entry
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    with caplog.at_level(logging.DEBUG):
-        await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
+    await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
     assert (
         "Skipped reloading MQTT integration, the MQTT config entry is not enabled"
         in caplog.text

@@ -6,8 +6,8 @@ from aioswitcher.api.messages import SwitcherBaseResponse
 from aioswitcher.device import DeviceState, ThermostatSwing
 import pytest
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -47,8 +47,8 @@ async def test_assume_button(
     ) as mock_control_device:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity},
             blocking=True,
         )
         assert mock_api.call_count == 2
@@ -84,8 +84,8 @@ async def test_swing_button(
     ) as mock_control_device:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity},
             blocking=True,
         )
         assert mock_api.call_count == 2
@@ -110,8 +110,8 @@ async def test_control_device_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 BUTTON_DOMAIN,
-                SERVICE_PRESS,
-                {ATTR_ENTITY_ID: ASSUME_ON_EID},
+                ButtonService.PRESS,
+                {CommonServiceArgument.ENTITY_ID: ASSUME_ON_EID},
                 blocking=True,
             )
 
@@ -132,8 +132,8 @@ async def test_control_device_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 BUTTON_DOMAIN,
-                SERVICE_PRESS,
-                {ATTR_ENTITY_ID: ASSUME_ON_EID},
+                ButtonService.PRESS,
+                {CommonServiceArgument.ENTITY_ID: ASSUME_ON_EID},
                 blocking=True,
             )
 

@@ -9,14 +9,15 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.sonos.const import (
     ATTR_DIALOG_LEVEL,
     MODEL_SONOS_ARC_ULTRA,
     SCAN_INTERVAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -145,8 +146,11 @@ async def test_select_dialog_level_set(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_DIALOG_LEVEL_ENTITY, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: SELECT_DIALOG_LEVEL_ENTITY,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 

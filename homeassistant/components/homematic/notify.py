@@ -20,7 +20,8 @@ from .const import (
     ATTR_PARAM,
     ATTR_VALUE,
     DOMAIN,
-    SERVICE_SET_DEVICE_VALUE,
+    HomematicService,
+    HomematicServiceArgument,
 )
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
@@ -41,13 +42,13 @@ def get_service(
 ) -> HomematicNotificationService:
     """Get the Homematic notification service."""
     data = {
-        ATTR_ADDRESS: config[ATTR_ADDRESS],
-        ATTR_CHANNEL: config[ATTR_CHANNEL],
-        ATTR_PARAM: config[ATTR_PARAM],
-        ATTR_VALUE: config[ATTR_VALUE],
+        HomematicServiceArgument.ADDRESS: config[ATTR_ADDRESS],
+        HomematicServiceArgument.CHANNEL: config[ATTR_CHANNEL],
+        HomematicServiceArgument.PARAM: config[ATTR_PARAM],
+        HomematicServiceArgument.VALUE: config[ATTR_VALUE],
     }
     if ATTR_INTERFACE in config:
-        data[ATTR_INTERFACE] = config[ATTR_INTERFACE]
+        data[HomematicServiceArgument.INTERFACE] = config[ATTR_INTERFACE]
 
     return HomematicNotificationService(hass, data)
 
@@ -65,8 +66,12 @@ class HomematicNotificationService(BaseNotificationService):
         """Send a notification to the device."""
         data = {**self.data, **kwargs.get(ATTR_DATA, {})}
 
-        if data.get(ATTR_VALUE) is not None:
-            templ = template_helper.Template(self.data[ATTR_VALUE], self.hass)
-            data[ATTR_VALUE] = template_helper.render_complex(templ, None)
+        if data.get(HomematicServiceArgument.VALUE) is not None:
+            templ = template_helper.Template(
+                self.data[HomematicServiceArgument.VALUE], self.hass
+            )
+            data[HomematicServiceArgument.VALUE] = template_helper.render_complex(
+                templ, None
+            )
 
-        self.hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
+        self.hass.services.call(DOMAIN, HomematicService.SET_DEVICE_VALUE, data)

@@ -10,8 +10,8 @@ from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -84,8 +84,8 @@ async def test_system_reset_button_press(
     with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: system_button_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: system_button_id},
             blocking=True,
         )
 
@@ -103,8 +103,8 @@ async def test_zone_reset_button_press(
     with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: zone_button_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: zone_button_id},
             blocking=True,
         )
 
@@ -122,8 +122,8 @@ async def test_dhw_reset_button_press(
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: dhw_button_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: dhw_button_id},
             blocking=True,
         )
 
@@ -147,8 +147,8 @@ async def test_button_press_api_call_failed(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: system_button_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: system_button_id},
             blocking=True,
         )
 
