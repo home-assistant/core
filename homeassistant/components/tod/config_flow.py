@@ -32,8 +32,8 @@ from .const import (
     DOMAIN,
 )
 
-CONF_AFTER_SUN = "after_sun"
 CONF_BEFORE_SUN = "before_sun"
+CONF_AFTER_SUN = "after_sun"
 
 BOUNDARY_FIELDS = (
     (CONF_AFTER, CONF_AFTER_TIME, CONF_AFTER_SUN, CONF_AFTER_OFFSET),

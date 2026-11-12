@@ -29,6 +29,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate fixed time boundaries to the time choices."""
     if entry.version == 1:
         options = dict(entry.options)
-        options[CONF_AFTER] = {CONF_TIME: options.pop(CONF_AFTER_TIME)}
         options[CONF_BEFORE] = {CONF_TIME: options.pop(CONF_BEFORE_TIME)}
+        options[CONF_AFTER] = {CONF_TIME: options.pop(CONF_AFTER_TIME)}
         hass.config_entries.async_update_entry(entry, options=options, version=2)
