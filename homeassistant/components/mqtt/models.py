@@ -2,7 +2,7 @@
 
 from ast import literal_eval
 import asyncio
-from collections import deque
+from collections import UserDict, deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -198,6 +198,38 @@ class DiscoveredDisabledEntity:
     # Entity registry index (entity_platform, "mqtt", unique_id)
     registry_key: tuple[str, str, str]
     discovery_data: DiscoveryInfoType
+
+
+class DiscoveredDisabledEntities(UserDict[tuple[str, str], DiscoveredDisabledEntity]):
+    """Discovered disabled entities by discovery hash, indexed by registry key."""
+
+    def __init__(self) -> None:
+        """Initialize the discovered disabled entities."""
+        super().__init__()
+        self._discovery_hashes: dict[tuple[str, str, str], tuple[str, str]] = {}
+
+    @override
+    def __setitem__(
+        self, discovery_hash: tuple[str, str], disabled_entity: DiscoveredDisabledEntity
+    ) -> None:
+        """Track a disabled entity."""
+        if discovery_hash in self.data:
+            del self[discovery_hash]
+        self.data[discovery_hash] = disabled_entity
+        self._discovery_hashes[disabled_entity.registry_key] = discovery_hash
+
+    @override
+    def __delitem__(self, discovery_hash: tuple[str, str]) -> None:
+        """Stop tracking a disabled entity."""
+        registry_key = self.data.pop(discovery_hash).registry_key
+        if self._discovery_hashes.get(registry_key) == discovery_hash:
+            del self._discovery_hashes[registry_key]
+
+    def get_discovery_hash(
+        self, registry_key: tuple[str, str, str]
+    ) -> tuple[str, str] | None:
+        """Return the discovery hash a disabled entity is tracked with."""
+        return self._discovery_hashes.get(registry_key)
 
 
 class MqttChildDeviceConfig(TypedDict, total=False):
@@ -552,9 +584,9 @@ class MqttData:
     # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
     # the disabled entity, so it can be cleaned up when an empty payload
     # is received on the topic it was discovered on.
-    discovery_discovered_and_disabled: dict[
-        tuple[str, str], DiscoveredDisabledEntity
-    ] = field(default_factory=dict)
+    discovery_discovered_and_disabled: DiscoveredDisabledEntities = field(
+        default_factory=DiscoveredDisabledEntities
+    )
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict
