@@ -6,6 +6,7 @@ from typing import Any, override
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 from pyvesync.base_devices.switch_base import VeSyncSwitch
+from pyvesync.const import NightlightStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -232,7 +233,7 @@ class VeSyncHumidifierRGBNightLightHA(VeSyncBaseEntity[VeSyncHumidifier], LightE
     @override
     def is_on(self) -> bool:
         """Return whether the night light is on."""
-        return self.device.state.rgb_nightlight_status == "on"
+        return self.device.state.rgb_nightlight_status == NightlightStatus.ON
 
     @property
     @override
