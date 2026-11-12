@@ -190,6 +190,34 @@ async def test_invalid_tracker_legacy_issue_replaced(
     )
 
 
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
+async def test_legacy_issues_removed_for_valid_trackers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test issues of recovered or removed trackers are deleted on setup."""
+    mock_config_entry.add_to_hass(hass)
+    for serial_number in (MOCK_SERIAL_NUMBER, "removed_tracker"):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"invalid_fressnapf_tracker_{mock_config_entry.entry_id}_{serial_number}",
+            config_entry_id=mock_config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="invalid_fressnapf_tracker",
+            translation_placeholders={"tracker_id": serial_number},
+        )
+    assert len(issue_registry.issues) == 2
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.issues
+
+
 @pytest.mark.usefixtures("mock_auth_client", "mock_api_client_malformed_tracker")
 async def test_invalid_tracker_shared_between_entries(
     hass: HomeAssistant,
