@@ -257,7 +257,7 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
         """Set the native value of the entity."""
         await self.async_set_option(value)
 
-    def set_native_unit_of_measurement(self, unit: str | None) -> None:
+    def _set_native_unit_of_measurement(self, unit: str | None) -> None:
         """Set the native unit of measurement for the entity."""
         if unit:
             candidate_unit = UNIT_MAP.get(unit, unit)
@@ -273,7 +273,7 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
         self._attr_native_value = cast(float | None, self.option_value)
         option_definition = self.appliance.available_options.get(self.bsh_key)
         if option_definition:
-            self.set_native_unit_of_measurement(option_definition.unit)
+            self._set_native_unit_of_measurement(option_definition.unit)
             option_constraints = option_definition.constraints
             if option_constraints:
                 if (
@@ -292,4 +292,4 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
                 ) and option_constraints.step_size:
                     self._attr_native_step = option_constraints.step_size
         elif option := self.appliance.options.get(self.bsh_key):
-            self.set_native_unit_of_measurement(option.unit)
+            self._set_native_unit_of_measurement(option.unit)

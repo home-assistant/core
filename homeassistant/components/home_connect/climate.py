@@ -339,7 +339,11 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 for fan_mode, api_value in FAN_MODES_OPTIONS.items()
                 if api_value in option_constraints.allowed_values
             ]
-        if option_definition:
+        if (
+            option_definition
+            or OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+            in self.appliance.options
+        ):
             # Then the constraints or the allowed values are not present
             # So we stick to the default values
             return list(FAN_MODES_OPTIONS.keys())

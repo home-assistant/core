@@ -702,6 +702,7 @@ async def test_added_entity_automatically(
         "state_attribute",
         "new_value",
         "expected_state_attribute_value",
+        "attributes_to_check",
     ),
     [
         (
@@ -727,6 +728,7 @@ async def test_added_entity_automatically(
             ATTR_PRESET_MODE,
             "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
             "manual",
+            {ATTR_PRESET_MODES: ["auto", "manual"]},
         ),
         (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
@@ -750,6 +752,7 @@ async def test_added_entity_automatically(
             ATTR_PERCENTAGE,
             75,
             75,
+            {},
         ),
     ],
     ids=["preset_mode", "percentage"],
@@ -772,6 +775,7 @@ async def test_options_features_available_non_writable(
     state_attribute: str,
     new_value: Any,
     expected_state_attribute_value: Any,
+    attributes_to_check: dict[str, Any],
 ) -> None:
     """Test that an option remains supported but becomes non-writable."""
     entity_id = "fan.air_conditioner"
@@ -840,6 +844,8 @@ async def test_options_features_available_non_writable(
     assert state
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & feature
     assert state.attributes[state_attribute] != expected_state_attribute_value
+    for attr, expected_value in attributes_to_check.items():
+        assert state.attributes[attr] == expected_value
 
     client.set_active_program_option.reset_mock()
     with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):

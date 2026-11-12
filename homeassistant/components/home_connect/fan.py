@@ -158,6 +158,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             if option_value is not None
             else None
         )
+        allowed_values_without_none = None
         if (
             (
                 option_definition := self.appliance.available_options.get(
@@ -166,13 +167,20 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
             )
             and (option_constraints := option_definition.constraints)
             and option_constraints.allowed_values
-            and (
-                allowed_values_without_none := {
-                    value
-                    for value in option_constraints.allowed_values
-                    if value is not None
-                }
-            )
+        ):
+            allowed_values_without_none = {
+                value
+                for value in option_constraints.allowed_values
+                if value is not None
+            }
+        elif option_definition or (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+            in self.appliance.options
+        ):
+            allowed_values_without_none = set(FAN_SPEED_MODE_OPTIONS_INVERTED)
+
+        if (
+            allowed_values_without_none is not None
             and self._original_speed_modes_keys != allowed_values_without_none
         ):
             self._original_speed_modes_keys = allowed_values_without_none

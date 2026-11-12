@@ -1259,10 +1259,10 @@ async def test_preset_mode_feature_not_supported_on_missing_active_clean(
         "service",
         "service_data_args",
         "expected_call_value",
-        "expected_error",
         "state_attribute",
         "new_value",
         "expected_state_attribute_value",
+        "attributes_to_check",
     ),
     [
         (
@@ -1285,10 +1285,10 @@ async def test_preset_mode_feature_not_supported_on_missing_active_clean(
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_AUTO},
             "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
-            r"Fan mode auto is not valid",  # Because there aren't option constraints, this error is raised
             ATTR_FAN_MODE,
             "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
             "manual",
+            {ATTR_FAN_MODES: ["auto", "manual"]},
         ),
         (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
@@ -1311,10 +1311,10 @@ async def test_preset_mode_feature_not_supported_on_missing_active_clean(
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: 20.0},
             20.0,
-            r"Option.*cannot be set",
             ATTR_TEMPERATURE,
             22.0,
             22.0,
+            {},
         ),
     ],
     ids=["fan_speed_mode", "setpoint_temperature"],
@@ -1334,10 +1334,10 @@ async def test_options_features_available_non_writable(
     service: str,
     service_data_args: dict[str, Any],
     expected_call_value: Any,
-    expected_error: str,
     state_attribute: str,
     new_value: Any,
     expected_state_attribute_value: Any,
+    attributes_to_check: dict[str, Any],
 ) -> None:
     """Test that option enters in read-only mode when is not listed in available program.
 
@@ -1429,9 +1429,11 @@ async def test_options_features_available_non_writable(
     assert state
     assert state.attributes[ATTR_SUPPORTED_FEATURES] & feature
     assert state.attributes[state_attribute] != expected_state_attribute_value
+    for attr, expected_value in attributes_to_check.items():
+        assert state.attributes[attr] == expected_value
 
     client.set_active_program_option.reset_mock()
-    with pytest.raises(HomeAssistantError, match=expected_error):
+    with pytest.raises(HomeAssistantError, match=r"Option.*cannot be set"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             service,
