@@ -27,6 +27,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -53,6 +54,7 @@ from .coordinator import SofarConfigEntry, SofarRuntimeData
 from .entity import (
     SofarEntity,
     SofarEntityDescription,
+    SofarPart,
     async_remove_unserved_entities,
     battery_pack_identifier,
 )
@@ -151,9 +153,9 @@ def _async_setup_battery_packs(
 
 def _battery_string(description: SofarSensorDescription) -> int | None:
     """Return the battery string a description belongs to, if any."""
-    if (part := description.part) is None or part[0] != "battery":
+    if (part := description.part) is None or part.kind != "battery":
         return None
-    return part[1]
+    return part.number
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -180,6 +182,13 @@ class SofarEnumSensor(SofarEntity, SensorEntity):
         return option_slug(value) if value is not None else None
 
 
+def restored_total(data: SensorExtraStoredData | None) -> float | None:
+    """Return a stored total, if the stored state holds a number."""
+    if data is None or not isinstance(data.native_value, (int, float)):
+        return None
+    return data.native_value
+
+
 class SofarTotalSensor(SofarEntity, RestoreSensor):
     """Defines a Sofar cumulative total sensor."""
 
@@ -188,9 +197,10 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
     @override
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        last_data = await self.async_get_last_sensor_data()
-        if last_data is not None and isinstance(last_data.native_value, (int, float)):
-            self._attr_native_value = last_data.native_value
+        if (
+            total := restored_total(await self.async_get_last_sensor_data())
+        ) is not None:
+            self._attr_native_value = total
         self._take_total()
 
     @callback
@@ -394,7 +404,7 @@ def _part_sensors(
             key=f"{measurement.key}_{number}",
             component=component,
             translation_key=measurement.translation_key,
-            part=(kind, number),
+            part=SofarPart(kind, number),
             device_class=measurement.device_class,
             native_unit_of_measurement=measurement.native_unit_of_measurement,
             state_class=measurement.state_class,

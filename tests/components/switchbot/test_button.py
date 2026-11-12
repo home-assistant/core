@@ -10,11 +10,7 @@ from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_i
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.button import (
-    DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
-    ButtonService,
-)
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -23,7 +19,6 @@ from homeassistant.components.switchbot.const import (
     DEFAULT_RETRY_COUNT,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_SENSOR_TYPE,
@@ -51,9 +46,9 @@ from . import (
 @pytest.mark.parametrize(
     ("service", "mock_method", "entity_id"),
     [
-        (SERVICE_PRESS, "next_image", "button.test_name_next_image"),
-        (SERVICE_PRESS, "prev_image", "button.test_name_previous_image"),
-        (SERVICE_PRESS, "random_image", "button.test_name_random_image"),
+        (ButtonService.PRESS, "next_image", "button.test_name_next_image"),
+        (ButtonService.PRESS, "prev_image", "button.test_name_previous_image"),
+        (ButtonService.PRESS, "random_image", "button.test_name_random_image"),
     ],
 )
 async def test_art_frame_button_press(
@@ -89,7 +84,7 @@ async def test_art_frame_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: entity_id},
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 

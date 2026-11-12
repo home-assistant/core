@@ -41,9 +41,14 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import battery_pack_identifier, entity_unique_id, part_identifier
+from .entity import (
+    SofarPart,
+    battery_pack_identifier,
+    entity_unique_id,
+    part_identifier,
+)
 from .helpers import create_modbus_params
-from .sensor import TOTAL_SENSOR_DESCRIPTIONS
+from .sensor import TOTAL_SENSOR_DESCRIPTIONS, restored_total
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,14 +92,16 @@ def _async_seed_high_water_marks(
         if (
             entity_id is None
             or (stored := restore_state_data.async_get_stored_state(entity_id)) is None
+            or stored.extra_data is None
+            or (
+                total := restored_total(
+                    SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
+                )
+            )
+            is None
         ):
             continue
-        if stored.extra_data is None:
-            continue
-        extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
-        if extra is None or not isinstance(extra.native_value, (int, float)):
-            continue
-        description.total_fn(device).seed(float(extra.native_value))
+        description.total_fn(device).seed(total)
 
 
 @callback
@@ -230,7 +237,7 @@ async def async_remove_config_entry_device(
     if TYPE_CHECKING:
         assert serial is not None
     if (DOMAIN, serial) in device_entry.identifiers or any(
-        (DOMAIN, part_identifier(serial, ("pv_string", number)))
+        (DOMAIN, part_identifier(serial, SofarPart("pv_string", number)))
         in device_entry.identifiers
         for number in PV_STRING_COMPONENTS
     ):
@@ -238,7 +245,7 @@ async def async_remove_config_entry_device(
     strings = {
         number
         for number in BATTERY_STRING_COMPONENTS
-        if (DOMAIN, part_identifier(serial, ("battery", number)))
+        if (DOMAIN, part_identifier(serial, SofarPart("battery", number)))
         in device_entry.identifiers
     }
     if config_entry.state is not ConfigEntryState.LOADED:
