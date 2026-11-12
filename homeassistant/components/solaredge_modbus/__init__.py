@@ -171,13 +171,22 @@ async def async_setup_entry(
 
     silent = solaredge.unresponsive_blocks & _probed_blocks(solaredge).keys()
     if newly_silent := silent - known_silent:
-        LOGGER.warning(
-            "%s did not answer for %s while probing, so the entities those"
-            " would carry are missing; this is looked at again in %s minutes",
-            entry.title,
-            " and ".join(sorted(newly_silent)),
-            int(ATTACHMENT_SCAN_INTERVAL.total_seconds() // 60),
-        )
+        if entry.pref_disable_polling:
+            LOGGER.warning(
+                "%s did not answer for %s while probing, so the entities"
+                " those would carry are missing",
+                entry.title,
+                " and ".join(sorted(newly_silent)),
+            )
+        else:
+            LOGGER.warning(
+                "%s did not answer for %s while probing, so the entities"
+                " those would carry are missing; this is looked at again in"
+                " %s minutes",
+                entry.title,
+                " and ".join(sorted(newly_silent)),
+                int(ATTACHMENT_SCAN_INTERVAL.total_seconds() // 60),
+            )
 
     _async_remove_stale_devices(hass, entry, solaredge, serial_number, silent=silent)
 
@@ -185,13 +194,14 @@ async def async_setup_entry(
 
     # What is wired to the inverter is read while setting up, so a meter or
     # battery added or removed later needs the entry to load again to be seen.
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            partial(_async_reload_when_attachments_change, hass, entry, unit),
-            ATTACHMENT_SCAN_INTERVAL,
+    if not entry.pref_disable_polling:
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass,
+                partial(_async_reload_when_attachments_change, hass, entry, unit),
+                ATTACHMENT_SCAN_INTERVAL,
+            )
         )
-    )
 
 
 def _known_silent_blocks(entry: SolarEdgeModbusConfigEntry) -> frozenset[str]:
