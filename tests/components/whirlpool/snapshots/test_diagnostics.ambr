@@ -52,6 +52,30 @@
         }),
       ]),
       'microwaves': list([
+        dict({
+          'category': 'microwave',
+          'model_number': '12345',
+          'raw': dict({
+            'microwaveCavity': dict({
+              'cavityState': 'idle',
+              'doorStatus': 'closed',
+            }),
+            'temperatureUnit': 'C',
+          }),
+          'raw_info': dict({
+            'attributes': dict({
+              'Category': 'Cooking',
+              'Name': '4d6963726f77617665',
+              'Serial': '**REDACTED**',
+            }),
+            'defaultClientId': '**REDACTED**',
+            'thingArn': '**REDACTED**',
+            'thingId': '**REDACTED**',
+            'thingName': '**REDACTED**',
+            'thingTypeName': '12345',
+            'version': 1,
+          }),
+        }),
       ]),
       'ovens': list([
         dict({
