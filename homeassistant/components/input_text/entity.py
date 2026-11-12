@@ -38,8 +38,8 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a text input."""
-        self._attr_native_value = config.get(CONF_INITIAL)
         self._update_config_attributes(config)
+        self._attr_native_value = self._valid_initial(config)
 
     def _update_config_attributes(self, config: ConfigType) -> None:
         """Update attributes based on the config."""
@@ -51,6 +51,24 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
         self._attr_pattern = config.get(CONF_PATTERN)
         self._attr_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_unique_id = config[CONF_ID]
+
+    def _is_valid(self, value: str) -> bool:
+        """Return whether the value fits the length range and the pattern."""
+        if not self.native_min <= len(value) <= self.native_max:
+            return False
+        return self.pattern_cmp is None or self.pattern_cmp.match(value) is not None
+
+    def _valid_initial(self, config: ConfigType) -> str | None:
+        """Return the initial value of the config, or None if it is invalid."""
+        initial: str | None = config.get(CONF_INITIAL)
+        if initial is None:
+            return None
+        if not self._is_valid(initial):
+            _LOGGER.warning(
+                "Ignoring invalid initial value of %s: %s", config[CONF_ID], initial
+            )
+            return None
+        return initial
 
     @classmethod
     @override
@@ -86,7 +104,7 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
         value = state.state if state else None
 
         # Check against None because value can be 0
-        if value is not None and self.native_min <= len(value) <= self.native_max:
+        if value is not None and self._is_valid(value):
             self._attr_native_value = value
 
     @override
@@ -114,4 +132,6 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._update_config_attributes(config)
+        if self.native_value is not None and not self._is_valid(self.native_value):
+            self._attr_native_value = self._valid_initial(config)
         self.async_write_ha_state()
