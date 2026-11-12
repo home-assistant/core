@@ -1,5 +1,6 @@
 """The Voice support integration."""
 
+from collections.abc import AsyncIterable
 from functools import partial
 import logging
 
@@ -22,10 +23,23 @@ from .app import get_app_manager
 from .client import (
     API_VERSION,
     CLIENT_ERRORS,
+    AudioRun,
+    AudioRunRequest,
     UnsupportedVersionError,
     VoiceSupportClient,
+    WakeWordAccepted,
+    WakeWordRejected,
 )
 from .const import CONF_INTEGRATION_CREATED_APP, DOMAIN
+
+__all__ = [
+    "DOMAIN",
+    "AudioRun",
+    "AudioRunRequest",
+    "WakeWordAccepted",
+    "WakeWordRejected",
+    "async_start_run",
+]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -131,3 +145,14 @@ def _async_provision(hass: HomeAssistant) -> None:
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
+
+
+async def async_start_run(
+    hass: HomeAssistant, request: AudioRunRequest, audio: AsyncIterable[bytes]
+) -> AudioRun | None:
+    """Open an audio run if the app is available and the preview is enabled."""
+    if (client := hass.data.get(DATA_CLIENT)) is None:
+        return None
+    if not async_is_enabled(hass):
+        return None
+    return await client.async_start_run(request, audio)

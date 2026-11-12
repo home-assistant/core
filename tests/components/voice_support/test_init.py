@@ -1,5 +1,6 @@
 """Test setting up Voice support and asking for the app."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, AsyncMock, call, patch
 
@@ -13,6 +14,8 @@ from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.voice_support import (
     DATA_CLIENT,
     PREVIEW_FEATURE_WAKE_WORD_VERIFICATION,
+    AudioRunRequest,
+    async_start_run,
 )
 from homeassistant.components.voice_support.client import INFO_REFRESH_INTERVAL
 from homeassistant.components.voice_support.const import (
@@ -318,3 +321,39 @@ async def test_remove_entry_app_error(
     assert uninstall_addon.call_count == 0
     assert "Failed to stop the Voice app: busy" in caplog.text
     assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def _no_audio() -> AsyncGenerator[bytes]:
+    return
+    yield
+
+
+@pytest.mark.usefixtures("labs")
+async def test_start_run_without_entry(hass: HomeAssistant) -> None:
+    """Test there is no run to give before the integration loads, nor without an entry."""
+    assert await async_start_run(hass, AudioRunRequest(), _no_audio()) is None
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_start_run(hass, AudioRunRequest(), _no_audio()) is None
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_start_run_gated_by_preview_feature(
+    hass: HomeAssistant, labs: None
+) -> None:
+    """Test the pipeline gets no run while the feature is off."""
+    client = hass.data[DATA_CLIENT]
+    request = AudioRunRequest(wake_word_phrase="okay nabu")
+
+    with patch.object(
+        client, "async_start_run", new=AsyncMock(return_value="run")
+    ) as start_run:
+        assert await async_start_run(hass, request, _no_audio()) is None
+        assert start_run.call_count == 0
+
+        await async_update_preview_feature(
+            hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, True
+        )
+        audio = _no_audio()
+        assert await async_start_run(hass, request, audio) == "run"
+        assert start_run.call_args[0] == (request, audio)

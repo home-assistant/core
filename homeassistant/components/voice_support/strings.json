@@ -70,7 +70,7 @@
   },
   "preview_features": {
     "wake_word_verification": {
-      "description": "Connects Home Assistant to the Voice app. On a Home Assistant OS or Supervised system the app is installed for you when this feature is enabled.",
+      "description": "Uses the Voice app to verify wake words and detect when commands begin and end. On a Home Assistant OS or Supervised system the app is installed for you when this feature is enabled.",
       "disable_confirmation": "Wake word verification will be turned off. The Voice app stays installed.",
       "enable_confirmation": "This feature is still in development and may change. On a Home Assistant OS or Supervised system the Voice app will be installed when this feature is enabled.",
       "name": "Wake word verification"
