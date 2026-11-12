@@ -12,6 +12,7 @@ from aioabrp import (
     AbrpVehicle,
     ConnectionEvent,
     ConnectionState,
+    Location,
     Telemetry,
     VehicleModelDisplay,
 )
@@ -548,6 +549,7 @@ _FAILED = AbrpApiError("HTTP 503")
         pytest.param([_ONE], False, False, id="missing"),
         pytest.param([_ONE, _BOTH], True, True, id="back_after_removal"),
         pytest.param([[]], True, False, id="empty_garage"),
+        pytest.param([[], _BOTH], True, True, id="back_after_empty_garage"),
     ],
 )
 async def test_vehicle_leaving_garage(
@@ -557,12 +559,16 @@ async def test_vehicle_leaving_garage(
     device_registry: dr.DeviceRegistry,
     mock_telemetry_stream: MagicMock,
     freezer: FrozenDateTimeFactory,
-    polls: list[list[AbrpVehicle] | Exception],
+    caplog: pytest.LogCaptureFixture,
+    polls: list[list[AbrpVehicle]],
     kept: bool,
     streamed: bool,
 ) -> None:
     """A vehicle missing from a garage fetch loses its device and entities."""
-    frame = Telemetry(voltage=build_metric_value(400.0))
+    frame = Telemetry(
+        voltage=build_metric_value(400.0),
+        location=build_metric_value(Location(lat=59.3293, lon=18.0686)),
+    )
     await setup_integration(hass, config_entry_with_vehicles)
     # Another account's device must never be swept up.
     other_entry = MockConfigEntry(domain=DOMAIN, unique_id="other-sub")
@@ -575,24 +581,25 @@ async def test_vehicle_leaving_garage(
     await hass.async_block_till_done()
 
     for poll in polls:
-        # Repeated, so a reload's setup fetch gets the same garage.
-        mock_abrp_client.side_effect = repeat(poll)
+        mock_abrp_client.return_value = poll
         freezer.tick(GARAGE_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-    # A reload after a removal starts without telemetry.
-    fire_frame(mock_telemetry_stream, MOCK_VEHICLE_ID_2, frame)
-    await hass.async_block_till_done()
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID_2}"),
         config_entry_with_vehicles.entry_id,
     )
     assert (device is not None) is kept
-    assert (
-        hass.states.get("sensor.rivian_r1s_2024_quad_max_voltage") is not None
-    ) is kept
+    for entity_id in (
+        "sensor.rivian_r1s_2024_quad_max_voltage",
+        "device_tracker.rivian_r1s_2024_quad_max_location",
+    ):
+        assert (hass.states.get(entity_id) is not None) is kept
     assert device_registry.async_get(other.id) is not None
+    # Handled in place, without reloading the entry or re-adding kept entities.
+    mock_telemetry_stream.assert_called_once()
+    assert "already exists" not in caplog.text
     stream_ids = mock_telemetry_stream.return_value.set_vehicle_ids.call_args.args[0]
     assert (MOCK_VEHICLE_ID_2 in stream_ids) is streamed
 
