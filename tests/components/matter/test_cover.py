@@ -248,6 +248,43 @@ async def test_cover_lift_only(
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
+        ("mock_window_covering_lift", "cover.mock_lift_window_covering"),
+    ],
+)
+async def test_cover_device_class(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the device class follows the window covering type."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "awning"
+
+    set_node_attribute(
+        matter_node, 1, 258, 0, clusters.WindowCovering.Enums.Type.kShutter
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "shutter"
+
+    set_node_attribute(
+        matter_node, 1, 258, 0, clusters.WindowCovering.Enums.Type.kUnknown
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert "device_class" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
         ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
     ],
 )

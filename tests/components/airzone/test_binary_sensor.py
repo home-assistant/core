@@ -27,6 +27,12 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.despacho_floor_demand")
     assert state is None
 
+    state = hass.states.get("binary_sensor.salon_cold_demand")
+    assert state is None
+
+    state = hass.states.get("binary_sensor.salon_heat_demand")
+    assert state is None
+
     state = hass.states.get("binary_sensor.despacho_problem")
     assert state.state == STATE_ON
     assert state.attributes.get("errors") == [API_ERROR_LOW_BATTERY]
@@ -39,6 +45,15 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.dorm_1_floor_demand")
     assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.dorm_1_cold_demand")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.dorm_1_heat_demand")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.dorm_ppal_heat_demand")
+    assert state.state == STATE_ON
 
     state = hass.states.get("binary_sensor.dorm_1_problem")
     assert state.state == STATE_OFF

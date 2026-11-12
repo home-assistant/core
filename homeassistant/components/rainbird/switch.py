@@ -13,7 +13,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, DOMAIN, MANUFACTURER
+from .const import (
+    ATTR_DURATION,
+    CONF_IMPORTED_NAMES,
+    DOMAIN,
+    MANUFACTURER,
+    RainbirdServiceArgument,
+)
 from .coordinator import RainbirdUpdateCoordinator
 from .types import RainbirdConfigEntry
 
@@ -86,7 +92,9 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         try:
             await self.coordinator.controller.irrigate_zone(
                 int(self._zone),
-                int(kwargs.get(ATTR_DURATION, self._duration_minutes)),
+                int(
+                    kwargs.get(RainbirdServiceArgument.DURATION, self._duration_minutes)
+                ),
             )
         except RainbirdDeviceBusyException as err:
             raise HomeAssistantError(

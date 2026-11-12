@@ -7,8 +7,9 @@ from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_va
 
 from homeassistant import config_entries
 from homeassistant.components.utility_meter.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
@@ -157,6 +158,37 @@ async def test_tariffs(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_offset_max_27_days(hass: HomeAssistant) -> None:
+    """Test the offset is capped at 27 days, matching the YAML limit."""
+    user_input = {
+        "cycle": "monthly",
+        "name": "Electricity meter",
+        "source": "sensor.input",
+        "tariffs": [],
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input | {"offset": 28}
+        )
+
+    with patch(
+        "homeassistant.components.utility_meter.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input | {"offset": 27}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"]["offset"] == 27
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_non_periodically_resetting(hass: HomeAssistant) -> None:

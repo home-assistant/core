@@ -1,6 +1,5 @@
 """Support for services."""
 
-from enum import StrEnum
 from typing import Any, cast
 
 from aioshelly.const import RPC_GENERATIONS
@@ -25,27 +24,9 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.json import JsonValueType
 
-from .const import CONF_SLEEP_PERIOD, DOMAIN
+from .const import CONF_SLEEP_PERIOD, DOMAIN, ShellyService, ShellyServiceArgument
 from .coordinator import ShellyConfigEntry
 from .utils import get_device_entry_gen
-
-
-class ShellyService(StrEnum):
-    """Store keys for Shelly services."""
-
-    GET_KVS_VALUE = "get_kvs_value"
-    SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
-    SET_KVS_VALUE = "set_kvs_value"
-
-
-class ShellyServiceArgument(StrEnum):
-    """Store keys for Shelly service arguments."""
-
-    KEY = "key"
-    POSITION = "position"
-    TILT_POSITION = "tilt_position"
-    VALUE = "value"
-
 
 SERVICE_GET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
