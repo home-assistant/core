@@ -270,17 +270,8 @@ MODELS_ALL_DEVICES = (
 )
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
-# Fan/Humidifier Services
-
 # Light data
 ATTR_SCENE = "scene"
-
-# Light Services
-
-# Remote Services
-
-# Switch Services
-
 
 # Features
 FEATURE_SET_BUZZER = 1
