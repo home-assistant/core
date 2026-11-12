@@ -186,9 +186,7 @@ class WatercrystStateSensor(SensorEntity, WatercrystStateEntity):
     @override
     @property
     def native_value(self) -> StateType | datetime:
-        if (data := self.coordinator.data) is None:
-            return None
-        return self.entity_description.value_fn(data)
+        return self.entity_description.value_fn(self.coordinator.data)
 
 
 class WatercrystMeasurementsSensor(SensorEntity, WatercrystMeasurementsEntity):
@@ -199,6 +197,4 @@ class WatercrystMeasurementsSensor(SensorEntity, WatercrystMeasurementsEntity):
     @override
     @property
     def native_value(self) -> StateType | datetime:
-        if (data := self.coordinator.data) is None:
-            return None
-        return self.entity_description.value_fn(data)
+        return self.entity_description.value_fn(self.coordinator.data)
