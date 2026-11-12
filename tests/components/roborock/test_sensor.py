@@ -13,6 +13,7 @@ from pytest_homeassistant.common import (
 from roborock.data.v1 import RoborockDockTypeCode
 from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
+from roborock.map.b01_q10_map_parser import Q10Room
 from roborock.roborock_message import RoborockDyadDataProtocol
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,6 +41,66 @@ async def test_sensors(
 ) -> None:
     """Test sensors and check test values are correctly set."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
+
+
+@pytest.mark.parametrize("room_index", [None, 0, 1])
+async def test_q10_current_room(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+    room_index: int | None,
+) -> None:
+    """Expose the room reported by the library, including unknown locations."""
+    map_trait = fake_q10_vacuum.b01_q10_properties.map
+    if room_index is not None:
+        map_trait.current_room = map_trait.rooms[room_index]
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.roborock_q10_s5_current_room")
+    assert state.state == (
+        map_trait.rooms[room_index].name if room_index is not None else STATE_UNKNOWN
+    )
+    assert state.attributes["options"] == ["Bedroom", "Living Room"]
+
+
+async def test_q10_current_room_updates_and_unloads(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Follow room and map changes and remove the listener on unload."""
+    map_trait = fake_q10_vacuum.b01_q10_properties.map
+    notify = map_trait.add_update_listener.call_args[0][0]
+    unsubscribe = map_trait.add_update_listener.return_value
+
+    for room in map_trait.rooms:
+        map_trait.current_room = room
+        notify()
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.roborock_q10_s5_current_room").state == room.name
+
+    room = Q10Room(id=11, raw_name="Harry's office", pixel_value=44, pixel_count=100)
+    map_trait.rooms = [room]
+    map_trait.current_room = room
+    notify()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.roborock_q10_s5_current_room")
+    assert state.state == "Harry's office"
+    assert state.attributes["options"] == ["Harry's office"]
+
+    map_trait.current_room = None
+    map_trait.rooms = []
+    notify()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.roborock_q10_s5_current_room")
+    assert state.state == STATE_UNKNOWN
+    assert "options" not in state.attributes
+
+    assert await hass.config_entries.async_unload(setup_entry.entry_id)
+    await hass.async_block_till_done()
+    unsubscribe.assert_called_once()
 
 
 def setup_coordinator_side_effect(
