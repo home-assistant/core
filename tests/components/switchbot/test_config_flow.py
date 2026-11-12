@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
 )
 from homeassistant.components.switchbot.const import (
+    CONF_BOT_PRESS_BUTTON,
     CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
@@ -1727,6 +1728,59 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 0
 
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
+
+
+async def test_options_flow_bot_press_button(hass: HomeAssistant) -> None:
+    """Test updating the Bot press button option."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "bot",
+        },
+        options={CONF_RETRY_COUNT: 3},
+        unique_id="aabbccddeeff",
+    )
+    entry.add_to_hass(hass)
+
+    # The press button option should be disabled by default.
+    with patch_async_setup_entry() as mock_setup_entry:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RETRY_COUNT: 3,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BOT_PRESS_BUTTON] is False
+
+    # Enable the press button option.
+    with patch_async_setup_entry():
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_BOT_PRESS_BUTTON: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BOT_PRESS_BUTTON] is True
+    assert entry.options[CONF_BOT_PRESS_BUTTON] is True
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize("sensor_type", ["curtain", "curtain_3"])
