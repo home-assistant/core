@@ -505,26 +505,28 @@ async def async_validate_trigger_config(
     hass: HomeAssistant, trigger_config: list[ConfigType]
 ) -> list[ConfigType]:
     """Validate triggers."""
-    config = []
-    for conf in trigger_config:
-        trigger_key: str = conf[CONF_PLATFORM]
-        platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
-        if not await _async_is_legacy_trigger(hass, platform, trigger_key):
-            trigger_descriptors = await platform.async_get_triggers(hass)
-            relative_trigger_key = get_relative_description_key(
-                platform_domain, trigger_key
-            )
-            if not (trigger := trigger_descriptors.get(relative_trigger_key)):
-                raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_complete_config(hass, conf)
-        elif hasattr(platform, "async_validate_trigger_config"):
-            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
-            conf = await platform.async_validate_trigger_config(hass, conf)
-        else:
-            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
-            conf = platform.TRIGGER_SCHEMA(conf)
-        config.append(conf)
-    return config
+    return [await _async_validate_trigger(hass, conf) for conf in trigger_config]
+
+
+async def _async_validate_trigger(hass: HomeAssistant, conf: ConfigType) -> ConfigType:
+    """Validate a trigger."""
+    trigger_key: str = conf[CONF_PLATFORM]
+    platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
+    if not await _async_is_legacy_trigger(hass, platform, trigger_key):
+        trigger_descriptors = await platform.async_get_triggers(hass)
+        relative_trigger_key = get_relative_description_key(
+            platform_domain, trigger_key
+        )
+        if not (trigger := trigger_descriptors.get(relative_trigger_key)):
+            raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified")
+        conf = await trigger.async_validate_complete_config(hass, conf)
+    elif hasattr(platform, "async_validate_trigger_config"):
+        conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
+        conf = await platform.async_validate_trigger_config(hass, conf)
+    else:
+        conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
+        conf = platform.TRIGGER_SCHEMA(conf)
+    return conf
 
 
 def _trigger_action_wrapper(

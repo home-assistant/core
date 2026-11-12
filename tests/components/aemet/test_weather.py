@@ -11,10 +11,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -49,7 +46,7 @@ async def test_all_entities(
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

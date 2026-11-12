@@ -2,8 +2,12 @@
 
 from unittest.mock import Mock, patch
 
-import grpc
 from lorawan_connection import ConnectionUnavailable
+from lorawan_connection.backend.chirpstack import (
+    AuthenticationError,
+    HTTP2Error,
+    TLSCertificateError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -58,14 +62,9 @@ async def test_global_key(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.parametrize(
-    "status", [grpc.StatusCode.UNAUTHENTICATED, grpc.StatusCode.PERMISSION_DENIED]
-)
-async def test_scoped_key(
-    hass: HomeAssistant, mock_connection: Mock, status: grpc.StatusCode
-) -> None:
+async def test_scoped_key(hass: HomeAssistant, mock_connection: Mock) -> None:
     """Scoped keys need a tenant UUID but do not require write access."""
-    mock_connection.tenants.side_effect = grpc.aio.AioRpcError(status, (), (), "")
+    mock_connection.tenants.side_effect = AuthenticationError()
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
@@ -81,16 +80,9 @@ async def test_scoped_key(
     assert result["step_id"] == "applications"
 
 
-@pytest.mark.parametrize(
-    "status", [grpc.StatusCode.UNAUTHENTICATED, grpc.StatusCode.PERMISSION_DENIED]
-)
-async def test_invalid_auth(
-    hass: HomeAssistant, mock_connection: Mock, status: grpc.StatusCode
-) -> None:
+async def test_invalid_auth(hass: HomeAssistant, mock_connection: Mock) -> None:
     """A tenant read disambiguates a scoped key from a rejected credential."""
-    mock_connection.tenants.side_effect = grpc.aio.AioRpcError(
-        grpc.StatusCode.UNAUTHENTICATED, (), (), "bad key"
-    )
+    mock_connection.tenants.side_effect = AuthenticationError("bad key")
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
@@ -99,7 +91,7 @@ async def test_invalid_auth(
         result["flow_id"], {"endpoint": "http://server:8080", "api_key": "bad"}
     )
     assert result["step_id"] == "tenant"
-    mock_connection.applications.side_effect = grpc.aio.AioRpcError(status, (), (), "")
+    mock_connection.applications.side_effect = AuthenticationError()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"tenant_id": "tenant"}
     )
@@ -175,16 +167,17 @@ async def test_invalid_endpoint(
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "error_key"),
     [
-        ConnectionUnavailable(),
-        grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
+        (ConnectionUnavailable("offline"), "cannot_connect"),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
     ],
 )
 async def test_tenant_listing_failure(
-    hass: HomeAssistant, mock_connection: Mock, error: Exception
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
-    """Connection and incomplete-list failures remain in the form."""
+    """Connection failures allow a retry in the same form."""
     mock_connection.tenants.side_effect = error
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
@@ -193,13 +186,14 @@ async def test_tenant_listing_failure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error_key}
     mock_connection.close.assert_awaited_once()
 
     mock_connection.tenants.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"endpoint": "http://server:8080", "api_key": "correct"}
+        result["flow_id"], {"endpoint": "https://fixed", "api_key": "correct"}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -228,14 +222,15 @@ async def test_multiple_tenants(hass: HomeAssistant, mock_connection: Mock) -> N
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "error_key"),
     [
-        ConnectionUnavailable(),
-        grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
+        (ConnectionUnavailable("offline"), "cannot_connect"),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
     ],
 )
 async def test_application_listing_failure(
-    hass: HomeAssistant, mock_connection: Mock, error: Exception
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
     """Keep the chosen tenant when application enumeration fails."""
     mock_connection.applications.side_effect = error
@@ -247,7 +242,7 @@ async def test_application_listing_failure(
         result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["step_id"] == "tenant"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
     assert mock_connection.close.await_count == 2
 
     mock_connection.applications.side_effect = None
@@ -304,14 +299,15 @@ async def test_empty_selection(hass: HomeAssistant, mock_connection: Mock) -> No
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "error_key"),
     [
-        ConnectionUnavailable("Application removed"),
-        grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
+        (ConnectionUnavailable("offline"), "cannot_connect"),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
     ],
 )
 async def test_inventory_access_failure(
-    hass: HomeAssistant, mock_connection: Mock, error: Exception
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
     """Retry inventory connection failures without losing the application selection."""
     mock_connection.inventory.side_effect = error
@@ -326,7 +322,7 @@ async def test_inventory_access_failure(
         result["flow_id"], {"application_ids": ["application"]}
     )
     assert result["step_id"] == "applications"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
     mock_connection.inventory.assert_awaited_once()
     assert mock_connection.close.await_count == 3
     assert not hass.config_entries.async_entries("chirpstack")
@@ -340,14 +336,11 @@ async def test_inventory_access_failure(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(
-    "status", [grpc.StatusCode.UNAUTHENTICATED, grpc.StatusCode.PERMISSION_DENIED]
-)
 async def test_inventory_auth_failure(
-    hass: HomeAssistant, mock_connection: Mock, status: grpc.StatusCode
+    hass: HomeAssistant, mock_connection: Mock
 ) -> None:
     """A key without inventory access can be replaced in the same flow."""
-    mock_connection.inventory.side_effect = grpc.aio.AioRpcError(status, (), (), "")
+    mock_connection.inventory.side_effect = AuthenticationError()
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
@@ -378,18 +371,28 @@ async def test_inventory_auth_failure(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        (ConnectionUnavailable("Selected application missing"), "cannot_connect"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
+    ],
+)
 async def test_reauth_rejected_inventory(
-    hass: HomeAssistant, connection_entry: MockConfigEntry, mock_connection: Mock
+    hass: HomeAssistant,
+    connection_entry: MockConfigEntry,
+    mock_connection: Mock,
+    error: Exception,
+    error_key: str,
 ) -> None:
-    """An unusable replacement key never overwrites working entry credentials."""
-    mock_connection.inventory.side_effect = ConnectionUnavailable(
-        "Selected application missing"
-    )
+    """Failed reauthentication preserves credentials until a successful retry."""
+    mock_connection.inventory.side_effect = error
     result = await connection_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"api_key": "replacement"}
     )
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error_key}
     assert connection_entry.data["api_key"] == "secret"
 
     mock_connection.inventory.side_effect = None
@@ -420,9 +423,7 @@ async def test_reenter_key_after_tenant_auth_failure(
     hass: HomeAssistant, mock_connection: Mock
 ) -> None:
     """A bad key can be corrected without abandoning the config flow."""
-    mock_connection.tenants.side_effect = grpc.aio.AioRpcError(
-        grpc.StatusCode.UNAUTHENTICATED, (), (), "Rejected"
-    )
+    mock_connection.tenants.side_effect = AuthenticationError("Rejected")
     result = await hass.config_entries.flow.async_init(
         "chirpstack",
         context={"source": SOURCE_USER},
@@ -431,9 +432,7 @@ async def test_reenter_key_after_tenant_auth_failure(
         result["flow_id"], {"endpoint": "http://server:8080", "api_key": "wrong"}
     )
     assert result["step_id"] == "tenant"
-    mock_connection.applications.side_effect = grpc.aio.AioRpcError(
-        grpc.StatusCode.UNAUTHENTICATED, (), (), "Rejected"
-    )
+    mock_connection.applications.side_effect = AuthenticationError("Rejected")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"tenant_id": "tenant"}
     )
