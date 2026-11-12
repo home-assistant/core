@@ -230,8 +230,7 @@ async def test_rgb_nightlight_state(
     entity_id = await _async_setup_rgb_nightlight(
         hass, config_entry, manager, entity_registry, rgb_humidifier
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "OasisMist Night light"
     assert state.attributes[ATTR_RGB_COLOR] == (255, 0, 64)
@@ -264,8 +263,7 @@ async def test_rgb_nightlight_brightness(
     entity_id = await _async_setup_rgb_nightlight(
         hass, config_entry, manager, entity_registry, rgb_humidifier
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == expected_brightness
 
@@ -365,8 +363,7 @@ async def test_rgb_nightlight_commands_update_state(
         LIGHT_DOMAIN, DOMAIN, "rgb-humidifier-nightlight"
     )
     assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_OFF
 
     aioclient_mock.clear_requests()
@@ -380,8 +377,7 @@ async def test_rgb_nightlight_commands_update_state(
         {ATTR_ENTITY_ID: entity_id, **data},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == expected_brightness
     assert state.attributes[ATTR_RGB_COLOR] == expected_color
@@ -389,15 +385,13 @@ async def test_rgb_nightlight_commands_update_state(
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == expected_brightness
     assert state.attributes[ATTR_RGB_COLOR] == expected_color
@@ -419,8 +413,7 @@ async def test_rgb_nightlight_restore_brightness(
     entity_id = await _async_setup_rgb_nightlight(
         hass, config_entry, manager, entity_registry, rgb_humidifier
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -477,8 +470,7 @@ async def test_rgb_nightlight_availability(
     entity_id = await _async_setup_rgb_nightlight(
         hass, config_entry, manager, entity_registry, rgb_humidifier
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_id)) is not None
     assert state.state == expected
 
 
