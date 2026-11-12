@@ -11,6 +11,7 @@ from yarl import URL
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -85,6 +86,34 @@ async def test_poll_rejected_cloud_token_stops_polling_without_reauth(
         get_cloud_devices.assert_awaited_once()
 
     assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
+    assert coordinator.last_exception.translation_key == "authentication_failed"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_poll_refresh_token_rejection_marks_climate_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Mark climate entities unavailable when OAuth refresh requires reauth."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    climate_entity_id = hass.states.async_entity_ids("climate")[0]
+    assert hass.states.get(climate_entity_id).state != STATE_UNAVAILABLE
+
+    with patch(
+        "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
+        new=AsyncMock(side_effect=_reauth_error()),
+    ):
+        assert coordinator.update_interval is not None
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not coordinator.last_update_success
+    assert hass.states.get(climate_entity_id).state == STATE_UNAVAILABLE
     assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
     assert coordinator.last_exception.translation_key == "authentication_failed"
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)

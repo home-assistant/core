@@ -20,7 +20,11 @@ from daikin_onecta.models import GatewayDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -238,9 +242,15 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 cloud_devices = await self._async_get_cloud_devices(
                     cooldown=_POST_WRITE_COOLDOWN
                 )
+            except OAuth2TokenRequestReauthError as err:
+                # Convert reauth failures so the coordinator notifies entities
+                # that their state is no longer current.
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
             except OAuth2TokenRequestError:
-                # Preserve refresh-token failures so Home Assistant can handle
-                # authentication failures rather than retrying the coordinator.
+                # Preserve transient token errors so the coordinator retries.
                 raise
             except OnectaRateLimitError as err:
                 # Retry-After delays scheduled polling; manual updates still poll.
