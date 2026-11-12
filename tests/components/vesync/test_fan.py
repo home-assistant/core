@@ -13,18 +13,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
-    SERVICE_OSCILLATE,
-    SERVICE_SET_PERCENTAGE,
     FanEntityCapabilityAttribute,
     FanEntityStateAttribute,
+    FanService,
     FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -89,8 +83,8 @@ async def test_fan_state(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on"),
-        (SERVICE_TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
+        (FanService.TURN_ON, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on"),
+        (FanService.TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
     ],
 )
 async def test_turn_on_off_success(
@@ -113,7 +107,7 @@ async def test_turn_on_off_success(
             await hass.services.async_call(
                 FAN_DOMAIN,
                 action,
-                {ATTR_ENTITY_ID: ENTITY_FAN},
+                {CommonServiceArgument.ENTITY_ID: ENTITY_FAN},
                 blocking=True,
             )
 
@@ -126,11 +120,11 @@ async def test_turn_on_off_success(
     ("action", "command"),
     [
         (
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_on",
         ),
         (
-            SERVICE_TURN_OFF,
+            FanService.TURN_OFF,
             "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_off",
         ),
     ],
@@ -154,7 +148,7 @@ async def test_turn_on_off_raises_error(
         await hass.services.async_call(
             FAN_DOMAIN,
             action,
-            {ATTR_ENTITY_ID: ENTITY_FAN},
+            {CommonServiceArgument.ENTITY_ID: ENTITY_FAN},
             blocking=True,
         )
 
@@ -201,9 +195,9 @@ async def test_set_preset_mode(
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                SERVICE_TURN_ON,
+                FanService.TURN_ON,
                 {
-                    ATTR_ENTITY_ID: ENTITY_FAN,
+                    CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
                     FanServiceArgument.PRESET_MODE: preset_mode,
                 },
                 blocking=True,
@@ -264,9 +258,9 @@ async def test_set_preset_mode_eco(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {
-                ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
                 FanServiceArgument.PRESET_MODE: "eco",
             },
             blocking=True,
@@ -319,8 +313,11 @@ async def test_pedestal_fan_oscillation(
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                "oscillate",
-                {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, "oscillating": action},
+                FanService.OSCILLATE,
+                {
+                    CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                    FanServiceArgument.OSCILLATING: action,
+                },
                 blocking=True,
             )
 
@@ -365,8 +362,11 @@ async def test_oscillation_success(
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                "oscillate",
-                {ATTR_ENTITY_ID: ENTITY_FAN, "oscillating": action},
+                FanService.OSCILLATE,
+                {
+                    CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                    FanServiceArgument.OSCILLATING: action,
+                },
                 blocking=True,
             )
 
@@ -375,7 +375,7 @@ async def test_oscillation_success(
         update_mock.assert_called_once()
 
 
-@pytest.mark.parametrize("service", [SERVICE_SET_PERCENTAGE, SERVICE_TURN_ON])
+@pytest.mark.parametrize("service", [FanService.SET_PERCENTAGE, FanService.TURN_ON])
 @pytest.mark.parametrize(
     ("details", "percentage", "expected_calls"),
     [
@@ -441,7 +441,10 @@ async def test_set_percentage(
         await hass.services.async_call(
             FAN_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ENTITY_FAN, FanServiceArgument.PERCENTAGE: percentage},
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                FanServiceArgument.PERCENTAGE: percentage,
+            },
             blocking=True,
         )
 
@@ -545,8 +548,11 @@ async def test_set_percentage_failure(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: ENTITY_FAN, FanServiceArgument.PERCENTAGE: percentage},
+            FanService.SET_PERCENTAGE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                FanServiceArgument.PERCENTAGE: percentage,
+            },
             blocking=True,
         )
 
@@ -606,28 +612,28 @@ async def test_percentage_in_preset_mode(
     ("service", "service_data", "command", "message"),
     [
         pytest.param(
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {},
             "turn_on",
             "Failed to turn on fan, no response found.",
             id="turn_on",
         ),
         pytest.param(
-            SERVICE_TURN_OFF,
+            FanService.TURN_OFF,
             {},
             "turn_off",
             "Failed to turn off fan, no response found.",
             id="turn_off",
         ),
         pytest.param(
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {FanServiceArgument.PRESET_MODE: "auto"},
             "set_auto_mode",
             "Failed to set preset mode, no response found.",
             id="preset_mode",
         ),
         pytest.param(
-            SERVICE_OSCILLATE,
+            FanService.OSCILLATE,
             {FanServiceArgument.OSCILLATING: True},
             "toggle_oscillation",
             "Failed to set oscillation, no response found.",
@@ -661,7 +667,7 @@ async def test_command_failure_without_response(
         await hass.services.async_call(
             FAN_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ENTITY_FAN, **service_data},
+            {CommonServiceArgument.ENTITY_ID: ENTITY_FAN, **service_data},
             blocking=True,
         )
 
@@ -692,8 +698,11 @@ async def test_pedestal_fan_oscillation_failure_without_response(
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_OSCILLATE,
-            {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, FanServiceArgument.OSCILLATING: True},
+            FanService.OSCILLATE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                FanServiceArgument.OSCILLATING: True,
+            },
             blocking=True,
         )
 
@@ -787,9 +796,9 @@ async def test_set_preset_mode_pet(
     ) as method_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_ON,
+            FanService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "fan.air_purifier_vital_200s",
+                CommonServiceArgument.ENTITY_ID: "fan.air_purifier_vital_200s",
                 FanServiceArgument.PRESET_MODE: "pet",
             },
             blocking=True,
