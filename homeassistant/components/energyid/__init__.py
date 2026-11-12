@@ -104,6 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         directive_coordinator=directive_coordinator,
         mappings={},
     )
+    if directive_coordinator.directives_enabled:
+        # A coordinator only polls while something listens to it.
+        entry.async_on_unload(directive_coordinator.async_add_listener(lambda: None))
     # Directives are optional, so a failed first fetch must not block the upload path.
     try:
         await directive_coordinator.async_config_entry_first_refresh()
