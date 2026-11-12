@@ -88,7 +88,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not obs:
             raise UpdateFailed("No data was returned from AirNow")
 
-        max_aqi = 0
+        max_aqi = -1
         max_aqi_level = 0
         max_aqi_desc = ""
         max_aqi_poll = ""
