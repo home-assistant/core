@@ -13,7 +13,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -27,6 +26,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
+from .coordinator import AxleConfigEntry
 
 STEP_SCHEMA = probatio.Schema(
     {
@@ -98,7 +98,7 @@ class AxleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_update_api_key(
         self,
-        entry: ConfigEntry,
+        entry: AxleConfigEntry,
         step_id: str,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:

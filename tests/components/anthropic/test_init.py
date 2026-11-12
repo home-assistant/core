@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from functools import partial
 from typing import Literal, TypedDict
@@ -213,7 +214,10 @@ async def test_init_repair_issue(
     await hass.async_block_till_done()
 
     assert (
-        issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
     ) is expected_issue
 
 
@@ -231,7 +235,12 @@ async def test_reconfigure_deprecated_model_repair(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     coordinator = mock_config_entry.runtime_data
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
     subentry = next(iter(mock_config_entry.subentries.values()))
     result = await mock_config_entry.start_subentry_reconfigure_flow(
@@ -250,7 +259,12 @@ async def test_reconfigure_deprecated_model_repair(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not coordinator
     assert subentry.data[CONF_CHAT_MODEL] == deprecated_model.id
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(
@@ -291,7 +305,12 @@ async def test_reconfigure_clears_model_repair(
     )
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
     mock_model_list.side_effect = partial(
         _model_page,
@@ -304,7 +323,12 @@ async def test_reconfigure_clears_model_repair(
         hass, subentry.subentry_id
     )
     assert result["step_id"] == "init"
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -318,7 +342,12 @@ async def test_reconfigure_clears_model_repair(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert subentry.data[CONF_CHAT_MODEL] == replacement_model.id
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_model_repair_retained_for_other_subentries(
@@ -327,7 +356,7 @@ async def test_model_repair_retained_for_other_subentries(
     mock_model_list: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Retain the shared repair until all affected accounts and subentries are fixed."""
+    """Retain an entry's repair until all its subentries are fixed."""
     deprecated_model = model_list[0].model_copy(
         update={"id": "claude-deprecated", "lifecycle": "deprecated"}
     )
@@ -339,7 +368,12 @@ async def test_model_repair_retained_for_other_subentries(
     mock_model_list.side_effect = partial(_model_page, [deprecated_model, active_model])
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
 
     disabled_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -377,7 +411,17 @@ async def test_model_repair_retained_for_other_subentries(
     assert await hass.config_entries.async_setup(healthy_entry.entry_id)
     await hass.async_block_till_done()
     assert healthy_entry.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
+    for entry in (disabled_entry, healthy_entry):
+        assert (
+            issue_registry.async_get_issue(DOMAIN, f"model_deprecated_{entry.entry_id}")
+            is None
+        )
 
     mock_model_list.side_effect = partial(
         _model_page,
@@ -391,7 +435,12 @@ async def test_model_repair_retained_for_other_subentries(
         hass, healthy_subentry.subentry_id
     )
     assert result["step_id"] == "init"
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id}
     )
@@ -399,7 +448,12 @@ async def test_model_repair_retained_for_other_subentries(
     assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
     assert healthy_entry.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+        )
+        is not None
+    )
 
     for subentry, expected_issue in zip(
         mock_config_entry.subentries.values(), (True, False), strict=True
@@ -419,8 +473,218 @@ async def test_model_repair_retained_for_other_subentries(
         assert mock_config_entry.state is ConfigEntryState.LOADED
         assert subentry.data[CONF_CHAT_MODEL] == active_model.id
         assert (
-            issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+            issue_registry.async_get_issue(
+                DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+            )
+            is not None
         ) is expected_issue
+
+
+async def _remove_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Remove a config entry."""
+    await hass.config_entries.async_remove(entry.entry_id)
+
+
+async def _disable_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Disable a config entry."""
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+
+async def _setup_deprecated_and_healthy_entries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+) -> MockConfigEntry:
+    """Set up an entry using a deprecated model and a second, healthy entry."""
+    deprecated_model = model_list[0].model_copy(
+        update={"id": "claude-deprecated", "lifecycle": "deprecated"}
+    )
+    active_model = model_list[0].model_copy(update={"id": "claude-active"})
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry, subentry, data={CONF_CHAT_MODEL: deprecated_model.id}
+        )
+    mock_model_list.side_effect = partial(_model_page, [deprecated_model, active_model])
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    healthy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other account",
+        data={CONF_API_KEY: "other-api-key"},
+        version=2,
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: active_model.id},
+                "subentry_type": "conversation",
+                "title": "Other conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    healthy_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(healthy_entry.entry_id)
+    await hass.async_block_till_done()
+    return healthy_entry
+
+
+async def _fail_reload(
+    hass: HomeAssistant, entry: MockConfigEntry, mock_model_list: AsyncMock
+) -> None:
+    """Reload an entry into setup retry."""
+    side_effect = mock_model_list.side_effect
+    mock_model_list.side_effect = APITimeoutError(request=None)
+    assert not await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_model_list.side_effect = side_effect
+
+
+async def _keep_loaded(
+    hass: HomeAssistant, entry: MockConfigEntry, mock_model_list: AsyncMock
+) -> None:
+    """Leave the entry loaded."""
+    assert entry.state is ConfigEntryState.LOADED
+
+
+PREPARE_ENTRY = [
+    pytest.param(_keep_loaded, id="loaded"),
+    pytest.param(_fail_reload, id="setup_retry"),
+]
+
+
+async def test_model_repair_linked_to_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Create the repair per entry and link it to that entry."""
+    healthy_entry = await _setup_deprecated_and_healthy_entries(
+        hass, mock_config_entry, mock_model_list
+    )
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"model_deprecated_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+    assert issue.data == {"entry_id": mock_config_entry.entry_id}
+    assert issue.translation_key == "model_deprecated"
+    assert issue.translation_placeholders == {"entry_name": mock_config_entry.title}
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"model_deprecated_{healthy_entry.entry_id}"
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("prepare", PREPARE_ENTRY)
+async def test_model_repair_deleted_with_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    prepare: Callable[[HomeAssistant, MockConfigEntry, AsyncMock], Awaitable[None]],
+) -> None:
+    """Delete the repair when its entry is removed, whatever the entry state."""
+    await _setup_deprecated_and_healthy_entries(
+        hass, mock_config_entry, mock_model_list
+    )
+    issue_id = f"model_deprecated_{mock_config_entry.entry_id}"
+    await prepare(hass, mock_config_entry, mock_model_list)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    await _remove_entry(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize("prepare", PREPARE_ENTRY)
+async def test_model_repair_hidden_with_disabled_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    prepare: Callable[[HomeAssistant, MockConfigEntry, AsyncMock], Awaitable[None]],
+) -> None:
+    """Hide the repair when its entry is disabled, whatever the entry state."""
+    await _setup_deprecated_and_healthy_entries(
+        hass, mock_config_entry, mock_model_list
+    )
+    issue_id = f"model_deprecated_{mock_config_entry.entry_id}"
+    await prepare(hass, mock_config_entry, mock_model_list)
+
+    await _disable_entry(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue_registry.async_is_hidden(issue)
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        pytest.param(_remove_entry, id="remove"),
+        pytest.param(_disable_entry, id="disable"),
+    ],
+)
+async def test_model_repair_ignore_kept_when_other_entry_goes_away(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    action: Callable[[HomeAssistant, MockConfigEntry], Awaitable[None]],
+) -> None:
+    """Keep an ignored repair when another entry goes away during setup retry."""
+    healthy_entry = await _setup_deprecated_and_healthy_entries(
+        hass, mock_config_entry, mock_model_list
+    )
+    issue_id = f"model_deprecated_{mock_config_entry.entry_id}"
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+    await _fail_reload(hass, mock_config_entry, mock_model_list)
+
+    await action(hass, healthy_entry)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+
+async def test_model_repair_ignore_kept_on_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Keep an ignored repair ignored across a reload of the offending entry."""
+    await _setup_deprecated_and_healthy_entries(
+        hass, mock_config_entry, mock_model_list
+    )
+    issue_id = f"model_deprecated_{mock_config_entry.entry_id}"
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

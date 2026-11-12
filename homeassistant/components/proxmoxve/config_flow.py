@@ -10,7 +10,7 @@ from proxmoxer.core import ResourceException
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -49,6 +49,7 @@ from .const import (
     DOMAIN,
     NODE_ONLINE,
 )
+from .coordinator import ProxmoxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 BASE_SCHEMA = probatio.Schema(
@@ -175,7 +176,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
     _data: dict[str, Any] = {}
-    _entry: ConfigEntry
+    _entry: ProxmoxConfigEntry
 
     @override
     async def async_step_user(

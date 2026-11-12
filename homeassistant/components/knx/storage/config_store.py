@@ -78,9 +78,17 @@ class KNXConfigStoreModel(TypedDict):
 
 
 def to_storage_dict(data: KnxEntityData[Any]) -> dict[str, Any]:
-    """Render validated entity data to its JSON serializable storage form."""
+    """Render validated entity data to its JSON serializable storage form.
+
+    Optional fields left unset are omitted - the frontend sends them that way,
+    and it is how the dict schemas stored them before the typed configs.
+    """
     return {
-        CONF_ENTITY: dataclasses.asdict(data.entity),
+        CONF_ENTITY: {
+            name: value
+            for name, value in dataclasses.asdict(data.entity).items()
+            if value is not None
+        },
         DOMAIN: _knx_to_storage(data.knx),
     }
 
@@ -105,12 +113,13 @@ def time_server_to_storage(config: TimeServerConfig) -> KNXTimeServerStoreModel:
 def _knx_to_storage(config: Any, *, sparse: bool = False) -> dict[str, Any]:
     """Render a typed config to its storage form.
 
-    `sparse` omits fields left at their default.
+    Unset optional fields (`None`) are omitted. `sparse` also omits fields left
+    at their default.
     """
     data: dict[str, Any] = {}
     for name, default, encode in _storage_encoders(type(config), sparse):
         value = getattr(config, name)
-        if sparse and value == default:
+        if value is None or (sparse and value == default):
             continue
         data[name] = encode(value)
     return data
@@ -118,10 +127,6 @@ def _knx_to_storage(config: Any, *, sparse: bool = False) -> dict[str, Any]:
 
 def _unchanged(value: Any) -> Any:
     return value
-
-
-def _group_select_to_storage(value: Any, *, sparse: bool) -> dict[str, Any] | None:
-    return None if value is None else _knx_to_storage(value, sparse=sparse)
 
 
 def _list_to_storage(value: list[Any], *, sparse: bool) -> list[dict[str, Any]]:
@@ -159,7 +164,7 @@ def _storage_encoders(config_type: type, sparse: bool) -> _StorageEncoders:
         ):
             encode = field_selector.to_storage
         elif isinstance(field_selector, GroupSelect):
-            encode = partial(_group_select_to_storage, sparse=sparse)
+            encode = partial(_knx_to_storage, sparse=sparse)
         elif get_origin(field_type) is list and dataclasses.is_dataclass(
             get_args(field_type)[0]
         ):

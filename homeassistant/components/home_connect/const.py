@@ -1,6 +1,13 @@
 """Constants for the Home Connect integration."""
 
-from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
+from aiohomeconnect.model import (
+    ApplianceType,
+    EventKey,
+    OptionKey,
+    ProgramKey,
+    SettingKey,
+    StatusKey,
+)
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
 
@@ -11,17 +18,17 @@ DOMAIN = "home_connect"
 API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
-    "AirConditioner",
-    "CleaningRobot",
-    "CoffeeMaker",
-    "Dishwasher",
-    "Dryer",
-    "Hood",
-    "Microwave",
-    "Oven",
-    "WarmingDrawer",
-    "Washer",
-    "WasherDryer",
+    ApplianceType.AIR_CONDITIONER,
+    ApplianceType.CLEANING_ROBOT,
+    ApplianceType.COFFEE_MAKER,
+    ApplianceType.DISHWASHER,
+    ApplianceType.DRYER,
+    ApplianceType.HOOD,
+    ApplianceType.MICROWAVE,
+    ApplianceType.OVEN,
+    ApplianceType.WARMING_DRAWER,
+    ApplianceType.WASHER,
+    ApplianceType.WASHER_DRYER,
 )
 
 UNIT_MAP = {
@@ -70,15 +77,6 @@ BSH_DOOR_STATE_CLOSED = "BSH.Common.EnumType.DoorState.Closed"
 BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
-
-SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
-SERVICE_SETTING = "change_setting"
-SERVICE_START_SELECTED_PROGRAM = "start_selected_program"
-
-ATTR_AFFECTS_TO = "affects_to"
-ATTR_KEY = "key"
-ATTR_PROGRAM = "program"
-ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"

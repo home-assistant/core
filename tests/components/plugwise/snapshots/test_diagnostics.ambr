@@ -24,6 +24,12 @@
     }),
     '08963fec7c53423ca5680aa4cb502c63': dict({
       'active_preset': 'away',
+      'asleep_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 17.0,
+        'upper_bound': 30.0,
+      }),
       'available_schedules': list([
         'off',
         'CV Roan',
@@ -32,17 +38,35 @@
         'Badkamer Schema',
         'CV Jessie',
       ]),
+      'away_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 14.0,
+        'upper_bound': 30.0,
+      }),
       'climate_mode': 'auto',
       'control_state': 'idle',
       'dev_class': 'climate',
+      'home_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 21.0,
+        'upper_bound': 30.0,
+      }),
       'model': 'ThermoZone',
       'name': 'Badkamer',
+      'no_frost_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 10.0,
+        'upper_bound': 30.0,
+      }),
       'preset_modes': list([
-        'home',
         'asleep',
-        'away',
-        'vacation',
         'no_frost',
+        'away',
+        'home',
+        'vacation',
       ]),
       'select_schedule': 'Badkamer Schema',
       'sensors': dict({
@@ -62,10 +86,22 @@
         'secondary': list([
         ]),
       }),
+      'vacation_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 12.0,
+        'upper_bound': 30.0,
+      }),
       'vendor': 'Plugwise',
     }),
     '12493538af164a409c6a1c79e38afe1c': dict({
       'active_preset': 'away',
+      'asleep_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 15.0,
+        'upper_bound': 30.0,
+      }),
       'available_schedules': list([
         'off',
         'CV Roan',
@@ -74,17 +110,35 @@
         'Badkamer Schema',
         'CV Jessie',
       ]),
+      'away_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 12.0,
+        'upper_bound': 30.0,
+      }),
       'climate_mode': 'heat',
       'control_state': 'idle',
       'dev_class': 'climate',
+      'home_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 20.0,
+        'upper_bound': 30.0,
+      }),
       'model': 'ThermoZone',
       'name': 'Bios',
+      'no_frost_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 8.0,
+        'upper_bound': 30.0,
+      }),
       'preset_modes': list([
         'home',
-        'asleep',
         'away',
         'vacation',
         'no_frost',
+        'asleep',
       ]),
       'select_schedule': 'off',
       'sensors': dict({
@@ -105,6 +159,12 @@
         'secondary': list([
           'a2c3583e0a6349358998b760cea82d2a',
         ]),
+      }),
+      'vacation_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 12.0,
+        'upper_bound': 30.0,
       }),
       'vendor': 'Plugwise',
     }),
@@ -131,14 +191,38 @@
     }),
     '446ac08dd04d4eff8ac57489757b7314': dict({
       'active_preset': 'no_frost',
+      'asleep_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 17.0,
+        'upper_bound': 30.0,
+      }),
       'available_schedules': list([
         'off',
       ]),
+      'away_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 15.0,
+        'upper_bound': 30.0,
+      }),
       'climate_mode': 'heat',
       'control_state': 'idle',
       'dev_class': 'climate',
+      'home_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 20.0,
+        'upper_bound': 30.0,
+      }),
       'model': 'ThermoZone',
       'name': 'Garage',
+      'no_frost_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 10.0,
+        'upper_bound': 30.0,
+      }),
       'preset_modes': list([
         'home',
         'asleep',
@@ -162,6 +246,12 @@
         ]),
         'secondary': list([
         ]),
+      }),
+      'vacation_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 15.0,
+        'upper_bound': 30.0,
       }),
       'vendor': 'Plugwise',
     }),
@@ -283,6 +373,12 @@
     }),
     '82fa13f017d240daa0d0ea1775420f24': dict({
       'active_preset': 'asleep',
+      'asleep_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 16.0,
+        'upper_bound': 30.0,
+      }),
       'available_schedules': list([
         'off',
         'CV Roan',
@@ -291,17 +387,35 @@
         'Badkamer Schema',
         'CV Jessie',
       ]),
+      'away_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 12.0,
+        'upper_bound': 30.0,
+      }),
       'climate_mode': 'auto',
       'control_state': 'idle',
       'dev_class': 'climate',
+      'home_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 20.0,
+        'upper_bound': 30.0,
+      }),
       'model': 'ThermoZone',
       'name': 'Jessie',
+      'no_frost_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 10.0,
+        'upper_bound': 30.0,
+      }),
       'preset_modes': list([
         'home',
-        'asleep',
+        'no_frost',
         'away',
         'vacation',
-        'no_frost',
+        'asleep',
       ]),
       'select_schedule': 'CV Jessie',
       'sensors': dict({
@@ -320,6 +434,12 @@
         'secondary': list([
           'd3da73bde12a47d5a6b8f9dad971f2ec',
         ]),
+      }),
+      'vacation_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 11.0,
+        'upper_bound': 30.0,
       }),
       'vendor': 'Plugwise',
     }),
@@ -438,6 +558,12 @@
     }),
     'c50f167537524366a5af7aa3942feb1e': dict({
       'active_preset': 'home',
+      'asleep_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 18.0,
+        'upper_bound': 30.0,
+      }),
       'available_schedules': list([
         'off',
         'CV Roan',
@@ -446,17 +572,35 @@
         'Badkamer Schema',
         'CV Jessie',
       ]),
+      'away_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 17.0,
+        'upper_bound': 30.0,
+      }),
       'climate_mode': 'auto',
       'control_state': 'heating',
       'dev_class': 'climate',
+      'home_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 21.5,
+        'upper_bound': 30.0,
+      }),
       'model': 'ThermoZone',
       'name': 'Woonkamer',
+      'no_frost_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 12.0,
+        'upper_bound': 30.0,
+      }),
       'preset_modes': list([
-        'home',
-        'asleep',
-        'away',
         'vacation',
+        'asleep',
         'no_frost',
+        'away',
+        'home',
       ]),
       'select_schedule': 'GF7  Woonkamer',
       'sensors': dict({
@@ -477,6 +621,12 @@
         'secondary': list([
           'b310b72a0e354bfab43089919b9a88bf',
         ]),
+      }),
+      'vacation_preset_temperature': dict({
+        'lower_bound': 4.0,
+        'resolution': 0.5,
+        'setpoint': 15.0,
+        'upper_bound': 30.0,
       }),
       'vendor': 'Plugwise',
     }),

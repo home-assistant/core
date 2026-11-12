@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
-from .const import ATTR_DURATION
+from .const import GeniusHubServiceArgument
 from .entity import GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
@@ -62,5 +62,7 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set the zone to override/on ({'setpoint': true}) for x seconds."""
-        duration: timedelta = kwargs.get(ATTR_DURATION, timedelta(hours=1))
+        duration: timedelta = kwargs.get(
+            GeniusHubServiceArgument.DURATION, timedelta(hours=1)
+        )
         await self._zone.set_override(1, int(duration.total_seconds()))

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_GATEWAY_ID
@@ -56,6 +56,7 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
         self._device_control = self._device.socket_control
         self._device_data = self._device_control.sockets[0]
 
+    @callback
     @override
     def _refresh(self) -> None:
         """Refresh the device."""
@@ -65,20 +66,14 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
     @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        if not self._device_data:
-            return False
         return self._device_data.state
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(False))
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(True))

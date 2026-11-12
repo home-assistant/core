@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import get_marketplace, setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
 
 ISSUE_ID = f"restart_required_{REPOSITORY_INTEGRATION_ID}_1.0.0"
@@ -154,6 +154,38 @@ async def test_removal_the_catalog_takes_back(
         await marketplace.async_handle_removed_repositories()
 
     assert not marketplace.repositories.is_removed(REPOSITORY_INTEGRATION)
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
+    )
+
+
+async def test_removed_repository_issue_removed_with_the_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue of a removed repository goes away with the entry."""
+    await setup_integration(hass, mock_config_entry)
+    marketplace = get_marketplace(hass)
+    marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.installed = True
+    removal = {"repository": REPOSITORY_INTEGRATION, "removal_type": "remove"}
+
+    with (
+        patch.object(
+            marketplace.data_client, "async_get_removed", return_value=[removal]
+        ),
+        patch.object(marketplace.data, "async_write"),
+    ):
+        await marketplace.async_handle_removed_repositories()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+
     assert not issue_registry.async_get_issue(
         DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
     )

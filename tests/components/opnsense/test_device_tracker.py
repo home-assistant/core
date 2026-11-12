@@ -268,3 +268,40 @@ async def test_reload_without_hostname_keeps_device_name(
     )
     assert device is not None
     assert device.name == "Desktop"
+
+
+@pytest.mark.parametrize(
+    ("new_hostname", "expected_device_name"),
+    [
+        pytest.param("Workstation", "Workstation", id="renamed"),
+        pytest.param("", "Desktop", id="hostname_removed"),
+    ],
+)
+async def test_disabled_tracker_device_renamed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    new_hostname: str,
+    expected_device_name: str,
+) -> None:
+    """Test the device of a disabled tracker follows hostname changes."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    registry_entry = entity_registry.async_get("device_tracker.desktop")
+    assert registry_entry is not None
+    assert registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    mock_opnsense_client.get_arp_table.return_value = [
+        ARP[0],
+        {**ARP[1], "hostname": new_hostname},
+    ]
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name

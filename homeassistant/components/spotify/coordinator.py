@@ -15,6 +15,7 @@ from spotifyaio import (
     SpotifyConnectionError,
     SpotifyForbiddenError,
     SpotifyNotFoundError,
+    SpotifyRateLimitError,
     UserProfile,
 )
 
@@ -167,7 +168,12 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                             context.uri,
                         )
                         self._playlist = None
-                    except SpotifyConnectionError, InvalidFieldValue, MissingField:
+                    except (
+                        SpotifyConnectionError,
+                        SpotifyRateLimitError,
+                        InvalidFieldValue,
+                        MissingField,
+                    ):
                         _LOGGER.debug(
                             "Unable to load spotify playlist '%s'. "
                             "Continuing without playlist data",

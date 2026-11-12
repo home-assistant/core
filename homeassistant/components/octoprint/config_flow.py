@@ -239,7 +239,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: discovery_info.host},
+                "title_placeholders": {"host": discovery_info.host},
                 "configuration_url": (
                     f"http://{discovery_info.host}:{discovery_info.port}"
                     f"{discovery_info.properties[CONF_PATH]}"
@@ -267,7 +267,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         url = URL(discovery_info.upnp["presentationURL"])
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: url.host or "-"},
+                "title_placeholders": {"host": url.host or "-"},
                 "configuration_url": discovery_info.upnp["presentationURL"],
             }
         )
@@ -289,7 +289,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: entry_data[CONF_HOST]},
+                "title_placeholders": {"host": entry_data[CONF_HOST]},
             }
         )
 

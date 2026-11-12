@@ -27,6 +27,7 @@ from probatio.humanize import humanize_error
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
+    AudioSettings,
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
@@ -609,6 +610,11 @@ class EsphomeAssistSatellite(
                 start_stage=start_stage,
                 end_stage=end_stage,
                 wake_word_phrase=wake_word_phrase,
+                audio_settings=AudioSettings(
+                    noise_suppression_level=audio_settings.noise_suppression_level,
+                    auto_gain_dbfs=audio_settings.auto_gain,
+                    volume_multiplier=audio_settings.volume_multiplier,
+                ),
             ),
             "esphome_assist_satellite_pipeline",
         )
