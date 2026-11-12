@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Literal, override
+from typing import override
 
 from satel_integra import SatelSystemTroubles, SatelTrouble, SatelTroubleType
 
@@ -28,11 +28,40 @@ from .coordinator import (
     SatelIntegraBaseCoordinator,
     SatelIntegraSystemStatusCoordinator,
     SatelIntegraSystemStatusData,
+    SatelIntegraZoneData,
     SatelIntegraZonesCoordinator,
 )
 from .entity import SatelIntegraBaseEntity, SatelIntegraEntity
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class SatelIntegraZoneBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Satel Integra zone status binary sensor."""
+
+    is_on_fn: Callable[[SatelIntegraZoneData], bool | None]
+
+
+ZONE_BINARY_SENSORS = (
+    SatelIntegraZoneBinarySensorEntityDescription(
+        key="violation",
+        name=None,
+        is_on_fn=lambda data: data.violated,
+    ),
+    SatelIntegraZoneBinarySensorEntityDescription(
+        key="tamper",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_registry_enabled_default=False,
+        is_on_fn=lambda data: data.tampered,
+    ),
+    SatelIntegraZoneBinarySensorEntityDescription(
+        key="bypass",
+        translation_key="bypass",
+        entity_registry_enabled_default=False,
+        is_on_fn=lambda data: data.bypassed,
+    ),
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -203,7 +232,6 @@ async def async_setup_entry(
 
     for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_ZONE):
         zone_num: int = subentry.data[CONF_ZONE_NUMBER]
-        zone_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
 
         async_add_entities(
             [
@@ -212,24 +240,9 @@ async def async_setup_entry(
                     config_entry.entry_id,
                     subentry,
                     zone_num,
-                    zone_type,
-                ),
-                SatelIntegraZoneBinarySensor(
-                    runtime_data.coordinator_zones,
-                    config_entry.entry_id,
-                    subentry,
-                    zone_num,
-                    BinarySensorDeviceClass.TAMPER,
-                    "tamper",
-                ),
-                SatelIntegraZoneBinarySensor(
-                    runtime_data.coordinator_zones,
-                    config_entry.entry_id,
-                    subentry,
-                    zone_num,
-                    None,
-                    "bypass",
-                ),
+                    description,
+                )
+                for description in ZONE_BINARY_SENSORS
             ],
             config_subentry_id=subentry.subentry_id,
         )
@@ -296,25 +309,23 @@ class SatelIntegraZoneBinarySensor(
 ):
     """Representation of a zone violation, tamper, or bypass status."""
 
+    entity_description: SatelIntegraZoneBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: SatelIntegraZonesCoordinator,
         config_entry_id: str,
         subentry: ConfigSubentry,
         zone_number: int,
-        device_class: BinarySensorDeviceClass | None,
-        status: Literal["violation", "tamper", "bypass"] = "violation",
+        description: SatelIntegraZoneBinarySensorEntityDescription,
     ) -> None:
         """Initialize the zone status sensor."""
         super().__init__(coordinator, config_entry_id, subentry, zone_number)
-        self._status = status
-        self._attr_device_class = device_class
-        if status == "violation":
-            self._attr_name = None
+        self.entity_description = description
+        if description.key == "violation":
+            self._attr_device_class = subentry.data[CONF_ZONE_TYPE]
         else:
-            self._attr_unique_id = f"{self._attr_unique_id}_{status}"
-            self._attr_translation_key = status
-            self._attr_entity_registry_enabled_default = False
+            self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property
     @override
@@ -322,11 +333,7 @@ class SatelIntegraZoneBinarySensor(
         """Return the independently reported zone status."""
         if (zone := self.coordinator.data.get(self._device_number)) is None:
             return None
-        if self._status == "tamper":
-            return zone.tampered
-        if self._status == "bypass":
-            return zone.bypassed
-        return zone.violated
+        return self.entity_description.is_on_fn(zone)
 
 
 class SatelIntegraSystemStatusBinarySensor(

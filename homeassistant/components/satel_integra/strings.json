@@ -247,9 +247,6 @@
       "system_trouble": {
         "name": "System trouble"
       },
-      "tamper": {
-        "name": "Tamper"
-      },
       "telephone_line_bad_signal_trouble": {
         "name": "Telephone line bad signal trouble"
       },
