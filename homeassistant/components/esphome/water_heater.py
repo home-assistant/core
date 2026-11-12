@@ -52,6 +52,7 @@ class EsphomeWaterHeater(
     """A water heater implementation for ESPHome."""
 
     _attr_precision = PRECISION_TENTHS
+    _missing_state_covers_entity = True
 
     @callback
     @override
