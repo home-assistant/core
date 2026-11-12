@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 import sqlite3
 import threading
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -21,8 +21,8 @@ from pytest_homeassistant.typing import (
     RecorderInstanceContextManager,
     WebSocketGenerator,
 )
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import create_engine, delete, select, text, update
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
@@ -30,22 +30,26 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.database_usage import (
     CACHE_TIME,
+    INNODB_TABLES_QUERY,
+    MARIADB_INNODB_TABLES_QUERY,
     REFRESH_INTERVAL,
     DatabaseUsage,
     _attribute_lengths,
+    _mysql_table_bytes,
     get_database_usage,
 )
 from homeassistant.components.recorder.db_schema import (
     ALL_TABLES,
     StateAttributes,
     States,
+    StatesMeta,
     Statistics,
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import get_engine_db_url, session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -174,10 +178,11 @@ async def test_database_usage(
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine", "skip_without_table_sizes")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_database_usage_sqlite_size(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test SQLite reports every table, the file size and the free pages."""
+    """Test SQLite reports every table, the file size, free pages and the WAL."""
     await _record_data(hass)
     for value in range(10):
         hass.states.async_set(f"sensor.big_{value}", "1", {"text": "a" * 15000})
@@ -198,6 +203,7 @@ async def test_database_usage_sqlite_size(
     assert {table["table"] for table in usage["tables"]} == tables
     assert usage["total_bytes"] == page_count * page_size
     assert usage["free_bytes"] == free_pages * page_size > 0
+    assert usage["wal_bytes"] > 0
     # Only the pages of the schema table itself are left out
     assert (
         sum(table["bytes"] for table in usage["tables"]) + usage["free_bytes"]
@@ -242,6 +248,7 @@ async def test_database_usage_mysql_size(
 
     assert usage["tables"] is not None
     assert usage["free_bytes"] is not None
+    assert usage["wal_bytes"] is None
     assert usage["total_bytes"] == (
         sum(table["bytes"] for table in usage["tables"]) + usage["free_bytes"]
     )
@@ -261,6 +268,7 @@ async def test_database_usage_postgresql_size(
 
     assert usage["tables"] is not None
     assert usage["free_bytes"] is None
+    assert usage["wal_bytes"] is None
     assert usage["total_bytes"] >= sum(table["bytes"] for table in usage["tables"])
 
 
@@ -277,6 +285,7 @@ async def test_database_usage_empty(
     result = await _async_usage(client, refresh=True)
 
     assert result["total_bytes"] > 0
+    assert result["wal_bytes"] is None
     assert result["entities"] == []
     assert result["statistics"] == []
     assert result["generated_at"] == START.isoformat()
@@ -413,6 +422,161 @@ async def test_database_usage_weighting(
     )
 
 
+@pytest.mark.usefixtures("skip_without_table_sizes")
+async def test_database_usage_shared_attributes(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test an attributes row shared by entities is split by their states."""
+    for value in range(3):
+        hass.states.async_set("sensor.busy", str(value), POWER_ATTRIBUTES)
+    hass.states.async_set("sensor.quiet", "1", POWER_ATTRIBUTES)
+    await async_wait_recording_done(hass)
+
+    usage = await recorder_mock.async_add_executor_job(
+        get_database_usage, recorder_mock
+    )
+
+    _assert_spread(usage, "state_attributes")
+    entities = _by_id(usage["entities"], "entity_id")
+    assert entities["sensor.busy"]["attributes_bytes"] == pytest.approx(
+        3 * entities["sensor.quiet"]["attributes_bytes"], abs=4
+    )
+
+
+def _purge_entity(instance: Recorder, entity_id: str) -> None:
+    """Delete the states and metadata of an entity on another connection."""
+    engine = create_engine(get_engine_db_url(instance.db_url))
+    try:
+        with engine.begin() as connection:
+            metadata_id = connection.execute(
+                select(StatesMeta.metadata_id).where(StatesMeta.entity_id == entity_id)
+            ).scalar_one()
+            connection.execute(
+                update(States)
+                .where(States.metadata_id == metadata_id)
+                .values(old_state_id=None)
+            )
+            connection.execute(delete(States).where(States.metadata_id == metadata_id))
+            connection.execute(
+                delete(StatesMeta).where(StatesMeta.metadata_id == metadata_id)
+            )
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("persistent_database", [True])
+async def test_database_usage_snapshot(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test a purge during the report does not change what it reads."""
+    await _record_data(hass)
+
+    def purge_during_report(*args: Any) -> dict[int | None, float]:
+        _purge_entity(recorder_mock, "sensor.busy")
+        return _attribute_lengths(*args)
+
+    with patch(
+        "homeassistant.components.recorder.database_usage._attribute_lengths",
+        side_effect=purge_during_report,
+    ):
+        usage = await recorder_mock.async_add_executor_job(
+            get_database_usage, recorder_mock
+        )
+
+    assert {(row["entity_id"], row["states"]) for row in usage["entities"]} == {
+        ("sensor.busy", 10),
+        ("sensor.quiet", 1),
+    }
+    report = await recorder_mock.async_add_executor_job(
+        get_database_usage, recorder_mock
+    )
+    # The attributes of the purged entity are left without a state
+    assert {(row["entity_id"], row["states"]) for row in report["entities"]} == {
+        ("sensor.quiet", 1),
+        (None, 0),
+    }
+
+
+def _mysql_session(
+    is_mariadb: bool, innodb_tables: Mock, file_per_table: int
+) -> MagicMock:
+    """Return a session that answers the MySQL size queries."""
+    tables = [("states", 1000, 100), ("events", 500, 100), ("statistics", 200, 30)]
+    results = {
+        "@@SESSION.information_schema_stats_expiry": Mock(
+            return_value=Mock(scalar_one=Mock(return_value=86400))
+        ),
+        "SET SESSION": Mock(),
+        "information_schema.tables": Mock(
+            return_value=Mock(all=Mock(return_value=tables))
+        ),
+        INNODB_TABLES_QUERY: innodb_tables,
+        MARIADB_INNODB_TABLES_QUERY: innodb_tables,
+        "@@innodb_file_per_table": Mock(
+            return_value=Mock(scalar_one=Mock(return_value=file_per_table))
+        ),
+    }
+    session = MagicMock()
+    session.get_bind.return_value.dialect.is_mariadb = is_mariadb
+    session.execute.side_effect = lambda statement, *args: next(
+        result for key, result in results.items() if key in str(statement)
+    )()
+    return session
+
+
+@pytest.mark.parametrize("is_mariadb", [False, True])
+@pytest.mark.parametrize(
+    ("innodb_tables", "file_per_table", "free_bytes"),
+    [
+        pytest.param(
+            Mock(
+                return_value=Mock(
+                    all=Mock(
+                        return_value=[
+                            ("db/states", 0),
+                            ("db/events", 0),
+                            ("db/statistics", 7),
+                        ]
+                    )
+                )
+            ),
+            1,
+            130,
+            id="mixed_tablespaces",
+        ),
+        pytest.param(
+            Mock(side_effect=OperationalError("", None, Exception())),
+            1,
+            230,
+            id="file_per_table_without_privilege",
+        ),
+        pytest.param(
+            Mock(side_effect=OperationalError("", None, Exception())),
+            0,
+            100,
+            id="shared_tablespace_without_privilege",
+        ),
+        pytest.param(
+            Mock(return_value=Mock(all=Mock(return_value=[("db/states", 0)]))),
+            0,
+            100,
+            id="tables_missing_from_innodb",
+        ),
+    ],
+)
+def test_mysql_free_bytes(
+    is_mariadb: bool, innodb_tables: Mock, file_per_table: int, free_bytes: int
+) -> None:
+    """Test MySQL counts the free space of each tablespace once."""
+    session = _mysql_session(is_mariadb, innodb_tables, file_per_table)
+
+    assert _mysql_table_bytes(session) == (
+        {"states": 1000, "events": 500, "statistics": 200},
+        1700 + free_bytes,
+        free_bytes,
+    )
+
+
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_usage_without_dbstat(
@@ -529,7 +693,7 @@ async def test_database_usage_slow_run(
     freezer.move_to(START)
     slow = timedelta(minutes=10)
 
-    def slow_attribute_lengths(*args: Any) -> dict[int | None, int]:
+    def slow_attribute_lengths(*args: Any) -> dict[int | None, float]:
         freezer.tick(slow)
         return _attribute_lengths(*args)
 

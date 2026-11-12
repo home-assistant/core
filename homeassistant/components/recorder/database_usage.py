@@ -3,12 +3,14 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Mapping
+from contextlib import suppress
 from datetime import datetime, timedelta
+import os
 from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import probatio
-from sqlalchemy import LargeBinary, cast, func, select, text
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import LargeBinary, cast, func, literal_column, make_url, select, text
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import websocket_api
@@ -31,6 +33,7 @@ from .db_schema import (
     StatisticsMeta,
     StatisticsShortTerm,
 )
+from .util import is_file_sqlite_url
 
 if TYPE_CHECKING:
     from sqlalchemy.dialects.mysql.base import MySQLDialect
@@ -46,6 +49,14 @@ SQLITE_DBSTAT_QUERY: Final = (
     "SELECT m.tbl_name, SUM(d.pgsize) FROM dbstat AS d "
     "JOIN sqlite_master AS m ON m.name = d.name "
     "WHERE d.aggregate = TRUE GROUP BY m.tbl_name"
+)
+INNODB_TABLES_QUERY: Final = (
+    "SELECT name, space FROM information_schema.INNODB_TABLES "
+    "WHERE name LIKE CONCAT(DATABASE(), '/%')"
+)
+MARIADB_INNODB_TABLES_QUERY: Final = (
+    "SELECT name, space FROM information_schema.INNODB_SYS_TABLES "
+    "WHERE name LIKE CONCAT(DATABASE(), '/%')"
 )
 
 
@@ -86,14 +97,15 @@ class DatabaseUsage(TypedDict):
     """Space used in the recorder database.
 
     total_bytes is the size of the database, free_bytes included, without the
-    SQLite write-ahead log. Byte figures per table and row are None when the
-    engine cannot report table sizes.
+    SQLite write-ahead log, whose files wal_bytes holds. Byte figures per table
+    and row are None when the engine cannot report table sizes.
     """
 
     generated_at: datetime
     duration: float
     total_bytes: int
     free_bytes: int | None
+    wal_bytes: int | None
     tables: list[TableUsage] | None
     entities: list[EntityUsage]
     statistics: list[StatisticUsage]
@@ -114,6 +126,32 @@ def _sqlite_table_bytes(session: Session) -> tuple[dict[str, int] | None, int, i
     else:
         table_bytes = {table: int(size) for table, size in rows}
     return table_bytes, page_count * page_size, free_pages * page_size
+
+
+def _sqlite_wal_bytes(db_url: str) -> int | None:
+    """Return the size of the write-ahead log and its index, None in memory."""
+    url = make_url(db_url)
+    if not is_file_sqlite_url(url):
+        return None
+    size = 0
+    for postfix in ("-wal", "-shm"):
+        with suppress(FileNotFoundError):
+            size += os.path.getsize(f"{url.database}{postfix}")
+    return size
+
+
+def _mysql_tablespaces(session: Session, is_mariadb: bool) -> dict[str, int] | None:
+    """Return the InnoDB tablespace per table, None when it cannot be read.
+
+    Reading InnoDB metadata needs the PROCESS privilege.
+    """
+    try:
+        rows = session.execute(
+            text(MARIADB_INNODB_TABLES_QUERY if is_mariadb else INNODB_TABLES_QUERY)
+        ).all()
+    except OperationalError, ProgrammingError:
+        return None
+    return {name.partition("/")[2]: int(space) for name, space in rows}
 
 
 def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
@@ -143,12 +181,18 @@ def _mysql_table_bytes(session: Session) -> tuple[dict[str, int], int, int]:
                 {"expiry": stats_expiry},
             )
     table_bytes = {table: int(size or 0) for table, size, _ in rows}
-    table_free = [int(free or 0) for _, _, free in rows]
-    # Tables in the shared system tablespace each report its free space
-    if session.execute(text("SELECT @@innodb_file_per_table")).scalar_one():
-        free_bytes = sum(table_free)
+    table_free = {table: int(free or 0) for table, _, free in rows}
+    # Tables in a shared tablespace each report the free space of that tablespace,
+    # so it is counted once per tablespace
+    spaces = _mysql_tablespaces(session, dialect.is_mariadb)
+    if spaces is not None and table_free.keys() <= spaces.keys():
+        free_bytes = sum(
+            {spaces[table]: free for table, free in table_free.items()}.values()
+        )
+    elif session.execute(text("SELECT @@innodb_file_per_table")).scalar_one():
+        free_bytes = sum(table_free.values())
     else:
-        free_bytes = max(table_free, default=0)
+        free_bytes = max(table_free.values(), default=0)
     return table_bytes, sum(table_bytes.values()) + free_bytes, free_bytes
 
 
@@ -192,39 +236,76 @@ def _byte_length(dialect: SupportedDialect | None, column: Any) -> Any:
 
 def _attribute_lengths(
     session: Session, dialect: SupportedDialect | None
-) -> dict[int | None, int]:
+) -> dict[int | None, float]:
     """Return the attributes length in bytes per metadata_id.
 
-    Each attributes row goes to the first state found through the index on
-    attributes_id, so a row shared by several entities is counted once.
-    Rows without a state go to None.
+    An attributes row shared by several entities is split over them by how
+    many of their states use it. Rows without a state go to None.
     """
-    owner = (
-        select(States.metadata_id)
-        .where(States.attributes_id == StateAttributes.attributes_id)
-        .limit(1)
-        .scalar_subquery()
+    # + 0 makes SQLite scan the table instead of reading it through an index
+    owner = States.metadata_id + literal_column("0")
+    refs = (
+        select(
+            owner.label("metadata_id"),
+            States.attributes_id,
+            func.count().label("rows"),
+        )
+        .group_by(owner, States.attributes_id)
+        .subquery()
     )
-    sub = select(
-        owner.label("owner"),
-        _byte_length(dialect, StateAttributes.shared_attrs).label("length"),
+    weighted = select(
+        refs.c.metadata_id,
+        refs.c.attributes_id,
+        refs.c.rows,
+        func.sum(refs.c.rows).over(partition_by=refs.c.attributes_id).label("total"),
     ).subquery()
+    length = _byte_length(dialect, StateAttributes.shared_attrs)
+    sub = (
+        select(
+            weighted.c.metadata_id.label("owner"),
+            func.coalesce(length * weighted.c.rows / weighted.c.total, length).label(
+                "length"
+            ),
+        )
+        .select_from(StateAttributes)
+        .outerjoin(weighted, weighted.c.attributes_id == StateAttributes.attributes_id)
+        .subquery()
+    )
     return {
-        metadata_id: int(length or 0)
+        metadata_id: float(length or 0)
         for metadata_id, length in session.execute(
             select(sub.c.owner, func.sum(sub.c.length)).group_by(sub.c.owner)
         ).all()
     }
 
 
-def _group[KeyT](
-    values: dict[int | None, int], keys: Mapping[int | None, KeyT]
-) -> dict[KeyT | None, int]:
+def _group[KeyT, ValueT: (int, float)](
+    values: dict[int | None, ValueT], keys: Mapping[int | None, KeyT]
+) -> dict[KeyT | None, ValueT]:
     """Return the values per key, with unknown ids under None."""
-    grouped: dict[KeyT | None, int] = defaultdict(int)
+    grouped: dict[KeyT | None, ValueT] = defaultdict(int)
     for id_, value in values.items():
         grouped[keys.get(id_)] += value
     return grouped
+
+
+def _begin_snapshot(session: Session, dialect: SupportedDialect | None) -> None:
+    """Begin a transaction that reads one snapshot of the database."""
+    match dialect:
+        case SupportedDialect.MYSQL:
+            session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
+        case SupportedDialect.POSTGRESQL:
+            session.connection(
+                execution_options={
+                    "isolation_level": "REPEATABLE READ",
+                    "postgresql_readonly": True,
+                }
+            )
+        case _:
+            # pysqlite only begins a transaction for writes; in WAL mode the read
+            # transaction does not block the recorder, but holds back checkpoints
+            # until the report is done
+            session.execute(text("BEGIN"))
 
 
 def get_database_usage(instance: Recorder) -> DatabaseUsage:
@@ -232,11 +313,13 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
 
     Table sizes come from the database engine; a table's bytes are spread over
     its rows evenly, except for attributes, which are spread by the length of
-    the JSON each entity owns.
+    the JSON each entity owns. All queries read one snapshot of the database.
     """
     started = dt_util.utcnow()
     dialect = instance.dialect_name
+    wal_bytes: int | None = None
     with session_scope(session=instance.get_session(), read_only=True) as session:
+        _begin_snapshot(session, dialect)
         states = _counts(session, States.metadata_id)
         attributes = _attribute_lengths(session, dialect)
         statistics = _counts(session, Statistics.metadata_id)
@@ -250,10 +333,9 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
                 table_bytes, total_bytes, free_bytes = _postgresql_table_bytes(session)
             case _:
                 table_bytes, total_bytes, free_bytes = _sqlite_table_bytes(session)
+                wal_bytes = _sqlite_wal_bytes(instance.db_url)
         entity_ids: dict[int | None, str | None] = dict(
-            session.execute(select(StatesMeta.metadata_id, StatesMeta.entity_id))
-            .tuples()
-            .all()
+            session.execute(select(StatesMeta.metadata_id, StatesMeta.entity_id)).all()
         )
         statistic_ids: dict[int | None, tuple[str | None, str | None]] = {
             id_: (statistic_id, source)
@@ -273,7 +355,7 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
         TABLE_STATISTICS_SHORT_TERM: sum(short_term.values()),
     }
 
-    def share(table: str, part: int) -> int | None:
+    def share(table: str, part: float) -> int | None:
         """Return the bytes of a table that part of its rows or JSON takes."""
         if table_bytes is None:
             return None
@@ -291,6 +373,7 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
         "duration": (generated_at - started).total_seconds(),
         "total_bytes": total_bytes,
         "free_bytes": free_bytes,
+        "wal_bytes": wal_bytes,
         "tables": None
         if table_bytes is None
         else [{"table": table, "bytes": size} for table, size in table_bytes.items()],
