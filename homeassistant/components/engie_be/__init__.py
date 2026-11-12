@@ -301,11 +301,13 @@ def _async_start_tariff_retry(hass: HomeAssistant, entry: EngieBeConfigEntry) ->
     async def _async_retry_classification() -> None:
         """Classify the pending households and stop once none is left."""
         pending = [
-            ban for ban, household in households.items() if household.is_dynamic is None
+            (ban, household)
+            for ban, household in households.items()
+            if household.is_dynamic is None
         ]
         try:
             results = await asyncio.gather(
-                *(_async_is_dynamic(runtime_data.client, ban) for ban in pending)
+                *(_async_is_dynamic(runtime_data.client, ban) for ban, _ in pending)
             )
         except ConfigEntryAuthFailed:
             _async_cancel_tariff_retry(runtime_data)
@@ -313,10 +315,12 @@ def _async_start_tariff_retry(hass: HomeAssistant, entry: EngieBeConfigEntry) ->
             return
         if entry.state is not ConfigEntryState.LOADED:
             return
-        for ban, is_dynamic in zip(pending, results, strict=True):
-            if (household := households.get(ban)) is not None:
+        applied: list[bool | None] = []
+        for (ban, household), is_dynamic in zip(pending, results, strict=True):
+            if households.get(ban) is household:
                 household.is_dynamic = is_dynamic
-        if any(results) and (epex := runtime_data.epex) is not None:
+                applied.append(is_dynamic)
+        if any(applied) and (epex := runtime_data.epex) is not None:
             await epex.async_request_refresh()
             if entry.state is not ConfigEntryState.LOADED:
                 return  # type: ignore[unreachable]
@@ -348,11 +352,17 @@ def _async_start_tariff_retry(hass: HomeAssistant, entry: EngieBeConfigEntry) ->
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: EngieBeConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
-    """Allow removing the device of a business agreement the account no longer lists."""
-    return not any(
-        domain == DOMAIN and ban in entry.runtime_data.relations.data
-        for domain, ban in device_entry.identifiers
-    )
+    """Remove the household of a business agreement the account no longer lists."""
+    if entry.state is not ConfigEntryState.LOADED:
+        return True
+    runtime_data = entry.runtime_data
+    bans = {ban for domain, ban in device_entry.identifiers if domain == DOMAIN}
+    async with runtime_data.household_sync_lock:
+        if bans & set(runtime_data.relations.data):
+            return False
+        if tracked := bans & set(runtime_data.households):
+            await _async_remove_households(hass, entry, tracked)
+        return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> None:

@@ -24,13 +24,16 @@ from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
+    NEW_HOUSEHOLDS_SIGNAL,
     PRICES_SCAN_INTERVAL,
     RELATIONS_SCAN_INTERVAL,
+    REMOVED_HOUSEHOLDS_SIGNAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -1589,3 +1592,172 @@ async def test_remove_config_entry_device(
     response = await ws_client.remove_device(stale_device.id)
     assert response["success"]
     assert device_registry.async_get(stale_device.id) is None
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_contracts_retry_ignores_replaced_household(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a retry result for a household that left and returned is discarded."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+
+    def _setup_contracts(queried_ban: str) -> EnergyContractsResponse:
+        if queried_ban == BAN:
+            raise EngieBeCommunicationError("boom")
+        return build_contracts()
+
+    client.async_get_energy_contracts.side_effect = _setup_contracts
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    runtime_data = mock_config_entry.runtime_data
+    assert runtime_data.households[BAN].is_dynamic is None
+
+    retry_started = asyncio.Event()
+    release_retry = asyncio.Event()
+
+    async def _contracts(_queried_ban: str) -> EnergyContractsResponse:
+        if not retry_started.is_set():
+            retry_started.set()
+            await release_retry.wait()
+            return build_contracts()
+        return build_contracts(dynamic=True)
+
+    client.async_get_energy_contracts.side_effect = _contracts
+    freezer.tick(CONTRACTS_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await retry_started.wait()
+
+    removed = asyncio.Event()
+    added = asyncio.Event()
+
+    @callback
+    def _removed(_bans: set[str]) -> None:
+        removed.set()
+
+    @callback
+    def _added(_bans: set[str]) -> None:
+        added.set()
+
+    mock_config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, REMOVED_HOUSEHOLDS_SIGNAL.format(mock_config_entry.entry_id), _removed
+        )
+    )
+    mock_config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NEW_HOUSEHOLDS_SIGNAL.format(mock_config_entry.entry_id), _added
+        )
+    )
+
+    client.async_get_customer_account_relations.return_value = build_relations(BAN_2)
+    freezer.tick(RELATIONS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await removed.wait()
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    freezer.tick(RELATIONS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await added.wait()
+    await hass.async_block_till_done()
+    assert runtime_data.households[BAN].is_dynamic is True
+
+    release_retry.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert runtime_data.households[BAN].is_dynamic is True
+    assert runtime_data.epex is not None
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _current_hour_price(hass, entity_registry, BAN) == pytest.approx(0.18)
+
+
+@pytest.mark.usefixtures("mock_engie_client")
+async def test_remove_device_while_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a device can be removed while the entry is not loaded."""
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device.id) is None
+
+
+async def test_remove_retained_household_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing a household kept through an empty agreement list lets it return."""
+    client = mock_engie_client.return_value
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+    client.async_get_customer_account_relations.return_value = CustomerAccountRelations(
+        accounts=()
+    )
+    await _sync_households(hass, freezer)
+    assert BAN in mock_config_entry.runtime_data.households
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert BAN not in mock_config_entry.runtime_data.households
+    assert device_registry.async_get(device.id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+        )
+        is None
+    )
+
+    client.async_get_customer_account_relations.return_value = build_relations(BAN)
+    await _sync_households(hass, freezer)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    price_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    assert price_entity_id is not None
+    price_state = hass.states.get(price_entity_id)
+    assert price_state is not None
+    assert float(price_state.state) == pytest.approx(0.123456)
