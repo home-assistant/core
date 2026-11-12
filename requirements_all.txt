@@ -209,7 +209,7 @@ aioapcaccess==1.0.0
 aioaquacell==1.0.0
 
 # homeassistant.components.vistapool
-aioaquarite==0.13.1
+aioaquarite==0.13.2
 
 # homeassistant.components.aseko_pool_live
 aioaseko==1.0.0
@@ -334,7 +334,7 @@ aioimmich==0.18.0
 aioindiallsky==0.1.8
 
 # homeassistant.components.ipp
-aioipp==0.20.0
+aioipp==0.21.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -520,7 +520,7 @@ aiowatttime==2024.6.0
 aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==1.0.2
+aiowebostv==1.1.0
 
 # homeassistant.components.withings
 aiowithings==4.0.1
@@ -761,7 +761,7 @@ bosch-alarm-mode2==0.4.11
 bosch-shc-camera-client==0.7.0
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.6.26
+boschshcpy==0.6.27
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -1661,7 +1661,7 @@ messagebird==1.2.1
 meteo-lt-pkg==0.7.3
 
 # homeassistant.components.meteoalarm
-meteoalarmapi==0.4.0
+meteoalarmapi==0.5.0
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.5.0
@@ -1718,7 +1718,7 @@ motionblinds==0.6.31
 motionblindsble==0.1.4
 
 # homeassistant.components.motioneye
-motioneye-client==0.4.1
+motioneye-client==0.4.2
 
 # homeassistant.components.bang_olufsen
 mozart-api==6.2.0.44.0
@@ -1751,7 +1751,7 @@ nad-receiver==0.4.0
 ndms2-client==0.1.2
 
 # homeassistant.components.neopool
-neopool-modbus==4.13.0
+neopool-modbus==4.15.0
 
 # homeassistant.components.ness_alarm
 nessclient==1.3.1

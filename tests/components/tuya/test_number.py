@@ -10,11 +10,11 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, json
 from homeassistant.util import json as json_util
@@ -132,10 +132,10 @@ async def test_set_value(
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 18,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 18,
         },
         blocking=True,
     )
@@ -289,10 +289,10 @@ async def test_hwsb_number_with_quirk(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 75,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 75,
         },
         blocking=True,
     )

@@ -1,14 +1,26 @@
 """Shark IQ services."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import ATTR_ROOMS, DOMAIN
+from .const import DOMAIN
 
-SERVICE_CLEAN_ROOM = "clean_room"
+
+class SharkIqService(StrEnum):
+    """Store keys for Shark IQ services."""
+
+    CLEAN_ROOM = "clean_room"
+
+
+class SharkIqServiceArgument(StrEnum):
+    """Store keys for Shark IQ service arguments."""
+
+    ROOMS = "rooms"
 
 
 @callback
@@ -19,10 +31,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CLEAN_ROOM,
+        SharkIqService.CLEAN_ROOM,
         entity_domain=VACUUM_DOMAIN,
         schema={
-            probatio.Required(ATTR_ROOMS): probatio.All(
+            probatio.Required(SharkIqServiceArgument.ROOMS): probatio.All(
                 probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             ),
         },
