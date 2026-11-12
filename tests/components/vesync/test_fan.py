@@ -12,13 +12,12 @@ from pyvesync.utils.errors import ResponseInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_PERCENTAGE,
+    FanEntityCapabilityAttribute,
+    FanEntityStateAttribute,
+    FanServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -203,7 +202,10 @@ async def test_set_preset_mode(
             await hass.services.async_call(
                 FAN_DOMAIN,
                 SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: preset_mode},
+                {
+                    ATTR_ENTITY_ID: ENTITY_FAN,
+                    FanServiceArgument.PRESET_MODE: preset_mode,
+                },
                 blocking=True,
             )
 
@@ -229,7 +231,7 @@ async def test_out_of_range_fan_level(
     state = hass.states.get(ENTITY_PEDESTAL_FAN)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.attributes[ATTR_PERCENTAGE] is None
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] is None
 
 
 async def test_set_preset_mode_eco(
@@ -247,8 +249,8 @@ async def test_set_preset_mode_eco(
 
     state = hass.states.get(ENTITY_PEDESTAL_FAN)
     assert state is not None
-    assert "eco" in state.attributes[ATTR_PRESET_MODES]
-    assert state.attributes[ATTR_PRESET_MODE] == "eco"
+    assert "eco" in state.attributes[FanEntityCapabilityAttribute.PRESET_MODES]
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] == "eco"
 
     with (
         patch(
@@ -263,7 +265,10 @@ async def test_set_preset_mode_eco(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, ATTR_PRESET_MODE: "eco"},
+            {
+                ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                FanServiceArgument.PRESET_MODE: "eco",
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -436,7 +441,7 @@ async def test_set_percentage(
         await hass.services.async_call(
             FAN_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: percentage},
+            {ATTR_ENTITY_ID: ENTITY_FAN, FanServiceArgument.PERCENTAGE: percentage},
             blocking=True,
         )
 
@@ -541,7 +546,7 @@ async def test_set_percentage_failure(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: percentage},
+            {ATTR_ENTITY_ID: ENTITY_FAN, FanServiceArgument.PERCENTAGE: percentage},
             blocking=True,
         )
 
@@ -594,7 +599,7 @@ async def test_percentage_in_preset_mode(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes[ATTR_PERCENTAGE] == expected_percentage
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] == expected_percentage
 
 
 @pytest.mark.parametrize(
@@ -616,14 +621,14 @@ async def test_percentage_in_preset_mode(
         ),
         pytest.param(
             SERVICE_TURN_ON,
-            {ATTR_PRESET_MODE: "auto"},
+            {FanServiceArgument.PRESET_MODE: "auto"},
             "set_auto_mode",
             "Failed to set preset mode, no response found.",
             id="preset_mode",
         ),
         pytest.param(
             SERVICE_OSCILLATE,
-            {ATTR_OSCILLATING: True},
+            {FanServiceArgument.OSCILLATING: True},
             "toggle_oscillation",
             "Failed to set oscillation, no response found.",
             id="oscillate",
@@ -688,7 +693,7 @@ async def test_pedestal_fan_oscillation_failure_without_response(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_OSCILLATE,
-            {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, ATTR_OSCILLATING: True},
+            {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, FanServiceArgument.OSCILLATING: True},
             blocking=True,
         )
 
@@ -725,7 +730,7 @@ async def test_pedestal_fan_oscillating_state(
 
     state = hass.states.get(ENTITY_PEDESTAL_FAN)
     assert state is not None
-    assert state.attributes[ATTR_OSCILLATING] is expected
+    assert state.attributes[FanEntityStateAttribute.OSCILLATING] is expected
 
 
 async def test_preset_mode_not_reported(
@@ -743,7 +748,7 @@ async def test_preset_mode_not_reported(
 
     state = hass.states.get(ENTITY_FAN)
     assert state is not None
-    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] is None
 
 
 async def test_unknown_preset_mode_logs_warning(
@@ -762,7 +767,7 @@ async def test_unknown_preset_mode_logs_warning(
 
     state = hass.states.get("fan.air_purifier_200s")
     assert state is not None
-    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] is None
     assert "Unknown mode 'unmapped'" in caplog.text
 
 
@@ -783,7 +788,10 @@ async def test_set_preset_mode_pet(
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "fan.air_purifier_vital_200s", ATTR_PRESET_MODE: "pet"},
+            {
+                ATTR_ENTITY_ID: "fan.air_purifier_vital_200s",
+                FanServiceArgument.PRESET_MODE: "pet",
+            },
             blocking=True,
         )
 
