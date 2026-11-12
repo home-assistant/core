@@ -109,7 +109,6 @@ RULE_URL = (
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -335,6 +334,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -992,7 +992,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
 
 INTEGRATIONS_WITHOUT_SCALE = [
     "abode",
-    "accuweather",
     "acmeda",
     "actiontec",
     "adax",
@@ -1226,10 +1225,10 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "file",
     "filesize",
     "filter",
-    "fitbit",
     "fints",
     "fireservicerota",
     "firmata",
+    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",

@@ -1,6 +1,7 @@
 """Services for the Nissan Leaf integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 
 import probatio
@@ -14,18 +15,32 @@ from .const import DATA_LEAF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_UPDATE_LEAF = "update"
-SERVICE_START_CHARGE_LEAF = "start_charge"
-ATTR_VIN = "vin"
 
-UPDATE_LEAF_SCHEMA = probatio.Schema({probatio.Required(ATTR_VIN): cv.string})
-START_CHARGE_LEAF_SCHEMA = probatio.Schema({probatio.Required(ATTR_VIN): cv.string})
+class NissanLeafService(StrEnum):
+    """Store keys for Nissan Leaf services."""
+
+    START_CHARGE = "start_charge"
+    UPDATE = "update"
+
+
+class NissanLeafServiceArgument(StrEnum):
+    """Store keys for Nissan Leaf service arguments."""
+
+    VIN = "vin"
+
+
+UPDATE_LEAF_SCHEMA = probatio.Schema(
+    {probatio.Required(NissanLeafServiceArgument.VIN): cv.string}
+)
+START_CHARGE_LEAF_SCHEMA = probatio.Schema(
+    {probatio.Required(NissanLeafServiceArgument.VIN): cv.string}
+)
 
 
 async def _async_handle_update(service: ServiceCall) -> None:
     """Handle service to update leaf data from Nissan servers."""
     hass = service.hass
-    vin = service.data[ATTR_VIN]
+    vin = service.data[NissanLeafServiceArgument.VIN]
 
     if vin in hass.data[DATA_LEAF]:
         data_store = hass.data[DATA_LEAF][vin]
@@ -42,7 +57,7 @@ async def _async_handle_start_charge(service: ServiceCall) -> None:
         "the charge instead"
     )
     hass = service.hass
-    vin = service.data[ATTR_VIN]
+    vin = service.data[NissanLeafServiceArgument.VIN]
 
     if vin in hass.data[DATA_LEAF]:
         data_store = hass.data[DATA_LEAF][vin]
@@ -67,11 +82,14 @@ async def _async_handle_start_charge(service: ServiceCall) -> None:
 def setup_services(hass: HomeAssistant) -> None:
     """Register the Nissan Leaf services."""
     hass.services.register(
-        DOMAIN, SERVICE_UPDATE_LEAF, _async_handle_update, schema=UPDATE_LEAF_SCHEMA
+        DOMAIN,
+        NissanLeafService.UPDATE,
+        _async_handle_update,
+        schema=UPDATE_LEAF_SCHEMA,
     )
     hass.services.register(
         DOMAIN,
-        SERVICE_START_CHARGE_LEAF,
+        NissanLeafService.START_CHARGE,
         _async_handle_start_charge,
         schema=START_CHARGE_LEAF_SCHEMA,
     )

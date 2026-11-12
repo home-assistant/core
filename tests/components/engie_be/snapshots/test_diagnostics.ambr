@@ -55,6 +55,33 @@
         }),
         'is_dynamic': True,
         'last_update_success': True,
+        'peaks': dict({
+          'is_fallback': False,
+          'last_update_success': True,
+          'monthly': dict({
+            'daily_peaks': list([
+              dict({
+                'end': '2026-10-15T18:15:00+02:00',
+                'peak_kw': 4.2,
+                'peak_kwh': 1.05,
+                'start': '2026-10-15T18:00:00+02:00',
+              }),
+            ]),
+            'month': 10,
+            'peak_of_the_month': dict({
+              'end': '2026-10-15T18:15:00+02:00',
+              'peak_kw': 4.2,
+              'peak_kwh': 1.05,
+              'start': '2026-10-15T18:00:00+02:00',
+            }),
+            'previous_peak_of_the_month': None,
+            'skipped_entries': 0,
+            'year': 2026,
+          }),
+          'peak_month': '2026-10',
+          'previous_month': None,
+          'update_interval': '1:00:00',
+        }),
         'slots': dict({
           '**REDACTED_473550ae0ee79134': dict({
             'injection': dict({
@@ -149,6 +176,33 @@
         }),
         'is_dynamic': True,
         'last_update_success': True,
+        'peaks': dict({
+          'is_fallback': False,
+          'last_update_success': True,
+          'monthly': dict({
+            'daily_peaks': list([
+              dict({
+                'end': '2026-10-15T18:15:00+02:00',
+                'peak_kw': 4.2,
+                'peak_kwh': 1.05,
+                'start': '2026-10-15T18:00:00+02:00',
+              }),
+            ]),
+            'month': 10,
+            'peak_of_the_month': dict({
+              'end': '2026-10-15T18:15:00+02:00',
+              'peak_kw': 4.2,
+              'peak_kwh': 1.05,
+              'start': '2026-10-15T18:00:00+02:00',
+            }),
+            'previous_peak_of_the_month': None,
+            'skipped_entries': 0,
+            'year': 2026,
+          }),
+          'peak_month': '2026-10',
+          'previous_month': None,
+          'update_interval': '1:00:00',
+        }),
         'slots': dict({
           '**REDACTED_473550ae0ee79134': dict({
             'injection': dict({
@@ -222,6 +276,33 @@
         }),
         'is_dynamic': False,
         'last_update_success': True,
+        'peaks': dict({
+          'is_fallback': False,
+          'last_update_success': True,
+          'monthly': dict({
+            'daily_peaks': list([
+              dict({
+                'end': '2026-10-15T18:15:00+02:00',
+                'peak_kw': 4.2,
+                'peak_kwh': 1.05,
+                'start': '2026-10-15T18:00:00+02:00',
+              }),
+            ]),
+            'month': 10,
+            'peak_of_the_month': dict({
+              'end': '2026-10-15T18:15:00+02:00',
+              'peak_kw': 4.2,
+              'peak_kwh': 1.05,
+              'start': '2026-10-15T18:00:00+02:00',
+            }),
+            'previous_peak_of_the_month': None,
+            'skipped_entries': 0,
+            'year': 2026,
+          }),
+          'peak_month': '2026-10',
+          'previous_month': None,
+          'update_interval': '1:00:00',
+        }),
         'slots': dict({
           '**REDACTED_473550ae0ee79134': dict({
             'injection': dict({
@@ -293,6 +374,33 @@
         }),
         'is_dynamic': False,
         'last_update_success': False,
+        'peaks': dict({
+          'is_fallback': False,
+          'last_update_success': True,
+          'monthly': dict({
+            'daily_peaks': list([
+              dict({
+                'end': '2026-10-15T18:15:00+02:00',
+                'peak_kw': 4.2,
+                'peak_kwh': 1.05,
+                'start': '2026-10-15T18:00:00+02:00',
+              }),
+            ]),
+            'month': 10,
+            'peak_of_the_month': dict({
+              'end': '2026-10-15T18:15:00+02:00',
+              'peak_kw': 4.2,
+              'peak_kwh': 1.05,
+              'start': '2026-10-15T18:00:00+02:00',
+            }),
+            'previous_peak_of_the_month': None,
+            'skipped_entries': 0,
+            'year': 2026,
+          }),
+          'peak_month': '2026-10',
+          'previous_month': None,
+          'update_interval': '1:00:00',
+        }),
         'slots': dict({
         }),
         'update_interval': '1:00:00',
