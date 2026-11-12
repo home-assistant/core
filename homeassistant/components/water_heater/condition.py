@@ -17,7 +17,7 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, WaterHeaterStateAttribute
+from .const import DOMAIN, WaterHeaterCapabilityAttribute, WaterHeaterStateAttribute
 
 ATTR_OPERATION_MODE = "operation_mode"
 
@@ -84,8 +84,9 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
     @override
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of a water heater entity from its state."""
-        # Water heater entities convert temperatures to the system unit via show_temp
-        return self._hass.config.units.temperature_unit
+        return entity_state.attributes.get(
+            WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+        )
 
 
 CONDITIONS: dict[str, type[Condition]] = {

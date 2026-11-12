@@ -1,6 +1,7 @@
 {
   "domain": "jewish_calendar",
   "name": "Jewish Calendar",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@tsvi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",

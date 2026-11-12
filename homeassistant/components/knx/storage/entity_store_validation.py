@@ -41,9 +41,7 @@ def parse_invalid(exc: probatio.Invalid) -> _ErrorDescription:
     return description  # type: ignore[return-value]
 
 
-def validate_config_store_data(
-    schema: Callable[[dict], dict], entity_data: dict
-) -> dict:
+def validate_config_store_data[T](schema: Callable[[dict], T], entity_data: dict) -> T:
     """Validate data for config store.
 
     Return validated data or raise EntityStoreValidationException.

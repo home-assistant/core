@@ -5,6 +5,13 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import imap
 from homeassistant.components.sensor import SensorStateClass
@@ -13,10 +20,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import TEST_FETCH_RESPONSE_TEXT_PLAIN, TEST_SEARCH_RESPONSE
 from .test_config_flow import MOCK_CONFIG
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])

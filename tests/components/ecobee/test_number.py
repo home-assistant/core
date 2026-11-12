@@ -3,20 +3,19 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.common import snapshot_platform
 
 VENTILATOR_MIN_HOME_ID = "number.ecobee_ventilator_minimum_time_home"
 VENTILATOR_MIN_AWAY_ID = "number.ecobee_ventilator_minimum_time_away"
@@ -46,8 +45,11 @@ async def test_set_min_time_home(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: VENTILATOR_MIN_HOME_ID, ATTR_VALUE: target_value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: VENTILATOR_MIN_HOME_ID,
+                NumberServiceArgument.VALUE: target_value,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -64,8 +66,11 @@ async def test_set_min_time_away(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: VENTILATOR_MIN_AWAY_ID, ATTR_VALUE: target_value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: VENTILATOR_MIN_AWAY_ID,
+                NumberServiceArgument.VALUE: target_value,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -85,8 +90,11 @@ async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: COMPRESSOR_MIN_TEMP_ID, ATTR_VALUE: target_value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: COMPRESSOR_MIN_TEMP_ID,
+                NumberServiceArgument.VALUE: target_value,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -103,8 +111,11 @@ async def test_set_fan_min_on_time(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: FAN_MIN_ON_TIME_ID, ATTR_VALUE: target_value},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: FAN_MIN_ON_TIME_ID,
+                NumberServiceArgument.VALUE: target_value,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()

@@ -3,15 +3,19 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.integration.const import DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import selector
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -25,9 +29,17 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
+    device_class = result["data_schema"].schema["device_class"]
+    assert isinstance(device_class, selector.SelectSelector)
+    assert all(
+        option in DEVICE_CLASS_STATE_CLASSES
+        and SensorStateClass.TOTAL in DEVICE_CLASS_STATE_CLASSES[option]
+        for option in device_class.config["options"]
+    )
+
     with patch(
         "homeassistant.components.integration.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -36,6 +48,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "name": "My integration",
                 "round": 1,
                 "source": input_sensor_entity_id,
+                "device_class": SensorDeviceClass.VOLUME,
                 "unit_time": "min",
                 "max_sub_interval": {"seconds": 0},
             },
@@ -50,6 +63,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.VOLUME,
         "unit_time": "min",
         "max_sub_interval": {"seconds": 0},
     }
@@ -62,6 +76,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.VOLUME,
         "unit_time": "min",
         "max_sub_interval": {"seconds": 0},
     }
@@ -113,6 +128,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "method": "right",
             "round": 2.0,
             "source": "sensor.input",
+            "device_class": SensorDeviceClass.MONETARY,
             "max_sub_interval": {"minutes": 1},
         },
     )
@@ -122,6 +138,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.MONETARY,
         "unit_prefix": "k",
         "unit_time": "min",
         "max_sub_interval": {"minutes": 1},
@@ -132,6 +149,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 2.0,
         "source": "sensor.input",
+        "device_class": SensorDeviceClass.MONETARY,
         "unit_prefix": "k",
         "unit_time": "min",
         "max_sub_interval": {"minutes": 1},

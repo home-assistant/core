@@ -3,11 +3,10 @@
 from typing import Final
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.enocean.const import DOMAIN
 from homeassistant.const import CONF_DEVICE
-
-from tests.common import MockConfigEntry
 
 ENTRY_CONFIG: Final[dict[str, str]] = {
     CONF_DEVICE: "/dev/ttyUSB0",

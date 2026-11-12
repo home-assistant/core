@@ -1,0 +1,5 @@
+{
+  "domain": "helty",
+  "name": "Helty",
+  "integrations": ["helty", "helty_cloud"]
+}

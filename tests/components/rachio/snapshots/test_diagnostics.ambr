@@ -1,0 +1,94 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'base_stations': list([
+      dict({
+        'base_station': dict({
+          'id': '**REDACTED**',
+          'macAddress': '**REDACTED**',
+          'reportedState': dict({
+            'connected': True,
+            'firmwareVersion': '2.0.1',
+          }),
+          'serialNumber': '**REDACTED**',
+        }),
+        'schedule': list([
+          dict({
+            'programId': '**REDACTED**',
+            'programName': 'Evening',
+            'skippable': True,
+            'start': '2026-10-28T18:00:00Z',
+            'totalRunDurationSeconds': 900,
+            'valveRunSummaries': list([
+              dict({
+                'durationSeconds': 900,
+                'valveId': '**REDACTED**',
+                'valveName': 'Front Yard',
+              }),
+            ]),
+          }),
+        ]),
+        'valves': list([
+          dict({
+            'baseStationId': '**REDACTED**',
+            'detectFlow': True,
+            'id': '**REDACTED**',
+            'name': 'Front Yard',
+            'state': dict({
+              'reportedState': dict({
+                'batteryStatus': 'GOOD',
+                'connected': True,
+                'defaultRuntimeSeconds': 600,
+                'firmwareVersion': '1.2.3',
+              }),
+            }),
+          }),
+        ]),
+      }),
+    ]),
+    'controllers': list([
+      dict({
+        'deleted': False,
+        'flexScheduleRules': list([
+        ]),
+        'id': '**REDACTED**',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'macAddress': '**REDACTED**',
+        'model': 'GENERATION3',
+        'name': 'Test Controller',
+        'on': True,
+        'paused': False,
+        'rainSensorTripped': False,
+        'scheduleRules': list([
+          dict({
+            'enabled': True,
+            'id': '**REDACTED**',
+            'name': 'Morning',
+            'summary': 'Every day at 6:00 AM',
+            'totalDuration': 900,
+            'type': 'FIXED',
+          }),
+        ]),
+        'serialNumber': '**REDACTED**',
+        'status': 'ONLINE',
+        'timeZone': 'America/Denver',
+        'zones': list([
+          dict({
+            'customSlope': dict({
+              'name': 'ZERO_THREE',
+            }),
+            'enabled': True,
+            'id': '**REDACTED**',
+            'imageUrl': '**REDACTED**',
+            'name': 'Test Zone',
+            'zoneNumber': 1,
+          }),
+        ]),
+      }),
+    ]),
+    'options': dict({
+      'manual_run_mins': 15,
+    }),
+  })
+# ---

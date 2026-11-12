@@ -480,3 +480,42 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup_platform[sys_006][button.reset_main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Reset Main Room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_006][button.reset_my_home_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Reset My Home 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_006][button.reset_my_home_1_dhw-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Reset My Home 1 DHW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home_1_dhw',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

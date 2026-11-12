@@ -13,12 +13,13 @@ from motioneye_client.const import (
     KEY_UPLOAD_ENABLED,
     KEY_VIDEO_STREAMING,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -31,8 +32,6 @@ from . import (
     create_mock_motioneye_client,
     setup_mock_motioneye_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_switch_turn_on_off(
@@ -58,8 +57,8 @@ async def test_switch_turn_on_off(
     # Turn switch off.
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 
@@ -81,8 +80,8 @@ async def test_switch_turn_on_off(
     # Turn switch on.
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 
@@ -112,8 +111,8 @@ async def test_switch_state_updates_right_after_toggling(hass: HomeAssistant) ->
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 
@@ -127,8 +126,8 @@ async def test_switch_state_updates_right_after_toggling(hass: HomeAssistant) ->
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 

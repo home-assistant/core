@@ -23,8 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import IturanConfigEntry
-from .coordinator import IturanDataUpdateCoordinator
+from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 from .entity import IturanBaseEntity
 
 

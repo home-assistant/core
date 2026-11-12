@@ -3,13 +3,13 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from pytest_homeassistant.common import async_fire_time_changed
+
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.plex.const import DEBOUNCE_TIMEOUT
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 
 async def test_scan_clients_button_schedule(
@@ -29,9 +29,9 @@ async def test_scan_clients_button_schedule(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: "button.plex_server_1_scan_clients",
+                CommonServiceArgument.ENTITY_ID: "button.plex_server_1_scan_clients",
             },
             True,
         )

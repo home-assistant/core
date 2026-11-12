@@ -8,6 +8,14 @@ import aiohttp
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
@@ -27,15 +35,6 @@ from homeassistant.helpers import aiohttp_client as client
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.ssl import SSLCipherList
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    extract_stack_to_frame,
-    mock_integration,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="camera_client")
@@ -690,3 +689,22 @@ async def test_redirect_to_blocked_address(
         pytest.raises(client.SSRFRedirectError),
     ):
         await session.get(redirect_url)
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_clientsession_accepts_large_headers(hass: HomeAssistant) -> None:
+    """Test the clientsession reads header fields larger than aiohttp's default limit."""
+    large_value = "x" * 9300
+
+    async def handler(request: web.Request) -> web.Response:
+        """Return a response with a header field larger than 8190 bytes."""
+        return web.Response(text="ok", headers={"Content-Security-Policy": large_value})
+
+    app = web.Application()
+    app.router.add_get("/", handler)
+
+    async with TestServer(app) as server:
+        session = client.async_get_clientsession(hass)
+        async with session.get(server.make_url("/")) as resp:
+            assert resp.status == 200
+            assert resp.headers["Content-Security-Policy"] == large_value

@@ -1,7 +1,7 @@
 """Tests for the Portainer button platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, _Call, call, patch
 
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
@@ -10,23 +10,22 @@ from pyportainer.exceptions import (
 )
 from pyportainer.models.stacks import Stack, StackType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.button import ButtonService
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
 
 BUTTON_DOMAIN = "button"
 UPDATE_STACK_ENTITY_ID = "button.webstack_update_stack"
@@ -72,8 +71,8 @@ async def test_buttons_containers(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -107,8 +106,8 @@ async def test_buttons_containers_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -127,8 +126,10 @@ async def test_buttons_invalid_auth_starts_reauth(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.practical_morse_restart_container"},
+            ButtonService.PRESS,
+            {
+                CommonServiceArgument.ENTITY_ID: "button.practical_morse_restart_container"
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -139,33 +140,53 @@ async def test_buttons_invalid_auth_starts_reauth(
 
 
 @pytest.mark.parametrize(
-    ("action", "client_method"),
+    ("entity_id", "client_method", "expected_call"),
     [
-        ("prune", "images_prune"),
+        pytest.param(
+            "button.my_environment_prune_unused_images",
+            "images_prune",
+            call(endpoint_id=1, dangling=False, until=timedelta(days=0)),
+            id="images",
+        ),
+        pytest.param(
+            "button.my_environment_prune_unused_volumes",
+            "prune_volumes",
+            call(1),
+            id="volumes",
+        ),
+        pytest.param(
+            "button.my_environment_prune_build_cache",
+            "prune_build_cache",
+            call(1, all_cache=True),
+            id="build_cache",
+        ),
+        pytest.param(
+            "button.my_environment_prune_unused_networks",
+            "prune_networks",
+            call(1),
+            id="networks",
+        ),
     ],
 )
 async def test_buttons_endpoint(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    action: str,
+    entity_id: str,
     client_method: str,
+    expected_call: _Call,
 ) -> None:
-    """Test pressing a Portainer endpoint button triggers call."""
+    """Test pressing a Portainer endpoint button calls the library."""
     await setup_integration(hass, mock_config_entry)
-
-    entity_id = f"button.my_environment_{action}_unused_images"
-    method_mock = getattr(mock_portainer_client, client_method)
-    pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    assert len(method_mock.mock_calls) == pre_calls + 1
+    assert getattr(mock_portainer_client, client_method).mock_calls == [expected_call]
 
 
 @pytest.mark.parametrize(
@@ -192,8 +213,10 @@ async def test_buttons_endpoints_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.my_environment_prune_unused_images"},
+            ButtonService.PRESS,
+            {
+                CommonServiceArgument.ENTITY_ID: "button.my_environment_prune_unused_images"
+            },
             blocking=True,
         )
 
@@ -208,8 +231,8 @@ async def test_button_update_stack(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
         blocking=True,
     )
 
@@ -240,8 +263,8 @@ async def test_button_update_stack_exceptions(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key

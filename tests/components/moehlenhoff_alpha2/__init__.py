@@ -4,13 +4,12 @@ from functools import partialmethod
 from unittest.mock import patch
 
 from moehlenhoff_alpha2 import Alpha2Base
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 import xmltodict
 
 from homeassistant.components.moehlenhoff_alpha2.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 MOCK_BASE_HOST = "fake-base-host"
 

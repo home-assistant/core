@@ -15,9 +15,9 @@ from elgato import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.elgato import ELGATO_KEY
 from homeassistant.components.elgato.const import (
     DOMAIN,
     FIRMWARE_SCAN_INTERVAL,
@@ -31,9 +31,10 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
+    ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -44,13 +45,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "update.frenck_firmware"
 
@@ -160,8 +160,8 @@ async def test_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -201,8 +201,8 @@ async def test_install_that_never_comes_back(
     """
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -229,8 +229,8 @@ async def test_install_on_a_device_that_stays_away(
     """
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -259,8 +259,8 @@ async def test_a_second_install_is_turned_away(
         *[
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: ENTITY_ID},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
                 blocking=True,
             )
             for _ in range(2)
@@ -276,6 +276,7 @@ async def test_catalog_refresh_during_an_install(
     hass: HomeAssistant,
     mock_elgato: MagicMock,
     mock_firmware_catalog: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the catalog refreshing while an install is running.
 
@@ -285,19 +286,24 @@ async def test_catalog_refresh_during_an_install(
 
     async def install(image: FirmwareImage, **kwargs: Any) -> None:
         """Let Elgato publish something while the device is busy."""
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await hass.data[ELGATO_KEY].async_refresh()
+        mock_firmware_catalog.versions.return_value = {
+            53: FirmwareVersion(board_type=53, build_number=230, version="1.0.5"),
+        }
+        freezer.tick(FIRMWARE_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        # Not waiting for background tasks: the device poll waits for this install
         await hass.async_block_till_done()
 
         assert (state := hass.states.get(ENTITY_ID))
+        assert state.attributes[ATTR_LATEST_VERSION] == "1.0.5.230"
         assert state.attributes[ATTR_IN_PROGRESS] is True
 
     mock_elgato.update_firmware.side_effect = install
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -338,8 +344,8 @@ async def test_download_does_not_hold_the_device(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -367,8 +373,8 @@ async def test_device_page_follows_the_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -398,8 +404,8 @@ async def test_install_error(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -468,8 +474,8 @@ async def test_download_failure_leaves_the_light_alone(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -494,8 +500,8 @@ async def test_install_rejected_by_the_device(
     with pytest.raises(HomeAssistantError, match="Battery is at 11%"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -509,18 +515,26 @@ async def test_install_keeps_the_device_to_itself(
     A device stops answering while it erases a flash slot, and enough traffic
     during that window takes its HTTP server down and restarts the light.
     """
-    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
-    refresh: asyncio.Task[None] | None = None
+    await async_setup_component(hass, HA_DOMAIN, {})
+    request: asyncio.Task[None] | None = None
+    request_waited = False
     polls_during_install = 0
 
     async def install(image: FirmwareImage, **kwargs: Any) -> None:
-        """Ask for a refresh while the device is busy taking firmware."""
-        nonlocal refresh, polls_during_install
+        """Ask for an update while the device is busy taking firmware."""
+        nonlocal request, request_waited, polls_during_install
         before = mock_elgato.state.call_count
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        refresh = hass.async_create_task(coordinator.async_refresh())
+        request = hass.async_create_task(
+            hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: "light.frenck"},
+                blocking=True,
+            )
+        )
         for _ in range(5):
             await asyncio.sleep(0)
+        request_waited = not request.done()
         polls_during_install = mock_elgato.state.call_count - before
 
     mock_elgato.update_firmware.side_effect = install
@@ -528,14 +542,15 @@ async def test_install_keeps_the_device_to_itself(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
-    assert refresh is not None
-    await refresh
+    assert request is not None
+    await request
 
+    assert request_waited
     assert polls_during_install == 0
     # And it is not blocked forever; the poll lands once the install is done.
     assert mock_elgato.state.call_count > polls_before
@@ -595,8 +610,8 @@ async def test_install_keeps_the_device_from_everyone(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 

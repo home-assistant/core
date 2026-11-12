@@ -4,22 +4,21 @@ from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
-    SERVICE_OPEN,
     SERVICE_UNLOCK,
+    LockService,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -91,8 +90,8 @@ async def test_lock_open_service(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_OPEN,
-        {ATTR_ENTITY_ID: "lock.test_lock"},
+        LockService.OPEN,
+        {CommonServiceArgument.ENTITY_ID: "lock.test_lock"},
         blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(1, 1, open_value)

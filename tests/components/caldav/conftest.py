@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from caldav.lib.url import URL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.caldav.const import DOMAIN
 from homeassistant.const import (
@@ -13,8 +14,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_URL = "https://example.com/url-1"
 TEST_USERNAME = "username-1"

@@ -7,6 +7,12 @@ from freezegun.api import FrozenDateTimeFactory
 from pyicloud.exceptions import PyiCloudException
 from pyicloud.services.calendar import CalendarObject, EventObject
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
@@ -16,13 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
 
 ENTITY_ID = "calendar.test_icloud_account_personal"
 
@@ -95,7 +94,8 @@ async def _setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     config_entry.add_to_hass(hass)
     with patch("homeassistant.components.icloud.PLATFORMS", [Platform.CALENDAR]):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        # The first fetch runs as a background task of the config entry.
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_entities(

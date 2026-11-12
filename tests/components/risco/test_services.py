@@ -3,18 +3,18 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.risco.const import DOMAIN, SERVICE_SET_TIME
+from homeassistant.components.risco.const import DOMAIN
 from homeassistant.components.risco.models import CloudData, RiscoData
+from homeassistant.components.risco.services import RiscoService, RiscoServiceArgument
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_TIME
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_CLOUD_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_set_time_service(
@@ -25,12 +25,12 @@ async def test_set_time_service(
         time_str = "2025-02-21T12:00:00"
         time = dt_util.parse_datetime(time_str)
         data = {
-            ATTR_CONFIG_ENTRY_ID: local_config_entry.entry_id,
-            ATTR_TIME: time_str,
+            CommonServiceArgument.CONFIG_ENTRY_ID: local_config_entry.entry_id,
+            RiscoServiceArgument.TIME: time_str,
         }
 
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
+            DOMAIN, RiscoService.SET_TIME, service_data=data, blocking=True
         )
 
         mock.assert_called_once_with(time)
@@ -47,7 +47,7 @@ async def test_set_time_service_with_no_time(
         }
 
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
+            DOMAIN, RiscoService.SET_TIME, service_data=data, blocking=True
         )
 
         mock_set_time.assert_called_once_with(dt_util.now())
@@ -58,12 +58,12 @@ async def test_set_time_service_with_invalid_entry(
 ) -> None:
     """Test the set_time service with an invalid config entry."""
     data = {
-        ATTR_CONFIG_ENTRY_ID: "invalid_entry_id",
+        CommonServiceArgument.CONFIG_ENTRY_ID: "invalid_entry_id",
     }
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
+            DOMAIN, RiscoService.SET_TIME, service_data=data, blocking=True
         )
     assert err.value.translation_key == "service_config_entry_not_found"
 
@@ -78,12 +78,12 @@ async def test_set_time_service_with_not_loaded_entry(
     assert local_config_entry.state is ConfigEntryState.NOT_LOADED
 
     data = {
-        ATTR_CONFIG_ENTRY_ID: local_config_entry.entry_id,
+        CommonServiceArgument.CONFIG_ENTRY_ID: local_config_entry.entry_id,
     }
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
+            DOMAIN, RiscoService.SET_TIME, service_data=data, blocking=True
         )
     assert err.value.translation_key == "service_config_entry_not_loaded"
 
@@ -104,12 +104,12 @@ async def test_set_time_service_with_cloud_entry(
     )
 
     data = {
-        ATTR_CONFIG_ENTRY_ID: cloud_entry.entry_id,
+        CommonServiceArgument.CONFIG_ENTRY_ID: cloud_entry.entry_id,
     }
 
     with pytest.raises(
         ServiceValidationError, match="This service only works with local"
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
+            DOMAIN, RiscoService.SET_TIME, service_data=data, blocking=True
         )

@@ -10,15 +10,14 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient
 import defusedxml.ElementTree as ET
 import pytest
+from pytest_homeassistant.common import get_test_instance_port
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import setup
 from homeassistant.components import emulated_hue
 from homeassistant.components.emulated_hue import upnp
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
-
-from tests.common import get_test_instance_port
-from tests.typing import ClientSessionGenerator
 
 BRIDGE_SERVER_PORT = get_test_instance_port()
 

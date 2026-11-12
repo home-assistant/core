@@ -3,18 +3,18 @@
 from unittest.mock import MagicMock, patch
 
 from huawei_lte_api.enums.net import LTEBandEnum, NetworkBandEnum, NetworkModeEnum
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, CONF_URL
+from homeassistant.const import CONF_URL, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import magic_client
-
-from tests.common import MockConfigEntry
 
 SELECT_NETWORK_MODE = "select.test_router_preferred_network_mode"
 
@@ -35,10 +35,10 @@ async def test_set_net_mode(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: SELECT_NETWORK_MODE,
-            ATTR_OPTION: NetworkModeEnum.MODE_4G_3G_AUTO.value,
+            CommonServiceArgument.ENTITY_ID: SELECT_NETWORK_MODE,
+            SelectServiceArgument.OPTION: NetworkModeEnum.MODE_4G_3G_AUTO.value,
         },
         blocking=True,
     )

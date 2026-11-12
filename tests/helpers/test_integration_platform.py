@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration, mock_platform
 
 from homeassistant import loader
 from homeassistant.const import EVENT_COMPONENT_LOADED
@@ -17,8 +18,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.setup import ATTR_COMPONENT
-
-from tests.common import MockModule, mock_integration, mock_platform
 
 
 async def test_process_integration_platforms_with_wait(hass: HomeAssistant) -> None:

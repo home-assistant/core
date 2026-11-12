@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from songpal import (
     ConnectChange,
     ContentChange,
@@ -18,7 +19,7 @@ from songpal.notification import SettingChange
 from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.songpal.const import ERROR_REQUEST_RETRY
-from homeassistant.components.songpal.services import SET_SOUND_SETTING
+from homeassistant.components.songpal.services import SongpalService
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -44,8 +45,6 @@ from . import (
     _create_mocked_device,
     _patch_media_player_device,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SUPPORT_SONGPAL = (
     MediaPlayerEntityFeature.VOLUME_SET
@@ -318,7 +317,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         songpal.DOMAIN,
-        SET_SOUND_SETTING,
+        SongpalService.SET_SOUND_SETTING,
         {"entity_id": ENTITY_ID, "name": "name", "value": "value"},
         blocking=True,
     )
@@ -336,7 +335,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         songpal.DOMAIN,
-        SET_SOUND_SETTING,
+        SongpalService.SET_SOUND_SETTING,
         {"entity_id": "all", "name": "name", "value": "value"},
         blocking=True,
     )
@@ -356,7 +355,7 @@ async def test_services(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         songpal.DOMAIN,
-        SET_SOUND_SETTING,
+        SongpalService.SET_SOUND_SETTING,
         {"entity_id": "all", "name": "name", "value": "value"},
         blocking=True,
     )

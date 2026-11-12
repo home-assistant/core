@@ -7,6 +7,7 @@ import attr
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LEGACY_CONFIG = {
     "device_name": "test-device",

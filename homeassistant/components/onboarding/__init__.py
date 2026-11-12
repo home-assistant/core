@@ -18,12 +18,22 @@ from .const import (
     STEP_USER,
     STEPS,
 )
-from .views import BaseOnboardingView, NoAuthBaseOnboardingView  # noqa: F401
+from .views import BaseOnboardingView, NoAuthBaseOnboardingView
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 4
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+    "BaseOnboardingView",
+    "NoAuthBaseOnboardingView",
+    "OnboardingStoreData",
+    "async_add_listener",
+    "async_is_onboarded",
+    "async_is_user_onboarded",
+]
 
 
 @dataclass

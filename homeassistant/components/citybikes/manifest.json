@@ -1,7 +1,12 @@
 {
   "domain": "citybikes",
   "name": "CityBikes",
+  "categories": [
+    "vehicles_transport.public_transport",
+    "vehicles_transport.bikes_scooters"
+  ],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/citybikes",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy",

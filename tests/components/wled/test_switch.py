@@ -5,30 +5,27 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
-
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    Platform,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
 )
+from syrupy.assertion import SnapshotAssertion
+from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -84,6 +81,12 @@ async def test_snapshots(
             {"send": True},
             {"send": False},
         ),
+        (
+            "switch.wled_rgb_light_audio_reactive",
+            "audio_reactive",
+            {"on": True},
+            {"on": False},
+        ),
     ],
 )
 async def test_switch_state(
@@ -103,8 +106,8 @@ async def test_switch_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -113,8 +116,8 @@ async def test_switch_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -126,8 +129,8 @@ async def test_switch_state(
     with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -140,8 +143,8 @@ async def test_switch_state(
     with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: state.entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -207,3 +210,62 @@ async def test_switch_dynamically_handle_segments(
         segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
     )
     assert segment1_reverse.state == STATE_UNAVAILABLE
+
+
+async def test_audio_reactive_switch_follows_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+) -> None:
+    """Test the AudioReactive switch follows the usermod's state on the device."""
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_OFF
+
+    data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    data["state"]["AudioReactive"]["on"] = True
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_ON
+
+    # The usermod is gone, like after flashing firmware without it.
+    del data["state"]["AudioReactive"]
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
+async def test_audio_reactive_switch_once_usermod_shows_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the AudioReactive switch is added once the usermod shows up."""
+    assert not hass.states.get("switch.wled_rgb_light_audio_reactive")
+
+    # Like after flashing firmware with the usermod.
+    data = await async_load_json_object_fixture(hass, "rgb_single_segment.json", DOMAIN)
+    data["state"]["AudioReactive"] = {"on": True}
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_ON
+
+    # Later updates don't add it a second time.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "does not generate unique IDs" not in caplog.text

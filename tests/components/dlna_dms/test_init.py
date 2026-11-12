@@ -1,7 +1,9 @@
 """Test the DLNA DMS component setup, cleanup, and module-level functions."""
 
 from typing import cast
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dlna_dms.const import (
     CONF_SOURCE_ID,
@@ -9,6 +11,7 @@ from homeassistant.components.dlna_dms.const import (
     DOMAIN,
 )
 from homeassistant.components.dlna_dms.dms import DlnaDmsData
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -20,8 +23,6 @@ from .conftest import (
     MOCK_DEVICE_USN,
     MOCK_SOURCE_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_resource_lifecycle(
@@ -129,3 +130,19 @@ async def test_migrate_entry_collision(
     assert updated_entry
     assert updated_entry.version == CONFIG_VERSION
     assert updated_entry.data.get(CONF_SOURCE_ID) == f"{MOCK_SOURCE_ID}_1"
+
+
+async def test_setup_entry_failed(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test setup fails when the data manager can't set up the entry."""
+    config_entry_mock.add_to_hass(hass)
+
+    with patch.object(DlnaDmsData, "async_setup_entry", return_value=False):
+        await hass.config_entries.async_setup(config_entry_mock.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry_mock.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry_mock.reason == (
+        f"Failed to set up DLNA media server {MOCK_DEVICE_NAME}"
+    )

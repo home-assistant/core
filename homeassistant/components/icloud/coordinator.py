@@ -1,5 +1,6 @@
 """Coordinators for the iCloud integration."""
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, tzinfo
 import logging
@@ -11,13 +12,14 @@ from pyicloud.services.reminders.client import RemindersApiError, RemindersAuthE
 from pyicloud.services.reminders.service import RemindersService
 
 from homeassistant.components.calendar import CalendarEvent
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .account import IcloudConfigEntry
-from .const import DOMAIN
+from .const import CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +29,13 @@ CALENDAR_SCAN_INTERVAL = timedelta(minutes=15)
 # `async_get_events` queries iCloud directly for anything outside this window.
 LOOKBACK = timedelta(days=1)
 LOOKAHEAD = timedelta(days=30)
+
+# Bound how long the coordinator waits for a fetch so a slow or unresponsive
+# Apple request cannot stall the refresh indefinitely. This frees the
+# coordinator, not the executor thread running the request, which is released
+# only once that request itself returns. The refresh no longer runs on the
+# startup path, so the bound is a generous backstop.
+FETCH_TIMEOUT = 300  # seconds
 
 
 @dataclass(slots=True)
@@ -118,9 +127,12 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
     async def _async_update_data(self) -> dict[str, IcloudCalendarData]:
         """Fetch calendars and their upcoming events."""
         try:
-            return await self.hass.async_add_executor_job(self._fetch)
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                return await self.hass.async_add_executor_job(self._fetch)
         except PyiCloudException as err:
             raise UpdateFailed(f"Error fetching calendars: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching calendars") from err
 
 
 def _parse_apple_date(value: datetime | list[int] | None) -> datetime | None:
@@ -202,6 +214,11 @@ def _as_calendar_event(event: EventObject) -> CalendarEvent | None:
 
 REMINDERS_SCAN_INTERVAL = timedelta(minutes=5)
 
+# An account that has never used Reminders has no Reminders zone, which is a
+# permanent state rather than a failure, so poll it gently: often enough for
+# the lists to appear by themselves once the account starts using Reminders.
+MISSING_ZONE_SCAN_INTERVAL = timedelta(hours=1)
+
 # pyicloud raises these for CloudKit failures; neither subclasses
 # PyiCloudException, so both have to be caught explicitly.
 # `get()` raises a bare LookupError when a reminder was removed elsewhere.
@@ -224,6 +241,23 @@ UNDECODED_TITLE = "Error Decoding Title"
 
 # Reminders are fetched one list at a time, so keep the per-list page bounded.
 RESULTS_LIMIT = 200
+
+
+def _is_zone_not_found_error(err: Exception) -> bool:
+    """Return True if err is a CloudKit zone-not-found error.
+
+    pyicloud raises RemindersApiError for CloudKit failures with the raw
+    response as .payload. A missing zone comes back as a zones entry with
+    serverErrorCode ZONE_NOT_FOUND, meaning the account has never used
+    Reminders and the zone was never created.
+    """
+    payload = getattr(err, "payload", None)
+    if not isinstance(payload, dict):
+        return False
+    return any(
+        isinstance(zone, dict) and zone.get("serverErrorCode") == "ZONE_NOT_FOUND"
+        for zone in payload.get("zones") or ()
+    )
 
 
 @dataclass(slots=True)
@@ -263,8 +297,17 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
             update_interval=REMINDERS_SCAN_INTERVAL,
         )
         self.account = entry.runtime_data
+        self._username = entry.data[CONF_USERNAME]
         self._warned_undecoded = False
         self._skipped_undecoded = False
+        self._zone_missing = False
+        # Fetching years of completed reminders means paging through tens of
+        # thousands of CloudKit records on every refresh, which is what made
+        # setup hang. The default excludes them; the option brings them back.
+        self._include_completed = entry.options.get(
+            CONF_INCLUDE_COMPLETED,
+            entry.data.get(CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED),
+        )
 
     @property
     def reminders(self) -> RemindersService:
@@ -282,7 +325,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         for list_id, name in _live_lists(service):
             batch = service.list_reminders(
                 list_id=list_id,
-                include_completed=True,
+                include_completed=self._include_completed,
                 results_limit=RESULTS_LIMIT,
             )
             reminders = []
@@ -304,12 +347,41 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
     async def _async_update_data(self) -> dict[str, IcloudReminderList]:
         """Fetch reminders from iCloud."""
         try:
-            data = await self.hass.async_add_executor_job(self._fetch)
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                data = await self.hass.async_add_executor_job(self._fetch)
         except REMINDERS_ERRORS as err:
+            if _is_zone_not_found_error(err):
+                self._handle_missing_zone()
+                # Keep the last snapshot: returning {} here would make
+                # _sync_lists() delete every to-do entity from the registry.
+                return self.data or {}
             raise UpdateFailed(f"Error fetching reminders: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching reminders") from err
 
+        self._handle_zone_restored()
         self._warn_if_undecoded()
         return data
+
+    def _handle_missing_zone(self) -> None:
+        """Accept that the account has no Reminders and stop hammering the zone."""
+        if not self._zone_missing:
+            self._zone_missing = True
+            _LOGGER.info(
+                "The iCloud account for '%s' has no Reminders data; to-do lists "
+                "will appear if Reminders is enabled for the account",
+                self._username,
+            )
+        # Not an error: the user may simply not use Reminders. Poll gently so
+        # the lists still appear on their own if the account starts using them.
+        self.update_interval = MISSING_ZONE_SCAN_INTERVAL
+
+    def _handle_zone_restored(self) -> None:
+        """Return to normal polling after a successful fetch."""
+        if not self._zone_missing:
+            return
+        self._zone_missing = False
+        self.update_interval = REMINDERS_SCAN_INTERVAL
 
     def _warn_if_undecoded(self) -> None:
         """Warn once if reminders had to be left out because of encryption.
@@ -338,15 +410,15 @@ def _live_lists(service: RemindersService) -> list[tuple[str, str]]:
     list inside it can share a name, so leaving groups in shows that name
     twice, once as a permanently empty list.
 
-    Deleted lists leave tombstones that cannot be recognised yet. pyicloud
-    exposes ``deleted`` on a reminder but not on a list, and the model forbids
-    extra fields, so a tombstone is indistinguishable from an empty list until
-    timlaing/pyicloud#319 is released.
+    Deleted lists leave tombstones that still carry the list's name while
+    holding no reminders. Sharing a list replaces its record, so every shared
+    list leaves one behind: leaving them in showed a second, always empty,
+    entity next to the live list.
     """
     return [
         (reminder_list.id, reminder_list.title)
         for reminder_list in service.lists()
-        if not reminder_list.is_group
+        if not reminder_list.is_group and not reminder_list.deleted
     ]
 
 

@@ -29,7 +29,7 @@ async def _can_reach_device(client: BryantEvolutionLocalClient) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: BryantEvolutionConfigEntry
-) -> bool:
+) -> None:
     """Set up Bryant Evolution from a config entry."""
 
     # Add a device for the SAM itself.
@@ -73,11 +73,10 @@ async def async_setup_entry(
         except FileNotFoundError as f:
             raise ConfigEntryNotReady from f
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: BryantEvolutionConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

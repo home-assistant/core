@@ -2,6 +2,12 @@
 
 from httpx2 import HTTPStatusError, RequestError, Response, TimeoutException
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import MagicMock
 from pythonxbox.api.provider.people.models import PeopleResponse
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,9 +22,6 @@ from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import AsyncMock, MockConfigEntry, async_load_json_object_fixture
-from tests.typing import MagicMock
 
 
 @pytest.fixture(autouse=True)

@@ -7,20 +7,23 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from peblar import PackageType, PeblarConnectionError, PeblarVersions
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def _async_offer_both_updates(
@@ -76,8 +79,8 @@ async def test_install_firmware(
     """
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.peblar_ev_charger_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
         blocking=True,
     )
 
@@ -95,8 +98,8 @@ async def test_install_customization(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.peblar_ev_charger_customization"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_customization"},
         blocking=True,
     )
 
@@ -119,8 +122,8 @@ async def test_install_firmware_refuses_while_customization_is_pending(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.peblar_ev_charger_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
             blocking=True,
         )
 
@@ -160,8 +163,8 @@ async def test_install_firmware_asks_the_charger_for_fresh_versions(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.peblar_ev_charger_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
             blocking=True,
         )
 
@@ -189,8 +192,8 @@ async def test_install_firmware_after_the_customization_landed(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.peblar_ev_charger_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.peblar_ev_charger_firmware"},
         blocking=True,
     )
 
@@ -201,8 +204,8 @@ async def _async_install(hass: HomeAssistant, package: str = "firmware") -> None
     """Install an update the way a user does."""
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: f"update.peblar_ev_charger_{package}"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: f"update.peblar_ev_charger_{package}"},
         blocking=True,
     )
 
@@ -492,8 +495,8 @@ async def test_a_second_install_is_refused_while_one_runs(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -525,8 +528,8 @@ async def test_the_button_returns_for_a_charger_that_never_came_back(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 

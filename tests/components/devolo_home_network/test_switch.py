@@ -7,21 +7,20 @@ from devolo_plc_api.device_api import WifiGuestAccessGet
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     SHORT_UPDATE_INTERVAL,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,8 +29,6 @@ from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COO
 
 from . import configure_integration
 from .mock import MockDevice
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
@@ -112,7 +109,10 @@ async def test_update_enable_guest_wifi(
         enabled=False
     )
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -130,7 +130,10 @@ async def test_update_enable_guest_wifi(
         enabled=True
     )
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -151,7 +154,10 @@ async def test_update_enable_guest_wifi(
         HomeAssistantError, match=f"Device {entry.title} did not respond"
     ):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     state = hass.states.get(entity_id)
     assert state is not None
@@ -189,7 +195,10 @@ async def test_update_enable_leds(
     # Switch off
     mock_device.device.async_get_led_setting.return_value = False
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -205,7 +214,10 @@ async def test_update_enable_leds(
     # Switch on
     mock_device.device.async_get_led_setting.return_value = True
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -226,7 +238,10 @@ async def test_update_enable_leds(
         HomeAssistantError, match=f"Device {entry.title} did not respond"
     ):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
     state = hass.states.get(entity_id)
     assert state is not None
@@ -297,7 +312,10 @@ async def test_auth_failed(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     await hass.async_block_till_done()
@@ -314,7 +332,10 @@ async def test_auth_failed(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {"entity_id": entity_id},
+            blocking=True,
         )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

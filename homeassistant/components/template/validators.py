@@ -8,13 +8,21 @@ from typing import Any
 
 import probatio
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import ConditionsChecker
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
+from .const import CONF_DEFAULT_ENTITY_ID, DEFAULT_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +30,22 @@ _LOGGER = logging.getLogger(__name__)
 # from cv.boolean and are used to produce logger errors for the user.
 RESULT_ON = ("1", "true", "yes", "on", "enable")
 RESULT_OFF = ("0", "false", "no", "off", "disable")
+
+
+def entity_config_identifier(platform: Platform, entity_config: ConfigType) -> str:
+    """Return the most specific user facing identifier for an entity config."""
+    default_name = DEFAULT_NAMES[platform]
+    if (
+        (name := entity_config.get(CONF_NAME))
+        and isinstance(name, Template)
+        and name.template != default_name
+    ):
+        return f"{CONF_NAME}: {name.template}"
+    if default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        return f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    if unique_id := entity_config.get(CONF_UNIQUE_ID):
+        return f"{CONF_UNIQUE_ID}: {unique_id}"
+    return f"{CONF_NAME}: {default_name}"
 
 
 class BlockedTemplateAttributes:
@@ -146,6 +170,8 @@ def strenum[T: StrEnum](
     state_enum: type[T],
     state_on: T | None = None,
     state_off: T | None = None,
+    *,
+    deprecated_enums: tuple[T, ...] | None = None,
     **kwargs: Any,
 ) -> Callable[[Any], T | None]:
     """Converts the template result to an StrEnum.
@@ -165,9 +191,12 @@ def strenum[T: StrEnum](
         if isinstance(result, str):
             value = result.lower().strip()
             try:
-                return state_enum(value)
+                enum_value = state_enum(value)
             except ValueError:
                 pass
+            else:
+                if enum_value not in (deprecated_enums or ()):
+                    return enum_value
 
         if state_on or state_off:
             try:
@@ -181,7 +210,9 @@ def strenum[T: StrEnum](
             except probatio.Invalid:
                 pass
 
-        expected = tuple(s.value for s in state_enum)
+        expected = tuple(
+            s.value for s in state_enum if s.value not in (deprecated_enums or ())
+        )
         if state_on:
             expected += RESULT_ON
         if state_off:

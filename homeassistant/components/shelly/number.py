@@ -51,6 +51,7 @@ from .utils import (
     get_device_entry_gen,
     get_virtual_component_ids,
     get_virtual_component_unit,
+    is_rpc_ledstrip_control_available,
     is_view_for_platform,
 )
 
@@ -137,6 +138,34 @@ class RpcCuryIntensityNumber(RpcNumber):
         await method(
             self._id, slot=self.entity_description.slot, intensity=round(value)
         )
+
+
+class RpcLedStripNumber(RpcNumber):
+    """Represent a RPC LED strip effect option entity."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if TYPE_CHECKING:
+            assert self.entity_description.sub_key is not None
+
+        return super().available and is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            self.entity_description.sub_key,
+        )
+
+    @rpc_call
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        method = getattr(self.coordinator.device, self.entity_description.method)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self._id, {self.entity_description.sub_key: round(value)})
 
 
 class RpcBluTrvNumber(RpcNumber):
@@ -329,6 +358,32 @@ RPC_NUMBERS: Final = {
             and right.get("vial", {}).get("level", -1) != -1
         ),
         entity_class=RpcCuryIntensityNumber,
+    ),
+    "ledstrip_speed": RpcNumberDescription(
+        key="ledstrip",
+        sub_key="speed",
+        translation_key="effect_speed",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        method="ledstrip_set",
+        supported=lambda _: True,
+        entity_class=RpcLedStripNumber,
+    ),
+    "ledstrip_intensity": RpcNumberDescription(
+        key="ledstrip",
+        sub_key="intensity",
+        translation_key="effect_intensity",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        method="ledstrip_set",
+        supported=lambda _: True,
+        entity_class=RpcLedStripNumber,
     ),
 }
 

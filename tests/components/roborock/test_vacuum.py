@@ -4,7 +4,14 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, call
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from roborock import RoborockException
 from roborock.data import WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
@@ -18,12 +25,8 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.roborock import DOMAIN
-from homeassistant.components.roborock.services import (
-    GET_MAPS_SERVICE_NAME,
-    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-    SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
-)
+from homeassistant.components.roborock.const import A01_UPDATE_INTERVAL
+from homeassistant.components.roborock.services import RoborockService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_AREA,
@@ -53,9 +56,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, seed_q7_map, set_trait_attributes
 from .mock_data import STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
@@ -241,7 +241,7 @@ async def test_get_maps(
     """Test that the service for maps correctly outputs rooms with the right name."""
     response = await hass.services.async_call(
         DOMAIN,
-        GET_MAPS_SERVICE_NAME,
+        RoborockService.GET_MAPS,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -266,7 +266,7 @@ async def test_get_maps_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_MAPS_SERVICE_NAME,
+            RoborockService.GET_MAPS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
             return_response=True,
@@ -285,7 +285,7 @@ async def test_goto(
     data = {ATTR_ENTITY_ID: ENTITY_ID, "x": 25500, "y": 25500}
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+        RoborockService.SET_VACUUM_GOTO_POSITION,
         data,
         blocking=True,
     )
@@ -313,7 +313,7 @@ async def test_goto_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            RoborockService.SET_VACUUM_GOTO_POSITION,
             {ATTR_ENTITY_ID: entity_id, "x": 25500, "y": 25500},
             blocking=True,
         )
@@ -327,7 +327,7 @@ async def test_zoned_cleaning(
     """Test cleaning specific zones."""
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        RoborockService.SET_VACUUM_ZONED_CLEANING,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             "x1": 28582,
@@ -362,7 +362,7 @@ async def test_zoned_cleaning_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            RoborockService.SET_VACUUM_ZONED_CLEANING,
             {
                 ATTR_ENTITY_ID: entity_id,
                 "x1": 28582,
@@ -386,7 +386,7 @@ async def test_get_current_position(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+        RoborockService.GET_VACUUM_CURRENT_POSITION,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -414,7 +414,7 @@ async def test_get_current_position_no_map_data(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
@@ -434,7 +434,7 @@ async def test_get_current_position_no_robot_position(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
@@ -459,7 +459,7 @@ async def test_get_current_position_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
             return_response=True,
@@ -736,6 +736,7 @@ async def test_q7_state_changing_commands(
     expected_activity: str,
     q7_vacuum_api: Mock,
     fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sending state-changing commands to the Q7 vacuum."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
@@ -754,12 +755,9 @@ async def test_q7_state_changing_commands(
 
     # Verify the entity state was updated
     assert fake_q7_vacuum.b01_q7_properties is not None
-    # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01_q7[0]
-
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(A01_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
     assert vacuum.state == expected_activity
@@ -875,17 +873,16 @@ async def test_q7_activity_none_status(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that activity returns None when status is None."""
     assert fake_q7_vacuum.b01_q7_properties is not None
     # Set status to None
     fake_q7_vacuum.b01_q7_properties._props_data.status = None
 
-    # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01_q7[0]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(A01_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the entity state is unknown when status is None
     vacuum = hass.states.get(Q7_ENTITY_ID)
@@ -897,6 +894,7 @@ async def test_q7_working_sleep_is_paused(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a cleaning job that fell asleep is reported as paused."""
     assert fake_q7_vacuum.b01_q7_properties is not None
@@ -904,10 +902,9 @@ async def test_q7_working_sleep_is_paused(
         WorkStatusMapping.WORKING_SLEEP
     )
 
-    coordinator = setup_entry.runtime_data.b01_q7[0]
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(A01_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
@@ -929,7 +926,7 @@ async def test_q7_get_maps(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_MAPS_SERVICE_NAME,
+        RoborockService.GET_MAPS,
         {ATTR_ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -964,7 +961,7 @@ async def test_q7_get_maps_empty(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_MAPS_SERVICE_NAME,
+        RoborockService.GET_MAPS,
         {ATTR_ENTITY_ID: Q7_ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -989,7 +986,7 @@ async def test_q7_get_maps_exception(
     ):
         await hass.services.async_call(
             DOMAIN,
-            GET_MAPS_SERVICE_NAME,
+            RoborockService.GET_MAPS,
             {ATTR_ENTITY_ID: Q7_ENTITY_ID},
             blocking=True,
             return_response=True,
@@ -1344,7 +1341,7 @@ async def test_q10_get_current_position(
 
     response = await hass.services.async_call(
         DOMAIN,
-        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+        RoborockService.GET_VACUUM_CURRENT_POSITION,
         {ATTR_ENTITY_ID: Q10_ENTITY_ID},
         blocking=True,
         return_response=True,
@@ -1364,7 +1361,7 @@ async def test_q10_get_current_position_not_available(
     with pytest.raises(HomeAssistantError, match="Robot position not found"):
         await hass.services.async_call(
             DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            RoborockService.GET_VACUUM_CURRENT_POSITION,
             {ATTR_ENTITY_ID: Q10_ENTITY_ID},
             blocking=True,
             return_response=True,
@@ -1379,7 +1376,7 @@ async def test_q10_zoned_cleaning(
     """Test that Q10 zoned cleaning uses the native zone task."""
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+        RoborockService.SET_VACUUM_ZONED_CLEANING,
         {
             ATTR_ENTITY_ID: Q10_ENTITY_ID,
             "x1": 28580,
@@ -1408,7 +1405,7 @@ async def test_q10_goto(
 
     await hass.services.async_call(
         DOMAIN,
-        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+        RoborockService.SET_VACUUM_GOTO_POSITION,
         {ATTR_ENTITY_ID: Q10_ENTITY_ID, "x": 29900, "y": 28650},
         blocking=True,
     )
@@ -1422,7 +1419,7 @@ async def test_q10_goto(
     ("service", "service_data", "api_method", "error", "expected_exception"),
     [
         pytest.param(
-            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            RoborockService.SET_VACUUM_GOTO_POSITION,
             {"x": 29900, "y": 28650},
             "goto_position",
             ValueError("invalid coordinate"),
@@ -1430,7 +1427,7 @@ async def test_q10_goto(
             id="goto-validation",
         ),
         pytest.param(
-            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+            RoborockService.SET_VACUUM_GOTO_POSITION,
             {"x": 29900, "y": 28650},
             "goto_position",
             RoborockException(),
@@ -1438,7 +1435,7 @@ async def test_q10_goto(
             id="goto-command",
         ),
         pytest.param(
-            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            RoborockService.SET_VACUUM_ZONED_CLEANING,
             {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
             "clean_zone",
             ValueError("invalid zone"),
@@ -1446,7 +1443,7 @@ async def test_q10_goto(
             id="zone-validation",
         ),
         pytest.param(
-            SET_VACUUM_ZONED_CLEANING_SERVICE_NAME,
+            RoborockService.SET_VACUUM_ZONED_CLEANING,
             {"x1": 28582, "y1": 21363, "x2": 27425, "y2": 22816, "repeats": 1},
             "clean_zone",
             RoborockException(),

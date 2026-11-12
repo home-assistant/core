@@ -1,6 +1,7 @@
 """Tests the lifx migration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.config_flow import LIFXConfigFlow
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import IP_ADDRESS, LABEL, SERIAL
 from .helpers import LEGACY_SERIAL, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -193,7 +192,7 @@ async def test_migrate_removes_the_legacy_shared_entry(
     entry = MockConfigEntry(domain=DOMAIN, version=1, unique_id=unique_id, data={})
     entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries(DOMAIN) == []

@@ -5,22 +5,18 @@ from unittest.mock import MagicMock
 
 from irm_kmi_api import ExtendedForecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _get_forecast(
@@ -29,9 +25,9 @@ async def _get_forecast(
     """Return the forecast from weather.get_forecasts."""
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
-            ATTR_ENTITY_ID: WEATHER_ENTITY_ID,
+            CommonServiceArgument.ENTITY_ID: WEATHER_ENTITY_ID,
             "type": forecast_type,
         },
         blocking=True,

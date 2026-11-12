@@ -6,6 +6,11 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoApiException, VolvoCarsCommandResult
@@ -14,18 +19,22 @@ from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockService,
     LockState,
 )
 from homeassistant.components.volvo.coordinator import FAST_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_mock
 from .const import DEFAULT_VIN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_api", "full_model")
@@ -131,8 +140,8 @@ async def test_unlock_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: entity_id},
+            LockService.UNLOCK,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -179,8 +188,8 @@ async def test_ha_lock_triggers_location_update(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {ATTR_ENTITY_ID: "lock.volvo_xc40_lock"},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.volvo_xc40_lock"},
         blocking=True,
     )
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -203,8 +212,8 @@ async def test_ha_unlock_does_not_trigger_location_update(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: "lock.volvo_xc40_lock"},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: "lock.volvo_xc40_lock"},
         blocking=True,
     )
     await hass.async_block_till_done(wait_background_tasks=True)

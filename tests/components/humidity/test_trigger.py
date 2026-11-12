@@ -3,21 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
-    HVACMode,
-)
-from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
-)
-from homeassistant.components.humidity.trigger import TRIGGERS
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -33,6 +19,19 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.climate import (
+    ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
+    HVACMode,
+)
+from homeassistant.components.humidifier import (
+    ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+)
+from homeassistant.components.humidity.trigger import TRIGGERS
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.weather import WeatherEntityStateAttribute
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -482,13 +481,13 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_all(
         *parametrize_numerical_attribute_changed_trigger_states(
             "humidity.changed",
             "sunny",
-            ATTR_WEATHER_HUMIDITY,
+            WeatherEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             "sunny",
-            ATTR_WEATHER_HUMIDITY,
+            WeatherEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
     ],
@@ -526,7 +525,7 @@ async def test_humidity_trigger_weather_behavior_each(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             "sunny",
-            ATTR_WEATHER_HUMIDITY,
+            WeatherEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
     ],
@@ -564,7 +563,7 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "humidity.crossed_threshold",
             "sunny",
-            ATTR_WEATHER_HUMIDITY,
+            WeatherEntityStateAttribute.HUMIDITY,
             attribute_required=True,
         ),
     ],

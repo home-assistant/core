@@ -1,13 +1,17 @@
 """Test device template functions."""
 
+from collections.abc import Callable
+from typing import Any
+
+import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.template import TemplateError
 
-from tests.common import MockConfigEntry
-from tests.helpers.template.helpers import assert_result_info, render_to_info
+from tests.helpers.template.helpers import assert_result_info, render, render_to_info
 
 
 async def test_device_entities(
@@ -203,6 +207,103 @@ async def test_device_name(
     assert info.rate_limit is None
 
 
+@pytest.mark.parametrize(
+    ("attr_name", "expected", "replacement"),
+    [
+        pytest.param(
+            "config_entries",
+            lambda entry_id: {entry_id},
+            "use 'config_entry_id' instead",
+            id="config_entries",
+        ),
+        pytest.param(
+            "config_entries_subentries",
+            lambda entry_id: {entry_id: {None}},
+            "use 'config_entry_id' and 'config_subentry_id' instead",
+            id="config_entries_subentries",
+        ),
+        pytest.param(
+            "primary_config_entry",
+            lambda entry_id: entry_id,
+            "use 'config_entry_id' instead",
+            id="primary_config_entry",
+        ),
+    ],
+)
+async def test_device_attr_deprecated_config_entry_attributes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    attr_name: str,
+    expected: Callable[[str], Any],
+    replacement: str,
+) -> None:
+    """Test deprecated config entry attributes keep working in templates."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{device_entry.id}', '{attr_name}') }}}}"
+    )
+    assert_result_info(info, expected(config_entry.entry_id))
+
+    info = render_to_info(
+        hass,
+        f"{{{{ is_device_attr('{device_entry.id}', '{attr_name}', None) }}}}",
+    )
+    assert_result_info(info, False)
+
+    # A custom log function renders in a fresh template environment
+    render(
+        hass,
+        f"{{{{ device_attr('{device_entry.id}', '{attr_name}') }}}}",
+        log_fn=lambda level, msg: None,
+    )
+
+    assert caplog.text.count(f"device attribute '{attr_name}'") == 1
+    assert replacement in caplog.text
+
+
+async def test_device_attr_deprecated_config_entry_attributes_composite(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a pre-migration composite device id reports its merged config entries."""
+    entry_1 = MockConfigEntry(domain="light")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="light")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("light", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("light", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    info = render_to_info(hass, f"{{{{ device_attr('{old_id}', 'config_entries') }}}}")
+    assert_result_info(info, {entry_1.entry_id, entry_2.entry_id})
+
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{old_id}', 'config_entries_subentries') }}}}"
+    )
+    assert_result_info(info, {entry_1.entry_id: {None}, entry_2.entry_id: {None}})
+
+    assert "is deprecated" not in caplog.text
+
+
 async def test_device_attr(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -327,6 +428,36 @@ async def test_device_attr(
     )
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_device_attr_private_attributes_blocked(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that device_attr does not expose private or dunder attributes."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        model="test",
+    )
+
+    for attr_name in ("_cache", "_config_entries", "_pending_move", "__dict__"):
+        info = render_to_info(
+            hass, f"{{{{ device_attr('{device_entry.id}', '{attr_name}') }}}}"
+        )
+        assert_result_info(info, None)
+
+        info = render_to_info(
+            hass,
+            f"{{{{ is_device_attr('{device_entry.id}', '{attr_name}', None) }}}}",
+        )
+        assert_result_info(info, True)
+
+    # Public attributes are still readable.
+    info = render_to_info(hass, f"{{{{ device_attr('{device_entry.id}', 'model') }}}}")
+    assert_result_info(info, "test")
 
 
 async def test_device_functions_with_child_devices(

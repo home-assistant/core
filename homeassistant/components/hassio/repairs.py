@@ -8,11 +8,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType
 import probatio
 
-from homeassistant.components.repairs import (
-    ConfirmRepairFlow,
-    RepairsFlow,
-    RepairsFlowResult,
-)
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 
@@ -26,7 +22,6 @@ from .const import (
     ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
-    ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_DOCUMENTATION,
@@ -233,10 +228,10 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
         placeholders: dict[str, str] = super().description_placeholders or {}
         if self.issue and self.issue.reference:
             placeholders[PLACEHOLDER_KEY_ADDON_INFO] = (
-                f"homeassistant://hassio/addon/{self.issue.reference}/info"
+                f"homeassistant://config/app/{self.issue.reference}/info"
             )
             placeholders[PLACEHOLDER_KEY_ADDON_DOCUMENTATION] = (
-                f"homeassistant://hassio/addon/{self.issue.reference}/documentation"
+                f"homeassistant://config/app/{self.issue.reference}/documentation"
             )
         return placeholders or None
 
@@ -260,8 +255,6 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if issue_id == ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER:
-        return ConfirmRepairFlow()
     supervisor_issues = get_issues_info(hass)
     issue = supervisor_issues and supervisor_issues.get_issue(issue_id)
     if issue and issue.key == ISSUE_KEY_SYSTEM_DOCKER_CONFIG:

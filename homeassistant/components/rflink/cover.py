@@ -5,14 +5,9 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.cover import (
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
-    CoverEntity,
-    CoverState,
-)
+from homeassistant.components.cover import CoverEntity, CoverState
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -29,7 +24,6 @@ from .const import (
     DEVICE_DEFAULTS_SCHEMA,
 )
 from .entity import RflinkCommand
-from .utils import create_issue_yaml_migration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,11 +59,6 @@ RFLINK_PLATFORM = {
         }
     ),
 }
-
-PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=probatio.ALLOW_EXTRA,
-)
 
 
 def entity_type_for_device_id(device_id):
@@ -130,25 +119,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink cover platform."""
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-    else:
-        async_add_entities(devices_from_config(discovery_info))
+        return
+    async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

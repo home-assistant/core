@@ -29,5 +29,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while communicating with Knocki"
+    }
   }
 }

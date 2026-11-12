@@ -45,11 +45,13 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="status",
         translation_key="status",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.status,
         entity_registry_enabled_default=False,
     ),
     BrotherSensorEntityDescription(
         key="printer_status",
+        name=None,
         translation_key="printer_status",
         device_class=SensorDeviceClass.ENUM,
         options=["idle", "other", "printing", "warmup"],

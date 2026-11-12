@@ -3,21 +3,26 @@
 from dataclasses import replace
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pysaunum import DEFAULT_DURATION, DEFAULT_FAN_DURATION, SaunumException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.saunum.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -53,8 +58,8 @@ async def test_set_sauna_duration(
     # Set new duration
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 180},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 180},
         blocking=True,
     )
 
@@ -78,8 +83,8 @@ async def test_set_fan_duration(
     # Set new duration
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 15},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 15},
         blocking=True,
     )
 
@@ -104,8 +109,11 @@ async def test_set_value_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 180},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 180,
+            },
             blocking=True,
         )
 
@@ -114,7 +122,7 @@ async def test_set_value_failure(
 async def test_set_value_while_session_active(
     hass: HomeAssistant,
     mock_saunum_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test error when trying to change duration while session is active."""
     entity_id = "number.saunum_leil_sauna_duration"
@@ -126,11 +134,9 @@ async def test_set_value_while_session_active(
         session_active=True,
     )
 
-    # Trigger coordinator update
-    coordinator = mock_config_entry.runtime_data
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Attempt to set value should raise ServiceValidationError
     with pytest.raises(
@@ -139,8 +145,11 @@ async def test_set_value_while_session_active(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 180},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 180,
+            },
             blocking=True,
         )
 

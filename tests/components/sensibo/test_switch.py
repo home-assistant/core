@@ -5,23 +5,15 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -59,9 +51,9 @@ async def test_switch_timer(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
         },
         blocking=True,
     )
@@ -90,9 +82,9 @@ async def test_switch_timer(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
         },
         blocking=True,
     )
@@ -122,9 +114,9 @@ async def test_switch_pure_boost(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
         },
         blocking=True,
     )
@@ -145,9 +137,9 @@ async def test_switch_pure_boost(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
         },
         blocking=True,
     )
@@ -178,9 +170,9 @@ async def test_switch_command_failure(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: state.entity_id,
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )
@@ -192,9 +184,9 @@ async def test_switch_command_failure(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: state.entity_id,
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )
@@ -215,9 +207,9 @@ async def test_switch_climate_react(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
         },
         blocking=True,
     )
@@ -233,9 +225,9 @@ async def test_switch_climate_react(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
         },
         blocking=True,
     )
@@ -272,9 +264,9 @@ async def test_switch_climate_react_no_data(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: state.entity_id,
+                CommonServiceArgument.ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )

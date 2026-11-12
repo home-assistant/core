@@ -5,7 +5,7 @@ import asyncio
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import make_entity_service_schema
 
-from .const import DATA_COMPONENT, DOMAIN, SERVICE_SCAN
+from .const import DATA_COMPONENT, DOMAIN, ImageProcessingService
 
 
 async def _async_scan_service(service: ServiceCall) -> None:
@@ -27,5 +27,8 @@ async def _async_scan_service(service: ServiceCall) -> None:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the image_processing services."""
     hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, _async_scan_service, schema=make_entity_service_schema({})
+        DOMAIN,
+        ImageProcessingService.SCAN,
+        _async_scan_service,
+        schema=make_entity_service_schema({}),
     )

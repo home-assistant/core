@@ -10,6 +10,7 @@ from opendisplay import (
     AuthenticationRequiredError,
     BLEConnectionError,
     BLETimeoutError,
+    ColorScheme,
     GlobalConfig,
     OpenDisplayDevice,
     OpenDisplayError,
@@ -80,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> None:
     """Set up OpenDisplay from a config entry."""
     address = entry.unique_id
     if TYPE_CHECKING:
@@ -128,9 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     display = device_config.displays[0]
     color_scheme_enum = display.color_scheme_enum
     color_scheme = (
-        str(color_scheme_enum)
-        if isinstance(color_scheme_enum, int)
-        else color_scheme_enum.name
+        color_scheme_enum.name
+        if isinstance(color_scheme_enum, ColorScheme)
+        else str(color_scheme_enum)
     )
     size = (
         f'{display.screen_diagonal_inches:.1f}"'
@@ -166,18 +167,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     )
     entry.async_on_unload(coordinator.async_start())
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OpenDisplayConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     if (task := entry.runtime_data.upload_task) and not task.done():
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, FLEX_PLATFORMS if entry.runtime_data.is_flex else BASE_PLATFORMS
     )

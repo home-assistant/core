@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from easyenergy import EasyEnergyNoDataError, Electricity
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.homeassistant import (
@@ -31,8 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")

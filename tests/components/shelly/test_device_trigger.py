@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from aioshelly.const import MODEL_BUTTON1
 import pytest
+from pytest_homeassistant.common import async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -24,8 +25,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
-
-from tests.common import async_get_device_automations
 
 
 @pytest.mark.parametrize(
@@ -162,7 +161,9 @@ async def test_get_triggers_for_invalid_device_id(
 ) -> None:
     """Test error raised for invalid shelly device_id."""
     await init_integration(hass, 1)
-    config_entry = await init_integration(hass, 1, data={}, skip_setup=True)
+    config_entry = await init_integration(
+        hass, 1, data={}, skip_setup=True, unique_id="123456ABCDEF"
+    )
     invalid_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},

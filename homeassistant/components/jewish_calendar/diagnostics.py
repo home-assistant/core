@@ -8,7 +8,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_ALTITUDE
-from .entity import JewishCalendarConfigEntry
+from .coordinator import JewishCalendarConfigEntry
 
 TO_REDACT = [
     CONF_ALTITUDE,

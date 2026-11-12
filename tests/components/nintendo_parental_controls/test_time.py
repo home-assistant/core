@@ -4,12 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from pynintendoparental.exceptions import BedtimeOutOfRangeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -17,8 +18,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_time(
@@ -66,8 +65,8 @@ async def test_set_time(
         await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_TIME: new_value},
+        TimeService.SET_VALUE,
+        service_data={TimeServiceArgument.TIME: new_value},
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -113,8 +112,8 @@ async def test_set_time_service_exceptions(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={ATTR_TIME: new_value},
+            TimeService.SET_VALUE,
+            service_data={TimeServiceArgument.TIME: new_value},
             target={ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )

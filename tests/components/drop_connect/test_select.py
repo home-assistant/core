@@ -1,12 +1,15 @@
 """Test DROP select entities."""
 
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components.select import (
-    ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -15,9 +18,6 @@ from .common import (
     TEST_DATA_HUB_TOPIC,
     config_entry_hub,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 async def test_selects_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
@@ -55,8 +55,11 @@ async def test_selects_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
     mqtt_mock.async_publish.reset_mock()
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "away", ATTR_ENTITY_ID: protect_mode_select_name},
+        SelectService.SELECT_OPTION,
+        {
+            SelectServiceArgument.OPTION: "away",
+            CommonServiceArgument.ENTITY_ID: protect_mode_select_name,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

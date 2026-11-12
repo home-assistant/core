@@ -1,5 +1,4 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, override
@@ -25,11 +24,16 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_IP_ADDRESS,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import CONF_IP_ADDRESS, DOMAIN
+from .const import DATA_HISENSE_AEHW4A1_CONFIG
 
 MIN_TEMP_C = 16
 MAX_TEMP_C = 32
@@ -124,8 +128,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the AEH-W4A1 climate platform."""
     # Priority 1: manual config
-    if hass.data[DOMAIN].get(CONF_IP_ADDRESS):
-        devices = hass.data[DOMAIN][CONF_IP_ADDRESS]
+    if hass.data[DATA_HISENSE_AEHW4A1_CONFIG].get(CONF_IP_ADDRESS):
+        devices = hass.data[DATA_HISENSE_AEHW4A1_CONFIG][CONF_IP_ADDRESS]
     else:
         # Priority 2: scanned interfaces
         devices = await AehW4a1().discovery()

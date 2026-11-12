@@ -5,6 +5,13 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException
 from watergate_local_api.models import AutoShutOffState
@@ -13,21 +20,20 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    CommonServiceArgument,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    patch,
-    snapshot_platform,
-)
 
 ENTITY_ID = "switch.sonic_auto_shut_off"
 
@@ -46,8 +52,8 @@ async def test_auto_shut_off_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_watergate_client.async_update_auto_shut_off.assert_called_once_with(
@@ -58,8 +64,8 @@ async def test_auto_shut_off_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_watergate_client.async_update_auto_shut_off.assert_called_once_with(
@@ -116,10 +122,12 @@ async def test_switch_raises_on_client_failure(
         WatergateApiException("boom")
     )
 
-    with pytest.raises(HomeAssistantError, match="Failed to update auto shut-off"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "auto_shut_off_update_failed"

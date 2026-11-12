@@ -10,6 +10,11 @@ from aiolyric.exceptions import LyricException
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricPriority, LyricRoom
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -18,12 +23,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -161,6 +160,26 @@ async def mock_lyric_mixed_devices() -> AsyncGenerator[MagicMock]:
         lyric.rooms_dict[mac_id] = {room_json["id"]: LyricRoom(room_json)}
 
     lyric.get_thermostat_rooms = AsyncMock(side_effect=get_thermostat_rooms)
+
+    with patch("homeassistant.components.lyric.Lyric", return_value=lyric):
+        yield lyric
+
+
+@pytest.fixture
+def mock_lyric_thermostats() -> Generator[MagicMock]:
+    """Yield a mocked Lyric client with an LCC and a TCC thermostat."""
+    location = LyricLocation(
+        MagicMock(),
+        location_json(
+            1,
+            [
+                load_json_object_fixture("thermostat_lcc.json", DOMAIN),
+                load_json_object_fixture("thermostat_tcc.json", DOMAIN),
+            ],
+        ),
+    )
+    lyric = build_mock_lyric([location])
+    lyric.priorities_dict = {}
 
     with patch("homeassistant.components.lyric.Lyric", return_value=lyric):
         yield lyric

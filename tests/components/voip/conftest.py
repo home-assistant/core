@@ -6,6 +6,7 @@ import contextlib
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from voip_utils import CallInfo
 from voip_utils.sip import get_sip_endpoint
 
@@ -21,10 +22,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.components.tts.conftest import (
-    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
-)
+from tests.components.tts.conftest import mock_tts_cache_dir_fixture_autouse  # noqa: F401
 
 
 @pytest.fixture(autouse=True)

@@ -6,19 +6,18 @@ from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.nextdns.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_button(
@@ -46,8 +45,8 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.fake_profile_clear_logs"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -86,8 +85,8 @@ async def test_button_failure(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.fake_profile_clear_logs"},
             blocking=True,
         )
 
@@ -108,8 +107,8 @@ async def test_button_auth_error(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.fake_profile_clear_logs"},
             blocking=True,
         )
 

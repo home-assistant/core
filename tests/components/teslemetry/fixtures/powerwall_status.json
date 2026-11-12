@@ -1,0 +1,64 @@
+{
+  "control": {
+    "islanding": {
+      "contactorClosed": true,
+      "customerIslandMode": "BACKUP",
+      "gridOK": true,
+      "microGridOK": true
+    },
+    "meterAggregates": [
+      {
+        "location": "BATTERY",
+        "realPowerW": -1250
+      },
+      {
+        "location": "SITE",
+        "realPowerW": 20
+      },
+      {
+        "location": "LOAD",
+        "realPowerW": 1630
+      },
+      {
+        "location": "SOLAR",
+        "realPowerW": 2860
+      },
+      {
+        "location": "SOLAR_RGM",
+        "realPowerW": 2840
+      },
+      {
+        "location": "GENERATOR",
+        "realPowerW": 0
+      },
+      {
+        "location": "CONDUCTOR",
+        "realPowerW": 0
+      }
+    ],
+    "siteShutdown": {
+      "isShutDown": false,
+      "reasons": []
+    }
+  },
+  "esCan": {
+    "firmwareUpdate": {
+      "isUpdating": false,
+      "msa": null,
+      "powerwalls": null,
+      "pvInverters": null,
+      "sync": null
+    }
+  },
+  "pw3Can": {
+    "firmwareUpdate": {
+      "isUpdating": false,
+      "progress": null
+    }
+  },
+  "system": {
+    "sitemanagerStatus": {
+      "isRunning": true
+    }
+  }
+}

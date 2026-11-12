@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, init_integration_gen4
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_restart_button(
@@ -51,8 +51,8 @@ async def test_restart_button_press(
     with patch("aiomodernforms.ModernFormsDevice.reboot") as reboot_mock:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.modernformsfan_restart"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.modernformsfan_restart"},
             blocking=True,
         )
         await hass.async_block_till_done()

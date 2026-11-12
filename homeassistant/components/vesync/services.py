@@ -1,12 +1,22 @@
 """Support for VeSync Services."""
 
+from enum import StrEnum
+
+from pyvesync.utils.errors import VeSyncError
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import VesyncConfigEntry
-from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_DEVICES, VS_DISCOVERY
+from .const import DOMAIN, VS_DEVICES, VS_DISCOVERY
+from .coordinator import VesyncConfigEntry
+
+
+class VeSyncService(StrEnum):
+    """Store keys for VeSync services."""
+
+    UPDATE_DEVICES = "update_devices"
 
 
 @callback
@@ -14,7 +24,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Handle for services."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
+        DOMAIN, VeSyncService.UPDATE_DEVICES, async_new_device_discovery
     )
 
 
@@ -30,7 +40,12 @@ async def async_new_device_discovery(call: ServiceCall) -> None:
         raise ServiceValidationError("Entry not loaded")
     manager = config_entry.runtime_data.manager
     known_devices = list(manager.devices)
-    await manager.get_devices()
+    try:
+        await manager.get_devices()
+    except VeSyncError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="api_response_error"
+        ) from err
     new_devices = [device for device in manager.devices if device not in known_devices]
 
     if new_devices:

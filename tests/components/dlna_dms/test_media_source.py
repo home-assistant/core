@@ -5,6 +5,7 @@ from unittest.mock import ANY, Mock
 from async_upnp_client.exceptions import UpnpError
 from didl_lite import didl_lite
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import media_source
 from homeassistant.components.dlna_dms.const import DOMAIN
@@ -28,8 +29,6 @@ from .conftest import (
     MOCK_DEVICE_TYPE,
     MOCK_SOURCE_ID,
 )
-
-from tests.common import MockConfigEntry
 
 # Auto-use a few fixtures from conftest
 pytestmark = [

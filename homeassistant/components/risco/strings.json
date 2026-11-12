@@ -72,6 +72,9 @@
     }
   },
   "exceptions": {
+    "local_unauthorized": {
+      "message": "Failed to authenticate with the local Risco panel"
+    },
     "not_local_entry": {
       "message": "This service only works with local Risco connections."
     }

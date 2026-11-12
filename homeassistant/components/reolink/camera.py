@@ -1,12 +1,16 @@
 """Component providing support for Reolink IP cameras."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import override
 
+from reolink_aio.api import Host
+
 from homeassistant.components.camera import (
     Camera,
+    CameraEntityCapabilities,
     CameraEntityDescription,
     CameraEntityFeature,
 )
@@ -30,6 +34,7 @@ class ReolinkCameraEntityDescription(
     """A class that describes camera entities for a camera channel."""
 
     stream: str
+    enabled_default: Callable[[Host, int], bool] | None = None
     # a camera stream always comes from a single lens
     lens_entity: bool = True
 
@@ -47,28 +52,30 @@ CAMERA_ENTITIES = (
         key="main",
         stream="main",
         translation_key="main",
+        enabled_default=lambda api, ch: not api.supported(ch, "sub"),
         supported=lambda api, ch: (
             api.supported(ch, "stream") and api.supported(ch, "main")
         ),
-        entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="snapshots_sub",
         stream="snapshots_sub",
         translation_key="snapshots_sub",
+        enabled_default=lambda api, ch: not api.supported(ch, "stream"),
         supported=lambda api, ch: (
             api.supported(ch, "snapshot") and api.supported(ch, "sub")
         ),
-        entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="snapshots",
         stream="snapshots_main",
         translation_key="snapshots_main",
+        enabled_default=lambda api, ch: (
+            not api.supported(ch, "stream") and not api.supported(ch, "sub")
+        ),
         supported=lambda api, ch: (
             api.supported(ch, "snapshot") and api.supported(ch, "main")
         ),
-        entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="ext",
@@ -89,28 +96,30 @@ CAMERA_ENTITIES = (
         key="autotrack_main",
         stream="telephoto_main",
         translation_key="telephoto_main",
+        enabled_default=lambda api, ch: not api.supported(ch, "sub"),
         supported=lambda api, ch: (
             api.supported(ch, "autotrack_stream") and api.supported(ch, "main")
         ),
-        entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="autotrack_snapshots_sub",
         stream="autotrack_snapshots_sub",
         translation_key="telephoto_snapshots_sub",
+        enabled_default=lambda api, ch: not api.supported(ch, "stream"),
         supported=lambda api, ch: (
             api.supported(ch, "autotrack_snapshot") and api.supported(ch, "sub")
         ),
-        entity_registry_enabled_default=False,
     ),
     ReolinkCameraEntityDescription(
         key="autotrack_snapshots_main",
         stream="autotrack_snapshots_main",
         translation_key="telephoto_snapshots_main",
+        enabled_default=lambda api, ch: (
+            not api.supported(ch, "stream") and not api.supported(ch, "sub")
+        ),
         supported=lambda api, ch: (
             api.supported(ch, "autotrack_snapshot") and api.supported(ch, "main")
         ),
-        entity_registry_enabled_default=False,
     ),
 )
 
@@ -157,6 +166,17 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
 
         if "snapshots" not in entity_description.stream:
             self._attr_supported_features = CameraEntityFeature.STREAM
+            self._attr_camera_entity_capabilities = CameraEntityCapabilities(
+                two_way_audio=(
+                    self._host.api.protocol == "rtsp"
+                    and self._host.api.supported(self._channel, "two_way_audio")
+                )
+            )
+
+        if entity_description.enabled_default is not None:
+            self._attr_entity_registry_enabled_default = (
+                entity_description.enabled_default(self._host.api, self._channel)
+            )
 
         if self._host.api.is_dual_lens:
             self._attr_translation_key = (

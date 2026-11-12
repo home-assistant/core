@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
     """Set up TP-Link Omada from a config entry."""
 
     try:
@@ -76,9 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, entry, client, site_client)
-    await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
+
+    # The first refresh sweeps stale client trackers before platforms create
+    # entities, so replaced clients do not push new trackers onto suffixed IDs.
+    await controller.initialize_first_refresh()
 
     _remove_old_devices(
         hass,
@@ -89,12 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def _remove_old_devices(
@@ -115,7 +116,7 @@ def _remove_old_devices(
             device_registry.async_remove_device(registered_device.id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
     """Migrate old config entry to a new format."""
 
     if entry.version == 1:
@@ -132,5 +133,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> b
             unique_id=f"{entry.unique_id}_{entry.data[CONF_SITE]}",
             version=2,
         )
-
-    return True

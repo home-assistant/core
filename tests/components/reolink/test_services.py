@@ -1,29 +1,28 @@
 """Test the Reolink services."""
 
 from datetime import datetime
+import errno
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.services import (
-    ATTR_RINGTONE,
-    ATTR_TIMESTAMP,
-    SERVICE_SNAPSHOT_PAST,
+    ReolinkService,
+    ReolinkServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_FILENAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import TEST_CAM_NAME
-
-from tests.common import MockConfigEntry
 
 TEST_FILE = "/test/snapshot.jpg"
 TEST_CAMERA_ID = f"{Platform.CAMERA}.{TEST_CAM_NAME}_fluent"
@@ -53,7 +52,10 @@ async def test_play_chime_service_entity(
     await hass.services.async_call(
         DOMAIN,
         "play_chime",
-        {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
+        {
+            CommonServiceArgument.DEVICE_ID: [device_id],
+            ReolinkServiceArgument.RINGTONE: "attraction",
+        },
         blocking=True,
     )
     reolink_chime.play.assert_called_once()
@@ -63,7 +65,10 @@ async def test_play_chime_service_entity(
         await hass.services.async_call(
             DOMAIN,
             "play_chime",
-            {ATTR_DEVICE_ID: ["invalid_id"], ATTR_RINGTONE: "attraction"},
+            {
+                CommonServiceArgument.DEVICE_ID: ["invalid_id"],
+                ReolinkServiceArgument.RINGTONE: "attraction",
+            },
             blocking=True,
         )
 
@@ -72,7 +77,10 @@ async def test_play_chime_service_entity(
         await hass.services.async_call(
             DOMAIN,
             "play_chime",
-            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
+            {
+                CommonServiceArgument.DEVICE_ID: [device_id],
+                ReolinkServiceArgument.RINGTONE: "attraction",
+            },
             blocking=True,
         )
 
@@ -81,7 +89,10 @@ async def test_play_chime_service_entity(
         await hass.services.async_call(
             DOMAIN,
             "play_chime",
-            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
+            {
+                CommonServiceArgument.DEVICE_ID: [device_id],
+                ReolinkServiceArgument.RINGTONE: "attraction",
+            },
             blocking=True,
         )
 
@@ -90,7 +101,10 @@ async def test_play_chime_service_entity(
         await hass.services.async_call(
             DOMAIN,
             "play_chime",
-            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
+            {
+                CommonServiceArgument.DEVICE_ID: [device_id],
+                ReolinkServiceArgument.RINGTONE: "attraction",
+            },
             blocking=True,
         )
 
@@ -123,7 +137,10 @@ async def test_play_chime_service_unloaded(
         await hass.services.async_call(
             DOMAIN,
             "play_chime",
-            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
+            {
+                CommonServiceArgument.DEVICE_ID: [device_id],
+                ReolinkServiceArgument.RINGTONE: "attraction",
+            },
             blocking=True,
         )
 
@@ -159,11 +176,11 @@ async def test_snapshot_past_service(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SNAPSHOT_PAST,
+            ReolinkService.SNAPSHOT_PAST,
             {
-                ATTR_ENTITY_ID: TEST_CAMERA_ID,
-                ATTR_TIMESTAMP: "2025-09-29 14:30:00",
-                CONF_FILENAME: TEST_FILE,
+                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
+                ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
             blocking=True,
         )
@@ -191,11 +208,11 @@ async def test_snapshot_past_service_not_allowed_path(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SNAPSHOT_PAST,
+            ReolinkService.SNAPSHOT_PAST,
             {
-                ATTR_ENTITY_ID: TEST_CAMERA_ID,
-                ATTR_TIMESTAMP: "2025-09-29 14:30:00",
-                CONF_FILENAME: TEST_FILE,
+                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
+                ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
             blocking=True,
         )
@@ -227,20 +244,34 @@ async def test_snapshot_past_service_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SNAPSHOT_PAST,
+            ReolinkService.SNAPSHOT_PAST,
             {
-                ATTR_ENTITY_ID: TEST_CAMERA_ID,
-                ATTR_TIMESTAMP: "2025-09-29 14:30:00",
-                CONF_FILENAME: TEST_FILE,
+                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
+                ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
             blocking=True,
         )
 
 
 @pytest.mark.usefixtures("camera_config_entry")
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
 async def test_snapshot_past_service_write_error(
     hass: HomeAssistant,
     reolink_host: MagicMock,
+    error: int,
+    translation_key: str,
 ) -> None:
     """Test the snapshot_past service when the image can not be written to disk."""
     reolink_host.baichuan.snapshot_past = AsyncMock(return_value=b"image")
@@ -248,20 +279,24 @@ async def test_snapshot_past_service_write_error(
     with (
         patch(
             "homeassistant.components.reolink.services.open",
-            side_effect=OSError("Test error"),
+            side_effect=OSError(error, "Error"),
             create=True,
         ),
         patch("homeassistant.components.reolink.services.os.makedirs"),
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SNAPSHOT_PAST,
+            ReolinkService.SNAPSHOT_PAST,
             {
-                ATTR_ENTITY_ID: TEST_CAMERA_ID,
-                ATTR_TIMESTAMP: "2025-09-29 14:30:00",
-                CONF_FILENAME: TEST_FILE,
+                CommonServiceArgument.ENTITY_ID: TEST_CAMERA_ID,
+                ReolinkServiceArgument.TIMESTAMP: "2025-09-29 14:30:00",
+                ReolinkServiceArgument.FILENAME: TEST_FILE,
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": TEST_FILE}
