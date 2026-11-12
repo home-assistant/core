@@ -1,5 +1,6 @@
 """Support for OPNsense Routers."""
 
+from aiohttp import ClientError, ClientResponseError
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
     OPNsenseClient,
@@ -16,16 +17,21 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACES,
+    DOMAIN,
+    get_firmware_privilege_issue_id,
+)
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.UPDATE]
 
 
 async def async_setup_entry(
@@ -42,10 +48,15 @@ async def async_setup_entry(
         config_entry.data[CONF_API_SECRET],
         session,
         opts={"verify_ssl": config_entry.data[CONF_VERIFY_SSL]},
+        throw_errors=True,
     )
     tracker_interfaces = config_entry.data.get(CONF_TRACKER_INTERFACES, [])
+    firmware_privilege_missing = False
     try:
-        await client.validate()
+        try:
+            await client.validate()
+        except OPNsensePrivilegeMissing:
+            firmware_privilege_missing = True
         if tracker_interfaces:
             interfaces_resp = await client.get_interfaces()
     except OPNsenseUnknownFirmware as err:
@@ -84,13 +95,19 @@ async def async_setup_entry(
             translation_key="invalid_auth",
             translation_placeholders={"url": url},
         ) from err
-    except OPNsensePrivilegeMissing as err:
+    except (OPNsensePrivilegeMissing, ClientResponseError) as err:
+        if isinstance(err, ClientResponseError) and err.status != 403:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"url": url},
+            ) from err
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="privilege_missing",
             translation_placeholders={"url": url},
         ) from err
-    except OPNsenseConnectionError as err:
+    except (OPNsenseConnectionError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
@@ -116,6 +133,7 @@ async def async_setup_entry(
     config_entry.runtime_data = OPNsenseRuntimeData(
         client=client,
         tracker_interfaces=tracker_interfaces,
+        firmware_privilege_missing=firmware_privilege_missing,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -126,6 +144,11 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    ir.async_delete_issue(
+        hass,
+        DOMAIN,
+        get_firmware_privilege_issue_id(config_entry.entry_id),
+    )
 
 
 async def async_remove_config_entry_device(

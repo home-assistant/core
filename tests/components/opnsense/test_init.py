@@ -2,6 +2,7 @@
 
 from unittest import mock
 
+from aiohttp import ClientResponseError
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
     OPNsenseConnectionError,
@@ -42,7 +43,6 @@ from .const import ARP
         (OPNsenseTimeoutError, ConfigEntryState.SETUP_RETRY, "timeout_connecting"),
         (OPNsenseSSLError, ConfigEntryState.SETUP_ERROR, "ssl_error"),
         (OPNsenseInvalidAuth, ConfigEntryState.SETUP_ERROR, "invalid_auth"),
-        (OPNsensePrivilegeMissing, ConfigEntryState.SETUP_ERROR, "privilege_missing"),
         (OPNsenseConnectionError, ConfigEntryState.SETUP_RETRY, "cannot_connect"),
     ],
 )
@@ -93,6 +93,42 @@ async def test_setup_entry_tracker_interface_not_found(
         "interface": "NOPE",
         "known": "WAN, LAN",
     }
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(OPNsensePrivilegeMissing(), id="library-error"),
+        pytest.param(
+            ClientResponseError(request_info=mock.Mock(), history=(), status=403),
+            id="http-forbidden",
+        ),
+    ],
+)
+async def test_setup_entry_tracker_interface_privilege_missing(
+    hass: HomeAssistant,
+    mock_opnsense_client: mock.AsyncMock,
+    error: Exception,
+) -> None:
+    """Test tracker setup still fails when interface privileges are missing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "http://router.lan/api",
+            CONF_API_KEY: "key",
+            CONF_API_SECRET: "secret",
+            CONF_VERIFY_SSL: False,
+            CONF_TRACKER_INTERFACES: ["LAN"],
+        },
+    )
+    entry.add_to_hass(hass)
+    mock_opnsense_client.get_interfaces.side_effect = error
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_key == "privilege_missing"
 
 
 STALE_MAC = "aa:bb:cc:dd:ee:ff"

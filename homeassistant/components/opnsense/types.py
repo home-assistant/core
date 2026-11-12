@@ -8,7 +8,10 @@ from aiopnsense import OPNsenseClient
 from homeassistant.config_entries import ConfigEntry
 
 if TYPE_CHECKING:
-    from .coordinator import OPNsenseDeviceTrackerCoordinator
+    from .coordinator import (
+        OPNsenseDeviceTrackerCoordinator,
+        OPNsenseFirmwareCoordinator,
+    )
 
 
 @dataclass(slots=True)
@@ -17,6 +20,8 @@ class OPNsenseRuntimeData:
 
     client: OPNsenseClient
     tracker_interfaces: list[str]
+    update_coordinator: OPNsenseFirmwareCoordinator | None = None
+    firmware_privilege_missing: bool = False
     tracked_devices: set[str] = field(default_factory=set)
     tracker_coordinator: OPNsenseDeviceTrackerCoordinator | None = None
 
