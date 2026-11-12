@@ -8,7 +8,11 @@ from homeassistant.components.emoncms.const import DOMAIN, FEED_ID, FEED_NAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import setup_integration
 from .conftest import EMONCMS_FAILURE, FEEDS, UNIQUE_ID
@@ -128,3 +132,26 @@ async def test_uuid_available_deletes_issue(
 
     assert config_entry.unique_id == UNIQUE_ID
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_uuid_migration_keeps_devices(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test devices are migrated in place once the server ships an uuid."""
+    emoncms_client.async_get_uuid.return_value = None
+    await setup_integration(hass, config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{config_entry.entry_id}-tag"), config_entry.entry_id
+    )
+    assert device
+
+    emoncms_client.async_get_uuid.return_value = UNIQUE_ID
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert [d.id for d in devices] == [device.id]
+    assert devices[0].identifiers == {(DOMAIN, f"{UNIQUE_ID}-tag")}
