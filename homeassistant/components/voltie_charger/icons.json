@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "evse_state": {
+        "default": "mdi:ev-station",
+        "state": {
+          "ev_connected_charging": "mdi:battery-charging",
+          "ev_connected_charging_ventilation": "mdi:battery-charging",
+          "ev_connected_not_charging": "mdi:ev-plug-type2",
+          "ev_not_connected": "mdi:power-plug-off-outline"
+        }
+      }
+    }
+  }
+}
