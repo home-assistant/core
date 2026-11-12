@@ -70,7 +70,9 @@ rules:
     status: todo
     comment: The software version is only set when the WebSocket connects.
   diagnostics: done
-  discovery-update-info: done
+  discovery-update-info:
+    status: todo
+    comment: Discovery only updates entries that have the Kodi UUID as unique ID, and the user flow sets none, so a Kodi added by hand keeps its old host.
   discovery: done
   docs-data-update: todo
   docs-examples: done
