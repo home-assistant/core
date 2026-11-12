@@ -371,7 +371,11 @@ class ForecaWeather(
         }
 
     def _convert_precipitation(self, rate: float | None) -> float | None:
-        """Convert a rate in mm/h to the entity's precipitation unit per hour."""
+        """Convert a rate in mm/h to the entity's precipitation unit per hour.
+
+        Not rounded like the other forecast values: at two decimals in inches,
+        light rain below about 0.13 mm/h would read as 0.
+        """
         if rate is None:
             return None
         return UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
