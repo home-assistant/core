@@ -100,9 +100,22 @@ async def test_battery_data_survives_basic_refresh(
     mock_solarlog_connector.update_basic_data.side_effect = return_basic_data
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await async_setup_component(hass, "homeassistant", {})
 
-    basic_coordinator = mock_config_entry.runtime_data.basic_data_coordinator
-    assert basic_coordinator.data is not None
+    assert hass.states.get("sensor.solarlog_charging_power").state == "50.0"
+    assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
+    assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
+
+    # Refresh only the basic coordinator; its fresh data has no battery data.
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "sensor.solarlog_power_ac"},
+        blocking=True,
+    )
+
+    assert mock_solarlog_connector.update_basic_data.await_count == 2
+    assert mock_solarlog_connector.update_battery_data.await_count == 1
     assert hass.states.get("sensor.solarlog_charging_power").state == "50.0"
     assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
     assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
@@ -122,13 +135,6 @@ async def test_battery_data_survives_basic_refresh(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_solarlog_connector.update_basic_data.await_count == 2
-    assert basic_coordinator.data.battery_data == BatteryData(
-        charge_power=50.0,
-        discharge_power=0.0,
-        level=45.0,
-        voltage=50.0,
-    )
     assert hass.states.get("sensor.solarlog_charging_power").state == STATE_UNAVAILABLE
     assert (
         hass.states.get("sensor.solarlog_discharging_power").state == STATE_UNAVAILABLE
@@ -150,7 +156,6 @@ async def test_battery_data_survives_basic_refresh(
         level=90.0,
         voltage=50.0,
     )
-    await async_setup_component(hass, "homeassistant", {})
     await hass.services.async_call(
         "homeassistant",
         "update_entity",
