@@ -1112,4 +1112,5 @@ async def test_platform_entity_service_skips_display_indirect_target(
         pre_announce_url=None,
         message=None,
         tts_engine=None,
+        language=None,
     )

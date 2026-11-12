@@ -1,6 +1,7 @@
 """Trigger entity."""
 
 from collections.abc import Callable, Mapping
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -73,6 +74,8 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             )
 
         await super().async_added_to_hass()
+        self.coordinator.entities.add(self)
+        self.async_on_remove(partial(self.coordinator.entities.discard, self))
 
         if self.coordinator.data is not None:
             # The trigger already produced data; rendering it must win over

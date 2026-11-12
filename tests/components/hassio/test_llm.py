@@ -1,8 +1,12 @@
 """Tests for the Hass.io LLM tools."""
 
+from collections.abc import Generator
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonState
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
@@ -13,8 +17,13 @@ from homeassistant.components.hassio.handler import (
     KEY_SUPERVISOR_PASSTHROUGH_CLIENT,
     HassioAPIError,
 )
-from homeassistant.components.hassio.llm import SupervisorGetLogsTool, async_get_tools
+from homeassistant.components.hassio.llm import (
+    SupervisorGetAppsTool,
+    SupervisorGetLogsTool,
+    async_get_tools,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 LOGS = {
@@ -74,15 +83,112 @@ def _app(slug: str, name: str) -> Mock:
 async def test_async_get_tools(
     hass: HomeAssistant, llm_context: llm.LLMContext, snapshot: SnapshotAssertion
 ) -> None:
-    """Test the logs tool lists the installed apps as sources."""
+    """Test the app tools are registered and logs list installed apps as sources."""
     hass.data[DATA_ADDONS_LIST] = [_app("core_mosquitto", "Mosquitto broker")]
 
     assert async_get_tools(hass, llm_context, llm.LLM_API_ASSIST) is None
     tools = async_get_tools(hass, llm_context, llm.LLM_API_HOME_ASSISTANT)
 
     assert tools is not None
-    assert [tool.name for tool in tools.tools] == ["hassio__get_logs"]
+    assert [tool.name for tool in tools.tools] == [
+        "hassio__get_logs",
+        "hassio__get_apps",
+    ]
     assert probatio.to_openapi(tools.tools[0].parameters) == snapshot
+    assert probatio.to_openapi(tools.tools[1].parameters) == snapshot
+    assert tools.tools[1].annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+
+
+@pytest.fixture
+def installed_apps(
+    supervisor_client: AsyncMock, addons_list: AsyncMock
+) -> Generator[AsyncMock]:
+    """Mock the installed-apps endpoint used by the tool."""
+    with patch(
+        "homeassistant.components.hassio.llm.get_supervisor_client",
+        return_value=supervisor_client,
+    ):
+        yield addons_list
+
+
+async def test_get_apps(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    installed_apps: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test versions and state are returned for installed apps in name order."""
+    installed_apps.return_value = [
+        replace(
+            installed_apps.return_value[0],
+            name="Music Assistant (BETA)",
+            slug="d5369777_music_assistant_beta",
+            version="2.11.0b8",
+            version_latest="2.11.0b9",
+        ),
+        replace(
+            installed_apps.return_value[1], name="File editor", slug="core_configurator"
+        ),
+    ]
+    tool = SupervisorGetAppsTool()
+
+    result = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+
+    assert result == snapshot
+    installed_apps.assert_awaited_once_with()
+
+
+async def test_get_apps_empty(
+    hass: HomeAssistant, llm_context: llm.LLMContext, installed_apps: AsyncMock
+) -> None:
+    """Test a system without installed apps returns an empty list."""
+    installed_apps.return_value = []
+    tool = SupervisorGetAppsTool()
+
+    result = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+
+    assert result == llm.ToolResult(data={"apps": []})
+
+
+async def test_get_apps_refreshes_versions_and_state(
+    hass: HomeAssistant, llm_context: llm.LLMContext, installed_apps: AsyncMock
+) -> None:
+    """Test calls read current app details instead of the integration's cached list."""
+    app = installed_apps.return_value[0]
+    hass.data[DATA_ADDONS_LIST] = [app]
+    updated_app = replace(
+        app,
+        version=app.version_latest,
+        update_available=False,
+        state=AddonState.STOPPED,
+    )
+    installed_apps.side_effect = [[app], [updated_app], []]
+    tool = SupervisorGetAppsTool()
+    tool_input = llm.ToolInput(tool.name, {})
+
+    initial = await tool.async_call(hass, tool_input, llm_context)
+    updated = await tool.async_call(hass, tool_input, llm_context)
+    removed = await tool.async_call(hass, tool_input, llm_context)
+
+    assert initial.data["apps"][0]["installed_version"] == app.version
+    assert updated.data["apps"][0]["installed_version"] == app.version_latest
+    assert updated.data["apps"][0]["update_available"] is False
+    assert updated.data["apps"][0]["state"] == "stopped"
+    assert removed.data["apps"] == []
+    assert installed_apps.await_count == 3
+
+
+async def test_get_apps_error(
+    hass: HomeAssistant, llm_context: llm.LLMContext, installed_apps: AsyncMock
+) -> None:
+    """Test a Supervisor failure is reported instead of looking like no apps are installed."""
+    installed_apps.side_effect = SupervisorError("unavailable")
+    tool = SupervisorGetAppsTool()
+
+    with pytest.raises(HomeAssistantError, match="Could not list installed apps"):
+        await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
 
 
 async def test_get_logs_default(
