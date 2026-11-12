@@ -222,10 +222,13 @@ class EdifierIrMediaPlayer(
         for feature in self._commands:
             self._attr_supported_features |= feature
 
-    async def _send_codes(self, *codes: EdifierCode) -> None:
+    async def _send_codes(self, *codes: EdifierCode | tuple[EdifierCode, ...]) -> None:
         """Send one or more IR commands."""
         for code in codes:
-            await self._send_command(code.to_command())
+            if isinstance(code, tuple):
+                await self._send_codes(*code)
+            else:
+                await self._send_command(code.to_command())
 
     @override
     async def async_turn_on(self) -> None:
@@ -240,12 +243,12 @@ class EdifierIrMediaPlayer(
     @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
-        await self._send_codes(*self._commands[MediaPlayerEntityFeature.VOLUME_STEP][0])
+        await self._send_codes(self._commands[MediaPlayerEntityFeature.VOLUME_STEP][0])
 
     @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
-        await self._send_codes(*self._commands[MediaPlayerEntityFeature.VOLUME_STEP][1])
+        await self._send_codes(self._commands[MediaPlayerEntityFeature.VOLUME_STEP][1])
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:

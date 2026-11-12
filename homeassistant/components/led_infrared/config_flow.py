@@ -137,7 +137,7 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
         # and off regardless of its initial state, while a wrong code set whose
         # off command is the right one's on leaves the light on.
         try:
-            for code in (codes.OFF, codes.ON, codes.OFF):
+            for code in (codes["OFF"], codes["ON"], codes["OFF"]):
                 await async_send_command(self.hass, emitter_id, code.to_command())
                 await asyncio.sleep(_TOGGLE_GAP)
         except HomeAssistantError:
