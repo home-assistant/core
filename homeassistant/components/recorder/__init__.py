@@ -121,8 +121,8 @@ def validate_db_url(db_url: str) -> Any:
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN, default=dict): probatio.All(
-            cv.deprecated(CONF_PURGE_INTERVAL),
-            cv.deprecated(CONF_DB_INTEGRITY_CHECK),
+            cv.deprecated(CONF_PURGE_INTERVAL, breaks_in_ha_version="2027.6.0"),
+            cv.deprecated(CONF_DB_INTEGRITY_CHECK, breaks_in_ha_version="2027.6.0"),
             FILTER_SCHEMA.extend(
                 {
                     probatio.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,

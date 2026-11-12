@@ -235,9 +235,10 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
             probatio.Any(
                 str,
                 probatio.All(
-                    cv.deprecated("macaddress"),
-                    cv.deprecated("model"),
-                    cv.deprecated("manufacturer"),
+                    # Remove together with MOVED_ZEROCONF_PROPS in homeassistant/loader.py
+                    cv.deprecated("macaddress", breaks_in_ha_version="2027.6.0"),
+                    cv.deprecated("model", breaks_in_ha_version="2027.6.0"),
+                    cv.deprecated("manufacturer", breaks_in_ha_version="2027.6.0"),
                     probatio.Schema(
                         {
                             probatio.Required("type"): str,

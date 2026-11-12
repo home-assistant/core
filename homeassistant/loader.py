@@ -577,8 +577,8 @@ def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> ZeroconfMatcher:
             _LOGGER.warning(
                 (
                     'Matching the zeroconf property "%s" at top-level is deprecated and'
-                    " should be moved into a properties dict; Check the developer"
-                    " documentation"
+                    " will stop working in Home Assistant 2027.6.0; it should be moved"
+                    " into a properties dict, check the developer documentation"
                 ),
                 moved_prop,
             )

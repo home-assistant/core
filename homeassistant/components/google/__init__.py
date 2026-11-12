@@ -57,7 +57,7 @@ CONFIG_SCHEMA = probatio.Schema(cv.removed(DOMAIN), extra=probatio.ALLOW_EXTRA)
 
 
 _SINGLE_CALSEARCH_CONFIG = probatio.All(
-    cv.deprecated(CONF_MAX_RESULTS),
+    cv.deprecated(CONF_MAX_RESULTS, breaks_in_ha_version="2027.6.0"),
     probatio.Schema(
         {
             probatio.Required(CONF_NAME): cv.string,
