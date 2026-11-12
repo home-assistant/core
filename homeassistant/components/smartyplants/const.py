@@ -11,6 +11,11 @@ DOMAIN: Final = "smartyplants"
 # 304, so a poll that finds nothing new is cheap.
 DEFAULT_SCAN_INTERVAL: Final = timedelta(minutes=1)
 
+# The custom integration this one replaces named the fertiliser countdown
+# differently, so its registry entries are adopted under the new key.
+LEGACY_FERTILISE_SUFFIX: Final = "_fertilise_days"
+FERTILIZE_SUFFIX: Final = "_fertilize"
+
 CONF_WEBHOOK_SECRET: Final = "webhook_secret"
 
 SIGNATURE_HEADER: Final = "X-Smartyplants-Signature"
