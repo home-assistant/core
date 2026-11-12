@@ -21,7 +21,16 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NamedTuple, Self, TypedDict, cast, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    NamedTuple,
+    Protocol,
+    Self,
+    TypedDict,
+    cast,
+    override,
+)
 
 from async_interrupt import interrupt
 import probatio
@@ -279,7 +288,7 @@ STATE_KEYS = {
     "error_reason_translation_key",
     "error_reason_translation_placeholders",
 }
-FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", *STATE_KEYS}
+FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", "sandbox", *STATE_KEYS}
 UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
     "unique_id",
     "title",
@@ -326,6 +335,7 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     minor_version: int
     options: Mapping[str, Any]
     result: ConfigEntry
+    sandbox: str
     subentries: Iterable[ConfigSubentryData]
     version: int
 
@@ -472,6 +482,7 @@ class ConfigEntry[_DataT = Any]:
     created_at: datetime
     modified_at: datetime
     discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
+    sandbox: str | None
 
     def __init__(
         self,
@@ -487,6 +498,7 @@ class ConfigEntry[_DataT = Any]:
         options: Mapping[str, Any] | None,
         pref_disable_new_entities: bool | None = None,
         pref_disable_polling: bool | None = None,
+        sandbox: str | None = None,
         source: str,
         state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
         subentries_data: Iterable[ConfigSubentryData | ConfigSubentryDataWithId] | None,
@@ -604,6 +616,9 @@ class ConfigEntry[_DataT = Any]:
         _setter(self, "created_at", created_at or utcnow())
         _setter(self, "modified_at", modified_at or utcnow())
         _setter(self, "discovery_keys", discovery_keys)
+
+        # Placement is set before setup and persists with the config entry.
+        _setter(self, "sandbox", sandbox)
 
     @override
     def __repr__(self) -> str:
@@ -745,6 +760,18 @@ class ConfigEntry[_DataT = Any]:
         """Set up an entry."""
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
+
+        # Route every setup path, including startup and retries, before local execution.
+        if (router := hass.config_entries.router) is not None:
+            try:
+                result = await router.async_setup_entry(self)
+            except ConfigEntryError as err:
+                self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, str(err))
+                return
+            if result is not None:
+                if result:
+                    self._async_set_state(hass, ConfigEntryState.LOADED, None)
+                return
 
         current_entry.set(self)
         try:
@@ -1343,7 +1370,7 @@ class ConfigEntry[_DataT = Any]:
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
-        return {
+        result: dict[str, Any] = {
             "created_at": self.created_at.isoformat(),
             "data": dict(self.data),
             "discovery_keys": dict(self.discovery_keys),
@@ -1361,6 +1388,10 @@ class ConfigEntry[_DataT = Any]:
             "unique_id": self.unique_id,
             "version": self.version,
         }
+        # Omit placement for local entries to preserve their storage representation.
+        if self.sandbox is not None:
+            result["sandbox"] = self.sandbox
+        return result
 
     @callback
     def async_on_unload(
@@ -1957,6 +1988,7 @@ class ConfigEntriesFlowManager(
             domain=result["handler"],
             minor_version=result["minor_version"],
             options=result["options"],
+            sandbox=result.get("sandbox"),
             source=flow.context["source"],
             subentries_data=result["subentries"],
             title=result["title"],
@@ -1994,12 +2026,20 @@ class ConfigEntriesFlowManager(
 
         Handler key is the domain of the component that we want to set up.
         """
-        handler = await _async_get_flow_handler(
-            self.hass, handler_key, self._hass_config
-        )
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        if (router := self.config_entries.router) is not None and (
+            flow := await router.async_create_flow(
+                handler_key, context=context, data=data
+            )
+        ) is not None:
+            flow.init_step = context["source"]
+            return flow
+
+        handler = await _async_get_flow_handler(
+            self.hass, handler_key, self._hass_config
+        )
         flow = handler()
         flow.init_step = context["source"]
         return flow
@@ -2277,6 +2317,50 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         return data
 
 
+class ConfigEntryRouter(Protocol):
+    """Hook protocol for routing config flows and entry setup elsewhere.
+
+    Currently used by `sandbox` to divert flows and config-entry setup to
+    a sandbox subprocess. Each method returns ``None`` to fall through to
+    the default behaviour and a concrete value to take over.
+    """
+
+    async def async_setup_component(self, domain: str) -> bool | None:
+        """Set up a component remotely, or return None for normal local setup."""
+
+    async def async_create_flow(
+        self,
+        handler_key: str,
+        *,
+        context: ConfigFlowContext,
+        data: Any,
+    ) -> ConfigFlow | None:
+        """Return a flow handler that will run the flow, or None to fall through."""
+
+    async def async_create_subentry_flow(
+        self, entry: ConfigEntry, subentry_type: str
+    ) -> ConfigSubentryFlow | None:
+        """Return a remote subentry flow, or None for local execution."""
+
+    async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
+        """Set up the entry remotely.
+
+        Return True on success (core marks the entry LOADED) or None to
+        fall through to the default setup. Raise ConfigEntryError on
+        failure — core marks the entry SETUP_ERROR with the message.
+        The router must not mutate entry state itself.
+        """
+
+    async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
+        """Unload the entry remotely.
+
+        Return True on success (core marks the entry NOT_LOADED) or None
+        to fall through to the default unload. Raise ConfigEntryError if
+        the entry cannot be unloaded — core leaves the entry state (and
+        the loaded remote entry) untouched.
+        """
+
+
 class ConfigEntries:
     """Manage the configuration entries.
 
@@ -2293,6 +2377,8 @@ class ConfigEntries:
         self._entries = ConfigEntryItems(hass)
         self._store = ConfigEntryStore(hass)
         self._initialized = asyncio.Event()
+        # Optional hook for diverting flows and entry setup (used by sandbox).
+        self.router: ConfigEntryRouter | None = None
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -2502,6 +2588,8 @@ class ConfigEntries:
                 options=entry["options"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
+                # Local entries do not persist a placement tag.
+                sandbox=entry.get("sandbox"),
                 source=entry["source"],
                 subentries_data=entry["subentries"],
                 title=entry["title"],
@@ -2595,6 +2683,17 @@ class ConfigEntries:
                 f" be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
+        # Remote custom integrations may have no code available on main.
+        if self.router is not None and entry.sandbox is not None:
+            if _lock:
+                async with entry.setup_lock:
+                    await entry.async_setup(self.hass)
+            else:
+                await entry.async_setup(self.hass)
+            return (
+                entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
+            )
+
         # Setup Component if not set up yet
         if entry.domain in self.hass.config.components:
             if _lock:
@@ -2650,11 +2749,48 @@ class ConfigEntries:
                 f" recoverable state {entry.state}"
             )
 
+        if self.router is not None:
+            if (result := await self._async_router_unload(entry, _lock)) is not None:
+                return result
+
         if _lock:
             async with entry.setup_lock:
                 return await entry.async_unload(self.hass)
 
         return await entry.async_unload(self.hass)
+
+    async def _async_router_unload(
+        self, entry: ConfigEntry, _lock: bool
+    ) -> bool | None:
+        """Run the router's remote unload under the entry's setup lock.
+
+        True marks the entry NOT_LOADED; a ConfigEntryError means the
+        remote side refused the unload — the entry stays in its current
+        state (still loaded remotely) and False is returned. None falls
+        through to the default unload path.
+        """
+        if _lock:
+            async with entry.setup_lock:
+                return await self._async_router_unload_locked(entry)
+        return await self._async_router_unload_locked(entry)
+
+    async def _async_router_unload_locked(self, entry: ConfigEntry) -> bool | None:
+        assert self.router is not None
+        try:
+            result = await self.router.async_unload_entry(entry)
+        except ConfigEntryError as err:
+            _LOGGER.error(
+                "Router failed to unload entry %s (%s): %s",
+                entry.title,
+                entry.domain,
+                err,
+            )
+            return False
+        if result:
+            entry._async_set_state(  # noqa: SLF001
+                self.hass, ConfigEntryState.NOT_LOADED, None
+            )
+        return result
 
     @callback
     def async_schedule_reload(self, entry_id: str) -> None:
@@ -3921,6 +4057,11 @@ class ConfigSubentryFlowManager(
 
         entry_id, subentry_type = handler_key
         entry = self._async_get_config_entry(entry_id)
+        if (router := self.hass.config_entries.router) is not None and (
+            remote_flow := await router.async_create_subentry_flow(entry, subentry_type)
+        ) is not None:
+            remote_flow.init_step = context["source"]
+            return remote_flow
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
         subentry_types = handler.async_get_supported_subentry_types(entry)
         if subentry_type not in subentry_types:

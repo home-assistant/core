@@ -1,0 +1,508 @@
+"""Tests for :class:`SandboxFlowProxy` — main-side flow forwarding."""
+
+import asyncio
+from collections.abc import Iterator
+import contextlib
+from ipaddress import ip_address
+from typing import cast
+from unittest.mock import patch
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+
+from homeassistant.components.sandbox import proxy_flow as proxy_flow_module
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.channel import Channel
+from homeassistant.components.sandbox.manager import SandboxManager
+from homeassistant.components.sandbox.messages import decode_json_dict, encode_json
+from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
+from homeassistant.components.sandbox.router import SandboxFlowRouter
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from ._helpers import FakeSandboxManager, make_channel_pair
+
+
+class _SandboxStub:
+    """Tiny sandbox-side dispatcher backed by a script of canned responses."""
+
+    def __init__(self, responses: list[pb.FlowResult]) -> None:
+        self._responses = responses
+        self.init_calls: list[pb.FlowInit] = []
+        self.step_calls: list[pb.FlowStep] = []
+        self.abort_calls: list[pb.FlowAbort] = []
+
+    def attach(self, channel: Channel) -> None:
+        channel.register("sandbox/flow_init", self._flow_init)
+        channel.register("sandbox/flow_step", self._flow_step)
+        channel.register("sandbox/flow_abort", self._flow_abort)
+        channel.register("sandbox/entry_setup", self._entry_setup)
+        channel.register("sandbox/entry_unload", self._entry_unload)
+
+    async def _flow_init(self, payload: pb.FlowInit) -> pb.FlowResult:
+        self.init_calls.append(payload)
+        return self._pop()
+
+    async def _flow_step(self, payload: pb.FlowStep) -> pb.FlowResult:
+        self.step_calls.append(payload)
+        return self._pop()
+
+    async def _flow_abort(self, payload: pb.FlowAbort) -> pb.FlowAbortResult:
+        self.abort_calls.append(payload)
+        return pb.FlowAbortResult()
+
+    async def _entry_setup(self, _payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        return pb.EntrySetupResult(ok=True)
+
+    async def _entry_unload(self, _payload: pb.EntryUnload) -> pb.EntryUnloadResult:
+        return pb.EntryUnloadResult(ok=True)
+
+    def _pop(self) -> pb.FlowResult:
+        return self._responses.pop(0)
+
+
+@contextlib.contextmanager
+def _wired_sandbox(
+    manager: FakeSandboxManager, *, group: str, responses: list[pb.FlowResult]
+) -> Iterator[_SandboxStub]:
+    """Wire a sandbox stub onto a fresh in-memory channel pair."""
+    main_channel, sandbox_channel = make_channel_pair(
+        name_a=f"main-{group}", name_b=f"sandbox-{group}"
+    )
+    stub = _SandboxStub(responses)
+    stub.attach(sandbox_channel)
+    main_channel.start()
+    sandbox_channel.start()
+    manager.install(group, main_channel)
+    try:
+        yield stub
+    finally:
+        # Best-effort close; the test will finish before any pending IO
+        # matters, but we tag the tasks so the linter doesn't flag them.
+        close_main = asyncio.ensure_future(main_channel.close())
+        close_sandbox = asyncio.ensure_future(sandbox_channel.close())
+        del close_main, close_sandbox
+
+
+@pytest.fixture
+def ignore_translations_for_mock_domains() -> list[str]:
+    """Suppress strings.json checks for our mock integrations."""
+    return [
+        "test_proxy_full",
+        "test_proxy_errors",
+        "test_proxy_abort",
+        "test_proxy_menu",
+        "test_proxy_progress",
+        "test_proxy_discovery",
+    ]
+
+
+@pytest.fixture(name="manager")
+def _manager_fixture() -> FakeSandboxManager:
+    """A fake sandbox manager that never spawns a subprocess."""
+    return FakeSandboxManager()
+
+
+async def test_full_flow_user_to_create_entry(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A user-initiated flow that asks for input then creates an entry."""
+    mock_integration(hass, MockModule("test_proxy_full"))
+    create_entry = pb.FlowResult(
+        type=FlowResultType.CREATE_ENTRY.value,
+        flow_id="sandbox-flow-1",
+        handler="test_proxy_full",
+        title="Proxy Title",
+    )
+    create_entry.data = encode_json({"host": "1.2.3.4"})
+    responses = [
+        # Response to flow_init — show a form
+        pb.FlowResult(
+            type=FlowResultType.FORM.value,
+            flow_id="sandbox-flow-1",
+            handler="test_proxy_full",
+            step_id="user",
+        ),
+        # Response to flow_step — create the entry
+        create_entry,
+    ]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_full", context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.2.3.4"}
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Proxy Title"
+
+    assert len(stub.init_calls) == 1
+    assert stub.init_calls[0].handler == "test_proxy_full"
+    assert decode_json_dict(stub.init_calls[0].context)["source"] == SOURCE_USER
+    # proto: a USER-source init carries no `data` field (was `data is None`).
+    assert not stub.init_calls[0].HasField("data")
+    assert len(stub.step_calls) == 1
+    assert stub.step_calls[0].flow_id == "sandbox-flow-1"
+    assert decode_json_dict(stub.step_calls[0].user_input) == {"host": "1.2.3.4"}
+
+    # The new ConfigEntry is tagged with the sandbox group via the
+    # ConfigEntry.sandbox first-class field (keeps the tag off entry.data
+    # where integration tests assert on it).
+    entries = hass.config_entries.async_entries("test_proxy_full")
+    assert len(entries) == 1
+    assert entries[0].sandbox == "built-in"
+    assert entries[0].data == {"host": "1.2.3.4"}
+    # The setup interception path marked it LOADED.
+    assert entries[0].state is ConfigEntryState.LOADED
+
+
+async def test_create_entry_carries_version_and_options(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A sandbox CREATE_ENTRY with VERSION/MINOR_VERSION/options round-trips."""
+    mock_integration(hass, MockModule("test_proxy_full"))
+    create_entry = pb.FlowResult(
+        type=FlowResultType.CREATE_ENTRY.value,
+        flow_id="sandbox-flow-ver",
+        handler="test_proxy_full",
+        title="Versioned",
+        version=2,
+        minor_version=3,
+    )
+    create_entry.data = encode_json({"host": "1.2.3.4"})
+    create_entry.options = encode_json({"poll_interval": 30})
+    responses = [create_entry]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses),
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        # The proxy class default is VERSION=1 — the entry must NOT inherit it.
+        assert SandboxFlowProxy.VERSION == 1
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_full", context={"source": SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entries = hass.config_entries.async_entries("test_proxy_full")
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 2
+    assert entry.minor_version == 3
+    assert entry.options == {"poll_interval": 30}
+    assert entry.data == {"host": "1.2.3.4"}
+
+
+async def test_form_with_errors_reshows(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A form returned with `errors` is shown as a fresh form on main."""
+    mock_integration(hass, MockModule("test_proxy_errors"))
+    reshow = pb.FlowResult(
+        type=FlowResultType.FORM.value,
+        flow_id="sandbox-flow-err",
+        handler="test_proxy_errors",
+        step_id="user",
+    )
+    reshow.errors = encode_json({"host": "invalid_host"})
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.FORM.value,
+            flow_id="sandbox-flow-err",
+            handler="test_proxy_errors",
+            step_id="user",
+        ),
+        reshow,
+    ]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses),
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_errors", context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "bad"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"host": "invalid_host"}
+
+
+async def test_abort_is_propagated(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """An ABORT from the sandbox surfaces as an abort on main."""
+    mock_integration(hass, MockModule("test_proxy_abort"))
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.ABORT.value,
+            flow_id="sandbox-flow-abort",
+            handler="test_proxy_abort",
+            reason="already_configured",
+        )
+    ]
+
+    with (
+        _wired_sandbox(manager, group="custom", responses=responses),
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "custom"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_abort", context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_menu_flow_renders_and_navigates(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A sandbox MENU renders on main and a selection forwards as navigation."""
+    mock_integration(hass, MockModule("test_proxy_menu"))
+    menu = pb.FlowResult(
+        type=FlowResultType.MENU.value,
+        flow_id="sandbox-flow-menu",
+        handler="test_proxy_menu",
+        step_id="user",
+    )
+    menu.menu_options = encode_json(["option_a", "option_b"])
+    create_entry = pb.FlowResult(
+        type=FlowResultType.CREATE_ENTRY.value,
+        flow_id="sandbox-flow-menu",
+        handler="test_proxy_menu",
+        title="Done",
+    )
+    create_entry.data = encode_json({"chosen": "a"})
+    responses = [menu, create_entry]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_menu", context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.MENU
+        assert result["menu_options"] == ["option_a", "option_b"]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "option_a"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # The menu selection forwarded as a navigation choice, not a fresh step.
+    assert len(stub.step_calls) == 1
+    assert decode_json_dict(stub.step_calls[0].user_input) == {
+        "next_step_id": "option_a"
+    }
+
+
+async def test_menu_dict_options_round_trip(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A dict-form MENU (id -> label) keeps its labels and order on main."""
+    mock_integration(hass, MockModule("test_proxy_menu"))
+    menu = pb.FlowResult(
+        type=FlowResultType.MENU.value,
+        flow_id="sandbox-flow-menu2",
+        handler="test_proxy_menu",
+        step_id="user",
+    )
+    # Crosses as a list of [id, label] pairs.
+    menu.menu_options = encode_json([["a", "Option A"], ["b", "Option B"]])
+    responses = [menu]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses),
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_menu", context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == {"a": "Option A", "b": "Option B"}
+
+
+async def test_unsupported_result_type_aborts_and_reaps_sandbox_flow(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """An unsupported result aborts on main AND reaps the sandbox-side flow."""
+    mock_integration(hass, MockModule("test_proxy_progress"))
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.SHOW_PROGRESS.value,
+            flow_id="sandbox-flow-progress",
+            handler="test_proxy_progress",
+            step_id="user",
+        )
+    ]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_progress", context={"source": SOURCE_USER}
+        )
+        # async_remove fires the abort as a background task on the loop (not
+        # hass-tracked), so await the outstanding abort tasks directly.
+        await asyncio.gather(*list(proxy_flow_module._BACKGROUND_ABORTS))
+        assert len(stub.abort_calls) == 1
+        assert stub.abort_calls[0].flow_id == "sandbox-flow-progress"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "sandbox_unsupported_result_type"
+
+
+async def test_discovery_flow_marshals_service_info(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A zeroconf-sourced flow flattens its ServiceInfo + DiscoveryKey safely."""
+    mock_integration(hass, MockModule("test_proxy_discovery"))
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.ABORT.value,
+            flow_id="sandbox-flow-disc",
+            handler="test_proxy_discovery",
+            reason="already_configured",
+        )
+    ]
+    info = ZeroconfServiceInfo(
+        ip_address=ip_address("1.2.3.4"),
+        ip_addresses=[ip_address("1.2.3.4")],
+        port=80,
+        hostname="device.local.",
+        type="_x._tcp.local.",
+        name="device",
+        properties={},
+    )
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_discovery",
+            context={
+                "source": "zeroconf",
+                "discovery_key": DiscoveryKey(
+                    domain="test_proxy_discovery", key="abc", version=1
+                ),
+            },
+            data=info,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert len(stub.init_calls) == 1
+    ctx = decode_json_dict(stub.init_calls[0].context)
+    assert ctx["source"] == "zeroconf"
+    # The DiscoveryKey dataclass crossed as a JSON-safe dict.
+    assert ctx["discovery_key"] == {
+        "domain": "test_proxy_discovery",
+        "key": "abc",
+        "version": 1,
+    }
+    # The ServiceInfo dataclass crossed as a JSON-safe dict (IPs stringified,
+    # derived ``host``/``addresses`` properties absent — fields only).
+    data = decode_json_dict(stub.init_calls[0].data)
+    assert data["ip_address"] == "1.2.3.4"
+    assert data["ip_addresses"] == ["1.2.3.4"]
+    assert data["hostname"] == "device.local."
+    assert "host" not in data
+
+
+async def test_reconfigure_flow_carries_entry(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A reconfigure flow ships main's entry so the sandbox can resolve it."""
+    mock_integration(hass, MockModule("test_proxy_reconf"))
+    entry = MockConfigEntry(
+        domain="test_proxy_reconf",
+        title="Existing",
+        data={"host": "1.2.3.4"},
+        sandbox="built-in",
+        entry_id="reconf-1",
+    )
+    entry.add_to_hass(hass)
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.FORM.value,
+            flow_id="sandbox-reconf-1",
+            handler="test_proxy_reconf",
+            step_id="reconfigure",
+        ),
+    ]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+
+    assert len(stub.init_calls) == 1
+    init = stub.init_calls[0]
+    assert init.HasField("entry")
+    assert init.entry.entry_id == "reconf-1"
+    assert init.entry.title == "Existing"
+    assert decode_json_dict(init.entry.data) == {"host": "1.2.3.4"}
+
+
+async def _install_router(hass: HomeAssistant, manager: FakeSandboxManager) -> None:
+    """Attach a router that uses ``manager`` to ``hass.config_entries``."""
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+    hass.config_entries.router = router

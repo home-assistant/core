@@ -165,7 +165,15 @@ async def async_setup_component(
     setup_futures[domain] = setup_future
 
     try:
-        result = await _async_setup_component(hass, domain, config)
+        if (router := hass.config_entries.router) is None or (
+            result := await router.async_setup_component(domain)
+        ) is None:
+            result = await _async_setup_component(hass, domain, config)
+        elif result:
+            hass.data[_DATA_SETUP].pop(domain, None)
+            hass.bus.async_fire_internal(
+                EVENT_COMPONENT_LOADED, EventComponentLoaded(component=domain)
+            )
         setup_future.set_result(result)
         if setup_done_future := setup_done_futures.pop(domain, None):
             setup_done_future.set_result(result)

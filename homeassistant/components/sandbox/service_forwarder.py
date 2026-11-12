@@ -1,0 +1,99 @@
+"""Service-forwarding helpers for mirrored sandbox services."""
+
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any
+
+import probatio
+
+from homeassistant.core import ServiceCall, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError
+
+from .channel import ChannelRemoteError
+from .messages import decode_json_dict
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from .bridge import SandboxBridge
+
+
+def parse_supports_response(value: str) -> SupportsResponse:
+    """Coerce the wire ``supports_response`` field into the enum."""
+    try:
+        return SupportsResponse(value.lower())
+    except ValueError:
+        return SupportsResponse.NONE
+
+
+def build_service_forwarder(
+    bridge: SandboxBridge,
+    domain: str,
+    service: str,
+    supports_response: SupportsResponse,
+) -> Callable[[ServiceCall], Coroutine[Any, Any, Any]]:
+    """Return a callable suitable for :meth:`ServiceRegistry.async_register`."""
+
+    async def _forward(call: ServiceCall) -> Any:
+        # Remember the real (main-issued) Context so the sandbox echoing this
+        # id back on a derived state/event restores it verbatim.
+        bridge.remember_context(call.context)
+        response = await bridge.async_raw_call_service(
+            domain=domain,
+            service=service,
+            target=_target_from_call(call),
+            service_data=dict(call.data),
+            context_id=call.context.id if call.context is not None else None,
+            return_response=call.return_response,
+        )
+        if supports_response is SupportsResponse.NONE:
+            return None
+        if response.HasField("response"):
+            return decode_json_dict(response.response.data)
+        return None
+
+    return _forward
+
+
+def _target_from_call(call: ServiceCall) -> dict[str, Any]:
+    """Extract a ``target`` dict from the (already-validated) service call."""
+    target: dict[str, Any] = {}
+    if not call.data:
+        return target
+    for key in ("entity_id", "area_id", "device_id", "floor_id", "label_id"):
+        value = call.data.get(key)
+        if value is None:
+            continue
+        target[key] = list(value) if isinstance(value, (list, tuple, set)) else value
+    return target
+
+
+def _rebuild_invalid(data: Mapping[str, Any]) -> probatio.Invalid:
+    """Rebuild a single :class:`probatio.Invalid` from its serialized payload."""
+    path = data.get("path") or None
+    return probatio.Invalid(data.get("msg", ""), path=path)
+
+
+def translate_remote_error(err: ChannelRemoteError) -> Exception:
+    """Map a sandbox-side exception class name to a sensible main-side one."""
+    if (error_data := err.error_data) is not None:
+        kind = error_data.get("kind")
+        if kind == "invalid":
+            return _rebuild_invalid(error_data)
+        if kind == "multiple":
+            return probatio.MultipleInvalid(
+                [_rebuild_invalid(child) for child in error_data.get("errors", [])]
+            )
+    name = err.error_type or ""
+    msg = err.error
+    if name in {"Invalid", "MultipleInvalid"}:
+        return TypeError(msg)
+    if name in {"ServiceNotFound", "ServiceValidationError", "HomeAssistantError"}:
+        return HomeAssistantError(msg)
+    return HomeAssistantError(f"sandbox error ({name or 'unknown'}): {msg}")
+
+
+__all__ = [
+    "build_service_forwarder",
+    "parse_supports_response",
+    "translate_remote_error",
+]

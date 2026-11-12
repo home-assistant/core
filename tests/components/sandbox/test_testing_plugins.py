@@ -1,0 +1,182 @@
+"""Tests for the ``homeassistant_sandbox.testing`` pytest plugins."""
+
+import asyncio
+from collections.abc import AsyncIterator
+from unittest.mock import MagicMock
+
+from homeassistant_sandbox.testing import conftest_sandbox as cs_plugin
+from homeassistant_sandbox.testing.pytest_plugin import (
+    DEFAULT_GROUP,
+    InProcessSandbox,
+    async_setup_inprocess_sandbox,
+)
+import pytest
+
+from homeassistant.components.sandbox.const import DATA_SANDBOX
+from homeassistant.core import HomeAssistant
+
+
+@pytest.fixture(name="in_process_sandbox")
+async def _in_process_sandbox_fixture(
+    hass: HomeAssistant, tmp_path_factory: pytest.TempPathFactory
+) -> AsyncIterator[InProcessSandbox]:
+    """Local copy of the ``sandbox_inprocess`` fixture for these tests."""
+    config_dir = tmp_path_factory.mktemp("sandbox_inproc")
+    sandbox = await async_setup_inprocess_sandbox(
+        hass, group=DEFAULT_GROUP, config_dir=str(config_dir)
+    )
+    try:
+        yield sandbox
+    finally:
+        await sandbox.stop()
+
+
+async def test_inprocess_plugin_wires_manager_and_bridge(
+    hass: HomeAssistant, in_process_sandbox: InProcessSandbox
+) -> None:
+    """The plugin installs a bridge for the group and parks a fake process."""
+    data = hass.data[DATA_SANDBOX]
+    assert in_process_sandbox.group == DEFAULT_GROUP
+    assert DEFAULT_GROUP in data.bridges
+    manager = data.manager
+    assert manager is not None
+    sandbox = manager.get(DEFAULT_GROUP)
+    assert sandbox is not None
+    assert sandbox.state == "running"
+    # The runtime task is still alive — set ready and serving.
+    assert not in_process_sandbox.runtime_task.done()
+
+
+async def test_inprocess_plugin_round_trips_ping(
+    hass: HomeAssistant, in_process_sandbox: InProcessSandbox
+) -> None:
+    """The in-memory channel speaks the real sandbox protocol."""
+    data = hass.data[DATA_SANDBOX]
+    channel = data.bridges[DEFAULT_GROUP].channel
+    result = await asyncio.wait_for(channel.call("sandbox/ping", None), timeout=2.0)
+    assert result.pong == "sandbox"
+
+
+async def test_inprocess_plugin_returns_existing_sandbox_on_ensure_started(
+    hass: HomeAssistant, in_process_sandbox: InProcessSandbox
+) -> None:
+    """``ensure_started`` returns the pre-installed sandbox without spawning."""
+    data = hass.data[DATA_SANDBOX]
+    manager = data.manager
+    assert manager is not None
+    existing = manager.get(DEFAULT_GROUP)
+    fresh = await manager.ensure_started(DEFAULT_GROUP)
+    assert fresh is existing
+
+
+def _make_item(
+    *, fixturenames: tuple[str, ...] = (), markers: tuple[str, ...] = ()
+) -> MagicMock:
+    """Construct a fake pytest item with the given fixtures/markers."""
+    item = MagicMock(spec=pytest.Item)
+    item.fixturenames = list(fixturenames)
+    item.get_closest_marker.side_effect = lambda name: (
+        MagicMock() if name in markers else None
+    )
+    item.add_marker = MagicMock()
+    return item
+
+
+def test_conftest_sandbox_skips_freezer_tests() -> None:
+    """A test that takes a ``freezer`` fixture gets a skip marker added."""
+    item = _make_item(fixturenames=("freezer",))
+    cs_plugin.pytest_collection_modifyitems(MagicMock(), [item])
+    assert item.add_marker.called
+    # The marker passed in is the skip marker constructed inline; sanity-
+    # check the call shape rather than the exact MarkDecorator identity.
+    args, _ = item.add_marker.call_args
+    assert args[0].name == "skip"
+
+
+def test_conftest_sandbox_skips_marker_tagged_tests() -> None:
+    """A test marked ``@pytest.mark.no_sandbox_freezer`` is skipped."""
+    item = _make_item(markers=("no_sandbox_freezer",))
+    cs_plugin.pytest_collection_modifyitems(MagicMock(), [item])
+    assert item.add_marker.called
+    args, _ = item.add_marker.call_args
+    assert args[0].name == "skip"
+
+
+def test_conftest_sandbox_injects_sandbox_into_hass_tests() -> None:
+    """A hass-using test gets the ``sandbox_subprocess`` fixture injected."""
+    item = _make_item(fixturenames=("hass",))
+    cs_plugin.pytest_collection_modifyitems(MagicMock(), [item])
+    assert not item.add_marker.called
+    assert "sandbox_subprocess" in item.fixturenames
+
+
+def test_conftest_sandbox_leaves_non_hass_tests_alone() -> None:
+    """Tests without hass, the freezer fixture, or the marker are untouched."""
+    item = _make_item(fixturenames=("tmp_path",))
+    cs_plugin.pytest_collection_modifyitems(MagicMock(), [item])
+    assert not item.add_marker.called
+    assert item.fixturenames == ["tmp_path"]
+
+
+def test_inprocess_plugin_injects_sandbox_into_hass_tests() -> None:
+    """The in-process plugin injects ``sandbox_inprocess`` the same way."""
+    from homeassistant_sandbox.testing import pytest_plugin as inproc_plugin  # noqa: PLC0415
+
+    item = _make_item(fixturenames=("hass",))
+    other = _make_item(fixturenames=("tmp_path",))
+    inproc_plugin.pytest_collection_modifyitems(MagicMock(), [item, other])
+    assert "sandbox_inprocess" in item.fixturenames
+    assert other.fixturenames == ["tmp_path"]
+
+
+def test_autotag_sets_mock_config_entry_sandbox() -> None:
+    """``install_mock_config_entry_autotag`` sets ``entry.sandbox`` on ``add_to_hass``."""
+    from homeassistant_sandbox.testing._autotag import install_mock_config_entry_autotag  # noqa: PLC0415
+    from pytest_homeassistant.common import MockConfigEntry  # noqa: PLC0415
+
+    fake_hass = MagicMock()
+    fake_hass.config_entries._entries = {}
+
+    restore = install_mock_config_entry_autotag()
+    try:
+        entry = MockConfigEntry(domain="light", data={"foo": "bar"})
+        assert entry.sandbox is None
+        entry.add_to_hass(fake_hass)
+        assert entry.sandbox == "built-in"
+        # entry.data is untouched — the tag rides on entry.sandbox instead.
+        assert dict(entry.data) == {"foo": "bar"}
+        assert fake_hass.config_entries._entries == {entry.entry_id: entry}
+
+        # ALWAYS_MAIN domains are skipped — entry stays untagged.
+        main_entry = MockConfigEntry(domain="automation", data={})
+        main_entry.add_to_hass(fake_hass)
+        assert main_entry.sandbox is None
+
+        # An entry that already carries the tag is left alone.
+        tagged = MockConfigEntry(domain="light", sandbox="custom")
+        tagged.add_to_hass(fake_hass)
+        assert tagged.sandbox == "custom"
+    finally:
+        restore()
+
+    # After restoring, ``add_to_hass`` is no longer patched: a fresh entry
+    # for a sandboxable domain does not get the tag injected.
+    untagged = MockConfigEntry(domain="light", data={})
+    untagged.add_to_hass(fake_hass)
+    assert untagged.sandbox is None
+
+
+def test_conftest_sandbox_registers_marker_in_configure() -> None:
+    """``pytest_configure`` adds the marker line so pytest --strict-markers passes."""
+    config = MagicMock()
+    try:
+        cs_plugin.pytest_configure(config)
+        config.addinivalue_line.assert_called_once()
+        args, _ = config.addinivalue_line.call_args
+        assert args[0] == "markers"
+        assert args[1].startswith("no_sandbox_freezer:")
+    finally:
+        # ``pytest_configure`` also installs the autotag monkey-patch;
+        # tear it down so the rest of the suite sees the original
+        # ``MockConfigEntry.add_to_hass``.
+        cs_plugin.pytest_unconfigure(config)

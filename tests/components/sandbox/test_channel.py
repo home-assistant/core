@@ -1,0 +1,463 @@
+"""Tests for the sandbox control :class:`Channel`."""
+
+import asyncio
+
+import probatio
+import pytest
+
+from homeassistant.components.sandbox.channel import (
+    MAX_FRAME_SIZE,
+    Channel,
+    ChannelClosedError,
+    ChannelRemoteError,
+    Frame,
+    FrameTooLargeError,
+)
+
+from ._helpers import JsonCodec, make_channel_pair
+
+
+class _QueueTransport:
+    """In-memory :class:`Transport` backed by a pair of queues."""
+
+    def __init__(
+        self, inbox: asyncio.Queue[bytes | None], outbox: asyncio.Queue[bytes | None]
+    ) -> None:
+        self._inbox = inbox
+        self._outbox = outbox
+        self._closed = False
+
+    async def read_frame(self) -> bytes | None:
+        return await self._inbox.get()
+
+    async def write_frame(self, data: bytes) -> None:
+        self._outbox.put_nowait(data)
+
+    def close(self) -> None:
+        if not self._closed:
+            self._closed = True
+            self._inbox.put_nowait(None)  # EOF sentinel for our reader
+
+    async def wait_closed(self) -> None:
+        return None
+
+
+async def test_transport_channel_round_trips() -> None:
+    """A channel built over an arbitrary Transport dispatches normally."""
+    q1: asyncio.Queue[bytes | None] = asyncio.Queue()
+    q2: asyncio.Queue[bytes | None] = asyncio.Queue()
+    channel_a = Channel(transport=_QueueTransport(q1, q2), name="a", codec=JsonCodec())
+    channel_b = Channel(transport=_QueueTransport(q2, q1), name="b", codec=JsonCodec())
+    channel_a.start()
+    channel_b.start()
+
+    async def echo(payload: object) -> dict[str, object]:
+        return {"echoed": payload}
+
+    channel_b.register("test/echo", echo)
+    try:
+        result = await asyncio.wait_for(channel_a.call("test/echo", 7), timeout=2.0)
+        assert result == {"echoed": 7}
+    finally:
+        await channel_a.close()
+        await channel_b.close()
+
+
+@pytest.fixture(name="channels")
+async def _channels_fixture() -> tuple:
+    """Return a paired Channel + Channel, both started, both auto-cleaned."""
+    channel_a, channel_b = make_channel_pair(use_json=True)
+    channel_a.start()
+    channel_b.start()
+    yield channel_a, channel_b
+    await channel_a.close()
+    await channel_b.close()
+
+
+async def test_round_trip_call(channels: tuple) -> None:
+    """A call resolves with the remote handler's return value."""
+    channel_a, channel_b = channels
+
+    async def echo(payload: dict) -> dict:
+        return {"echoed": payload["value"]}
+
+    channel_b.register("test/echo", echo)
+    result = await channel_a.call("test/echo", {"value": 42})
+    assert result == {"echoed": 42}
+
+
+async def test_remote_error_surfaces_as_exception(channels: tuple) -> None:
+    """A handler that raises sends an error response that the caller raises."""
+    channel_a, channel_b = channels
+
+    async def boom(_payload: object) -> None:
+        raise ValueError("kaboom")
+
+    channel_b.register("test/boom", boom)
+    with pytest.raises(ChannelRemoteError) as exc:
+        await channel_a.call("test/boom", None)
+    assert "kaboom" in str(exc.value)
+    assert exc.value.error_type == "ValueError"
+
+
+async def test_vol_invalid_carries_error_data(channels: tuple) -> None:
+    """A handler raising ``probatio.Invalid`` ships its path in ``error_data``."""
+    channel_a, channel_b = channels
+
+    async def bad(_payload: object) -> None:
+        raise probatio.Invalid("expected int", path=["options", "count"])
+
+    channel_b.register("test/bad", bad)
+    with pytest.raises(ChannelRemoteError) as exc:
+        await channel_a.call("test/bad", None)
+    assert exc.value.error_type == "Invalid"
+    assert exc.value.error_data == {
+        "kind": "invalid",
+        "msg": "expected int",
+        "path": ["options", "count"],
+    }
+
+
+async def test_vol_multiple_invalid_round_trips_children(channels: tuple) -> None:
+    """A ``probatio.MultipleInvalid`` ships each child error in ``error_data``."""
+    channel_a, channel_b = channels
+
+    async def bad(_payload: object) -> None:
+        raise probatio.MultipleInvalid(
+            [
+                probatio.Invalid("expected int", path=["count"]),
+                probatio.Invalid("required key", path=["name"]),
+            ]
+        )
+
+    channel_b.register("test/multi", bad)
+    with pytest.raises(ChannelRemoteError) as exc:
+        await channel_a.call("test/multi", None)
+    assert exc.value.error_type == "MultipleInvalid"
+    assert exc.value.error_data == {
+        "kind": "multiple",
+        "errors": [
+            {"kind": "invalid", "msg": "expected int", "path": ["count"]},
+            {"kind": "invalid", "msg": "required key", "path": ["name"]},
+        ],
+    }
+
+
+async def test_unknown_handler_returns_error(channels: tuple) -> None:
+    """Calls to unregistered types come back as remote errors."""
+    channel_a, _ = channels
+    with pytest.raises(ChannelRemoteError) as exc:
+        await channel_a.call("test/unknown", None)
+    assert exc.value.error_type == "ChannelUnknownType"
+
+
+async def test_close_cancels_inflight_calls(channels: tuple) -> None:
+    """Closing the channel mid-call surfaces ChannelClosedError to the caller."""
+    channel_a, channel_b = channels
+
+    received = asyncio.Event()
+
+    async def slow(_payload: object) -> None:
+        received.set()
+        await asyncio.sleep(60)
+
+    channel_b.register("test/slow", slow)
+    call_task = asyncio.create_task(channel_a.call("test/slow", None))
+    await received.wait()
+    await channel_a.close()
+
+    with pytest.raises(ChannelClosedError):
+        await call_task
+
+
+async def test_push_message_is_one_way(channels: tuple) -> None:
+    """Push messages run the handler but produce no reply."""
+    channel_a, channel_b = channels
+    received: list[object] = []
+
+    async def receive(payload: object) -> None:
+        received.append(payload)
+
+    channel_b.register("test/push", receive)
+    await channel_a.push("test/push", {"hello": "world"})
+
+    for _ in range(100):
+        if received:
+            break
+        await asyncio.sleep(0.01)
+    assert received == [{"hello": "world"}]
+
+
+async def test_inline_push_handler_runs_in_wire_order(channels: tuple) -> None:
+    """Inline push handlers run in the read loop, preserving wire order."""
+    channel_a, channel_b = channels
+    received: list[int] = []
+
+    def receive(payload: dict) -> None:
+        received.append(payload["idx"])
+
+    channel_b.register_push_inline("test/inline", receive)
+    for idx in range(100):
+        await channel_a.push("test/inline", {"idx": idx})
+
+    for _ in range(100):
+        if len(received) == 100:
+            break
+        await asyncio.sleep(0.01)
+    assert received == list(range(100))
+
+
+async def test_inline_push_handler_exception_keeps_reader_alive(
+    channels: tuple, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A raising inline handler is logged; the read loop keeps dispatching."""
+    channel_a, channel_b = channels
+    received: list[int] = []
+
+    def receive(payload: dict) -> None:
+        if payload["idx"] == 0:
+            raise ValueError("boom")
+        received.append(payload["idx"])
+
+    channel_b.register_push_inline("test/inline", receive)
+    await channel_a.push("test/inline", {"idx": 0})
+    await channel_a.push("test/inline", {"idx": 1})
+
+    for _ in range(100):
+        if received:
+            break
+        await asyncio.sleep(0.01)
+    assert received == [1]
+    assert "push handler for test/inline raised" in caplog.text
+
+    # Calls still round-trip on the surviving read loop.
+    async def echo(payload: dict) -> dict:
+        return {"echoed": payload["value"]}
+
+    channel_b.register("test/echo", echo)
+    assert await channel_a.call("test/echo", {"value": 5}) == {"echoed": 5}
+
+
+async def test_call_to_inline_only_type_is_unknown(channels: tuple) -> None:
+    """A CALL frame never dispatches inline — only async handlers serve calls."""
+    channel_a, channel_b = channels
+
+    channel_b.register_push_inline("test/inline", lambda payload: None)
+    with pytest.raises(ChannelRemoteError) as err:
+        await asyncio.wait_for(channel_a.call("test/inline", {}), timeout=2.0)
+    assert err.value.error_type == "ChannelUnknownType"
+
+
+async def test_handler_can_call_back_without_deadlock(channels: tuple) -> None:
+    """A handler that issues channel.call mid-execution doesn't deadlock."""
+    channel_a, channel_b = channels
+
+    async def a_ping(_payload: object) -> dict[str, bool]:
+        return {"pong": True}
+
+    async def b_forward(_payload: object) -> dict[str, bool]:
+        # Re-enter the channel: B's handler issues a call back to A
+        # while B's reader is the same task that dispatched us.
+        return await channel_b.call("a/ping", None, timeout=2.0)
+
+    channel_a.register("a/ping", a_ping)
+    channel_b.register("b/forward", b_forward)
+
+    result = await asyncio.wait_for(channel_a.call("b/forward", None), timeout=2.0)
+    assert result == {"pong": True}
+
+
+async def test_concurrency_cap_queues_excess_handlers() -> None:
+    """The (cap+1)th call queues at the semaphore until a slot frees."""
+    channel_a, channel_b = make_channel_pair(max_inflight_b=2, use_json=True)
+    channel_a.start()
+    channel_b.start()
+    started: list[asyncio.Event] = [asyncio.Event() for _ in range(3)]
+    release: list[asyncio.Event] = [asyncio.Event() for _ in range(3)]
+
+    async def slow(payload: dict) -> int:
+        idx = payload["idx"]
+        started[idx].set()
+        await release[idx].wait()
+        return idx
+
+    channel_b.register("test/slow", slow)
+
+    try:
+        tasks = [
+            asyncio.create_task(channel_a.call("test/slow", {"idx": i}))
+            for i in range(3)
+        ]
+
+        # First two enter the handler; the third queues at the semaphore.
+        await asyncio.wait_for(started[0].wait(), timeout=2.0)
+        await asyncio.wait_for(started[1].wait(), timeout=2.0)
+        await asyncio.sleep(0.05)
+        assert not started[2].is_set()
+
+        # Release the first; the third can now enter.
+        release[0].set()
+        await asyncio.wait_for(started[2].wait(), timeout=2.0)
+
+        # Release the rest and confirm all three replies land.
+        release[1].set()
+        release[2].set()
+        results = await asyncio.wait_for(asyncio.gather(*tasks), timeout=2.0)
+        assert sorted(results) == [0, 1, 2]
+    finally:
+        await channel_a.close()
+        await channel_b.close()
+
+
+async def test_oversize_outbound_frame_fails_only_that_call(channels: tuple) -> None:
+    """An over-cap frame fails its own call; the channel stays usable."""
+    channel_a, channel_b = channels
+
+    async def echo(payload: dict) -> dict:
+        return {"echoed": payload["value"]}
+
+    async def big_reply(_payload: object) -> dict:
+        return {"blob": "y" * (MAX_FRAME_SIZE + 1)}
+
+    channel_b.register("test/echo", echo)
+    channel_b.register("test/big", big_reply)
+
+    with pytest.raises(FrameTooLargeError):
+        await channel_a.call("test/echo", {"value": "x" * (MAX_FRAME_SIZE + 1)})
+
+    with pytest.raises(ChannelRemoteError) as exc:
+        await asyncio.wait_for(channel_a.call("test/big", None), timeout=5.0)
+    assert exc.value.error_type == "FrameTooLargeError"
+
+    # Both failures stayed local to their calls — the channel still works.
+    result = await channel_a.call("test/echo", {"value": 42})
+    assert result == {"echoed": 42}
+
+
+class _ObservableTransport:
+    """Transport that records close()/wait_closed() and lets a test feed EOF."""
+
+    def __init__(self) -> None:
+        self._inbox: asyncio.Queue[bytes | None] = asyncio.Queue()
+        self.close_calls = 0
+        self.wait_closed_calls = 0
+
+    def feed(self, data: bytes | None) -> None:
+        self._inbox.put_nowait(data)
+
+    async def read_frame(self) -> bytes | None:
+        return await self._inbox.get()
+
+    async def write_frame(self, data: bytes) -> None:
+        return None
+
+    def close(self) -> None:
+        self.close_calls += 1
+
+    async def wait_closed(self) -> None:
+        self.wait_closed_calls += 1
+
+
+async def test_close_after_eof_still_closes_transport() -> None:
+    """close() after EOF finishes the teardown the read loop couldn't."""
+    transport = _ObservableTransport()
+    channel = Channel(transport=transport, name="eof", codec=JsonCodec())
+
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def slow(_payload: object) -> None:
+        started.set()
+        try:
+            await asyncio.sleep(60)
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    channel.register("test/slow", slow)
+    channel.start()
+
+    # Drive one inbound call so a handler task is inflight, then feed EOF.
+    transport.feed(JsonCodec().encode(Frame.call(1, "test/slow", None)))
+    await asyncio.wait_for(started.wait(), timeout=2.0)
+    transport.feed(None)
+
+    for _ in range(50):
+        if channel.closed:
+            break
+        await asyncio.sleep(0)
+    # EOF marked the channel closed but did NOT close the transport.
+    assert channel.closed
+    assert transport.close_calls == 0
+
+    await channel.close()
+
+    # close() finished the teardown: transport closed once, inflight awaited.
+    assert transport.close_calls == 1
+    assert transport.wait_closed_calls == 1
+    assert cancelled.is_set()
+
+    # Idempotent: a second close() does no further transport work.
+    await channel.close()
+    assert transport.close_calls == 1
+
+
+async def test_read_backpressure_sheds_over_queued_cap(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A frame-flood is bounded: over the cap, calls are shed not queued."""
+    channel_a, channel_b = make_channel_pair(
+        max_inflight_b=2, max_queued_b=3, use_json=True
+    )
+    channel_a.start()
+    channel_b.start()
+    release = asyncio.Event()
+
+    async def never(_payload: dict) -> int:
+        await release.wait()
+        return 1
+
+    channel_b.register("test/never", never)
+
+    pending: list[asyncio.Task] = []
+    try:
+        # Fill the queue cap (3) with handlers parked on the semaphore/await.
+        pending = [
+            asyncio.create_task(channel_a.call("test/never", {"idx": i}))
+            for i in range(3)
+        ]
+        for _ in range(50):
+            if len(channel_b._inflight) >= 3:
+                break
+            await asyncio.sleep(0)
+        assert len(channel_b._inflight) == 3
+
+        # The next call is shed with a ChannelOverloaded error frame.
+        with pytest.raises(ChannelRemoteError) as err:
+            await asyncio.wait_for(
+                channel_a.call("test/never", {"idx": 99}), timeout=2.0
+            )
+        assert err.value.error_type == "ChannelOverloaded"
+
+        # The reader threw the excess away rather than growing the inflight set.
+        assert len(channel_b._inflight) == 3
+
+        # A task-dispatched push is shed too — with a warning, not silently.
+        inline_received: list[dict] = []
+        channel_b.register_push_inline("test/inline", inline_received.append)
+        await channel_a.push("test/never", {"idx": 100})
+        # Inline pushes bypass the shed entirely (they queue nothing).
+        await channel_a.push("test/inline", {"idx": 101})
+        for _ in range(100):
+            if inline_received:
+                break
+            await asyncio.sleep(0.01)
+        assert inline_received == [{"idx": 101}]
+        assert "overloaded, dropping push frame test/never" in caplog.text
+        assert len(channel_b._inflight) == 3
+    finally:
+        release.set()
+        for task in pending:
+            task.cancel()
+        await channel_a.close()
+        await channel_b.close()

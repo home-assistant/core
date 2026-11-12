@@ -1,0 +1,311 @@
+"""Tests for :class:`SandboxFlowRouter` — classification + setup interception."""
+
+from typing import cast
+
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+
+from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
+from homeassistant.components.sandbox.manager import SandboxManager
+from homeassistant.components.sandbox.messages import decode_json_dict
+from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
+from homeassistant.components.sandbox.router import (
+    SandboxFlowRouter,
+    _entry_setup_payload,
+)
+from homeassistant.components.sandbox.sources import (
+    async_register_sandbox_source_resolver,
+)
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlowContext,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from ._helpers import FakeSandboxManager, make_channel_pair
+
+
+@pytest.fixture(name="manager")
+def _manager_fixture(hass: HomeAssistant) -> FakeSandboxManager:
+    """A fake sandbox manager that never spawns a subprocess."""
+    return FakeSandboxManager()
+
+
+async def test_async_create_flow_returns_none_for_system_domain(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """System integrations stay on main — router returns None."""
+    mock_integration(
+        hass,
+        MockModule("test_system", partial_manifest={"integration_type": "system"}),
+    )
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+
+    flow = await router.async_create_flow(
+        "test_system",
+        context=ConfigFlowContext(source=SOURCE_USER),
+        data=None,
+    )
+
+    assert flow is None
+
+
+async def test_async_create_flow_returns_proxy_for_builtin(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A built-in integration not in ALWAYS_MAIN gets a SandboxFlowProxy."""
+    mock_integration(hass, MockModule("test_builtin"))
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+
+    flow = await router.async_create_flow(
+        "test_builtin",
+        context=ConfigFlowContext(source=SOURCE_USER),
+        data=None,
+    )
+
+    assert isinstance(flow, SandboxFlowProxy)
+
+
+async def test_async_create_flow_reuses_group_of_existing_entry(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A second flow for a domain already routed to a sandbox reuses it."""
+    mock_integration(hass, MockModule("test_reuse"))
+    existing = MockConfigEntry(
+        domain="test_reuse",
+        sandbox="built-in",
+    )
+    existing.add_to_hass(hass)
+
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+    flow = await router.async_create_flow(
+        "test_reuse",
+        context=ConfigFlowContext(source=SOURCE_USER),
+        data=None,
+    )
+
+    assert isinstance(flow, SandboxFlowProxy)
+    # The proxy carries the same group as the existing entry.
+    assert flow._sandbox_group == "built-in"
+
+
+async def test_async_create_flow_returns_none_when_classified_main(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """ALWAYS_MAIN domains go to main — router returns None."""
+    mock_integration(hass, MockModule("automation"))
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+
+    flow = await router.async_create_flow(
+        "automation",
+        context=ConfigFlowContext(source=SOURCE_USER),
+        data=None,
+    )
+
+    assert flow is None
+
+
+async def test_async_setup_entry_routes_to_sandbox(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """Entries carrying ``sandbox`` are routed to the manager."""
+    channel_a, channel_b = make_channel_pair()
+    received: list[pb.EntrySetup] = []
+
+    async def _entry_setup(payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        received.append(payload)
+        return pb.EntrySetupResult(ok=True)
+
+    channel_b.register("sandbox/entry_setup", _entry_setup)
+    channel_a.start()
+    channel_b.start()
+    manager.install("built-in", channel_a)
+
+    mock_integration(hass, MockModule("test_entry"))
+    entry = MockConfigEntry(
+        domain="test_entry",
+        title="Test",
+        sandbox="built-in",
+    )
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+
+    try:
+        result = await router.async_setup_entry(cast(ConfigEntry, entry))
+    finally:
+        await channel_a.close()
+        await channel_b.close()
+
+    assert result is True
+    assert manager.start_calls == ["built-in"]
+    assert len(received) == 1
+    assert received[0].domain == "test_entry"
+    assert received[0].title == "Test"
+    # Sandbox group is carried as a first-class ConfigEntry field now;
+    # entry.data on the wire is exactly what the integration sees.
+    assert decode_json_dict(received[0].data) == {}
+
+
+async def test_async_setup_entry_marks_setup_error_on_failure(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A sandbox refusing entry_setup raises; core maps it to SETUP_ERROR."""
+    channel_a, channel_b = make_channel_pair()
+
+    async def _entry_setup(_payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        return pb.EntrySetupResult(ok=False, reason="boom")
+
+    channel_b.register("sandbox/entry_setup", _entry_setup)
+    channel_a.start()
+    channel_b.start()
+    manager.install("built-in", channel_a)
+
+    mock_integration(hass, MockModule("test_fail"))
+    entry = MockConfigEntry(
+        domain="test_fail",
+        title="Test",
+        sandbox="built-in",
+    )
+    entry.add_to_hass(hass)
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+    hass.config_entries.router = router
+
+    try:
+        result = await hass.config_entries.async_setup(entry.entry_id)
+    finally:
+        await channel_a.close()
+        await channel_b.close()
+
+    assert result is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "boom"
+
+
+async def test_entry_setup_payload_sets_builtin_source(hass: HomeAssistant) -> None:
+    """A built-in entry's payload carries a ``{kind: builtin}`` source."""
+    mock_integration(hass, MockModule("payload_builtin"))
+    entry = MockConfigEntry(domain="payload_builtin", title="Payload")
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    assert payload.integration_source.kind == "builtin"
+
+
+async def test_entry_setup_payload_sets_git_source(hass: HomeAssistant) -> None:
+    """A custom entry's payload carries the resolver's pinned git source."""
+    mock_integration(hass, MockModule("payload_custom"), built_in=False)
+    async_register_sandbox_source_resolver(
+        hass,
+        lambda domain: {
+            "kind": "git",
+            "url": "https://github.com/owner/payload_custom",
+            "ref": "d" * 40,
+            "tag": "v2.0.0",
+        },
+    )
+    entry = MockConfigEntry(domain="payload_custom", title="Payload")
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    assert payload.integration_source.kind == "git"
+    assert payload.integration_source.ref == "d" * 40
+    assert payload.integration_source.subdir == "custom_components/payload_custom"
+
+
+async def test_entry_setup_payload_carries_core_config(hass: HomeAssistant) -> None:
+    """The payload snapshots main's core config for the private hass."""
+    mock_integration(hass, MockModule("payload_config"))
+    entry = MockConfigEntry(domain="payload_config", title="Payload")
+    hass.config.country = "NL"
+    hass.config.currency = "USD"
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    core_config = payload.core_config
+    # The test hass fixture pins these values (tests/common.py).
+    assert core_config.latitude == hass.config.latitude
+    assert core_config.longitude == hass.config.longitude
+    assert core_config.elevation == hass.config.elevation
+    assert core_config.time_zone == "US/Pacific"
+    assert core_config.unit_system == "metric"
+    assert core_config.language == hass.config.language
+    assert core_config.country == "NL"
+    assert core_config.currency == "USD"
+    assert core_config.location_name == "test home"
+
+
+async def test_entry_setup_payload_omits_unset_country(hass: HomeAssistant) -> None:
+    """An unset (None) country stays absent on the wire instead of empty."""
+    mock_integration(hass, MockModule("payload_config"))
+    entry = MockConfigEntry(domain="payload_config", title="Payload")
+    hass.config.country = None
+
+    payload = await _entry_setup_payload(hass, cast(ConfigEntry, entry))
+
+    assert not payload.core_config.HasField("country")
+
+
+async def test_async_setup_entry_returns_none_when_not_sandboxed(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """Entries without ``sandbox`` set are left to the default setup path."""
+    entry = MockConfigEntry(domain="test_plain", data={"some": "value"})
+    router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+
+    result = await router.async_setup_entry(cast(ConfigEntry, entry))
+
+    assert result is None
+    assert manager.start_calls == []
+
+
+async def test_component_setup_path_routes_tagged_entries(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """setup.py's per-entry boot path consults the router."""
+    channel_a, channel_b = make_channel_pair()
+    received: list[pb.EntrySetup] = []
+
+    async def _entry_setup(payload: pb.EntrySetup) -> pb.EntrySetupResult:
+        received.append(payload)
+        return pb.EntrySetupResult(ok=True)
+
+    channel_b.register("sandbox/entry_setup", _entry_setup)
+    channel_a.start()
+    channel_b.start()
+    manager.install("built-in", channel_a)
+
+    local_setup_calls: list[str] = []
+
+    async def _local_setup_entry(hass_: HomeAssistant, entry_: ConfigEntry) -> None:
+        local_setup_calls.append(entry_.entry_id)
+
+    mock_integration(
+        hass,
+        MockModule("test_bootpath", async_setup_entry=_local_setup_entry),
+    )
+    mock_platform(hass, "test_bootpath.config_flow", None)
+    entry = MockConfigEntry(
+        domain="test_bootpath",
+        title="Boot",
+        sandbox="built-in",
+    )
+    entry.add_to_hass(hass)
+    hass.config_entries.router = SandboxFlowRouter(hass, cast(SandboxManager, manager))
+
+    try:
+        assert await async_setup_component(hass, "test_bootpath", {})
+        await hass.async_block_till_done()
+    finally:
+        await channel_a.close()
+        await channel_b.close()
+
+    assert [msg.entry_id for msg in received] == [entry.entry_id]
+    assert local_setup_calls == []
+    assert entry.state is ConfigEntryState.LOADED

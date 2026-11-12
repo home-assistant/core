@@ -1,0 +1,19 @@
+# Paths are relative to the Core checkout used as the build context.
+.git
+.github
+config
+docs
+sandbox
+.devcontainer
+.vscode
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+**/*.egg-info
+**/.mypy_cache
+**/.pytest_cache
+**/.ruff_cache
+**/build
+**/dist
+**/tests

@@ -1,0 +1,161 @@
+"""Sandbox — run integrations in isolated subprocesses."""
+
+from dataclasses import dataclass, field
+import logging
+from typing import Any
+
+import probatio
+
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.translation import (
+    async_register_sandbox_translation_provider,
+)
+from homeassistant.helpers.typing import ConfigType
+
+from ._proto import sandbox_pb2 as pb
+from .bridge import SandboxBridge, async_create_bridge
+from .channel import Channel
+from .const import DATA_SANDBOX, DOMAIN
+from .manager import SandboxManager
+from .router import SandboxFlowRouter
+from .translation import SandboxTranslationProvider
+
+_LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        DOMAIN: probatio.Schema(
+            {probatio.Optional("integrations", default=[]): [cv.slug]}
+        )
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+
+@dataclass
+class SandboxData:
+    """Global Sandbox runtime data."""
+
+    manager: SandboxManager | None = None
+    router: SandboxFlowRouter | None = None
+    bridges: dict[str, SandboxBridge] = field(default_factory=dict)
+    # A bridge displaced by a restart, held until the fresh process goes
+    # ready so its proxies + platform slots can be torn down right before
+    # the replacement re-registers the same entries (keyed by group).
+    pending_teardown: dict[str, SandboxBridge] = field(default_factory=dict)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sandbox integration."""
+    domains = frozenset(config.get(DOMAIN, {}).get("integrations", ()))
+    if domains:
+        await async_setup_runtime(hass, domains=domains)
+    return True
+
+
+async def async_setup_runtime(
+    hass: HomeAssistant, *, domains: frozenset[str] | None
+) -> None:
+    """Install routing; None selects the compatibility test harness's automatic mode."""
+    data = SandboxData()
+    hass.data[DATA_SANDBOX] = data
+
+    def _on_channel_ready(group: str, channel: Channel) -> None:
+        # Keep unavailable proxies visible until the replacement worker is ready.
+        old_bridge = data.bridges.get(group)
+        data.bridges[group] = async_create_bridge(hass, group=group, channel=channel)
+        if old_bridge is None:
+            return
+        # A second crash before the first respawn went ready would orphan
+        # the earlier pending bridge — tear it down now so neither leaks.
+        previous = data.pending_teardown.get(group)
+        if previous is not None and previous is not old_bridge:
+            hass.async_create_task(previous.async_teardown())
+        data.pending_teardown[group] = old_bridge
+
+    def _on_channel_closed(group: str) -> None:
+        # The sandbox process exited and its channel is closed. Mark its
+        # proxies unavailable so a dead sandbox stops serving stale state;
+        # they recover on respawn via the normal register/state round-trip.
+        bridge = data.bridges.get(group)
+        if bridge is not None:
+            bridge.async_mark_all_unavailable()
+
+    def _on_ready(group: str) -> None:
+        # Capture loaded entries before yielding so initial startup is not replayed.
+        old_bridge = data.pending_teardown.pop(group, None)
+        loaded = [
+            entry.entry_id
+            for entry in hass.config_entries.async_entries()
+            if entry.sandbox == group and entry.state is ConfigEntryState.LOADED
+        ]
+        if old_bridge is None and not loaded:
+            return
+        hass.async_create_task(_async_recover_group(old_bridge, loaded))
+
+    async def _async_recover_group(
+        old_bridge: SandboxBridge | None, loaded_entry_ids: list[str]
+    ) -> None:
+        # Teardown must complete before the reload's setup re-registers the
+        # same entry — otherwise ``async_register_remote_platform`` trips the
+        # "already been setup!" guard on the still-registered old platform.
+        if old_bridge is not None:
+            await old_bridge.async_teardown()
+        for entry_id in loaded_entry_ids:
+            hass.config_entries.async_schedule_reload(entry_id)
+
+    async def _on_shutdown_reply(group: str, reply: Any) -> None:
+        """Persist the sandbox's restore-state snapshot."""
+        if not reply.HasField("restore_state"):
+            return
+        bridge = data.bridges.get(group)
+        if bridge is None:
+            _LOGGER.debug(
+                "sandbox[%s]: shutdown reply carried restore_state but"
+                " no bridge is registered; dropping",
+                group,
+            )
+            return
+        try:
+            await bridge._handle_store_save(  # noqa: SLF001 — internal write path
+                pb.StoreSave(key="core.restore_state", data=reply.restore_state)
+            )
+        except Exception:
+            _LOGGER.exception(
+                "Failed to persist restore_state snapshot for sandbox %s",
+                group,
+            )
+
+    manager = SandboxManager(
+        hass,
+        on_channel_ready=_on_channel_ready,
+        on_channel_closed=_on_channel_closed,
+        on_ready=_on_ready,
+        on_shutdown_reply=_on_shutdown_reply,
+    )
+    router = SandboxFlowRouter(hass, manager, data=data, domains=domains)
+    data.manager = manager
+    data.router = router
+
+    hass.config_entries.router = router
+
+    # Feed sandboxed integrations' frontend translations into core's cache.
+    # Built-in domains read main's own disk; only customs pull over RPC.
+    translation_provider = SandboxTranslationProvider(hass, data)
+    unregister_translation_provider = async_register_sandbox_translation_provider(
+        hass, translation_provider.async_get_translations
+    )
+
+    async def _on_stop(_event: Event) -> None:
+        """Stop every sandbox process on HA shutdown."""
+        hass.config_entries.router = None
+        unregister_translation_provider()
+        await manager.async_graceful_shutdown_all(timeout=manager.shutdown_grace)
+        await manager.async_stop_all()
+        data.bridges.clear()
+        data.pending_teardown.clear()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_stop)

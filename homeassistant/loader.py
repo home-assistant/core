@@ -174,7 +174,7 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
         AwesomeVersion("0.7.1"),
         "crashes Home Assistant when it can't connect to the API",
     ),
-    # Added in 2026.11.0 because HACS ships with Home Assistant now
+    # Added in 2026.11.0 because Marketplace ships with Home Assistant now
     "hacs": BlockedIntegration(
         None,
         "is now built into Home Assistant as the Marketplace",
@@ -503,6 +503,55 @@ class ComponentProtocol(Protocol):
         """Set up integration."""
 
 
+class SandboxIntegrationDescriptor(TypedDict, total=False):
+    """Display metadata for a sandbox-only custom integration."""
+
+    domain: str
+    name: str
+    config_flow: bool
+    integration_type: str
+    iot_class: str | None
+    single_config_entry: bool
+    title_translations: dict[str, str]
+    categories: list[str]
+    connectivity: list[str]
+
+
+# Catalog metadata enables discovery without loading remote integration code.
+SandboxCatalogProvider = Callable[[], list[SandboxIntegrationDescriptor]]
+
+DATA_SANDBOX_CATALOG_PROVIDERS: HassKey[list[SandboxCatalogProvider]] = HassKey(
+    "sandbox_catalog_providers"
+)
+
+
+@callback
+def async_register_sandbox_catalog_provider(
+    hass: HomeAssistant, provider: SandboxCatalogProvider
+) -> Callable[[], None]:
+    """Register a provider enumerating sandbox-only custom integrations."""
+    providers = hass.data.setdefault(DATA_SANDBOX_CATALOG_PROVIDERS, [])
+    providers.append(provider)
+
+    @callback
+    def _unregister() -> None:
+        providers.remove(provider)
+
+    return _unregister
+
+
+@callback
+def async_get_sandbox_catalog(
+    hass: HomeAssistant,
+) -> dict[str, SandboxIntegrationDescriptor]:
+    """Return registered sandbox catalog descriptors keyed by domain."""
+    catalog: dict[str, SandboxIntegrationDescriptor] = {}
+    for provider in hass.data.get(DATA_SANDBOX_CATALOG_PROVIDERS, []):
+        for descriptor in provider():
+            catalog.setdefault(descriptor["domain"], descriptor)
+    return catalog
+
+
 async def async_get_integration_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, Any]:
@@ -548,6 +597,25 @@ async def async_get_integration_descriptions(
             "overwrites_built_in": integration.overwrites_built_in,
         }
         custom_flows[integration_key][integration.domain] = metadata
+
+    # Merge sandbox-only customs (code never on disk) so the picker can list
+    # them. On-disk customs carry richer metadata and a domain may appear in
+    # both, so the disk scan above wins on collision.
+    for domain, descriptor in async_get_sandbox_catalog(hass).items():
+        if domain in custom_flows["integration"] or domain in custom_flows["helper"]:
+            continue
+        integration_type = descriptor.get("integration_type", "integration")
+        integration_key = "helper" if integration_type == "helper" else "integration"
+        custom_flows[integration_key][domain] = {
+            "categories": descriptor.get("categories", []),
+            "connectivity": descriptor.get("connectivity", []),
+            "config_flow": descriptor.get("config_flow", False),
+            "integration_type": integration_type,
+            "iot_class": descriptor.get("iot_class"),
+            "name": descriptor.get("name", domain),
+            "single_config_entry": descriptor.get("single_config_entry", False),
+            "overwrites_built_in": False,
+        }
 
     return {"core": core_flows, "custom": custom_flows}
 
@@ -1548,57 +1616,66 @@ async def async_get_integrations(
         else:
             needed[domain] = cache[domain] = hass.loop.create_future()
 
-    if in_progress:
-        await asyncio.wait(in_progress.values())
-        # Here we retrieve the results we waited for
-        # instead of reading them from the cache since
-        # reading from the cache will have a race if
-        # the integration gets removed from the cache
-        # because it was not found.
-        for domain, future in in_progress.items():
-            results[domain] = future.result()
+    try:
+        if in_progress:
+            await asyncio.wait(in_progress.values())
+            # Here we retrieve the results we waited for
+            # instead of reading them from the cache since
+            # reading from the cache will have a race if
+            # the integration gets removed from the cache
+            # because it was not found.
+            for domain, future in in_progress.items():
+                results[domain] = future.result()
 
-    if not needed:
-        return results
+        if not needed:
+            return results
 
-    # First we look for custom components
-    # Instead of using resolve_from_root we use the cache of custom
-    # components to find the integration.
-    custom = await async_get_custom_components(hass)
-    for domain, future in needed.items():
-        if integration := custom.get(domain):
-            results[domain] = cache[domain] = integration
-            future.set_result(integration)
-
-    for domain in results:
-        needed.pop(domain, None)
-
-    # Now the rest use resolve_from_root
-    if needed:
-        from . import components  # noqa: PLC0415
-
-        integrations = await hass.async_add_executor_job(
-            _resolve_integrations_from_root, hass, components, needed
-        )
+        # First we look for custom components
+        # Instead of using resolve_from_root we use the cache of custom
+        # components to find the integration.
+        custom = await async_get_custom_components(hass)
         for domain, future in needed.items():
-            if integration := integrations.get(domain):
+            if integration := custom.get(domain):
                 results[domain] = cache[domain] = integration
                 future.set_result(integration)
-            else:
-                # We don't cache that it doesn't exist as configuration
-                # validation that relies on integrations being loaded
-                # would be unfixable. For example if a custom integration
-                # was temporarily removed.
-                # This allows restoring a missing integration to fix the
-                # validation error so the config validations checks do not
-                # block restarting.
-                del cache[domain]
-                exc = IntegrationNotFound(domain)
-                results[domain] = exc
-                # We don't use set_exception because
-                # we expect there will be cases where
-                # the future exception is never retrieved
-                future.set_result(exc)
+
+        for domain in results:
+            needed.pop(domain, None)
+
+        # Now the rest use resolve_from_root
+        if needed:
+            from . import components  # noqa: PLC0415
+
+            integrations = await hass.async_add_executor_job(
+                _resolve_integrations_from_root, hass, components, needed
+            )
+            for domain, future in needed.items():
+                if integration := integrations.get(domain):
+                    results[domain] = cache[domain] = integration
+                    future.set_result(integration)
+                else:
+                    # We don't cache that it doesn't exist as configuration
+                    # validation that relies on integrations being loaded
+                    # would be unfixable. For example if a custom integration
+                    # was temporarily removed.
+                    # This allows restoring a missing integration to fix the
+                    # validation error so the config validations checks do not
+                    # block restarting.
+                    del cache[domain]
+                    exc = IntegrationNotFound(domain)
+                    results[domain] = exc
+                    # We don't use set_exception because
+                    # we expect there will be cases where
+                    # the future exception is never retrieved
+                    future.set_result(exc)
+
+    except BaseException as err:
+        for domain, future in needed.items():
+            del cache[domain]
+            future.set_exception(err)
+            # Retrieve the exception even when there are no concurrent callers.
+            future.exception()
+        raise
 
     return results
 

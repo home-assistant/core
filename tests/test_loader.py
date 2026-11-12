@@ -883,6 +883,100 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
         mock_get.assert_called_once_with(hass)
 
 
+@pytest.mark.parametrize(
+    ("descriptor", "expected_bucket", "expected_metadata"),
+    [
+        pytest.param(
+            {
+                "domain": "sandboxed_custom",
+                "name": "Sandboxed Custom",
+                "categories": ["energy.solar_batteries"],
+                "connectivity": ["cloud"],
+                "config_flow": True,
+                "integration_type": "integration",
+                "iot_class": "cloud_polling",
+                "single_config_entry": True,
+            },
+            "integration",
+            {
+                "config_flow": True,
+                "integration_type": "integration",
+                "iot_class": "cloud_polling",
+                "name": "Sandboxed Custom",
+                "categories": ["energy.solar_batteries"],
+                "connectivity": ["cloud"],
+                "single_config_entry": True,
+                "overwrites_built_in": False,
+            },
+            id="full-integration",
+        ),
+        pytest.param(
+            {
+                "domain": "sandboxed_helper",
+                "name": "Sandboxed Helper",
+                "integration_type": "helper",
+            },
+            "helper",
+            {
+                "config_flow": False,
+                "integration_type": "helper",
+                "iot_class": None,
+                "name": "Sandboxed Helper",
+                "categories": [],
+                "connectivity": [],
+                "single_config_entry": False,
+                "overwrites_built_in": False,
+            },
+            id="minimal-helper-defaults",
+        ),
+    ],
+)
+async def test_get_integration_descriptions_includes_sandbox_catalog(
+    hass: HomeAssistant,
+    descriptor: loader.SandboxIntegrationDescriptor,
+    expected_bucket: str,
+    expected_metadata: dict[str, Any],
+) -> None:
+    """A registered catalog provider surfaces a sandbox-only custom in the picker."""
+    unregister = loader.async_register_sandbox_catalog_provider(
+        hass, lambda: [descriptor]
+    )
+    try:
+        with patch("homeassistant.loader.async_get_custom_components", return_value={}):
+            descriptions = await loader.async_get_integration_descriptions(hass)
+    finally:
+        unregister()
+
+    assert descriptions["custom"][expected_bucket][descriptor["domain"]] == (
+        expected_metadata
+    )
+
+
+async def test_sandbox_catalog_does_not_override_on_disk_custom(
+    hass: HomeAssistant,
+) -> None:
+    """An on-disk custom carries richer metadata, so it wins a domain collision."""
+    on_disk = _get_test_integration(hass, "sandboxed_custom", True)
+    unregister = loader.async_register_sandbox_catalog_provider(
+        hass,
+        lambda: [{"domain": "sandboxed_custom", "name": "Catalog Name"}],
+    )
+    try:
+        with patch(
+            "homeassistant.loader.async_get_custom_components",
+            return_value={"sandboxed_custom": on_disk},
+        ):
+            descriptions = await loader.async_get_integration_descriptions(hass)
+    finally:
+        unregister()
+
+    # The on-disk manifest name, not the catalog's, is served.
+    assert (
+        descriptions["custom"]["integration"]["sandboxed_custom"]["name"]
+        == "sandboxed_custom"
+    )
+
+
 async def test_integration_descriptions_custom_categories(
     hass: HomeAssistant,
 ) -> None:
@@ -2405,6 +2499,90 @@ async def test_async_get_integrations_multiple_non_existent(
     ):
         integrations = await loader.async_get_integrations(hass, ["does_not_exist"])
     assert integrations["does_not_exist"] is integration
+
+
+@pytest.mark.parametrize("error", [OSError, asyncio.CancelledError])
+async def test_get_integrations_failed_load(
+    hass: HomeAssistant,
+    error: type[BaseException],
+) -> None:
+    """Failed discovery releases waiters and permits retries."""
+    started = asyncio.Event()
+    finish = asyncio.Event()
+
+    async def failed_load(_hass: HomeAssistant) -> None:
+        started.set()
+        await finish.wait()
+        raise error("Load failed")
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components", side_effect=failed_load
+    ):
+        owner = asyncio.create_task(
+            loader.async_get_integration(hass, "lookup_failure")
+        )
+        await started.wait()
+        waiter = asyncio.create_task(
+            loader.async_get_integration(hass, "lookup_failure")
+        )
+        await asyncio.sleep(0)
+        finish.set()
+        results = await asyncio.wait_for(
+            asyncio.gather(owner, waiter, return_exceptions=True), timeout=1
+        )
+
+    assert all(isinstance(result, error) for result in results)
+    assert "lookup_failure" not in hass.data[loader.DATA_INTEGRATIONS]
+
+    integration = _get_test_integration(hass, "lookup_failure", False)
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value={"lookup_failure": integration},
+    ):
+        assert await loader.async_get_integration(hass, "lookup_failure") is integration
+
+
+async def test_get_integrations_cancelled_while_waiting(hass: HomeAssistant) -> None:
+    """Cancelling a mixed batch releases its own lookups, not another caller's."""
+    cached = await loader.async_get_integration(hass, "sensor")
+    started = asyncio.Event()
+    finish = asyncio.Event()
+    integration = _get_test_integration(hass, "test_1", False)
+
+    async def load_custom(_hass: HomeAssistant) -> dict[str, loader.Integration]:
+        started.set()
+        await finish.wait()
+        return {"test_1": integration}
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components", side_effect=load_custom
+    ):
+        owner = asyncio.create_task(loader.async_get_integration(hass, "test_1"))
+        await started.wait()
+        mixed = asyncio.create_task(
+            loader.async_get_integrations(hass, ["sensor", "test_1", "test_2"])
+        )
+        await asyncio.sleep(0)
+        waiter = asyncio.create_task(loader.async_get_integration(hass, "test_2"))
+        await asyncio.sleep(0)
+        mixed.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await mixed
+        finish.set()
+        assert await owner is integration
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(waiter, timeout=1)
+
+    assert loader.async_get_loaded_integration(hass, "sensor") is cached
+    assert loader.async_get_loaded_integration(hass, "test_1") is integration
+    assert "test_2" not in hass.data[loader.DATA_INTEGRATIONS]
+
+    retry = _get_test_integration(hass, "test_2", False)
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value={"test_2": retry},
+    ):
+        assert await loader.async_get_integration(hass, "test_2") is retry
 
 
 @pytest.mark.parametrize(

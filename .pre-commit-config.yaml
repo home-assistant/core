@@ -56,6 +56,28 @@ repos:
         exclude: ^\.github/workflows/.*\.lock\.yml$
   - repo: local
     hooks:
+      # Drift guard for the checked-in sandbox protobuf gencode. Manual
+      # stage only (grpcio-tools is not a project dep, so it bootstraps a
+      # throwaway venv and degrades gracefully when uv is absent): run with
+      # `prek run --hook-stage manual sandbox-proto-drift` or in a CI lane.
+      - id: sandbox-proto-drift
+        name: sandbox protobuf gencode drift guard
+        entry: packages/home-assistant-sandbox/proto/check_drift.sh
+        language: script
+        pass_filenames: false
+        stages: [manual]
+        files: ^packages/home-assistant-sandbox/proto/sandbox\.proto$
+      # Drift guard for the hand-mirrored sandbox wire modules (channel.py,
+      # codec_protobuf.py, messages.py) and the checked-in protobuf gencode
+      # pair (_proto/sandbox_pb2.py/.pyi). A plain byte-for-byte diff with no
+      # external tooling, so — unlike the proto gencode guard above — it runs as
+      # a regular hook whenever either copy of a mirrored file changes.
+      - id: sandbox-mirror-drift
+        name: sandbox wire-module mirror drift guard
+        entry: packages/home-assistant-sandbox/proto/check_mirror_drift.sh
+        language: script
+        pass_filenames: false
+        files: ^(homeassistant/components/sandbox|packages/home-assistant-sandbox/homeassistant_sandbox)/((channel|codec_protobuf|messages|entry_sync)\.py|_proto/sandbox_pb2\.(py|pyi))$
       # Run mypy through our wrapper script in order to get the possible
       # pyenv and/or virtualenv activated; it may not have been e.g. if
       # committing from a GUI tool that was not launched from an activated
@@ -67,6 +89,8 @@ repos:
         require_serial: true
         types_or: [python, pyi]
         files: ^(homeassistant|packages/pylint-home-assistant)/.+\.(py|pyi)$
+        # Generated .py/.pyi pairs would be checked as duplicate modules.
+        exclude: _pb2\.(py|pyi)$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint --ignore-missing-annotations=y

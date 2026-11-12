@@ -1,7 +1,7 @@
 """Translation string lookup helpers."""
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -21,7 +21,9 @@ from homeassistant.loader import (
     async_get_config_flows,
     async_get_custom_components,
     async_get_integrations,
+    async_get_sandbox_catalog,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import load_json
 
 from . import singleton
@@ -30,6 +32,15 @@ _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
+
+# Providers supply remote strings unavailable on disk; failures must return no strings.
+type SandboxTranslationProvider = Callable[
+    [list[str], set[str]], Awaitable[dict[str, dict[str, Any]]]
+]
+
+DATA_SANDBOX_TRANSLATION_PROVIDERS: HassKey[list[SandboxTranslationProvider]] = HassKey(
+    "sandbox_translation_providers"
+)
 
 
 def recursive_flatten(
@@ -115,15 +126,34 @@ async def _async_get_component_strings(
             _load_translations_files_by_language, files_to_load_by_language
         )
 
+    # Merge remote strings before applying the same title fallback as local strings.
+    if providers := hass.data.get(DATA_SANDBOX_TRANSLATION_PROVIDERS):
+        language_list = list(languages)
+        for provider in providers:
+            overlay = await provider(language_list, components)
+            for language, by_domain in overlay.items():
+                loaded_translations_by_language.setdefault(language, {}).update(
+                    by_domain
+                )
+
+    # Sandbox-only customs have no on-disk Integration, so their title falls
+    # back to the catalog descriptor instead (name, or a localized title).
+    catalog = async_get_sandbox_catalog(hass)
+
     for language in languages:
         loaded_translations = loaded_translations_by_language.setdefault(language, {})
         for domain in components:
             # Translations that miss "title" will get integration put in.
             component_translations = loaded_translations.setdefault(domain, {})
-            if "title" not in component_translations and (
-                integration := integrations.get(domain)
-            ):
+            if "title" in component_translations:
+                continue
+            if integration := integrations.get(domain):
                 component_translations["title"] = integration.name
+            elif descriptor := catalog.get(domain):
+                title_translations = descriptor.get("title_translations") or {}
+                component_translations["title"] = title_translations.get(
+                    language, descriptor.get("name") or domain
+                )
 
         translations_by_language.setdefault(language, {}).update(loaded_translations)
 
@@ -473,6 +503,21 @@ async def async_load_integrations(hass: HomeAssistant, integrations: set[str]) -
     await _async_get_translations_cache(hass).async_load(
         hass.config.language, integrations
     )
+
+
+@callback
+def async_register_sandbox_translation_provider(
+    hass: HomeAssistant, provider: SandboxTranslationProvider
+) -> Callable[[], None]:
+    """Register a provider of sandboxed integrations' translation strings."""
+    providers = hass.data.setdefault(DATA_SANDBOX_TRANSLATION_PROVIDERS, [])
+    providers.append(provider)
+
+    @callback
+    def _unregister() -> None:
+        providers.remove(provider)
+
+    return _unregister
 
 
 @callback

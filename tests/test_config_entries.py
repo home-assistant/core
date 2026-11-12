@@ -4135,6 +4135,52 @@ async def test_entry_unload_invalid_state(
     assert entry.state is state
 
 
+@pytest.mark.parametrize(
+    ("unload_side_effect", "expected_result", "expected_state"),
+    [
+        pytest.param(
+            None,
+            True,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            id="router-unloads",
+        ),
+        pytest.param(
+            ConfigEntryError("sandbox refused the unload"),
+            False,
+            config_entries.ConfigEntryState.LOADED,
+            id="router-refuses",
+        ),
+    ],
+)
+async def test_entry_unload_router_owns_entry_state(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    unload_side_effect: ConfigEntryError | None,
+    expected_result: bool,
+    expected_state: config_entries.ConfigEntryState,
+) -> None:
+    """A router unload marks NOT_LOADED on True and keeps LOADED on refusal.
+
+    The ConfigEntryRouter contract: raising ConfigEntryError means the
+    remote side refused the unload — async_unload returns False and the
+    entry state must stay LOADED (the entry is still loaded remotely).
+    """
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    router = Mock(
+        spec_set=["async_create_flow", "async_setup_entry", "async_unload_entry"]
+    )
+    router.async_unload_entry = AsyncMock(
+        return_value=True, side_effect=unload_side_effect
+    )
+    manager.router = router
+
+    assert await manager.async_unload(entry.entry_id) is expected_result
+    assert entry.state is expected_state
+    router.async_unload_entry.assert_awaited_once_with(entry)
+
+
 async def test_entry_reload_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -11284,6 +11330,118 @@ async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> N
     )
     loaded = json_loads(json_dumps(entry.as_json_fragment))
     assert loaded["disabled_by"] == "user"
+
+
+def test_sandbox_default_is_none_and_omitted_from_storage() -> None:
+    """An untagged entry leaves ``sandbox`` out of the on-disk payload."""
+    entry = MockConfigEntry(domain="test")
+    assert entry.sandbox is None
+    dict_repr = entry.as_dict()
+    assert "sandbox" not in dict_repr
+    stored = json_loads(json_dumps(entry.as_storage_fragment))
+    assert "sandbox" not in stored
+
+
+def test_sandbox_is_persisted_when_set() -> None:
+    """A tagged entry serialises ``sandbox`` into ``as_dict``/storage."""
+    entry = MockConfigEntry(domain="test", sandbox="built-in")
+    assert entry.sandbox == "built-in"
+    dict_repr = entry.as_dict()
+    assert dict_repr["sandbox"] == "built-in"
+    stored = json_loads(json_dumps(entry.as_storage_fragment))
+    assert stored["sandbox"] == "built-in"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_sandbox_round_trip_through_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An entry stored with ``sandbox`` loads back with the field set."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "key": config_entries.STORAGE_KEY,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {"host": "1.2.3.4"},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "hue",
+                    "entry_id": "abc",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "sandbox": "built-in",
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Hue",
+                    "unique_id": None,
+                    "version": 1,
+                }
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entries = manager.async_entries()
+    assert len(entries) == 1
+    assert entries[0].sandbox == "built-in"
+    # entry.data is untouched — the tag rides on the first-class field.
+    assert dict(entries[0].data) == {"host": "1.2.3.4"}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_sandbox_absent_from_storage_loads_as_none(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Pre-Phase-17 entries with no ``sandbox`` key load with ``sandbox=None``."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "key": config_entries.STORAGE_KEY,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {},
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "sun",
+                    "entry_id": "abc",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "import",
+                    "subentries": [],
+                    "title": "Sun",
+                    "unique_id": None,
+                    "version": 1,
+                }
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entries = manager.async_entries()
+    assert len(entries) == 1
+    assert entries[0].sandbox is None
+
+
+def test_sandbox_cannot_be_set_directly() -> None:
+    """``entry.sandbox = ...`` is rejected — the field is frozen after init."""
+    entry = MockConfigEntry(domain="test")
+    with pytest.raises(AttributeError):
+        entry.sandbox = "built-in"
 
 
 @pytest.mark.parametrize(

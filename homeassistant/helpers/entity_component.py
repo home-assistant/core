@@ -222,6 +222,26 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         platform = self._platforms.pop(key)
         await platform.async_destroy()
 
+    @callback
+    def async_register_remote_platform(
+        self, config_entry: ConfigEntry, platform: EntityPlatform
+    ) -> None:
+        """Register a pre-built EntityPlatform for a remote integration."""
+        key = config_entry.entry_id
+        if key in self._platforms:
+            raise ValueError(
+                f"Config entry {config_entry.title} ({key}) for {self.domain}"
+                " has already been setup!"
+            )
+        self._platforms[key] = platform
+
+    @callback
+    def async_unregister_remote_platform(
+        self, config_entry: ConfigEntry
+    ) -> EntityPlatform | None:
+        """Drop a platform registered via ``async_register_remote_platform``."""
+        return self._platforms.pop(config_entry.entry_id, None)
+
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
     ) -> list[_EntityT]:

@@ -33,6 +33,7 @@ from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file
 from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
+from .sandbox_context import current_sandbox
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -150,7 +151,7 @@ class _StoreManager:
         # cause the Store to return None when it should not.
         #
         # The "/" in key check is to prevent the cache from being used
-        # for subdirs in case we have a key like "hacs/XXX"
+        # for subdirs in case we have a key like "custom/cache"
         #
         if "/" in key or key in self._invalidated or self._files is None:
             _LOGGER.debug("%s: Cache miss", key)
@@ -422,6 +423,11 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             # We make a copy because code might assume it's safe to mutate loaded data
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
+        elif sandbox := current_sandbox.get():
+            # Use the same migration path for remote and local storage envelopes.
+            data = await sandbox.async_store_load(self.key)
+            if data is None:
+                return None
         else:
             try:
                 data = await self._io.async_load()
@@ -642,6 +648,10 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
     async def _async_write_data(self, data: dict) -> None:
+        if sandbox := current_sandbox.get():
+            # Route here so immediate, delayed, and final writes all reach main.
+            await sandbox.async_store_save(self.key, data)
+            return
         if self._serialize_in_event_loop:
             mode, json_data = self._prepare_data(data)
         else:
@@ -669,4 +679,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
         async with self._write_lock:
             self._io.async_invalidate_cache()
+            if sandbox := current_sandbox.get():
+                # A sandbox runtime unlinks on main, not on local disk.
+                await sandbox.async_store_remove(self.key)
+                return
+
             await self._io.async_remove()
