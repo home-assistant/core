@@ -148,7 +148,8 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
             *(self._async_get_schedule(resource) for resource in resources),
             return_exceptions=True,
         )
-        # Every request has finished before a failure ends the refresh.
+        # A claim lost by any request outranks the failure of another request.
+        self._raise_if_unclaimed()
         if errors := [
             result for result in results if isinstance(result, BaseException)
         ]:
@@ -156,7 +157,6 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
         schedules = [
             result for result in results if not isinstance(result, BaseException)
         ]
-        self._raise_if_unclaimed()
         return EnergyIDDirectivesData(
             resources={resource.id: resource for resource in resources},
             schedules={
