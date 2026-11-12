@@ -1,5 +1,6 @@
 """Tests for Fritz!Tools diagnostics platform."""
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -9,15 +10,23 @@ from syrupy.filters import props
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
 
 
+@pytest.mark.parametrize(
+    "fc_data",
+    [
+        pytest.param(MOCK_FB_SERVICES, id="default"),
+        pytest.param(
+            {k: v for k, v in MOCK_FB_SERVICES.items() if k != "LANConfigSecurity1"},
+            id="no_lan_config_security",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    fc_class_mock,
-    fh_class_mock,
-    fs_class_mock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""

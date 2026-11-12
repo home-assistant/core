@@ -1057,6 +1057,9 @@ class AvmWrapper(FritzBoxTools):
     async def async_get_current_user_rights(self) -> dict[str, Any]:
         """Call X_AVM-DE_GetCurrentUser service."""
 
+        if "LANConfigSecurity1" not in self.connection.services:
+            return {}
+
         result = await self._async_service_call(
             "LANConfigSecurity",
             "1",
