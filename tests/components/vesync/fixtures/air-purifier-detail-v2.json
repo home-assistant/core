@@ -23,7 +23,7 @@
       "errorCode": 0,
       "autoPreference": {
         "autoPreferenceType": "default",
-        "roomSize": 0
+        "roomSize": 400
       }
     }
   }

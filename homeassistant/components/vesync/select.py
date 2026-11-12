@@ -68,10 +68,15 @@ def _toggle_outlet_nightlight(device: VeSyncBaseDevice, *args) -> Awaitable[bool
     raise HomeAssistantError("Device does not support toggling nightlight.")
 
 
-def _set_purifier_auto_preference(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+def _set_purifier_auto_preference(
+    device: VeSyncBaseDevice, preference: str
+) -> Awaitable[bool]:
     """Set the auto mode preference of a purifier."""
     if hasattr(device, "set_auto_preference"):
-        return device.set_auto_preference(*args)
+        # pyvesync sends a default room size unless one is passed
+        if room_size := device.state.auto_room_size:
+            return device.set_auto_preference(preference, room_size)
+        return device.set_auto_preference(preference)
     raise HomeAssistantError("Device does not support auto mode preferences.")
 
 

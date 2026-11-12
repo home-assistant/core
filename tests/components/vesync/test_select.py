@@ -158,7 +158,7 @@ async def test_purifier_auto_preference(
             blocking=True,
         )
 
-    method_mock.assert_called_once_with("quiet")
+    method_mock.assert_called_once_with("quiet", 400)
 
 
 async def test_no_auto_preference_without_support(
@@ -180,3 +180,11 @@ def test_auto_preference_unsupported_device() -> None:
     """Test setting an auto preference on a device without one raises."""
     with pytest.raises(HomeAssistantError):
         _set_purifier_auto_preference(Mock(spec=[]), "quiet")
+
+
+def test_auto_preference_without_room_size() -> None:
+    """Test a device without a room size gets the library default."""
+    device = Mock()
+    device.state.auto_room_size = 0
+    _set_purifier_auto_preference(device, "quiet")
+    device.set_auto_preference.assert_called_once_with("quiet")
