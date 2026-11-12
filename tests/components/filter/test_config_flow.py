@@ -65,13 +65,13 @@ from homeassistant.data_entry_flow import FlowResultType
         (
             {CONF_FILTER_NAME: FILTER_NAME_RANGE},
             {
-                CONF_FILTER_LOWER_BOUND: 1.0,
-                CONF_FILTER_UPPER_BOUND: 10.0,
+                CONF_FILTER_LOWER_BOUND: -40.0,
+                CONF_FILTER_UPPER_BOUND: -5.0,
             },
             {
                 CONF_FILTER_NAME: FILTER_NAME_RANGE,
-                CONF_FILTER_LOWER_BOUND: 1.0,
-                CONF_FILTER_UPPER_BOUND: 10.0,
+                CONF_FILTER_LOWER_BOUND: -40.0,
+                CONF_FILTER_UPPER_BOUND: -5.0,
             },
         ),
         (
