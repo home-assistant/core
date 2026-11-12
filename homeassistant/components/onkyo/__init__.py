@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -33,6 +33,7 @@ class OnkyoData:
     """Config Entry data."""
 
     manager: ReceiverManager
+    parent_device_id: str
     sources: dict[InputSource, str]
     sound_modes: dict[ListeningMode, str]
     channel_muting_coordinator: ChannelMutingCoordinator
@@ -68,6 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> Non
 
     manager = ReceiverManager(hass, entry, info)
 
+    # Registered here, so that the device is present even before any zone or
+    # feature of the receiver has announced itself.
+    parent_device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, info.identifier)},
+        name=info.model_name,
+        model_id=info.model_name,
+    )
+
     sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
     sources = {InputSource(k): v for k, v in sources_store.items()}
 
@@ -77,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> Non
     channel_muting_coordinator = ChannelMutingCoordinator(hass, entry, manager)
 
     entry.runtime_data = OnkyoData(
-        manager, sources, sound_modes, channel_muting_coordinator
+        manager, parent_device.id, sources, sound_modes, channel_muting_coordinator
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

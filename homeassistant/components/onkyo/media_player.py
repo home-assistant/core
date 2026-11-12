@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.hass_dict import HassKey
@@ -30,6 +31,7 @@ from .const import (
     ListeningMode,
     VolumeResolution,
 )
+from .entity import OnkyoEntity
 from .receiver import ReceiverManager
 from .util import get_meaning
 
@@ -53,6 +55,12 @@ SUPPORTED_FEATURES_VOLUME = (
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
+
+ZONE_TRANSLATION_KEYS = {
+    Zone.ZONE2: "zone2",
+    Zone.ZONE3: "zone3",
+    Zone.ZONE4: "zone4",
+}
 
 PLAYABLE_SOURCES = (
     InputSource.FM,
@@ -155,6 +163,7 @@ async def async_setup_entry(
             zone_entity = OnkyoMediaPlayer(
                 manager,
                 zone,
+                parent_device_id=data.parent_device_id,
                 volume_resolution=volume_resolution,
                 max_volume=max_volume,
                 sources=sources,
@@ -168,12 +177,10 @@ async def async_setup_entry(
     manager.callbacks.update.append(update_callback)
 
 
-class OnkyoMediaPlayer(MediaPlayerEntity):
+class OnkyoMediaPlayer(OnkyoEntity, MediaPlayerEntity):
     """Onkyo Receiver Media Player (one per each zone)."""
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-    _attr_should_poll = False
-    _attr_has_entity_name = True
 
     _supports_volume: bool = False
     # None means no technical possibility of support
@@ -189,19 +196,27 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         manager: ReceiverManager,
         zone: Zone,
         *,
+        parent_device_id: str,
         volume_resolution: VolumeResolution,
         max_volume: float,
         sources: dict[InputSource, str],
         sound_modes: dict[ListeningMode, str],
     ) -> None:
         """Initialize the Onkyo Receiver."""
-        self._manager = manager
+        super().__init__(manager)
         self._zone = zone
 
-        name = manager.info.model_name
         identifier = manager.info.identifier
-        self._attr_name = f"{name}{' ' + ZONES[zone] if zone is not Zone.MAIN else ''}"
+        self._attr_name = None
         self._attr_unique_id = f"{identifier}_{zone.value}"
+
+        # Every zone other than the main one is a child device of the receiver.
+        if zone is not Zone.MAIN:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, self._attr_unique_id)},
+                parent_device_id=parent_device_id,
+                translation_key=ZONE_TRANSLATION_KEYS[zone],
+            )
 
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
@@ -249,12 +264,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity will be removed from hass."""
         self.cancel_pending()
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._manager.connected
 
     async def query_state(self) -> None:
         """Query the receiver for all the info, that we care about."""
