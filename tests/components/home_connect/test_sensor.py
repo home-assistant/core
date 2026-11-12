@@ -731,7 +731,7 @@ async def test_sensors_states(
 
 
 @pytest.mark.parametrize(
-    ("appliance", "status_keys", "door_state_entity_id", "expected_enabled"),
+    ("appliance", "status_keys", "door_state_entity_id", "expected_disabled_by"),
     [
         pytest.param(
             ApplianceType.REFRIGERATOR,
@@ -740,7 +740,7 @@ async def test_sensors_states(
                 StatusKey.REFRIGERATION_COMMON_DOOR_REFRIGERATOR,
             ],
             "sensor.refrigerator_door",
-            False,
+            er.RegistryEntryDisabler.INTEGRATION,
             id="refrigerator_with_compartment_door",
         ),
         pytest.param(
@@ -750,14 +750,14 @@ async def test_sensors_states(
                 StatusKey.REFRIGERATION_COMMON_DOOR_FREEZER,
             ],
             "sensor.fridgefreezer_door",
-            False,
+            er.RegistryEntryDisabler.INTEGRATION,
             id="fridge_freezer_with_compartment_door",
         ),
         pytest.param(
             ApplianceType.REFRIGERATOR,
             [StatusKey.BSH_COMMON_DOOR_STATE],
             "sensor.refrigerator_door",
-            True,
+            None,
             id="refrigerator_without_compartment_door",
         ),
         pytest.param(
@@ -767,7 +767,7 @@ async def test_sensors_states(
                 StatusKey.REFRIGERATION_COMMON_DOOR_REFRIGERATOR,
             ],
             "sensor.dishwasher_door",
-            True,
+            None,
             id="not_a_refrigeration_appliance",
         ),
     ],
@@ -781,7 +781,7 @@ async def test_door_state_sensor_with_compartment_doors(
     status_keys: list[StatusKey],
     entity_registry: er.EntityRegistry,
     door_state_entity_id: str,
-    expected_enabled: bool,
+    expected_disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Test the generic door sensor is disabled by default next to compartment doors."""
     client.get_status = AsyncMock(
@@ -797,12 +797,10 @@ async def test_door_state_sensor_with_compartment_doors(
 
     entry = entity_registry.async_get(door_state_entity_id)
     assert entry
-    if expected_enabled:
-        assert entry.disabled_by is None
-        assert hass.states.get(door_state_entity_id)
-    else:
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        assert hass.states.get(door_state_entity_id) is None
+    assert entry.disabled_by is expected_disabled_by
+    assert (hass.states.get(door_state_entity_id) is None) is (
+        expected_disabled_by is not None
+    )
 
 
 @pytest.mark.parametrize(
