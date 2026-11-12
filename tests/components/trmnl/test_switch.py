@@ -154,6 +154,10 @@ async def test_action_uses_current_access_token(
     """Test an action sends the access token the OAuth session holds now."""
     await setup_integration(hass, mock_config_entry)
     mock_trmnl_client.token = "stale"
+    sent_tokens: list[str] = []
+    mock_trmnl_client.update_device.side_effect = lambda *_, **__: sent_tokens.append(
+        mock_trmnl_client.token
+    )
 
     await hass.services.async_call(
         "switch",
@@ -162,4 +166,4 @@ async def test_action_uses_current_access_token(
         blocking=True,
     )
 
-    assert mock_trmnl_client.token == "access"
+    assert sent_tokens == ["access"]

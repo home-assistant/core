@@ -196,14 +196,28 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
-async def test_dhcp_flow(hass: HomeAssistant) -> None:
-    """Test DHCP discovery asks before it starts the sign in."""
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_trmnl_client", "mock_setup_entry"
+)
+async def test_dhcp_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test DHCP discovery asks before it starts the sign in, then creates the entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
     )
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "oauth_discovery"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await complete_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, result
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ACCOUNT_SUBJECT
 
 
 async def test_dhcp_already_configured(
@@ -285,3 +299,4 @@ async def test_reauth_flow_wrong_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
