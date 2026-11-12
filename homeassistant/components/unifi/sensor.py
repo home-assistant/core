@@ -1057,11 +1057,13 @@ async def async_setup_entry(
             async_add_entities([UnifiSensorEntity(obj_id, hub, description)])
 
     for description in ENTITY_DESCRIPTIONS:
+        api_handler = description.api_handler_fn(hub.api)
         config_entry.async_on_unload(
-            description.api_handler_fn(hub.api).subscribe(
+            api_handler.subscribe(
                 partial(create_sensor, description),
                 (ItemEvent.ADDED, ItemEvent.CHANGED)
-                if description.discovery_fn is not None
+                if isinstance(api_handler, Clients)
+                or description.discovery_fn is not None
                 else ItemEvent.ADDED,
             )
         )
