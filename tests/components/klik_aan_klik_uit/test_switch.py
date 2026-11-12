@@ -6,12 +6,8 @@ from pytest_homeassistant.components.radio_frequency.common import (
 )
 from rf_protocols.commands.kaku import _DEFAULT_REPEATS
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 SWITCH_ENTITY_ID = "switch.kaku_id_123456_ch_1_output"
@@ -25,8 +21,8 @@ async def test_turn_on_off_sends_kaku_commands(
     """Test non-dim switch on/off behavior."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
 
@@ -42,8 +38,8 @@ async def test_turn_on_off_sends_kaku_commands(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
 

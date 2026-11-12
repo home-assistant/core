@@ -32,6 +32,11 @@ def entity_unique_id(serial: str, key: str) -> str:
     return f"{serial}_{key}"
 
 
+def part_identifier(serial: str, part: SofarPart) -> str:
+    """Name the device of one inverter part by its kind and number."""
+    return f"{serial}_{part[0]}_{part[1]}"
+
+
 def battery_pack_identifier(serial: str, pack: BatteryPack) -> str:
     """Name the device of one BTS battery pack by its group and place."""
     return f"{serial}_battery_pack_{pack.group_nr}_{pack.pack_nr}"
@@ -82,14 +87,13 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         if (part := entity_description.part) is None:
             self._attr_device_info = self.coordinator.device_info
             return
-        kind, number = part
         self._attr_device_info = dr.DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.coordinator.device.serial_number}_{kind}_{number}")
+                (DOMAIN, part_identifier(self.coordinator.device.serial_number, part))
             },
             via_device_id=runtime_data.inverter_device_id,
-            translation_key=kind,
-            translation_placeholders={"number": str(number)},
+            translation_key=part[0],
+            translation_placeholders={"number": str(part[1])},
         )
 
     @property
