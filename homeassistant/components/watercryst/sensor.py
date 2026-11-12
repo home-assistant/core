@@ -21,6 +21,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    EntityCategory,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -56,6 +57,7 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
     WatercrystSensorEntityDescription[StateResponse](
         key="event.event_id",
         translation_key="event_id",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.event.event_id if data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](
