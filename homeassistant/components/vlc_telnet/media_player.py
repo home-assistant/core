@@ -1,5 +1,6 @@
 """Provide functionality to interact with the vlc telnet interface."""
 
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate, Literal, override
@@ -139,6 +140,7 @@ class VlcDevice(MediaPlayerEntity):
             name=name,
         )
         self._using_addon = config_entry.source == SOURCE_HASSIO
+        self._repeat_lock = asyncio.Lock()
 
     @catch_vlc_errors(log=True)
     async def async_update(self) -> None:
@@ -163,7 +165,6 @@ class VlcDevice(MediaPlayerEntity):
             self._attr_available = True
             self._vlc_repeat = None
             self._vlc_loop = None
-            self._attr_repeat = None
             LOGGER.debug("Connected to vlc host: %s", self._vlc.host)
 
         status = await self._vlc.status()
@@ -327,20 +328,23 @@ class VlcDevice(MediaPlayerEntity):
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        # Repeat overrides loop in VLC, so loop goes first and only when it matters.
-        try:
-            if repeat != RepeatMode.ONE:
+        loop = repeat == RepeatMode.ALL
+        repeat_one = repeat == RepeatMode.ONE
+        async with self._repeat_lock:
+            try:
                 self._vlc_loop = None
-                await self._vlc.loop("on" if repeat == RepeatMode.ALL else "off")
-                self._vlc_loop = repeat == RepeatMode.ALL
-            self._vlc_repeat = None
-            await self._vlc.repeat("on" if repeat == RepeatMode.ONE else "off")
-            self._vlc_repeat = repeat == RepeatMode.ONE
-        finally:
-            self._attr_repeat = self._confirmed_repeat_mode()
-            self.async_write_ha_state()
+                await self._vlc.loop("on" if loop else "off")
+                self._vlc_loop = loop
+                self._vlc_repeat = None
+                await self._vlc.repeat("on" if repeat_one else "off")
+                self._vlc_repeat = repeat_one
+            except CommandError:
+                self.async_write_ha_state()
+                raise
 
-    def _confirmed_repeat_mode(self) -> RepeatMode | None:
+    @property
+    @override
+    def repeat(self) -> RepeatMode | None:
         """Return the repeat mode VLC has confirmed, or None if it is unknown."""
         if self._vlc_repeat:
             return RepeatMode.ONE

@@ -200,7 +200,7 @@ async def test_update_logs_error_instead_of_raising(
     ("repeat", "expected_calls"),
     [
         pytest.param(RepeatMode.OFF, [call.loop("off"), call.repeat("off")], id="off"),
-        pytest.param(RepeatMode.ONE, [call.repeat("on")], id="one"),
+        pytest.param(RepeatMode.ONE, [call.loop("off"), call.repeat("on")], id="one"),
         pytest.param(RepeatMode.ALL, [call.loop("on"), call.repeat("off")], id="all"),
     ],
 )
@@ -211,7 +211,7 @@ async def test_repeat_set(
     repeat: RepeatMode,
     expected_calls: list,
 ) -> None:
-    """Test that repeat_set sends the VLC loop and repeat commands in order."""
+    """Test that repeat_set sends only the VLC loop and repeat commands, in order."""
     vlc_mock.reset_mock()
 
     await hass.services.async_call(
@@ -221,11 +221,7 @@ async def test_repeat_set(
         blocking=True,
     )
 
-    assert [
-        method_call
-        for method_call in vlc_mock.method_calls
-        if method_call[0] in ("loop", "repeat")
-    ] == expected_calls
+    assert vlc_mock.method_calls == [*expected_calls, call.status(), call.info()]
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes[ATTR_MEDIA_REPEAT] == repeat
@@ -242,7 +238,13 @@ async def test_repeat_set(
         ),
         pytest.param(RepeatMode.OFF, RepeatMode.ALL, "loop", None, id="off_loop_fails"),
         pytest.param(
+            RepeatMode.ALL, RepeatMode.ONE, "loop", None, id="all_to_one_loop_fails"
+        ),
+        pytest.param(
             RepeatMode.ALL, RepeatMode.ONE, "repeat", None, id="all_repeat_fails"
+        ),
+        pytest.param(
+            RepeatMode.ALL, RepeatMode.OFF, "repeat", None, id="all_to_off_repeat_fails"
         ),
     ],
 )
@@ -275,3 +277,54 @@ async def test_repeat_set_failure_keeps_confirmed_mode(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_MEDIA_REPEAT) == expected
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_repeat_set_connect_error_makes_unavailable(
+    hass: HomeAssistant,
+    vlc_mock: MagicMock,
+) -> None:
+    """Test that a lost connection during repeat_set makes the entity unavailable."""
+    vlc_mock.repeat.side_effect = ConnectError("test error")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_REPEAT_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+            blocking=True,
+        )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_reconnect_clears_repeat_mode(
+    hass: HomeAssistant,
+    vlc_mock: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that reconnecting to VLC forgets the repeat mode it confirmed before."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+        blocking=True,
+    )
+    vlc_mock.status.side_effect = ConnectError("test error")
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    vlc_mock.status.side_effect = None
+    vlc_mock.host = "1.1.1.1"
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == "idle"
+    assert state.attributes.get(ATTR_MEDIA_REPEAT) is None
