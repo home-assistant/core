@@ -19,6 +19,9 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
+    CONF_PRO_MODE,
+    CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
     CONF_STORE_RESPONSES,
     CONF_VERBOSITY,
     CONF_WEB_SEARCH,
@@ -423,43 +426,126 @@ async def test_generate_data_with_attachments(
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
 @pytest.mark.parametrize("configured_store", [False, True])
 @pytest.mark.parametrize(
-    ("image_options", "image_model", "input_fidelity_options"),
+    ("subentry_options", "image_model", "extra_tool_options", "expected_model_options"),
     [
-        ({}, "gpt-image-2.6-flare", {}),
+        (
+            {},
+            "gpt-image-2.6-flare",
+            {},
+            {"reasoning": {"effort": "low", "summary": "auto"}},
+        ),
         pytest.param(
-            {CONF_IMAGE_MODEL: "gpt-image-2.6-sunburst"},
+            {
+                CONF_IMAGE_MODEL: "gpt-image-2.6-sunburst",
+                CONF_REASONING_EFFORT: "medium",
+            },
             "gpt-image-2.6-sunburst",
             {},
-            id="gpt-image-2.6-sunburst",
+            {"reasoning": {"effort": "medium", "summary": "auto"}},
+            id="inherit-medium-effort",
+        ),
+        pytest.param(
+            {CONF_REASONING_EFFORT: "high"},
+            "gpt-image-2.6-flare",
+            {},
+            {"reasoning": {"effort": "high", "summary": "auto"}},
+            id="inherit-high-effort",
+        ),
+        pytest.param(
+            {CONF_REASONING_EFFORT: "none"},
+            "gpt-image-2.6-flare",
+            {"complexity": "low"},
+            {
+                "reasoning": {"effort": "none", "summary": "auto"},
+                "temperature": 1.0,
+                "top_p": 1.0,
+            },
+            id="none-effort-maps-to-low-complexity",
+        ),
+        pytest.param(
+            {CONF_REASONING_EFFORT: "xhigh"},
+            "gpt-image-2.6-flare",
+            {"complexity": "high"},
+            {"reasoning": {"effort": "xhigh", "summary": "auto"}},
+            id="xhigh-effort-maps-to-high-complexity",
+        ),
+        pytest.param(
+            {CONF_REASONING_EFFORT: "max"},
+            "gpt-image-2.6-flare",
+            {"complexity": "high"},
+            {"reasoning": {"effort": "max", "summary": "auto"}},
+            id="max-effort-maps-to-high-complexity",
         ),
         pytest.param(
             {CONF_IMAGE_MODEL: "gpt-image-2.6-flare"},
             "gpt-image-2.6-flare",
             {},
+            {"reasoning": {"effort": "low", "summary": "auto"}},
             id="gpt-image-2.6-flare",
         ),
         (
             {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
             "gpt-image-2.5-sunburst",
             {},
+            {"reasoning": {"summary": "auto"}},
         ),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-2.5-flare"},
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-6.1-sol",
+                CONF_IMAGE_MODEL: "gpt-image-2.5-flare",
+                CONF_PRO_MODE: True,
+                CONF_REASONING_EFFORT: "medium",
+            },
             "gpt-image-2.5-flare",
             {},
+            {"reasoning": {"summary": "auto", "mode": "pro"}},
+            id="omit-effort-preserve-summary-and-pro-mode",
         ),
-        ({CONF_IMAGE_MODEL: "gpt-image-2"}, "gpt-image-2", {}),
+        pytest.param(
+            {
+                CONF_IMAGE_MODEL: "gpt-image-2.5-flare",
+                CONF_REASONING_EFFORT: "none",
+                CONF_REASONING_SUMMARY: "off",
+            },
+            "gpt-image-2.5-flare",
+            {},
+            {},
+            id="omit-empty-reasoning-and-sampling",
+        ),
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-4o-mini",
+                CONF_IMAGE_MODEL: "gpt-image-2.5-flare",
+            },
+            "gpt-image-2.5-flare",
+            {},
+            {"temperature": 1.0, "top_p": 1.0},
+            id="non-reasoning-chat-model",
+        ),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-2"},
+            "gpt-image-2",
+            {},
+            {"reasoning": {"summary": "auto"}},
+        ),
         (
             {CONF_IMAGE_MODEL: "gpt-image-1.5"},
             "gpt-image-1.5",
             {"input_fidelity": "high"},
+            {"reasoning": {"summary": "auto"}},
         ),
         (
             {CONF_IMAGE_MODEL: "gpt-image-1"},
             "gpt-image-1",
             {"input_fidelity": "high"},
+            {"reasoning": {"summary": "auto"}},
         ),
-        ({CONF_IMAGE_MODEL: "gpt-image-1-mini"}, "gpt-image-1-mini", {}),
+        (
+            {CONF_IMAGE_MODEL: "gpt-image-1-mini"},
+            "gpt-image-1-mini",
+            {},
+            {"reasoning": {"summary": "auto"}},
+        ),
     ],
 )
 async def test_generate_image(
@@ -468,9 +554,10 @@ async def test_generate_image(
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    image_options: dict[str, str],
+    subentry_options: dict[str, str | bool],
     image_model: str,
-    input_fidelity_options: dict[str, str],
+    extra_tool_options: dict[str, str],
+    expected_model_options: dict[str, JsonValueType],
     configured_store: bool,
 ) -> None:
     """Test AI Task image generation."""
@@ -490,7 +577,7 @@ async def test_generate_image(
         ai_task_entry,
         data={
             **ai_task_entry.data,
-            **image_options,
+            **subentry_options,
             CONF_STORE_RESPONSES: configured_store,
         },
     )
@@ -532,19 +619,18 @@ async def test_generate_image(
 
     mock_upload_media.assert_called_once()
     assert mock_create_stream.call_args is not None
-    assert mock_create_stream.call_args.kwargs["store"] is True
+    request = mock_create_stream.call_args.kwargs
+    assert request["store"] is True
+    option_keys = request.keys() & {"reasoning", "temperature", "top_p"}
+    assert {key: request[key] for key in option_keys} == expected_model_options
     image_tool = next(
-        iter(
-            tool
-            for tool in mock_create_stream.call_args.kwargs["tools"]
-            if tool["type"] == "image_generation"
-        ),
+        iter(tool for tool in request["tools"] if tool["type"] == "image_generation"),
     )
     assert image_tool == {
         "type": "image_generation",
         "model": image_model,
         "output_format": "png",
-        **input_fidelity_options,
+        **extra_tool_options,
     }
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == b"A"
