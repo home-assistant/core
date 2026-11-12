@@ -24,8 +24,10 @@ from homeassistant.components.sofar.const import (
     SCAN_INTERVAL,
 )
 from homeassistant.components.sofar.sensor import (
+    ENUM_SENSOR_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
     TOTAL_SENSOR_DESCRIPTIONS,
+    SofarEnumSensorDescription,
     SofarSensorDescription,
     SofarTotalSensorDescription,
 )
@@ -94,6 +96,7 @@ async def test_all_entities(
     unit.holding[0x0608] = 88  # battery_capacity_1 -> 88%
     unit.holding[0x0687] = 160  # solar_generation_total -> 16.0 kWh
     unit.holding[0x104D] = 70  # depth of discharge -> 30% on-grid cut-off
+    unit.holding[0x1023] = 9  # feedin_limitation_mode -> no such member
     freezer.tick(timedelta(seconds=PACKS_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -105,7 +108,11 @@ def test_sensor_description_components_are_real() -> None:
     inverter = SofarInverter(
         MockModbusConnection().for_unit(1), serial_number="SP1ES12345678"
     )
-    for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS):
+    for description in (
+        *SENSOR_DESCRIPTIONS,
+        *ENUM_SENSOR_DESCRIPTIONS,
+        *TOTAL_SENSOR_DESCRIPTIONS,
+    ):
         component = getattr(inverter, description.component, None)
         assert component is not None, f"unknown component {description.component!r}"
         assert hasattr(component, description.key), (
@@ -162,7 +169,11 @@ async def test_enabled_by_default_partition(
     served = entry.runtime_data.served_components
     expected_disabled = {
         description.key
-        for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS)
+        for description in (
+            *SENSOR_DESCRIPTIONS,
+            *ENUM_SENSOR_DESCRIPTIONS,
+            *TOTAL_SENSOR_DESCRIPTIONS,
+        )
         if description.component in served
         and not description.entity_registry_enabled_default
     }
@@ -312,12 +323,13 @@ async def test_sensor_availability_on_component_failure(
     "description",
     [
         pytest.param(description, id=description.key)
-        for description in SENSOR_DESCRIPTIONS
+        for description in (*SENSOR_DESCRIPTIONS, *ENUM_SENSOR_DESCRIPTIONS)
         if description.key not in DERIVED_KEYS
     ],
 )
 async def test_value_fn_reads_the_field_its_key_names(
-    init_integration: MockConfigEntry, description: SofarSensorDescription
+    init_integration: MockConfigEntry,
+    description: SofarSensorDescription | SofarEnumSensorDescription,
 ) -> None:
     """Test each value_fn reads the field its key and component name."""
     device = init_integration.runtime_data.readings.device
