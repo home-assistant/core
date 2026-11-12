@@ -177,6 +177,45 @@ def test_roles_fit_the_dpt() -> None:
     assert _function_roles(TEST_PROJECT, function) == {}
 
 
+def _com_object(address: str, write: bool) -> dict[str, Any]:
+    return {
+        "group_address_links": [address],
+        "flags": {
+            "read": not write,
+            "write": write,
+            "communication": True,
+            "transmit": not write,
+            "update": False,
+            "read_on_init": False,
+        },
+    }
+
+
+def test_command_roles_need_a_writing_receiver() -> None:
+    """Test a group address no linked object writes takes no command role."""
+    project = {
+        **TEST_PROJECT,
+        "communication_objects": {
+            # the actuator's status object only transmits 1/0/2
+            "O-1": _com_object("1/0/2", write=False),
+            "O-2": _com_object("1/0/1", write=True),
+        },
+    }
+    # the status address comes first: it is no switching command
+    function = _function("Light", "FT-1", "P-2", ("1/0/2", ""), ("1/0/1", ""))
+    assert _function_roles(project, function) == {
+        "InfoOnOff": "1/0/2",
+        "SwitchOnOff": "1/0/1",
+    }
+    # stored as the command, but nothing receives it
+    function = _function("Light", "FT-1", "P-2", ("1/0/2", "SwitchOnOff"))
+    assert _function_roles(project, function) == {}
+    assert _build_platform_suggestion(project, function) is None
+    # without linked objects in the project, the receivers are unknown
+    function = _function("Socket", "FT-10", "P-2", ("4/0/1", "SwitchOnOff"))
+    assert _function_roles(project, function) == {"SwitchOnOff": "4/0/1"}
+
+
 def test_brightness_feedback_without_brightness_value() -> None:
     """Test a dimmable light without an absolute brightness value still switches."""
     function = _function(

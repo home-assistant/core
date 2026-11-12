@@ -7,9 +7,11 @@ functions, while KNX Information Model semantics of channels are still rare.
 
 The role stored with a group address is used when it is one of the function
 type; other group addresses get the first free function point of their DPT. A
-group address whose DPT doesn't fit a function point is left unmatched.
+group address whose DPT doesn't fit a function point is left unmatched, and one
+no linked communication object writes never takes a command role.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Final, Literal, Required, TypedDict, override
@@ -197,38 +199,71 @@ def _fits(dpt: DPTType | None, point: tuple[int, int]) -> bool:
     return dpt["main"] == main and dpt["sub"] in (None, sub)
 
 
-def _function_roles(project: KNXProject, function: Function) -> dict[str, str]:
+def _receivers(project: KNXProject) -> dict[str, bool]:
+    """Whether a linked communication object writes each group address.
+
+    Group addresses without a linked communication object in the project are not
+    included: whether anything receives them is unknown.
+    """
+    receivers: dict[str, bool] = {}
+    for com_object in (project.get("communication_objects") or {}).values():
+        for address in com_object["group_address_links"]:
+            receivers[address] = (
+                receivers.get(address, False) or com_object["flags"]["write"]
+            )
+    return receivers
+
+
+def _function_roles(
+    project: KNXProject,
+    function: Function,
+    receivers: Mapping[str, bool] | None = None,
+) -> dict[str, str]:
     """Map the roles of a function to the address of their group address.
 
     A stored role of the function type is kept when the group address fits it; a
     further group address stored with the same role is left unmatched, so a
     second status address never becomes a command. Group addresses without such
-    a role get the first free function point their DPT fits.
+    a role get the first free function point they fit. A command role (written
+    by the entity) only fits a group address a linked communication object
+    writes, as far as the project knows its links (`receivers`, see
+    `_receivers`).
     """
+    if receivers is None:
+        receivers = _receivers(project)
     points = FUNCTION_POINTS.get(function["function_type"], ())
     point_dpts = dict(points)
+    entity = FUNCTION_ENTITIES.get(function["function_type"])
+    commands = (
+        {role for role, (_path, slots) in entity.roles.items() if "write" in slots}
+        if entity is not None
+        else set()
+    )
     roles: dict[str, str] = {}
     without_role: list[str] = []
 
-    def dpt_of(address: str) -> DPTType | None:
+    def takes(address: str, role: str) -> bool:
         group_address = project["group_addresses"].get(address)
-        return group_address["dpt"] if group_address is not None else None
+        dpt = group_address["dpt"] if group_address is not None else None
+        if not _fits(dpt, point_dpts[role]):
+            return False
+        # known receivers that all don't write: a command would reach no one
+        return role not in commands or receivers.get(address, True)
 
     for ref in function["group_addresses"].values():
         role, address = ref["role"], ref["address"]
         if role not in point_dpts:
             without_role.append(address)
-        elif role not in roles and _fits(dpt_of(address), point_dpts[role]):
+        elif role not in roles and takes(address, role):
             roles[role] = address
 
     for address in without_role:
-        dpt = dpt_of(address)
         if (
             free_role := next(
                 (
                     name
-                    for name, point in points
-                    if name not in roles and _fits(dpt, point)
+                    for name, _point in points
+                    if name not in roles and takes(address, name)
                 ),
                 None,
             )
@@ -246,12 +281,14 @@ def _set_ga(config: dict[str, Any], path: tuple[str, ...], slot: str, ga: str) -
 
 
 def _build_platform_suggestion(
-    project: KNXProject, function: Function
+    project: KNXProject,
+    function: Function,
+    receivers: Mapping[str, bool] | None = None,
 ) -> tuple[Platform, PlatformSuggestion] | None:
     """Build the `knx` config of the entity a function becomes."""
     if (entity := FUNCTION_ENTITIES.get(function["function_type"])) is None:
         return None
-    roles = _function_roles(project, function)
+    roles = _function_roles(project, function, receivers)
     if any(role not in roles for role in entity.required):
         return None
     knx_config: dict[str, Any] = {}
@@ -308,9 +345,10 @@ def _spaces(locations: dict[str, Space]) -> dict[str, Space]:
 def _build_suggestions(project: KNXProject) -> list[ProviderSuggestion]:
     """Build suggestions for all functions of a type with an entity."""
     spaces = _spaces(project.get("locations") or {})
+    receivers = _receivers(project)
     suggestions: list[ProviderSuggestion] = []
     for function_id, function in (project.get("functions") or {}).items():
-        if (built := _build_platform_suggestion(project, function)) is None:
+        if (built := _build_platform_suggestion(project, function, receivers)) is None:
             continue
         platform, platform_suggestion = built
         space = spaces.get(function["space_id"])
