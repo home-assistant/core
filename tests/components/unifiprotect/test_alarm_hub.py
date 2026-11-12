@@ -91,161 +91,13 @@ def _ufp_with_alarm_hub(ufp: MockUFPFixture, alarm_hub: LinkStation) -> MockUFPF
     return ufp
 
 
-async def test_sensors_not_created_without_public_bootstrap(
+async def test_event_not_created_without_public_bootstrap(
     hass: HomeAssistant, ufp: MockUFPFixture
 ) -> None:
-    """No alarm hub sensors when the public bootstrap is unavailable."""
+    """No alarm hub entity when the public bootstrap is unavailable."""
     ufp.api.has_public_bootstrap = False
     await init_entry(hass, ufp, [])
-    assert hass.states.get("sensor.alarm_hub_battery_voltage") is None
-
-
-async def test_alarm_hub_battery_voltage_sensor(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp_with_alarm_hub: MockUFPFixture,
-) -> None:
-    """Battery voltage sensor is created with the reported voltage."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    entity_id = "sensor.alarm_hub_battery_voltage"
-    entity = entity_registry.async_get(entity_id)
-    assert entity is not None
-    assert entity.unique_id == f"{ALARM_HUB_MAC}_battery_voltage"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "12.108427"
-    assert state.attributes["device_class"] == "voltage"
-    assert state.attributes["unit_of_measurement"] == "V"
-
-
-async def test_alarm_hub_last_event_sensor(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp_with_alarm_hub: MockUFPFixture,
-) -> None:
-    """Last-event timestamp sensor is created."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    entity_id = "sensor.alarm_hub_last_event"
-    entity = entity_registry.async_get(entity_id)
-    assert entity is not None
-    assert entity.unique_id == f"{ALARM_HUB_MAC}_last_event"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.attributes["device_class"] == "timestamp"
-
-
-async def test_alarm_hub_tamper_binary_sensor(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp_with_alarm_hub: MockUFPFixture,
-) -> None:
-    """Tamper cover binary sensor reflects the cover status."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    entity_id = "binary_sensor.alarm_hub_tamper"
-    entity = entity_registry.async_get(entity_id)
-    assert entity is not None
-    assert entity.unique_id == f"{ALARM_HUB_MAC}_tamper"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.attributes["device_class"] == "tamper"
-    assert state.state == "off"  # cover closed
-
-
-async def test_alarm_hub_battery_binary_sensor(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp_with_alarm_hub: MockUFPFixture,
-) -> None:
-    """Battery problem binary sensor is off when battery_status is ok."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    entity_id = "binary_sensor.alarm_hub_battery"
-    entity = entity_registry.async_get(entity_id)
-    assert entity is not None
-    assert entity.unique_id == f"{ALARM_HUB_MAC}_battery"
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.attributes["device_class"] == "battery"
-    assert state.state == "off"
-
-
-async def test_alarm_hub_zone_binary_sensors(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    ufp_with_alarm_hub: MockUFPFixture,
-) -> None:
-    """One binary sensor per configured input, with mapped device classes."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    # Named motion zone.
-    hallway = hass.states.get("binary_sensor.alarm_hub_hallway")
-    assert hallway is not None
-    assert hallway.attributes["device_class"] == "motion"
-    assert hallway.state == "off"  # status normal
-
-    # Named emergency button -> safety.
-    tamper_btn = entity_registry.async_get("binary_sensor.alarm_hub_24_hour_tamper")
-    assert tamper_btn is not None
-    assert tamper_btn.unique_id == f"{ALARM_HUB_MAC}_input_16"
-    assert (
-        hass.states.get("binary_sensor.alarm_hub_24_hour_tamper").attributes[
-            "device_class"
-        ]
-        == "safety"
-    )
-
-    # Unnamed entry zone -> opening, fallback name "Zone 25".
-    entry = hass.states.get("binary_sensor.alarm_hub_zone_25")
-    assert entry is not None
-    assert entry.attributes["device_class"] == "opening"
-
-
-async def test_alarm_hub_zone_triggered_state(
-    hass: HomeAssistant,
-    ufp_with_alarm_hub: MockUFPFixture,
-    alarm_hub: LinkStation,
-) -> None:
-    """A zone in the ALARM status reports on."""
-    # Mark the Hallway motion zone (input 24) as triggered.
-    alarm_hub.alarm_hub["input"]["24"]["status"] = "alarm"
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    state = hass.states.get("binary_sensor.alarm_hub_hallway")
-    assert state is not None
-    assert state.state == "on"
-
-
-async def test_alarm_hub_zone_unknown_status_unavailable(
-    hass: HomeAssistant,
-    ufp_with_alarm_hub: MockUFPFixture,
-    alarm_hub: LinkStation,
-) -> None:
-    """A zone with an unreadable (UNKNOWN) status is unavailable, not 'off'."""
-    alarm_hub.alarm_hub["input"]["24"]["status"] = "unknown"
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    state = hass.states.get("binary_sensor.alarm_hub_hallway")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_alarm_hub_disabled_zone_not_created(
-    hass: HomeAssistant,
-    ufp_with_alarm_hub: MockUFPFixture,
-    alarm_hub: LinkStation,
-) -> None:
-    """A disabled input is not surfaced as a zone entity."""
-    alarm_hub.alarm_hub["input"]["24"]["enable"] = "off"
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    assert hass.states.get("binary_sensor.alarm_hub_hallway") is None
+    assert hass.states.get(HUB_EVENT) is None
 
 
 async def test_alarm_hub_in_diagnostics(
@@ -302,7 +154,7 @@ async def test_alarm_hub_availability_follows_public_ws(
     """Availability tracks the public websocket health, not the private one."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    entity_id = "sensor.alarm_hub_battery_voltage"
+    entity_id = HUB_EVENT
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     # Private connection drops: the public-only alarm hub stays available.
@@ -323,73 +175,6 @@ async def test_alarm_hub_availability_follows_public_ws(
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
-async def test_alarm_hub_state_updates_from_public_ws(
-    hass: HomeAssistant,
-    ufp_with_alarm_hub: MockUFPFixture,
-    alarm_hub: LinkStation,
-) -> None:
-    """A public devices WS update for the hub refreshes its entities."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    entity_id = "binary_sensor.alarm_hub_hallway"
-    assert hass.states.get(entity_id).state == "off"
-
-    # Trigger the Hallway motion zone (input 24) on the cached hub object.
-    alarm_hub.alarm_hub["input"]["24"]["status"] = "alarm"
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = alarm_hub
-    mock_msg.new_obj = alarm_hub
-    assert ufp_with_alarm_hub.devices_ws_subscription is not None
-    ufp_with_alarm_hub.devices_ws_subscription(mock_msg)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == "on"
-
-
-async def test_alarm_hub_values_update_from_public_ws(
-    hass: HomeAssistant,
-    ufp_with_alarm_hub: MockUFPFixture,
-    alarm_hub: LinkStation,
-) -> None:
-    """Hub-level values follow a public devices WS update."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "off"
-    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "12.108427"
-
-    alarm_hub.alarm_hub["cover"]["status"] = "open"
-    alarm_hub.alarm_hub["battery"]["voltage"] = 11.5
-    assert ufp_with_alarm_hub.devices_ws_subscription is not None
-    ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
-    await hass.async_block_till_done()
-
-    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "on"
-    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "11.5"
-
-
-async def test_alarm_hub_reads_replaced_object_after_resync(
-    hass: HomeAssistant,
-    ufp_with_alarm_hub: MockUFPFixture,
-    alarm_hub: LinkStation,
-) -> None:
-    """A resync that replaces the hub object is picked up from the bootstrap."""
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    replaced = _make_alarm_hub()
-    replaced.alarm_hub["cover"]["status"] = "open"
-    replaced.alarm_hub["battery"]["voltage"] = 11.5
-    ufp_with_alarm_hub.api.public_bootstrap.alarm_hubs[alarm_hub.id] = replaced
-    msg = public_device_ws_message(None)
-    msg.old_obj = alarm_hub
-    assert ufp_with_alarm_hub.devices_ws_subscription is not None
-    ufp_with_alarm_hub.devices_ws_subscription(msg)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "on"
-    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "11.5"
-
-
 async def test_alarm_hub_unavailable_while_disconnected(
     hass: HomeAssistant,
     ufp_with_alarm_hub: MockUFPFixture,
@@ -397,24 +182,17 @@ async def test_alarm_hub_unavailable_while_disconnected(
 ) -> None:
     """A disconnected hub takes all of its entities offline until it is back."""
     await init_entry(hass, ufp_with_alarm_hub, [])
-    entity_ids = (
-        "binary_sensor.alarm_hub_tamper",
-        "sensor.alarm_hub_battery_voltage",
-        "binary_sensor.alarm_hub_hallway",
-    )
     assert ufp_with_alarm_hub.devices_ws_subscription is not None
 
     alarm_hub.state = DeviceState.DISCONNECTED
     ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
     await hass.async_block_till_done()
-    for entity_id in entity_ids:
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(HUB_EVENT).state == STATE_UNAVAILABLE
 
     alarm_hub.state = DeviceState.CONNECTED
     ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
     await hass.async_block_till_done()
-    for entity_id in entity_ids:
-        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(HUB_EVENT).state != STATE_UNAVAILABLE
 
 
 async def test_alarm_hub_becomes_unavailable_when_removed(
@@ -425,7 +203,7 @@ async def test_alarm_hub_becomes_unavailable_when_removed(
     """A delete WS frame (new_obj=None) marks the hub's entities unavailable."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    entity_id = "sensor.alarm_hub_battery_voltage"
+    entity_id = HUB_EVENT
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     # Drop the hub from the public bootstrap, then send a delete frame.
@@ -440,33 +218,6 @@ async def test_alarm_hub_becomes_unavailable_when_removed(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-
-async def test_alarm_hub_disconnected_battery(
-    hass: HomeAssistant,
-    ufp_with_alarm_hub: MockUFPFixture,
-    alarm_hub: LinkStation,
-) -> None:
-    """A disconnected backup battery degrades gracefully.
-
-    Real hardware reports a disconnected, removed or fully flat backup battery
-    identically: ``connection: disconnected`` with ``voltage: 0`` and no
-    ``batteryStatus``. The battery is an optional add-on, so this is also the
-    steady state for a hub with no battery fitted and must not read as a problem.
-    """
-    assert alarm_hub.alarm_hub is not None
-    alarm_hub.alarm_hub["battery"] = {"connection": "disconnected", "voltage": 0}
-    await init_entry(hass, ufp_with_alarm_hub, [])
-
-    # An absent batteryStatus must not read as a problem (optional battery).
-    battery = hass.states.get("binary_sensor.alarm_hub_battery")
-    assert battery is not None
-    assert battery.state == "off"
-
-    # Voltage reads unknown rather than a misleading 0.0 V.
-    voltage = hass.states.get("sensor.alarm_hub_battery_voltage")
-    assert voltage is not None
-    assert voltage.state == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -488,7 +239,7 @@ async def test_alarm_hub_added_at_runtime(
     ufp.api.update_public = AsyncMock(return_value=pb)
 
     await init_entry(hass, ufp, [])
-    assert hass.states.get("sensor.alarm_hub_battery_voltage") is None
+    assert hass.states.get(HUB_EVENT) is None
 
     pb.alarm_hubs = {alarm_hub.id: alarm_hub}
     msg = public_device_ws_message(alarm_hub)
@@ -497,13 +248,9 @@ async def test_alarm_hub_added_at_runtime(
     ufp.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "12.108427"
-    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "off"
-    assert hass.states.get("binary_sensor.alarm_hub_hallway") is not None
     assert hass.states.get(HUB_EVENT) is not None
     assert (
-        entity_registry.async_get("sensor.alarm_hub_battery_voltage").unique_id
-        == f"{ALARM_HUB_MAC}_battery_voltage"
+        entity_registry.async_get(HUB_EVENT).unique_id == f"{ALARM_HUB_MAC}_alarm_hub"
     )
 
 
@@ -559,7 +306,6 @@ async def test_plain_link_station_added_at_runtime(
         )
         is None
     )
-    assert hass.states.get("sensor.alarm_hub_battery_voltage") is None
     assert hass.states.get(HUB_EVENT) is None
 
 
@@ -594,7 +340,7 @@ async def test_alarm_hub_without_name(
     assert device.model == model
     assert device.model_id == device_type
     assert (
-        hass.states.get(f"sensor.{object_id}_{ALARM_HUB_MAC.lower()}_battery_voltage")
+        hass.states.get(f"event.{object_id}_{ALARM_HUB_MAC.lower()}_activity")
         is not None
     )
 
@@ -607,8 +353,8 @@ async def test_alarm_hub_unavailable_when_public_bootstrap_lost(
     """Losing the public bootstrap marks alarm hub entities unavailable."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    entity_id = "sensor.alarm_hub_battery_voltage"
-    assert hass.states.get(entity_id).state == "12.108427"
+    entity_id = HUB_EVENT
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     ufp_with_alarm_hub.api.has_public_bootstrap = False
     # A frame without a merged object makes the entities re-read the bootstrap.
