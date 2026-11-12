@@ -34,10 +34,10 @@ flowchart LR
 The default placement uses one group for built-in integrations and one for custom integrations. A group shares one process and one private Home Assistant instance. It is not one process per config entry.
 
 1. Bootstrap installs the router before integration setup. The router sends selected domains to a worker. Other domains use normal local setup.
-2. The supervisor starts the worker with `python -m homeassistant_sandbox`. The worker loads its registries, connects the channel, installs handlers, and loads restore state. It calls `hass.async_start()` before sending `Ready`.
+2. The supervisor starts the worker with `python -m homeassistant_sandbox`. The worker starts its Home Assistant instance, then signals readiness.
 3. The host sends a config-entry snapshot. The worker sets it up after startup. Entry and subentry IDs are preserved. Supported configuration changes flow in both directions. Conflicting edits require a reload.
 4. The worker sends entity descriptions and state updates. The host registers typed proxy entities. Entity actions become service calls or entity queries to the worker. The host retains canonical entity and device identities.
-5. Worker `Store` operations use a context variable to route persistence through the host. Storage is namespaced by group. An acknowledged configuration update means the host accepted it and scheduled a save; it does not guarantee a disk flush.
+5. Worker `Store` operations use a context variable to route persistence through the host. Storage is namespaced by group.
 
 On a worker crash, its proxies become unavailable. The supervisor has a bounded restart policy. Recovery removes the old platforms before reloading entries. Graceful shutdown unloads entries, flushes stores, and returns restore-state data. The host can terminate a worker that does not stop.
 
