@@ -67,11 +67,9 @@ from .const import (
     BASE_PLATFORMS,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
-    KEY_DATA_BOOTSTRAP_PROGRESS,
     KEY_DATA_LOGGING as DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
-    SIGNAL_BOOTSTRAP_PROGRESS,
 )
 from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
@@ -102,11 +100,13 @@ from .setup import (
     BootstrapIntegrationsProgress,
     BootstrapPhase,
     BootstrapProgress,
-    # _setup_started and _async_get_domains_pending_setup are marked as protected to make it clear
-    # that it is not part of the public API and should not be used
-    # by integrations. It is only used for internal tracking of
-    # which integrations are being set up.
+    # _setup_started, _async_get_domains_pending_setup and the bootstrap progress
+    # functions are marked as protected to make it clear that they are not part
+    # of the public API and should not be used by integrations. They are only
+    # used for internal tracking of which integrations are being set up.
+    _async_dispatch_bootstrap_progress,
     _async_get_domains_pending_setup,
+    _async_set_bootstrap_progress_source,
     _setup_started,
     async_get_setup_timings,
     async_notify_setup_error,
@@ -772,14 +772,15 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 async def _async_resolve_domains_and_preload(
     hass: core.HomeAssistant, config: dict[str, Any]
-) -> tuple[dict[str, Integration], dict[str, Integration]]:
+) -> tuple[dict[str, Integration], dict[str, Integration], set[str]]:
     """Resolve all dependencies and return integrations to set up.
 
-    The return value is a tuple of two dictionaries:
+    The return value is a tuple of two dictionaries and a set:
     - The first dictionary contains integrations
       specified by the configuration (including config entries).
     - The second dictionary contains the same integrations as the first dictionary
       together with all their dependencies.
+    - The set contains the domains that were not found.
     """
     domains_to_setup = _get_domains(hass, config)
 
@@ -898,19 +899,29 @@ async def _async_resolve_domains_and_preload(
         eager_start=True,
     )
 
-    return integrations_to_setup, all_integrations_to_setup
+    return (
+        integrations_to_setup,
+        all_integrations_to_setup,
+        {
+            domain
+            for domain, itg in integrations_or_excs.items()
+            if isinstance(itg, loader.IntegrationNotFound)
+        },
+    )
 
 
 async def _async_set_up_integrations(
-    hass: core.HomeAssistant, config: dict[str, Any], start: float | None = None
+    hass: core.HomeAssistant, config: dict[str, Any], start: float
 ) -> None:
     """Set up all the integrations."""
-    watcher = _WatchPendingSetups(hass, _setup_started(hass), start or monotonic())
+    watcher = _WatchPendingSetups(hass, _setup_started(hass), start)
     watcher.async_start()
 
-    integrations, all_integrations = await _async_resolve_domains_and_preload(
-        hass, config
-    )
+    (
+        integrations,
+        all_integrations,
+        not_found_domains,
+    ) = await _async_resolve_domains_and_preload(hass, config)
     # Detect all cycles
     integrations_after_dependencies = (
         await loader.resolve_integrations_after_dependencies(
@@ -949,7 +960,12 @@ async def _async_set_up_integrations(
             for domain in domain_group & all_domains
             for dep in (domain, *integrations_after_dependencies[domain])
         }
-        | ((_get_domains(hass, config) | all_integrations.keys()) - all_domains)
+        | (
+            (_get_domains(hass, config) | all_integrations.keys())
+            - all_domains
+            # Safe mode does not load custom integrations, so they are not found.
+            - (not_found_domains if hass.config.safe_mode else set())
+        )
     )
 
     _LOGGER.info("Setting up stage 0")
@@ -1064,7 +1080,7 @@ class _WatchPendingSetups:
         elif waiting_tasks := self._hass._active_tasks:  # noqa: SLF001
             _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
         self._async_dispatch(remaining_with_setup_started)
-        self._async_dispatch_progress()
+        _async_dispatch_bootstrap_progress(self._hass)
         if (
             self._setup_started
             and self._duration_count % LOG_SLOW_STARTUP_INTERVAL == 0
@@ -1091,13 +1107,18 @@ class _WatchPendingSetups:
     def async_set_planned_domains(self, domains: set[str]) -> None:
         """Set the domains bootstrap will set up, including dependencies."""
         self._planned_domains = domains
-        self._async_dispatch_progress()
+        _async_dispatch_bootstrap_progress(self._hass)
 
     @core.callback
     def async_set_phase(self, phase: BootstrapPhase) -> None:
         """Set the current phase and dispatch the progress."""
         self._phase = phase
-        self._async_dispatch_progress()
+        if phase is not BootstrapPhase.RUNNING:
+            _async_dispatch_bootstrap_progress(self._hass)
+            return
+        # Later subscribers get the summary from when Core started running.
+        summary = self._async_progress()
+        _async_set_bootstrap_progress_source(self._hass, lambda: summary)
 
     @core.callback
     def _async_core_state_changed(self, phase: BootstrapPhase, _: core.Event) -> None:
@@ -1120,7 +1141,7 @@ class _WatchPendingSetups:
         if self._hass.is_stopping:
             self._progress_handle = None
             return
-        self._async_dispatch_progress()
+        _async_dispatch_bootstrap_progress(self._hass)
         self._async_schedule_progress()
 
     def _async_progress(self) -> BootstrapProgress:
@@ -1152,11 +1173,6 @@ class _WatchPendingSetups:
             active=active,
         )
 
-    def _async_dispatch_progress(self) -> None:
-        """Store and dispatch the startup progress."""
-        progress = self._hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] = self._async_progress()
-        async_dispatcher_send_internal(self._hass, SIGNAL_BOOTSTRAP_PROGRESS, progress)
-
     def _async_schedule_next(self) -> None:
         """Schedule the next call."""
         self._handle = self._loop.call_later(
@@ -1165,13 +1181,13 @@ class _WatchPendingSetups:
 
     def async_start(self) -> None:
         """Start watching."""
-        self._async_dispatch_progress()
+        _async_set_bootstrap_progress_source(self._hass, self._async_progress)
         self._async_schedule_next()
 
     def async_stop(self) -> None:
         """Stop watching."""
         self._async_dispatch({})
-        self._async_dispatch_progress()
+        _async_dispatch_bootstrap_progress(self._hass)
         # Progress keeps the wrap up phase until the core state changes.
         for event_type, phase in (
             (EVENT_HOMEASSISTANT_START, BootstrapPhase.STARTING),

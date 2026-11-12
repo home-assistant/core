@@ -15,10 +15,8 @@ from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
-    KEY_DATA_BOOTSTRAP_PROGRESS,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
-    SIGNAL_BOOTSTRAP_PROGRESS,
 )
 from homeassistant.core import (
     Context,
@@ -89,6 +87,7 @@ from homeassistant.setup import (
     BootstrapProgress,
     async_get_loaded_integrations,
     async_get_setup_timings,
+    async_subscribe_bootstrap_progress,
     async_wait_component,
 )
 from homeassistant.util import slugify
@@ -268,14 +267,11 @@ def handle_subscribe_bootstrap_progress(
         """Forward bootstrap progress to websocket."""
         connection.send_message(messages.event_message(msg["id"], message))
 
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_PROGRESS, forward_bootstrap_progress
-    )
-
+    # Subscribing sends the current progress, which must follow the result.
     connection.send_result(msg["id"])
-    # Send the current progress so (re)connecting clients do not wait a tick.
-    if (progress := hass.data.get(KEY_DATA_BOOTSTRAP_PROGRESS)) is not None:
-        forward_bootstrap_progress(progress)
+    connection.subscriptions[msg["id"]] = async_subscribe_bootstrap_progress(
+        hass, forward_bootstrap_progress
+    )
 
 
 @callback

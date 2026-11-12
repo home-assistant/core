@@ -53,9 +53,7 @@ from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAG
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_EXTERNAL_URL,
-    KEY_DATA_BOOTSTRAP_PROGRESS,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
-    SIGNAL_BOOTSTRAP_PROGRESS,
     EntityCategory,
 )
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
@@ -78,6 +76,7 @@ from homeassistant.setup import (
     BootstrapIntegrationsProgress,
     BootstrapPhase,
     BootstrapProgress,
+    _async_set_bootstrap_progress_source,
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
@@ -3748,7 +3747,7 @@ async def test_subscribe_bootstrap_progress(
         integrations=BootstrapIntegrationsProgress(total=3, done=1, failed=["fail"]),
         active={"slow": 1.0},
     )
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_PROGRESS, message)
+    _async_set_bootstrap_progress_source(hass, lambda: message)
     msg = await websocket_client.receive_json()
     assert msg["id"] == subscription
     assert msg["type"] == "event"
@@ -3765,14 +3764,15 @@ async def test_subscribe_bootstrap_progress_sends_current_progress(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test a (re)connecting client gets the current progress right away."""
-    hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] = {"phase": "setup"}
+    progress = {"phase": "setup"}
+    _async_set_bootstrap_progress_source(hass, progress.copy)
     first = await hass_ws_client(hass)
     await first.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
     assert (await first.receive_json())["success"]
     assert (await first.receive_json())["event"] == {"phase": "setup"}
     await first.close()
 
-    hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] = {"phase": "wrap_up"}
+    progress["phase"] = "wrap_up"
     reconnected = await hass_ws_client(hass)
     await reconnected.send_json_auto_id({"type": "subscribe_bootstrap_progress"})
     assert (await reconnected.receive_json())["success"]

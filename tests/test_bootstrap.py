@@ -37,9 +37,7 @@ from homeassistant.const import (
     BASE_PLATFORMS,
     CONF_DEBUG,
     EVENT_HOMEASSISTANT_START,
-    KEY_DATA_BOOTSTRAP_PROGRESS,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
-    SIGNAL_BOOTSTRAP_PROGRESS,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -47,7 +45,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
-from homeassistant.setup import BootstrapProgress
+from homeassistant.setup import BootstrapProgress, async_subscribe_bootstrap_progress
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
@@ -362,7 +360,7 @@ async def test_setting_up_empty_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test default integrations are set up with empty config."""
-    await bootstrap._async_set_up_integrations(hass, {})
+    await bootstrap._async_set_up_integrations(hass, {}, monotonic())
 
     assert all(
         domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
@@ -377,7 +375,7 @@ async def test_setting_up_config(
 ) -> None:
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
-        hass, {"group hello": {}, "homeassistant": {}}
+        hass, {"group hello": {}, "homeassistant": {}}, monotonic()
     )
 
     assert "group" in hass.config.components
@@ -423,7 +421,9 @@ async def test_setup_after_deps_all_present(hass: HomeAssistant) -> None:
         "homeassistant.components.logger.async_setup", gen_domain_setup("logger")
     ):
         await bootstrap._async_set_up_integrations(
-            hass, {"root": {}, "first_dep": {}, "second_dep": {}, "logger": {}}
+            hass,
+            {"root": {}, "first_dep": {}, "second_dep": {}, "logger": {}},
+            monotonic(),
         )
 
     assert "root" in hass.config.components
@@ -471,7 +471,7 @@ async def test_setup_after_deps_in_stage_1(hass: HomeAssistant) -> None:
     )
 
     await bootstrap._async_set_up_integrations(
-        hass, {"cloud": {}, "normal_integration": {}, "an_after_dep": {}}
+        hass, {"cloud": {}, "normal_integration": {}, "an_after_dep": {}}, monotonic()
     )
 
     assert "normal_integration" in hass.config.components
@@ -544,7 +544,7 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
     )
 
     await bootstrap._async_set_up_integrations(
-        hass, {"cloud": {}, "normal_integration": {}}
+        hass, {"cloud": {}, "normal_integration": {}}, monotonic()
     )
 
     assert "normal_integration" in hass.config.components
@@ -628,6 +628,7 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
             "normal_integration": {},
             "an_after_dep": {},
         },
+        monotonic(),
     )
 
     assert "frontend" in hass.config.components
@@ -687,7 +688,9 @@ async def test_setup_after_deps_via_platform(hass: HomeAssistant) -> None:
     hass.bus.async_listen_once("component_loaded", continue_loading)
 
     await bootstrap._async_set_up_integrations(
-        hass, {"light": {"platform": "platform_int"}, "after_dep_of_platform_int": {}}
+        hass,
+        {"light": {"platform": "platform_int"}, "after_dep_of_platform_int": {}},
+        monotonic(),
     )
 
     assert "light" in hass.config.components
@@ -728,7 +731,9 @@ async def test_setup_after_deps_not_trigger_load(hass: HomeAssistant) -> None:
         ),
     )
 
-    await bootstrap._async_set_up_integrations(hass, {"root": {}, "second_dep": {}})
+    await bootstrap._async_set_up_integrations(
+        hass, {"root": {}, "second_dep": {}}, monotonic()
+    )
 
     assert "root" in hass.config.components
     assert "first_dep" not in hass.config.components
@@ -760,7 +765,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
     )
 
     await bootstrap._async_set_up_integrations(
-        hass, {"root": {}, "first_dep": {}, "second_dep": {}}
+        hass, {"root": {}, "first_dep": {}, "second_dep": {}}, monotonic()
     )
 
     assert "root" in hass.config.components
@@ -1257,7 +1262,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     )
     with patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.025):
         await bootstrap._async_set_up_integrations(
-            hass, {"normal_integration": {}, "an_after_dep": {}}
+            hass, {"normal_integration": {}, "an_after_dep": {}}, monotonic()
         )
         await hass.async_block_till_done()
 
@@ -1299,7 +1304,9 @@ async def test_warning_logged_on_wrap_up_timeout(
     )
 
     with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
-        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"normal_integration": {}}, monotonic()
+        )
 
     task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
@@ -1347,7 +1354,9 @@ async def test_tasks_logged_that_block_stage_1(
             bootstrap, "STAGE_1_INTEGRATIONS", {*original_stage_1, "normal_integration"}
         ),
     ):
-        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"normal_integration": {}}, monotonic()
+        )
 
     task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
@@ -1392,7 +1401,9 @@ async def test_tasks_logged_that_block_stage_2(
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
         patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0),
     ):
-        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"normal_integration": {}}, monotonic()
+        )
 
     task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
@@ -1412,7 +1423,9 @@ async def test_bootstrap_is_cancellation_safe(
     with patch.object(
         bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
     ):
-        await bootstrap._async_set_up_integrations(hass, {"cancel_integration": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"cancel_integration": {}}, monotonic()
+        )
         await hass.async_block_till_done()
 
     assert "Error setting up integration cancel_integration" in caplog.text
@@ -1431,7 +1444,7 @@ async def test_bootstrap_log_already_setup_stage(
 ) -> None:
     """Test logging when all integrations in a stage were already setup."""
     with patch.object(bootstrap, "STAGE_1_INTEGRATIONS", {"frontend"}):
-        await bootstrap._async_set_up_integrations(hass, {})
+        await bootstrap._async_set_up_integrations(hass, {}, monotonic())
         await hass.async_block_till_done()
 
     assert "Already set up stage 1: {'frontend'}" in caplog.text
@@ -1755,6 +1768,7 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
                 "logger": {},
                 "binary_sensor": {},
             },
+            monotonic(),
         )
 
     assert "binary_sensor" in hass.config.components
@@ -1903,7 +1917,7 @@ def _track_bootstrap_progress(
     def _progress(data: BootstrapProgress) -> None:
         progress.append((hass.state, data))
 
-    async_dispatcher_connect(hass, SIGNAL_BOOTSTRAP_PROGRESS, _progress)
+    async_subscribe_bootstrap_progress(hass, _progress)
     return progress
 
 
@@ -1936,7 +1950,7 @@ async def test_bootstrap_progress_concurrent_setup(
 
     setup_task = hass.async_create_task(
         bootstrap._async_set_up_integrations(
-            hass, {"integration_a": {}, "integration_b": {}}
+            hass, {"integration_a": {}, "integration_b": {}}, monotonic()
         )
     )
     await all_started.wait()
@@ -1959,7 +1973,6 @@ async def test_bootstrap_progress_concurrent_setup(
     assert final["active"] == {}
     assert final["integrations"]["done"] == final["integrations"]["total"]
     assert final["integrations"]["failed"] == []
-    assert hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] is final
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -1995,7 +2008,7 @@ async def test_bootstrap_progress_failures_and_running_summary(
 
     with mock_config_flow("integration_retry", config_entries.ConfigFlow):
         await bootstrap._async_set_up_integrations(
-            hass, {"integration_fail": {}, "integration_retry": {}}
+            hass, {"integration_fail": {}, "integration_retry": {}}, monotonic()
         )
         _, final = progress[-1]
         # The entry sets up again once Home Assistant has started.
@@ -2008,7 +2021,8 @@ async def test_bootstrap_progress_failures_and_running_summary(
     _, running = progress[-1]
     assert running["phase"] == bootstrap.BootstrapPhase.RUNNING
     assert running["integrations"] == final["integrations"]
-    assert hass.data[KEY_DATA_BOOTSTRAP_PROGRESS] is running
+    # A late subscriber gets the summary from when Core started running.
+    assert _track_bootstrap_progress(hass) == [(CoreState.running, running)]
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -2034,7 +2048,9 @@ async def test_bootstrap_progress_unscheduled_dependency(hass: HomeAssistant) ->
     )
     progress = _track_bootstrap_progress(hass)
 
-    await bootstrap._async_set_up_integrations(hass, {"cycle_a": {}, "cycle_b": {}})
+    await bootstrap._async_set_up_integrations(
+        hass, {"cycle_a": {}, "cycle_b": {}}, monotonic()
+    )
 
     _, final = progress[-1]
     assert "dependency_only" not in hass.config.components
@@ -2098,7 +2114,9 @@ async def test_bootstrap_progress_unresolved_dependencies(
     progress = _track_bootstrap_progress(hass)
 
     await bootstrap._async_set_up_integrations(
-        hass, {"good_integration": {}, "bad_integration": {}, "not_found": {}}
+        hass,
+        {"good_integration": {}, "bad_integration": {}, "not_found": {}},
+        monotonic(),
     )
 
     _, final = progress[-1]
@@ -2132,10 +2150,7 @@ async def test_bootstrap_progress_running_transition(hass: HomeAssistant) -> Non
         (CoreState.starting, bootstrap.BootstrapPhase.STARTING),
         (CoreState.running, bootstrap.BootstrapPhase.RUNNING),
     ]
-    assert (
-        hass.data[KEY_DATA_BOOTSTRAP_PROGRESS]["phase"]
-        == bootstrap.BootstrapPhase.RUNNING
-    )
+    assert _track_bootstrap_progress(hass) == [progress[-1]]
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -2165,7 +2180,9 @@ async def test_bootstrap_progress_while_starting(
     progress = _track_bootstrap_progress(hass)
 
     with mock_config_flow("integration_new", config_entries.ConfigFlow):
-        await bootstrap._async_set_up_integrations(hass, {"integration_new": {}})
+        await bootstrap._async_set_up_integrations(
+            hass, {"integration_new": {}}, monotonic()
+        )
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, slow_start_listener)
         start_task = hass.async_create_task(hass.async_start())
         await start_listener_running.wait()
@@ -2200,3 +2217,79 @@ async def test_bootstrap_progress_while_starting(
 
         release_entry.set()
         await add_task
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.usefixtures("enable_custom_integrations")
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+@pytest.mark.parametrize(
+    ("safe_mode", "total"),
+    [
+        pytest.param(False, 2, id="normal_mode"),
+        pytest.param(True, 0, id="safe_mode"),
+    ],
+)
+async def test_bootstrap_progress_custom_integrations(
+    hass: HomeAssistant, safe_mode: bool, total: int
+) -> None:
+    """Test custom integrations skipped in safe mode do not count as failed."""
+    hass.set_state(CoreState.not_running)
+    hass.config.safe_mode = safe_mode
+    MockConfigEntry(domain="test_package_loaded_executor").add_to_hass(hass)
+    progress = _track_bootstrap_progress(hass)
+
+    await bootstrap._async_set_up_integrations(hass, {"test_package": {}}, monotonic())
+
+    _, final = progress[-1]
+    assert final["integrations"] == {"total": total, "done": total, "failed": []}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+@patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set())
+async def test_bootstrap_progress_late_subscriber(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test progress is only built for subscribers, a late one gets it right away."""
+    hass.set_state(CoreState.not_running)
+    setup_started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await release.wait()
+        return True
+
+    mock_integration(
+        hass, MockModule(domain="slow_integration", async_setup=async_setup)
+    )
+
+    with patch.object(
+        bootstrap._WatchPendingSetups,
+        "_async_progress",
+        autospec=True,
+        side_effect=bootstrap._WatchPendingSetups._async_progress,
+    ) as build_progress:
+        setup_task = hass.async_create_task(
+            bootstrap._async_set_up_integrations(
+                hass, {"slow_integration": {}}, monotonic()
+            )
+        )
+        await setup_started.wait()
+        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        async_fire_time_changed(hass)
+        build_progress.assert_not_called()
+
+        progress = _track_bootstrap_progress(hass)
+        build_progress.assert_called_once()
+        freezer.tick(bootstrap.SLOW_STARTUP_CHECK_INTERVAL)
+        async_fire_time_changed(hass)
+        release.set()
+        await setup_task
+
+    (_, current), (_, tick), *_ = progress
+    assert current["phase"] == bootstrap.BootstrapPhase.SETUP
+    assert set(current["active"]) == {"slow_integration"}
+    assert current["integrations"] == {"total": 1, "done": 0, "failed": []}
+    assert tick["active"]["slow_integration"] > current["active"]["slow_integration"]
+    _, final = progress[-1]
+    assert final["integrations"] == {"total": 1, "done": 1, "failed": []}
