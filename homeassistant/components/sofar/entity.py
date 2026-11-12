@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, NamedTuple, override
 
 from sofar_modbus.modern.battery_pack import BatteryPack
 
@@ -15,8 +15,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, SERVED_COMPONENTS
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 
-# A part of the inverter, as (device translation key, number).
-type SofarPart = tuple[str, int]
+
+class SofarPart(NamedTuple):
+    """A part of the inverter that has its own device."""
+
+    kind: str  # the device's translation key
+    number: int
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,7 +38,7 @@ def entity_unique_id(serial: str, key: str) -> str:
 
 def part_identifier(serial: str, part: SofarPart) -> str:
     """Name the device of one inverter part by its kind and number."""
-    return f"{serial}_{part[0]}_{part[1]}"
+    return f"{serial}_{part.kind}_{part.number}"
 
 
 def battery_pack_identifier(serial: str, pack: BatteryPack) -> str:
@@ -92,8 +96,8 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
                 (DOMAIN, part_identifier(self.coordinator.device.serial_number, part))
             },
             via_device_id=runtime_data.inverter_device_id,
-            translation_key=part[0],
-            translation_placeholders={"number": str(part[1])},
+            translation_key=part.kind,
+            translation_placeholders={"number": str(part.number)},
         )
 
     @property
