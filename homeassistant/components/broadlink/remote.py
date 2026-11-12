@@ -36,7 +36,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -125,6 +125,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._code_storage = codes
         self._flag_storage = flags
         self._storage_loaded = False
+        self._storage_lock = asyncio.Lock()
         self._codes = {}
         self._flags = defaultdict(int)
         self._lock = asyncio.Lock()
@@ -209,11 +210,23 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
     async def _async_load_storage(self):
         """Load code and flag storage from disk."""
-        # Exception is intentionally not trapped to
-        # provide feedback if something fails.
-        self._codes.update(await self._code_storage.async_load() or {})
-        self._flags.update(await self._flag_storage.async_load() or {})
-        self._storage_loaded = True
+        async with self._storage_lock:
+            if self._storage_loaded:
+                return
+            # Exception is intentionally not trapped to
+            # provide feedback if something fails.
+            self._codes.update(await self._code_storage.async_load() or {})
+            self._flags.update(await self._flag_storage.async_load() or {})
+            self._storage_loaded = True
+
+    async def async_list_commands(self) -> ServiceResponse:
+        """Return the names of the learned devices and commands."""
+        await self._async_load_storage()
+        return {
+            "devices": {
+                device: sorted(self._codes[device]) for device in sorted(self._codes)
+            }
+        }
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
