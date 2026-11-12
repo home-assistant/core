@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 import jwt
+import probatio
 from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 
@@ -16,11 +17,23 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigFlowResult,
+    OptionsFlowWithReload,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import CLIENT_ID, DOMAIN, LOGGER, OAUTH2_SCOPES, REQUIRED_SCOPES
+from .const import (
+    CLIENT_ID,
+    CONF_HOME_ENTITIES,
+    DOMAIN,
+    LOGGER,
+    OAUTH2_SCOPES,
+    REQUIRED_SCOPES,
+)
+from .coordinator import TRMNLConfigEntry, scope_granted
+from .home import CAPABILITIES_BY_DOMAIN
 
 
 class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -28,6 +41,13 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     DOMAIN = DOMAIN
     VERSION = 2
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: TRMNLConfigEntry) -> TRMNLOptionsFlow:
+        """Return the options flow."""
+        return TRMNLOptionsFlow()
 
     @property
     @override
@@ -106,3 +126,35 @@ class TRMNLConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=user.name if user else "TRMNL", data=data)
+
+
+class TRMNLOptionsFlow(OptionsFlowWithReload):
+    """TRMNL options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick the entities to show on TRMNL."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if user_input[CONF_HOME_ENTITIES] and not scope_granted(
+                self.config_entry, "content"
+            ):
+                errors["base"] = "content_not_granted"
+            else:
+                return self.async_create_entry(
+                    data={**self.config_entry.options, **user_input}
+                )
+        schema = probatio.Schema(
+            {
+                probatio.Optional(
+                    CONF_HOME_ENTITIES,
+                    default=self.config_entry.options.get(CONF_HOME_ENTITIES, []),
+                ): EntitySelector(
+                    EntitySelectorConfig(
+                        domain=list(CAPABILITIES_BY_DOMAIN), multiple=True
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

@@ -1,8 +1,11 @@
 """The TRMNL integration."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 from aiohttp import ClientError
 from trmnl import TRMNLClient
-from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
+from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError, TRMNLNotFoundError
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -23,8 +26,16 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CLIENT_ID, DOMAIN
-from .coordinator import TRMNLConfigEntry, TRMNLCoordinator
+from .const import (
+    CLIENT_ID,
+    CONF_HOME_ENTITIES,
+    CONF_HOME_PLUGIN_SETTING_ID,
+    DOMAIN,
+    HOMEY_PLUGIN_ID,
+    LOGGER,
+)
+from .coordinator import TRMNLConfigEntry, TRMNLCoordinator, scope_granted
+from .home import HomePusher
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH, Platform.TIME]
 
@@ -51,6 +62,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> Non
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if entity_ids := entry.options.get(CONF_HOME_ENTITIES):
+        entry.async_on_unload(
+            HomePusher(hass, entity_ids, _home_push(hass, entry)).async_start()
+        )
+
+
+def _home_push(
+    hass: HomeAssistant, entry: TRMNLConfigEntry
+) -> Callable[[dict[str, Any]], Coroutine[Any, Any, None]]:
+    """Return a push to the entry's Homey plugin setting, made again if the user deleted it."""
+    coordinator = entry.runtime_data
+
+    async def create_plugin_setting() -> int:
+        plugin_setting = await coordinator.client.create_plugin_setting(
+            hass.config.location_name, HOMEY_PLUGIN_ID
+        )
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                **entry.options,
+                CONF_HOME_PLUGIN_SETTING_ID: plugin_setting.identifier,
+            },
+        )
+        return plugin_setting.identifier
+
+    async def push(snapshot: dict[str, Any]) -> None:
+        await coordinator.async_ensure_token_valid()
+        plugin_setting_id = entry.options.get(CONF_HOME_PLUGIN_SETTING_ID)
+        if plugin_setting_id is None:
+            plugin_setting_id = await create_plugin_setting()
+        try:
+            await coordinator.client.update_plugin_setting_data(
+                plugin_setting_id, snapshot
+            )
+        except TRMNLNotFoundError:
+            await coordinator.client.update_plugin_setting_data(
+                await create_plugin_setting(), snapshot
+            )
+
+    return push
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> None:
@@ -101,3 +153,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> N
         },
         version=2,
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> None:
+    """Delete the plugin setting the integration created, if the user granted delete."""
+    plugin_setting_id = entry.options.get(CONF_HOME_PLUGIN_SETTING_ID)
+    if plugin_setting_id is None or not scope_granted(entry, "delete"):
+        return
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+        await TRMNLClient(
+            token=session.token["access_token"],
+            session=async_get_clientsession(hass),
+        ).delete_plugin_setting(plugin_setting_id)
+    except (ClientError, TRMNLError) as err:
+        LOGGER.warning("Could not delete the TRMNL home plugin setting: %s", err)

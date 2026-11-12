@@ -354,3 +354,39 @@ async def test_reconfigure_flow_wrong_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data["token"]["access_token"] == "access"
+
+
+@pytest.mark.usefixtures("mock_trmnl_client")
+async def test_options_flow_picks_entities(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the options flow stores the entities to show on TRMNL."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"home_entities": ["light.lamp"]}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {"home_entities": ["light.lamp"]}
+
+
+@pytest.mark.usefixtures("mock_trmnl_client")
+async def test_options_flow_needs_content_scope(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test picking entities asks for a new sign in when content was unticked."""
+    token = {**mock_config_entry.data["token"], "scope": "openid read devices"}
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "token": token}
+    )
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"home_entities": ["light.lamp"]}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "content_not_granted"}

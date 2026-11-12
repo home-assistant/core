@@ -15,9 +15,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, OAUTH2_SCOPES
 
 type TRMNLConfigEntry = ConfigEntry[TRMNLCoordinator]
+
+
+def scope_granted(entry: TRMNLConfigEntry, scope: str) -> bool:
+    """Return True if the user granted the scope on the TRMNL consent page."""
+    return scope in entry.data["token"].get("scope", OAUTH2_SCOPES).split()
 
 
 class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
