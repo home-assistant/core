@@ -11,6 +11,11 @@ from pajgps_api.models.device import Device
 from pajgps_api.models.trackpoint import TrackPoint
 from pajgps_api.pajgps_api_error import PajGpsApiError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.paj_gps.const import UPDATE_INTERVAL
@@ -19,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

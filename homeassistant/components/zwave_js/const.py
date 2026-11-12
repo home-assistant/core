@@ -154,7 +154,6 @@ CREDENTIAL_RULE_SINGLE = "single"
 CREDENTIAL_RULE_DUAL = "dual"
 CREDENTIAL_RULE_TRIPLE = "triple"
 
-ATTR_NODES = "nodes"
 # config parameter
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
@@ -180,6 +179,8 @@ ATTR_OPERATION_TYPE = "operation_type"
 ATTR_TWIST_ASSIST = "twist_assist"
 
 ADDON_SLUG = "core_zwave_js"
+
+NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
 
 # Sensor entity description constants
 ENTITY_DESC_KEY_BATTERY_LIST_STATE = "battery_list_state"

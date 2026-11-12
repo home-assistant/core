@@ -6,11 +6,10 @@ import os
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_test_config_dir
 
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.scripts import check_config
-
-from tests.common import get_test_config_dir
 
 BASE_CONFIG = (
     "homeassistant:\n"

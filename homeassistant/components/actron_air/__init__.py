@@ -25,7 +25,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> None:
     """Set up Actron Air integration from a config entry."""
 
     api = ActronAirAPI(
@@ -48,10 +48,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
             translation_key="setup_connection_error",
         ) from err
 
+    try:
+        push_enabled = await api.start_push(
+            [system.serial for system in systems if system.serial]
+        )
+    except ActronAirAuthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+        ) from err
+
+    if push_enabled:
+        entry.async_on_unload(api.stop_push)
+    else:
+        LOGGER.debug("Realtime push unavailable, falling back to polling")
+
     device_registry = dr.async_get(hass)
     system_coordinators: dict[str, ActronAirSystemCoordinator] = {}
     for system in systems:
-        coordinator = ActronAirSystemCoordinator(hass, entry, api, system)
+        coordinator = ActronAirSystemCoordinator(
+            hass, entry, api, system, push_enabled=push_enabled
+        )
         LOGGER.debug("Setting up coordinator for system: %s", system.serial)
         await coordinator.async_config_entry_first_refresh()
         system_coordinators[system.serial] = coordinator
@@ -75,9 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

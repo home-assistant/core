@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from fumis import FumisConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fumis.const import DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import UNIQUE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.parametrize(
     "init_integration", [Platform.NUMBER], indirect=True

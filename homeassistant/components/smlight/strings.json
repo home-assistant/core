@@ -4,8 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "Please ensure you reconfigure against the same device.",
       "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
     },
@@ -181,6 +179,12 @@
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
     },
+    "firmware_version_already_installed": {
+      "message": "Firmware version {version} is already installed on {device_name}."
+    },
+    "firmware_version_not_found": {
+      "message": "Firmware version {version} is not available for {device_name}."
+    },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
@@ -205,7 +209,7 @@
   },
   "issues": {
     "unsupported_firmware": {
-      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
+      "description": "Your SMLIGHT SLZB-06x device \"{name}\" is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
       "title": "SLZB core firmware update required"
     }
   },

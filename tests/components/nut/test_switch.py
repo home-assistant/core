@@ -1,25 +1,17 @@
 """Test the NUT switch platform."""
 
-import json
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 
 from homeassistant.components.nut.const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_ON, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
-
-from tests.common import async_load_fixture
 
 
 @pytest.mark.parametrize(
@@ -83,7 +75,7 @@ async def test_switch_pdu_dynamic_outlets(
         list_commands_return_value[command] = command
 
     ups_fixture = f"{model}.json"
-    list_vars = json.loads(await async_load_fixture(hass, ups_fixture, DOMAIN))
+    list_vars = await async_load_json_object_fixture(hass, ups_fixture, DOMAIN)
 
     run_command = AsyncMock()
 
@@ -106,8 +98,8 @@ async def test_switch_pdu_dynamic_outlets(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -115,8 +107,8 @@ async def test_switch_pdu_dynamic_outlets(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -205,16 +197,16 @@ async def test_switch_outlets_without_outlet_count(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     run_command.assert_called_with("ups1", "outlet.1.load.off")
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     run_command.assert_called_with("ups1", "outlet.1.load.on")

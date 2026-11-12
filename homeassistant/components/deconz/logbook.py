@@ -138,7 +138,9 @@ def async_describe_events(
     def async_describe_deconz_alarm_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook alarm event."""
         if device := device_registry.async_get(
-            event.data[ATTR_DEVICE_ID], include_child_devices=False
+            event.data[ATTR_DEVICE_ID],
+            include_child_devices=False,
+            include_composite_devices=False,
         ):
             deconz_alarm_event = _get_deconz_event_from_device(hass, device)
             name = deconz_alarm_event.device.name
@@ -156,7 +158,9 @@ def async_describe_events(
     def async_describe_deconz_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook event."""
         if device := device_registry.async_get(
-            event.data[ATTR_DEVICE_ID], include_child_devices=False
+            event.data[ATTR_DEVICE_ID],
+            include_child_devices=False,
+            include_composite_devices=False,
         ):
             deconz_event = _get_deconz_event_from_device(hass, device)
             name = deconz_event.device.name

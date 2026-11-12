@@ -11,7 +11,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 type GPSDConfigEntry = ConfigEntry[AGPS3mechanism]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> None:
     """Set up GPSD from a config entry."""
     agps_thread = AGPS3mechanism()
     entry.runtime_data = agps_thread
@@ -26,19 +26,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GPSDConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        agps_thread = entry.runtime_data
-        await hass.async_add_executor_job(
-            lambda: agps_thread.stream_data(
-                host=entry.data.get(CONF_HOST),
-                port=entry.data.get(CONF_PORT),
-                enable=False,
-            )
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    agps_thread = entry.runtime_data
+    await hass.async_add_executor_job(
+        lambda: agps_thread.stream_data(
+            host=entry.data.get(CONF_HOST),
+            port=entry.data.get(CONF_PORT),
+            enable=False,
         )
-
-    return unload_ok
+    )

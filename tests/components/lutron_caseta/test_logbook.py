@@ -1,5 +1,7 @@
 """The tests for lutron caseta logbook."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.lutron_caseta.const import (
     ATTR_ACTION,
     ATTR_AREA_NAME,
@@ -22,7 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from . import MockBridge, async_setup_integration
 
-from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
@@ -102,7 +103,7 @@ async def test_humanify_lutron_caseta_button_event_integration_not_loaded(
     await hass.async_block_till_done()
 
     for device in device_registry.devices:
-        if device.config_entries == {config_entry.entry_id}:
+        if device.config_entry_id == config_entry.entry_id:
             dr_device_id = device.id
             break
 

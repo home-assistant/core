@@ -4,21 +4,20 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.wake_on_lan.const import CONF_SECUREON_PASSWORD
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
     CONF_MAC,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 async def test_state(
@@ -73,8 +72,8 @@ async def test_service_calls(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wake_on_lan_00_01_02_03_04_05"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
     )
 

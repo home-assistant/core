@@ -1,6 +1,6 @@
 """Constants for the iAlarm integration."""
 
-from pyialarm import IAlarm
+from pyasyncialarm import IAlarm
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 

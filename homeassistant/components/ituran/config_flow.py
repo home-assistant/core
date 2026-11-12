@@ -4,9 +4,9 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyituran import Ituran
 from pyituran.exceptions import IturanApiError, IturanAuthError
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 
@@ -20,16 +20,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ID_OR_PASSPORT): str,
-        vol.Required(CONF_PHONE_NUMBER): str,
+        probatio.Required(CONF_ID_OR_PASSPORT): str,
+        probatio.Required(CONF_PHONE_NUMBER): str,
     }
 )
 
-STEP_OTP_DATA_SCHEMA = vol.Schema(
+STEP_OTP_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OTP): str,
+        probatio.Required(CONF_OTP): str,
     }
 )
 
@@ -129,7 +129,7 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={
                 "phone_number": self._user_info[CONF_PHONE_NUMBER]
             },

@@ -8,6 +8,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from yalexs.activity import (
     ACTIVITY_ACTIONS_BRIDGE_OPERATION,
     ACTIVITY_ACTIONS_DOOR_OPERATION,
@@ -42,8 +43,6 @@ from homeassistant.components.august.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
 
 USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
 

@@ -6,6 +6,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from sqlalchemy import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
@@ -52,8 +54,6 @@ from . import (
     ENTRY_CONFIG_WITH_QUERY_TEMPLATE,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "recorder_mock")
 
@@ -121,7 +121,7 @@ async def test_form_with_query_template(
 
     with patch(
         "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -164,7 +164,7 @@ async def test_form_with_broken_query_template(
         result["flow_id"],
         DATA_CONFIG,
     )
-    message = re.escape("Schema validation failed @ data['query']")
+    message = re.escape("Schema validation failed at 'query'")
     with pytest.raises(InvalidData, match=message):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -173,7 +173,7 @@ async def test_form_with_broken_query_template(
 
     with patch(
         "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -251,6 +251,52 @@ async def test_flow_fails_db_url(hass: HomeAssistant) -> None:
         )
 
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=DATA_CONFIG,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        ENTRY_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_flow_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
+    """Test the db url is validated with psycopg2 for driverless PostgreSQL URLs."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        side_effect=SQLAlchemyError("error_message"),
+    ) as create_engine_mock:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_NAME: "Get Value",
+                CONF_DB_URL: "postgresql://user:pass@host/db",
+            },
+        )
+
+    assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
+    assert create_engine_mock.mock_calls[0].args[0] == make_url(
+        "postgresql+psycopg2://user:pass@host/db"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=DATA_CONFIG,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        ENTRY_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
@@ -537,6 +583,19 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
 
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_QUERY: "SELECT 5 as size",
+            CONF_COLUMN_NAME: "size",
+            CONF_ADDITIONAL_OPTIONS: {
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
     """Test options flow fails incorrect query and template."""
@@ -618,7 +677,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
         CONF_QUERY: "multiple_queries",
     }
 
-    message = re.escape("Schema validation failed @ data['query']")
+    message = re.escape("Schema validation failed at 'query'")
     with pytest.raises(InvalidData, match=message):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

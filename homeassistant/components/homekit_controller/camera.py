@@ -11,9 +11,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import AccessoryEntity
+
+DEFAULT_IMAGE_WIDTH = 640
+DEFAULT_IMAGE_HEIGHT = 480
 
 
 class HomeKitCamera(AccessoryEntity, Camera):
@@ -31,11 +34,21 @@ class HomeKitCamera(AccessoryEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a jpeg with the current camera snapshot."""
-        return await self._accessory.pairing.image(  # type: ignore[attr-defined]
-            self._aid,
-            width or 640,
-            height or 480,
-        )
+        width = width or DEFAULT_IMAGE_WIDTH
+        height = height or DEFAULT_IMAGE_HEIGHT
+        pairing = self._accessory.pairing
+        image: bytes | None = await pairing.image(self._aid, width, height)  # type: ignore[attr-defined]
+        if image is None and (width, height) != (
+            DEFAULT_IMAGE_WIDTH,
+            DEFAULT_IMAGE_HEIGHT,
+        ):
+            # The requested size is only a hint and some accessories reject
+            # sizes they do not support. Retry with the default size; the camera
+            # component scales the result to the requested size if needed.
+            image = await pairing.image(  # type: ignore[attr-defined]
+                self._aid, DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT
+            )
+        return image
 
 
 async def async_setup_entry(

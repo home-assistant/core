@@ -49,7 +49,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
   docs-data-update: done
@@ -67,9 +67,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: Entity relies on standard platform default icons.
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt

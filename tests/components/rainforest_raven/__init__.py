@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.rainforest_raven.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_MAC
 
@@ -15,8 +17,6 @@ from .const import (
     PRICE_CLUSTER,
     SUMMATION,
 )
-
-from tests.common import MockConfigEntry
 
 
 def create_mock_device() -> AsyncMock:

@@ -4,13 +4,12 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from pynina import Warning
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nina.const import CONF_REGIONS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_platform(

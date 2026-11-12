@@ -3,22 +3,21 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from reolink_aio.exceptions import ReolinkError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.services import ATTR_SPEED, SERVICE_PTZ_MOVE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
@@ -27,8 +26,20 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    reolink_host: MagicMock,
 ) -> None:
     """Test all entities."""
+
+    def mock_supported(ch, capability, sub_channel=None):
+        if capability in {"ptz_stop", "pan", "tilt", "ptz_speed"}:
+            return sub_channel == 1
+        if sub_channel is not None:
+            return False
+        return True
+
+    reolink_host.sub_channels.return_value = {None, 1}
+    reolink_host.supported = mock_supported
+
     with patch(
         "homeassistant.components.reolink.PLATFORMS",
         [Platform.BUTTON],
@@ -52,8 +63,8 @@ async def test_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_ptz_command.assert_called_once()
@@ -62,18 +73,28 @@ async def test_button(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
 
+@pytest.mark.parametrize(
+    "sub_channel",
+    [
+        None,
+        1,
+    ],
+)
 async def test_ptz_move_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
+    sub_channel: int | None,
 ) -> None:
     """Test ptz_move entity service using PTZ button entity."""
+    reolink_host.sub_channels.return_value = {sub_channel}
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BUTTON]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -87,7 +108,9 @@ async def test_ptz_move_service(
         {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
         blocking=True,
     )
-    reolink_host.set_ptz_command.assert_called_with(0, command="Up", speed=5)
+    reolink_host.set_ptz_command.assert_called_with(
+        0, sub_channel, command="Up", speed=5
+    )
 
     reolink_host.set_ptz_command.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
@@ -115,8 +138,8 @@ async def test_host_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.reboot.assert_called_once()
@@ -125,7 +148,7 @@ async def test_host_button(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )

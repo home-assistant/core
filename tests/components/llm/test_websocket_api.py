@@ -1,12 +1,13 @@
 """Tests for the LLM integration websocket API."""
 
+from typing import Any
+
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 class _StubAPI(llm.API):
@@ -30,12 +31,28 @@ async def setup_llm(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("registered_apis", "expected_apis"),
     [
-        pytest.param([], [{"id": "assist", "name": "Assist"}], id="assist_only"),
+        pytest.param(
+            [],
+            [
+                {"id": "assist", "name": "Device control", "requires_admin": False},
+                {
+                    "id": "homeassistant",
+                    "name": "Home Assistant",
+                    "requires_admin": True,
+                },
+            ],
+            id="default_apis",
+        ),
         pytest.param(
             [("test-api", "Test API")],
             [
-                {"id": "assist", "name": "Assist"},
-                {"id": "test-api", "name": "Test API"},
+                {"id": "assist", "name": "Device control", "requires_admin": False},
+                {
+                    "id": "homeassistant",
+                    "name": "Home Assistant",
+                    "requires_admin": True,
+                },
+                {"id": "test-api", "name": "Test API", "requires_admin": False},
             ],
             id="registered_api",
         ),
@@ -45,7 +62,7 @@ async def test_list_apis(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     registered_apis: list[tuple[str, str]],
-    expected_apis: list[dict[str, str]],
+    expected_apis: list[dict[str, Any]],
 ) -> None:
     """Test listing the registered LLM APIs."""
     for api_id, name in registered_apis:

@@ -50,7 +50,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -126,7 +125,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
+    def __init__(self, entry: BeoConfigEntry, client: MozartClient) -> None:
         """Initialize the media player."""
         super().__init__(entry, client)
 
@@ -196,6 +195,17 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
                 )
             )
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Replace the own entity_id in the group members."""
+        super().async_entity_id_changed(old_entity_id)
+        if self._attr_group_members and old_entity_id in self._attr_group_members:
+            self._attr_group_members = [
+                self.entity_id if member == old_entity_id else member
+                for member in self._attr_group_members
+            ]
+
     async def _initialize(self) -> None:
         """Initialize connection dependent variables."""
 
@@ -243,11 +253,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
 
         # Use a fallback list of sources
         except ValueError:
-            # Try to get software version from device
-            if self.device_info:
-                sw_version = self.device_info.get("sw_version")
-            if not sw_version:
-                sw_version = self._software_status.software_version
+            sw_version = self._software_status.software_version
 
             _LOGGER.warning(
                 "The API is outdated compared to the device"

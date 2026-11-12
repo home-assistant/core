@@ -1,7 +1,7 @@
 """Common stuff for Comelit SimpleHome tests."""
 
 from aiocomelit.api import (
-    ComelitSerialBridgeObject,
+    ComelitDeviceObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
@@ -31,7 +31,7 @@ VEDO_PIN = "5678"
 FAKE_PIN = "0000"
 BAD_PIN = "abcd"
 
-LIGHT0 = ComelitSerialBridgeObject(
+LIGHT0 = ComelitDeviceObject(
     index=0,
     name="Light0",
     status=0,
@@ -45,7 +45,7 @@ LIGHT0 = ComelitSerialBridgeObject(
 )
 BRIDGE_DEVICE_QUERY = {
     CLIMATE: {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,
@@ -63,7 +63,7 @@ BRIDGE_DEVICE_QUERY = {
         ),
     },
     COVER: {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Cover0",
             status=0,
@@ -80,7 +80,7 @@ BRIDGE_DEVICE_QUERY = {
         0: LIGHT0,
     },
     OTHER: {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Switch0",
             status=0,

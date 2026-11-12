@@ -1,8 +1,10 @@
 {
   "domain": "nextcloud",
   "name": "Nextcloud",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/nextcloud",
   "integration_type": "service",
   "iot_class": "cloud_polling",

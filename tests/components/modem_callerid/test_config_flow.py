@@ -51,6 +51,7 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_DEVICE: com_port().device}
+        assert result["result"].unique_id == "0572:1340_1234_Connexant_modem"
 
 
 @patch(
@@ -91,6 +92,10 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {CONF_DEVICE: port.device}
+        assert (
+            result["result"].unique_id
+            == "0572:1340_1234_Virtual serial port_Some serial port"
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

@@ -12,12 +12,22 @@ from unittest import mock
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+)
 
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
 from homeassistant.components import scene
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -44,19 +54,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.condition import Condition
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-)
 
 ENTITY_ID = "script.test"
 
@@ -453,7 +453,7 @@ async def test_service_response_data_errors(
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(vol.Invalid, match=expected_error):
+    with pytest.raises(probatio.Invalid, match=expected_error):
         await script_obj.async_run(context=context)
 
 
@@ -936,7 +936,7 @@ async def test_delay_template_complex_invalid(
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [
                 {
-                    "error": "expected float for dictionary value @ data['seconds']",
+                    "error": "expected float at 'seconds'",
                     "template_errors": ["'invalid_delay' is undefined"],
                 }
             ],
@@ -4129,13 +4129,13 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     """Test that a script aborts when we send invalid service data."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    calls = async_mock_service(hass, "test", "script", vol.Schema({"text": str}))
+    calls = async_mock_service(hass, "test", "script", probatio.Schema({"text": str}))
     sequence = cv.SCRIPT_SCHEMA(
         [{"action": "test.script", "data": {"text": 1}}, {"event": event}]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 0
@@ -4145,7 +4145,7 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     expected_trace = {
         "0": [
             {
-                "error": "expected str for dictionary value @ data['text']",
+                "error": "expected str at 'text'",
                 "result": {
                     "params": {
                         "domain": "test",
@@ -4176,7 +4176,7 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
     sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="BROKEN"):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 0
@@ -5991,7 +5991,7 @@ async def test_validate_action_config(
             validated_config[action_type] = await script.async_validate_action_config(
                 hass, validated_config[action_type]
             )
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             pytest.fail(f"{action_type} config invalid: {err}")
 
     # Verify non-static actions have validated
@@ -6235,6 +6235,265 @@ async def test_platform_async_validate_action_config(hass: HomeAssistant) -> Non
     ) as device_automation_validate_action_mock:
         await script.async_validate_action_config(hass, config)
         device_automation_validate_action_mock.assert_awaited()
+
+
+_INVALID_CONDITION = {
+    "condition": "state",
+    "entity_id": "0123456789abcdef0123456789abcdef",
+    "state": "on",
+}
+_INVALID_CONDITION_ERROR = (
+    "Unknown entity registry entry 0123456789abcdef0123456789abcdef"
+)
+_INVALID_TRIGGER = {"trigger": "non_existing"}
+_INVALID_TRIGGER_ERROR = "Invalid trigger 'non_existing' specified"
+_INVALID_DEVICE_ACTION = {"device_id": "abc", "domain": "light", "type": "turn_on"}
+_INVALID_DEVICE_ACTION_ERROR = "Unknown device 'abc'"
+
+
+@pytest.mark.parametrize(
+    ("action", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            {"if": [_INVALID_CONDITION], "then": []},
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            id="if",
+        ),
+        pytest.param(
+            {"if": [], "then": [_INVALID_DEVICE_ACTION]},
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="then",
+        ),
+        pytest.param(
+            {"if": [], "then": [], "else": [_INVALID_DEVICE_ACTION]},
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="else",
+        ),
+        pytest.param(
+            {"choose": [{"conditions": [_INVALID_CONDITION], "sequence": []}]},
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            id="choose_conditions",
+        ),
+        pytest.param(
+            {"choose": [{"conditions": [], "sequence": [_INVALID_DEVICE_ACTION]}]},
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_sequence",
+        ),
+        pytest.param(
+            {"choose": [], "default": [_INVALID_DEVICE_ACTION]},
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_default",
+        ),
+        pytest.param(
+            {"repeat": {"while": [_INVALID_CONDITION], "sequence": []}},
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            id="repeat_while",
+        ),
+        pytest.param(
+            {"repeat": {"until": [_INVALID_CONDITION], "sequence": []}},
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            id="repeat_until",
+        ),
+        pytest.param(
+            {"repeat": {"count": 2, "sequence": [_INVALID_DEVICE_ACTION]}},
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="repeat_sequence",
+        ),
+        pytest.param(
+            {"parallel": [_INVALID_DEVICE_ACTION]},
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="parallel",
+        ),
+        pytest.param(
+            {"sequence": [_INVALID_DEVICE_ACTION]},
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="sequence",
+        ),
+        pytest.param(
+            {"wait_for_trigger": [_INVALID_TRIGGER]},
+            probatio.Invalid,
+            _INVALID_TRIGGER_ERROR,
+            id="wait_for_trigger",
+        ),
+    ],
+)
+async def test_validate_action_config_nested_block(
+    hass: HomeAssistant,
+    action: dict[str, Any],
+    expected_exception: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test each block nested in an action is validated."""
+    config = cv.SCRIPT_SCHEMA([action])
+
+    with pytest.raises(expected_exception) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
+
+
+@pytest.mark.parametrize(
+    ("action_type", "action", "expected_key"),
+    [
+        pytest.param(cv.SCRIPT_ACTION_IF, {"then": []}, "if", id="if"),
+        pytest.param(cv.SCRIPT_ACTION_IF, {"if": []}, "then", id="then"),
+        pytest.param(
+            cv.SCRIPT_ACTION_CHOOSE,
+            {"choose": [{"sequence": []}]},
+            "conditions",
+            id="choose_conditions",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_CHOOSE,
+            {"choose": [{"conditions": []}]},
+            "sequence",
+            id="choose_sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_PARALLEL,
+            {"parallel": [{"sequence": []}, {}]},
+            "sequence",
+            id="parallel_sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_ACTION_REPEAT,
+            {"repeat": {"count": 2}},
+            "sequence",
+            id="repeat_sequence",
+        ),
+        pytest.param(cv.SCRIPT_ACTION_SEQUENCE, {}, "sequence", id="sequence"),
+        pytest.param(
+            cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER,
+            {},
+            "wait_for_trigger",
+            id="wait_for_trigger",
+        ),
+    ],
+)
+async def test_validate_action_config_missing_required_block(
+    hass: HomeAssistant, action_type: str, action: dict[str, Any], expected_key: str
+) -> None:
+    """Test a block required by the schema is not skipped when it is missing."""
+    with (
+        patch(
+            "homeassistant.helpers.config_validation.determine_script_action",
+            return_value=action_type,
+        ),
+        pytest.raises(KeyError) as exc_info,
+    ):
+        await script.async_validate_action_config(hass, action)
+
+    assert exc_info.value.args == (expected_key,)
+
+
+@pytest.mark.parametrize(
+    ("action", "expected_exception", "expected_error"),
+    [
+        pytest.param(
+            {
+                "if": [_INVALID_CONDITION],
+                "then": [_INVALID_DEVICE_ACTION],
+                "else": [{"wait_for_trigger": [_INVALID_TRIGGER]}],
+            },
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            id="if_before_then",
+        ),
+        pytest.param(
+            {
+                "if": [],
+                "then": [_INVALID_DEVICE_ACTION],
+                "else": [{"wait_for_trigger": [_INVALID_TRIGGER]}],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="then_before_else",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {"conditions": [_INVALID_CONDITION], "sequence": []},
+                ],
+                "default": [_INVALID_DEVICE_ACTION],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_default_before_options",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {
+                        "conditions": [_INVALID_CONDITION],
+                        "sequence": [_INVALID_DEVICE_ACTION],
+                    },
+                ],
+            },
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            id="choose_conditions_before_sequence",
+        ),
+        pytest.param(
+            {
+                "choose": [
+                    {"conditions": [], "sequence": [_INVALID_DEVICE_ACTION]},
+                    {"conditions": [_INVALID_CONDITION], "sequence": []},
+                ],
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="choose_option_sequence_before_next_option_conditions",
+        ),
+        pytest.param(
+            {
+                "repeat": {
+                    "until": [_INVALID_CONDITION],
+                    "sequence": [_INVALID_DEVICE_ACTION],
+                }
+            },
+            probatio.Invalid,
+            _INVALID_CONDITION_ERROR,
+            id="repeat_until_before_sequence",
+        ),
+        pytest.param(
+            {
+                "parallel": [
+                    {"sequence": [_INVALID_DEVICE_ACTION]},
+                    {"sequence": [{"wait_for_trigger": [_INVALID_TRIGGER]}]},
+                ]
+            },
+            InvalidDeviceAutomationConfig,
+            _INVALID_DEVICE_ACTION_ERROR,
+            id="parallel_branches_in_order",
+        ),
+    ],
+)
+async def test_validate_action_config_first_error(
+    hass: HomeAssistant,
+    action: dict[str, Any],
+    expected_exception: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test which error is raised when several nested blocks are invalid."""
+    config = cv.SCRIPT_SCHEMA([action])
+
+    with pytest.raises(expected_exception) as exc_info:
+        await script.async_validate_actions_config(hass, config)
+
+    assert type(exc_info.value) is expected_exception
+    assert str(exc_info.value) == expected_error
 
 
 async def test_stop_action(
@@ -6600,7 +6859,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
 
 
 async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
-    """Test continue on error doesn't block unknown errors from e.g., libraries."""
+    """Test continue_on_error with unknown errors bubbling up from service calls."""
 
     class MyLibraryError(Exception):
         """My custom library error."""
@@ -6622,8 +6881,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(MyLibraryError):
-        await script_obj.async_run(context=Context())
+    await script_obj.async_run(context=Context())
 
     assert_action_trace(
         {
@@ -6642,7 +6900,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
                 }
             ],
         },
-        expected_script_execution="error",
+        expected_script_execution="finished",
     )
 
 
@@ -6694,16 +6952,139 @@ async def test_disabled_actions(
     )
 
 
-async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
-    """Test that a script aborts when an action enabled uses non-limited template."""
+async def test_enabled_template_uses_state(hass: HomeAssistant) -> None:
+    """Test an action enabled template is rendered with full access to states."""
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
                 "event": event,
-                "enabled": "{{ states('sensor.limited') }}",
+                "enabled": "{{ states('input_boolean.run_step') == 'on' }}",
             }
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("input_boolean.run_step", "off")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+    assert_action_trace({"0": [{"result": {"enabled": False}}]})
+
+    # The template is rendered again on each run, so a state change is picked up
+    hass.states.async_set("input_boolean.run_step", "on")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert_action_trace(
+        {"0": [{"result": {"event": event, "event_data": {}}}]},
+    )
+
+
+async def test_enabled_template_uses_variables(hass: HomeAssistant) -> None:
+    """Test an action enabled template is rendered with the run variables."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"from_sequence": True}},
+            {
+                "alias": "Sequence variable",
+                "event": event,
+                "event_data": {"step": "sequence"},
+                "enabled": "{{ from_sequence }}",
+            },
+            {
+                "alias": "Run variable",
+                "event": event,
+                "event_data": {"step": "run"},
+                "enabled": "{{ from_run }}",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(run_variables={"from_run": False}, context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["step"] for event in events] == ["sequence"]
+
+    await script_obj.async_run(run_variables={"from_run": True}, context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["step"] for event in events] == ["sequence", "sequence", "run"]
+
+
+async def test_enabled_template_on_condition_step(hass: HomeAssistant) -> None:
+    """Test the enabled template of a condition step uses states and variables."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "condition": "template",
+                "value_template": "{{ condition_passes }}",
+                "enabled": "{{ check_enabled and is_state('input_boolean.check', 'on') }}",
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    hass.states.async_set("input_boolean.check", "on")
+
+    # Enabled and passing, so the run continues
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": True},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    # Enabled and failing, so the run stops
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    # Disabled by a variable, so the failing condition is skipped
+    await script_obj.async_run(
+        run_variables={"check_enabled": False, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    # Disabled by a state change, so the failing condition is skipped
+    hass.states.async_set("input_boolean.check", "off")
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+
+
+async def test_enabled_template_error(hass: HomeAssistant) -> None:
+    """Test that a script aborts when an action enabled template fails to render."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "event": event,
+                "enabled": "{{ states('sensor.missing') | float }}",
+                "continue_on_error": True,
+            },
+            {"event": event},
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -6718,8 +7099,10 @@ async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
         "0": [
             {
                 "error": (
-                    "TemplateError: Use of 'states' is not"
-                    " supported in limited templates"
+                    "ValueError: Template error: float got"
+                    " invalid input 'unknown' when rendering template"
+                    " '{{ states('sensor.missing') | float }}' but no default"
+                    " was specified"
                 )
             }
         ],
@@ -6898,7 +7281,7 @@ async def test_conversation_response_not_set(
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     result = await script_obj.async_run(context=Context())
-    assert result.conversation_response is UNDEFINED
+    assert result.conversation_response is Undefined
 
     assert_action_trace({})
 

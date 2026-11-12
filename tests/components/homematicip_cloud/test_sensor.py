@@ -1,7 +1,14 @@
 """Tests for HomematicIP Cloud sensor."""
 
+from unittest.mock import patch
+
 from homematicip.base.enums import ValveState, WindowState
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -26,13 +33,20 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_TEMPERATURE_OFFSET,
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
+    SENSOR_DESCRIPTIONS_BY_DEVICE,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfLength,
     UnitOfPower,
     UnitOfRatio,
@@ -52,7 +66,7 @@ async def test_hmip_accesspoint_status(
 ) -> None:
     """Test HomematicipSwitch."""
     entity_id = "sensor.home_control_access_point_duty_cycle"
-    entity_name = "HOME_CONTROL_ACCESS_POINT Duty Cycle"
+    entity_name = "HOME_CONTROL_ACCESS_POINT Duty cycle"
     device_model = "HmIP-HAP"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["HOME_CONTROL_ACCESS_POINT"]
@@ -64,6 +78,7 @@ async def test_hmip_accesspoint_status(
     assert hmip_device
     assert ha_state.state == "8.0"
     assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ha_state.attributes["icon"] == "mdi:access-point-network"
 
 
 async def test_hmip_heating_thermostat(
@@ -295,6 +310,38 @@ async def test_hmip_power_sensor(
     assert ha_state.attributes[ATTR_CONFIG_PENDING]
 
 
+async def test_hmip_power_and_energy_without_device_class(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the power and energy of a device the library has no class for."""
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Deckenlicht"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    entity_id = "sensor.deckenlicht_power"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "currentPowerConsumption",
+        23.5,
+        channel=0,
+        channel_real_index=1,
+    )
+    assert hass.states.get(entity_id).state == "23.5"
+
+
 async def test_hmip_illuminance_sensor1(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
@@ -365,12 +412,39 @@ async def test_hmip_motion_detector_push_button_single_illuminance(
     assert "does not generate unique IDs" not in caplog.text
 
 
+async def test_hmip_motion_detector_switch_outdoor_illuminance(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the illuminance of a motion detector with switching actuator."""
+    entity_id = "sensor.bewegungsmelder_haustur_illuminance"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Bewegungsmelder Haustür"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "illumination", 231, channel=0, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == "231"
+
+
 async def test_hmip_windspeed_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipWindspeedSensor."""
-    entity_id = "sensor.wettersensor_pro_windspeed"
-    entity_name = "Wettersensor - pro Windspeed"
+    entity_id = "sensor.wettersensor_pro_wind_speed"
+    entity_name = "Wettersensor - pro Wind speed"
     device_model = "HmIP-SWO-PR"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wettersensor - pro"]
@@ -422,7 +496,7 @@ async def test_hmip_today_rain_sensor(
 ) -> None:
     """Test HomematicipTodayRainSensor."""
     entity_id = "sensor.weather_sensor_plus_today_rain"
-    entity_name = "Weather Sensor – plus Today Rain"
+    entity_name = "Weather Sensor – plus Today rain"
     device_model = "HmIP-SWO-PL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Weather Sensor – plus"]
@@ -445,7 +519,7 @@ async def test_hmip_temperature_external_sensor_channel_1(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Channel 1 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_1_temperature"
-    entity_name = "STE2 Channel 1 Temperature"
+    entity_name = "STE2 Channel 1 temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -470,7 +544,7 @@ async def test_hmip_temperature_external_sensor_channel_2(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Channel 2 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_2_temperature"
-    entity_name = "STE2 Channel 2 Temperature"
+    entity_name = "STE2 Channel 2 temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -495,7 +569,7 @@ async def test_hmip_temperature_external_sensor_delta(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Delta HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_delta_temperature"
-    entity_name = "STE2 Delta Temperature"
+    entity_name = "STE2 Delta temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -578,6 +652,84 @@ async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
         hass, hmip_device, "valveState", ValveState.ADAPTION_DONE
     )
     ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes["icon"] == "mdi:heating-coil"
+
+
+async def test_hmip_floor_terminal_block_valve_names_match_their_channel(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test each valve sensor carries the label of its own channel.
+
+    The channels are listed as 0, 1, 10, 11, 12, 2, ..., so a lookup by list
+    position would put the label of channel 10 on the sensor of channel 2.
+    """
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Fußbodenheizungsaktor"]
+    )
+    device = next(
+        device
+        for device in mock_hap.home.devices
+        if device.id == "3014F7110000000000000049"
+    )
+    labels = {channel.index: channel.label for channel in device.functionalChannels}
+
+    entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_hap.config_entry.entry_id
+        )
+        if entry.unique_id.startswith("3014F7110000000000000049_")
+        and entry.unique_id.endswith("_ftb_valve_position")
+    ]
+    assert len(entries) == 12
+    for entry in entries:
+        index = int(entry.unique_id.split("_")[1])
+        name = hass.states.get(entry.entity_id).name
+        assert name == f"Fußbodenheizungsaktor {labels[index]}"
+
+
+async def test_hmip_floor_terminal_block_thermal_valve_position(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the valve positions of a floor terminal block with thermal actuators."""
+    fixture = await async_load_json_object_fixture(
+        hass, "homematicip_cloud.json", DOMAIN
+    )
+    # the fixture's floor terminal blocks share a label, give this one its own
+    device = fixture["devices"]["3014F7110000000000BBBBB1"]
+    device["label"] = "FAL230"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["FAL230"], test_groups=[], extra_devices=[device]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    entity_id = next(
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_hap.config_entry.entry_id
+        )
+        if entry.unique_id == "3014F7110000000000BBBBB1_2_ftb_valve_position"
+    )
+    assert hass.states.get(entity_id).state == "100"
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "valvePosition", 0.0, channel=0, channel_real_index=2
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "0"
+    # no valveState on these channels, so no adaption warning either
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
 
@@ -807,7 +959,7 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
 ) -> None:
     """Test HomematicipTiltVibrationSensor."""
     entity_id = "sensor.neigungssensor_tor_tilt_angle"
-    entity_name = "Neigungssensor Tor Tilt Angle"
+    entity_name = "Neigungssensor Tor Tilt angle"
     device_model = "ELV-SH-CTV"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Neigungssensor Tor"]
@@ -820,12 +972,53 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
     assert ha_state.state == "89"
 
 
+async def test_hmip_temperature_tilt_vibration_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test the ELV-SH-TACO, whose tilt channel sits at index 2, not 1."""
+    device_model = "ELV-SH-TACO"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wassertemperatursensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_state",
+        "Wassertemperatursensor Tilt State",
+        device_model,
+    )
+    assert ha_state.state == "non_neutral"
+
+    await async_manipulate_test_data(hass, hmip_device, "tiltState", "TILTED", 2)
+    ha_state = hass.states.get("sensor.wassertemperatursensor_tilt_state")
+    assert ha_state.state == "tilted"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_tilt_angle",
+        "Wassertemperatursensor Tilt angle",
+        device_model,
+    )
+    assert ha_state.state == "92"
+
+    ha_state, _ = get_and_check_entity_basics(
+        hass,
+        mock_hap,
+        "sensor.wassertemperatursensor_temperature",
+        "Wassertemperatursensor Temperature",
+        device_model,
+    )
+    assert ha_state.state == "22.9"
+
+
 async def test_hmip_absolute_humidity_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test absolute humidity sensor (vaporAmount)."""
     entity_id = "sensor.elvshctv_absolute_humidity"
-    entity_name = "elvshctv Absolute Humidity"
+    entity_name = "elvshctv Absolute humidity"
     device_model = "ELV-SH-CTH"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["elvshctv"]
@@ -843,7 +1036,7 @@ async def test_hmip_absolute_humidity_sensor_invalid_value(
 ) -> None:
     """Test absolute humidity sensor with invalid value for vaporAmount."""
     entity_id = "sensor.elvshctv_absolute_humidity"
-    entity_name = "elvshctv Absolute Humidity"
+    entity_name = "elvshctv Absolute humidity"
     device_model = "ELV-SH-CTH"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["elvshctv"]
@@ -880,6 +1073,31 @@ async def test_hmip_water_valve_current_water_flow(
         == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
     )
     assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_hmip_water_supply_stop_water_flow(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the water flow of a water supply stop."""
+    entity_id = "sensor.wasserstopp_water_flow"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Wasserstopp"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(hass, hmip_device, "waterFlow", 11.55)
+    assert hass.states.get(entity_id).state == "11.55"
 
 
 async def test_hmip_water_valve_water_volume(
@@ -923,7 +1141,9 @@ async def test_hmip_water_valve_water_volume_since_open(
 
 
 async def test_hmip_smoke_detector_dirt_level(
-    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    default_mock_hap_factory: HomeFactory,
 ) -> None:
     """Test HomematicipSmokeDetectorDirtLevel."""
     entity_id = "sensor.rauchwarnmelder_dirt_level"
@@ -931,7 +1151,6 @@ async def test_hmip_smoke_detector_dirt_level(
     device_model = "HmIP-SWSD"
 
     # Pre-register the entity as enabled before platform loads
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -1083,6 +1302,47 @@ async def test_hmip_soil_temperature_sensor(
 
 
 @pytest.mark.parametrize(
+    ("entity_id", "entity_name", "attribute", "value", "new_value"),
+    [
+        ("sensor.zisterne_distance", "Zisterne Distance", "distance", "30.8", 39.4),
+        (
+            "sensor.zisterne_height",
+            "Zisterne Height",
+            "calculatedHeight",
+            "619.2",
+            610.6,
+        ),
+    ],
+)
+async def test_hmip_ultrasonic_distance_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_id: str,
+    entity_name: str,
+    attribute: str,
+    value: str,
+    new_value: float,
+) -> None:
+    """Test the ELV-SH-DUSI distance and height sensors."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Zisterne"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, "ELV-SH-DUSI"
+    )
+
+    assert ha_state.state == value
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.CENTIMETERS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert ha_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+
+    await async_manipulate_test_data(hass, hmip_device, attribute, new_value)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == str(new_value)
+
+
+@pytest.mark.parametrize(
     ("device_data_fixture", "device_label", "entity_id", "device_model", "channel"),
     [
         (
@@ -1135,3 +1395,18 @@ async def test_hmip_carbon_dioxide_sensor(
         channel_real_index=channel,
     )
     assert hass.states.get(entity_id).state == "812.0"
+
+
+def test_simple_sensor_descriptions_no_overlap() -> None:
+    """Every device class must match at most one description group."""
+    device_classes = list(SENSOR_DESCRIPTIONS_BY_DEVICE)
+    for i, cls_a in enumerate(device_classes):
+        for cls_b in device_classes[i + 1 :]:
+            assert not issubclass(cls_a, cls_b), (
+                f"{cls_a.__name__} matches both {cls_a.__name__} and "
+                f"{cls_b.__name__}; duplicate entities would be created"
+            )
+            assert not issubclass(cls_b, cls_a), (
+                f"{cls_b.__name__} matches both {cls_b.__name__} and "
+                f"{cls_a.__name__}; duplicate entities would be created"
+            )

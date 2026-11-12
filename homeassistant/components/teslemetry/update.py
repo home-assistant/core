@@ -4,6 +4,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.update import (
@@ -15,14 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 AVAILABLE = "available"
 DOWNLOADING = "downloading"
@@ -51,7 +51,7 @@ async def async_setup_entry(
 class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):
     """Teslemetry Updates entity."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     @override

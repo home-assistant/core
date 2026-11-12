@@ -1,0 +1,99 @@
+"""Base entities for the Marketplace."""
+
+from typing import TYPE_CHECKING, override
+
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
+
+from .const import DOMAIN
+from .coordinator import MarketplaceUpdateCoordinator
+
+if TYPE_CHECKING:
+    from .base import MarketplaceManager
+    from .repositories.base import Repository
+
+
+class MarketplaceEntity(Entity):
+    """Base entity for the Marketplace."""
+
+    repository: Repository
+    _attr_should_poll = False
+
+    def __init__(self, marketplace: MarketplaceManager) -> None:
+        """Initialize."""
+        self.marketplace = marketplace
+
+
+class RepositoryEntity(
+    BaseCoordinatorEntity[MarketplaceUpdateCoordinator], MarketplaceEntity
+):
+    """Base repository entity."""
+
+    def __init__(
+        self,
+        marketplace: MarketplaceManager,
+        repository: Repository,
+    ) -> None:
+        """Initialize."""
+        BaseCoordinatorEntity.__init__(
+            self, marketplace.coordinators[repository.data.category]
+        )
+        MarketplaceEntity.__init__(self, marketplace=marketplace)
+        self.repository = repository
+        self._attr_unique_id = repository.data.id
+        self._repo_last_fetched = repository.data.last_fetched
+        self._last_available = self.available
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.marketplace.repositories.is_installed(
+            repository_id=self.repository.data.id
+        )
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return the device of the repository."""
+
+        def _manufacturer() -> str:
+            if authors := self.repository.data.authors:
+                return ", ".join(author.replace("@", "") for author in authors)
+            return self.repository.data.full_name.split("/")[0]
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.repository.data.id)},
+            name=self.repository.display_name,
+            model=self.repository.data.category,
+            manufacturer=_manufacturer(),
+            configuration_url=f"homeassistant://marketplace/repository/{self.repository.data.id}",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Going away or coming back changes nothing that was fetched
+        available = self.available
+        if (
+            available == self._last_available
+            and self._repo_last_fetched is not None
+            and self.repository.data.last_fetched is not None
+            and self._repo_last_fetched >= self.repository.data.last_fetched
+        ):
+            return
+
+        self._last_available = available
+        self._repo_last_fetched = self.repository.data.last_fetched
+        self.async_write_ha_state()
+
+    @override
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """

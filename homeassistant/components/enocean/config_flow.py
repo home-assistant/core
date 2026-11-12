@@ -4,7 +4,7 @@ import glob
 from typing import Any, override
 
 from enocean_async import Gateway
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import usb
 from homeassistant.components.usb import (
@@ -12,7 +12,7 @@ from homeassistant.components.usb import (
     usb_unique_id_from_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -23,9 +23,9 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
 
-MANUAL_SCHEMA = vol.Schema(
+MANUAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): cv.string,
+        probatio.Required(CONF_DEVICE): cv.string,
     }
 )
 
@@ -74,7 +74,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
-            CONF_NAME: human_readable_device_name(
+            "name": human_readable_device_name(
                 discovery_info.device,
                 discovery_info.serial_number,
                 discovery_info.manufacturer,
@@ -91,12 +91,11 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery confirmation."""
         if user_input is not None:
             return await self.async_step_manual({CONF_DEVICE: self.data[CONF_DEVICE]})
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="usb_confirm",
             description_placeholders={
-                ATTR_MANUFACTURER: MANUFACTURER,
-                CONF_DEVICE: self.data.get(CONF_DEVICE, ""),
+                "manufacturer": MANUFACTURER,
+                "device": self.data.get(CONF_DEVICE, ""),
             },
         )
 
@@ -135,9 +134,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="detect",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
+                    probatio.Required(CONF_DEVICE): SelectSelector(
                         SelectSelectorConfig(
                             options=devices,
                             translation_key="devices",

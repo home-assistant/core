@@ -98,7 +98,7 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
 
     TYPE = CLIMATE_DOMAIN
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, device: Thermostat, hub: DeconzHub) -> None:
         """Set up thermostat device."""
@@ -219,13 +219,13 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self._device.scaled_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         if self._device.mode == ThermostatMode.COOL and self._device.cooling_setpoint:
             return self._device.scaled_cooling_setpoint

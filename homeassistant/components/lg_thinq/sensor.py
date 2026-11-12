@@ -829,9 +829,9 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         """Handle added to Hass."""
         await super().async_added_to_hass()
         if self.coordinator.update_energy_at_time_of_day is None:
-            # random time 01:00:00 ~ 02:59:00
+            # Random time between 01:00:00 and 05:59:00
             self.coordinator.update_energy_at_time_of_day = time(
-                hour=random.randint(1, 2), minute=random.randint(0, 59)
+                hour=random.randint(1, 5), minute=random.randint(0, 59)
             )
             _LOGGER.debug(
                 "[%s] Set energy update time: %s",

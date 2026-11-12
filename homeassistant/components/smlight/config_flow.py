@@ -3,10 +3,10 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pysmlight import Api2
 from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -31,16 +31,16 @@ from .bluetooth import get_ble_scanner_mode
 from .const import CONF_BLE_SCANNER_MODE, DOMAIN, BLEScannerMode
 from .coordinator import SmConfigEntry
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -51,9 +51,9 @@ BLE_SCANNER_OPTIONS = [
     BLEScannerMode.PASSIVE,
 ]
 
-BLE_SCANNER_SCHEMA = vol.Schema(
+BLE_SCANNER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BLE_SCANNER_MODE): SelectSelector(
+        probatio.Required(CONF_BLE_SCANNER_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=BLE_SCANNER_OPTIONS,
                 translation_key=CONF_BLE_SCANNER_MODE,
@@ -88,6 +88,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                     return await self._async_complete_entry(user_input)
@@ -113,11 +114,15 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                     if self.source == SOURCE_RECONFIGURE:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         await self.async_set_unique_id(format_mac(info.MAC))
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         self._abort_if_unique_id_mismatch()
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
                             data_updates={
@@ -145,7 +150,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device_name = discovery_info.hostname.removesuffix(".local.")
         self._host = discovery_info.host
 
-        self.context["title_placeholders"] = {CONF_NAME: self._device_name}
+        self.context["title_placeholders"] = {"name": self._device_name}
         self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
         # fallback for legacy firmware older than v2.3.x
@@ -174,6 +179,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     info = await self.client.get_info()
 
                     if info.model not in Devices:
+                        # pylint: disable-next=home-assistant-flow-call-in-try
                         return self.async_abort(reason="unsupported_device")
 
                 return await self._async_complete_entry(user_input)
@@ -183,8 +189,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except SmlightAuthError:
                 return await self.async_step_auth()
-
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
@@ -383,6 +387,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         coordinator = self.config_entry.runtime_data.data
         return self.async_show_form(
             step_id="no_settings",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={"model": coordinator.data.info.model},
         )

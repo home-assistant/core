@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.feedreader.event import (
@@ -17,8 +18,6 @@ from homeassistant.util import dt as dt_util
 
 from . import create_mock_entry
 from .const import VALID_CONFIG_DEFAULT
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(

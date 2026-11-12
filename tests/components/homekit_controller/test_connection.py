@@ -12,6 +12,7 @@ from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.homekit_controller.connection import (
@@ -38,8 +39,6 @@ from .common import (
     setup_test_component,
     time_changed,
 )
-
-from tests.common import MockConfigEntry
 
 
 @dataclasses.dataclass
@@ -142,7 +141,7 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     bridge = device_registry.async_get(bridge.id)
 
     assert bridge.identifiers == variant.before
-    assert bridge.config_entries == {entry.entry_id}
+    assert bridge.config_entry_id == entry.entry_id
 
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)

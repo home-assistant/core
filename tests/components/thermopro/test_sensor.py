@@ -1,17 +1,17 @@
 """Test the ThermoPro sensors."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_discovered_devices,
+)
+
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermopro.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
 from . import TP357_SERVICE_INFO, TP962R_SERVICE_INFO, TP962R_SERVICE_INFO_2
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    patch_discovered_devices,
-)
 
 
 async def test_sensors_tp962r(hass: HomeAssistant) -> None:

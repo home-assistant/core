@@ -6,7 +6,9 @@ from datetime import date, timedelta
 import enum
 from functools import partial
 import logging
+import math
 import os
+from pathlib import Path
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import threading
@@ -14,9 +16,9 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 import uuid
 
+import probatio
 import py
 import pytest
-import voluptuous as vol
 
 import homeassistant
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -29,11 +31,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml import load_yaml_dict
 
 
 def test_boolean() -> None:
     """Test boolean validation."""
-    schema = vol.Schema(cv.boolean)
+    schema = probatio.Schema(cv.boolean)
 
     for value in (
         None,
@@ -46,7 +49,7 @@ def test_boolean() -> None:
         {"one": "two"},
         test_boolean,
     ):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("true", "On", "1", "YES", "   true  ", "enable", 1, 50, True, 0.1):
@@ -58,10 +61,10 @@ def test_boolean() -> None:
 
 def test_latitude() -> None:
     """Test latitude validation."""
-    schema = vol.Schema(cv.latitude)
+    schema = probatio.Schema(cv.latitude)
 
     for value in ("invalid", None, -91, 91, "-91", "91", "123.01A"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("-89", 89, "12.34"):
@@ -70,10 +73,10 @@ def test_latitude() -> None:
 
 def test_longitude() -> None:
     """Test longitude validation."""
-    schema = vol.Schema(cv.longitude)
+    schema = probatio.Schema(cv.longitude)
 
     for value in ("invalid", None, -181, 181, "-181", "181", "123.01A"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("-179", 179, "12.34"):
@@ -82,10 +85,10 @@ def test_longitude() -> None:
 
 def test_port() -> None:
     """Test TCP/UDP network port."""
-    schema = vol.Schema(cv.port)
+    schema = probatio.Schema(cv.port)
 
     for value in ("invalid", None, -1, 0, 80000, "81000"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("1000", 21, 24574):
@@ -94,13 +97,13 @@ def test_port() -> None:
 
 def test_isfile() -> None:
     """Validate that the value is an existing file."""
-    schema = vol.Schema(cv.isfile)
+    schema = probatio.Schema(cv.isfile)
 
     fake_file = "this-file-does-not.exist"
     assert not os.path.isfile(fake_file)
 
     for value in ("invalid", None, -1, 0, 80000, fake_file):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             schema(value)
 
     # patching methods that allow us to fake a file existing
@@ -114,7 +117,7 @@ def test_isfile() -> None:
 
 def test_url() -> None:
     """Test URL."""
-    schema = vol.Schema(cv.url)
+    schema = probatio.Schema(cv.url)
 
     for value in (
         "invalid",
@@ -125,7 +128,7 @@ def test_url() -> None:
         "http://??,**",
         "https://??,**",
     ):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in (
@@ -138,9 +141,68 @@ def test_url() -> None:
         assert schema(value)
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.url, id="url"),
+        pytest.param(cv.url_no_path, id="url_no_path"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("http://exa mple.com", id="space_in_host"),
+        pytest.param("http://user:pass@exa mple.com", id="space_in_host_with_userinfo"),
+        pytest.param("http://example.com\x00", id="nul"),
+        pytest.param("http://exam\tple.com", id="tab_in_host"),
+        pytest.param("http://exam\nple.com", id="newline_in_host"),
+        pytest.param("http://exam\u00a0ple.com", id="no_break_space_in_host"),
+        pytest.param("http://example.com/pa\tth", id="tab_in_path"),
+        pytest.param("http://example.com/?q=a\nb", id="newline_in_query"),
+        pytest.param("http://example.com/\x7f", id="delete_in_path"),
+    ],
+)
+def test_url_rejects_whitespace_and_control_chars(
+    validator: Callable[[Any], Any], value: str
+) -> None:
+    """Test URLs containing whitespace or control characters are rejected."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("\nhttp://example.com", id="leading_newline"),
+        pytest.param("http://example.com\n", id="trailing_newline"),
+        pytest.param("  http://example.com  ", id="surrounding_spaces"),
+    ],
+)
+def test_url_strips_surrounding_whitespace(value: str) -> None:
+    """Test surrounding whitespace is stripped from URLs."""
+    assert probatio.Schema(cv.url)(value) == "http://example.com"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("http://example.com/snapshot image.jpg", id="space_in_path"),
+        pytest.param(
+            "http://example.com/?file=snapshot image.jpg", id="space_in_query"
+        ),
+        pytest.param("http://example.com/#snapshot image", id="space_in_fragment"),
+        pytest.param("http://user:pa ss@example.com/", id="space_in_password"),
+        pytest.param("http://us er@example.com/", id="space_in_username"),
+    ],
+)
+def test_url_allows_spaces_outside_host(value: str) -> None:
+    """Test spaces outside the host are kept, since HTTP clients encode them."""
+    assert probatio.Schema(cv.url)(value) == value
+
+
 def test_configuration_url() -> None:
     """Test URL."""
-    schema = vol.Schema(cv.configuration_url)
+    schema = probatio.Schema(cv.configuration_url)
 
     for value in (
         "invalid",
@@ -152,7 +214,7 @@ def test_configuration_url() -> None:
         "https://??,**",
         "homeassistant://??,**",
     ):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in (
@@ -169,14 +231,14 @@ def test_configuration_url() -> None:
 
 def test_url_no_path() -> None:
     """Test URL."""
-    schema = vol.Schema(cv.url_no_path)
+    schema = probatio.Schema(cv.url_no_path)
 
     for value in (
         "https://localhost/test/index.html",
         "http://home-assistant.io/test/",
         "http://invalid-port.local:999999",
     ):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in (
@@ -191,7 +253,7 @@ def test_platform_config() -> None:
     """Test platform config validation."""
     options = ({}, {"hello": "world"})
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             cv.PLATFORM_SCHEMA(value)
 
     options = ({"platform": "mqtt"}, {"platform": "mqtt", "beer": "yes"})
@@ -201,7 +263,7 @@ def test_platform_config() -> None:
 
 def test_ensure_list() -> None:
     """Test ensure_list."""
-    schema = vol.Schema(cv.ensure_list)
+    schema = probatio.Schema(cv.ensure_list)
     assert schema(None) == []
     assert schema(1) == [1]
     assert schema([1]) == [1]
@@ -210,12 +272,342 @@ def test_ensure_list() -> None:
     assert schema({"1": "2"}) == [{"1": "2"}]
 
 
+def _even_as_str(value: Any) -> str:
+    """Validate an even number and return it as a string."""
+    if not isinstance(value, int) or value % 2:
+        raise probatio.Invalid("not even")
+    return str(value)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, [], id="none"),
+        pytest.param([], [], id="empty_list"),
+        pytest.param([2, 4], ["2", "4"], id="list"),
+        pytest.param([2], ["2"], id="list_of_one"),
+        pytest.param(2, ["2"], id="single"),
+        pytest.param(0, ["0"], id="falsy_single"),
+    ],
+)
+def test_list_of(value: Any, expected: list[str]) -> None:
+    """Test _list_of gives the same result as All(ensure_list, [validator])."""
+    assert cv._list_of(_even_as_str)(value) == expected
+    assert probatio.All(cv.ensure_list, [_even_as_str])(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "paths", "ensure_list_paths"),
+    [
+        pytest.param(3, [[]], [[0]], id="single"),
+        pytest.param("2", [[]], [[0]], id="single_str"),
+        pytest.param((2,), [[]], [[0]], id="tuple_is_a_single_item"),
+        pytest.param([3], [[0]], [[0]], id="list_of_one"),
+        pytest.param([2, 3, 4, 5], [[1], [3]], [[1], [3]], id="list"),
+    ],
+)
+def test_list_of_invalid(
+    value: Any, paths: list[list[int]], ensure_list_paths: list[list[int]]
+) -> None:
+    """Test _list_of only adds an index to the error path of a list item."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        cv._list_of(_even_as_str)(value)
+    assert [err.path for err in exc_info.value.errors] == paths
+    assert [err.msg for err in exc_info.value.errors] == ["not even"] * len(paths)
+
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        probatio.All(cv.ensure_list, [_even_as_str])(value)
+    assert [err.path for err in exc_info.value.errors] == ensure_list_paths
+
+
+_VALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_INVALID_CONDITION = {"condition": "state", "entity_id": "light.kitchen"}
+_VALID_ACTION = {"delay": 1}
+_INVALID_ACTION = {"delay": "invalid"}
+_INVALID_TRIGGER = {"trigger": "event", "alias": 5}
+
+
+@pytest.mark.parametrize(
+    ("schema", "single", "single_path", "as_list", "list_path"),
+    [
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            _INVALID_ACTION,
+            ["delay"],
+            [_VALID_ACTION, _INVALID_ACTION],
+            [1, "delay"],
+            id="script",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            _INVALID_CONDITION,
+            ["state"],
+            [_VALID_CONDITION, _INVALID_CONDITION],
+            [1, "state"],
+            id="conditions",
+        ),
+        pytest.param(
+            cv.TRIGGER_SCHEMA,
+            _INVALID_TRIGGER,
+            ["alias"],
+            [{"trigger": "event"}, _INVALID_TRIGGER],
+            [1, "alias"],
+            id="triggers",
+        ),
+        pytest.param(
+            cv.AND_CONDITION_SCHEMA,
+            {"condition": "and", "conditions": _INVALID_CONDITION},
+            ["conditions", "state"],
+            {"condition": "and", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["conditions", 1, "state"],
+            id="and",
+        ),
+        pytest.param(
+            cv.OR_CONDITION_SCHEMA,
+            {"condition": "or", "conditions": _INVALID_CONDITION},
+            ["conditions", "state"],
+            {"condition": "or", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["conditions", 1, "state"],
+            id="or",
+        ),
+        pytest.param(
+            cv.NOT_CONDITION_SCHEMA,
+            {"condition": "not", "conditions": _INVALID_CONDITION},
+            ["conditions", "state"],
+            {"condition": "not", "conditions": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["conditions", 1, "state"],
+            id="not",
+        ),
+        pytest.param(
+            cv.AND_CONDITION_SHORTHAND_SCHEMA,
+            {"and": _INVALID_CONDITION},
+            ["and", "state"],
+            {"and": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["and", 1, "state"],
+            id="and_shorthand",
+        ),
+        pytest.param(
+            cv.OR_CONDITION_SHORTHAND_SCHEMA,
+            {"or": _INVALID_CONDITION},
+            ["or", "state"],
+            {"or": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["or", 1, "state"],
+            id="or_shorthand",
+        ),
+        pytest.param(
+            cv.NOT_CONDITION_SHORTHAND_SCHEMA,
+            {"not": _INVALID_CONDITION},
+            ["not", "state"],
+            {"not": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["not", 1, "state"],
+            id="not_shorthand",
+        ),
+        pytest.param(
+            cv.CONDITION_SHORTHAND_SCHEMA,
+            {"condition": _INVALID_CONDITION},
+            ["condition", "state"],
+            {"condition": [_VALID_CONDITION, _INVALID_CONDITION]},
+            ["condition", 1, "state"],
+            id="condition_shorthand",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"choose": {"conditions": [], "sequence": [], "invalid": 1}},
+            ["choose", "invalid"],
+            {
+                "choose": [
+                    {"conditions": [], "sequence": []},
+                    {"conditions": [], "sequence": [], "invalid": 1},
+                ]
+            },
+            ["choose", 1, "invalid"],
+            id="choose",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"choose": {"conditions": _INVALID_CONDITION, "sequence": []}},
+            ["choose", "conditions", "state"],
+            {
+                "choose": [
+                    {"conditions": [], "sequence": []},
+                    {
+                        "conditions": [_VALID_CONDITION, _INVALID_CONDITION],
+                        "sequence": [],
+                    },
+                ]
+            },
+            ["choose", 1, "conditions", 1, "state"],
+            id="choose_conditions",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"choose": [], "default": _INVALID_ACTION},
+            ["default", "delay"],
+            {"choose": [], "default": [_VALID_ACTION, _INVALID_ACTION]},
+            ["default", 1, "delay"],
+            id="choose_default",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"if": _INVALID_CONDITION, "then": []},
+            ["if", "state"],
+            {"if": [_VALID_CONDITION, _INVALID_CONDITION], "then": []},
+            ["if", 1, "state"],
+            id="if",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"if": [], "then": [], "else": _INVALID_ACTION},
+            ["else", "delay"],
+            {"if": [], "then": [], "else": [_VALID_ACTION, _INVALID_ACTION]},
+            ["else", 1, "delay"],
+            id="else",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"repeat": {"until": _INVALID_CONDITION, "sequence": []}},
+            ["repeat", "until", "state"],
+            {
+                "repeat": {
+                    "until": [_VALID_CONDITION, _INVALID_CONDITION],
+                    "sequence": [],
+                }
+            },
+            ["repeat", "until", 1, "state"],
+            id="repeat_until",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"sequence": _INVALID_ACTION},
+            ["sequence", "delay"],
+            {"sequence": [_VALID_ACTION, _INVALID_ACTION]},
+            ["sequence", 1, "delay"],
+            id="sequence",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {"wait_for_trigger": _INVALID_TRIGGER},
+            ["wait_for_trigger", "alias"],
+            {"wait_for_trigger": [{"trigger": "event"}, _INVALID_TRIGGER]},
+            ["wait_for_trigger", 1, "alias"],
+            id="wait_for_trigger",
+        ),
+    ],
+)
+def test_single_item_error_path(
+    schema: Callable[[Any], Any],
+    single: Any,
+    single_path: list[str | int],
+    as_list: Any,
+    list_path: list[str | int],
+) -> None:
+    """Test the error path of an item written without a list has no index."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        schema(single)
+    assert [err.path for err in exc_info.value.errors] == [single_path]
+
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        schema(as_list)
+    assert [err.path for err in exc_info.value.errors] == [list_path]
+
+
+# These validate to themselves
+_UNCHANGED_ACTION = {"event": "test"}
+_UNCHANGED_CONDITION = {"condition": "sun"}
+
+
+@pytest.mark.parametrize(
+    ("schema", "single", "expected"),
+    [
+        pytest.param(
+            cv.SCRIPT_SCHEMA, _UNCHANGED_ACTION, [_UNCHANGED_ACTION], id="script"
+        ),
+        pytest.param(cv.SCRIPT_SCHEMA, None, [], id="script_none"),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            _UNCHANGED_CONDITION,
+            [_UNCHANGED_CONDITION],
+            id="conditions",
+        ),
+        pytest.param(cv.CONDITIONS_SCHEMA, None, [], id="conditions_none"),
+        pytest.param(
+            cv.TRIGGER_SCHEMA,
+            {"trigger": "event"},
+            [{"platform": "event"}],
+            id="triggers",
+        ),
+        pytest.param(cv.TRIGGER_SCHEMA, None, [], id="triggers_none"),
+        pytest.param(
+            cv.TRIGGER_SCHEMA,
+            {"triggers": {"trigger": "event"}},
+            [{"platform": "event"}],
+            id="triggers_single_sublist",
+        ),
+        pytest.param(
+            cv.AND_CONDITION_SCHEMA,
+            {"condition": "and", "conditions": _UNCHANGED_CONDITION},
+            {"condition": "and", "conditions": [_UNCHANGED_CONDITION]},
+            id="and",
+        ),
+        pytest.param(
+            cv.CONDITION_SCHEMA,
+            {"or": _UNCHANGED_CONDITION},
+            {"condition": "or", "conditions": [_UNCHANGED_CONDITION]},
+            id="or_shorthand",
+        ),
+        pytest.param(
+            cv.CONDITION_SHORTHAND_SCHEMA,
+            {"condition": None},
+            {"condition": []},
+            id="condition_shorthand_none",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            {
+                "choose": {
+                    "conditions": _UNCHANGED_CONDITION,
+                    "sequence": _UNCHANGED_ACTION,
+                }
+            },
+            [
+                {
+                    "choose": [
+                        {
+                            "conditions": [_UNCHANGED_CONDITION],
+                            "sequence": [_UNCHANGED_ACTION],
+                        }
+                    ]
+                }
+            ],
+            id="choose",
+        ),
+    ],
+)
+def test_single_item_is_wrapped_in_list(
+    schema: Callable[[Any], Any], single: Any, expected: Any
+) -> None:
+    """Test an item written without a list validates to a list."""
+    assert schema(single) == expected
+
+
+def test_single_trigger_not_a_mapping() -> None:
+    """Test a single trigger which is not a mapping is invalid."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        cv.TRIGGER_SCHEMA(5)
+    assert [(err.path, err.msg) for err in exc_info.value.errors] == [
+        ([], "expected a mapping")
+    ]
+
+
 def test_entity_id() -> None:
     """Test entity ID validation."""
-    schema = vol.Schema(cv.entity_id)
+    schema = probatio.Schema(cv.entity_id)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema("invalid_entity")
+
+    with pytest.raises(probatio.MultipleInvalid):
+        schema("sensor.light\n")
 
     assert schema("sensor.LIGHT") == "sensor.light"
 
@@ -223,7 +615,7 @@ def test_entity_id() -> None:
 @pytest.mark.parametrize("validator", [cv.entity_ids, cv.entity_ids_or_uuids])
 def test_entity_ids(validator) -> None:
     """Test entity ID validation."""
-    schema = vol.Schema(validator)
+    schema = probatio.Schema(validator)
 
     options = (
         "invalid_entity",
@@ -233,7 +625,7 @@ def test_entity_ids(validator) -> None:
         ["sensor.light,sensor_invalid"],
     )
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     options = ([], ["sensor.light"], "sensor.light")
@@ -245,7 +637,7 @@ def test_entity_ids(validator) -> None:
 
 def test_entity_ids_or_uuids() -> None:
     """Test entity ID validation."""
-    schema = vol.Schema(cv.entity_ids_or_uuids)
+    schema = probatio.Schema(cv.entity_ids_or_uuids)
 
     valid_uuid = "a266a680b608c32770e6c45bfe6b8411"
     valid_uuid2 = "a266a680b608c32770e6c45bfe6b8412"
@@ -259,7 +651,7 @@ def test_entity_ids_or_uuids() -> None:
         [f"{valid_uuid},invalid_uuid"],
     )
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     options = ([], [valid_uuid], valid_uuid)
@@ -271,7 +663,7 @@ def test_entity_ids_or_uuids() -> None:
 
 def test_entity_domain() -> None:
     """Test entity domain validation."""
-    schema = vol.Schema(cv.entity_domain("sensor"))
+    schema = probatio.Schema(cv.entity_domain("sensor"))
 
     for value in (
         "invalid_entity",
@@ -279,24 +671,49 @@ def test_entity_domain() -> None:
         "cover.demo,sensor.another_entity",
         "",
     ):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     assert schema("sensor.LIGHT") == "sensor.light"
 
-    schema = vol.Schema(cv.entity_domain(("sensor", "binary_sensor")))
+    schema = probatio.Schema(cv.entity_domain(("sensor", "binary_sensor")))
 
     for value in ("invalid_entity", "cover.demo"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     assert schema("sensor.LIGHT") == "sensor.light"
     assert schema("binary_sensor.LIGHT") == "binary_sensor.light"
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.entity_ids, id="entity_ids"),
+        pytest.param(cv.entity_ids_or_uuids, id="entity_ids_or_uuids"),
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+        pytest.param(cv.entity_domain("sensor"), id="entity_domain"),
+        pytest.param(cv.entities_domain("sensor"), id="entities_domain"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(True, id="bool"),
+        pytest.param(4, id="int"),
+        pytest.param(1.5, id="float"),
+    ],
+)
+def test_entity_ids_non_iterable(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test entity ID validators reject non-string scalars with Invalid."""
+    with pytest.raises(probatio.Invalid):
+        validator(value)
+
+
 def test_entities_domain() -> None:
     """Test entities domain validation."""
-    schema = vol.Schema(cv.entities_domain("sensor"))
+    schema = probatio.Schema(cv.entities_domain("sensor"))
 
     options = (
         None,
@@ -307,7 +724,7 @@ def test_entities_domain() -> None:
     )
 
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     options = ("sensor.light", ["SENSOR.light"], ["sensor.light", "sensor.demo"])
@@ -320,7 +737,7 @@ def test_entities_domain() -> None:
 
 def test_ensure_list_csv() -> None:
     """Test ensure_list_csv."""
-    schema = vol.Schema(cv.ensure_list_csv)
+    schema = probatio.Schema(cv.ensure_list_csv)
 
     options = (None, 12, [], ["string"], "string1,string2")
     for value in options:
@@ -338,7 +755,7 @@ def test_event_schema() -> None:
         {"event": "state_changed", "event_data": 1},
     )
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             cv.EVENT_SCHEMA(value)
 
     options = (
@@ -351,19 +768,32 @@ def test_event_schema() -> None:
 
 def test_icon() -> None:
     """Test icon validation."""
-    schema = vol.Schema(cv.icon)
+    schema = probatio.Schema(cv.icon)
 
-    for value in (False, "work"):
-        with pytest.raises(vol.MultipleInvalid):
+    for value in (False, "work", "mdi:wo rk", "mdi:\twork", "mdi: work"):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     schema("mdi:work")
     schema("custom:prefix")
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("mdi:work\n", id="trailing_newline"),
+        pytest.param(" mdi:work", id="leading_space"),
+        pytest.param("\tmdi:work  ", id="tab_and_trailing_spaces"),
+    ],
+)
+def test_icon_strips_surrounding_whitespace(value: str) -> None:
+    """Test icon validation strips surrounding whitespace."""
+    assert cv.icon(value) == "mdi:work"
+
+
 def test_time_period() -> None:
     """Test time_period validation."""
-    schema = vol.Schema(cv.time_period)
+    schema = probatio.Schema(cv.time_period)
 
     options = (
         None,
@@ -379,7 +809,7 @@ def test_time_period() -> None:
         "12:30.5:30",
     )
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     options = (
@@ -410,6 +840,32 @@ def test_time_period() -> None:
         assert schema(value) == result
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.time_period, id="time_period"),
+        pytest.param(cv.positive_time_period, id="positive_time_period"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(math.inf, id="float_inf"),
+        pytest.param("inf", id="str_inf"),
+        pytest.param("-inf", id="str_neg_inf"),
+        pytest.param(10**20, id="huge_seconds"),
+        pytest.param("99999999999:00", id="huge_hours"),
+        pytest.param("0:0:inf", id="inf_seconds_field"),
+        pytest.param({"days": math.inf}, id="dict_inf_days"),
+        pytest.param({"days": 1e10}, id="dict_huge_days"),
+    ],
+)
+def test_time_period_overflow(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test time_period rejects periods that overflow timedelta."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(value)
+
+
 def test_remove_falsy() -> None:
     """Test remove falsy."""
     assert cv.remove_falsy([0, None, 1, "1", {}, [], ""]) == [1, "1"]
@@ -417,9 +873,9 @@ def test_remove_falsy() -> None:
 
 def test_service() -> None:
     """Test service validation."""
-    schema = vol.Schema(cv.service)
+    schema = probatio.Schema(cv.service)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema("invalid_turn_on")
 
     schema("homeassistant.turn_on")
@@ -454,6 +910,21 @@ def test_service() -> None:
             "alias": "turn on kitchen lights",
         },
         {"action": "scene.turn_on", "metadata": {}},
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "kitchen",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {
+            "action": "light.turn_on",
+            "target": {
+                "area_id": "{{ 'kitchen' }}",
+                "exclude": {"entity_id": "light.pantry"},
+            },
+        },
+        {"action": "light.turn_on", "target": "{{ {'area_id': 'kitchen'} }}"},
     ],
 )
 def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
@@ -497,20 +968,27 @@ def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
             "action": "homeassistant.turn_on",
             "data_template": {"brightness": "{{ no_end"},
         },
+        {
+            "action": "light.turn_on",
+            "target": {"exclude": {"entity_id": "light.pantry"}},
+        },
     ],
 )
 def test_invalid_service_schema(
     hass: HomeAssistant, config: dict[str, Any] | None
 ) -> None:
     """Test service_schema validation fails."""
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         cv.SERVICE_SCHEMA(config)
 
 
 def test_entity_service_schema() -> None:
     """Test make_entity_service_schema validation."""
     schema = cv.make_entity_service_schema(
-        {vol.Required("required"): cv.positive_int, vol.Optional("optional"): cv.string}
+        {
+            probatio.Required("required"): cv.positive_int,
+            probatio.Optional("optional"): cv.string,
+        }
     )
 
     options = (
@@ -523,7 +1001,7 @@ def test_entity_service_schema() -> None:
         {"required": "str", "area_id": "kitchen"},
     )
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             cv.SERVICE_SCHEMA(value)
 
     options = (
@@ -546,13 +1024,127 @@ def test_entity_service_schema() -> None:
         assert "metadata" not in validated
 
 
+def test_entity_service_schema_exclude() -> None:
+    """Test make_entity_service_schema validates the exclude block."""
+    schema = cv.make_entity_service_schema({})
+
+    invalid = (
+        # An exclude block alone doesn't target anything
+        {"exclude": {"entity_id": "light.kitchen"}},
+        # Exclude blocks can't be nested
+        {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
+        # all and none are not supported in the exclude block
+        {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "none"}},
+        {"area_id": "kitchen", "exclude": {"unknown": "pantry"}},
+        {"area_id": "kitchen", "exclude": "light.kitchen"},
+        # Unlike the target, the exclude block only accepts strict entity IDs
+        {"area_id": "kitchen", "exclude": {"entity_id": "light.kitchen, light.pantry"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "Light.Kitchen"}},
+        {
+            "area_id": "kitchen",
+            "exclude": {"entity_id": "0123456789abcdef0123456789abcdef"},
+        },
+    )
+    for value in invalid:
+        with pytest.raises(probatio.MultipleInvalid):
+            schema(value)
+
+    assert schema(
+        {
+            "entity_id": "all",
+            "exclude": {
+                "entity_id": ["light.kitchen", "light.pantry"],
+                "device_id": "a_device",
+                "area_id": "kitchen",
+                "floor_id": "ground_floor",
+                "label_id": "christmas",
+            },
+        }
+    ) == {
+        "entity_id": "all",
+        "exclude": {
+            "entity_id": ["light.kitchen", "light.pantry"],
+            "device_id": ["a_device"],
+            "area_id": ["kitchen"],
+            "floor_id": ["ground_floor"],
+            "label_id": ["christmas"],
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        probatio.Schema(cv.TARGET_FIELDS),
+        probatio.Schema(cv.TARGET_SERVICE_FIELDS),
+        probatio.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED),
+    ],
+)
+def test_target_fields_exclude(schema: probatio.Schema) -> None:
+    """Test the exclude block of the target field schemas."""
+    assert schema({"area_id": "kitchen", "exclude": {"label_id": "christmas"}}) == {
+        "area_id": ["kitchen"],
+        "exclude": {"label_id": ["christmas"]},
+    }
+
+    for value in (
+        {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "light.kitchen, light.pantry"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "Light.Kitchen"}},
+        {
+            "area_id": "kitchen",
+            "exclude": {"entity_id": "0123456789abcdef0123456789abcdef"},
+        },
+    ):
+        with pytest.raises(probatio.MultipleInvalid):
+            schema(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param({"area_id": ["kitchen"]}, id="no_exclude"),
+        pytest.param(
+            {"area_id": ["kitchen"], "exclude": {"label_id": ["christmas"]}},
+            id="target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_valid(value: dict[str, Any]) -> None:
+    """Test targets which are accepted by exclude_requires_target."""
+    assert cv.exclude_requires_target(value) == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param({"exclude": {"label_id": ["christmas"]}}, id="exclude_only"),
+        pytest.param(
+            {"entity_id": [], "exclude": {"label_id": ["christmas"]}},
+            id="empty_target_and_exclude",
+        ),
+    ],
+)
+def test_exclude_requires_target_invalid(value: dict[str, Any]) -> None:
+    """Test a target consisting of only an exclude block is rejected."""
+    with pytest.raises(
+        probatio.Invalid, match="an exclude block requires a target to exclude from"
+    ):
+        cv.exclude_requires_target(value)
+
+
 def test_entity_service_schema_with_metadata() -> None:
     """Test make_entity_service_schema with overridden metadata key."""
-    schema = cv.make_entity_service_schema({vol.Required("metadata"): cv.positive_int})
+    schema = cv.make_entity_service_schema(
+        {probatio.Required("metadata"): cv.positive_int}
+    )
 
     options = ({"metadata": {"some": "frontend_stuff"}, "entity_id": "light.kitchen"},)
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             cv.SERVICE_SCHEMA(value)
 
     options = ({"metadata": 1, "entity_id": "light.kitchen"},)
@@ -563,10 +1155,10 @@ def test_entity_service_schema_with_metadata() -> None:
 
 def test_slug() -> None:
     """Test slug validation."""
-    schema = vol.Schema(cv.slug)
+    schema = probatio.Schema(cv.slug)
 
     for value in (None, "hello world"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in (12345, "hello"):
@@ -575,15 +1167,15 @@ def test_slug() -> None:
 
 def test_string(hass: HomeAssistant) -> None:
     """Test string validation."""
-    schema = vol.Schema(cv.string)
+    schema = probatio.Schema(cv.string)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema(None)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema([])
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema({})
 
     for value in (True, 1, "hello"):
@@ -612,15 +1204,15 @@ def test_string(hass: HomeAssistant) -> None:
 
 def test_string_with_no_html() -> None:
     """Test string with no html validation."""
-    schema = vol.Schema(cv.string_with_no_html)
+    schema = probatio.Schema(cv.string_with_no_html)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("This has HTML in it <a>Link</a>")
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("<b>Bold</b>")
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("HTML element names are <EM>case-insensitive</eM>.")
 
     for value in (
@@ -635,9 +1227,9 @@ def test_string_with_no_html() -> None:
 
 def test_temperature_unit() -> None:
     """Test temperature unit validation."""
-    schema = vol.Schema(cv.temperature_unit)
+    schema = probatio.Schema(cv.temperature_unit)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema("K")
 
     schema("C")
@@ -646,13 +1238,15 @@ def test_temperature_unit() -> None:
 
 def test_x10_address() -> None:
     """Test x10 addr validator."""
-    schema = vol.Schema(cv.x10_address)
-    with pytest.raises(vol.Invalid):
+    schema = probatio.Schema(cv.x10_address)
+    with pytest.raises(probatio.Invalid):
         schema("Q1")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("q55")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("garbage_addr")
+    with pytest.raises(probatio.Invalid):
+        schema("a1\n")
 
     schema("a1")
     schema("C11")
@@ -660,7 +1254,7 @@ def test_x10_address() -> None:
 
 def test_template(hass: HomeAssistant) -> None:
     """Test template validator."""
-    schema = vol.Schema(cv.template)
+    schema = probatio.Schema(cv.template)
 
     for value in (
         None,
@@ -668,7 +1262,7 @@ def test_template(hass: HomeAssistant) -> None:
         "{% if True %}Hello",
         ["test"],
     ):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             schema(value)
 
     options = (
@@ -689,7 +1283,7 @@ def test_template(hass: HomeAssistant) -> None:
 
 async def test_template_no_hass(hass: HomeAssistant) -> None:
     """Test template validator."""
-    schema = vol.Schema(cv.template)
+    schema = probatio.Schema(cv.template)
 
     for value in (
         None,
@@ -699,7 +1293,7 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
         # Filter added as an extension by Home Assistant
         "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     ):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await hass.async_add_executor_job(schema, value)
 
     options = (
@@ -715,14 +1309,14 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
     )
     for value in options:
         with pytest.raises(
-            vol.Invalid, match="Validates schema outside the event loop"
+            probatio.Invalid, match="Validates schema outside the event loop"
         ):
             await hass.async_add_executor_job(schema, value)
 
 
 def test_dynamic_template(hass: HomeAssistant) -> None:
     """Test dynamic template validator."""
-    schema = vol.Schema(cv.dynamic_template)
+    schema = probatio.Schema(cv.dynamic_template)
 
     for value in (
         None,
@@ -732,7 +1326,7 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
         ["test"],
         "just a string",
     ):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             schema(value)
 
     options = (
@@ -752,10 +1346,10 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("hass")
 def test_template_complex() -> None:
     """Test template_complex validator."""
-    schema = vol.Schema(cv.template_complex)
+    schema = probatio.Schema(cv.template_complex)
 
     for value in ("{{ partial_print }", "{% if True %}Hello"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     options = (
@@ -784,11 +1378,158 @@ def test_template_complex() -> None:
         assert schema(value) == value
 
 
+INVALID_TEMPLATE = "{{ partial_print }"
+INVALID_TEMPLATE_MESSAGE = "invalid template (TemplateSyntaxError: unexpected '}')"
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("value", "expected_path"),
+    [
+        pytest.param(INVALID_TEMPLATE, [], id="string"),
+        pytest.param(["{{ beer }}", INVALID_TEMPLATE], [1], id="list_index"),
+        pytest.param({"a": "{{ beer }}", "b": INVALID_TEMPLATE}, ["b"], id="dict_key"),
+        pytest.param({INVALID_TEMPLATE: 1}, [INVALID_TEMPLATE], id="dict_template_key"),
+        pytest.param(
+            {"data": {"a": ["{{ beer }}", {"b": INVALID_TEMPLATE}]}},
+            ["data", "a", 1, "b"],
+            id="nested",
+        ),
+    ],
+)
+def test_template_complex_error_path(value: Any, expected_path: list[Any]) -> None:
+    """Test template_complex reports the path of the failing element."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        cv.template_complex(value)
+
+    assert excinfo.value.path == expected_path
+    assert excinfo.value.error_message == INVALID_TEMPLATE_MESSAGE
+
+
+@pytest.mark.usefixtures("hass")
+@pytest.mark.parametrize(
+    ("validator", "value", "expected_path", "expected_message"),
+    [
+        pytest.param(
+            probatio.Any(cv.string, cv.template_complex),
+            {"a": [INVALID_TEMPLATE]},
+            ["a", 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="any_string_template_complex",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data": {"a": INVALID_TEMPLATE}},
+            ["data", "a"],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_data",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data_template": {"a": [INVALID_TEMPLATE]}},
+            ["data_template", "a", 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_data_template",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "data": [INVALID_TEMPLATE]},
+            ["data"],
+            "template value should be a string",
+            id="service_data_not_a_dict",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+            },
+            ["target", "entity_id", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_target_entity_id",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {
+                    "area_id": "kitchen",
+                    "exclude": {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+                },
+            },
+            ["target", "exclude", "entity_id", 1],
+            f"Entity ID {INVALID_TEMPLATE} is not a valid entity ID",
+            id="service_target_exclude_entity_id",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {
+                "action": "light.turn_on",
+                "target": {
+                    "area_id": "kitchen",
+                    "exclude": {"entity_id": [[INVALID_TEMPLATE]]},
+                },
+            },
+            ["target", "exclude", "entity_id", 0, 0],
+            INVALID_TEMPLATE_MESSAGE,
+            id="service_target_exclude_entity_id_nested_list",
+        ),
+        pytest.param(
+            cv.SERVICE_SCHEMA,
+            {"action": "light.turn_on", "target": {"entity_id": INVALID_TEMPLATE}},
+            ["target", "entity_id"],
+            f"Entity {INVALID_TEMPLATE} is neither a valid entity ID nor a valid UUID",
+            id="service_target_entity_id_not_a_list",
+        ),
+        pytest.param(
+            selector.TargetSelector(),
+            {"entity_id": ["light.kitchen", INVALID_TEMPLATE]},
+            ["entity_id", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="target_selector_entity_id",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"repeat": {"for_each": ["a", INVALID_TEMPLATE], "sequence": []}}],
+            [0, "repeat", "for_each", 1],
+            INVALID_TEMPLATE_MESSAGE,
+            id="repeat_for_each",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"repeat": {"for_each": {"a": INVALID_TEMPLATE}, "sequence": []}}],
+            [0, "repeat", "for_each"],
+            "template value should be a string",
+            id="repeat_for_each_not_a_list",
+        ),
+        pytest.param(
+            cv.positive_time_period_template,
+            {"hours": 1, "minutes": INVALID_TEMPLATE},
+            ["minutes"],
+            "expected float",
+            id="positive_time_period_template",
+        ),
+    ],
+)
+def test_template_complex_any_branch_error(
+    validator: Any, value: Any, expected_path: list[Any], expected_message: str
+) -> None:
+    """Test which error wins when template_complex is one branch of an Any.
+
+    Any reports the error with the longest path, and the first one on a tie.
+    """
+    with pytest.raises(probatio.Invalid) as excinfo:
+        probatio.Schema(validator)(value)
+
+    assert excinfo.value.path == expected_path
+    assert excinfo.value.error_message == expected_message
+
+
 def test_time_zone() -> None:
     """Test time zone validation."""
-    schema = vol.Schema(cv.time_zone)
+    schema = probatio.Schema(cv.time_zone)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema("America/Do_Not_Exist")
 
     schema("America/Los_Angeles")
@@ -797,10 +1538,10 @@ def test_time_zone() -> None:
 
 def test_date() -> None:
     """Test date validation."""
-    schema = vol.Schema(cv.date)
+    schema = probatio.Schema(cv.date)
 
     for value in ("Not a date", "23:42", "2016-11-23T18:59:08"):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             schema(value)
 
     schema(dt_util.now().date())
@@ -809,10 +1550,15 @@ def test_date() -> None:
 
 def test_time() -> None:
     """Test date validation."""
-    schema = vol.Schema(cv.time)
+    schema = probatio.Schema(cv.time)
 
-    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
-        with pytest.raises(vol.Invalid):
+    for value in (
+        "Not a time",
+        "2016-11-23",
+        "2016-11-23T18:59:08",
+        "0:2147483648",
+    ):
+        with pytest.raises(probatio.Invalid):
             schema(value)
 
     schema(dt_util.now().time())
@@ -822,9 +1568,9 @@ def test_time() -> None:
 
 def test_datetime() -> None:
     """Test date time validation."""
-    schema = vol.Schema(cv.datetime)
+    schema = probatio.Schema(cv.datetime)
     for value in (date.today(), "Wrong DateTime"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     schema(dt_util.now())
@@ -838,11 +1584,11 @@ def test_multi_select() -> None:
         - Will not accept any input but a list
         - Will not accept selections outside of configured scope
     """
-    schema = vol.Schema(cv.multi_select({"paulus": "Paulus", "robban": "Robban"}))
+    schema = probatio.Schema(cv.multi_select({"paulus": "Paulus", "robban": "Robban"}))
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("robban")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema(["paulus", "martinhj"])
 
     schema(["robban", "paulus"])
@@ -882,6 +1628,57 @@ def test_selector_in_serializer() -> None:
     }
 
 
+def test_selector_with_context_in_serializer() -> None:
+    """Test selector with context with custom_serializer."""
+    assert cv.custom_serializer(
+        selector.UnitOfMeasurementSelector(
+            selector.UnitOfMeasurementSelectorConfig(
+                context={"filter_device_class": "device_class"}
+            )
+        )
+    ) == {
+        "selector": {
+            "unit_of_measurement": {"context": {"filter_device_class": "device_class"}}
+        },
+    }
+
+
+def test_selector_context_in_field_list() -> None:
+    """Test selector context is only added to the field that sets it."""
+    schema = probatio.Schema(
+        {
+            probatio.Optional("device_class"): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain="sensor")
+            ),
+            probatio.Optional(
+                "unit_of_measurement"
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={"filter_device_class": "device_class"}
+                )
+            ),
+        }
+    )
+    assert probatio.to_field_list(schema, custom_serializer=cv.custom_serializer) == [
+        {
+            "name": "device_class",
+            "optional": True,
+            "required": False,
+            "selector": {"device_class": {"domain": "sensor", "multiple": False}},
+        },
+        {
+            "name": "unit_of_measurement",
+            "optional": True,
+            "required": False,
+            "selector": {
+                "unit_of_measurement": {
+                    "context": {"filter_device_class": "device_class"}
+                }
+            },
+        },
+    ]
+
+
 def test_positive_time_period_dict_in_serializer() -> None:
     """Test positive_time_period_dict with custom_serializer."""
     assert cv.custom_serializer(cv.positive_time_period_dict) == {
@@ -892,7 +1689,9 @@ def test_positive_time_period_dict_in_serializer() -> None:
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""
-    return vol.Schema({"venus": cv.boolean, "mars": cv.boolean, "jupiter": cv.boolean})
+    return probatio.Schema(
+        {"venus": cv.boolean, "mars": cv.boolean, "jupiter": cv.boolean}
+    )
 
 
 @pytest.fixture
@@ -909,7 +1708,7 @@ def test_deprecated_with_no_optionals(caplog: pytest.LogCaptureFixture, schema) 
         - Processes schema without changing any values
         - No warning or difference in output if key is not provided
     """
-    deprecated_schema = vol.All(cv.deprecated("mars"), schema)
+    deprecated_schema = probatio.All(cv.deprecated("mars"), schema)
 
     test_data = {"mars": True}
     output = deprecated_schema(test_data.copy())
@@ -941,10 +1740,10 @@ def test_deprecated_or_removed_param_and_raise(
         - Outputs the appropriate deprecation or removed
           from support error if key is detected
     """
-    removed_schema = vol.All(cv.deprecated("mars", raise_if_present=True), schema)
+    removed_schema = probatio.All(cv.deprecated("mars", raise_if_present=True), schema)
 
     test_data = {"mars": True}
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         removed_schema(test_data)
     assert (
         "The 'mars' option is deprecated, please remove it from your configuration"
@@ -957,10 +1756,10 @@ def test_deprecated_or_removed_param_and_raise(
     assert len(caplog.records) == 0
     assert test_data == output
 
-    deprecated_schema = vol.All(cv.removed("mars"), schema)
+    deprecated_schema = probatio.All(cv.removed("mars"), schema)
 
     test_data = {"mars": True}
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         deprecated_schema(test_data)
     assert (
         "The 'mars' option has been removed, please remove it from your configuration"
@@ -987,7 +1786,7 @@ def test_deprecated_with_replacement_key(
         - No warning or difference in output if neither key nor
             replacement_key are provided
     """
-    deprecated_schema = vol.All(
+    deprecated_schema = probatio.All(
         cv.deprecated("mars", replacement_key="jupiter"), schema
     )
 
@@ -1013,6 +1812,66 @@ def test_deprecated_with_replacement_key(
     assert test_data == output
 
 
+@pytest.mark.parametrize(
+    ("replacement_key", "expected_output", "expected_message"),
+    [
+        pytest.param(
+            None,
+            {"mars": True},
+            "The 'mars' option is deprecated and will be removed in Home Assistant "
+            "2027.6, please remove it from your configuration",
+            id="no_replacement_key",
+        ),
+        pytest.param(
+            "jupiter",
+            {"jupiter": True},
+            "The 'mars' option is deprecated and will be removed in Home Assistant "
+            "2027.6, please replace it with 'jupiter'",
+            id="replacement_key",
+        ),
+    ],
+)
+def test_deprecated_with_breaks_in_ha_version(
+    caplog: pytest.LogCaptureFixture,
+    schema: probatio.Schema,
+    replacement_key: str | None,
+    expected_output: dict[str, bool],
+    expected_message: str,
+) -> None:
+    """Test the deprecation warning mentions the version the key is removed in."""
+    deprecated_schema = probatio.All(
+        cv.deprecated(
+            "mars", replacement_key=replacement_key, breaks_in_ha_version="2027.6"
+        ),
+        schema,
+    )
+
+    output = deprecated_schema({"mars": True})
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelno == logging.WARNING
+    assert expected_message in caplog.text
+    assert output == expected_output
+
+
+def test_deprecated_with_breaks_in_ha_version_and_raise(
+    schema: probatio.Schema,
+) -> None:
+    """Test the raised error mentions the version the key is removed in."""
+    deprecated_schema = probatio.All(
+        cv.deprecated("mars", raise_if_present=True, breaks_in_ha_version="2027.6"),
+        schema,
+    )
+
+    with pytest.raises(
+        probatio.Invalid,
+        match=(
+            "The 'mars' option is deprecated and will be removed in Home Assistant "
+            "2027.6, please remove it from your configuration"
+        ),
+    ):
+        deprecated_schema({"mars": True})
+
+
 def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> None:
     """Test deprecation behaves correctly with a default value.
 
@@ -1021,7 +1880,7 @@ def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> No
     Expected behavior:
         - Behaves identically as when the default value was not present
     """
-    deprecated_schema = vol.All(cv.deprecated("mars", default=False), schema)
+    deprecated_schema = probatio.All(cv.deprecated("mars", default=False), schema)
 
     test_data = {"mars": True}
     with patch(
@@ -1058,7 +1917,7 @@ def test_deprecated_with_replacement_key_and_default(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    deprecated_schema = vol.All(
+    deprecated_schema = probatio.All(
         cv.deprecated("mars", replacement_key="jupiter", default=False), schema
     )
 
@@ -1083,12 +1942,12 @@ def test_deprecated_with_replacement_key_and_default(
     assert len(caplog.records) == 0
     assert output == {"venus": True, "jupiter": False}
 
-    deprecated_schema_with_default = vol.All(
-        vol.Schema(
+    deprecated_schema_with_default = probatio.All(
+        probatio.Schema(
             {
                 "venus": cv.boolean,
-                vol.Optional("mars", default=False): cv.boolean,
-                vol.Optional("jupiter", default=False): cv.boolean,
+                probatio.Optional("mars", default=False): cv.boolean,
+                probatio.Optional("jupiter", default=False): cv.boolean,
             }
         ),
         cv.deprecated("mars", replacement_key="jupiter", default=False),
@@ -1225,13 +2084,83 @@ def test_deprecated_logger_without_config_attributes(
     assert len(caplog.records) == 0
 
 
+@pytest.mark.parametrize(
+    ("validator", "option_status"),
+    [
+        pytest.param(cv.deprecated, "is deprecated", id="deprecated"),
+        pytest.param(
+            partial(cv.removed, raise_if_present=False),
+            "has been removed",
+            id="removed",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "preprocess",
+    [
+        pytest.param(lambda config: config, id="raw_loader_output"),
+        pytest.param(probatio.Schema(dict), id="pass_through_schema"),
+        pytest.param(
+            probatio.Schema({}, extra=probatio.ALLOW_EXTRA),
+            id="rebuilding_schema",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason=(
+                    "The mapping engine allocates a fresh container and never copies "
+                    "the __config_file__/__line__ slots, so _deprecated_or_removed "
+                    "takes its 'except AttributeError' branch and logs no location."
+                ),
+            ),
+        ),
+        pytest.param(
+            cv.PLATFORM_SCHEMA_BASE,
+            id="platform_schema_base",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason=(
+                    "Same rebuild, through the real PLATFORM_SCHEMA_BASE that "
+                    "check_config.py runs before the platform's own PLATFORM_SCHEMA."
+                ),
+            ),
+        ),
+    ],
+)
+def test_deprecated_or_removed_location_survives_schema_rebuild(
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    validator: Callable[..., Callable[[dict], dict]],
+    option_status: str,
+    preprocess: Callable[[dict], dict],
+) -> None:
+    """Test the location prefix survives a schema the config was passed through.
+
+    The config is built with the real YAML loader so the annotation is the one
+    production gets, not a hand-set attribute.
+    """
+    # Note: Unlike find_annotation, which reads the location off the mapping key,
+    # _deprecated_or_removed reads it off the container itself, so a schema that
+    # rebuilds the container silently drops the "near <file>:<line>" prefix. That is
+    # what check_config.py does when it hands the already validated p_validated to
+    # the platform's own PLATFORM_SCHEMA, where the cv.deprecated calls of broadlink,
+    # canary, mvglive and integration live.
+
+    config_file = tmp_path / "configuration.yaml"
+    config_file.write_text("platform: test_platform\nmars: blah\n", encoding="utf8")
+    config = load_yaml_dict(str(config_file))
+
+    validator("mars", default=False)(preprocess(config))
+
+    assert len(caplog.records) == 1
+    assert f"The 'mars' option near {config_file}:1 {option_status}" in caplog.text
+
+
 def test_key_dependency() -> None:
     """Test key_dependency validator."""
-    schema = vol.Schema(cv.key_dependency("beer", "soda"))
+    schema = probatio.Schema(cv.key_dependency("beer", "soda"))
 
     options = {"beer": None}
     for value in options:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     options = ({"beer": None, "soda": None}, {"soda": None}, {})
@@ -1241,25 +2170,30 @@ def test_key_dependency() -> None:
 
 def test_has_at_most_one_key() -> None:
     """Test has_at_most_one_key validator."""
-    schema = vol.Schema(cv.has_at_most_one_key("beer", "soda"))
+    schema = probatio.Schema(cv.has_at_most_one_key("beer", "soda"))
 
     for value in (None, [], {"beer": None, "soda": None}):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
-    for value in ({}, {"beer": None}, {"soda": None}, {vol.Optional("soda"): None}):
+    for value in (
+        {},
+        {"beer": None},
+        {"soda": None},
+        {probatio.Optional("soda"): None},
+    ):
         schema(value)
 
 
 def test_has_at_least_one_key() -> None:
     """Test has_at_least_one_key validator."""
-    schema = vol.Schema(cv.has_at_least_one_key("beer", "soda"))
+    schema = probatio.Schema(cv.has_at_least_one_key("beer", "soda"))
 
     for value in (None, [], {}, {"wine": None}):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
-    for value in ({"beer": None}, {"soda": None}, {vol.Required("soda"): None}):
+    for value in ({"beer": None}, {"soda": None}, {probatio.Required("soda"): None}):
         schema(value)
 
 
@@ -1272,20 +2206,20 @@ def test_enum() -> None:
         value1 = "Value 1"
         value2 = "Value 2"
 
-    schema = vol.Schema(cv.enum(TestEnum))
+    schema = probatio.Schema(cv.enum(TestEnum))
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("value3")
 
 
 def test_socket_timeout() -> None:
     """Test socket timeout validator."""
-    schema = vol.Schema(cv.socket_timeout)
+    schema = probatio.Schema(cv.socket_timeout)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema(0.0)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema(-1)
 
     assert schema(None) == _GLOBAL_DEFAULT_TIMEOUT
@@ -1295,12 +2229,12 @@ def test_socket_timeout() -> None:
 
 def test_matches_regex() -> None:
     """Test matches_regex validator."""
-    schema = vol.Schema(cv.matches_regex(".*uiae.*"))
+    schema = probatio.Schema(cv.matches_regex(".*uiae.*"))
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema(1.0)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("  nrtd   ")
 
     test_str = "This is a test including uiae."
@@ -1309,12 +2243,12 @@ def test_matches_regex() -> None:
 
 def test_is_regex() -> None:
     """Test the is_regex validator."""
-    schema = vol.Schema(cv.is_regex)
+    schema = probatio.Schema(cv.is_regex)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema("(")
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema({"a dict": "is not a regex"})
 
     valid_re = ".*"
@@ -1323,7 +2257,7 @@ def test_is_regex() -> None:
 
 def test_comp_entity_ids() -> None:
     """Test config validation for component entity IDs."""
-    schema = vol.Schema(cv.comp_entity_ids)
+    schema = probatio.Schema(cv.comp_entity_ids)
 
     for valid in (
         "ALL",
@@ -1337,23 +2271,135 @@ def test_comp_entity_ids() -> None:
         schema(valid)
 
     for invalid in (["light.kitchen", "not-entity-id"], "*", ""):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             schema(invalid)
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param("all", "all", id="all"),
+        pytest.param("ALL", "all", id="all_upper"),
+        pytest.param("none", "none", id="none"),
+        pytest.param("NoNe", "none", id="none_mixed_case"),
+        pytest.param(None, "none", id="none_value"),
+        pytest.param([], [], id="empty_list"),
+        pytest.param("light.kitchen", ["light.kitchen"], id="string"),
+        pytest.param("LIGHT.Kitchen", ["light.kitchen"], id="string_upper"),
+        pytest.param(
+            "light.kitchen, light.ceiling",
+            ["light.kitchen", "light.ceiling"],
+            id="comma_string",
+        ),
+        pytest.param(
+            ["light.kitchen", "light.ceiling"],
+            ["light.kitchen", "light.ceiling"],
+            id="list",
+        ),
+    ],
+)
+def test_comp_entity_ids_valid(
+    validator: Callable[[Any], Any], value: Any, expected: str | list[str]
+) -> None:
+    """Test component entity ID validators accept and normalize valid values."""
+    assert validator(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("validator", "value", "message"),
+    [
+        pytest.param(
+            cv.comp_entity_ids,
+            "not-entity-id",
+            "Entity ID not-entity-id is an invalid entity ID",
+            id="comp_entity_ids-string",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            ["light.kitchen", "not-entity-id"],
+            "Entity ID not-entity-id is an invalid entity ID",
+            id="comp_entity_ids-list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            ["all"],
+            "Entity ID all is an invalid entity ID",
+            id="comp_entity_ids-all_in_list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids,
+            4,
+            "Entity IDs must be a string or a list",
+            id="comp_entity_ids-int",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            "not-entity-id",
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID",
+            id="comp_entity_ids_or_uuids-string",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            ["light.kitchen", "not-entity-id"],
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID",
+            id="comp_entity_ids_or_uuids-list",
+        ),
+        pytest.param(
+            cv.comp_entity_ids_or_uuids,
+            4,
+            "Entity IDs must be a string or a list",
+            id="comp_entity_ids_or_uuids-int",
+        ),
+        pytest.param(
+            cv.make_entity_service_schema({}),
+            {"entity_id": "not-entity-id"},
+            "Entity ID not-entity-id is an invalid entity ID at 'entity_id'",
+            id="entity_service_schema-string",
+        ),
+        pytest.param(
+            cv.make_entity_service_schema({}),
+            {"entity_id": ["light.kitchen", "not-entity-id"]},
+            "Entity ID not-entity-id is an invalid entity ID at 'entity_id'",
+            id="entity_service_schema-list",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"action": "light.turn_on", "target": {"entity_id": "not-entity-id"}}],
+            "Entity not-entity-id is neither a valid entity ID nor a valid UUID"
+            " at '[0].target.entity_id'",
+            id="script_schema-target",
+        ),
+    ],
+)
+def test_comp_entity_ids_invalid_message(
+    validator: Callable[[Any], Any], value: Any, message: str
+) -> None:
+    """Test component entity ID validators report the entity ID error."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        validator(value)
+    assert str(excinfo.value) == message
 
 
 def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
-    schema = vol.Schema(cv.uuid4_hex)
+    schema = probatio.Schema(cv.uuid4_hex)
 
     for value in ("Not a hex string", "0", 0):
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             schema(value)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         # the 13th char should be 4
         schema("a03d31b22eee1acc9b90eec40be6ed23")
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         # the 17th char should be 8-a
         schema("a03d31b22eee4acc7b90eec40be6ed23")
 
@@ -1364,35 +2410,35 @@ def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
 
 def test_key_value_schemas() -> None:
     """Test key value schemas."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         cv.key_value_schemas(
             "mode",
             {
-                "number": vol.Schema({"mode": "number", "data": int}),
-                "string": vol.Schema({"mode": "string", "data": str}),
+                "number": probatio.Schema({"mode": "number", "data": int}),
+                "string": probatio.Schema({"mode": "string", "data": str}),
             },
         )
     )
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         schema(True)
     assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
             str(excinfo.value)
             == f"Unexpected value for mode: '{mode}'. Expected number, string"
         )
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         schema({"mode": "number", "data": "string-value"})
-    assert str(excinfo.value) == "expected int for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected int at 'data'"
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         schema({"mode": "string", "data": 1})
-    assert str(excinfo.value) == "expected str for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected str at 'data'"
 
     for mode, data in (("number", 1), ("string", "hello")):
         schema({"mode": mode, "data": data})
@@ -1401,37 +2447,37 @@ def test_key_value_schemas() -> None:
 @pytest.mark.usefixtures("hass")
 def test_key_value_schemas_with_default() -> None:
     """Test key value schemas."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         cv.key_value_schemas(
             "mode",
             {
-                "number": vol.Schema({"mode": "number", "data": int}),
-                "string": vol.Schema({"mode": "string", "data": str}),
+                "number": probatio.Schema({"mode": "number", "data": int}),
+                "string": probatio.Schema({"mode": "string", "data": str}),
             },
-            vol.Schema({"mode": cv.dynamic_template}),
+            probatio.Schema({"mode": cv.dynamic_template}),
             "a cool template",
         )
     )
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         schema(True)
     assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
             str(excinfo.value) == f"Unexpected value for mode: '{mode}'."
             " Expected number, string, a cool template"
         )
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         schema({"mode": "number", "data": "string-value"})
-    assert str(excinfo.value) == "expected int for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected int at 'data'"
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         schema({"mode": "string", "data": 1})
-    assert str(excinfo.value) == "expected str for dictionary value @ data['data']"
+    assert str(excinfo.value) == "expected str at 'data'"
 
     for mode, data in (("number", 1), ("string", "hello")):
         schema({"mode": mode, "data": data})
@@ -1441,25 +2487,25 @@ def test_key_value_schemas_with_default() -> None:
 @pytest.mark.usefixtures("hass")
 def test_key_value_schemas_with_default_no_list_alternatives() -> None:
     """Test key value schemas."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         cv.key_value_schemas(
             "mode",
             {
-                "number": vol.Schema({"mode": "number", "data": int}),
-                "string": vol.Schema({"mode": "string", "data": str}),
+                "number": probatio.Schema({"mode": "number", "data": int}),
+                "string": probatio.Schema({"mode": "string", "data": str}),
             },
-            vol.Schema({"mode": cv.dynamic_template}),
+            probatio.Schema({"mode": cv.dynamic_template}),
             "a cool template",
             list_alternatives=False,
         )
     )
 
-    with pytest.raises(vol.Invalid) as excinfo:
+    with pytest.raises(probatio.Invalid) as excinfo:
         schema(True)
     assert str(excinfo.value) == "Expected a dictionary"
 
     for mode in None, {"a": "dict"}, "invalid":
-        with pytest.raises(vol.Invalid) as excinfo:
+        with pytest.raises(probatio.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
             str(excinfo.value)
@@ -1471,14 +2517,14 @@ def test_key_value_schemas_with_default_no_list_alternatives() -> None:
 def test_key_value_schemas_without_default_no_list_alternatives() -> None:
     """Test key value schemas."""
     with pytest.raises(ValueError) as excinfo:
-        vol.Schema(
+        probatio.Schema(
             cv.key_value_schemas(
                 "mode",
                 {
-                    "number": vol.Schema({"mode": "number", "data": int}),
-                    "string": vol.Schema({"mode": "string", "data": str}),
+                    "number": probatio.Schema({"mode": "number", "data": int}),
+                    "string": probatio.Schema({"mode": "string", "data": str}),
                 },
-                vol.Schema({"mode": cv.dynamic_template}),
+                probatio.Schema({"mode": cv.dynamic_template}),
                 list_alternatives=False,
             )
         )
@@ -1506,11 +2552,11 @@ def test_key_value_schemas_without_default_no_list_alternatives() -> None:
         ),
         (
             {"event": None},
-            r"string value is None for dictionary value @ data\['event'\]",
+            r"string value is None at 'event'",
         ),
         (
             {"device_id": None},
-            r"string value is None for dictionary value @ data\['device_id'\]",
+            r"string value is None at 'device_id'",
         ),
         (
             {"scene": "light.kitchen"},
@@ -1530,13 +2576,816 @@ def test_key_value_schemas_without_default_no_list_alternatives() -> None:
 @pytest.mark.usefixtures("hass")
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
     """Test script action validation is user friendly."""
-    with pytest.raises(vol.Invalid, match=error):
+    with pytest.raises(probatio.Invalid, match=error):
         cv.script_action(config)
+
+
+@pytest.mark.parametrize(
+    ("parallel", "expected"),
+    [
+        pytest.param(None, [], id="none"),
+        pytest.param([None], [{"sequence": []}], id="none_branch"),
+        pytest.param([[]], [{"sequence": []}], id="empty_list_branch"),
+        pytest.param(
+            {"delay": 1},
+            [{"sequence": [{"delay": timedelta(seconds=1)}]}],
+            id="single_action",
+        ),
+        pytest.param(
+            [{"delay": 1}, [{"delay": 1}, {"delay": 1}], {"sequence": [{"delay": 1}]}],
+            [
+                {"sequence": [{"delay": timedelta(seconds=1)}]},
+                {
+                    "sequence": [
+                        {"delay": timedelta(seconds=1)},
+                        {"delay": timedelta(seconds=1)},
+                    ]
+                },
+                {"sequence": [{"delay": timedelta(seconds=1)}]},
+            ],
+            id="action_list_and_sequence_branches",
+        ),
+        pytest.param(
+            [{"sequence": {"delay": 1}}],
+            [{"sequence": [{"delay": timedelta(seconds=1)}]}],
+            id="sequence_single_action",
+        ),
+        pytest.param(
+            [{"alias": "x", "sequence": [{"delay": 1}]}],
+            [{"alias": "x", "sequence": [{"delay": timedelta(seconds=1)}]}],
+            id="sequence_with_alias",
+        ),
+        # A branch with both an action key and a sequence key is that action
+        pytest.param(
+            [{"device_id": "x", "domain": "light", "sequence": [{"event": "foo"}]}],
+            [
+                {
+                    "sequence": [
+                        {
+                            "device_id": "x",
+                            "domain": "light",
+                            "sequence": [{"event": "foo"}],
+                        }
+                    ]
+                }
+            ],
+            id="device_action_with_sequence_key",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "device",
+                    "device_id": "x",
+                    "domain": "light",
+                    "sequence": [{"event": "foo"}],
+                }
+            ],
+            [
+                {
+                    "sequence": [
+                        {
+                            "condition": "device",
+                            "device_id": "x",
+                            "domain": "light",
+                            "sequence": [{"event": "foo"}],
+                        }
+                    ]
+                }
+            ],
+            id="device_condition_with_sequence_key",
+        ),
+    ],
+)
+def test_script_parallel_branches(
+    parallel: Any, expected: list[dict[str, Any]]
+) -> None:
+    """Test the branches of a parallel action are wrapped in sequences."""
+    assert cv.SCRIPT_SCHEMA([{"parallel": parallel}]) == [{"parallel": expected}]
+
+
+@pytest.mark.parametrize(
+    ("parallel", "error"),
+    [
+        pytest.param(
+            [{"delay": "garbage"}],
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel[0].delay'",
+            id="action",
+        ),
+        pytest.param(
+            {"delay": "garbage"},
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel.delay'",
+            id="single_action",
+        ),
+        pytest.param(
+            [[{"delay": 1}, {"delay": "garbage"}]],
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel[0][1].delay'",
+            id="action_list",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": "garbage"}]}],
+            "offset garbage should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F' "
+            "at '[0].parallel[0].sequence[0].delay'",
+            id="sequence",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": 1}], "bogus": 1}],
+            "not a valid option at '[0].parallel[0].bogus'",
+            id="sequence_with_extra_key",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": 1}], "service": "a.b"}],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="service_with_sequence_key",
+        ),
+        pytest.param(
+            [{"sequence": [{"delay": 1}], "variables": {"a": 1}}],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="variables_with_sequence_key",
+        ),
+        pytest.param(
+            [
+                {
+                    "condition": "state",
+                    "entity_id": "light.a",
+                    "state": "on",
+                    "sequence": [{"delay": 1}],
+                }
+            ],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="state_condition_with_sequence_key",
+        ),
+        pytest.param(
+            [{"delay": 1, "sequence": [{"delay": 1}]}],
+            "not a valid option at '[0].parallel[0].sequence'",
+            id="delay_with_sequence_key",
+        ),
+        pytest.param(
+            ["str"], "expected dictionary at '[0].parallel[0]'", id="string_branch"
+        ),
+        pytest.param(5, "expected dictionary at '[0].parallel'", id="not_a_list"),
+        pytest.param(
+            [{"foo": 1}],
+            "Unable to determine action at '[0].parallel[0]'",
+            id="unknown_action",
+        ),
+        pytest.param(
+            [{}], "Unable to determine action at '[0].parallel[0]'", id="empty_branch"
+        ),
+    ],
+)
+def test_script_parallel_branches_invalid(parallel: Any, error: str) -> None:
+    """Test the error of an invalid parallel branch has the path of the branch."""
+    with pytest.raises(probatio.Invalid) as excinfo:
+        cv.SCRIPT_SCHEMA([{"parallel": parallel}])
+    assert str(excinfo.value) == error
+
+
+_STATE_CONDITION = {"condition": "state", "entity_id": "light.a", "state": "on"}
+_VALIDATED_STATE_CONDITION = {
+    "condition": "state",
+    "entity_id": ["light.a"],
+    "state": "on",
+    "match": "all",
+}
+_STATE_CONDITION_WITHOUT_STATE = {"condition": "state", "entity_id": "light.a"}
+_INVALID_TEMPLATE_CONDITION = {"condition": "template", "value_template": "{{ bad"}
+_UNKNOWN_CONDITION = {"condition": "non_existing"}
+
+_STATE_REQUIRED = ("required key not provided", "required")
+_NOT_AN_OPTION = ("not a valid option", "extra_keys_not_allowed")
+_EXPECTED_DICT = ("Expected a dictionary", None)
+_INVALID_TEMPLATE = (
+    "invalid template (TemplateSyntaxError: unexpected end of template, "
+    "expected 'end of print statement'.)",
+    None,
+)
+_UNEXPECTED_CONDITION_NONE = (
+    "Unexpected value for condition: 'None'. Expected a condition, a list of "
+    "conditions or a valid template",
+    None,
+)
+_UNEXPECTED_CONDITION_LIST = (
+    f"Unexpected value for condition: '{[_STATE_CONDITION]}'. Expected a "
+    "condition, a list of conditions or a valid template",
+    None,
+)
+
+
+@pytest.mark.parametrize(
+    ("schema", "config", "expected"),
+    [
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            _STATE_CONDITION,
+            [_VALIDATED_STATE_CONDITION],
+            id="single",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": [_STATE_CONDITION, _STATE_CONDITION], "alias": "x"}],
+            [
+                {
+                    "condition": "or",
+                    "conditions": [
+                        _VALIDATED_STATE_CONDITION,
+                        _VALIDATED_STATE_CONDITION,
+                    ],
+                    "alias": "x",
+                }
+            ],
+            id="or",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"and": [_STATE_CONDITION], "note": "x", "enabled": False}],
+            [
+                {
+                    "condition": "and",
+                    "conditions": [_VALIDATED_STATE_CONDITION],
+                    "enabled": False,
+                }
+            ],
+            id="and",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"not": _STATE_CONDITION}],
+            [{"condition": "not", "conditions": [_VALIDATED_STATE_CONDITION]}],
+            id="not_single_child",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": None}],
+            [{"condition": "or", "conditions": []}],
+            id="or_none",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": [_STATE_CONDITION], "alias": "x"}],
+            [
+                {
+                    "condition": "and",
+                    "conditions": [_VALIDATED_STATE_CONDITION],
+                    "alias": "x",
+                }
+            ],
+            id="list",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": []}],
+            [{"condition": "and", "conditions": []}],
+            id="list_empty",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": [{"and": [_STATE_CONDITION, {"not": [_STATE_CONDITION]}]}]}],
+            [
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "and",
+                            "conditions": [
+                                _VALIDATED_STATE_CONDITION,
+                                {
+                                    "condition": "not",
+                                    "conditions": [_VALIDATED_STATE_CONDITION],
+                                },
+                            ],
+                        }
+                    ],
+                }
+            ],
+            id="nested",
+        ),
+        # A condition key makes it a long form condition, the shorthand key is
+        # then an option of that condition
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": "light.is_on", "or": [_STATE_CONDITION]}],
+            [{"condition": "light.is_on", "or": [_STATE_CONDITION]}],
+            id="custom_condition_with_or",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"condition": "light.is_on", "or": [_STATE_CONDITION]}],
+            [{"condition": "light.is_on", "or": [_STATE_CONDITION]}],
+            id="action_custom_condition_with_or",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"or": [_STATE_CONDITION, _STATE_CONDITION]}],
+            [
+                {
+                    "condition": "or",
+                    "conditions": [
+                        _VALIDATED_STATE_CONDITION,
+                        _VALIDATED_STATE_CONDITION,
+                    ],
+                }
+            ],
+            id="action_or",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"condition": [_STATE_CONDITION, _STATE_CONDITION]}],
+            [
+                {
+                    "condition": "and",
+                    "conditions": [
+                        _VALIDATED_STATE_CONDITION,
+                        _VALIDATED_STATE_CONDITION,
+                    ],
+                }
+            ],
+            id="action_list",
+        ),
+    ],
+)
+def test_condition_shorthand(
+    schema: Callable[[Any], Any], config: Any, expected: list[dict[str, Any]]
+) -> None:
+    """Test condition shorthands are expanded and validated."""
+    assert schema(config) == expected
+
+
+async def test_condition_shorthand_template(hass: HomeAssistant) -> None:
+    """Test condition shorthands with a template condition."""
+    validated_template = template.Template("{{ true }}", hass)
+
+    assert cv.CONDITIONS_SCHEMA(["{{ true }}"]) == [
+        {"condition": "template", "value_template": validated_template}
+    ]
+    assert cv.CONDITIONS_SCHEMA(
+        [{"condition": [_STATE_CONDITION, "{{ true }}"], "enabled": False}]
+    ) == [
+        {
+            "condition": "and",
+            "conditions": [
+                _VALIDATED_STATE_CONDITION,
+                {"condition": "template", "value_template": validated_template},
+            ],
+            "enabled": False,
+        }
+    ]
+    assert cv.CONDITIONS_SCHEMA(
+        [{"or": [{"condition": "template", "value_template": "{{ true }}"}]}]
+    ) == [
+        {
+            "condition": "or",
+            "conditions": [
+                {"condition": "template", "value_template": validated_template}
+            ],
+        }
+    ]
+    assert cv.SCRIPT_SCHEMA([{"condition": "{{ true }}"}]) == [
+        {"condition": "template", "value_template": validated_template}
+    ]
+
+
+@pytest.mark.parametrize(
+    ("schema", "config", "expected_errors"),
+    [
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            _STATE_CONDITION_WITHOUT_STATE,
+            {(("state",), *_STATE_REQUIRED)},
+            id="single",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE],
+            {((1, "state"), *_STATE_REQUIRED)},
+            id="list_of_conditions",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [
+                {
+                    "condition": "or",
+                    "conditions": [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE],
+                }
+            ],
+            {((0, "conditions", 1, "state"), *_STATE_REQUIRED)},
+            id="long_form_or",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE]}],
+            {((0, "or", 1, "state"), *_STATE_REQUIRED)},
+            id="or",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"and": [_STATE_CONDITION_WITHOUT_STATE]}],
+            {((0, "and", 0, "state"), *_STATE_REQUIRED)},
+            id="and",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"not": _STATE_CONDITION_WITHOUT_STATE}],
+            {((0, "not", "state"), *_STATE_REQUIRED)},
+            id="not_single_child",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE]}],
+            {((0, "condition", 1, "state"), *_STATE_REQUIRED)},
+            id="list",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [
+                {
+                    "or": [
+                        {
+                            "and": [
+                                _STATE_CONDITION,
+                                {"not": [_STATE_CONDITION_WITHOUT_STATE]},
+                            ]
+                        }
+                    ]
+                }
+            ],
+            {((0, "or", 0, "and", 1, "not", 0, "state"), *_STATE_REQUIRED)},
+            id="nested",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [
+                {
+                    "or": [
+                        _STATE_CONDITION_WITHOUT_STATE,
+                        _STATE_CONDITION,
+                        _STATE_CONDITION_WITHOUT_STATE,
+                    ]
+                }
+            ],
+            {
+                ((0, "or", 0, "state"), *_STATE_REQUIRED),
+                ((0, "or", 2, "state"), *_STATE_REQUIRED),
+            },
+            id="or_two_invalid_children",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": [_STATE_CONDITION], "bogus": 1}],
+            {((0, "bogus"), *_NOT_AN_OPTION)},
+            id="or_extra_key",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": [_STATE_CONDITION], "bogus": 1}],
+            {((0, "bogus"), *_NOT_AN_OPTION)},
+            id="list_extra_key",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"and": [_STATE_CONDITION], "or": [_STATE_CONDITION]}],
+            {((0, "or"), *_NOT_AN_OPTION)},
+            id="and_with_or",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"and": [_STATE_CONDITION_WITHOUT_STATE], "or": [_STATE_CONDITION]}],
+            {
+                ((0, "and", 0, "state"), *_STATE_REQUIRED),
+                ((0, "or"), *_NOT_AN_OPTION),
+            },
+            id="invalid_and_with_or",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": [_STATE_CONDITION], "and": [_STATE_CONDITION]}],
+            {((0, "and"), *_NOT_AN_OPTION)},
+            id="list_with_and",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": 5}],
+            {((0, "or"), *_EXPECTED_DICT)},
+            id="or_not_a_condition",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": [[_STATE_CONDITION]]}],
+            {((0, "or", 0), *_EXPECTED_DICT)},
+            id="or_list_child",
+        ),
+        # A condition key makes it a long form condition, a shorthand key is
+        # then not allowed
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": "state", "or": [_STATE_CONDITION]}],
+            {
+                ((0, "entity_id"), *_STATE_REQUIRED),
+                (
+                    (0, "or"),
+                    "not a valid option, did you mean 'for'?",
+                    "extra_keys_not_allowed",
+                ),
+                ((0, "state"), *_STATE_REQUIRED),
+            },
+            id="state_condition_with_or",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": "or", "or": [_STATE_CONDITION]}],
+            {
+                ((0, "conditions"), *_STATE_REQUIRED),
+                ((0, "or"), *_NOT_AN_OPTION),
+            },
+            id="or_condition_with_or",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": None, "or": [_STATE_CONDITION]}],
+            {((0,), *_UNEXPECTED_CONDITION_NONE)},
+            id="none_condition_with_or",
+        ),
+        # A conditions key makes it a long form condition as well
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": [_STATE_CONDITION], "conditions": [_STATE_CONDITION]}],
+            {((0,), *_UNEXPECTED_CONDITION_NONE)},
+            id="or_with_conditions",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": [_STATE_CONDITION], "conditions": [_STATE_CONDITION]}],
+            {((0,), *_UNEXPECTED_CONDITION_LIST)},
+            id="list_with_conditions",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            ["{{ bad"],
+            {((0,), *_EXPECTED_DICT)},
+            id="invalid_template",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"foo": 1}],
+            {((0,), *_UNEXPECTED_CONDITION_NONE)},
+            id="unknown_key",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [5],
+            {((0,), *_EXPECTED_DICT)},
+            id="not_a_condition",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"or": [_INVALID_TEMPLATE_CONDITION, _UNKNOWN_CONDITION]}],
+            {((0, "or", 0, "value_template"), *_INVALID_TEMPLATE)},
+            id="or_invalid_template",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"and": [_INVALID_TEMPLATE_CONDITION, _UNKNOWN_CONDITION]}],
+            {((0, "and", 0, "value_template"), *_INVALID_TEMPLATE)},
+            id="and_invalid_template",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"not": [_INVALID_TEMPLATE_CONDITION, _UNKNOWN_CONDITION]}],
+            {((0, "not", 0, "value_template"), *_INVALID_TEMPLATE)},
+            id="not_invalid_template",
+        ),
+        pytest.param(
+            cv.CONDITIONS_SCHEMA,
+            [{"condition": [_INVALID_TEMPLATE_CONDITION, _UNKNOWN_CONDITION]}],
+            {((0, "condition", 0, "value_template"), *_INVALID_TEMPLATE)},
+            id="list_invalid_template",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"or": [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE]}],
+            {((0, "or", 1, "state"), *_STATE_REQUIRED)},
+            id="action_or",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"condition": [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE]}],
+            {((0, "condition", 1, "state"), *_STATE_REQUIRED)},
+            id="action_list",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"or": [_INVALID_TEMPLATE_CONDITION, _UNKNOWN_CONDITION]}],
+            {((0, "or", 0, "value_template"), *_INVALID_TEMPLATE)},
+            id="action_or_invalid_template",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"if": [{"or": [_INVALID_TEMPLATE_CONDITION]}], "then": []}],
+            {((0, "if", 0, "or", 0, "value_template"), *_INVALID_TEMPLATE)},
+            id="action_if_or_invalid_template",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"or": [_STATE_CONDITION], "bogus": 1}],
+            {((0, "bogus"), *_NOT_AN_OPTION)},
+            id="action_or_extra_key",
+        ),
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"condition": "state", "or": [_STATE_CONDITION]}],
+            {
+                ((0, "entity_id"), *_STATE_REQUIRED),
+                (
+                    (0, "or"),
+                    "not a valid option, did you mean 'for'?",
+                    "extra_keys_not_allowed",
+                ),
+                ((0, "state"), *_STATE_REQUIRED),
+            },
+            id="action_state_condition_with_or",
+        ),
+        # Another action key decides the action, the shorthand key is not allowed
+        pytest.param(
+            cv.SCRIPT_SCHEMA,
+            [{"or": [_STATE_CONDITION], "delay": 1}],
+            {((0, "or"), *_NOT_AN_OPTION)},
+            id="action_delay_with_or",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_condition_shorthand_invalid(
+    schema: Callable[[Any], Any],
+    config: Any,
+    expected_errors: set[tuple[tuple[str | int, ...], str, str | None]],
+) -> None:
+    """Test an invalid condition shorthand reports the path of the failing child."""
+    with pytest.raises(probatio.MultipleInvalid) as excinfo:
+        schema(config)
+
+    assert {
+        (tuple(error.path), error.error_message, error.code)
+        for error in excinfo.value.errors
+    } == expected_errors
+
+
+_CONDITION_SHORTHANDS = [
+    pytest.param("and", "and", id="and"),
+    pytest.param("or", "or", id="or"),
+    pytest.param("not", "not", id="not"),
+    pytest.param("condition", "and", id="list"),
+]
+# A single condition which is not in a list is not a list shorthand
+_CONDITION_KEY_SHORTHANDS = _CONDITION_SHORTHANDS[:3]
+_CONDITION_SCHEMAS = [
+    pytest.param(cv.CONDITION_SCHEMA, id="condition"),
+    pytest.param(cv.CONDITION_ACTION_SCHEMA, id="action"),
+]
+
+
+def _validation_errors(
+    schema: Callable[[Any], Any], config: dict[str, Any], children_key: str
+) -> set[tuple[tuple[str | int, ...], str, str | None]]:
+    """Return the validation errors, with the children at the conditions key."""
+    with pytest.raises(probatio.MultipleInvalid) as excinfo:
+        schema(config)
+
+    renamed = {children_key: "conditions"}
+    return {
+        (
+            (*(renamed.get(key, key) for key in error.path[:1]), *error.path[1:]),
+            error.error_message,
+            error.code,
+        )
+        for error in excinfo.value.errors
+    }
+
+
+@pytest.mark.parametrize("schema", _CONDITION_SCHEMAS)
+@pytest.mark.parametrize(
+    ("shorthand_key", "condition", "children", "options"),
+    [
+        pytest.param(*shorthand.values, children, options, id=f"{shorthand.id}-{id_}")
+        for shorthands, children, options, id_ in (
+            (_CONDITION_KEY_SHORTHANDS, _STATE_CONDITION, {}, "single_child"),
+            (_CONDITION_KEY_SHORTHANDS, None, {}, "no_children"),
+            (_CONDITION_SHORTHANDS, [], {}, "empty"),
+            (
+                _CONDITION_SHORTHANDS,
+                [
+                    _STATE_CONDITION,
+                    {"condition": "template", "value_template": "{{ 1 }}"},
+                ],
+                {},
+                "children",
+            ),
+            (
+                _CONDITION_SHORTHANDS,
+                [{"or": [_STATE_CONDITION, {"condition": [_STATE_CONDITION]}]}],
+                {},
+                "nested_shorthand",
+            ),
+            (
+                _CONDITION_SHORTHANDS,
+                [_STATE_CONDITION],
+                {"alias": "x", "enabled": False},
+                "alias_enabled",
+            ),
+            (
+                _CONDITION_SHORTHANDS,
+                [_STATE_CONDITION],
+                {"enabled": "{{ 1 }}"},
+                "enabled_template",
+            ),
+            (_CONDITION_SHORTHANDS, [_STATE_CONDITION], {"note": "x"}, "note"),
+        )
+        for shorthand in shorthands
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_condition_shorthand_same_as_long_form(
+    schema: Callable[[Any], Any],
+    shorthand_key: str,
+    condition: str,
+    children: Any,
+    options: dict[str, Any],
+) -> None:
+    """Test a condition shorthand gives the same result as the long form."""
+    validated = schema({shorthand_key: children, **options})
+
+    assert validated == schema(
+        {"condition": condition, "conditions": children, **options}
+    )
+    assert validated["condition"] == condition
+
+
+@pytest.mark.parametrize("schema", _CONDITION_SCHEMAS)
+@pytest.mark.parametrize(
+    ("shorthand_key", "condition", "children", "options"),
+    [
+        pytest.param(*shorthand.values, children, options, id=f"{shorthand.id}-{id_}")
+        for shorthands, children, options, id_ in (
+            (
+                _CONDITION_KEY_SHORTHANDS,
+                _STATE_CONDITION_WITHOUT_STATE,
+                {},
+                "invalid_single_child",
+            ),
+            (_CONDITION_KEY_SHORTHANDS, 5, {}, "single_child_not_a_mapping"),
+            (
+                _CONDITION_SHORTHANDS,
+                [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE],
+                {},
+                "invalid_child",
+            ),
+            (
+                _CONDITION_SHORTHANDS,
+                [_INVALID_TEMPLATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE],
+                {},
+                "invalid_children",
+            ),
+            (
+                _CONDITION_SHORTHANDS,
+                [_STATE_CONDITION, 5],
+                {},
+                "child_not_a_mapping",
+            ),
+            (
+                _CONDITION_SHORTHANDS,
+                [{"or": [_STATE_CONDITION, _STATE_CONDITION_WITHOUT_STATE]}],
+                {},
+                "invalid_nested_shorthand",
+            ),
+            (_CONDITION_SHORTHANDS, [_STATE_CONDITION], {"bogus": 1}, "extra_key"),
+            (_CONDITION_SHORTHANDS, [_STATE_CONDITION], {"alias": {}}, "alias"),
+            (_CONDITION_SHORTHANDS, [_STATE_CONDITION], {"enabled": {}}, "enabled"),
+        )
+        for shorthand in shorthands
+    ],
+)
+@pytest.mark.usefixtures("hass")
+def test_condition_shorthand_invalid_same_as_long_form(
+    schema: Callable[[Any], Any],
+    shorthand_key: str,
+    condition: str,
+    children: Any,
+    options: dict[str, Any],
+) -> None:
+    """Test an invalid condition shorthand gives the same errors as the long form."""
+    assert _validation_errors(
+        schema, {shorthand_key: children, **options}, shorthand_key
+    ) == _validation_errors(
+        schema,
+        {"condition": condition, "conditions": children, **options},
+        "conditions",
+    )
 
 
 def test_whitespace() -> None:
     """Test whitespace validation."""
-    schema = vol.Schema(cv.whitespace)
+    schema = probatio.Schema(cv.whitespace)
 
     for value in (
         None,
@@ -1548,7 +3397,7 @@ def test_whitespace() -> None:
         [1, 2],
         {"one": "two"},
     ):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("  ", "   "):
@@ -1557,13 +3406,13 @@ def test_whitespace() -> None:
 
 def test_currency() -> None:
     """Test currency validator."""
-    schema = vol.Schema(cv.currency)
+    schema = probatio.Schema(cv.currency)
 
     for value in (
         None,
         "BTC",
     ):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("EUR", "USD"):
@@ -1572,10 +3421,10 @@ def test_currency() -> None:
 
 def test_historic_currency() -> None:
     """Test historic currency validator."""
-    schema = vol.Schema(cv.historic_currency)
+    schema = probatio.Schema(cv.historic_currency)
 
     for value in (None, "BTC", "EUR"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("DEM", "NLG"):
@@ -1584,10 +3433,10 @@ def test_historic_currency() -> None:
 
 def test_country() -> None:
     """Test country validator."""
-    schema = vol.Schema(cv.country)
+    schema = probatio.Schema(cv.country)
 
     for value in (None, "Candyland", "USA"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("NL", "SE"):
@@ -1596,10 +3445,10 @@ def test_country() -> None:
 
 def test_language() -> None:
     """Test language validator."""
-    schema = vol.Schema(cv.language)
+    schema = probatio.Schema(cv.language)
 
     for value in (None, "Klingon", "english"):
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
     for value in ("en", "sv"):
@@ -1609,15 +3458,15 @@ def test_language() -> None:
 @pytest.mark.usefixtures("hass")
 def test_positive_time_period_template() -> None:
     """Test positive time period template validation."""
-    schema = vol.Schema(cv.positive_time_period_template)
+    schema = probatio.Schema(cv.positive_time_period_template)
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema({})
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema({5: 5})
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema({"invalid": 5})
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         schema("invalid")
 
     # Time periods pass
@@ -1732,13 +3581,13 @@ def test_platform_only_schema(
 
 def test_domain() -> None:
     """Test domain."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         cv.domain_key(5)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         cv.domain_key("")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         cv.domain_key("hue ")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         cv.domain_key("hue  ")
     assert cv.domain_key("hue") == "hue"
     assert cv.domain_key("hue1") == "hue1"
@@ -1754,19 +3603,22 @@ def test_color_hex() -> None:
     assert cv.color_hex("#000000") == "#000000"
 
     msg = r"Color should be in the format #RRGGBB"
-    with pytest.raises(vol.Invalid, match=msg):
+    with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex("#777")
 
-    with pytest.raises(vol.Invalid, match=msg):
+    with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex("FFFFF")
 
-    with pytest.raises(vol.Invalid, match=msg):
+    with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex("FFFFFF")
 
-    with pytest.raises(vol.Invalid, match=msg):
+    with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex("#FFFFFFF")
 
-    with pytest.raises(vol.Invalid, match=msg):
+    with pytest.raises(probatio.Invalid, match=msg):
+        cv.color_hex("#FFFFFF\n")
+
+    with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex(123456)
 
 
@@ -1818,14 +3670,14 @@ async def test_async_validate(hass: HomeAssistant, tmpdir: py.path.local) -> Non
         validator_calls = {}
 
         # Assert validation in executor when decorated with not_async_friendly
-        await cv.async_validate(hass, vol.All(cv.isdir, cv.string), tmpdir)
+        await cv.async_validate(hass, probatio.All(cv.isdir, cv.string), tmpdir)
         assert validator_calls == {"isdir": [hass.loop_thread_id, ANY], "string": [ANY]}
         assert validator_calls["isdir"][1] != hass.loop_thread_id
         assert validator_calls["string"][0] != hass.loop_thread_id
         validator_calls = {}
 
         # Assert validation in executor when decorated with not_async_friendly
-        await cv.async_validate(hass, vol.All(cv.string, cv.isdir), tmpdir)
+        await cv.async_validate(hass, probatio.All(cv.string, cv.isdir), tmpdir)
         assert validator_calls == {
             "isdir": [hass.loop_thread_id, ANY],
             "string": [hass.loop_thread_id, ANY],
@@ -1840,7 +3692,7 @@ async def test_async_validate(hass: HomeAssistant, tmpdir: py.path.local) -> Non
         validator_calls = {}
 
         # Assert validation in event loop when not using cv.async_validate
-        vol.All(cv.isdir, cv.string)(tmpdir)
+        probatio.All(cv.isdir, cv.string)(tmpdir)
         assert validator_calls == {
             "isdir": [hass.loop_thread_id],
             "string": [hass.loop_thread_id],
@@ -1848,7 +3700,7 @@ async def test_async_validate(hass: HomeAssistant, tmpdir: py.path.local) -> Non
         validator_calls = {}
 
         # Assert validation in event loop when not using cv.async_validate
-        vol.All(cv.string, cv.isdir)(tmpdir)
+        probatio.All(cv.string, cv.isdir)(tmpdir)
         assert validator_calls == {
             "isdir": [hass.loop_thread_id],
             "string": [hass.loop_thread_id],
@@ -1946,6 +3798,174 @@ async def test_nested_trigger_list_extra() -> None:
     ]
 
 
+_VALID_TRIGGER = {"trigger": "event", "event_type": "x"}
+_VALIDATED_TRIGGER = {"platform": "event", "event_type": "x"}
+
+
+@pytest.mark.parametrize(
+    ("config", "expected"),
+    [
+        pytest.param(None, [], id="none"),
+        pytest.param([], [], id="empty"),
+        pytest.param(_VALID_TRIGGER, [_VALIDATED_TRIGGER], id="single"),
+        pytest.param(
+            [{"platform": "event", "event_type": "x"}],
+            [_VALIDATED_TRIGGER],
+            id="platform_key",
+        ),
+        pytest.param(
+            [
+                {"triggers": [_VALID_TRIGGER, _VALID_TRIGGER]},
+                _VALID_TRIGGER,
+                {"triggers": _VALID_TRIGGER},
+            ],
+            [_VALIDATED_TRIGGER] * 4,
+            id="sublists",
+        ),
+        pytest.param(
+            {"triggers": [_VALID_TRIGGER, _VALID_TRIGGER]},
+            [_VALIDATED_TRIGGER] * 2,
+            id="single_sublist",
+        ),
+        pytest.param({"triggers": None}, [], id="single_sublist_none"),
+        pytest.param([{"triggers": []}], [], id="sublist_empty"),
+        pytest.param([{"triggers": None}], [], id="sublist_none"),
+    ],
+)
+def test_trigger_schema_valid(config: Any, expected: list[dict[str, Any]]) -> None:
+    """Test the validated output of the trigger schema."""
+    assert TRIGGER_SCHEMA(config) == expected
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_errors"),
+    [
+        pytest.param(
+            _INVALID_TRIGGER, [(["alias"], "expected str", "type")], id="single"
+        ),
+        pytest.param(
+            [_VALID_TRIGGER, _INVALID_TRIGGER],
+            [([1, "alias"], "expected str", "type")],
+            id="list",
+        ),
+        pytest.param(
+            [{"triggers": [_VALID_TRIGGER, _VALID_TRIGGER]}, _INVALID_TRIGGER],
+            [([1, "alias"], "expected str", "type")],
+            id="after_sublist",
+        ),
+        pytest.param(
+            [_VALID_TRIGGER, {"triggers": [_VALID_TRIGGER, _INVALID_TRIGGER]}],
+            [([1, "triggers", 1, "alias"], "expected str", "type")],
+            id="in_sublist",
+        ),
+        pytest.param(
+            [{"triggers": _INVALID_TRIGGER}],
+            [([0, "triggers", "alias"], "expected str", "type")],
+            id="sublist_single",
+        ),
+        pytest.param(
+            {"triggers": [_VALID_TRIGGER, _INVALID_TRIGGER]},
+            [(["triggers", 1, "alias"], "expected str", "type")],
+            id="single_sublist",
+        ),
+        pytest.param(
+            {"triggers": _INVALID_TRIGGER},
+            [(["triggers", "alias"], "expected str", "type")],
+            id="single_sublist_single",
+        ),
+        pytest.param(
+            [{"triggers": [{"triggers": [_VALID_TRIGGER]}]}],
+            [([0, "triggers", 0, "trigger"], "required key not provided", "required")],
+            id="sublist_in_sublist",
+        ),
+        pytest.param(
+            [{"triggers": [_VALID_TRIGGER], "alias": "x"}],
+            [([0, "trigger"], "required key not provided", "required")],
+            id="sublist_extra_key",
+        ),
+        pytest.param(
+            [{"triggers": [5]}],
+            [([0, "triggers", 0], "expected a mapping", "not_a_dictionary")],
+            id="sublist_non_dict_item",
+        ),
+        pytest.param(
+            [{"triggers": 5}],
+            [([0, "triggers"], "expected a mapping", "not_a_dictionary")],
+            id="sublist_non_dict",
+        ),
+        pytest.param(
+            5, [([], "expected a mapping", "not_a_dictionary")], id="non_dict"
+        ),
+        pytest.param(
+            [5], [([0], "expected a mapping", "not_a_dictionary")], id="non_dict_item"
+        ),
+        pytest.param(
+            [None], [([0], "expected a mapping", "not_a_dictionary")], id="none_item"
+        ),
+        pytest.param(
+            [["triggers"]],
+            [([0], "expected a mapping", "not_a_dictionary")],
+            id="list_item",
+        ),
+        pytest.param(
+            ["triggers"],
+            [([0], "expected a mapping", "not_a_dictionary")],
+            id="string_item",
+        ),
+        pytest.param(
+            [{"event_type": "x"}],
+            [([0, "trigger"], "required key not provided", "required")],
+            id="missing_trigger",
+        ),
+        pytest.param(
+            [{"trigger": 5}],
+            [([0, "platform"], "expected str", "type")],
+            id="trigger_not_string",
+        ),
+        pytest.param(
+            [{"trigger": "event", "platform": "event"}],
+            [
+                (
+                    [0],
+                    "Cannot specify both 'platform' and 'trigger'."
+                    " Please use 'trigger' only.",
+                    None,
+                )
+            ],
+            id="trigger_and_platform",
+        ),
+        pytest.param(
+            [
+                _INVALID_TRIGGER,
+                {"triggers": [_INVALID_TRIGGER, {"event_type": "x"}]},
+                5,
+            ],
+            [
+                ([0, "alias"], "expected str", "type"),
+                ([1, "triggers", 0, "alias"], "expected str", "type"),
+                (
+                    [1, "triggers", 1, "trigger"],
+                    "required key not provided",
+                    "required",
+                ),
+                ([2], "expected a mapping", "not_a_dictionary"),
+            ],
+            id="several_errors",
+        ),
+    ],
+)
+def test_trigger_schema_invalid(
+    config: Any, expected_errors: list[tuple[list[str | int], str, str | None]]
+) -> None:
+    """Test the errors of the trigger schema index the config as written."""
+    with pytest.raises(probatio.MultipleInvalid) as exc_info:
+        TRIGGER_SCHEMA(config)
+
+    assert [
+        (err.path, err.error_message, err.code) for err in exc_info.value.errors
+    ] == expected_errors
+
+
 async def test_trigger_backwards_compatibility() -> None:
     """Test triggers with backwards compatibility."""
 
@@ -1953,15 +3973,15 @@ async def test_trigger_backwards_compatibility() -> None:
     assert cv._trigger_pre_validator({"platform": "abc"}) == {"platform": "abc"}
     assert cv._trigger_pre_validator({"trigger": "abc"}) == {"platform": "abc"}
     with pytest.raises(
-        vol.Invalid,
+        probatio.Invalid,
         match=(
             "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
         ),
     ):
         cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
     with pytest.raises(
-        vol.Invalid,
-        match=re.escape("required key not provided @ data['trigger']"),
+        probatio.Invalid,
+        match=re.escape("required key not provided at 'trigger'"),
     ):
         cv._trigger_pre_validator({})
 
@@ -1971,28 +3991,28 @@ async def test_is_entity_service_schema(
 ) -> None:
     """Test cv.is_entity_service_schema."""
     for schema in (
-        vol.Schema({"some": str}),
-        vol.All(vol.Schema({"some": str})),
-        vol.Any(vol.Schema({"some": str})),
-        vol.Any(cv.make_entity_service_schema({"some": str})),
+        probatio.Schema({"some": str}),
+        probatio.All(probatio.Schema({"some": str})),
+        probatio.Any(probatio.Schema({"some": str})),
+        probatio.Any(cv.make_entity_service_schema({"some": str})),
     ):
         assert cv.is_entity_service_schema(schema) is False
 
     for schema in (
         cv.make_entity_service_schema({"some": str}),
-        vol.Schema(cv.make_entity_service_schema({"some": str})),
-        vol.Schema(vol.All(cv.make_entity_service_schema({"some": str}))),
-        vol.Schema(vol.Schema(cv.make_entity_service_schema({"some": str}))),
-        vol.All(cv.make_entity_service_schema({"some": str})),
-        vol.All(vol.All(cv.make_entity_service_schema({"some": str}))),
-        vol.All(vol.Schema(cv.make_entity_service_schema({"some": str}))),
+        probatio.Schema(cv.make_entity_service_schema({"some": str})),
+        probatio.Schema(probatio.All(cv.make_entity_service_schema({"some": str}))),
+        probatio.Schema(probatio.Schema(cv.make_entity_service_schema({"some": str}))),
+        probatio.All(cv.make_entity_service_schema({"some": str})),
+        probatio.All(probatio.All(cv.make_entity_service_schema({"some": str}))),
+        probatio.All(probatio.Schema(cv.make_entity_service_schema({"some": str}))),
     ):
         assert cv.is_entity_service_schema(schema) is True
 
 
 def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
     """Test renamed."""
-    renamed_schema = vol.All(cv.renamed("mors", "mars"), schema)
+    renamed_schema = probatio.All(cv.renamed("mors", "mars"), schema)
 
     test_data = {"mars": True}
     output = renamed_schema(test_data.copy())
@@ -2006,14 +4026,14 @@ def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
 
     test_data = {"mars": True, "mors": True}
     with pytest.raises(
-        vol.Invalid,
+        probatio.Invalid,
         match="Cannot specify both 'mors' and 'mars'. Please use 'mars' only.",
     ):
         renamed_schema(test_data.copy())
     assert len(caplog.records) == 0
 
     # Check error handling if data is not a dict
-    with pytest.raises(vol.Invalid, match="expected a dictionary"):
+    with pytest.raises(probatio.Invalid, match="expected a mapping"):
         renamed_schema([])
 
 
@@ -2022,7 +4042,7 @@ def test_stop_action_schema_error_false_with_response() -> None:
     schema = cv._SCRIPT_STOP_SCHEMA
 
     # error: true with response_variable should fail
-    with pytest.raises(vol.Invalid, match="not allowed to add a response"):
+    with pytest.raises(probatio.Invalid, match="not allowed to add a response"):
         schema({"stop": "Error", "error": True, "response_variable": "result"})
 
     # error: false with response_variable should work
@@ -2083,7 +4103,7 @@ def test_base_schemas_reject_invalid_note(
     invalid_note: Any,
 ) -> None:
     """Test that script, condition, trigger base schemas reject non-string notes."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         validator({**base_config, "note": invalid_note})
 
 
@@ -2117,7 +4137,7 @@ def test_choose_option_accepts_note() -> None:
 @pytest.mark.usefixtures("hass")
 def test_choose_option_rejects_invalid_note(invalid_note: Any) -> None:
     """Test that choose option schemas reject non-string notes."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         cv.script_action(
             {"choose": [{**_CHOOSE_OPTION_BASE_CONFIG, "note": invalid_note}]}
         )

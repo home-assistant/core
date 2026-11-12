@@ -4,22 +4,21 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from wmspro.destination import Action
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.wmspro.number import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 from . import setup_config_entry
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -78,8 +77,8 @@ async def test_button_press(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity.entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
@@ -166,8 +165,8 @@ async def test_button_rotation_reset_press(
     ) as mock_action_delitem:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: button_entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: button_entity_id},
             blocking=True,
         )
         assert len(mock_action_delitem.mock_calls) == 2

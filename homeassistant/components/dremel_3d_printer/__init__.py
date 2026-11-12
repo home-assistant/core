@@ -15,7 +15,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: DremelConfigEntry
-) -> bool:
+) -> None:
     """Set up Dremel 3D Printer from a config entry."""
     try:
         api = await hass.async_add_executor_job(
@@ -34,12 +34,11 @@ async def async_setup_entry(
     if api.get_model() != CAMERA_MODEL:
         platforms.remove(Platform.CAMERA)
     await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DremelConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DremelConfigEntry) -> None:
     """Unload Dremel config entry."""
     platforms = list(PLATFORMS)
     if entry.runtime_data.api.get_model() != CAMERA_MODEL:
         platforms.remove(Platform.CAMERA)
-    return await hass.config_entries.async_unload_platforms(entry, platforms)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)

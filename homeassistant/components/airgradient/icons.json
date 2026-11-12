@@ -17,6 +17,9 @@
       }
     },
     "select": {
+      "altitude_unit": {
+        "default": "mdi:altimeter"
+      },
       "co2_automatic_baseline_calibration": {
         "default": "mdi:molecule-co2"
       },

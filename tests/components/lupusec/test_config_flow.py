@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from lupupy import LupusecException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lupusec.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_STEP = {
     CONF_HOST: "test-host.lan",
@@ -51,7 +50,7 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.lupusec.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
@@ -107,7 +106,7 @@ async def test_flow_user_init_data_error_and_recover(
     with (
         patch(
             "homeassistant.components.lupusec.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",

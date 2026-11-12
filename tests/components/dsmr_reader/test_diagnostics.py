@@ -2,15 +2,14 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_get_config_entry_diagnostics(
@@ -29,7 +28,7 @@ async def test_get_config_entry_diagnostics(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.dsmr_reader.async_setup_entry", return_value=True
+        "homeassistant.components.dsmr_reader.async_setup_entry", return_value=None
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

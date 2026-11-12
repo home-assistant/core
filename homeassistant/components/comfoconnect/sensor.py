@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
+import probatio
 from pycomfoconnect import (
     SENSOR_BYPASS_STATE,
     SENSOR_CURRENT_RMOT,
@@ -27,7 +28,6 @@ from pycomfoconnect import (
     SENSOR_TEMPERATURE_OUTDOOR,
     SENSOR_TEMPERATURE_SUPPLY,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -47,7 +47,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -264,8 +263,8 @@ SENSOR_TYPES = (
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In([desc.key for desc in SENSOR_TYPES])]
+        probatio.Optional(CONF_RESOURCES, default=[]): probatio.All(
+            probatio.EnsureList(), [probatio.In([desc.key for desc in SENSOR_TYPES])]
         )
     }
 )

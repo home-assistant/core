@@ -4,75 +4,37 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import web
-import requests
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import CONF_PUSH_SECRET, DATA_ACCESS_TOKEN, DOMAIN, EVENT_PUSH
+from .services import setup_services
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PUSH_SECRET = "push_secret"
-
-DOMAIN = "foursquare"
-
-EVENT_CHECKIN = "foursquare.checkin"
-EVENT_PUSH = "foursquare.push"
-
-SERVICE_CHECKIN = "checkin"
-
-CHECKIN_SERVICE_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional("alt"): cv.string,
-        vol.Optional("altAcc"): cv.string,
-        vol.Optional("broadcast"): cv.string,
-        vol.Optional("eventId"): cv.string,
-        vol.Optional("ll"): cv.string,
-        vol.Optional("llAcc"): cv.string,
-        vol.Optional("mentions"): cv.string,
-        vol.Optional("shout"): cv.string,
-        vol.Required("venueId"): cv.string,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                vol.Required(CONF_PUSH_SECRET): cv.string,
+                probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
+                probatio.Required(probatio.Secret(CONF_PUSH_SECRET)): cv.string,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Foursquare component."""
     config = config[DOMAIN]
-
-    def checkin_user(call: ServiceCall) -> None:
-        """Check a user in on Swarm."""
-        url = f"https://api.foursquare.com/v2/checkins/add?oauth_token={config[CONF_ACCESS_TOKEN]}&v=20160802&m=swarm"
-        response = requests.post(url, data=call.data, timeout=10)
-
-        if response.status_code not in (HTTPStatus.OK, HTTPStatus.CREATED):
-            _LOGGER.exception(
-                "Error checking in user. Response %d: %s:",
-                response.status_code,
-                response.reason,
-            )
-
-        hass.bus.fire(EVENT_CHECKIN, {"text": response.text})
-
-    # Register our service with Home Assistant.
-    hass.services.register(
-        DOMAIN, "checkin", checkin_user, schema=CHECKIN_SERVICE_SCHEMA
-    )
+    hass.data[DATA_ACCESS_TOKEN] = config[CONF_ACCESS_TOKEN]
+    setup_services(hass)
 
     hass.http.register_view(FoursquarePushReceiver(config[CONF_PUSH_SECRET]))
 
@@ -102,9 +64,7 @@ class FoursquarePushReceiver(HomeAssistantView):
         _LOGGER.debug("Received Foursquare push: %s", data)
 
         if self.push_secret != secret:
-            _LOGGER.error(
-                "Received Foursquare push with invalid push secret: %s", secret
-            )
+            _LOGGER.error("Received Foursquare push with an invalid push secret")
             return self.json_message("Incorrect secret", HTTPStatus.BAD_REQUEST)
 
         request.app[KEY_HASS].bus.async_fire(EVENT_PUSH, data)

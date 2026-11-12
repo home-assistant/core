@@ -3,19 +3,25 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    mock_component,
+    mock_restore_cache,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import switch, template
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.template.switch import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -26,7 +32,10 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     async_get_flow_preview_state,
     async_trigger,
     make_test_action,
@@ -35,14 +44,6 @@ from .conftest import (
     setup_and_test_unique_id,
     setup_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    mock_component,
-    mock_restore_cache,
-)
-from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_switch"
 TEST_STATE_ENTITY_ID = "switch.test_state"
@@ -307,8 +308,8 @@ async def test_trigger_attributes_with_optimistic_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -320,8 +321,8 @@ async def test_trigger_attributes_with_optimistic_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -339,8 +340,8 @@ async def test_trigger_attributes_with_optimistic_state(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -484,8 +485,8 @@ async def test_on_action(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -510,8 +511,8 @@ async def test_on_action_optimistic(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -538,8 +539,8 @@ async def test_off_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -564,8 +565,8 @@ async def test_off_action_optimistic(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_SWITCH.entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH.entity_id},
         blocking=True,
     )
 
@@ -833,6 +834,48 @@ async def test_not_optimistic(hass: HomeAssistant, expected: str) -> None:
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_SWITCH, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_SWITCH, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_extra_template_attributes(
     hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
@@ -845,15 +888,19 @@ async def test_extra_template_attributes(
     )
 
 
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_blocked_template_attributes(
     hass: HomeAssistant,
+    style: ConfigurationStyle,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blocked extra attributes."""
     await setup_entity(
         hass,
         TEST_SWITCH,
-        ConfigurationStyle.MODERN,
+        style,
         0,
         {
             **SWITCH_ACTIONS,
@@ -864,3 +911,41 @@ async def test_blocked_template_attributes(
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: device_class"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(hass, TEST_SWITCH, style, SWITCH_ACTIONS, caplog)
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_SWITCH,
+        style,
+        1,
+        {
+            **SWITCH_ACTIONS,
+            "attributes": "{{ dict(device_class='does not matter') }}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_SWITCH.entity_id}: device_class"
+    assert error in caplog.text

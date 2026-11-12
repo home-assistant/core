@@ -172,4 +172,35 @@ PLCNET_ATTACHED = LogicalNetwork(
     ],
 )
 
+PLCNET_MISSING_DATA_RATE = LogicalNetwork(
+    devices=[
+        {
+            "mac_address": "00:00:5E:00:53:00",
+            "attached_to_router": False,
+            "topology": LOCAL,
+            "user_device_name": "test1",
+        },
+        {
+            "mac_address": "00:00:5E:00:53:02",
+            "attached_to_router": True,
+            "topology": REMOTE,
+            "user_device_name": "test2",
+        },
+        {
+            "mac_address": "00:00:5E:00:53:03",
+            "attached_to_router": False,
+            "topology": REMOTE,
+            "user_device_name": "test3",
+        },
+    ],
+    data_rates=[
+        {
+            "mac_address_from": "00:00:5E:00:53:00",
+            "mac_address_to": "00:00:5E:00:53:03",
+            "rx_rate": 150.0,
+            "tx_rate": 150.0,
+        },
+    ],
+)
+
 UPTIME = 100

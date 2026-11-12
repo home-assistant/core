@@ -3,21 +3,21 @@
 import logging
 from unittest.mock import patch
 
-from homeassistant import config_entries, loader
-from homeassistant.components.logger import DOMAIN
-from homeassistant.components.logger.helpers import DATA_LOGGER
-from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockModule,
     MockUser,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
-from tests.typing import WebSocketGenerator
+from pytest_homeassistant.typing import WebSocketGenerator
+
+from homeassistant import config_entries, loader
+from homeassistant.components.logger import DOMAIN
+from homeassistant.components.logger.helpers import DATA_LOGGER
+from homeassistant.components.websocket_api import TYPE_RESULT
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 async def test_integration_log_info(

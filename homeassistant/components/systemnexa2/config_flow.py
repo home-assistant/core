@@ -6,8 +6,8 @@ import socket
 from typing import Any, override
 
 import aiohttp
+import probatio
 from sn2.device import Device
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -15,25 +15,18 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import (
-    ATTR_MODEL,
-    ATTR_SW_VERSION,
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_SCHEMA = vol.Schema(
+_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -92,8 +85,8 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(
                             reason="unsupported_model",
                             description_placeholders={
-                                ATTR_MODEL: str(device_model),
-                                ATTR_SW_VERSION: str(device_version),
+                                "model": str(device_model),
+                                "sw_version": str(device_version),
                             },
                         )
 
@@ -118,6 +111,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self._async_create_device_entry()
 
         if self.source == SOURCE_RECONFIGURE:
+            # pylint: disable-next=home-assistant-step_id-match-method
             return self.async_show_form(
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
@@ -181,7 +175,6 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None and self._discovered_device is not None:
             return await self._async_create_device_entry()
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"name": self._discovered_device.name},

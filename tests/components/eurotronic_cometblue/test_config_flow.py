@@ -4,8 +4,9 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from bleak.exc import BleakDeviceNotFoundError
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.eurotronic_cometblue.config_flow import (
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import FIXTURE_DEVICE_NAME, FIXTURE_MAC, FIXTURE_USER_INPUT
 from .conftest import FAKE_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_no_devices(
@@ -53,7 +52,7 @@ async def test_user_step_discovered_devices(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pick_device"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "wrong_address"}
         )
@@ -213,6 +212,13 @@ async def test_bluetooth_flow_no_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_name_from_discovery() -> None:

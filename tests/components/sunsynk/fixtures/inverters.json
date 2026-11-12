@@ -1,0 +1,72 @@
+[
+  {
+    "sn": "1029384756",
+    "alias": "Garage inverter",
+    "gsn": "E0192837465",
+    "status": 1,
+    "type": 2,
+    "commTypeName": "RS485",
+    "custCode": 29,
+    "version": {
+      "masterVer": "2.3.7.4",
+      "softVer": "1.5.1.5",
+      "hardVer": "",
+      "hmiVer": "E.4.2.4",
+      "bmsVer": ""
+    },
+    "model": "SUNSYNK-5K-SG04LP1",
+    "equipMode": null,
+    "pac": 61,
+    "etoday": 1.7,
+    "etotal": 375.1,
+    "updateAt": "2023-01-07T15:40:02Z",
+    "opened": 1,
+    "plant": {
+      "id": 12345,
+      "name": "John Smith",
+      "type": 2,
+      "master": null,
+      "installer": null,
+      "email": null,
+      "phone": null
+    },
+    "gatewayVO": {
+      "gsn": "E0192837465",
+      "status": 2
+    },
+    "sunsynkEquip": true,
+    "protocolIdentifier": "2"
+  },
+  {
+    "sn": "2938475610",
+    "alias": "",
+    "gsn": "E0192837466",
+    "status": 1,
+    "type": 2,
+    "commTypeName": "RS485",
+    "custCode": 29,
+    "version": null,
+    "model": "",
+    "equipMode": null,
+    "pac": 61,
+    "etoday": 1.7,
+    "etotal": 375.1,
+    "updateAt": "2023-01-07T15:40:02Z",
+    "opened": 1,
+    "plant": {
+      "id": 12345,
+      "name": "John Smith",
+      "type": 2,
+      "master": null,
+      "installer": null,
+      "email": null,
+      "phone": null
+    },
+    "gatewayVO": {
+      "gsn": "E0192837466",
+      "status": 2
+    },
+    "sunsynkEquip": true,
+    "protocolIdentifier": "2"
+  }
+]

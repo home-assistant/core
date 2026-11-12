@@ -1,0 +1,61 @@
+{
+  "id": "aaaaaaaaaaaaaaaaaaaaaaaa",
+  "state": "CONNECTED",
+  "name": "Alarm Hub",
+  "mac": "AABBCCDDEEFF",
+  "isAlarmHub": true,
+  "lastEvent": 1780415883894,
+  "alarmHub": {
+    "armed": "off",
+    "battery": {
+      "charging": "off",
+      "connection": "connected",
+      "voltage": 12.108427,
+      "batteryStatus": "ok"
+    },
+    "cover": {
+      "distance": 72,
+      "status": "close"
+    },
+    "input": {
+      "4": {
+        "enable": "on",
+        "type": "nc",
+        "status": "alarm",
+        "inputType": "SMOKE",
+        "name": "Kitchen Smoke"
+      },
+      "8": {
+        "enable": "on",
+        "type": "nc",
+        "status": "normal",
+        "inputType": "GLASS_BREAK",
+        "name": "Living Room Window"
+      },
+      "16": {
+        "enable": "on",
+        "type": "nc",
+        "status": "normal",
+        "inputType": "EMERGENCY_BUTTON",
+        "name": "24 Hour Tamper"
+      },
+      "24": {
+        "enable": "on",
+        "type": "nc",
+        "status": "normal",
+        "inputType": "MOTION",
+        "name": "Hallway"
+      },
+      "25": {
+        "enable": "on",
+        "type": "nc",
+        "status": "normal",
+        "inputType": "ENTRY"
+      }
+    }
+  },
+  "ledSettings": {
+    "isEnabled": true
+  },
+  "modelKey": "linkstation"
+}

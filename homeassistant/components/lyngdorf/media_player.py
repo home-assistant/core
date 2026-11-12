@@ -1,12 +1,21 @@
 """Media player platform for Lyngdorf integration."""
 
+from collections.abc import Awaitable
 from datetime import datetime
 from typing import TYPE_CHECKING, override
 
-from lyngdorf.device import Receiver
-from lyngdorf.models.base import NumericRange
-from lyngdorf.states import Control, PlaybackState, Repeat
-from lyngdorf.streaming import NowPlaying
+from lyngdorf import (
+    Control,
+    LyngdorfInvalidValueError,
+    LyngdorfReceiver,
+    LyngdorfUnsupportedError,
+    NowPlaying,
+    NumericRange,
+    PlaybackState,
+    Player,
+    Repeat,
+    ZoneB,
+)
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -17,9 +26,11 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import LyngdorfEntity
 from .models import LyngdorfConfigEntry
 
@@ -106,6 +117,32 @@ def _to_lyngdorf_volume(volume: float, volume_range: NumericRange) -> float:
     return max(volume_range.min, min(volume_db, volume_range.max))
 
 
+def _invalid_option(option: str, options: list[str]) -> ServiceValidationError:
+    """Return the error for an option the device does not offer."""
+    return ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_option",
+        translation_placeholders={"option": option, "options": ", ".join(options)},
+    )
+
+
+async def _async_transport(command: Awaitable[bool]) -> None:
+    """Await a streaming command, raising if the device did not take it."""
+    try:
+        accepted = await command
+    except LyngdorfUnsupportedError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_command",
+        ) from err
+    # False covers both a rejected request and one that never arrived.
+    if not accepted:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_failed",
+        )
+
+
 class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
     """Base Lyngdorf media player entity."""
 
@@ -113,7 +150,7 @@ class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        receiver: Receiver,
+        receiver: LyngdorfReceiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         translation_key: str | None,
@@ -134,7 +171,7 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
 
     def __init__(
         self,
-        receiver: Receiver,
+        receiver: LyngdorfReceiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
     ) -> None:
@@ -147,11 +184,19 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
             "zone_b",
         )
 
+    @property
+    def _zone_b(self) -> ZoneB:
+        """Return the Zone B controls; this entity exists only when it has them."""
+        zone_b = self._receiver.zone_b
+        if TYPE_CHECKING:
+            assert zone_b is not None
+        return zone_b
+
     @override
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        if self._receiver.zone_b_power_on:
+        if self._zone_b.power_on:
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
@@ -159,73 +204,67 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
     @property
     def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
-        return self._receiver.zone_b_mute_enabled
-
-    @property
-    def _volume_range(self) -> NumericRange:
-        """Return the model's documented Zone B volume range."""
-        volume_range = self._receiver.zone_b_volume_range
-        # This entity is only created for models that have a Zone B.
-        if TYPE_CHECKING:
-            assert volume_range is not None
-        return volume_range
+        return self._zone_b.muted
 
     @override
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if (volume := self._receiver.zone_b_volume) is None:
+        volume = self._zone_b.volume
+        if volume.value is None:
             return None
-        return _to_ha_volume(volume, self._volume_range)
+        return _to_ha_volume(volume.value, volume.range)
 
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        self._receiver.zone_b_power_on = True
+        await self._zone_b.set_power(True)
 
     @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        self._receiver.zone_b_power_on = False
+        await self._zone_b.set_power(False)
 
     @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        self._receiver.zone_b_volume_up()
+        await self._zone_b.volume.up()
 
     @override
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
-        self._receiver.zone_b_volume_down()
+        await self._zone_b.volume.down()
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._receiver.set_zone_b_volume(
-            _to_lyngdorf_volume(volume, self._volume_range)
-        )
+        control = self._zone_b.volume
+        await control.set(_to_lyngdorf_volume(volume, control.range))
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._receiver.zone_b_mute_enabled = mute
+        await self._zone_b.set_muted(mute)
 
     @override
     @property
     def source(self) -> str | None:
         """Return the current input source."""
-        return self._receiver.zone_b_source
+        return self._zone_b.source
 
     @override
     @property
     def source_list(self) -> list[str] | None:
         """Return the list of available sources."""
-        return self._receiver.zone_b_available_sources
+        return self._zone_b.sources
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        self._receiver.zone_b_source = source
+        try:
+            await self._zone_b.set_source(source)
+        except LyngdorfInvalidValueError as err:
+            raise _invalid_option(source, self._zone_b.sources) from err
 
 
 class LyngdorfMainDevice(LyngdorfDevice):
@@ -233,7 +272,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
 
     def __init__(
         self,
-        receiver: Receiver,
+        receiver: LyngdorfReceiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
     ) -> None:
@@ -253,10 +292,8 @@ class LyngdorfMainDevice(LyngdorfDevice):
         # drift, rather than once a second, which is all Home Assistant
         # needs: it stores a position and a timestamp and extrapolates.
         await super().async_added_to_hass()
-        if self._has_streamer:
-            self.async_on_remove(
-                self._receiver.register_position_jump_callback(self._handle_position)
-            )
+        if (player := self._receiver.player) is not None:
+            self.async_on_remove(player.on_position_jump(self._handle_position))
 
     @callback
     def _handle_position(self, _position_ms: int | None) -> None:
@@ -264,31 +301,35 @@ class LyngdorfMainDevice(LyngdorfDevice):
         self.async_write_ha_state()
 
     @property
-    def _has_streamer(self) -> bool:
-        """Return whether this model has a streaming module at all."""
-        return self._receiver.model.has_streaming_feature()
+    def _player(self) -> Player:
+        """Return the streamer; transport is only offered when it exists."""
+        player = self._receiver.player
+        if TYPE_CHECKING:
+            assert player is not None
+        return player
 
     @property
     def _now_playing(self) -> NowPlaying | None:
         """Return the current track, or None if this model has no streamer."""
-        if not self._has_streamer:
+        if (player := self._receiver.player) is None:
             return None
-        return self._receiver.now_playing
+        return player.now_playing
 
     @override
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the features the device currently offers."""
         features = FEATURES_MAIN
-        if (now_playing := self._now_playing) is None:
+        player = self._receiver.player
+        if player is None or (now_playing := player.now_playing) is None:
             return features
 
         for control, feature in CONTROL_FEATURES:
             if control in now_playing.controls:
                 features |= feature
-        if self._receiver.can_shuffle:
+        if player.can_shuffle:
             features |= MediaPlayerEntityFeature.SHUFFLE_SET
-        if self._receiver.available_repeat_modes:
+        if player.repeat_modes:
             features |= MediaPlayerEntityFeature.REPEAT_SET
         return features
 
@@ -298,10 +339,9 @@ class LyngdorfMainDevice(LyngdorfDevice):
         """Return the state of the device."""
         if not self._receiver.power_on:
             return MediaPlayerState.OFF
-        if (now_playing := self._now_playing) is not None:
-            if (state := PLAYBACK_STATES.get(now_playing.state)) is not None:
-                return state
-        return MediaPlayerState.ON
+        if (now_playing := self._now_playing) is None or now_playing.state is None:
+            return MediaPlayerState.ON
+        return PLAYBACK_STATES.get(now_playing.state, MediaPlayerState.ON)
 
     @override
     @property
@@ -315,25 +355,33 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def media_title(self) -> str | None:
         """Return the title of the current track."""
-        return now_playing.title if (now_playing := self._now_playing) else None
+        if (now_playing := self._now_playing) is None:
+            return None
+        return now_playing.title
 
     @override
     @property
     def media_artist(self) -> str | None:
         """Return the artist of the current track."""
-        return now_playing.artist if (now_playing := self._now_playing) else None
+        if (now_playing := self._now_playing) is None:
+            return None
+        return now_playing.artist
 
     @override
     @property
     def media_album_name(self) -> str | None:
         """Return the album of the current track."""
-        return now_playing.album if (now_playing := self._now_playing) else None
+        if (now_playing := self._now_playing) is None:
+            return None
+        return now_playing.album
 
     @override
     @property
     def media_image_url(self) -> str | None:
         """Return the album art of the current track."""
-        return now_playing.art_url if (now_playing := self._now_playing) else None
+        if (now_playing := self._now_playing) is None:
+            return None
+        return now_playing.art_url
 
     @override
     @property
@@ -349,29 +397,36 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def media_position(self) -> int | None:
         """Return the position of the current track, in seconds."""
-        if not self._has_streamer or not self._receiver.has_position:
+        player = self._receiver.player
+        if player is None or (position_ms := player.position_ms) is None:
             return None
-        return round(self._receiver.position_ms / 1000)
+        return round(position_ms / 1000)
 
     @override
     @property
     def media_position_updated_at(self) -> datetime | None:
         """Return when the position was last valid."""
-        if not self._has_streamer or not self._receiver.has_position:
+        # The timestamp advances on every poll, including ones that report no
+        # position, so it is only meaningful alongside a position.
+        player = self._receiver.player
+        if player is None or player.position_ms is None:
             return None
-        return self._receiver.position_updated_at
+        return player.position_updated_at
 
     @override
     @property
     def shuffle(self) -> bool | None:
         """Return whether shuffle is enabled."""
-        return self._receiver.shuffle if self._has_streamer else None
+        if (player := self._receiver.player) is None:
+            return None
+        return player.shuffle
 
     @override
     @property
     def repeat(self) -> RepeatMode | None:
         """Return the current repeat mode."""
-        if not self._has_streamer or (repeat := self._receiver.repeat) is None:
+        player = self._receiver.player
+        if player is None or (repeat := player.repeat) is None:
             return None
         return REPEAT_MODES.get(repeat)
 
@@ -381,67 +436,59 @@ class LyngdorfMainDevice(LyngdorfDevice):
         # On a controller-driven source such as AirPlay the device ends the
         # session rather than pausing, and only the controlling app can
         # start it again.
-        await self._receiver.async_pause()
+        await _async_transport(self._player.pause())
 
     @override
     async def async_media_next_track(self) -> None:
         """Skip to the next track."""
-        await self._receiver.async_next()
+        await _async_transport(self._player.next_track())
 
     @override
     async def async_media_previous_track(self) -> None:
         """Skip to the previous track."""
-        await self._receiver.async_previous()
+        await _async_transport(self._player.previous_track())
 
     @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position, given in seconds."""
-        await self._receiver.async_seek(round(position * 1000))
+        await _async_transport(self._player.seek(round(position * 1000)))
 
     @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle, leaving the repeat mode alone."""
-        await self._receiver.async_set_shuffle(shuffle)
+        await _async_transport(self._player.set_shuffle(shuffle))
 
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode, leaving shuffle alone."""
-        await self._receiver.async_set_repeat(LYNGDORF_REPEATS[repeat])
+        await _async_transport(self._player.set_repeat(LYNGDORF_REPEATS[repeat]))
 
     @override
     @property
     def source_list(self) -> list[str] | None:
         """Return a list of available input sources."""
-        return self._receiver.available_sources
+        return self._receiver.sources
 
     @override
     @property
     def sound_mode_list(self) -> list[str] | None:
         """Return a list of available sound modes."""
-        return self._receiver.available_sound_modes
+        return self._receiver.sound_modes
 
     @override
     @property
     def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
-        return self._receiver.mute_enabled
-
-    @property
-    def _volume_range(self) -> NumericRange:
-        """Return the model's documented main-zone volume range."""
-        volume_range = self._receiver.volume_range
-        # Every supported model documents a main-zone volume range.
-        if TYPE_CHECKING:
-            assert volume_range is not None
-        return volume_range
+        return self._receiver.muted
 
     @override
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if (volume := self._receiver.volume) is None:
+        volume = self._receiver.volume
+        if volume.value is None:
             return None
-        return _to_ha_volume(volume, self._volume_range)
+        return _to_ha_volume(volume.value, volume.range)
 
     @override
     @property
@@ -458,39 +505,46 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        self._receiver.power_on = True
+        await self._receiver.set_power(True)
 
     @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        self._receiver.power_on = False
+        await self._receiver.set_power(False)
 
     @override
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        self._receiver.volume_up()
+        await self._receiver.volume.up()
 
     @override
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
-        self._receiver.volume_down()
+        await self._receiver.volume.down()
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._receiver.set_volume(_to_lyngdorf_volume(volume, self._volume_range))
+        control = self._receiver.volume
+        await control.set(_to_lyngdorf_volume(volume, control.range))
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._receiver.mute_enabled = mute
+        await self._receiver.set_muted(mute)
 
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        self._receiver.sound_mode = sound_mode
+        try:
+            await self._receiver.set_sound_mode(sound_mode)
+        except LyngdorfInvalidValueError as err:
+            raise _invalid_option(sound_mode, self._receiver.sound_modes) from err
 
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        self._receiver.source = source
+        try:
+            await self._receiver.set_source(source)
+        except LyngdorfInvalidValueError as err:
+            raise _invalid_option(source, self._receiver.sources) from err

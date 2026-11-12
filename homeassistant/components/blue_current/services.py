@@ -1,21 +1,36 @@
 """The Blue Current integration."""
 
-import voluptuous as vol
+from enum import StrEnum
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE_ID
+import probatio
+
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
-from .const import BCU_APP, CHARGING_CARD_ID, DOMAIN, SERVICE_START_CHARGE_SESSION
+from .const import BCU_APP, DOMAIN
 
-SERVICE_START_CHARGE_SESSION_SCHEMA = vol.Schema(
+
+class BlueCurrentService(StrEnum):
+    """Store keys for Blue Current services."""
+
+    START_CHARGE_SESSION = "start_charge_session"
+
+
+class BlueCurrentServiceArgument(StrEnum):
+    """Store keys for Blue Current service arguments."""
+
+    CHARGING_CARD_ID = "charging_card_id"
+
+
+SERVICE_START_CHARGE_SESSION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
         # When no charging card is provided, use no charging card
         # (BCU_APP = no charging card).
-        vol.Optional(CHARGING_CARD_ID, default=BCU_APP): cv.string,
+        probatio.Optional(
+            BlueCurrentServiceArgument.CHARGING_CARD_ID, default=BCU_APP
+        ): cv.string,
     }
 )
 
@@ -24,28 +39,11 @@ async def start_charge_session(service_call: ServiceCall) -> None:
     """Start a charge session with the provided device and charge card ID."""
     # When no charge card is provided, use the default charge card
     # set in the config flow.
-    charging_card_id = service_call.data[CHARGING_CARD_ID]
-    device_id = service_call.data[CONF_DEVICE_ID]
+    charging_card_id = service_call.data[BlueCurrentServiceArgument.CHARGING_CARD_ID]
 
-    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-        service_call.hass, device_id, domain=DOMAIN
+    device, config_entry = service.async_get_device_and_config_entry(
+        service_call.hass, DOMAIN, service_call.data[CommonServiceArgument.DEVICE_ID]
     )
-
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="invalid_device_id"
-        )
-
-    if not config_entry:
-        # The device is not connected to a valid blue_current config entry.
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="no_config_entry"
-        )
-
-    if config_entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
-        )
 
     connector = config_entry.runtime_data
 
@@ -63,7 +61,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_START_CHARGE_SESSION,
+        BlueCurrentService.START_CHARGE_SESSION,
         start_charge_session,
         SERVICE_START_CHARGE_SESSION_SCHEMA,
     )

@@ -8,6 +8,7 @@ from unittest.mock import Mock
 from motionblindsble.const import MotionSpeedLevel
 from motionblindsble.device import MotionDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.motionblinds_ble.const import ATTR_SPEED
 from homeassistant.components.select import (
@@ -18,8 +19,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(("select", "args"), [(ATTR_SPEED, MotionSpeedLevel.HIGH)])

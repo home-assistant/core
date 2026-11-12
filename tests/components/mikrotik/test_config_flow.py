@@ -1,5 +1,7 @@
 """Test Mikrotik setup process."""
 
+from unittest.mock import AsyncMock, patch
+
 from librouteros.exceptions import ConnectionClosed, TrapError
 import pytest
 
@@ -122,7 +124,7 @@ async def test_host_already_configured(
 
 
 @pytest.mark.parametrize("mock_api_error", [CONN_ERROR], indirect=True)
-@pytest.mark.usefixtures("mock_api_error")
+@pytest.mark.usefixtures("mock_api_error", "mock_setup_entry")
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test error when connection is unsuccessful."""
 
@@ -135,9 +137,15 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with patch("librouteros.connect"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=DEMO_USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
-@pytest.mark.usefixtures("mock_api_error")
+@pytest.mark.usefixtures("mock_api_error", "mock_setup_entry")
 async def test_wrong_credentials(hass: HomeAssistant) -> None:
     """Test error when credentials are wrong."""
 
@@ -154,10 +162,17 @@ async def test_wrong_credentials(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "invalid_auth",
     }
 
+    with patch("librouteros.connect"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=DEMO_USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntryFactory,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we can reauth."""
     entry = mock_config_entry(data=DEMO_USER_INPUT)
@@ -182,9 +197,12 @@ async def test_reauth_success(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
-@pytest.mark.usefixtures("mock_api_error")
+@pytest.mark.usefixtures("mock_api_error", "mock_setup_entry")
 async def test_reauth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntryFactory,
@@ -210,9 +228,21 @@ async def test_reauth_failed(
         CONF_PASSWORD: "invalid_auth",
     }
 
+    with patch("librouteros.connect"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
 
 @pytest.mark.parametrize("mock_api_error", [CONN_ERROR], indirect=True)
-@pytest.mark.usefixtures("mock_api_error")
+@pytest.mark.usefixtures("mock_api_error", "mock_setup_entry")
 async def test_reauth_failed_conn_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntryFactory,
@@ -235,3 +265,117 @@ async def test_reauth_failed_conn_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch("librouteros.connect"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+
+
+RECONFIGURE_INPUT = {
+    CONF_HOST: "1.1.1.1",
+    CONF_USERNAME: "new-username",
+    CONF_PASSWORD: "new-password",
+    CONF_PORT: 8729,
+    CONF_VERIFY_SSL: True,
+}
+
+
+async def test_reconfigure_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguring the integration updates the config entry."""
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == RECONFIGURE_INPUT
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_host_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+) -> None:
+    """Test reconfigure aborts when the new host belongs to another entry."""
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
+    entry.add_to_hass(hass)
+    other_entry = mock_config_entry(data={**DEMO_USER_INPUT, CONF_HOST: "1.1.1.1"})
+    other_entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == DEMO_USER_INPUT
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_errors"),
+    [
+        pytest.param(CONN_ERROR, {"base": "cannot_connect"}, id="cannot_connect"),
+        pytest.param(
+            AUTH_ERROR,
+            {CONF_USERNAME: "invalid_auth", CONF_PASSWORD: "invalid_auth"},
+            id="invalid_auth",
+        ),
+    ],
+)
+async def test_reconfigure_error_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntryFactory,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    expected_errors: dict[str, str],
+) -> None:
+    """Test reconfigure shows an error and then recovers on valid input."""
+    entry = mock_config_entry(data=DEMO_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch("librouteros.connect", side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == expected_errors
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == RECONFIGURE_INPUT
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1

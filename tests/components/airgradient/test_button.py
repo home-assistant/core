@@ -3,20 +3,23 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from airgradient import AirGradientConnectionError, AirGradientError
+from airgradient import AirGradientConnectionError, AirGradientError, ApiVersion
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import async_load_config_fixture, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from . import async_load_config_fixture, load_config_fixture, setup_integration
 
 
 async def test_all_entities(
@@ -43,9 +46,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
+            CommonServiceArgument.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
         },
         blocking=True,
     )
@@ -53,9 +56,9 @@ async def test_pressing_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: "button.airgradient_test_led_bar",
+            CommonServiceArgument.ENTITY_ID: "button.airgradient_test_led_bar",
         },
         blocking=True,
     )
@@ -96,6 +99,31 @@ async def test_cloud_creates_no_button(
 
 
 @pytest.mark.parametrize(
+    ("model", "entity_count"),
+    [
+        pytest.param("P-1PSG", 2, id="known"),
+        pytest.param("P-UNKNOWN", 0, id="unknown"),
+    ],
+)
+async def test_v1_action_capabilities(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    model: str,
+    entity_count: int,
+) -> None:
+    """Test V1 actions require declared model capabilities."""
+    mock_v1_airgradient_client.get_current_measures.return_value.model = model
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert len(hass.states.async_all()) == entity_count
+
+
+@pytest.mark.parametrize(
     ("exception", "error_message"),
     [
         (
@@ -124,9 +152,9 @@ async def test_exception_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
+                CommonServiceArgument.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
             },
             blocking=True,
         )

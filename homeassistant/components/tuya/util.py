@@ -63,17 +63,11 @@ class ActionDPCodeNotFoundError(ServiceValidationError):
         )
 
 
-def get_device_info(device: CustomerDevice, *, initial: bool = False) -> DeviceInfo:
+def get_device_info(device: CustomerDevice) -> DeviceInfo:
     """Get device info."""
     manufacturer = "Tuya"
     model: str | None = device.product_name
     model_id: str | None = device.product_id
-
-    if initial:
-        # Note: the model is overridden via entity.device_info property
-        # when the entity is created. If no entities are generated, it will
-        # stay as unsupported
-        model = f"{device.product_name} (unsupported)"
 
     if (
         quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)

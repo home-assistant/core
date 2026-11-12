@@ -2,14 +2,14 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_entity_attributes(

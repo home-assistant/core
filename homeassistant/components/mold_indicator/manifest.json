@@ -1,6 +1,7 @@
 {
   "domain": "mold_indicator",
   "name": "Mold Indicator",
+  "categories": ["helpers.calculate_value", "sensors.temperature_humidity"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mold_indicator",

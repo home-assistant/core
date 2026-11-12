@@ -4,10 +4,11 @@ import logging
 from typing import Any, override
 
 from altruistclient import AltruistClient, AltruistDeviceModel, AltruistError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -50,7 +51,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data_schema = self.add_suggested_values_to_schema(
-            vol.Schema({vol.Required(CONF_HOST): str}),
+            probatio.Schema({probatio.Required(CONF_HOST): str}),
             {CONF_HOST: ip_address},
         )
 
@@ -74,7 +75,10 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                 async_get_clientsession(self.hass), str(discovery_info.ip_address)
             )
         except AltruistError:
-            return self.async_abort(reason="no_device_found")
+            return self.async_abort(
+                reason="no_devices_found",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         self.device = client.device
         _LOGGER.debug("Zeroconf device: %s", client.device)
@@ -101,7 +105,6 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={

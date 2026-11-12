@@ -4,18 +4,17 @@ from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.codes.lg.tv import LGTVCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.infrared import RECEIVER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredReceiverEntity
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.infrared import InfraredReceivedSignal
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared import RECEIVER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredReceiverEntity
 
 EVENT_ENTITY_ID = "event.lg_tv_received_command"
 
@@ -71,7 +70,7 @@ async def test_event_fires(
     state = hass.states.get(EVENT_ENTITY_ID)
     assert state is not None
     assert state.state == now.isoformat(timespec="milliseconds")
-    assert state.attributes[ATTR_EVENT_TYPE] == expected_event_type
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == expected_event_type
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -89,7 +88,7 @@ async def test_event_ignores_other_nec_addresses(
     state = hass.states.get(EVENT_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) is None
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -106,7 +105,7 @@ async def test_event_ignores_non_nec_signals(
     state = hass.states.get(EVENT_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) is None
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -145,4 +144,4 @@ async def test_event_resubscribes_after_receiver_unavailable(
     state = hass.states.get(EVENT_ENTITY_ID)
     assert state is not None
     assert state.state == now.isoformat(timespec="milliseconds")
-    assert state.attributes[ATTR_EVENT_TYPE] == "power_on"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "power_on"

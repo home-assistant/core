@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.samsungtv.const import (
@@ -30,8 +31,6 @@ from .const import (
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.parametrize(

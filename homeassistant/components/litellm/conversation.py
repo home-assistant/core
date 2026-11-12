@@ -8,8 +8,8 @@ from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LiteLLMConfigEntry
 from .const import DOMAIN
+from .coordinator import LiteLLMConfigEntry
 from .entity import LiteLLMEntity
 
 

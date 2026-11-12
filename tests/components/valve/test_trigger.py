@@ -3,20 +3,22 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.valve import ATTR_IS_CLOSED, DOMAIN, ValveState
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.valve import ATTR_IS_CLOSED, DOMAIN, ValveState
+from homeassistant.components.valve.trigger import TRIGGERS
+from homeassistant.core import HomeAssistant
 
 TRIGGER_STATES = [
     *parametrize_trigger_states(
@@ -60,6 +62,12 @@ async def target_valves(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, DOMAIN)
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "closed": TargetSupport.STANDARD,
+    "opened": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -82,6 +90,11 @@ async def test_valve_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

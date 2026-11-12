@@ -3,13 +3,12 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -52,7 +51,7 @@ async def test_config_flow(
 
 
 def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
+    """Get suggested value for key in probatio schema."""
     for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:

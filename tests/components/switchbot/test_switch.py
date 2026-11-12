@@ -4,6 +4,8 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -12,8 +14,9 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -22,6 +25,7 @@ from . import (
     AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
     AIR_PURIFIER_TABLE_US_SERVICE_INFO,
     AIR_PURIFIER_US_SERVICE_INFO,
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
     RELAY_SWITCH_1_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
@@ -29,9 +33,6 @@ from . import (
     WOHAND_SERVICE_INFO,
     WORELAY_SWITCH_1PM_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_switchbot_switch_with_restore_state(
@@ -62,7 +63,7 @@ async def test_switchbot_switch_with_restore_state(
         return_value=False,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(entity_id)
         assert state.state == STATE_ON
@@ -106,7 +107,7 @@ async def test_exception_handling_switch(
 
     with patch(patch_target, new=AsyncMock(side_effect=exception)):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -153,7 +154,7 @@ async def test_relay_switch_control(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "switch.test_name"
 
@@ -190,7 +191,7 @@ async def test_relay_switch_2pm_control(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id_1 = "switch.test_name_channel_1"
 
@@ -290,7 +291,7 @@ async def test_relay_switch_control_with_exception(
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -378,12 +379,12 @@ async def test_air_purifier_switch_control(
         **{turn_on_method: mocked_turn_on, turn_off_method: mocked_turn_off},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -391,8 +392,8 @@ async def test_air_purifier_switch_control(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -437,21 +438,61 @@ async def test_standing_fan_oscillation_switches(
         },
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         mocked_set.assert_awaited_once_with(True)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         assert mocked_set.await_count == 2
         mocked_set.assert_awaited_with(False)
+
+
+@pytest.mark.parametrize(
+    ("service", "mock_method", "expected_arg"),
+    [
+        (SERVICE_TURN_ON, "set_vertical_oscillation", True),
+        (SERVICE_TURN_OFF, "set_vertical_oscillation", False),
+    ],
+)
+async def test_circulator_fan_pro_vertical_oscillation_switch(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    mock_method: str,
+    expected_arg: bool,
+) -> None:
+    """Test the Circulator Fan Pro vertical oscillation switch."""
+    inject_bluetooth_service_info(hass, CIRCULATOR_FAN_PRO_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="circulator_fan_pro")
+    entry.add_to_hass(hass)
+
+    mocked_instance = AsyncMock(return_value=True)
+    with patch.multiple(
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotCirculatorFanPro",
+        get_basic_info=AsyncMock(return_value=None),
+        update=AsyncMock(return_value=None),
+        **{mock_method: mocked_instance},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "switch.test_name_vertical_oscillation"},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(expected_arg)

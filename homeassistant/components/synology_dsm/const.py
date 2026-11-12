@@ -7,6 +7,7 @@ from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCE
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
     SynologyDSMAPINoDataException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
@@ -38,7 +39,6 @@ EXCEPTION_UNKNOWN = "unknown"
 ISSUE_MISSING_BACKUP_SETUP = "missing_backup_setup"
 
 # Configuration
-CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 CONF_DEVICE_TOKEN = "device_token"
 CONF_SNAPSHOT_QUALITY = "snap_profile_type"
@@ -56,20 +56,16 @@ DEFAULT_BACKUP_PATH = "ha_backup"
 
 ENTITY_UNIT_LOAD = "load"
 
+# Package Center does not list these packages
+HIDDEN_PACKAGE_INSTALL_TYPE = "system_hidden"
+
 SHARED_SUFFIX = "_shared"
 
 # Signals
 SIGNAL_CAMERA_SOURCE_CHANGED = "synology_dsm.camera_stream_source_changed"
 
-# Services
-SERVICE_REBOOT = "reboot"
-SERVICE_SHUTDOWN = "shutdown"
-SERVICES = [
-    SERVICE_REBOOT,
-    SERVICE_SHUTDOWN,
-]
-
 SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginInvalidException,

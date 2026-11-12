@@ -4,9 +4,9 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import MagicMock
 
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import MockConfigEntry
 
-from tests.common import MockConfigEntry
+from homeassistant.core import HomeAssistant
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

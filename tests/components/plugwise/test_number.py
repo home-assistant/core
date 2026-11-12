@@ -1,8 +1,9 @@
 """Tests for the Plugwise Number integration."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -10,19 +11,21 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from tests.common import MockConfigEntry, snapshot_platform
+ADAM_DHW_NUMBER_UNIQUE_ID = "056ee145a816487eaa69243c3280f8bf-max_dhw_temperature"
+ADAM_DHW_NUMBER_ISSUE_ID = "deprecated_dhw_temperature_056ee145a816487eaa69243c3280f8bf"
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize("platforms", [(NUMBER_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_adam_number_entities(
     hass: HomeAssistant,
-    mock_smile_adam: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -34,7 +37,7 @@ async def test_adam_number_entities(
 async def test_adam_temperature_offset_change(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test changing of the temperature_offset number."""
+    """Test changing an Adam temperature_offset number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -51,10 +54,11 @@ async def test_adam_temperature_offset_change(
     )
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 async def test_adam_temperature_offset_out_of_bounds_change(
-    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test changing of the temperature_offset number beyond limits."""
+    """Test changing an Adam temperature_offset number beyond limits."""
     with pytest.raises(ServiceValidationError, match="valid range"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -67,17 +71,116 @@ async def test_adam_temperature_offset_out_of_bounds_change(
         )
 
 
+async def test_adam_preset_temperature_change(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of a preset temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.badkamer_home_preset_temperature",
+            ATTR_VALUE: 20.5,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_adam.set_number.call_count == 1
+    mock_smile_adam.set_number.assert_called_with(
+        "08963fec7c53423ca5680aa4cb502c63",
+        "home_preset_temperature",
+        20.5,
+        setpoint="setpoint",
+    )
+
+
+@pytest.mark.usefixtures("mock_smile_adam")
+async def test_adam_preset_temperature_out_of_bounds_change(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of a preset temperature number beyond limits."""
+    with pytest.raises(ServiceValidationError, match="valid range"):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "number.badkamer_home_preset_temperature",
+                ATTR_VALUE: 31.0,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_smile_adam_heat_cool")
+@pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.parametrize("platforms", [(NUMBER_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_cooling_number_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Adam with cooling number snapshot."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+async def test_adam_preset_cooling_temperature_change(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing of an Adam preset cooling temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.living_room_away_preset_cooling_temperature",
+            ATTR_VALUE: 24.0,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_adam_heat_cool.set_number.call_count == 1
+    mock_smile_adam_heat_cool.set_number.assert_called_with(
+        "f2bf9048bef64cc5b6d5110154e33c81",
+        "away_preset_temperature",
+        24.0,
+        setpoint="setpoint_high",
+    )
+
+
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [False], indirect=True)
 async def test_adam_dhw_setpoint_change(
     hass: HomeAssistant,
     mock_smile_adam_heat_cool: MagicMock,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test changing of number entities."""
+    """Test changing an existing deprecated DHW number."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        NUMBER_DOMAIN,
+        DOMAIN,
+        ADAM_DHW_NUMBER_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="opentherm_domestic_hot_water_setpoint",
+    )
+    with patch("homeassistant.components.plugwise.PLATFORMS", [NUMBER_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     state = hass.states.get("number.opentherm_domestic_hot_water_setpoint")
     assert state
     assert float(state.state) == 60.0
+    issue = issue_registry.async_get_issue(DOMAIN, ADAM_DHW_NUMBER_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_dhw_temperature"
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -95,13 +198,37 @@ async def test_adam_dhw_setpoint_change(
     )
 
 
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_adam_dhw_number_not_created_for_new_install(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the deprecated DHW number is not created for new installations."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.plugwise.PLATFORMS", [NUMBER_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            NUMBER_DOMAIN, DOMAIN, ADAM_DHW_NUMBER_UNIQUE_ID
+        )
+        is None
+    )
+    assert (DOMAIN, ADAM_DHW_NUMBER_ISSUE_ID) not in issue_registry.issues
+
+
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(NUMBER_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_anna_number_entities(
     hass: HomeAssistant,
-    mock_smile_anna: MagicMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     setup_platform: MockConfigEntry,
@@ -112,10 +239,10 @@ async def test_anna_number_entities(
 
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
-async def test_anna_max_boiler_temp_change(
+async def test_anna_boiler_temperature_change(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test changing of number entities."""
+    """Test changing an Anna maximum_boiler_temperature_setpoint number."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -129,4 +256,54 @@ async def test_anna_max_boiler_temp_change(
     assert mock_smile_anna.set_number.call_count == 1
     mock_smile_anna.set_number.assert_called_with(
         "1cbf783bb11e4a7c8a6843dee3a86927", "boiler_temperature", 65.0
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+async def test_anna_preset_temperature_change(
+    hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of an Anna preset temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.anna_home_preset_temperature",
+            ATTR_VALUE: 20.5,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_anna.set_number.call_count == 1
+    mock_smile_anna.set_number.assert_called_with(
+        "3cb70739631c4d17a86b8b12e8a5161b",
+        "home_preset_temperature",
+        20.5,
+        setpoint="setpoint_low",
+    )
+
+
+async def test_anna_preset_cooling_temperature_change(
+    hass: HomeAssistant,
+    mock_smile_anna_loria: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test changing of an Anna preset cooling temperature number."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.anna_away_preset_cooling_temperature",
+            ATTR_VALUE: 26.0,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_anna_loria.set_number.call_count == 1
+    mock_smile_anna_loria.set_number.assert_called_with(
+        "582dfbdace4d4aeb832923ce7d1ddda0",
+        "away_preset_temperature",
+        26.0,
+        setpoint="setpoint_high",
     )

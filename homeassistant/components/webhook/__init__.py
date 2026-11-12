@@ -11,10 +11,11 @@ from typing import TYPE_CHECKING, Any, cast
 from aiohttp import StreamReader
 from aiohttp.hdrs import METH_GET, METH_HEAD, METH_POST, METH_PUT
 from aiohttp.web import Request, Response
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.const import is_supervisor_unix_socket_request
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url, is_cloud_connection
@@ -34,6 +35,17 @@ URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 type HandlerType = Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]
+
+__all__ = [
+    "DOMAIN",
+    "SUPPORTED_METHODS",
+    "async_generate_id",
+    "async_generate_path",
+    "async_generate_url",
+    "async_handle_webhook",
+    "async_register",
+    "async_unregister",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,6 +163,7 @@ async def async_handle_webhook(
             received_from += f" ({request.remote})"
         content_stream = request.content
         method_name = request.method
+        is_supervisor_request = False
         if TYPE_CHECKING:
             # MockRequest mimics the aiohttp Request interface and is used for
             # cloudhooks and webhooks triggered via the WebSocket API.
@@ -159,6 +172,7 @@ async def async_handle_webhook(
         received_from = request.remote
         content_stream = request.content
         method_name = request.method
+        is_supervisor_request = is_supervisor_unix_socket_request(request)
 
     # Always respond successfully to not give away if a hook exists or not.
     if (webhook := handlers.get(webhook_id)) is None:
@@ -187,7 +201,8 @@ async def async_handle_webhook(
         )
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-    if webhook.local_only:
+    # Requests over the Supervisor Unix socket are always local
+    if webhook.local_only and not is_supervisor_request:
         is_local = not (is_cloud_connection(hass) or request.remote is None)
 
         if is_local:
@@ -274,12 +289,12 @@ def websocket_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "webhook/handle",
-        vol.Required("webhook_id"): str,
-        vol.Required("method"): vol.In(SUPPORTED_METHODS),
-        vol.Optional("body", default=""): str,
-        vol.Optional("headers", default={}): {str: str},
-        vol.Optional("query", default=""): str,
+        probatio.Required("type"): "webhook/handle",
+        probatio.Required("webhook_id"): str,
+        probatio.Required("method"): probatio.In(SUPPORTED_METHODS),
+        probatio.Optional("body", default=""): str,
+        probatio.Optional("headers", default={}): {str: str},
+        probatio.Optional("query", default=""): str,
     }
 )
 @websocket_api.async_response

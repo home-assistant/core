@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, refresh_data, setup_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensor(

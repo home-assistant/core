@@ -8,9 +8,18 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import DOMAIN, config_entries
@@ -19,22 +28,13 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockUser,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -131,6 +131,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp1",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -151,6 +152,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp2",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -171,6 +173,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": core_ce.ConfigEntryDisabler.USER,
             "domain": "comp3",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -191,6 +194,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp4",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -211,6 +215,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "created_at": timestamp,
             "disabled_by": None,
             "domain": "comp5",
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -334,6 +339,68 @@ async def test_reload_entry(hass: HomeAssistant, client: TestClient) -> None:
     assert len(hass.config_entries.async_entries()) == 1
 
 
+async def test_reload_entry_survives_client_disconnect(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test a client disconnect does not truncate the reload.
+
+    The HTTP runner is created with handler_cancellation=True, so a disconnect
+    cancels the request handler. Reload unloads the entry before setting it up
+    again, so an unshielded cancel leaves the entry unloaded.
+    """
+    reloading = asyncio.Event()
+    disconnected = asyncio.Event()
+    setup_calls = 0
+
+    async def mock_setup_entry(hass: HomeAssistant, entry: core_ce.ConfigEntry) -> None:
+        """Stall in the setup after the unload, so the cancel lands on this await."""
+        nonlocal setup_calls
+        setup_calls += 1
+        if setup_calls == 2:
+            reloading.set()
+            await disconnected.wait()
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=AsyncMock(return_value=None),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
+
+    with mock_config_flow("comp", ConfigFlow):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is core_ce.ConfigEntryState.LOADED
+
+        view = config_entries.ConfigManagerEntryResourceReloadView()
+        request = Mock()
+        request.__getitem__ = Mock(
+            side_effect={"hass_user": hass_admin_user}.__getitem__
+        )
+        request.app = {KEY_HASS: hass}
+
+        task = hass.async_create_task(view.post(request, entry.entry_id))
+        await reloading.wait()
+
+        # The client goes away mid-reload.
+        task.cancel()
+        disconnected.set()
+
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        await hass.async_block_till_done()
+
+    # The setup after the unload must still have completed.
+    assert entry.state is core_ce.ConfigEntryState.LOADED
+    assert setup_calls == 2
+
+
 async def test_reload_invalid_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test reloading an invalid entry via the API."""
     resp = await client.post("/api/config/config_entries/entry/invalid/reload")
@@ -384,9 +451,9 @@ async def test_reload_entry_in_setup_retry(
     hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test reloading an entry via the API that is in setup retry."""
-    mock_setup_entry = AsyncMock(return_value=True)
-    mock_unload_entry = AsyncMock(return_value=True)
-    mock_migrate_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_unload_entry = AsyncMock(return_value=None)
+    mock_migrate_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -453,13 +520,13 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
                 },
@@ -500,7 +567,7 @@ async def test_initialize_flow_unmet_dependency(
     """Test unmet dependencies are listed."""
     mock_platform(hass, "test.config_flow", None)
 
-    config_schema = vol.Schema({"comp_conf": {"hello": str}}, required=True)
+    config_schema = probatio.Schema({"comp_conf": {"hello": str}}, required=True)
     mock_integration(
         hass, MockModule(domain="dependency_1", config_schema=config_schema)
     )
@@ -535,13 +602,13 @@ async def test_initialize_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 description_placeholders={"url": "https://example.com"},
                 errors={"username": "Should be unique."},
             )
@@ -585,7 +652,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     class TestFlow(core_ce.ConfigFlow):
@@ -619,6 +686,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -647,7 +715,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
 async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can finish a two step flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -656,7 +724,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
 
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
-                step_id="account", data_schema=vol.Schema({"user_title": str})
+                step_id="account", data_schema=probatio.Schema({"user_title": str})
             )
 
         async def async_step_account(self, user_input=None):
@@ -707,6 +775,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 "disabled_by": None,
                 "domain": "test",
                 "entry_id": entries[0].entry_id,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": timestamp,
@@ -736,7 +805,7 @@ async def test_continue_flow_unauth(
 ) -> None:
     """Test we can't finish a two step flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -745,7 +814,7 @@ async def test_continue_flow_unauth(
 
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
-                step_id="account", data_schema=vol.Schema({"user_title": str})
+                step_id="account", data_schema=probatio.Schema({"user_title": str})
             )
 
         async def async_step_account(self, user_input=None):
@@ -791,7 +860,7 @@ async def test_get_progress_index(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -829,9 +898,7 @@ async def test_get_progress_index(
         form_user = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_USER}
         )
-        form_reconfigure = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
-        )
+        form_reconfigure = await entry.start_reconfigure_flow(hass)
 
     for form in (form_hassio, form_user, form_reconfigure):
         assert form["type"] is data_entry_flow.FlowResultType.FORM
@@ -876,13 +943,13 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -912,13 +979,13 @@ async def test_get_progress_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
             schema = {
-                vol.Required("username"): str,
-                vol.Required("password"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
             }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(schema),
+                data_schema=probatio.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -946,7 +1013,7 @@ async def test_get_progress_subscribe(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -1058,7 +1125,7 @@ async def test_get_progress_subscribe_create_entry(hass: HomeAssistant) -> None:
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     class TestFlow(core_ce.ConfigFlow):
@@ -1091,7 +1158,7 @@ async def test_get_progress_subscribe_in_progress(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -1214,7 +1281,7 @@ async def test_get_progress_subscribe_in_progress_bad_flow(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -1289,10 +1356,10 @@ async def test_get_progress_subscribe_in_progress_bad_flow(
         assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
+    bad_entry = MockConfigEntry(domain="test2", title="Test 2")
+    bad_entry.add_to_hass(hass)
     with mock_config_flow("test2", BadFlow):
-        forms["bad"] = await hass.config_entries.flow.async_init(
-            "test2", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
-        )
+        forms["bad"] = await bad_entry.start_reauth_flow(hass)
     assert forms["bad"]["type"] is data_entry_flow.FlowResultType.FORM
     assert forms["bad"]["step_id"] == "account"
 
@@ -1356,7 +1423,9 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                        data_schema=probatio.Schema(
+                            {probatio.Required("enabled"): bool}
+                        ),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1419,7 +1488,9 @@ async def test_options_flow_unauth(
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                        data_schema=probatio.Schema(
+                            {probatio.Required("enabled"): bool}
+                        ),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1445,7 +1516,7 @@ async def test_options_flow_unauth(
 async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can finish a two step options flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -1456,7 +1527,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) ->
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
-                        step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                        step_id="finish", data_schema=probatio.Schema({"enabled": bool})
                     )
 
                 async def async_step_finish(self, user_input=None):
@@ -1513,7 +1584,7 @@ async def test_options_flow_with_invalid_data(
 ) -> None:
     """Test an options flow with invalid_data."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -1525,9 +1596,9 @@ async def test_options_flow_with_invalid_data(
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id="finish",
-                        data_schema=vol.Schema(
+                        data_schema=probatio.Schema(
                             {
-                                vol.Required(
+                                probatio.Required(
                                     "choices", default=["invalid", "valid"]
                                 ): cv.multi_select({"valid": "Valid"})
                             }
@@ -1595,7 +1666,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
             async def async_step_user(self, user_input=None):
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    data_schema=probatio.Schema({probatio.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1657,7 +1728,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
 
                 return self.async_show_form(
                     step_id="reconfigure",
-                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    data_schema=probatio.Schema({probatio.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1722,6 +1793,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
     assert data == {
         "handler": ["test1", "test"],
         "reason": "reconfigure_successful",
+        "translation_domain": "homeassistant",
         "type": "abort",
         "description_placeholders": None,
     }
@@ -1753,7 +1825,7 @@ async def test_subentry_flow_abort_duplicate(hass: HomeAssistant, client) -> Non
                     )
 
                 return self.async_show_form(
-                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                    step_id="finish", data_schema=probatio.Schema({"enabled": bool})
                 )
 
         @classmethod
@@ -1889,7 +1961,7 @@ async def test_subentry_flow_unauth(
             async def async_step_init(self, user_input=None):
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
+                    data_schema=probatio.Schema({probatio.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1920,7 +1992,7 @@ async def test_subentry_flow_unauth(
 async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
     """Test we can finish a two step subentry flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -1936,7 +2008,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
                     )
 
                 return self.async_show_form(
-                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                    step_id="finish", data_schema=probatio.Schema({"enabled": bool})
                 )
 
         @classmethod
@@ -1998,7 +2070,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
 async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> None:
     """Test a subentry flow with invalid_data."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -2007,9 +2079,9 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
             async def async_step_user(self, user_input=None):
                 return self.async_show_form(
                     step_id="finish",
-                    data_schema=vol.Schema(
+                    data_schema=probatio.Schema(
                         {
-                            vol.Required(
+                            probatio.Required(
                                 "choices", default=["invalid", "valid"]
                             ): cv.multi_select({"valid": "Valid"})
                         }
@@ -2098,6 +2170,7 @@ async def test_get_single(
         "disabled_by": None,
         "domain": "test",
         "entry_id": entry.entry_id,
+        "error_reason_translation_domain": None,
         "error_reason_translation_key": None,
         "error_reason_translation_placeholders": None,
         "modified_at": timestamp,
@@ -2288,6 +2361,102 @@ async def test_disable_entry(
     assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            ConfigEntryNotReady,
+            core_ce.ConfigEntryState.SETUP_RETRY,
+            id="setup_retry",
+        ),
+        pytest.param(
+            ConfigEntryError, core_ce.ConfigEntryState.SETUP_ERROR, id="setup_error"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "loaded_components",
+    [
+        pytest.param(set(), id="integration_not_loaded"),
+        pytest.param({"comp"}, id="integration_loaded"),
+    ],
+)
+async def test_enable_entry_setup_fails(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: type[Exception],
+    expected_state: core_ce.ConfigEntryState,
+    loaded_components: set[str],
+) -> None:
+    """Test enabling an entry that fails setup does not require a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    mock_setup_entry = AsyncMock(side_effect=side_effect)
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp", disabled_by=core_ce.ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+    # With the integration already loaded, enabling reloads only the entry
+    hass.config.components.update(loaded_components)
+
+    with mock_config_flow("comp", ConfigFlow):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": False}
+    assert entry.disabled_by is None
+    assert entry.state is expected_state
+    mock_setup_entry.assert_called_once()
+
+
+async def test_enable_entry_component_setup_fails(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test enabling an entry whose integration fails setup requires a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=False),
+            async_setup_entry=mock_setup_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp", disabled_by=core_ce.ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+
+    with mock_config_flow("comp", ConfigFlow):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    # A failed integration setup is not retried until Home Assistant restarts
+    assert response["result"] == {"require_restart": True}
+    assert entry.disabled_by is None
+    assert entry.state is core_ce.ConfigEntryState.NOT_LOADED
+    mock_setup_entry.assert_not_called()
+
+
 async def test_disable_entry_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2304,6 +2473,39 @@ async def test_disable_entry_nonexisting(
         }
     )
     response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
+async def test_enable_entry_removed_during_reload(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test enabling an entry that is removed while it is being reloaded."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="test", disabled_by=core_ce.ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+
+    async def remove_entry(
+        entry_id: str, disabled_by: core_ce.ConfigEntryDisabler | None
+    ) -> bool:
+        await hass.config_entries.async_remove(entry_id)
+        return False
+
+    with patch.object(
+        hass.config_entries, "async_set_disabled_by", side_effect=remove_entry
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
 
     assert not response["success"]
     assert response["error"]["code"] == "not_found"
@@ -2334,7 +2536,7 @@ async def test_ignore_flow(
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -2369,6 +2571,7 @@ async def test_ignore_flow(
         assert response["success"]
 
     assert len(hass.config_entries.flow.async_progress()) == 0
+    assert "test" not in hass.config.components
 
     entry = hass.config_entries.async_entries("test")[0]
     assert entry.source == "ignore"
@@ -2460,6 +2663,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2481,6 +2685,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2502,6 +2707,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2523,6 +2729,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2544,6 +2751,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2576,6 +2784,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2607,6 +2816,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2628,6 +2838,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2659,6 +2870,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2680,6 +2892,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2717,6 +2930,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp1",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2738,6 +2952,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp2",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2759,6 +2974,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": "user",
             "domain": "comp3",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2780,6 +2996,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp4",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2801,6 +3018,7 @@ async def test_get_matching_entries_ws(
             "disabled_by": None,
             "domain": "comp5",
             "entry_id": ANY,
+            "error_reason_translation_domain": None,
             "error_reason_translation_key": None,
             "error_reason_translation_placeholders": None,
             "modified_at": timestamp,
@@ -2909,6 +3127,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -2933,6 +3152,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp2",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -2957,6 +3177,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -2987,6 +3208,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3018,6 +3240,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3048,6 +3271,7 @@ async def test_subscribe_entries_ws(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": entry.modified_at.timestamp(),
@@ -3139,6 +3363,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -3163,6 +3388,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": created,
@@ -3195,6 +3421,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3223,6 +3450,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": "user",
                 "domain": "comp3",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3255,6 +3483,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": modified,
@@ -3285,6 +3514,7 @@ async def test_subscribe_entries_ws_filtered(
                 "disabled_by": None,
                 "domain": "comp1",
                 "entry_id": ANY,
+                "error_reason_translation_domain": None,
                 "error_reason_translation_key": None,
                 "error_reason_translation_placeholders": None,
                 "modified_at": entry.modified_at.timestamp(),
@@ -3306,12 +3536,148 @@ async def test_subscribe_entries_ws_filtered(
     ]
 
 
+@pytest.mark.parametrize(
+    (
+        "initial_disabled_by",
+        "new_disabled_by",
+        "initial_state",
+        "loaded_components",
+        "expected_events",
+        "require_restart",
+    ),
+    [
+        pytest.param(
+            None,
+            "user",
+            core_ce.ConfigEntryState.LOADED,
+            {"comp"},
+            [
+                ("user", "loaded"),
+                ("user", "unload_in_progress"),
+                ("user", "not_loaded"),
+            ],
+            False,
+            id="disable_loaded",
+        ),
+        pytest.param(
+            None,
+            "user",
+            core_ce.ConfigEntryState.NOT_LOADED,
+            {"comp"},
+            [("user", "not_loaded")],
+            False,
+            id="disable_not_loaded",
+        ),
+        pytest.param(
+            None,
+            "user",
+            core_ce.ConfigEntryState.MIGRATION_ERROR,
+            {"comp"},
+            [("user", "migration_error")],
+            True,
+            id="disable_not_recoverable",
+        ),
+        pytest.param(
+            core_ce.ConfigEntryDisabler.USER,
+            None,
+            core_ce.ConfigEntryState.NOT_LOADED,
+            {"comp"},
+            [
+                (None, "not_loaded"),
+                (None, "setup_in_progress"),
+                (None, "loaded"),
+            ],
+            False,
+            id="enable",
+        ),
+        pytest.param(
+            core_ce.ConfigEntryDisabler.USER,
+            None,
+            core_ce.ConfigEntryState.FAILED_UNLOAD,
+            {"comp"},
+            [(None, "failed_unload")],
+            True,
+            id="enable_not_recoverable",
+        ),
+        pytest.param(
+            core_ce.ConfigEntryDisabler.USER,
+            None,
+            core_ce.ConfigEntryState.NOT_LOADED,
+            set(),
+            [(None, "not_loaded")],
+            True,
+            id="enable_component_setup_fails",
+        ),
+    ],
+)
+async def test_subscribe_entries_ws_disabled_by_changed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    initial_disabled_by: core_ce.ConfigEntryDisabler | None,
+    new_disabled_by: str | None,
+    initial_state: core_ce.ConfigEntryState,
+    loaded_components: set[str],
+    expected_events: list[tuple[str | None, str]],
+    require_restart: bool,
+) -> None:
+    """Test subscribers are notified when a config entry is disabled or enabled."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    # The component setup only runs when the component is not already loaded
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=False),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.update(loaded_components)
+    entry = MockConfigEntry(
+        domain="comp", disabled_by=initial_disabled_by, state=initial_state
+    )
+    entry.add_to_hass(hass)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "config_entries/subscribe"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    subscription_id = response["id"]
+    response = await ws_client.receive_json()
+    assert response["event"] == [{"type": None, "entry": ANY}]
+
+    with mock_config_flow("comp", ConfigFlow):
+        await ws_client.send_json_auto_id(
+            {
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": new_disabled_by,
+            }
+        )
+        events = [await ws_client.receive_json() for _ in expected_events]
+    assert [
+        (
+            message["id"],
+            event["type"],
+            event["entry"]["disabled_by"],
+            event["entry"]["state"],
+        )
+        for message in events
+        for event in message["event"]
+    ] == [(subscription_id, "updated", *expected) for expected in expected_events]
+    # The disable result is only sent after all change events
+    response = await ws_client.receive_json()
+    assert response["id"] == subscription_id + 1
+    assert response["result"] == {"require_restart": require_restart}
+
+
 async def test_flow_with_multiple_schema_errors(
     hass: HomeAssistant, client: TestClient
 ) -> None:
     """Test an config flow with multiple schema errors."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -3319,11 +3685,13 @@ async def test_flow_with_multiple_schema_errors(
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_LATITUDE): cv.latitude,
-                        vol.Required(CONF_LONGITUDE): cv.longitude,
-                        vol.Required(CONF_RADIUS): vol.All(int, vol.Range(min=5)),
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Required(CONF_RADIUS): probatio.All(
+                            int, probatio.Range(min=5)
+                        ),
                     }
                 ),
             )
@@ -3355,7 +3723,7 @@ async def test_flow_with_multiple_schema_errors_base(
 ) -> None:
     """Test config flow with multiple schema errors."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -3363,9 +3731,9 @@ async def test_flow_with_multiple_schema_errors_base(
         async def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        probatio.Required(CONF_LATITUDE): cv.latitude,
                     }
                 ),
             )
@@ -3386,8 +3754,8 @@ async def test_flow_with_multiple_schema_errors_base(
         assert data == {
             "errors": {
                 "base": [
-                    "extra keys not allowed @ data['invalid']",
-                    "extra keys not allowed @ data['invalid_2']",
+                    "not a valid option at 'invalid'",
+                    "not a valid option at 'invalid_2'",
                 ],
                 "latitude": "required key not provided",
             }
@@ -3404,7 +3772,7 @@ async def test_supports_reconfigure(
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1")
@@ -3421,7 +3789,7 @@ async def test_supports_reconfigure(
         async def async_step_reconfigure(self, user_input=None):
             if user_input is None:
                 return self.async_show_form(
-                    step_id="reconfigure", data_schema=vol.Schema({})
+                    step_id="reconfigure", data_schema=probatio.Schema({})
                 )
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
@@ -3466,6 +3834,7 @@ async def test_supports_reconfigure(
     assert data == {
         "handler": "test",
         "reason": "reconfigure_successful",
+        "translation_domain": "homeassistant",
         "type": "abort",
         "description_placeholders": None,
     }
@@ -3478,7 +3847,7 @@ async def test_does_not_support_reconfigure(
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     class TestFlow(core_ce.ConfigFlow):

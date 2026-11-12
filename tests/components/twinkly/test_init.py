@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.twinkly.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MAC, TEST_MODEL
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_twinkly_client")
@@ -84,6 +83,36 @@ async def test_mac_migration(
         (DOMAIN, config_entry.unique_id), config_entry.entry_id
     ).identifiers == {(DOMAIN, TEST_MAC)}
     assert config_entry.unique_id == TEST_MAC
+
+
+async def test_mac_migration_cannot_connect(
+    hass: HomeAssistant, mock_twinkly_client: AsyncMock
+) -> None:
+    """Test the MAC migration is retried when the device cannot be reached."""
+    mock_twinkly_client.get_details.side_effect = TimeoutError
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        minor_version=1,
+        unique_id="unique_id",
+        data={
+            CONF_HOST: "192.168.0.123",
+            CONF_ID: "00000000-0000-0000-0000-000000000000",
+            CONF_NAME: "Tree 1",
+            CONF_MODEL: TEST_MODEL,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        config_entry.reason
+        == "Unable to connect to the Twinkly device at 192.168.0.123"
+    )
+    assert config_entry.minor_version == 1
+    assert config_entry.unique_id == "unique_id"
 
 
 @pytest.mark.usefixtures("mock_twinkly_client")

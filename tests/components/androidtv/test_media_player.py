@@ -9,6 +9,8 @@ from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.androidtv.const import (
     CONF_APPS,
@@ -22,8 +24,8 @@ from homeassistant.components.androidtv.const import (
     DOMAIN,
 )
 from homeassistant.components.androidtv.services import (
-    ATTR_DEVICE_PATH,
-    ATTR_LOCAL_PATH,
+    AndroidTVService,
+    AndroidTVServiceArgument,
 )
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -44,7 +46,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     EVENT_HOMEASSISTANT_STOP,
@@ -76,9 +77,6 @@ from .common import (
     TEST_HOST_NAME,
     setup_mock_entry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 MSG_RECONNECT = {
     patchers.KEY_PYTHON: (
@@ -115,7 +113,7 @@ async def test_reconnect(
     "Handles device/service unavailable. Log a warning once when
     unavailable, log once when reconnected."
 
-    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    https://contributors.home-assistant.io/core/quality-scale/
     """
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
@@ -462,16 +460,18 @@ async def test_select_source_firetv(
 
 
 @pytest.mark.parametrize(
-    ("config", "connect"),
+    ("config", "connect", "translation_key"),
     [
-        (CONFIG_ANDROID_DEFAULT, False),
-        (CONFIG_FIRETV_DEFAULT, False),
-        (CONFIG_ANDROID_DEFAULT, True),
-        (CONFIG_FIRETV_DEFAULT, True),
+        (CONFIG_ANDROID_DEFAULT, False, "cannot_connect_python_adb"),
+        (CONFIG_FIRETV_DEFAULT, False, "cannot_connect_python_adb"),
+        (CONFIG_ANDROID_DEFAULT, True, "cannot_connect_python_adb"),
+        (CONFIG_FIRETV_DEFAULT, True, "cannot_connect_python_adb"),
+        (CONFIG_ANDROID_ADB_SERVER, False, "cannot_connect_adb_server"),
+        (CONFIG_FIRETV_ADB_SERVER, False, "cannot_connect_adb_server"),
     ],
 )
 async def test_setup_fail(
-    hass: HomeAssistant, config: dict[str, Any], connect: bool
+    hass: HomeAssistant, config: dict[str, Any], connect: bool, translation_key: str
 ) -> None:
     """Test entity is not created when ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
@@ -489,6 +489,11 @@ async def test_setup_fail(
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert config_entry.error_reason_translation_key == translation_key
+        assert (
+            config_entry.error_reason_translation_placeholders["address"]
+            == f"{TEST_HOST_NAME}:{DEFAULT_PORT}"
+        )
         assert state is None
 
 
@@ -509,17 +514,51 @@ async def test_adb_command(hass: HomeAssistant) -> None:
         with patch(
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
         ) as patch_shell:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {ATTR_ENTITY_ID: entity_id, AndroidTVServiceArgument.COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_shell.assert_called_with(command)
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] == response
+            assert service_response == {entity_id: {"adb_response": response}}
+
+
+async def test_adb_command_empty_response(hass: HomeAssistant) -> None:
+    """Test sending a command via the `androidtv.adb_command` service that returns an empty response."""
+    patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.add_to_hass(hass)
+    command = "test command"
+    response = "  "
+
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with patch(
+            "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
+        ) as patch_shell:
+            service_response = await hass.services.async_call(
+                DOMAIN,
+                AndroidTVService.ADB_COMMAND,
+                {ATTR_ENTITY_ID: entity_id, AndroidTVServiceArgument.COMMAND: command},
+                blocking=True,
+                return_response=True,
+            )
+
+            patch_shell.assert_called_with(command)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
@@ -540,16 +579,18 @@ async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell",
             side_effect=UnicodeDecodeError("utf-8", response, 0, len(response), "TEST"),
         ):
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {ATTR_ENTITY_ID: entity_id, AndroidTVServiceArgument.COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_key(hass: HomeAssistant) -> None:
@@ -569,17 +610,19 @@ async def test_adb_command_key(hass: HomeAssistant) -> None:
         with patch(
             "androidtv.basetv.basetv_async.BaseTVAsync.adb_shell", return_value=response
         ) as patch_shell:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {ATTR_ENTITY_ID: entity_id, AndroidTVServiceArgument.COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_shell.assert_called_with(f"input keyevent {KEYS[command]}")
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] is None
+            assert service_response == {entity_id: None}
 
 
 async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
@@ -600,17 +643,19 @@ async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
             "androidtv.androidtv.androidtv_async.AndroidTVAsync.get_properties_dict",
             return_value=response,
         ) as patch_get_props:
-            await hass.services.async_call(
+            service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {ATTR_ENTITY_ID: entity_id, AndroidTVServiceArgument.COMMAND: command},
                 blocking=True,
+                return_response=True,
             )
 
             patch_get_props.assert_called()
             state = hass.states.get(entity_id)
             assert state is not None
             assert state.attributes["adb_response"] == str(response)
+            assert service_response == {entity_id: {"adb_response": str(response)}}
 
 
 async def test_learn_sendevent(hass: HomeAssistant) -> None:
@@ -632,7 +677,7 @@ async def test_learn_sendevent(hass: HomeAssistant) -> None:
         ) as patch_learn_sendevent:
             await hass.services.async_call(
                 DOMAIN,
-                "learn_sendevent",
+                AndroidTVService.LEARN_SENDEVENT,
                 {ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
@@ -701,11 +746,11 @@ async def test_download(hass: HomeAssistant) -> None:
         with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_pull") as patch_pull:
             await hass.services.async_call(
                 DOMAIN,
-                "download",
+                AndroidTVService.DOWNLOAD,
                 {
                     ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )
@@ -718,11 +763,11 @@ async def test_download(hass: HomeAssistant) -> None:
         ):
             await hass.services.async_call(
                 DOMAIN,
-                "download",
+                AndroidTVService.DOWNLOAD,
                 {
                     ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )
@@ -747,11 +792,11 @@ async def test_upload(hass: HomeAssistant) -> None:
         with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_push") as patch_push:
             await hass.services.async_call(
                 DOMAIN,
-                "upload",
+                AndroidTVService.UPLOAD,
                 {
                     ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )
@@ -764,11 +809,11 @@ async def test_upload(hass: HomeAssistant) -> None:
         ):
             await hass.services.async_call(
                 DOMAIN,
-                "upload",
+                AndroidTVService.UPLOAD,
                 {
                     ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )

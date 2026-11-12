@@ -1,0 +1,22 @@
+{
+  "chart": {
+    "range": {
+      "start_date": "2026-08-28T19:00:00+02:00",
+      "end_date": "2026-08-30T23:59:59+02:00"
+    },
+    "series": {
+      "prices": [
+        {
+          "start_date": "2026-08-29T04:00:00+00:00",
+          "end_date": "2026-08-30T04:00:00+00:00",
+          "price_tax_included": {
+            "amount": 16029802
+          },
+          "price_tax_excluded": {
+            "amount": 8761816
+          }
+        }
+      ]
+    }
+  }
+}

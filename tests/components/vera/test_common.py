@@ -3,11 +3,11 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import async_fire_time_changed
+
 from homeassistant.components.vera import SubscriptionRegistry
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
 
 
 async def test_subscription_registry(hass: HomeAssistant) -> None:

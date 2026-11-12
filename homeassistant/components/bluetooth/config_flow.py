@@ -13,7 +13,7 @@ from bluetooth_adapters import (
     get_adapters,
 )
 from habluetooth import BluetoothScanningMode, get_manager
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SOURCE
+from homeassistant.const import CONF_MODE, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -39,7 +39,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from .const import (
     CONF_ADAPTER,
     CONF_DETAILS,
-    CONF_MODE,
     CONF_PASSIVE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DEVICE_ID,
@@ -62,10 +61,12 @@ _MODE_SELECTOR = SelectSelector(
 )
 
 
-async def _options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def _options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Build the options schema with the saved mode as the default."""
     current = resolve_scanning_mode(handler.options).value
-    return vol.Schema({vol.Required(CONF_MODE, default=current): _MODE_SELECTOR})
+    return probatio.Schema(
+        {probatio.Required(CONF_MODE, default=current): _MODE_SELECTOR}
+    )
 
 
 async def _validate_options(
@@ -196,9 +197,9 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="multiple_adapters",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADAPTER): vol.In(
+                    probatio.Required(CONF_ADAPTER): probatio.In(
                         {
                             adapter: adapter_display_info(
                                 adapter, self._adapters[adapter]
