@@ -6,7 +6,8 @@ group addresses in roles - the function points of its type. Most projects have
 functions, while KNX Information Model semantics of channels are still rare.
 
 The role stored with a group address is used when it is one of the function
-type; other group addresses get the first free function point of their DPT.
+type; other group addresses get the first free function point of their DPT. A
+group address whose DPT doesn't fit a function point is left unmatched.
 """
 
 from dataclasses import dataclass
@@ -183,38 +184,56 @@ class FunctionHints(TypedDict, total=False):
     functions_found: int
 
 
+def _fits(dpt: DPTType | None, point: tuple[int, int]) -> bool:
+    """Whether a group address of `dpt` fits a function point of DPT `point`.
+
+    One without a DPT fits any point, one with only a main number the points of
+    that number. A subtype has to be the point's: another one of the same main
+    number can be encoded differently (5.010 is a count, 5.001 a percentage).
+    """
+    if dpt is None:
+        return True
+    main, sub = point
+    return dpt["main"] == main and dpt["sub"] in (None, sub)
+
+
 def _function_roles(project: KNXProject, function: Function) -> dict[str, str]:
     """Map the roles of a function to the address of their group address.
 
-    A stored role of the function type is kept. Other group addresses get the
-    first free function point of their DPT, else of its main number; one
-    without a DPT gets the first free point.
+    A stored role of the function type is kept when the group address fits it; a
+    further group address stored with the same role is left unmatched, so a
+    second status address never becomes a command. Group addresses without such
+    a role get the first free function point their DPT fits.
     """
     points = FUNCTION_POINTS.get(function["function_type"], ())
-    names = {name for name, _dpt in points}
+    point_dpts = dict(points)
     roles: dict[str, str] = {}
-    unassigned: list[str] = []
-    for ref in function["group_addresses"].values():
-        if ref["role"] in names and ref["role"] not in roles:
-            roles[ref["role"]] = ref["address"]
-        else:
-            unassigned.append(ref["address"])
+    without_role: list[str] = []
 
-    def free(dpt: DPTType | None, exact: bool) -> str | None:
-        for name, (main, sub) in points:
-            if name in roles:
-                continue
-            if dpt is None or (
-                dpt["main"] == main and (not exact or dpt["sub"] == sub)
-            ):
-                return name
-        return None
-
-    for address in unassigned:
+    def dpt_of(address: str) -> DPTType | None:
         group_address = project["group_addresses"].get(address)
-        dpt = group_address["dpt"] if group_address is not None else None
-        if (role := free(dpt, exact=True) or free(dpt, exact=False)) is not None:
+        return group_address["dpt"] if group_address is not None else None
+
+    for ref in function["group_addresses"].values():
+        role, address = ref["role"], ref["address"]
+        if role not in point_dpts:
+            without_role.append(address)
+        elif role not in roles and _fits(dpt_of(address), point_dpts[role]):
             roles[role] = address
+
+    for address in without_role:
+        dpt = dpt_of(address)
+        if (
+            free_role := next(
+                (
+                    name
+                    for name, point in points
+                    if name not in roles and _fits(dpt, point)
+                ),
+                None,
+            )
+        ) is not None:
+            roles[free_role] = address
     return roles
 
 
@@ -237,8 +256,16 @@ def _build_platform_suggestion(
         return None
     knx_config: dict[str, Any] = {}
     used: set[str] = set()
+    # the role writing each config path; its feedback alone is no usable address
+    writers = {
+        path: role for role, (path, slots) in entity.roles.items() if "write" in slots
+    }
     for role, (path, slots) in entity.roles.items():
         if (address := roles.get(role)) is None:
+            continue
+        if (writer := writers.get(path, role)) != role and writer not in roles:
+            # e.g. the brightness of a dimmable light without an absolute
+            # brightness value: left unmatched, the light switches
             continue
         for slot in slots:
             _set_ga(knx_config, path, slot, address)

@@ -18,6 +18,8 @@ DPT_STEP = {"main": 1, "sub": 7}
 DPT_PERCENT = {"main": 5, "sub": 1}
 DPT_TEMPERATURE = {"main": 9, "sub": 1}
 DPT_HVAC_MODE = {"main": 20, "sub": 102}
+DPT_COUNTER = {"main": 5, "sub": 10}
+DPT_PERCENT_ANY = {"main": 5, "sub": None}
 
 
 def _group_address(address: str, dpt: dict[str, int] | None) -> dict[str, Any]:
@@ -78,6 +80,8 @@ TEST_PROJECT: dict[str, Any] = {
         "3/0/4": _group_address("3/0/4", DPT_HVAC_MODE),
         "3/0/5": _group_address("3/0/5", DPT_SWITCH),
         "4/0/1": _group_address("4/0/1", DPT_SWITCH),
+        "5/0/1": _group_address("5/0/1", DPT_COUNTER),
+        "5/0/2": _group_address("5/0/2", DPT_PERCENT_ANY),
     },
     "devices": {},
     "communication_objects": {},
@@ -147,6 +151,48 @@ def test_roles_stored_or_from_the_dpt() -> None:
         "SwitchOnOff": "1/0/1",
         "InfoOnOff": "1/0/2",
     }
+
+
+def test_second_address_of_a_stored_role() -> None:
+    """Test a second address stored with a taken role is not given another role."""
+    function = _function(
+        "Light", "FT-1", "P-2", ("1/0/2", "InfoOnOff"), ("1/0/1", "InfoOnOff")
+    )
+    # a second status address doesn't become the switching command
+    assert _function_roles(TEST_PROJECT, function) == {"InfoOnOff": "1/0/2"}
+    assert _build_platform_suggestion(TEST_PROJECT, function) is None
+
+
+def test_roles_fit_the_dpt() -> None:
+    """Test group addresses only take function points their DPT fits."""
+    # a count (5.010) is no brightness percentage (5.001); a main number fits
+    function = _function("Light", "FT-6", "P-2", ("5/0/1", ""), ("5/0/2", ""))
+    assert _function_roles(TEST_PROJECT, function) == {"DimmingValue": "5/0/2"}
+    # a stored role whose DPT doesn't fit is not used
+    function = _function(
+        "Socket", "FT-10", "P-2", ("3/0/1", "SwitchOnOff"), ("1/0/2", "InfoOnOff")
+    )
+    assert _function_roles(TEST_PROJECT, function) == {"InfoOnOff": "1/0/2"}
+    function = _function("Light", "FT-6", "P-2", ("5/0/1", "DimmingValue"))
+    assert _function_roles(TEST_PROJECT, function) == {}
+
+
+def test_brightness_feedback_without_brightness_value() -> None:
+    """Test a dimmable light without an absolute brightness value still switches."""
+    function = _function(
+        "Light",
+        "FT-6",
+        "P-2",
+        ("1/0/1", "SwitchOnOff"),
+        ("1/0/2", "InfoOnOff"),
+        ("1/0/4", "InfoDimmingValue"),
+    )
+    platform, suggestion = _build_platform_suggestion(TEST_PROJECT, function)
+    assert platform is Platform.LIGHT
+    assert suggestion["knx"] == {
+        "ga_switch": {"write": "1/0/1", "state": "1/0/2", "passive": []},
+    }
+    assert suggestion["unmatched"] == ["1/0/4"]
 
 
 def test_dimmable_light() -> None:
