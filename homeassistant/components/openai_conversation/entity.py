@@ -648,7 +648,7 @@ class OpenAIBaseLLMEntity(Entity):
             complexity = None
             if image_model.startswith("gpt-image-2.6"):
                 match reasoning.get("effort"):
-                    case "none":
+                    case "none" | "minimal":
                         complexity = "low"
                     case "xhigh" | "max":
                         complexity = "high"

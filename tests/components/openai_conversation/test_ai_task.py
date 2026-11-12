@@ -463,6 +463,13 @@ async def test_generate_data_with_attachments(
             id="none-effort-maps-to-low-complexity",
         ),
         pytest.param(
+            {CONF_CHAT_MODEL: "gpt-5", CONF_REASONING_EFFORT: "minimal"},
+            "gpt-image-2.6-flare",
+            {"complexity": "low"},
+            {"reasoning": {"effort": "minimal", "summary": "auto"}},
+            id="minimal-effort-maps-to-low-complexity",
+        ),
+        pytest.param(
             {CONF_REASONING_EFFORT: "xhigh"},
             "gpt-image-2.6-flare",
             {"complexity": "high"},
