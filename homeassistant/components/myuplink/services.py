@@ -158,26 +158,24 @@ async def async_get_datapoints(call: ServiceCall) -> ServiceResponse:
         ) from err
 
     return {
-        "devicepoints": [
-            {
-                "category": point.get("category"),
-                "parameter_id": point.get("parameterId"),
-                "parameter_name": point.get("parameterName", "").replace("\u00ad", ""),
-                "parameter_unit": point.get("parameterUnit"),
-                "value": point.get("value"),
-                "str_value": point.get("strVal"),
-                "timestamp": point.get("timestamp"),
-                "min_value": point.get("minValue"),
-                "max_value": point.get("maxValue"),
-                "step_value": point.get("stepValue"),
-                "scale_value": point.get("scaleValue"),
-                "writable": point.get("writable"),
-                "enum_values": point.get("enumValues"),
-                "smart_home_categories": point.get("smartHomeCategories"),
-                "zone_id": point.get("zoneId"),
-            }
-            for point in dev_points
-        ]
+        str(point["parameterId"]): {
+            "category": point.get("category"),
+            "parameter_id": point.get("parameterId"),
+            "parameter_name": point.get("parameterName", "").replace("\u00ad", ""),
+            "parameter_unit": point.get("parameterUnit"),
+            "value": point.get("value"),
+            "str_value": point.get("strVal"),
+            "timestamp": point.get("timestamp"),
+            "min_value": point.get("minValue"),
+            "max_value": point.get("maxValue"),
+            "step_value": point.get("stepValue"),
+            "scale_value": point.get("scaleValue"),
+            "writable": point.get("writable"),
+            "enum_values": point.get("enumValues"),
+            "smart_home_categories": point.get("smartHomeCategories"),
+            "zone_id": point.get("zoneId"),
+        }
+        for point in dev_points
     }
 
 

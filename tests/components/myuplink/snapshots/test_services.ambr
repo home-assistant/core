@@ -1,45 +1,43 @@
 # serializer version: 1
 # name: test_get_services
   dict({
-    'devicepoints': list([
-      dict({
-        'category': 'NIBEF F730 CU 3x400V',
-        'enum_values': list([
-        ]),
-        'max_value': None,
-        'min_value': None,
-        'parameter_id': '40004',
-        'parameter_name': 'Current outd temp (BT1)',
-        'parameter_unit': '°C',
-        'scale_value': '0.1',
-        'smart_home_categories': list([
-        ]),
-        'step_value': 1,
-        'str_value': '-9.3°C',
-        'timestamp': '2024-02-09T10:56:12+00:00',
-        'value': -9.3,
-        'writable': False,
-        'zone_id': None,
-      }),
-      dict({
-        'category': 'NIBEF F730 CU 3x400V',
-        'enum_values': list([
-        ]),
-        'max_value': None,
-        'min_value': None,
-        'parameter_id': '40008',
-        'parameter_name': 'Supply line (BT2)',
-        'parameter_unit': '°C',
-        'scale_value': '0.1',
-        'smart_home_categories': list([
-        ]),
-        'step_value': 1,
-        'str_value': '39.7°C',
-        'timestamp': '2024-02-09T10:58:51+00:00',
-        'value': 39.7,
-        'writable': False,
-        'zone_id': None,
-      }),
-    ]),
+    '40004': dict({
+      'category': 'NIBEF F730 CU 3x400V',
+      'enum_values': list([
+      ]),
+      'max_value': None,
+      'min_value': None,
+      'parameter_id': '40004',
+      'parameter_name': 'Current outd temp (BT1)',
+      'parameter_unit': '°C',
+      'scale_value': '0.1',
+      'smart_home_categories': list([
+      ]),
+      'step_value': 1,
+      'str_value': '-9.3°C',
+      'timestamp': '2024-02-09T10:56:12+00:00',
+      'value': -9.3,
+      'writable': False,
+      'zone_id': None,
+    }),
+    '40008': dict({
+      'category': 'NIBEF F730 CU 3x400V',
+      'enum_values': list([
+      ]),
+      'max_value': None,
+      'min_value': None,
+      'parameter_id': '40008',
+      'parameter_name': 'Supply line (BT2)',
+      'parameter_unit': '°C',
+      'scale_value': '0.1',
+      'smart_home_categories': list([
+      ]),
+      'step_value': 1,
+      'str_value': '39.7°C',
+      'timestamp': '2024-02-09T10:58:51+00:00',
+      'value': 39.7,
+      'writable': False,
+      'zone_id': None,
+    }),
   })
 # ---
