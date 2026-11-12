@@ -49,9 +49,10 @@ from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, CommonServiceArgument
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import ConfigType
 
@@ -195,8 +196,11 @@ async def test_run_select_service_optimistic(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "beer"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "beer",
+        },
         blocking=True,
     )
 
@@ -238,8 +242,11 @@ async def test_run_select_service_optimistic_with_command_template(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "beer"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "beer",
+        },
         blocking=True,
     )
 
@@ -281,8 +288,11 @@ async def test_run_select_service(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "milk",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
@@ -323,8 +333,11 @@ async def test_run_select_service_with_command_template(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.test_select", ATTR_OPTION: "milk"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: "select.test_select",
+            SelectServiceArgument.OPTION: "milk",
+        },
         blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
