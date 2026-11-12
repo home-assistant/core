@@ -9,6 +9,16 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
+      "effect_source": {
+        "data": {
+          "effect_source": "Effects to show"
+        },
+        "data_description": {
+          "effect_source": "Choose which effect list Home Assistant should show by default."
+        },
+        "description": "Different lights support different effects. Selecting all effects may make the effect list long. After setup, you can go to Settings > Devices & services > AiDot > Configure to choose which effects each light shows in Home Assistant.",
+        "title": "Effect list"
+      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
@@ -35,6 +45,20 @@
   "exceptions": {
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "effect_source": "Effects to show"
+        },
+        "data_description": {
+          "effect_source": "Choose which effect list Home Assistant should show by default."
+        },
+        "description": "Different lights support different effects. Selecting all effects may make the effect list long. After setup, you can go to Settings > Devices & services > AiDot > Configure to choose which effects each light shows in Home Assistant.",
+        "title": "Effect list"
+      }
     }
   }
 }
