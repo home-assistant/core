@@ -27,8 +27,8 @@
       "failed_burner_flame_ignitions": 34,
       "failed_burner_starts": 6,
       "intended_boiler_temperature": 17.5,
-      "open_therm_application_specific_fault_code": 0,
-      "open_therm_oem_fault_code": 255,
+      "fault_flags": 0,
+      "oem_fault_code": 255,
       "water_temperature": 19.0
     },
     "switches": {

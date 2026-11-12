@@ -471,8 +471,8 @@
     "sensors": {
       "burner_operation_time": 5566,
       "burner_starts": 15344,
-      "central_heater_pump_operation_time": 6452,
-      "central_heater_pump_starts": 3801046,
+      "heating_pump_operation_time": 6452,
+      "heating_pump_starts": 3801046,
       "dhw_burner_operation_time": 408,
       "dhw_burner_starts": 7400,
       "dhw_pump_operation_time": 23842,
@@ -481,9 +481,9 @@
       "failed_burner_starts": 0,
       "intended_boiler_temperature": 0.0,
       "modulation_level": 0,
-      "open_therm_application_specific_fault_code": 0,
-      "open_therm_oem_diagnostic_code": 0,
-      "open_therm_oem_fault_code": 255,
+      "fault_flags": 0,
+      "oem_diagnostic_code": 0,
+      "oem_fault_code": 255,
       "return_temperature": 37.1,
       "water_pressure": 1.4,
       "water_temperature": 37.3

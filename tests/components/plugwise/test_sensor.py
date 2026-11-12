@@ -102,8 +102,8 @@ async def test_anna_sensor_snapshot(
     "key",
     [
         "dhw_flow",
-        "open_therm_oem_fault_code",
-        "open_therm_application_specific_fault_code",
+        "oem_fault_code",
+        "fault_flags",
     ],
 )
 async def test_heater_sensors_disabled_by_default(

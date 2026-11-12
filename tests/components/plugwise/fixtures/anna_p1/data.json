@@ -83,8 +83,8 @@
       "failed_burner_starts": 6,
       "intended_boiler_temperature": 0.0,
       "modulation_level": 0,
-      "open_therm_application_specific_fault_code": 0,
-      "open_therm_oem_fault_code": 255,
+      "fault_flags": 0,
+      "oem_fault_code": 255,
       "water_pressure": 6.0,
       "water_temperature": 35.0
     },

@@ -188,12 +188,6 @@
       "burner_starts": {
         "name": "Burner starts"
       },
-      "central_heater_pump_operation_time": {
-        "name": "Central heating pump operation time"
-      },
-      "central_heater_pump_starts": {
-        "name": "Central heating pump starts"
-      },
       "cooling_setpoint": {
         "name": "Cooling setpoint"
       },
@@ -296,11 +290,20 @@
       "failed_burner_starts": {
         "name": "Failed burner starts"
       },
+      "fault_flags": {
+        "name": "Application-specific fault code"
+      },
       "gas_consumed_cumulative": {
         "name": "Gas consumed cumulative"
       },
       "gas_consumed_interval": {
         "name": "Gas consumed interval"
+      },
+      "heating_pump_operation_time": {
+        "name": "Central heating pump operation time"
+      },
+      "heating_pump_starts": {
+        "name": "Central heating pump starts"
       },
       "heating_setpoint": {
         "name": "Heating setpoint"
@@ -323,13 +326,10 @@
       "net_electricity_point": {
         "name": "Net electricity point"
       },
-      "open_therm_application_specific_fault_code": {
-        "name": "Application-specific fault code"
-      },
-      "open_therm_oem_diagnostic_code": {
+      "oem_diagnostic_code": {
         "name": "OEM diagnostic code"
       },
-      "open_therm_oem_fault_code": {
+      "oem_fault_code": {
         "name": "OEM fault code"
       },
       "outdoor_air_temperature": {

@@ -1230,8 +1230,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_therm_application_specific_fault_code',
-    'unique_id': '056ee145a816487eaa69243c3280f8bf-open_therm_application_specific_fault_code',
+    'translation_key': 'fault_flags',
+    'unique_id': '056ee145a816487eaa69243c3280f8bf-fault_flags',
     'unit_of_measurement': None,
   })
 # ---
@@ -1613,8 +1613,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_therm_oem_fault_code',
-    'unique_id': '056ee145a816487eaa69243c3280f8bf-open_therm_oem_fault_code',
+    'translation_key': 'oem_fault_code',
+    'unique_id': '056ee145a816487eaa69243c3280f8bf-oem_fault_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -2465,8 +2465,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_therm_application_specific_fault_code',
-    'unique_id': '36b937e44ad145bab165fa0fe99d742d-open_therm_application_specific_fault_code',
+    'translation_key': 'fault_flags',
+    'unique_id': '36b937e44ad145bab165fa0fe99d742d-fault_flags',
     'unit_of_measurement': None,
   })
 # ---
@@ -2902,8 +2902,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_therm_oem_fault_code',
-    'unique_id': '36b937e44ad145bab165fa0fe99d742d-open_therm_oem_fault_code',
+    'translation_key': 'oem_fault_code',
+    'unique_id': '36b937e44ad145bab165fa0fe99d742d-oem_fault_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -4453,8 +4453,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_therm_application_specific_fault_code',
-    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-open_therm_application_specific_fault_code',
+    'translation_key': 'fault_flags',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-fault_flags',
     'unit_of_measurement': None,
   })
 # ---
@@ -4731,8 +4731,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'open_therm_oem_fault_code',
-    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-open_therm_oem_fault_code',
+    'translation_key': 'oem_fault_code',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-oem_fault_code',
     'unit_of_measurement': None,
   })
 # ---
