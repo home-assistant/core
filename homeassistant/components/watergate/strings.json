@@ -30,6 +30,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "external_power": {
+        "name": "External power"
+      },
       "mqtt_connected": {
         "name": "MQTT connected"
       },
@@ -90,6 +93,9 @@
       }
     },
     "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
       "mqtt_up_since": {
         "name": "MQTT up since"
       },
@@ -135,6 +141,9 @@
   "exceptions": {
     "auto_shut_off_update_failed": {
       "message": "Failed to update auto shut-off"
+    },
+    "device_unavailable": {
+      "message": "Sonic device is unavailable"
     },
     "reboot_failed": {
       "message": "Failed to reboot the device"

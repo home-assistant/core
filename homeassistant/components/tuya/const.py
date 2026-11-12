@@ -797,6 +797,7 @@ class DPCode(StrEnum):
     MAX_SET = "max_set"
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
+    MODE_ECO = "mode_eco"  # Eco mode
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_AREA_SWITCH = "motion_area_switch"  # Activity area
     MOTION_RECORD = "motion_record"

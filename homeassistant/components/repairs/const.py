@@ -6,10 +6,12 @@ from typing import TYPE_CHECKING
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
+    from .models import RepairsData
     from .update_report import UpdateReport
 
 DOMAIN = "repairs"
 
+DATA_REPAIRS: HassKey[RepairsData] = HassKey(DOMAIN)
 DATA_UPDATE_REPORT: HassKey[UpdateReport] = HassKey("repairs_update_report")
 UPDATE_REPORT_ISSUE_ID = "update_report"
 

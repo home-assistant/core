@@ -326,13 +326,14 @@ async def test_climate_control_errors(
     await hass.async_block_till_done()
 
     # Test exception when trying set temperature
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
             blocking=True,
         )
+    assert exc_info.value.translation_key == "target_temperature_not_supported"
     # Test exception when trying set fan level
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(

@@ -28,7 +28,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.network import is_ip_address
 
-from .config_flow import get_client_controller
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -46,6 +45,7 @@ from .const import (
 )
 from .coordinator import RainMachineDataUpdateCoordinator
 from .services import async_setup_services
+from .util import get_client_controller
 
 DEFAULT_SSL = True
 

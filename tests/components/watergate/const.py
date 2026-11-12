@@ -4,6 +4,7 @@ from watergate_local_api.models import (
     DeviceState,
     DeviceStateV2,
     NetworkingData,
+    PowerSupply,
     TelemetryData,
 )
 from watergate_local_api.models.water_meter import WaterMeter
@@ -58,3 +59,5 @@ DEFAULT_NETWORKING_STATE = NetworkingData(
 )
 
 DEFAULT_TELEMETRY_STATE = TelemetryData(0.0, 100, 28.32, None, [])
+
+DEFAULT_POWER_SUPPLY = PowerSupply(battery=True, external=False, batteries_voltage=6800)
