@@ -12,7 +12,11 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverState,
 )
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 
 from .common import CommandStore, setup_integration
@@ -97,12 +101,31 @@ async def test_cover_services(
 
 
 @pytest.mark.parametrize("device", ["blind_without_values"], indirect=True)
-@pytest.mark.usefixtures("device")
-async def test_cover_without_values(hass: HomeAssistant) -> None:
-    """Test a cover whose control reports no values."""
+async def test_cover_without_values(
+    hass: HomeAssistant,
+    command_store: CommandStore,
+    device: Device,
+) -> None:
+    """Test a cover whose control reports no values can still be positioned."""
+    entity_id = "cover.test"
     await setup_integration(hass)
 
-    state = hass.states.get("cover.test")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
     assert ATTR_CURRENT_POSITION not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 15
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+
+    await command_store.trigger_observe_callback(hass, device)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 30

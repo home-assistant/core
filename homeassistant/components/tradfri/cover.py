@@ -4,7 +4,11 @@ from typing import TYPE_CHECKING, Any, override
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
-from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -37,6 +41,12 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
     """The platform class required by Home Assistant."""
 
     _attr_name = None
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     def __init__(
         self,
