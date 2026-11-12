@@ -53,6 +53,7 @@ from .coordinator import SofarConfigEntry, SofarRuntimeData
 from .entity import (
     SofarEntity,
     SofarEntityDescription,
+    SofarPart,
     async_remove_unserved_entities,
     battery_pack_identifier,
 )
@@ -151,9 +152,9 @@ def _async_setup_battery_packs(
 
 def _battery_string(description: SofarSensorDescription) -> int | None:
     """Return the battery string a description belongs to, if any."""
-    if (part := description.part) is None or part[0] != "battery":
+    if (part := description.part) is None or part.kind != "battery":
         return None
-    return part[1]
+    return part.number
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -394,7 +395,7 @@ def _part_sensors(
             key=f"{measurement.key}_{number}",
             component=component,
             translation_key=measurement.translation_key,
-            part=(kind, number),
+            part=SofarPart(kind, number),
             device_class=measurement.device_class,
             native_unit_of_measurement=measurement.native_unit_of_measurement,
             state_class=measurement.state_class,

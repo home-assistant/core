@@ -41,7 +41,12 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import battery_pack_identifier, entity_unique_id, part_identifier
+from .entity import (
+    SofarPart,
+    battery_pack_identifier,
+    entity_unique_id,
+    part_identifier,
+)
 from .helpers import create_modbus_params
 from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
@@ -230,7 +235,7 @@ async def async_remove_config_entry_device(
     if TYPE_CHECKING:
         assert serial is not None
     if (DOMAIN, serial) in device_entry.identifiers or any(
-        (DOMAIN, part_identifier(serial, ("pv_string", number)))
+        (DOMAIN, part_identifier(serial, SofarPart("pv_string", number)))
         in device_entry.identifiers
         for number in PV_STRING_COMPONENTS
     ):
@@ -238,7 +243,7 @@ async def async_remove_config_entry_device(
     strings = {
         number
         for number in BATTERY_STRING_COMPONENTS
-        if (DOMAIN, part_identifier(serial, ("battery", number)))
+        if (DOMAIN, part_identifier(serial, SofarPart("battery", number)))
         in device_entry.identifiers
     }
     if config_entry.state is not ConfigEntryState.LOADED:
