@@ -781,7 +781,6 @@ async def test_client_sensors_discovered_when_ssid_changes_to_allowed(
     hass: HomeAssistant,
     mock_websocket_message: WebsocketMessageMock,
     client_payload: list[dict[str, Any]],
-    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Client sensors are reconsidered when the client's SSID changes."""
     for entity_id in (
