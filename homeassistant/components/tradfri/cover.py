@@ -85,9 +85,8 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if (position := self._device_data.current_cover_position) is None:
-            return None
-        return 100 - position
+        position = self._device_data.current_cover_position
+        return None if position is None else 100 - position
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -113,6 +112,5 @@ class TradfriCover(TradfriBaseEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        if (position := self.current_cover_position) is None:
-            return None
-        return position == 0
+        position = self.current_cover_position
+        return None if position is None else position == 0
