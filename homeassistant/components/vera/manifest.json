@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["zwave"],
   "documentation": "https://www.home-assistant.io/integrations/vera",
   "integration_type": "hub",
   "iot_class": "local_polling",

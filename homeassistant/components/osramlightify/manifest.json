@@ -3,6 +3,7 @@
   "name": "Osramlightify",
   "categories": ["lighting.lighting_systems"],
   "codeowners": [],
+  "connectivity": ["zigbee"],
   "documentation": "https://www.home-assistant.io/integrations/osramlightify",
   "iot_class": "local_polling",
   "loggers": ["lightify"],

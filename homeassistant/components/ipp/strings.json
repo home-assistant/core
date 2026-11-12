@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
+      "different_device": "The provided printer does not match the printer that was set up before.",
       "ipp_error": "Encountered IPP error.",
       "ipp_version_error": "IPP version not supported by printer.",
       "parse_error": "Failed to parse response from printer.",
@@ -11,10 +12,21 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "connection_upgrade": "Failed to connect to printer. Please try again with SSL/TLS option checked."
+      "connection_upgrade": "Failed to connect to printer. Please try again with SSL/TLS option checked.",
+      "ipp_error": "[%key:component::ipp::config::abort::ipp_error%]",
+      "ipp_version_error": "[%key:component::ipp::config::abort::ipp_version_error%]"
     },
     "flow_title": "{name}",
     "step": {
+      "reconfigure": {
+        "data": {
+          "base_path": "[%key:component::ipp::config::step::user::data::base_path%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
       "user": {
         "data": {
           "base_path": "Relative path to the printer",

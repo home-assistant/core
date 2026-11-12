@@ -84,9 +84,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={
-                    CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
-                },
+                translation_placeholders={"email": self.config_entry.data[CONF_EMAIL]},
             ) from e
         except CookidooParseException as e:
             # login() scrapes the CIAM login page, so it can also fail to parse it
@@ -112,7 +110,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     translation_domain=DOMAIN,
                     translation_key="setup_authentication_exception",
                     translation_placeholders={
-                        CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
+                        "email": self.config_entry.data[CONF_EMAIL]
                     },
                 ) from exc
             except (CookidooRequestException, CookidooParseException) as exc:

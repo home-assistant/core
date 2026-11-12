@@ -8,6 +8,7 @@ from hassfest.model import Config
 INTEGRATION_PLUGINS = [
     "application_credentials",
     "bluetooth",
+    "brand_images",
     "codeowners",
     "conditions",
     "config_schema",
@@ -46,7 +47,9 @@ CORE_PLUGINS = [
 
 ALL_PLUGIN_NAMES = [*INTEGRATION_PLUGINS, *CORE_PLUGINS]
 LOCAL_PLUGINS = {
-    name: f"{__package__}.{name}" for name in ALL_PLUGIN_NAMES if name != "json"
+    name: f"{__package__}.{name}"
+    for name in ALL_PLUGIN_NAMES
+    if name not in ("brand_images", "json")
 }
 
 

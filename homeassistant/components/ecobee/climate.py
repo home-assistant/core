@@ -42,18 +42,7 @@ from .const import (
     LOGGER,
     MANUFACTURER,
 )
-from .services import (
-    ATTR_COOL_TEMP,
-    ATTR_END_DATE,
-    ATTR_END_TIME,
-    ATTR_FAN_MIN_ON_TIME,
-    ATTR_FAN_MODE,
-    ATTR_HEAT_TEMP,
-    ATTR_START_DATE,
-    ATTR_START_TIME,
-    ATTR_VACATION_NAME,
-    _async_get_thermostats,
-)
+from .services import EcobeeServiceArgument, _async_get_thermostats
 from .util import is_indefinite_hold
 
 PRESET_AWAY_INDEFINITELY = "away_indefinitely"
@@ -828,23 +817,23 @@ class Thermostat(ClimateEntity):
 
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
-        vacation_name = service_data[ATTR_VACATION_NAME]
+        vacation_name = service_data[EcobeeServiceArgument.VACATION_NAME]
         cool_temp = TemperatureConverter.convert(
-            service_data[ATTR_COOL_TEMP],
+            service_data[EcobeeServiceArgument.COOL_TEMP],
             self.hass.config.units.temperature_unit,
             UnitOfTemperature.FAHRENHEIT,
         )
         heat_temp = TemperatureConverter.convert(
-            service_data[ATTR_HEAT_TEMP],
+            service_data[EcobeeServiceArgument.HEAT_TEMP],
             self.hass.config.units.temperature_unit,
             UnitOfTemperature.FAHRENHEIT,
         )
-        start_date = service_data.get(ATTR_START_DATE)
-        start_time = service_data.get(ATTR_START_TIME)
-        end_date = service_data.get(ATTR_END_DATE)
-        end_time = service_data.get(ATTR_END_TIME)
-        fan_mode = service_data[ATTR_FAN_MODE]
-        fan_min_on_time = service_data[ATTR_FAN_MIN_ON_TIME]
+        start_date = service_data.get(EcobeeServiceArgument.START_DATE)
+        start_time = service_data.get(EcobeeServiceArgument.START_TIME)
+        end_date = service_data.get(EcobeeServiceArgument.END_DATE)
+        end_time = service_data.get(EcobeeServiceArgument.END_TIME)
+        fan_mode = service_data[EcobeeServiceArgument.FAN_MODE]
+        fan_min_on_time = service_data[EcobeeServiceArgument.FAN_MIN_ON_TIME]
 
         kwargs = {
             key: value

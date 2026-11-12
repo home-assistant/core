@@ -6,15 +6,8 @@ from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
@@ -45,7 +38,7 @@ async def test_doorsense(hass: HomeAssistant) -> None:
     data = {
         ATTR_ENTITY_ID: "lock.online_with_doorsense_name_online_with_doorsense_name"
     }
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.UNLOCK, data, blocking=True)
 
     assert (
         states.get(
@@ -54,7 +47,7 @@ async def test_doorsense(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
+    await hass.services.async_call(LOCK_DOMAIN, LockService.LOCK, data, blocking=True)
 
     assert (
         states.get(

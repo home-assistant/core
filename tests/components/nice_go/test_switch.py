@@ -11,8 +11,9 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -26,8 +27,8 @@ async def test_turn_on(
     await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
         blocking=True,
     )
     mock_nice_go.vacation_mode_on.assert_called_once_with("1")
@@ -40,8 +41,8 @@ async def test_turn_off(
     await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_garage_2_vacation_mode"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
         blocking=True,
     )
     mock_nice_go.vacation_mode_off.assert_called_once_with("2")
@@ -118,8 +119,8 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error while turning on the switch"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
             blocking=True,
         )
 
@@ -129,8 +130,8 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error while turning off the switch"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test_garage_2_vacation_mode"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
             blocking=True,
         )
 
@@ -141,8 +142,8 @@ async def test_auth_failed_error(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
         blocking=True,
     )
 
@@ -154,16 +155,16 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error while turning on the switch"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_garage_1_vacation_mode"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_1_vacation_mode"},
             blocking=True,
         )
 
     with pytest.raises(HomeAssistantError, match="Error while turning off the switch"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test_garage_2_vacation_mode"},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: "switch.test_garage_2_vacation_mode"},
             blocking=True,
         )
 

@@ -12,6 +12,7 @@ from homeassistant.components.nx584.const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
     DOMAIN,
+    REQUEST_TIMEOUT,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -84,7 +85,9 @@ async def test_user_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_HOST}:{TEST_PORT}"
     assert result["data"] == {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT}
-    mock_client.assert_called_with(f"http://{TEST_HOST}:{TEST_PORT}")
+    mock_client.assert_called_with(
+        f"http://{TEST_HOST}:{TEST_PORT}", timeout=REQUEST_TIMEOUT
+    )
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

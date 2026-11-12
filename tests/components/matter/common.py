@@ -63,6 +63,7 @@ FIXTURES = [
     "lifx_switch_89",
     "longan_link_thermostat",
     "mock_air_purifier",
+    "mock_battery_solar_bridge",
     "mock_battery_storage",
     "mock_camera",
     "mock_chime",
@@ -136,6 +137,7 @@ FIXTURES = [
     "wago_home_relay_16a",
     "yandex_smart_socket",
     "zemismart_mt25b",
+    "zemismart_wifi_smart_switch",
 ]
 
 

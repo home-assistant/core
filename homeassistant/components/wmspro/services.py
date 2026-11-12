@@ -2,16 +2,11 @@
 
 import probatio
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    DOMAIN as COVER_DOMAIN,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service
 
-from .const import DOMAIN, SERVICE_SET_COVER_POSITION_AND_TILT
+from .const import DOMAIN, WebControlProService, WebControlProServiceArgument
 
 
 @callback
@@ -20,17 +15,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         service_domain=DOMAIN,
-        service_name=SERVICE_SET_COVER_POSITION_AND_TILT,
+        service_name=WebControlProService.SET_COVER_POSITION_AND_TILT,
         entity_domain=COVER_DOMAIN,
         func="async_set_cover_position_and_tilt",
         required_features=[
             CoverEntityFeature.SET_POSITION | CoverEntityFeature.SET_TILT_POSITION
         ],
         schema={
-            probatio.Required(ATTR_POSITION): probatio.All(
+            probatio.Required(WebControlProServiceArgument.POSITION): probatio.All(
                 probatio.Coerce(int), probatio.Percentage()
             ),
-            probatio.Required(ATTR_TILT_POSITION): probatio.All(
+            probatio.Required(WebControlProServiceArgument.TILT_POSITION): probatio.All(
                 probatio.Coerce(int), probatio.Percentage()
             ),
         },

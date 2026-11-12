@@ -1,5 +1,7 @@
 """Tests for the ntfy notify platform."""
 
+import errno
+from pathlib import Path
 from typing import Any
 
 from aiontfy import BroadcastAction, HttpAction, Message, ViewAction
@@ -14,27 +16,9 @@ from pytest_homeassistant.common import AsyncMock, MockConfigEntry, patch
 from yarl import URL
 
 from homeassistant.components import media_source
-from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TITLE
-from homeassistant.components.ntfy.const import DOMAIN
-from homeassistant.components.ntfy.services import (
-    ATTR_ACTIONS,
-    ATTR_ATTACH,
-    ATTR_ATTACH_FILE,
-    ATTR_CALL,
-    ATTR_CLICK,
-    ATTR_DELAY,
-    ATTR_EMAIL,
-    ATTR_FILENAME,
-    ATTR_MARKDOWN,
-    ATTR_PRIORITY,
-    ATTR_SEQUENCE_ID,
-    ATTR_TAGS,
-    SERVICE_CLEAR,
-    SERVICE_DELETE,
-    SERVICE_PUBLISH,
-)
+from homeassistant.components.ntfy.const import DOMAIN, NtfyService, NtfyServiceArgument
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -56,20 +40,20 @@ async def test_ntfy_publish(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PUBLISH,
+        NtfyService.PUBLISH,
         {
-            ATTR_ENTITY_ID: "notify.mytopic",
-            ATTR_MESSAGE: "Hello",
-            ATTR_TITLE: "World",
-            ATTR_ATTACH: "https://example.org/download.zip",
-            ATTR_CLICK: "https://example.org",
-            ATTR_DELAY: {"days": 1, "seconds": 30},
-            ATTR_ICON: "https://example.org/logo.png",
-            ATTR_MARKDOWN: True,
-            ATTR_PRIORITY: "5",
-            ATTR_TAGS: ["partying_face", "grin"],
-            ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
-            ATTR_ACTIONS: [
+            CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+            NtfyServiceArgument.MESSAGE: "Hello",
+            NtfyServiceArgument.TITLE: "World",
+            NtfyServiceArgument.ATTACH: "https://example.org/download.zip",
+            NtfyServiceArgument.CLICK: "https://example.org",
+            NtfyServiceArgument.DELAY: {"days": 1, "seconds": 30},
+            NtfyServiceArgument.ICON: "https://example.org/logo.png",
+            NtfyServiceArgument.MARKDOWN: True,
+            NtfyServiceArgument.PRIORITY: "5",
+            NtfyServiceArgument.TAGS: ["partying_face", "grin"],
+            NtfyServiceArgument.SEQUENCE_ID: "Mc3otamDNcpJ",
+            NtfyServiceArgument.ACTIONS: [
                 {
                     "action": "broadcast",
                     "label": "Take picture",
@@ -176,11 +160,11 @@ async def test_send_message_exception(
     with pytest.raises(HomeAssistantError, match=error_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUBLISH,
+            NtfyService.PUBLISH,
             {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_MESSAGE: "triggered",
-                ATTR_TITLE: "test",
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.MESSAGE: "triggered",
+                NtfyServiceArgument.TITLE: "test",
             },
             blocking=True,
         )
@@ -195,19 +179,25 @@ async def test_send_message_exception(
     [
         (
             ServiceValidationError,
-            {ATTR_DELAY: {"days": 1, "seconds": 30}, ATTR_CALL: "1234567890"},
+            {
+                NtfyServiceArgument.DELAY: {"days": 1, "seconds": 30},
+                NtfyServiceArgument.CALL: "1234567890",
+            },
             "Delayed call notifications are not supported",
         ),
         (
             ServiceValidationError,
-            {ATTR_DELAY: {"days": 1, "seconds": 30}, ATTR_EMAIL: "mail@example.org"},
+            {
+                NtfyServiceArgument.DELAY: {"days": 1, "seconds": 30},
+                NtfyServiceArgument.EMAIL: "mail@example.org",
+            },
             "Delayed email notifications are not supported",
         ),
         (
             probatio.MultipleInvalid,
             {
-                ATTR_ATTACH: "https://example.com/Epic Sax Guy 10 Hours.mp4",
-                ATTR_ATTACH_FILE: {
+                NtfyServiceArgument.ATTACH: "https://example.com/Epic Sax Guy 10 Hours.mp4",
+                NtfyServiceArgument.ATTACH_FILE: {
                     "media_content_id": (
                         "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
                     ),
@@ -219,14 +209,14 @@ async def test_send_message_exception(
         (
             probatio.MultipleInvalid,
             {
-                ATTR_FILENAME: "Epic Sax Guy 10 Hours.mp4",
+                NtfyServiceArgument.FILENAME: "Epic Sax Guy 10 Hours.mp4",
             },
             "Filename only allowed when attachment is provided",
         ),
         (
             probatio.MultipleInvalid,
             {
-                ATTR_ACTIONS: [
+                NtfyServiceArgument.ACTIONS: [
                     {"action": "broadcast", "label": "1"},
                     {"action": "broadcast", "label": "2"},
                     {"action": "broadcast", "label": "3"},
@@ -237,7 +227,7 @@ async def test_send_message_exception(
         ),
         (
             probatio.MultipleInvalid,
-            {ATTR_ACTIONS: [{"action": "copy", "label": "Copy"}]},
+            {NtfyServiceArgument.ACTIONS: [{"action": "copy", "label": "Copy"}]},
             r"required key not provided at 'actions\[0\]\.value'",
         ),
     ],
@@ -261,18 +251,64 @@ async def test_send_message_validation_errors(
     with pytest.raises(exception, match=error_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUBLISH,
-            {ATTR_ENTITY_ID: "notify.mytopic", **payload},
+            NtfyService.PUBLISH,
+            {CommonServiceArgument.ENTITY_ID: "notify.mytopic", **payload},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_send_message_file_not_found_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test publish message service validation errors."""
+    assert await async_setup_component(hass, "media_source", {})
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "pathlib.Path.read_bytes",
+            side_effect=FileNotFoundError(
+                errno.ENOENT,
+                "No such file or directory",
+                "/media/Epic Sax Guy 10 Hours.mp4",
+            ),
+        ),
+        pytest.raises(ServiceValidationError) as exc,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            NtfyService.PUBLISH,
+            {
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.ATTACH_FILE: {
+                    "media_content_id": (
+                        "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                    ),
+                    "media_content_type": "video/mp4",
+                },
+            },
+            blocking=True,
+        )
+    assert exc.value.translation_key == "os_read_not_found"
+    assert exc.value.translation_placeholders == {
+        "path": str(
+            Path("tests/testing_config/media/Epic Sax Guy 10 Hours.mp4").resolve()
+        )
+    }
 
 
 @pytest.mark.parametrize(
     ("service", "call_method"),
     [
-        (SERVICE_PUBLISH, "publish"),
-        (SERVICE_CLEAR, "clear"),
-        (SERVICE_DELETE, "delete"),
+        (NtfyService.PUBLISH, "publish"),
+        (NtfyService.CLEAR, "clear"),
+        (NtfyService.DELETE, "delete"),
     ],
 )
 async def test_send_message_reauth_flow(
@@ -298,7 +334,10 @@ async def test_send_message_reauth_flow(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "notify.mytopic", ATTR_SEQUENCE_ID: "Mc3otamDNcpJ"},
+            {
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.SEQUENCE_ID: "Mc3otamDNcpJ",
+            },
             blocking=True,
         )
 
@@ -329,10 +368,10 @@ async def test_ntfy_publish_attachment_upload(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PUBLISH,
+        NtfyService.PUBLISH,
         {
-            ATTR_ENTITY_ID: "notify.mytopic",
-            ATTR_ATTACH_FILE: {
+            CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+            NtfyServiceArgument.ATTACH_FILE: {
                 "media_content_id": (
                     "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
                 ),
@@ -368,14 +407,14 @@ async def test_ntfy_publish_upload_camera_snapshot(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUBLISH,
+            NtfyService.PUBLISH,
             {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_ATTACH_FILE: {
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.ATTACH_FILE: {
                     "media_content_id": "media-source://camera/camera.demo_camera",
                     "media_content_type": "image/jpeg",
                 },
-                ATTR_FILENAME: "Epic Sax Guy 10 Hours.jpg",
+                NtfyServiceArgument.FILENAME: "Epic Sax Guy 10 Hours.jpg",
             },
             blocking=True,
         )
@@ -417,10 +456,10 @@ async def test_ntfy_publish_upload_media_source_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUBLISH,
+            NtfyService.PUBLISH,
             {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_ATTACH_FILE: {
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.ATTACH_FILE: {
                     "media_content_id": "media-source://xbox/123456789/",
                     "media_content_type": "video/mp4",
                 },
@@ -447,10 +486,10 @@ async def test_ntfy_publish_upload_media_image_source(
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUBLISH,
+            NtfyService.PUBLISH,
             {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_ATTACH_FILE: {
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.ATTACH_FILE: {
                     "media_content_id": "media-source://image/image.test",
                     "media_content_type": "image/png",
                 },
@@ -479,10 +518,10 @@ async def test_ntfy_publish_upload_tts_source(
     ) as mock_get_media_source_audio:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUBLISH,
+            NtfyService.PUBLISH,
             {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_ATTACH_FILE: {
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.ATTACH_FILE: {
                     "media_content_id": "media-source://tts/demo?message=Test&language=en",
                     "media_content_type": "audio/mp3",
                 },
@@ -510,10 +549,10 @@ async def test_ntfy_clear(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR,
+        NtfyService.CLEAR,
         {
-            ATTR_ENTITY_ID: "notify.mytopic",
-            ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+            CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+            NtfyServiceArgument.SEQUENCE_ID: "Mc3otamDNcpJ",
         },
         blocking=True,
     )
@@ -547,10 +586,10 @@ async def test_clear_exception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR,
+            NtfyService.CLEAR,
             {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.SEQUENCE_ID: "Mc3otamDNcpJ",
             },
             blocking=True,
         )
@@ -573,10 +612,10 @@ async def test_ntfy_delete(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DELETE,
+        NtfyService.DELETE,
         {
-            ATTR_ENTITY_ID: "notify.mytopic",
-            ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+            CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+            NtfyServiceArgument.SEQUENCE_ID: "Mc3otamDNcpJ",
         },
         blocking=True,
     )
@@ -610,10 +649,10 @@ async def test_delete_exception(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DELETE,
+            NtfyService.DELETE,
             {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+                CommonServiceArgument.ENTITY_ID: "notify.mytopic",
+                NtfyServiceArgument.SEQUENCE_ID: "Mc3otamDNcpJ",
             },
             blocking=True,
         )

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import jinja2
 from jinja2 import pass_environment
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.helpers.template.helpers import raise_no_default
 
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
 # Sentinel object for default parameter
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class MathExtension(BaseTemplateExtension):

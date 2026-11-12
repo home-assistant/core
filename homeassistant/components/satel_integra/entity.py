@@ -32,7 +32,6 @@ class SatelIntegraBaseEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
 ):
     """Defines a Satel Integra base entity."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     _controller: AsyncSatel

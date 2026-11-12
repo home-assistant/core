@@ -10,6 +10,9 @@
       "drop": {
         "default": "mdi:package-down"
       },
+      "fall": {
+        "default": "mdi:human-handsdown"
+      },
       "feeding": {
         "default": "mdi:information"
       },
@@ -286,6 +289,9 @@
       },
       "do_not_disturb": {
         "default": "mdi:minus-circle"
+      },
+      "eco_mode": {
+        "default": "mdi:leaf"
       },
       "energy_saving": {
         "default": "mdi:leaf"

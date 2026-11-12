@@ -5,6 +5,7 @@ import logging
 from typing import override
 
 from iotawattpy.iotawatt import Iotawatt
+from iotawattpy.sensor import Sensor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -23,7 +24,7 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 5
 type IotawattConfigEntry = ConfigEntry[IotawattUpdater]
 
 
-class IotawattUpdater(DataUpdateCoordinator):
+class IotawattUpdater(DataUpdateCoordinator[dict[str, dict[str, Sensor]]]):
     """Class to manage fetching update data from the IoTaWatt Energy Device."""
 
     api: Iotawatt | None = None
@@ -56,7 +57,7 @@ class IotawattUpdater(DataUpdateCoordinator):
             self._last_run = last_run
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, dict[str, Sensor]]:
         """Fetch sensors from IoTaWatt device."""
         if self.api is None:
             api = Iotawatt(
