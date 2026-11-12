@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: The integration does not expose any custom service actions.
-  appropriate-polling:
-    status: exempt
-    comment: The integration uses a push-based mechanism with a background sync task, not polling.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -50,7 +48,7 @@ rules:
   integration-owner: done
   log-when-unavailable:
     status: done
-    comment: The integration logs a single  message when the EnergyID service is unavailable.
+    comment: The integration logs a single message when the EnergyID service is unavailable.
   parallel-updates:
     status: exempt
     comment: This integration does not create its own entities.
@@ -111,6 +109,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: Full strict typing compliance will be addressed in a future update.
+  strict-typing: done
