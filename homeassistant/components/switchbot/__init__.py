@@ -3,6 +3,8 @@
 import logging
 from typing import Any
 
+import switchbot
+
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.const import (
@@ -15,11 +17,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-
-import switchbot
 
 from .const import (
     CONF_CURTAIN_SPEED,

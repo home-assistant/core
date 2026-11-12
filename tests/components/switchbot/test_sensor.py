@@ -4,6 +4,13 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    inject_advertisement,
+    inject_bluetooth_service_info,
+)
+from switchbot import SwitchBotAdvertisement, SwitchbotModel
+
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.switchbot.const import (
@@ -27,13 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.bluetooth import (
-    inject_advertisement,
-    inject_bluetooth_service_info,
-)
-
-from switchbot import SwitchBotAdvertisement, SwitchbotModel
 
 from . import (
     AIR_PURIFIER_JP_SERVICE_INFO,

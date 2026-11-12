@@ -4,6 +4,9 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
+
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -27,9 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant.common import MockConfigEntry
-
-from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
 from . import (
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
