@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -55,6 +56,20 @@ type _GoogleWeatherDataType = (
     CurrentConditionsResponse | DailyForecastResponse | HourlyForecastResponse | None
 )
 type GoogleWeatherConfigEntry = ConfigEntry[GoogleWeatherRuntimeData]
+
+
+def create_api(
+    hass: HomeAssistant, api_key: str, referrer: str | None
+) -> GoogleWeatherApi:
+    """Create a Google Weather API client."""
+    return GoogleWeatherApi(
+        session=async_get_clientsession(hass),
+        api_key=api_key,
+        referrer=referrer,
+        language_code=hass.config.language,
+        # The entities report native values in metric units.
+        units_system="METRIC",
+    )
 
 
 class GoogleWeatherBaseCoordinator[T: _GoogleWeatherDataType](

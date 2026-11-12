@@ -69,15 +69,10 @@ def mock_google_weather_api() -> Generator[AsyncMock]:
         load_json_object_fixture("minute_forecast.json", DOMAIN)
     )
 
-    with (
-        patch(
-            "homeassistant.components.google_weather.GoogleWeatherApi", autospec=True
-        ) as mock_api,
-        patch(
-            "homeassistant.components.google_weather.config_flow.GoogleWeatherApi",
-            new=mock_api,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.google_weather.coordinator.GoogleWeatherApi",
+        autospec=True,
+    ) as mock_api:
         api = mock_api.return_value
         api.async_get_current_conditions.return_value = current_conditions
         api.async_get_daily_forecast.return_value = daily_forecast
