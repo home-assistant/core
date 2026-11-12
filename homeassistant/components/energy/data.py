@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er, singleton, storage
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
-STORAGE_MINOR_VERSION = 4
+STORAGE_MINOR_VERSION = 5
 STORAGE_KEY = DOMAIN
 
 
@@ -103,8 +103,6 @@ class LegacyGridSourceType(TypedDict):
     flow_to: list[FlowToGridSourceType]
     power: NotRequired[list[GridPowerSourceType]]
 
-    cost_adjustment_day: float
-
 
 class GridSourceType(TypedDict):
     """Dictionary holding a unified grid connection (like batteries).
@@ -136,8 +134,6 @@ class GridSourceType(TypedDict):
     # positive when consuming from grid, negative when exporting
     stat_rate: NotRequired[str]
     power_config: NotRequired[PowerConfig]
-
-    cost_adjustment_day: float
 
     # An optional custom name for display in energy graphs
     name: NotRequired[str]
@@ -507,7 +503,8 @@ GRID_SOURCE_SCHEMA = probatio.All(
             # Power measurement (optional)
             probatio.Optional("stat_rate"): str,
             probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
-            probatio.Required("cost_adjustment_day"): probatio.Coerce(float),
+            # cost_adjustment_day was removed in HA Core 2026.12
+            probatio.Remove("cost_adjustment_day"): probatio.Coerce(float),
             probatio.Optional("name"): str,
         }
     ),
@@ -687,7 +684,6 @@ def _migrate_legacy_grid_to_unified(
     flow_from = old_grid.get("flow_from", [])
     flow_to = old_grid.get("flow_to", [])
     power_list = old_grid.get("power", [])
-    cost_adj = old_grid.get("cost_adjustment_day", 0.0)
 
     new_sources: list[dict[str, Any]] = []
     # Number of grid connections = max length across all three arrays
@@ -697,10 +693,7 @@ def _migrate_legacy_grid_to_unified(
         return []
 
     for i in range(max_len):
-        source: dict[str, Any] = {
-            "type": "grid",
-            "cost_adjustment_day": cost_adj,
-        }
+        source: dict[str, Any] = {"type": "grid"}
 
         # Import fields from flow_from
         if i < len(flow_from):
@@ -777,6 +770,10 @@ class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
         if old_major_version == 1 and old_minor_version < 4:
             # Add device_consumption_gas field if it doesn't exist
             data.setdefault("device_consumption_gas", [])
+
+        if old_major_version == 1 and old_minor_version < 5:
+            for source in data.get("energy_sources", []):
+                source.pop("cost_adjustment_day", None)
 
         return data
 

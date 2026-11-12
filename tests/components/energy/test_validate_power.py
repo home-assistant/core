@@ -30,7 +30,6 @@ async def test_validation_grid_power_valid(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -64,7 +63,6 @@ async def test_validation_grid_power_wrong_unit(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -183,7 +181,6 @@ async def test_validation_grid_power_wrong_state_class(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -225,7 +222,6 @@ async def test_validation_grid_power_entity_missing(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.missing_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -263,7 +259,6 @@ async def test_validation_grid_power_entity_unavailable(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.unavailable_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -297,7 +292,6 @@ async def test_validation_grid_power_entity_non_numeric(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.non_numeric_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -339,7 +333,6 @@ async def test_validation_grid_power_wrong_device_class(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.wrong_device_class_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -384,12 +377,10 @@ async def test_validation_grid_power_different_units(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.power_watt",
-                    "cost_adjustment_day": 0.0,
                 },
                 {
                     "type": "grid",
                     "stat_rate": "sensor.power_milliwatt",
-                    "cost_adjustment_day": 0.0,
                 },
             ]
         }
@@ -434,7 +425,6 @@ async def test_validation_grid_power_external_statistics(
                 {
                     "type": "grid",
                     "stat_rate": "external:power_stat",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
@@ -469,7 +459,6 @@ async def test_validation_grid_power_recorder_untracked(
                 {
                     "type": "grid",
                     "stat_rate": "sensor.untracked_power",
-                    "cost_adjustment_day": 0.0,
                 }
             ]
         }
