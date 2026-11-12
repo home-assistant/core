@@ -59,8 +59,8 @@ class UpdateFailed(HomeAssistantError):
         self.retry_after = retry_after
 
 
-class DeviceUnavailable(UpdateFailed):
-    """Raised when an update failed because the device is unavailable.
+class UpdateFailedUnreachable(UpdateFailed):
+    """Raised when an update failed because the device or service is unreachable.
 
     Use for expected unavailability, e.g. a device that was turned off,
     the failure is logged at info level instead of error.
@@ -531,7 +531,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 )
 
             if self.last_update_success:
-                if log_failures and isinstance(err, DeviceUnavailable):
+                if log_failures and isinstance(err, UpdateFailedUnreachable):
                     self.logger.info("%s is unavailable: %s", self.name, err)
                 elif log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)

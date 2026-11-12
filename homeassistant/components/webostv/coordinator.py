@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
-    DeviceUnavailable,
+    UpdateFailedUnreachable,
 )
 
 from .const import DOMAIN, LOGGER, WEBOSTV_EXCEPTIONS
@@ -61,7 +61,7 @@ class WebOsTvDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 and self.config_entry.state is ConfigEntryState.LOADED
                 and self.hass.state is CoreState.running
             ):
-                raise DeviceUnavailable(
+                raise UpdateFailedUnreachable(
                     translation_domain=DOMAIN,
                     translation_key="device_unavailable",
                 ) from error

@@ -57,8 +57,8 @@ KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
         "Error fetching test data",
     ),
     (
-        update_coordinator.DeviceUnavailable(),
-        update_coordinator.DeviceUnavailable,
+        update_coordinator.UpdateFailedUnreachable(),
+        update_coordinator.UpdateFailedUnreachable,
         "test is unavailable",
     ),
     (
@@ -327,7 +327,7 @@ async def test_refresh_device_unavailable(
     caplog.clear()
 
     crd.update_method = AsyncMock(
-        side_effect=update_coordinator.DeviceUnavailable("Device is off")
+        side_effect=update_coordinator.UpdateFailedUnreachable("Device is off")
     )
     await crd.async_refresh()
 
