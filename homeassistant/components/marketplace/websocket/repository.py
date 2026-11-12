@@ -77,6 +77,7 @@ def _send_refresh_failed(
     {
         probatio.Required("type"): "marketplace/repository/info",
         probatio.Required("repository_id"): str,
+        probatio.Optional("language"): str,
     }
 )
 @websocket_api.require_admin
@@ -115,12 +116,20 @@ async def marketplace_repository_info(
         repository.data.new = False
         await marketplace.data.async_write()
 
+    # A README in the language of the user replaces README.md
+    additional_info = (
+        await repository.async_get_translated_readme(
+            msg.get("language", hass.config.language)
+        )
+        or repository.additional_info
+    )
+
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
             {
                 **repository_summary(marketplace, repository),
-                "additional_info": repository.additional_info,
+                "additional_info": additional_info,
                 "beta": repository.data.show_beta,
                 "default_branch": repository.data.default_branch,
                 "hide_default_branch": repository.repository_manifest.hide_default_branch,
