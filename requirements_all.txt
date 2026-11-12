@@ -3388,7 +3388,7 @@ transmission-rpc==7.0.3
 triggercmd==0.0.36
 
 # homeassistant.components.trmnl
-trmnl==0.2.0
+trmnl==0.3.0
 
 # homeassistant.components.twinkly
 ttls==1.11.1
