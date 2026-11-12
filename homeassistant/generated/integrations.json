@@ -8588,6 +8588,15 @@
             "network"
           ],
           "name": "Lutron Homeworks"
+        },
+        "lutron_grafik_eye": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "lighting.lighting_systems"
+          ],
+          "name": "Lutron GRAFIK Eye"
         }
       }
     },

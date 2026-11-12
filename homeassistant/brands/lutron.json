@@ -1,5 +1,5 @@
 {
   "domain": "lutron",
   "name": "Lutron",
-  "integrations": ["lutron", "lutron_caseta", "homeworks"]
+  "integrations": ["lutron", "lutron_caseta", "homeworks", "lutron_grafik_eye"]
 }
