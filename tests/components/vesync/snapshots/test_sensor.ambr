@@ -2178,82 +2178,6 @@
         None,
       ]),
       'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': None,
-      'device_class': None,
-      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.dual_air_fryer_basket_1_preheating_set_time',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'object_id_base': 'Basket 1 preheating set time',
-      'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 2,
-        }),
-      }),
-      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': None,
-      'original_name': 'Basket 1 preheating set time',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'preheat_set_time_basket',
-      'unique_id': 'CAFTF101S-preheat_set_time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': list([
-        None,
-      ]),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': None,
-      'device_class': None,
-      'device_id': <DeviceEntry identifiers=[('vesync', 'CAFTF101S')]>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.dual_air_fryer_basket_2_preheating_set_time',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'object_id_base': 'Basket 2 preheating set time',
-      'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 2,
-        }),
-      }),
-      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': None,
-      'original_name': 'Basket 2 preheating set time',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'preheat_set_time_basket',
-      'unique_id': 'CAFTF101S-preheat_set_time-chamber_2',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': list([
-        None,
-      ]),
-      'area_id': None,
       'capabilities': dict({
         <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
           'cooking_end',
@@ -2374,21 +2298,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_1_preheating_set_time]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 1 preheating set time',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dual_air_fryer_basket_1_preheating_set_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_2_cooking_set_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2457,21 +2366,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dual_air_fryer_basket_2_current_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor_state[Dual Air Fryer][sensor.dual_air_fryer_basket_2_preheating_set_time]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual Air Fryer Basket 2 preheating set time',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dual_air_fryer_basket_2_preheating_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

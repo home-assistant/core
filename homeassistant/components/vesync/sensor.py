@@ -7,7 +7,7 @@ from typing import override
 
 from pyvesync.base_devices.fryer_base import FryerState
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.const import TemperatureUnits
+from pyvesync.const import AirFryerFeatures, TemperatureUnits
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
@@ -241,7 +241,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_value_fn=lambda state: state.preheat_set_time,
-        exists_fn=is_air_fryer,
+        exists_fn=lambda device: (
+            is_air_fryer(device) and AirFryerFeatures.PREHEAT in device.features
+        ),
     ),
 )
 
@@ -280,18 +282,18 @@ def _setup_entities(
     entities: list[VeSyncSensorEntity] = []
     for device in devices:
         for description in SENSORS:
-            if description.state_value_fn is not None:
-                if not is_air_fryer(device):
-                    continue
-                entities.append(
-                    VeSyncSensorEntity(device, description, coordinator, chamber=1)
-                )
-                if device.is_dual_chamber:
-                    entities.append(
-                        VeSyncSensorEntity(device, description, coordinator, chamber=2)
-                    )
-            elif description.exists_fn(device):
+            if not description.exists_fn(device):
+                continue
+            if description.state_value_fn is None or not is_air_fryer(device):
                 entities.append(VeSyncSensorEntity(device, description, coordinator))
+                continue
+            entities.append(
+                VeSyncSensorEntity(device, description, coordinator, chamber=1)
+            )
+            if device.is_dual_chamber:
+                entities.append(
+                    VeSyncSensorEntity(device, description, coordinator, chamber=2)
+                )
 
     async_add_entities(entities, update_before_add=True)
 
