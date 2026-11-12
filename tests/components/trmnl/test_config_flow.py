@@ -300,3 +300,47 @@ async def test_reauth_flow_wrong_account(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
 
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_trmnl_client", "mock_setup_entry"
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test signing in again from Reconfigure replaces the token and keeps the entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await complete_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, result, scope="openid read devices"
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data["token"]["scope"] == "openid read devices"
+    assert hass.config_entries.async_entries(DOMAIN) == [mock_config_entry]
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_trmnl_client", "mock_setup_entry"
+)
+async def test_reconfigure_flow_wrong_account(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Reconfigure aborts when the user signs in to another account."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await complete_oauth_flow(
+        hass, hass_client_no_auth, aioclient_mock, result, subject="someone-else"
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data["token"]["access_token"] == "access"
