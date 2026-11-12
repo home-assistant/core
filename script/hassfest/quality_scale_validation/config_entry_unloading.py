@@ -22,6 +22,8 @@ def validate(
 ) -> list[str] | None:
     """Validate that the integration supports config entry unloading."""
     init_file = integration.path / "__init__.py"
+    if not init_file.exists():
+        return [f"Integration is missing {init_file}"]
 
     if not _has_unload_entry_function(ast_parse_module(init_file)):
         return [

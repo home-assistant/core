@@ -23,6 +23,26 @@ def _call_name(node: ast.Call) -> str | None:
     return None
 
 
+def _assigns_device_info(node: ast.AST) -> bool:
+    """Test if the node assigns a value to `_attr_device_info`.
+
+    Annotations without a value and assignments of `None` do not count.
+    """
+    if isinstance(node, ast.Assign):
+        targets, value = node.targets, node.value
+    elif isinstance(node, ast.AnnAssign):
+        targets, value = [node.target], node.value
+    else:
+        return False
+    if value is None or (isinstance(value, ast.Constant) and value.value is None):
+        return False
+    return any(
+        (isinstance(target, ast.Name) and target.id == "_attr_device_info")
+        or (isinstance(target, ast.Attribute) and target.attr == "_attr_device_info")
+        for target in targets
+    )
+
+
 def _creates_device(module: ast.Module) -> bool:
     """Test if the module provides device info or registers a device."""
     for node in ast.walk(module):
@@ -35,18 +55,7 @@ def _creates_device(module: ast.Module) -> bool:
                 keyword.arg == "config_entry_id" for keyword in node.keywords
             ):
                 return True
-        if (
-            isinstance(node, ast.Attribute)
-            and node.attr == "_attr_device_info"
-            and isinstance(node.ctx, ast.Store)
-        ):
-            return True
-        if isinstance(node, (ast.Assign, ast.AnnAssign)) and any(
-            isinstance(target, ast.Name) and target.id == "_attr_device_info"
-            for target in (
-                node.targets if isinstance(node, ast.Assign) else [node.target]
-            )
-        ):
+        if _assigns_device_info(node):
             return True
         if (
             isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))

@@ -1,6 +1,7 @@
 """Tests for hassfest quality_scale."""
 
 from pathlib import Path
+from typing import Any
 
 from hassfest.model import Config, Integration
 import pytest
@@ -142,3 +143,116 @@ def test_done_rule_not_implemented(config: Config, tmp_path: Path) -> None:
         "`_attr_device_info` or `device_info` found)",
         quality_scale.RULE_URL.format(rule_name="devices"),
     }
+
+
+def _get_validator_integration(
+    tmp_path: Path, config: Config, files: dict[str, str], manifest: dict[str, Any]
+) -> Integration:
+    """Create an integration with the given source files and manifest keys."""
+    path = tmp_path / "test"
+    path.mkdir()
+    for name, content in files.items():
+        (path / name).write_text(content)
+    return Integration(
+        path,
+        _config=config,
+        _manifest={"domain": "test", "name": "Test", **manifest},
+    )
+
+
+@pytest.mark.parametrize(
+    ("rule", "files", "manifest", "implemented"),
+    [
+        pytest.param(
+            "devices",
+            {"entity.py": DEVICE_ENTITY},
+            {},
+            True,
+            id="devices_device_info",
+        ),
+        pytest.param(
+            "devices",
+            {
+                "entity.py": """
+class TestEntity:
+    _attr_device_info: DeviceInfo | None
+    _attr_device_info = None
+
+    def __init__(self) -> None:
+        self._attr_device_info = None
+"""
+            },
+            {},
+            False,
+            id="devices_none_or_annotation_only",
+        ),
+        pytest.param(
+            "config-entry-unloading",
+            {"sensor.py": ""},
+            {},
+            False,
+            id="config_entry_unloading_missing_init",
+        ),
+        pytest.param(
+            "reconfiguration-flow",
+            {
+                "config_flow.py": """
+class TestConfigFlow(ConfigFlow, domain="test"):
+    async def async_step_reconfigure(self, user_input=None): ...
+"""
+            },
+            {},
+            True,
+            id="reconfiguration_flow_config_entry",
+        ),
+        pytest.param(
+            "reconfiguration-flow",
+            {
+                "config_flow.py": """
+class TestConfigFlow(ConfigFlow, domain="test"):
+    async def async_step_user(self, user_input=None): ...
+
+
+class TestSubentryFlow(ConfigSubentryFlow):
+    async def async_step_reconfigure(self, user_input=None): ...
+"""
+            },
+            {},
+            False,
+            id="reconfiguration_flow_subentry_only",
+        ),
+        pytest.param(
+            "discovery",
+            {"config_flow.py": ""},
+            {"dhcp": [{"macaddress": "AABBCC*"}]},
+            True,
+            id="discovery_dhcp",
+        ),
+        pytest.param(
+            "discovery",
+            {
+                "config_flow.py": """
+class TestConfigFlow(ConfigFlow, domain="test"):
+    async def async_step_dhcp(self, discovery_info): ...
+"""
+            },
+            {"dhcp": [{"registered_devices": True}]},
+            False,
+            id="discovery_dhcp_registered_devices_only",
+        ),
+    ],
+)
+def test_validator(
+    config: Config,
+    tmp_path: Path,
+    rule: str,
+    files: dict[str, str],
+    manifest: dict[str, Any],
+    implemented: bool,
+) -> None:
+    """Test that the validators detect whether a rule is implemented."""
+    integration = _get_validator_integration(tmp_path, config, files, manifest)
+    errors = quality_scale.VALIDATORS[rule].validate(
+        config, integration, rules_done=set()
+    )
+    assert (not errors) is implemented
