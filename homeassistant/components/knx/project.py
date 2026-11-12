@@ -128,6 +128,15 @@ class KNXProject:
                 return xknxproj.parse()
 
         project = await self.hass.async_add_executor_job(_parse_project)
+        await self.async_set_project(xknx, project)
+
+    async def async_set_project(self, xknx: XKNX, project: KNXProjectModel) -> None:
+        """Store and load parsed project data, replacing the current project.
+
+        Used for an uploaded project file, and by integrations providing project
+        data in the format of xknxproject from another source - eg. a project
+        editor keeping the project up to date while it is edited.
+        """
         async with self._project_lock:
             await self._store.async_save(project)
             # Invalidate rather than populate: whether the full project is held

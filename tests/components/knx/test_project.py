@@ -16,6 +16,7 @@ import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import KNX_MODULE_KEY
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -99,3 +100,24 @@ async def test_cache_is_refreshed_on_upload(
     assert res["success"], res
     knxproject = await project.get_knxproject()
     assert knxproject["info"]["name"] == "Reuploaded"
+
+
+@pytest.mark.usefixtures("load_knxproj")
+async def test_set_project_stores_and_loads(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    project_data: dict[str, Any],
+    hass_storage: dict[str, Any],
+) -> None:
+    """Project data from another source is stored and loaded like an upload."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+    assert await project.get_knxproject() is not None
+
+    new_data = {**project_data, "info": {**project_data["info"], "name": "Provided"}}
+    await project.async_set_project(hass.data[KNX_MODULE_KEY].xknx, new_data)
+
+    assert project.info["name"] == "Provided"
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"]["info"]["name"] == "Provided"
+    knxproject = await project.get_knxproject()
+    assert knxproject["info"]["name"] == "Provided"
