@@ -8,7 +8,6 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    patch,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +16,7 @@ from homeassistant.components.watercryst.coordinator import (
     MEASUREMENTS_POLLING_INTERVAL,
     STATE_POLLING_INTERVAL,
 )
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -39,9 +38,8 @@ async def test_all_entities(
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.watercryst._PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -59,9 +57,8 @@ async def test_available_entities(
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.watercryst._PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
