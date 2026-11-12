@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable
 import gc
-import logging
 import threading
 
 import pytest
@@ -271,8 +270,7 @@ async def test_async_close_iterator_error(caplog: pytest.LogCaptureFixture) -> N
     stream = async_gen()
     assert await anext(stream) == b"hello"
 
-    with caplog.at_level(logging.DEBUG):
-        await async_close_iterator(stream)
+    await async_close_iterator(stream)
     assert "Error closing" in caplog.text
     assert "Boom!" in caplog.text
 
