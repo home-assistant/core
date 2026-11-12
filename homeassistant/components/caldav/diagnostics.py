@@ -31,7 +31,7 @@ async def async_get_config_entry_diagnostics(
     if entry.state is ConfigEntryState.LOADED:
         try:
             payload["calendars"] = await hass.async_add_executor_job(
-                _get_calendars, entry.runtime_data
+                _get_calendars, entry.runtime_data.client
             )
         except (
             caldav_requests.exceptions.ConnectionError,
