@@ -97,6 +97,7 @@ async def test_zvidar_state(hass: HomeAssistant, client, zvidar, integration) ->
 
     state = hass.states.get("cover.window_blind_controller")
     assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHADE
 
 
 async def test_simon_io_700_roller_blind(
