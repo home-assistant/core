@@ -203,6 +203,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._event_addr = EventListenAddr(None, event_port, event_callback_url)
         self.poll_availability = poll_availability
         self.location = location
+        self._config_location = location
         self.mac_address = mac_address
         self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
@@ -340,7 +341,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             entry.data,
             entry.options,
         )
-        self.location = entry.data[CONF_URL]
+        new_location: str = entry.data[CONF_URL]
+        location_changed = new_location != self._config_location
+        self._config_location = self.location = new_location
         self.poll_availability = entry.options.get(CONF_POLL_AVAILABILITY, False)
         self.browse_unfiltered = entry.options.get(CONF_BROWSE_UNFILTERED, False)
 
@@ -353,19 +356,21 @@ class DlnaDmrEntity(MediaPlayerEntity):
         new_callback_url = entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
 
         if (
-            new_port == self._event_addr.port
+            not location_changed
+            and new_port == self._event_addr.port
             and new_callback_url == self._event_addr.callback_url
         ):
             return
 
-        # Changes to eventing requires a device reconnect for it to update correctly
+        # Changes to location or eventing require a device reconnect to take effect
         await self._device_disconnect()
         # Update _event_addr after disconnecting, to stop the right event listener
         self._event_addr = self._event_addr._replace(
             port=new_port, callback_url=new_callback_url
         )
         try:
-            await self._device_connect(self.location)
+            # An in-flight connect may have reset self.location while disconnecting
+            await self._device_connect(new_location)
         except UpnpError as err:
             _LOGGER.warning("Couldn't (re)connect after config change: %r", err)
 
