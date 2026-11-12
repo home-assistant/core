@@ -1,6 +1,6 @@
 """Tests for repairs model.py."""
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from types import FrameType
 from unittest.mock import MagicMock, patch
@@ -19,6 +19,7 @@ from pytest_homeassistant.common import (
 
 from homeassistant.components.repairs import (
     DOMAIN,
+    ConfirmRepairFlow,
     FlowType,
     RepairsFlow,
     RepairsFlowResult,
@@ -32,8 +33,11 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowError, FlowResultType
 from homeassistant.helpers.frame import IntegrationFrame
 import homeassistant.helpers.issue_registry as ir
+
+from .common import MockFixFlowNextFlowRepairsFlow
 
 
 @pytest.fixture(autouse=True)
@@ -48,6 +52,10 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
     ) -> RepairsFlow:
         if issue_id == "context_issue":
             return MockFixFlowContext()
+        if issue_id == "repairs_flow_issue":
+            return MockFixFlowNextFlowRepairsFlow()
+        if issue_id == "issue_1":
+            return ConfirmRepairFlow()
         return MockFixFlowNextFlow()
 
     mock_platform(
@@ -89,7 +97,7 @@ class MockFixFlowContext(RepairsFlow):
 
 
 @contextmanager
-def mock_core_config_flow() -> Iterator[None]:
+def mock_core_config_flow() -> Generator[None]:
     """Mock a config flow."""
 
     class CompConfigSubentryFlowHandler(ConfigSubentryFlow):
@@ -175,7 +183,7 @@ class MockFixFlowNextFlow(RepairsFlow):
     ],
 )
 async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> None:
-    """Test that that a repair flow can refer to an options flow."""
+    """Test that that a repair flow can refer to an options/subentries flow."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     mock_entry = MockConfigEntry(
@@ -211,6 +219,60 @@ async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> 
 
     assert next_flow_type is flow_type
     assert mock_entry == flow["result"]
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        ["fake_integration"],
+    ],
+)
+async def test_fix_issue_next_flow_missing_issue(hass: HomeAssistant) -> None:
+    """Test repairs flow error handling of issue removal after flow start."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ir.async_create_issue(
+        hass,
+        "fake_integration",
+        "repairs_flow_issue",
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="fake_key",
+        is_fixable=True,
+    )
+    ir.async_create_issue(
+        hass,
+        "fake_integration",
+        "issue_1",
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="fake_key",
+        is_fixable=True,
+    )
+
+    issue = ir.async_get(hass).async_get_issue("fake_integration", "issue_1")
+    assert issue
+
+    flow_manager = repairs_flow_manager(hass)
+    result = await flow_manager.async_init(
+        "fake_integration", context={"issue_id": "repairs_flow_issue"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    with pytest.raises(FlowError) as exc:
+        await flow_manager.async_configure(result["flow_id"], {"remove_issue": True})
+    assert str(exc.value) == "issue issue_1 not found in next_flow"
+
+    ir.async_create_issue(
+        hass,
+        "fake_integration",
+        "issue_1",
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="fake_key",
+        is_fixable=True,
+    )
+    result = await flow_manager.async_configure(result["flow_id"], {})
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["next_flow"]
+    assert result["result"].issue_id == "issue_1"
 
 
 @pytest.mark.parametrize(
