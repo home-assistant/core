@@ -8,32 +8,39 @@ from typing import Any
 import probatio
 from transmission_rpc import Torrent
 
-from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector, service
 
-from .const import (
-    ATTR_DELETE_DATA,
-    ATTR_DOWNLOAD_PATH,
-    ATTR_LABELS,
-    ATTR_TORRENT,
-    ATTR_TORRENT_FILTER,
-    ATTR_TORRENTS,
-    CONF_ENTRY_ID,
-    DEFAULT_DELETE_DATA,
-    DOMAIN,
-    FILTER_MODES,
-    SERVICE_ADD_TORRENT,
-    SERVICE_GET_TORRENTS,
-    SERVICE_REMOVE_TORRENT,
-    SERVICE_START_TORRENT,
-    SERVICE_STOP_TORRENT,
-)
+from .const import DOMAIN, FILTER_MODES
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .helpers import filter_torrents, format_torrents
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_DELETE_DATA = False
+TORRENTS = "torrents"
+
+
+class TransmissionService(StrEnum):
+    """Service names for Transmission."""
+
+    ADD_TORRENT = "add_torrent"
+    GET_TORRENTS = "get_torrents"
+    REMOVE_TORRENT = "remove_torrent"
+    START_TORRENT = "start_torrent"
+    STOP_TORRENT = "stop_torrent"
+
+
+class TransmissionServiceArgument(StrEnum):
+    """Service argument names for Transmission."""
+
+    ID = "id"
+    ENTRY_ID = "entry_id"
+    DELETE_DATA = "delete_data"
+    DOWNLOAD_PATH = "download_path"
+    LABELS = "labels"
+    TORRENT = "torrent"
+    TORRENT_FILTER = "torrent_filter"
 
 
 class TorrentFilter(StrEnum):
@@ -48,18 +55,18 @@ class TorrentFilter(StrEnum):
 
 SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
-            {"integration": DOMAIN}
-        ),
+        probatio.Required(
+            TransmissionServiceArgument.ENTRY_ID
+        ): selector.ConfigEntrySelector({"integration": DOMAIN}),
     }
 )
 
 SERVICE_ADD_TORRENT_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            probatio.Required(ATTR_TORRENT): cv.string,
-            probatio.Optional(ATTR_DOWNLOAD_PATH): cv.string,
-            probatio.Optional(ATTR_LABELS): cv.string,
+            probatio.Required(TransmissionServiceArgument.TORRENT): cv.string,
+            probatio.Optional(TransmissionServiceArgument.DOWNLOAD_PATH): cv.string,
+            probatio.Optional(TransmissionServiceArgument.LABELS): cv.string,
         }
     ),
 )
@@ -67,7 +74,7 @@ SERVICE_ADD_TORRENT_SCHEMA = probatio.All(
 SERVICE_GET_TORRENTS_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            probatio.Required(ATTR_TORRENT_FILTER): probatio.In(
+            probatio.Required(TransmissionServiceArgument.TORRENT_FILTER): probatio.In(
                 [x.lower() for x in TorrentFilter]
             ),
         }
@@ -77,22 +84,24 @@ SERVICE_GET_TORRENTS_SCHEMA = probatio.All(
 SERVICE_REMOVE_TORRENT_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            probatio.Required(CONF_ID): cv.positive_int,
+            probatio.Required(TransmissionServiceArgument.ID): cv.positive_int,
             probatio.Optional(
-                ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA
+                TransmissionServiceArgument.DELETE_DATA, default=DEFAULT_DELETE_DATA
             ): cv.boolean,
         }
     )
 )
 
 SERVICE_START_TORRENT_SCHEMA = probatio.All(
-    SERVICE_BASE_SCHEMA.extend({probatio.Required(CONF_ID): cv.positive_int}),
+    SERVICE_BASE_SCHEMA.extend(
+        {probatio.Required(TransmissionServiceArgument.ID): cv.positive_int}
+    ),
 )
 
 SERVICE_STOP_TORRENT_SCHEMA = probatio.All(
     SERVICE_BASE_SCHEMA.extend(
         {
-            probatio.Required(CONF_ID): cv.positive_int,
+            probatio.Required(TransmissionServiceArgument.ID): cv.positive_int,
         }
     )
 )
@@ -103,7 +112,7 @@ def _get_coordinator_from_service_data(
 ) -> TransmissionDataUpdateCoordinator:
     """Return coordinator for entry id."""
     entry: TransmissionConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[CONF_ENTRY_ID]
+        call.hass, DOMAIN, call.data[TransmissionServiceArgument.ENTRY_ID]
     )
     return entry.runtime_data
 
@@ -111,10 +120,12 @@ def _get_coordinator_from_service_data(
 async def _async_add_torrent(call: ServiceCall) -> None:
     """Add new torrent to download."""
     coordinator = _get_coordinator_from_service_data(call)
-    torrent: str = call.data[ATTR_TORRENT]
-    download_path: str | None = call.data.get(ATTR_DOWNLOAD_PATH)
+    torrent: str = call.data[TransmissionServiceArgument.TORRENT]
+    download_path: str | None = call.data.get(TransmissionServiceArgument.DOWNLOAD_PATH)
     labels: list[str] | None = (
-        call.data[ATTR_LABELS].split(",") if ATTR_LABELS in call.data else None
+        call.data[TransmissionServiceArgument.LABELS].split(",")
+        if TransmissionServiceArgument.LABELS in call.data
+        else None
     )
 
     if not (
@@ -140,7 +151,7 @@ async def _async_add_torrent(call: ServiceCall) -> None:
 async def _async_get_torrents(call: ServiceCall) -> dict[str, Any] | None:
     """Get torrents."""
     coordinator = _get_coordinator_from_service_data(call)
-    torrent_filter: str = call.data[ATTR_TORRENT_FILTER]
+    torrent_filter: str = call.data[TransmissionServiceArgument.TORRENT_FILTER]
 
     def get_filtered_torrents() -> list[Torrent]:
         """Filter torrents based on the filter provided."""
@@ -151,14 +162,14 @@ async def _async_get_torrents(call: ServiceCall) -> dict[str, Any] | None:
 
     info = format_torrents(torrents)
     return {
-        ATTR_TORRENTS: info,
+        TORRENTS: info,
     }
 
 
 async def _async_start_torrent(call: ServiceCall) -> None:
     """Start torrent."""
     coordinator = _get_coordinator_from_service_data(call)
-    torrent_id = call.data[CONF_ID]
+    torrent_id = call.data[TransmissionServiceArgument.ID]
     await call.hass.async_add_executor_job(coordinator.api.start_torrent, torrent_id)
     await coordinator.async_request_refresh()
 
@@ -166,7 +177,7 @@ async def _async_start_torrent(call: ServiceCall) -> None:
 async def _async_stop_torrent(call: ServiceCall) -> None:
     """Stop torrent."""
     coordinator = _get_coordinator_from_service_data(call)
-    torrent_id = call.data[CONF_ID]
+    torrent_id = call.data[TransmissionServiceArgument.ID]
     await call.hass.async_add_executor_job(coordinator.api.stop_torrent, torrent_id)
     await coordinator.async_request_refresh()
 
@@ -174,8 +185,8 @@ async def _async_stop_torrent(call: ServiceCall) -> None:
 async def _async_remove_torrent(call: ServiceCall) -> None:
     """Remove torrent."""
     coordinator = _get_coordinator_from_service_data(call)
-    torrent_id = call.data[CONF_ID]
-    delete_data = call.data[ATTR_DELETE_DATA]
+    torrent_id = call.data[TransmissionServiceArgument.ID]
+    delete_data = call.data[TransmissionServiceArgument.DELETE_DATA]
     await call.hass.async_add_executor_job(
         partial(coordinator.api.remove_torrent, torrent_id, delete_data=delete_data)
     )
@@ -188,14 +199,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ADD_TORRENT,
+        TransmissionService.ADD_TORRENT,
         _async_add_torrent,
         schema=SERVICE_ADD_TORRENT_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_TORRENTS,
+        TransmissionService.GET_TORRENTS,
         _async_get_torrents,
         schema=SERVICE_GET_TORRENTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -203,21 +214,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REMOVE_TORRENT,
+        TransmissionService.REMOVE_TORRENT,
         _async_remove_torrent,
         schema=SERVICE_REMOVE_TORRENT_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_START_TORRENT,
+        TransmissionService.START_TORRENT,
         _async_start_torrent,
         schema=SERVICE_START_TORRENT_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_STOP_TORRENT,
+        TransmissionService.STOP_TORRENT,
         _async_stop_torrent,
         schema=SERVICE_STOP_TORRENT_SCHEMA,
     )

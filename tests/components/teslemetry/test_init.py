@@ -63,6 +63,8 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -112,6 +114,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -2747,8 +2750,7 @@ async def test_vehicle_bluetooth_out_of_range(
         ):
             assert isinstance(router, VehicleRouter)
 
-            with caplog.at_level(logging.DEBUG):
-                assert await router.flash_lights() == CLOUD_RESULT
+            assert await router.flash_lights() == CLOUD_RESULT
 
             cloud.assert_awaited_once()
             bluetooth_vehicle.flash_lights.assert_not_called()
@@ -3331,8 +3333,11 @@ async def test_charge_on_solar_settings_removed_with_entry(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            NumberServiceArgument.VALUE: 35,
+        },
         blocking=True,
     )
     async_fire_time_changed(hass)
@@ -3528,8 +3533,11 @@ async def test_local_command_survives_site_info_push_before_next_poll(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.energy_site_backup_reserve",
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
@@ -3569,8 +3577,11 @@ async def test_local_command_survives_poll_started_before_it(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.energy_site_backup_reserve",
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
     assert hass.states.get("number.energy_site_backup_reserve").state == "80"
@@ -4106,7 +4117,6 @@ async def test_paired_site_live_read_failure_logging(
             if record.getMessage().startswith("Local live poll")
         ]
 
-    caplog.set_level(logging.DEBUG)
     await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
     await _tick_local_live(hass, freezer, 1)

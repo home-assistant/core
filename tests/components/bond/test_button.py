@@ -3,8 +3,8 @@
 from bond_async import Action, DeviceType
 
 from homeassistant.components.bond.button import STEP_SIZE
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -137,8 +137,8 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_increase_flame"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.name_1_increase_flame"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -150,8 +150,8 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_decrease_flame"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.name_1_decrease_flame"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -176,8 +176,10 @@ async def test_press_button(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_start_increasing_brightness"},
+            ButtonService.PRESS,
+            {
+                CommonServiceArgument.ENTITY_ID: "button.name_1_start_increasing_brightness"
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -189,8 +191,10 @@ async def test_press_button(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_start_decreasing_brightness"},
+            ButtonService.PRESS,
+            {
+                CommonServiceArgument.ENTITY_ID: "button.name_1_start_decreasing_brightness"
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -215,8 +219,8 @@ async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_open_next"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.name_1_open_next"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -226,8 +230,8 @@ async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_close_next"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.name_1_close_next"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -249,8 +253,8 @@ async def test_preset_button(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_preset"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.name_1_preset"},
             blocking=True,
         )
         await hass.async_block_till_done()

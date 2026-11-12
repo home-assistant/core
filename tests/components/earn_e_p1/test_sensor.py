@@ -1,16 +1,39 @@
 """Tests for the EARN-E P1 Meter sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from earn_e_p1 import PacketType
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.earn_e_p1.coordinator import NO_DATA_TIMEOUT
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_DEVICE_DATA, trigger_callback
+from .conftest import MOCK_DEVICE_DATA, MOCK_HOST, trigger_callback
+
+POWER_IMPORTED_ENTITY_ID = "sensor.earn_e_p1_meter_power_imported"
+POWER_IMPORTED_STATE = str(MOCK_DEVICE_DATA["power_delivered"])
+LOST_MESSAGE = (
+    f"Error fetching earn_e_p1 data: No data received from {MOCK_HOST} "
+    f"for {NO_DATA_TIMEOUT.total_seconds():.0f} seconds"
+)
+RECOVERED_MESSAGE = f"Device at {MOCK_HOST} is available"
+# Long enough for the scheduled refresh, which runs just after the timeout.
+SILENCE = NO_DATA_TIMEOUT + timedelta(seconds=2)
 
 # The meter alternates between a realtime packet holding the instantaneous
 # values and a heartbeat packet holding the meter totals. Each type only
@@ -40,6 +63,15 @@ HEARTBEAT_NO_GAS = {
     "wifiRSSI": -65,
 }
 HEARTBEAT = {**HEARTBEAT_NO_GAS, "gas_delivered": 1234.567}
+
+
+async def _async_tick(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, delta: timedelta
+) -> None:
+    """Advance time and run the timers that became due."""
+    freezer.tick(delta)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -224,3 +256,135 @@ async def test_wifi_rssi_disabled_by_default(
     entry = entity_registry.async_get("sensor.earn_e_p1_meter_wi_fi_rssi")
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_sensor_unavailable_when_device_stops_sending(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sensors go unavailable without packets, logging once each way."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == POWER_IMPORTED_STATE
+
+    # A packet before the timeout restarts it from that packet.
+    await _async_tick(hass, freezer, NO_DATA_TIMEOUT - timedelta(seconds=20))
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+    await _async_tick(hass, freezer, timedelta(seconds=30))
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == POWER_IMPORTED_STATE
+
+    await _async_tick(hass, freezer, SILENCE - timedelta(seconds=30))
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Later failed refreshes do not log again.
+    await _async_tick(hass, freezer, SILENCE)
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert caplog.text.count(LOST_MESSAGE) == 1
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == POWER_IMPORTED_STATE
+    assert caplog.text.count(RECOVERED_MESSAGE) == 1
+
+
+async def test_sensor_unavailable_when_refresh_fires_early(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test silence is caught when the scheduled refresh fires early.
+
+    The coordinator truncates the loop time when it schedules a refresh, so the
+    refresh can run up to a second before the last packet is a full timeout old.
+    """
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A packet late in a second gives the largest truncation.
+    freezer.tick(timedelta(seconds=1.9 - hass.loop.time() % 1))
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    await _async_tick(hass, freezer, NO_DATA_TIMEOUT - timedelta(seconds=0.5))
+    await _async_tick(hass, freezer, timedelta(seconds=2.5))
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_created_after_device_silent_at_startup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a device silent since setup is logged, then added once it sends."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _async_tick(hass, freezer, SILENCE)
+    assert caplog.text.count(LOST_MESSAGE) == 1
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID) is None
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == POWER_IMPORTED_STATE
+    assert caplog.text.count(RECOVERED_MESSAGE) == 1
+
+
+async def test_update_entity_keeps_fresh_sensor_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+) -> None:
+    """Test a manual refresh does not mark a device with fresh data unavailable."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: POWER_IMPORTED_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == POWER_IMPORTED_STATE
+
+
+async def test_update_entity_keeps_silent_sensor_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a manual refresh does not bring back stale data of a silent device."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    await _async_tick(hass, freezer, SILENCE)
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: POWER_IMPORTED_ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == STATE_UNAVAILABLE
