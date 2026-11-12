@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 HOST = "192.168.1.5"
-PORT = 10800
+PORT = 10900
 APP_HOST = "core-voice"
 INFO_URL = f"http://{HOST}:{PORT}/info"
 APP_INFO_URL = f"http://{APP_HOST}:{PORT}/info"
