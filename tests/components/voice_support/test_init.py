@@ -1,6 +1,5 @@
 """Test setting up Voice support and asking for the app."""
 
-from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, AsyncMock, call, patch
 
@@ -14,8 +13,6 @@ from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.voice_support import (
     DATA_CLIENT,
     PREVIEW_FEATURE_WAKE_WORD_VERIFICATION,
-    AudioRunRequest,
-    async_start_run,
 )
 from homeassistant.components.voice_support.client import INFO_REFRESH_INTERVAL
 from homeassistant.components.voice_support.const import (
@@ -31,15 +28,10 @@ from homeassistant.util import dt as dt_util
 from .conftest import APP_HOST, INFO, INFO_URL, PORT
 
 
-async def _no_audio() -> AsyncGenerator[bytes]:
-    return
-    yield
-
-
 async def test_setup_entry(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
-    """Test a loaded entry gives the pipeline its client, and unloading takes it."""
+    """Test setup connects to the app and unload removes the client."""
     assert setup_integration.state is ConfigEntryState.LOADED
     assert hass.data[DATA_CLIENT].info is not None
 
@@ -80,9 +72,8 @@ async def test_info_refresh(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the app is asked again now and then, and a miss is not fatal."""
+    """Test app information is refreshed until the entry unloads."""
     client = hass.data[DATA_CLIENT]
     assert aioclient_mock.call_count == 1
 
@@ -91,66 +82,92 @@ async def test_info_refresh(
     assert aioclient_mock.call_count == 2
     assert client.info is not None
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(INFO_URL, exc=aiohttp.ClientError)
-    async_fire_time_changed(hass, dt_util.utcnow() + 2 * INFO_REFRESH_INTERVAL)
-    await hass.async_block_till_done()
-    assert client.info is None
-    assert "nothing will be verified" not in caplog.text
-
-    # An update to a version we do not speak is said once, not every refresh
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(INFO_URL, json=INFO)
-    async_fire_time_changed(hass, dt_util.utcnow() + 3 * INFO_REFRESH_INTERVAL)
-    await hass.async_block_till_done()
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(INFO_URL, json={**INFO, "api_version": 2})
-    async_fire_time_changed(hass, dt_util.utcnow() + 4 * INFO_REFRESH_INTERVAL)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + 5 * INFO_REFRESH_INTERVAL)
-    await hass.async_block_till_done()
-    assert client.info is None
-    assert caplog.text.count("nothing will be verified") == 1
-    assert setup_integration.state is ConfigEntryState.LOADED
-
-    # Unloading stops the asking
     await hass.config_entries.async_unload(setup_integration.entry_id)
     aioclient_mock.clear_requests()
     aioclient_mock.get(INFO_URL, json=INFO)
-    async_fire_time_changed(hass, dt_util.utcnow() + 6 * INFO_REFRESH_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + 2 * INFO_REFRESH_INTERVAL)
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 0
 
 
-@pytest.mark.usefixtures("labs")
-async def test_start_run_without_entry(hass: HomeAssistant) -> None:
-    """Test there is no run to give before the integration loads, nor without an entry."""
-    assert await async_start_run(hass, AudioRunRequest(), _no_audio()) is None
-
-    assert await async_setup_component(hass, DOMAIN, {})
-    assert await async_start_run(hass, AudioRunRequest(), _no_audio()) is None
-
-
-@pytest.mark.usefixtures("setup_integration")
-async def test_start_run_gated_by_preview_feature(
-    hass: HomeAssistant, labs: None
+@pytest.mark.parametrize(
+    ("response", "reason"),
+    [
+        pytest.param({"exc": aiohttp.ClientError}, "cannot_connect", id="unreachable"),
+        pytest.param(
+            {"json": {**INFO, "api_version": 2}}, "unsupported_version", id="version"
+        ),
+    ],
+)
+async def test_info_refresh_reloads_unusable_app(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+    reason: str,
 ) -> None:
-    """Test the pipeline gets no run while the feature is off."""
+    """Test an unusable app reloads the entry and recovers through setup retries."""
     client = hass.data[DATA_CLIENT]
-    request = AudioRunRequest(wake_word_phrase="okay nabu")
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(INFO_URL, **response)
 
-    with patch.object(
-        client, "async_start_run", new=AsyncMock(return_value="run")
-    ) as start_run:
-        assert await async_start_run(hass, request, _no_audio()) is None
-        assert start_run.call_count == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
 
-        await async_update_preview_feature(
-            hass, DOMAIN, PREVIEW_FEATURE_WAKE_WORD_VERIFICATION, True
-        )
-        audio = _no_audio()
-        assert await async_start_run(hass, request, audio) == "run"
-        assert start_run.call_args[0] == (request, audio)
+    assert client.info is None
+    assert DATA_CLIENT not in hass.data
+    assert setup_integration.state is ConfigEntryState.SETUP_RETRY
+    assert setup_integration.error_reason_translation_key == reason
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(INFO_URL, json=INFO)
+    async_fire_time_changed(hass, dt_util.utcnow() + 2 * INFO_REFRESH_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert setup_integration.state is ConfigEntryState.LOADED
+    assert hass.data[DATA_CLIENT].info is not None
+
+
+@pytest.mark.parametrize(
+    ("owned", "api_version", "update_available", "update_error", "expected_updates"),
+    [
+        pytest.param(True, 0, True, None, 1, id="owned_outdated"),
+        pytest.param(True, 0, False, None, 0, id="no_update"),
+        pytest.param(False, 0, True, None, 0, id="external"),
+        pytest.param(True, 2, True, None, 0, id="newer_protocol"),
+        pytest.param(True, 0, True, SupervisorError("busy"), 1, id="update_failed"),
+    ],
+)
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_setup_updates_owned_app(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    addon_info: AsyncMock,
+    create_backup: AsyncMock,
+    update_addon: AsyncMock,
+    owned: bool,
+    api_version: int,
+    update_available: bool,
+    update_error: Exception | None,
+    expected_updates: int,
+) -> None:
+    """Test setup updates an outdated app only when the integration installed it."""
+    addon_info.return_value.update_available = update_available
+    update_addon.side_effect = update_error
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_INTEGRATION_CREATED_APP: owned},
+    )
+    aioclient_mock.get(INFO_URL, json={**INFO, "api_version": api_version})
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert create_backup.call_count == expected_updates
+    assert update_addon.call_count == expected_updates
 
 
 SYSTEM_FLOW = call(ANY, DOMAIN, context={"source": SOURCE_SYSTEM}, data={})
@@ -234,10 +251,13 @@ async def test_enabling_the_feature_asks_for_the_app(hass: HomeAssistant) -> Non
         assert create_flow.call_count == 2
 
 
-async def test_a_satellite_loads_the_integration(hass: HomeAssistant) -> None:
-    """Test the satellite component brings voice support with it."""
+@pytest.mark.parametrize("component", ["assist_pipeline", "assist_satellite"])
+async def test_voice_component_loads_the_integration(
+    hass: HomeAssistant, component: str
+) -> None:
+    """Test voice support loads through the pipeline dependency."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "assist_satellite", {})
+    assert await async_setup_component(hass, component, {})
 
     assert DOMAIN in hass.config.components
 

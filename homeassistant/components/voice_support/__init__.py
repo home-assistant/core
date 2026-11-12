@@ -1,15 +1,6 @@
-"""The Voice support integration.
+"""The Voice support integration."""
 
-Loading this integration means a satellite exists: that is when the app it
-provides is wanted, so setup puts the app in place. Depend on it only from
-a component that is itself only there for satellites.
-
-This is an internal component. What it exports is for Home Assistant's own
-voice components; other integrations, custom ones above all, must not use
-any of it, and it can change in any release.
-"""
-
-from collections.abc import AsyncIterable
+from functools import partial
 import logging
 
 from homeassistant.components.hassio import AddonError
@@ -31,24 +22,10 @@ from .app import get_app_manager
 from .client import (
     API_VERSION,
     CONNECT_ERRORS,
-    AudioRun,
-    AudioRunRequest,
     UnsupportedVersionError,
     VoiceSupportClient,
-    WakeWordAccepted,
-    WakeWordRejected,
 )
 from .const import CONF_INTEGRATION_CREATED_APP, DOMAIN
-
-# Internal, see the module docstring: not for other integrations to use
-__all__ = [
-    "DOMAIN",
-    "AudioRun",
-    "AudioRunRequest",
-    "WakeWordAccepted",
-    "WakeWordRejected",
-    "async_start_run",
-]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -88,7 +65,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Connect to the app at the entry's address."""
     client = VoiceSupportClient(hass, entry.data[CONF_HOST], entry.data[CONF_PORT])
     try:
-        await client.async_connect()
+        await client.async_connect(
+            partial(hass.config_entries.async_schedule_reload, entry.entry_id)
+        )
     except CONNECT_ERRORS as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -96,7 +75,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             translation_placeholders={"url": str(client.url)},
         ) from err
     except UnsupportedVersionError as err:
-        # Not ready rather than an error: the app may get updated any time
+        if (
+            entry.data.get(CONF_INTEGRATION_CREATED_APP)
+            and err.info.api_version < API_VERSION
+        ):
+            get_app_manager(hass).async_schedule_update_addon(catch_error=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="unsupported_version",
@@ -148,18 +131,3 @@ def _async_provision(hass: HomeAssistant) -> None:
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
-
-
-async def async_start_run(
-    hass: HomeAssistant, request: AudioRunRequest, audio: AsyncIterable[bytes]
-) -> AudioRun | None:
-    """Open a run with the app over this audio, or None to go on without one.
-
-    None is not a failure: there is no app to ask right now, or voice
-    support is turned off.
-    """
-    if (client := hass.data.get(DATA_CLIENT)) is None:
-        return None
-    if not async_is_enabled(hass):
-        return None
-    return await client.async_start_run(request, audio)

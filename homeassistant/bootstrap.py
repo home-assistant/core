@@ -254,9 +254,7 @@ DEFAULT_INTEGRATIONS = {
     # Base platforms:
     # Note: Calendar and todo are not included to prevent them from registering
     # their frontend panels when there are no calendar or todo integrations.
-    # Assist satellite is left to its providers, so that voice support only
-    # loads once there is a satellite.
-    *(BASE_PLATFORMS - {"assist_satellite", "calendar", "todo"}),
+    *(BASE_PLATFORMS - {"calendar", "todo"}),
     #
     # Integrations providing triggers and conditions for base platforms:
     "air_quality",
