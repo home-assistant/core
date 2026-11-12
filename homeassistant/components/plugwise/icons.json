@@ -137,12 +137,6 @@
       "burner_starts": {
         "default": "mdi:fire"
       },
-      "central_heater_pump_operation_time": {
-        "default": "mdi:pump"
-      },
-      "central_heater_pump_starts": {
-        "default": "mdi:pump"
-      },
       "dhw_burner_operation_time": {
         "default": "mdi:fire-circle"
       },
@@ -164,8 +158,17 @@
       "failed_burner_starts": {
         "default": "mdi:fire-alert"
       },
+      "fault_flags": {
+        "default": "mdi:alert-circle-outline"
+      },
       "gas_consumed_interval": {
         "default": "mdi:meter-gas"
+      },
+      "heating_pump_operation_time": {
+        "default": "mdi:pump"
+      },
+      "heating_pump_starts": {
+        "default": "mdi:pump"
       },
       "maximum_modulation_level": {
         "default": "mdi:percent"
@@ -173,13 +176,10 @@
       "modulation_level": {
         "default": "mdi:percent"
       },
-      "open_therm_application_specific_fault_code": {
-        "default": "mdi:alert-circle-outline"
-      },
-      "open_therm_oem_diagnostic_code": {
+      "oem_diagnostic_code": {
         "default": "mdi:information-outline"
       },
-      "open_therm_oem_fault_code": {
+      "oem_fault_code": {
         "default": "mdi:alert-circle-outline"
       },
       "valve_position": {
