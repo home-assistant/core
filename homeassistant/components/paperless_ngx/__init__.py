@@ -20,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 from .coordinator import (
+    PaperlessAsnCoordinator,
     PaperlessConfigEntry,
     PaperlessData,
     PaperlessStatisticCoordinator,
@@ -36,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
 
     statistics_coordinator = PaperlessStatisticCoordinator(hass, entry, api)
     status_coordinator = PaperlessStatusCoordinator(hass, entry, api)
+    next_asn_coordinator = PaperlessAsnCoordinator(hass, entry, api)
 
     await statistics_coordinator.async_config_entry_first_refresh()
 
@@ -46,9 +48,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
         # just because status coordinator fails.
         LOGGER.warning("Could not initialize status coordinator: %s", err)
 
+    try:
+        await next_asn_coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        LOGGER.warning("Could not initialize next ASN coordinator: %s", err)
+
     entry.runtime_data = PaperlessData(
         status=status_coordinator,
         statistics=statistics_coordinator,
+        next_asn=next_asn_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
