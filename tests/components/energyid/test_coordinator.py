@@ -1,6 +1,8 @@
 """Tests for the EnergyID directives coordinator."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
 import datetime as dt
 from functools import partial
 from typing import Any, NoReturn
@@ -499,6 +501,47 @@ async def test_forbidden_schedule_only_drops_that_schedule(
     assert set(coordinator.data.resources) == {DIRECTIVE_ID}
     assert coordinator.data.schedules == {}
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_failed_schedule_waits_for_the_other_requests(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing schedule ends the refresh only after the others finished."""
+    resource, schedule = _directive_fixture()
+    other = replace(resource, id="22222222-2222-2222-2222-222222222222")
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(return_value=[resource, other])
+    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    finished: list[str] = []
+
+    async def get_directive_data(directive_id: str) -> DirectiveData:
+        if directive_id == DIRECTIVE_ID:
+            raise ClientResponseError(request_info=MagicMock(), history=(), status=401)
+        for _ in range(3):
+            await asyncio.sleep(0)
+        finished.append(directive_id)
+        return schedule
+
+    mock_webhook_client.get_directive_data = AsyncMock(side_effect=get_directive_data)
+    finished_at_failure: list[str] = []
+    coordinator.async_add_listener(
+        lambda: (
+            finished_at_failure.extend(finished)
+            if not coordinator.last_update_success
+            else None
+        )
+    )
+    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not coordinator.last_update_success
+    assert finished_at_failure == [other.id]
 
 
 async def test_schedule_server_error_keeps_directive_granted(
