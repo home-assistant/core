@@ -477,7 +477,7 @@ async def test_service_call_all_exclude_nested_group(hass: HomeAssistant) -> Non
         LockService.LOCK,
         {
             CommonServiceArgument.ENTITY_ID: "all",
-            CONF_EXCLUDE: {CommonServiceArgument.ENTITY_ID: "lock.nested_group"},
+            CONF_EXCLUDE: {ATTR_ENTITY_ID: "lock.nested_group"},
         },
         blocking=True,
     )

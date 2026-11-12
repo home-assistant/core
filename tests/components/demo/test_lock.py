@@ -8,11 +8,12 @@ from pytest_homeassistant.common import async_capture_events, async_mock_service
 from homeassistant.components.demo import DOMAIN, lock as demo_lock
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
     SERVICE_OPEN,
-    LockService,
+    SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import EVENT_STATE_CHANGED, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -50,10 +51,7 @@ async def test_locking(hass: HomeAssistant) -> None:
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        LOCK_DOMAIN,
-        LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: KITCHEN},
-        blocking=False,
+        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: KITCHEN}, blocking=False
     )
     await hass.async_block_till_done()
 
@@ -73,10 +71,7 @@ async def test_unlocking(hass: HomeAssistant) -> None:
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        LOCK_DOMAIN,
-        LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: FRONT},
-        blocking=False,
+        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: FRONT}, blocking=False
     )
     await hass.async_block_till_done()
 
@@ -96,10 +91,7 @@ async def test_opening(hass: HomeAssistant) -> None:
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        LOCK_DOMAIN,
-        LockService.OPEN,
-        {CommonServiceArgument.ENTITY_ID: OPENABLE_LOCK},
-        blocking=False,
+        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=False
     )
     await hass.async_block_till_done()
 
@@ -119,10 +111,7 @@ async def test_jammed_when_locking(hass: HomeAssistant) -> None:
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        LOCK_DOMAIN,
-        LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: POORLY_INSTALLED},
-        blocking=False,
+        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: POORLY_INSTALLED}, blocking=False
     )
     await hass.async_block_till_done()
 
@@ -137,9 +126,6 @@ async def test_opening_mocked(hass: HomeAssistant) -> None:
     """Test the opening of a lock."""
     calls = async_mock_service(hass, LOCK_DOMAIN, SERVICE_OPEN)
     await hass.services.async_call(
-        LOCK_DOMAIN,
-        LockService.OPEN,
-        {CommonServiceArgument.ENTITY_ID: OPENABLE_LOCK},
-        blocking=True,
+        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
     )
     assert len(calls) == 1

@@ -22,15 +22,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
     SERVICE_OPEN,
-    LockService,
+    SERVICE_UNLOCK,
     LockState,
 )
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -65,9 +66,9 @@ async def test_lock_service_calls(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.LOCK,
+        SERVICE_LOCK,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+            ATTR_ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -80,9 +81,9 @@ async def test_lock_service_calls(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.UNLOCK,
+        SERVICE_UNLOCK,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+            ATTR_ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -95,9 +96,9 @@ async def test_lock_service_calls(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.OPEN,
+        SERVICE_OPEN,
         {
-            CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+            ATTR_ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -143,9 +144,9 @@ async def test_lock_without_pullspring(
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.OPEN,
+            SERVICE_OPEN,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_2c3d",
+                ATTR_ENTITY_ID: "lock.lock_2c3d",
             },
             blocking=True,
         )
@@ -163,9 +164,9 @@ async def test_lock_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.LOCK,
+            SERVICE_LOCK,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+                ATTR_ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -175,9 +176,9 @@ async def test_lock_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.UNLOCK,
+            SERVICE_UNLOCK,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+                ATTR_ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -187,9 +188,9 @@ async def test_lock_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.OPEN,
+            SERVICE_OPEN,
             {
-                CommonServiceArgument.ENTITY_ID: "lock.lock_1a2b",
+                ATTR_ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )

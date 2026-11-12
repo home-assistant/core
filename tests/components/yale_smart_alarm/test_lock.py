@@ -8,12 +8,14 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient import UnknownError, YaleDoorManAPI, YaleSmartAlarmData
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    LockService,
-    LockServiceArgument,
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    Platform,
 )
-from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -60,18 +62,15 @@ async def test_lock_service_calls(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: "lock.device1"},
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: "lock.device1"},
             blocking=True,
         )
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.UNLOCK,
-        {
-            CommonServiceArgument.ENTITY_ID: "lock.device1",
-            LockServiceArgument.CODE: "123456",
-        },
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.device1", ATTR_CODE: "123456"},
         blocking=True,
     )
     client.auth.post_authenticated.assert_called_once()
@@ -80,11 +79,8 @@ async def test_lock_service_calls(
     client.auth.post_authenticated.reset_mock()
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.LOCK,
-        {
-            CommonServiceArgument.ENTITY_ID: "lock.device1",
-            LockServiceArgument.CODE: "123456",
-        },
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.device1", ATTR_CODE: "123456"},
         blocking=True,
     )
     client.auth.post_authenticated.assert_called_once()
@@ -121,11 +117,8 @@ async def test_lock_service_call_fails(
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.UNLOCK,
-            {
-                CommonServiceArgument.ENTITY_ID: "lock.device1",
-                LockServiceArgument.CODE: "123456",
-            },
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: "lock.device1", ATTR_CODE: "123456"},
             blocking=True,
         )
     client.auth.post_authenticated.assert_called_once()
@@ -138,11 +131,8 @@ async def test_lock_service_call_fails(
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.LOCK,
-            {
-                CommonServiceArgument.ENTITY_ID: "lock.device1",
-                LockServiceArgument.CODE: "123456",
-            },
+            SERVICE_LOCK,
+            {ATTR_ENTITY_ID: "lock.device1", ATTR_CODE: "123456"},
             blocking=True,
         )
     client.auth.post_authenticated.assert_called_once()
@@ -174,11 +164,8 @@ async def test_lock_service_call_fails_with_incorrect_status(
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.UNLOCK,
-            {
-                CommonServiceArgument.ENTITY_ID: "lock.device1",
-                LockServiceArgument.CODE: "123456",
-            },
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: "lock.device1", ATTR_CODE: "123456"},
             blocking=True,
         )
     client.auth.post_authenticated.assert_called_once()

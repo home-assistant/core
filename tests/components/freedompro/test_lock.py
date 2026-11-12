@@ -5,8 +5,13 @@ from unittest.mock import ANY, patch
 
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
-from homeassistant.const import CommonServiceArgument
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    LockState,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -98,8 +103,8 @@ async def test_lock_set_unlock(
     with patch("homeassistant.components.freedompro.lock.put_state") as mock_put_state:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: [entity_id]},
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"lock": 0}')
@@ -137,8 +142,8 @@ async def test_lock_set_lock(
     with patch("homeassistant.components.freedompro.lock.put_state") as mock_put_state:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.LOCK,
-            {CommonServiceArgument.ENTITY_ID: [entity_id]},
+            SERVICE_LOCK,
+            {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"lock": 1}')

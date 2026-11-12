@@ -19,16 +19,10 @@ from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
-    LockService,
     LockState,
 )
 from homeassistant.components.volvo.coordinator import FAST_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -140,8 +134,8 @@ async def test_unlock_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -188,8 +182,8 @@ async def test_ha_lock_triggers_location_update(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.volvo_xc40_lock"},
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.volvo_xc40_lock"},
         blocking=True,
     )
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -212,8 +206,8 @@ async def test_ha_unlock_does_not_trigger_location_update(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.volvo_xc40_lock"},
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.volvo_xc40_lock"},
         blocking=True,
     )
     await hass.async_block_till_done(wait_background_tasks=True)

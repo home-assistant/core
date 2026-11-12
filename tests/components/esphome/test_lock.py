@@ -10,8 +10,14 @@ from aioesphomeapi import (
     LockState as ESPHomeLockState,
 )
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
+    SERVICE_OPEN,
+    SERVICE_UNLOCK,
+    LockState,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockGenericDeviceEntryType
@@ -46,8 +52,8 @@ async def test_lock_entity_no_open(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.test_my_lock"},
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK, device_id=0)])
@@ -109,8 +115,8 @@ async def test_lock_entity_supports_open(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.test_my_lock"},
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls([call(1, LockCommand.LOCK, device_id=0)])
@@ -118,8 +124,8 @@ async def test_lock_entity_supports_open(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.test_my_lock"},
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls(
@@ -129,8 +135,8 @@ async def test_lock_entity_supports_open(
     mock_client.lock_command.reset_mock()
     await hass.services.async_call(
         LOCK_DOMAIN,
-        LockService.OPEN,
-        {CommonServiceArgument.ENTITY_ID: "lock.test_my_lock"},
+        SERVICE_OPEN,
+        {ATTR_ENTITY_ID: "lock.test_my_lock"},
         blocking=True,
     )
     mock_client.lock_command.assert_has_calls([call(1, LockCommand.OPEN, device_id=0)])
