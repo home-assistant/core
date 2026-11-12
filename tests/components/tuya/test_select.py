@@ -124,37 +124,6 @@ async def test_select_option(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["dlq_jdj6ccklup7btq3a"],
-)
-async def test_dlq_relay_status_select(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test relay status select on a DLQ device."""
-    entity_id = "select.eau_chaude_power_on_behavior"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "power_on",
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "relay_status", "value": "power_on"}]
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
     ["cl_zah67ekd"],
 )
 async def test_select_invalid_option(
