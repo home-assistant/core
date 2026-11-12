@@ -6,7 +6,8 @@ import pytest
 from pyvesync import VeSync
 from pyvesync.utils.errors import VeSyncError
 
-from homeassistant.components.vesync.const import DOMAIN, SERVICE_UPDATE_DEVS
+from homeassistant.components.vesync.const import DOMAIN
+from homeassistant.components.vesync.services import VeSyncService
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -28,7 +29,9 @@ async def test_async_new_device_discovery_no_entry(
     await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError, match="Entry not found"):
-        await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+        )
 
 
 @pytest.mark.usefixtures("manager")
@@ -46,7 +49,9 @@ async def test_async_new_device_discovery_entry_not_loaded(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     with pytest.raises(ServiceValidationError, match="Entry not loaded"):
-        await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+        )
 
 
 async def test_async_new_device_discovery_error(
@@ -61,7 +66,9 @@ async def test_async_new_device_discovery_error(
     manager.get_devices = AsyncMock(side_effect=VeSyncError("API failure"))
 
     with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+        )
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "api_response_error"
@@ -91,7 +98,9 @@ async def test_async_new_device_discovery(
     )
 
     # Call the service that should trigger discovery and platform setup
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, VeSyncService.UPDATE_DEVICES, {}, blocking=True
+    )
     await hass.async_block_till_done()
 
     assert manager.get_devices.call_count == 1
