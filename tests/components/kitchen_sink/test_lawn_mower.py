@@ -12,7 +12,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
+from homeassistant.const import EVENT_STATE_CHANGED, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -98,7 +98,10 @@ async def test_mower(
 
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
-        LAWN_MOWER_DOMAIN, service_call, {ATTR_ENTITY_ID: entity}, blocking=False
+        LAWN_MOWER_DOMAIN,
+        service_call,
+        {CommonServiceArgument.ENTITY_ID: entity},
+        blocking=False,
     )
     await hass.async_block_till_done()
 
@@ -121,7 +124,7 @@ async def test_service_calls_mocked(hass: HomeAssistant, service_call) -> None:
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         service_call,
-        {ATTR_ENTITY_ID: MOWER_SERVICE_ENTITY},
+        {CommonServiceArgument.ENTITY_ID: MOWER_SERVICE_ENTITY},
         blocking=True,
     )
     assert len(calls) == 1

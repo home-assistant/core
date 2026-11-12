@@ -16,7 +16,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -136,7 +136,7 @@ async def test_mover_services(
         await hass.services.async_call(
             LAWN_MOWER_DOMAIN,
             test.service_name,
-            {ATTR_ENTITY_ID: entity_id},
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         device._execute_command.assert_called_with(test.command)

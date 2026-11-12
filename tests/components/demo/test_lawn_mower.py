@@ -14,7 +14,6 @@ from homeassistant.components.lawn_mower import (
     LawnMowerService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_PLATFORM,
     CommonServiceArgument,
@@ -128,7 +127,7 @@ async def test_command_cancels_pending_dock(
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_LAWN_MOWER},
+        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     assert hass.states.get(ENTITY_LAWN_MOWER).state == expected_state

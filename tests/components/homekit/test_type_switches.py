@@ -60,6 +60,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    CommonServiceArgument,
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
 from homeassistant.util import dt as dt_util
@@ -493,7 +494,7 @@ async def test_lawn_mower_set_state(
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
     assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[0].data[CommonServiceArgument.ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -501,7 +502,7 @@ async def test_lawn_mower_set_state(
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
     assert call_turn_off
-    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_off[0].data[CommonServiceArgument.ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
