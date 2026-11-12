@@ -544,6 +544,35 @@ async def test_alarm_hub_emergency_input_fires_on_hub(
     assert ATTR_INPUT not in attributes
 
 
+@pytest.mark.parametrize(
+    ("event_type", "pin", "status"),
+    [
+        pytest.param(EventType.ALARM_HUB_MOTION, "6", "normal", id="input"),
+        pytest.param(EventType.ALARM_HUB_BUTTON_PRESS, "32", "normal", id="emergency"),
+        pytest.param(EventType.ALARM_HUB_DEVICE_TAMPER, None, "restored", id="hub"),
+    ],
+)
+async def test_alarm_hub_back_to_rest_does_not_fire(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+    event_type: EventType,
+    pin: str | None,
+    status: str,
+) -> None:
+    """Going back to rest has no event type of its own, except for entry inputs."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    events = _capture_events(hass, INPUT_EVENT, HUB_EVENT)
+    metadata = PublicEventMetadata(pin=pin, status_text=status)
+    ufp_with_alarm_hub.events_msg(
+        _hub_event(alarm_hub, event_type, metadata), EventChange.STARTED
+    )
+    await hass.async_block_till_done()
+
+    assert not events
+
+
 async def test_alarm_hub_disabled_input_fires_on_hub(
     hass: HomeAssistant,
     ufp_with_alarm_hub: MockUFPFixture,

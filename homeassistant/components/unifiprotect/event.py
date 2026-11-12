@@ -728,6 +728,19 @@ def _alarm_hub_terminals(hub: LinkStation) -> set[int] | None:
     return {int(terminal) for terminal in terminals if terminal.isdecimal()}
 
 
+# Statuses that report an input or the hub going back to rest. Only entry
+# inputs have an event type of their own for that.
+_ALARM_HUB_REST_STATUSES = frozenset({"normal", "restored"})
+
+
+def _alarm_hub_event_triggered(event: ProtectEvent) -> bool:
+    """Return whether an alarm hub event reports something being triggered."""
+    if event.type is EventType.ALARM_HUB_ENTRY_CLOSED:
+        return True
+    metadata = event.metadata
+    return metadata is None or metadata.status_text not in _ALARM_HUB_REST_STATUSES
+
+
 def _alarm_hub_event_data(event: ProtectEvent) -> dict[str, Any]:
     """Return the event id and the reported status of an alarm hub event."""
     event_data: dict[str, Any] = {ATTR_EVENT_ID: event.id}
@@ -778,7 +791,7 @@ class ProtectAlarmHubEventEntity(
     @callback
     def _async_hub_event(self, event: ProtectEvent) -> None:
         input_id = _alarm_hub_event_input(event)
-        if input_id in self._input_ids:
+        if input_id in self._input_ids or not _alarm_hub_event_triggered(event):
             return
         event_data = _alarm_hub_event_data(event)
         hub = self._ufp_public_obj
@@ -826,6 +839,8 @@ class ProtectAlarmHubInputEventEntity(
     @callback
     def _async_input_event(self, event: ProtectEvent) -> None:
         if _alarm_hub_event_input(event) != self._input_id:
+            return
+        if not _alarm_hub_event_triggered(event):
             return
         self._fire_once(
             event,
