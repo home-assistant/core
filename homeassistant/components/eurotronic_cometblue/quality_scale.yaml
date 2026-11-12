@@ -67,7 +67,9 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: Device PIN reconfiguration is exempt by maintainer agreement.
   repair-issues:
     status: exempt
     comment: Not required.
