@@ -1,5 +1,10 @@
 {
   "entity": {
+    "image": {
+      "radar": {
+        "default": "mdi:radar"
+      }
+    },
     "sensor": {
       "build_up_index": {
         "default": "mdi:grass"
@@ -42,6 +47,9 @@
       },
       "precipitation_category": {
         "default": "mdi:weather-pouring"
+      },
+      "radar_reflectivity": {
+        "default": "mdi:radar"
       },
       "rate_of_spread": {
         "default": "mdi:grass"
