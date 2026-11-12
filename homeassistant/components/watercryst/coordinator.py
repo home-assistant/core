@@ -1,7 +1,6 @@
 """BIOCAT device data update coordinators."""
 
 from abc import abstractmethod
-from asyncio import CancelledError
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -58,8 +57,6 @@ class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
     async def _async_update_data(self) -> DataT:
         try:
             return await self._async_fetch_data()
-        except CancelledError:
-            raise
         except (
             WTCApiDisabledError,
             WTCApiTemporaryError,
