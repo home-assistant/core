@@ -7,7 +7,12 @@ from http import HTTPStatus
 import logging
 from typing import override
 
-from asyncsleepiq import AsyncSleepIQ, SleepIQAPIException, SleepIQTimeoutException
+from asyncsleepiq import (
+    AsyncSleepIQ,
+    SleepIQAPIException,
+    SleepIQSleeper,
+    SleepIQTimeoutException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -62,7 +67,7 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
 
 class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
-    """SleepIQ pause mode and favorite firmness update coordinator."""
+    """SleepIQ pause mode, favorite firmness and Responsive Air update coordinator."""
 
     config_entry: SleepIQConfigEntry
 
@@ -81,6 +86,27 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=LONGER_UPDATE_INTERVAL,
         )
         self.client = client
+        self.responsive_air_sleepers: list[SleepIQSleeper] = []
+
+    @override
+    async def _async_setup(self) -> None:
+        sleepers = [
+            sleeper for bed in self.client.beds.values() for sleeper in bed.sleepers
+        ]
+        # Checked once: polling an unsupported endpoint makes the library log in again.
+        try:
+            supported = await asyncio.gather(
+                *[sleeper.has_responsive_air() for sleeper in sleepers]
+            )
+        except SleepIQTimeoutException as err:
+            raise UpdateFailed(
+                f"Timed out checking SleepIQ Responsive Air support: {err}"
+            ) from err
+        self.responsive_air_sleepers = [
+            sleeper
+            for sleeper, available in zip(sleepers, supported, strict=True)
+            if available
+        ]
 
     @override
     async def _async_update_data(self) -> None:
@@ -92,16 +118,20 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
                     for bed in self.client.beds.values()
                     for sleeper in bed.sleepers
                 ],
+                *[
+                    sleeper.fetch_responsive_air()
+                    for sleeper in self.responsive_air_sleepers
+                ],
             )
         except SleepIQTimeoutException as err:
             raise UpdateFailed(
-                f"Timed out fetching SleepIQ pause and favorite data: {err}"
+                f"Timed out fetching SleepIQ pause, favorite and Responsive Air data: {err}"
             ) from err
         except SleepIQAPIException as err:
             if err.code == HTTPStatus.UNAUTHORIZED:
                 raise ConfigEntryAuthFailed from err
             raise UpdateFailed(
-                f"Failed to fetch SleepIQ pause and favorite data: {err}"
+                f"Failed to fetch SleepIQ pause, favorite and Responsive Air data: {err}"
             ) from err
 
 
