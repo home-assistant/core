@@ -67,7 +67,12 @@ and has to match the directory name of the integration."""
             }
         )
     else:
-        info.update(gather_new_integration(arguments.template == "integration"))
+        info.update(
+            gather_new_integration(
+                arguments.template == "integration",
+                arguments.template == "config_flow_helper",
+            )
+        )
 
     return Info(**info)
 
@@ -78,7 +83,7 @@ YES_NO = {
 }
 
 
-def gather_new_integration(determine_auth: bool) -> Info:
+def gather_new_integration(determine_auth: bool, is_helper: bool = False) -> Info:
     """Gather info about new integration from user."""
     fields = {
         "name": {
@@ -167,7 +172,13 @@ More info @ https://contributors.home-assistant.io/core/integrations/manifest/#i
             }
         )
 
+    if is_helper:
+        del fields["integration_type"]
+
     info = _gather_info(fields)
+
+    if is_helper:
+        info["integration_type"] = "helper"
 
     if info.get("integration_type") not in (
         NO_CATEGORIES_INTEGRATION_TYPES | {IntegrationType.VIRTUAL}

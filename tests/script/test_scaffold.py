@@ -66,6 +66,25 @@ def test_new_integration_requires_integration_type(
     assert mock_input.call_count == len(answers)
 
 
+def test_new_helper_integration_is_not_asked_for_integration_type() -> None:
+    """Test the helper config flow template gets the helper type and categories."""
+    answers = [*BASE_ANSWERS, "entity", "helpers"]
+    arguments = SimpleNamespace(
+        integration="scaffold_test", develop=False, template="config_flow_helper"
+    )
+
+    with patch("builtins.input", side_effect=answers) as mock_input:
+        info = gather_info(arguments)
+
+    assert info.integration_type == "helper"
+    assert info.categories == ["helpers"]
+    assert mock_input.call_count == len(answers)
+    assert not any(
+        "What is the integration type?" in call.args[0]
+        for call in mock_input.call_args_list
+    )
+
+
 def test_develop_integration_has_integration_type(tmp_path: Path) -> None:
     """Test developer mode sets the type hassfest needs for a config flow."""
     arguments = SimpleNamespace(integration=None, develop=True)
