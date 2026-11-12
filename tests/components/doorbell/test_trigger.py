@@ -15,7 +15,7 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.doorbell.trigger import TRIGGERS
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -82,7 +82,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -92,7 +92,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -115,7 +115,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -125,7 +125,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -148,7 +148,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -158,7 +158,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -168,7 +168,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:02.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -185,7 +185,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -202,7 +202,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 0,
@@ -212,7 +212,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:02.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -235,7 +235,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "other_event",
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event",
                         },
                     },
                     "count": 0,
@@ -245,7 +245,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:01.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "ring",
+                            EventEntityStateAttribute.EVENT_TYPE: "ring",
                         },
                     },
                     "count": 1,
@@ -255,7 +255,7 @@ def test_trigger_target_support() -> None:
                         "state": "2026-01-01T00:00:00.000+00:00",
                         "attributes": {
                             ATTR_DEVICE_CLASS: "doorbell",
-                            ATTR_EVENT_TYPE: "other_event",
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event",
                         },
                     },
                     "count": 0,
