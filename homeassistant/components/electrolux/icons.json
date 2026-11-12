@@ -51,18 +51,6 @@
       "appliance_state": {
         "default": "mdi:information-outline"
       },
-      "bottomoven_running_time": {
-        "default": "mdi:timer-outline"
-      },
-      "bottomoven_start_at": {
-        "default": "mdi:timer-play-outline"
-      },
-      "bottomoven_time_left": {
-        "default": "mdi:timer-outline"
-      },
-      "end_at": {
-        "default": "mdi:timer-pause-outline"
-      },
       "bottomoven_appliance_state": {
         "default": "mdi:information-outline"
       },
@@ -75,11 +63,23 @@
       "bottomoven_food_probe_temperature": {
         "default": "mdi:thermometer-probe"
       },
+      "bottomoven_running_time": {
+        "default": "mdi:timer-outline"
+      },
+      "bottomoven_start_at": {
+        "default": "mdi:timer-play-outline"
+      },
+      "bottomoven_time_left": {
+        "default": "mdi:timer-outline"
+      },
       "cycle_phase": {
         "default": "mdi:animation-play"
       },
       "display_temperature": {
         "default": "mdi:thermometer"
+      },
+      "end_at": {
+        "default": "mdi:timer-pause-outline"
       },
       "extracavity_appliance_state": {
         "default": "mdi:information-outline"
@@ -114,23 +114,14 @@
       "running_time": {
         "default": "mdi:timer-outline"
       },
+      "sound_volume": {
+        "default": "mdi:volume-high"
+      },
       "start_at": {
         "default": "mdi:timer-play-outline"
       },
       "time_left": {
         "default": "mdi:timer-outline"
-      },
-      "upperoven_running_time": {
-        "default": "mdi:timer-outline"
-      },
-      "upperoven_start_at": {
-        "default": "mdi:timer-play-outline"
-      },
-      "upperoven_time_left": {
-        "default": "mdi:timer-outline"
-      },
-      "sound_volume": {
-        "default": "mdi:volume-high"
       },
       "upperoven_appliance_state": {
         "default": "mdi:information-outline"
@@ -143,6 +134,15 @@
       },
       "upperoven_food_probe_temperature": {
         "default": "mdi:thermometer-probe"
+      },
+      "upperoven_running_time": {
+        "default": "mdi:timer-outline"
+      },
+      "upperoven_start_at": {
+        "default": "mdi:timer-play-outline"
+      },
+      "upperoven_time_left": {
+        "default": "mdi:timer-outline"
       }
     },
     "switch": {
