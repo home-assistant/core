@@ -3,23 +3,37 @@
 from typing import Any
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, setup_test_component_platform
 from pytest_homeassistant.components.infrared import (
     EMITTER_ENTITY_ID,
     RECEIVER_ENTITY_ID,
 )
-from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 from homeassistant.components.daikin_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
 )
-from homeassistant.components.infrared import DATA_COMPONENT
+from homeassistant.components.infrared import DOMAIN as INFRARED_DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import Entity
+from homeassistant.setup import async_setup_component
+
+
+async def _async_setup_infrared(hass: HomeAssistant, entities: list[Entity]) -> None:
+    """Set up the infrared integration with entities from a test platform."""
+    setup_test_component_platform(hass, INFRARED_DOMAIN, entities)
+    assert await async_setup_component(
+        hass, INFRARED_DOMAIN, {INFRARED_DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -90,13 +104,12 @@ async def test_user_flow_title_from_entity_name(
     assert result["title"] == expected_title
 
 
-@pytest.mark.usefixtures("init_infrared")
 async def test_user_flow_title_without_registry_entry(hass: HomeAssistant) -> None:
     """Test the title falls back to the entity ID for an emitter not in the registry."""
     emitter = MockInfraredEmitterEntity("unused", "Unregistered IR emitter")
     # Without a unique ID the entity is never added to the entity registry
     emitter._attr_unique_id = None
-    await hass.data[DATA_COMPONENT].async_add_entities([emitter])
+    await _async_setup_infrared(hass, [emitter])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -129,16 +142,17 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures(
-    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
-)
 async def test_user_flow_receiver_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the flow aborts when the receiver is already configured."""
     mock_config_entry.add_to_hass(hass)
-    await hass.data[DATA_COMPONENT].async_add_entities(
-        [MockInfraredEmitterEntity("second_ir_emitter", "Second IR emitter")]
+    await _async_setup_infrared(
+        hass,
+        [
+            MockInfraredEmitterEntity("second_ir_emitter", "Second IR emitter"),
+            MockInfraredReceiverEntity("test_ir_receiver"),
+        ],
     )
 
     result = await hass.config_entries.flow.async_init(
