@@ -5,9 +5,10 @@ from typing import Any, override
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -92,7 +93,9 @@ class DemoWaterHeater(WaterHeaterEntity):
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        self._attr_native_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        self._attr_native_target_temperature = kwargs.get(
+            WaterHeaterServiceArgument.TEMPERATURE
+        )
         self.schedule_update_ha_state()
 
     @override

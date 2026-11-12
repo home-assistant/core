@@ -10,6 +10,7 @@ from homeassistant.components.switcher_kis.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .consts import (
     DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE,
@@ -88,12 +89,15 @@ async def test_user_setup_found_token_device_valid_token(
     with patch(
         "homeassistant.components.switcher_kis.config_flow.validate_token",
         return_value=True,
-    ):
+    ) as mock_validate_token:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
         )
 
+    mock_validate_token.assert_called_once_with(
+        DUMMY_USERNAME, DUMMY_TOKEN, async_get_clientsession(hass)
+    )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Switcher"
     assert result3["result"].data == {
@@ -224,12 +228,17 @@ async def test_reauth_successful(
     with patch(
         "homeassistant.components.switcher_kis.config_flow.validate_token",
         return_value=True,
-    ):
+    ) as mock_validate_token:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
         )
 
+    mock_validate_token.assert_called_once_with(
+        user_input[CONF_USERNAME],
+        user_input[CONF_TOKEN],
+        async_get_clientsession(hass),
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 

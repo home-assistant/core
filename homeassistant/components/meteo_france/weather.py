@@ -1,7 +1,7 @@
 """Support for Meteo-France weather service."""
 
 import time
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -43,6 +43,8 @@ from .const import (
     MODEL,
 )
 from .coordinator import MeteoFranceConfigEntry, MeteoFranceForecastUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 def format_condition(condition: str, force_day: bool = False) -> str:
@@ -93,8 +95,7 @@ class MeteoFranceWeather(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
+        self.coordinator.config_entry.async_create_task(
             self.hass, self.async_update_listeners(("daily", "hourly"))
         )
 
@@ -102,10 +103,12 @@ class MeteoFranceWeather(
     @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        assert self.platform.config_entry and self.platform.config_entry.unique_id
+        unique_id = self.coordinator.config_entry.unique_id
+        if TYPE_CHECKING:
+            assert unique_id
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name=self.coordinator.data.position["name"],

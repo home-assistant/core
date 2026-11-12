@@ -77,7 +77,7 @@ urllib3>=2.0
 uv==0.13.6
 webrtc-models==0.3.0
 yarl==1.25.1
-zeroconf==0.152.0
+zeroconf==0.153.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -141,7 +141,7 @@ multidict>=6.0.2
 Brotli>=1.2.1
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.14.1
+pydantic==2.14.2
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0

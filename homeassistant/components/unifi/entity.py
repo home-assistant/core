@@ -266,6 +266,23 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
 
     @callback
+    @override
+    def add_to_platform_abort(self) -> None:
+        """Keep the object of a disabled entity known, forget any other.
+
+        A disabled entity is not added but keeps its registry entry, so its
+        object stays known until that entry is removed. Any other entity
+        that is not added is tried again on the next scan.
+        """
+        super().add_to_platform_abort()
+        loader = self.hub.entity_loader
+        obj = (self.entity_description.key, self._obj_id)
+        if (entry := self.registry_entry) and entry.disabled:
+            loader.known_but_disabled[entry.entity_id] = obj
+        else:
+            loader.known_objects.discard(obj)
+
+    @callback
     def _async_coordinator_updated(self) -> None:
         """Skip coordinator updates that changed a different object."""
         coordinator_data = self.coordinator.data
