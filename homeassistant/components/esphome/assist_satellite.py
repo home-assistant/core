@@ -95,6 +95,9 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: (
             PipelineEventType.WAKE_WORD_END
         ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_REJECTED: (
+            PipelineEventType.WAKE_WORD_REJECTED
+        ),
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: (
             PipelineEventType.STT_VAD_START
         ),
