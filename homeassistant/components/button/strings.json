@@ -21,6 +21,16 @@
       "name": "Update"
     }
   },
+  "selector": {
+    "press_count": {
+      "options": {
+        "1": "Single press",
+        "2": "Double press",
+        "3": "Triple press",
+        "4": "Quadruple press"
+      }
+    }
+  },
   "services": {
     "press": {
       "description": "Presses a button.",
@@ -45,6 +55,12 @@
     },
     "pressed": {
       "description": "Triggers when one or more buttons are pressed.",
+      "fields": {
+        "press_count": {
+          "description": "How many times the button is pressed in quick succession.",
+          "name": "Number of presses"
+        }
+      },
       "name": "Button pressed"
     }
   }

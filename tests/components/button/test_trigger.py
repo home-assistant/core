@@ -23,6 +23,7 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.button.trigger import TRIGGERS
 from homeassistant.components.event import (
+    ATTR_PRESS_COUNT,
     EventEntityCapabilityAttribute,
     EventEntityStateAttribute,
 )
@@ -60,6 +61,13 @@ _PHYSICAL_BUTTON_EVENT_TYPES = [
     "long_press_start",
     "long_press_end",
 ]
+_NO_MULTI_PRESS_BUTTON_EVENT_TYPES = [
+    "press_start",
+    "press_end",
+    "long_press_start",
+    "long_press_end",
+    "single_press",
+]
 _PRESS_START_BUTTON_EVENT_TYPES = ["press_start", "long_press_start"]
 _HOLD_BUTTON_EVENT_TYPES = ["long_press_start", "long_press_end"]
 _EVENT_ENTITY_ID = "event.test_button"
@@ -70,16 +78,17 @@ def _button_event_state(
     event_types: list[str],
     event_type: str | None = None,
     device_class: str = "button",
+    press_count: int | None = None,
 ) -> StateDescription:
     """Build an event entity state."""
-    return {
-        "state": state,
-        "attributes": {
-            ATTR_DEVICE_CLASS: device_class,
-            EventEntityCapabilityAttribute.EVENT_TYPES: event_types,
-            EventEntityStateAttribute.EVENT_TYPE: event_type,
-        },
+    attributes: dict[str, Any] = {
+        ATTR_DEVICE_CLASS: device_class,
+        EventEntityCapabilityAttribute.EVENT_TYPES: event_types,
+        EventEntityStateAttribute.EVENT_TYPE: event_type,
     }
+    if press_count is not None:
+        attributes[ATTR_PRESS_COUNT] = press_count
+    return {"state": state, "attributes": attributes}
 
 
 def _button_event_states(
@@ -88,6 +97,23 @@ def _button_event_states(
     device_class: str = "button",
 ) -> list[BasicTriggerStateDescription]:
     """Build an unknown initial state followed by events and their call counts."""
+    return _press_count_event_states(
+        event_types,
+        [(event_type, None, count) for event_type, count in events],
+        device_class,
+    )
+
+
+def _press_count_event_states(
+    event_types: list[str],
+    events: list[tuple[str, int | None, int]],
+    device_class: str = "button",
+) -> list[BasicTriggerStateDescription]:
+    """Build an unknown initial state followed by events and their call counts.
+
+    Each event is an (event_type, press_count, call count) tuple, where a
+    press_count of None leaves the attribute out.
+    """
     return [
         {
             "included_state": _button_event_state(
@@ -102,10 +128,11 @@ def _button_event_states(
                     event_types,
                     event_type,
                     device_class,
+                    press_count,
                 ),
                 "count": count,
             }
-            for second, (event_type, count) in enumerate(events)
+            for second, (event_type, press_count, count) in enumerate(events)
         ),
     ]
 
@@ -153,6 +180,51 @@ async def test_button_trigger_options_validation(
 def test_trigger_target_support() -> None:
     """Certify the trigger registry matches its declared target support."""
     assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
+@pytest.mark.parametrize(
+    ("options", "expected"),
+    [
+        ({}, 1),
+        ({"press_count": 1}, 1),
+        ({"press_count": 2}, 2),
+        ({"press_count": "3"}, 3),
+        ({"press_count": 5}, 5),
+    ],
+)
+async def test_button_pressed_trigger_press_count_valid(
+    hass: HomeAssistant, options: dict[str, Any], expected: int
+) -> None:
+    """Test the pressed trigger accepts a press count of at least 1."""
+    validated_config = await async_validate_trigger_config(
+        hass,
+        [
+            {
+                CONF_PLATFORM: "button.pressed",
+                CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                CONF_OPTIONS: options,
+            }
+        ],
+    )
+    assert validated_config[0][CONF_OPTIONS]["press_count"] == expected
+
+
+@pytest.mark.parametrize("press_count", [0, -1, "not_a_number", None])
+async def test_button_pressed_trigger_press_count_invalid(
+    hass: HomeAssistant, press_count: int | str | None
+) -> None:
+    """Test the pressed trigger rejects an invalid press count."""
+    with pytest.raises(probatio.Invalid):
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    CONF_PLATFORM: "button.pressed",
+                    CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                    CONF_OPTIONS: {"press_count": press_count},
+                }
+            ],
+        )
 
 
 @pytest.mark.parametrize(
@@ -685,6 +757,98 @@ async def test_button_event_trigger(
 
 
 @pytest.mark.parametrize(
+    (
+        "target_entities_indirect",
+        "trigger_target_config",
+        "entity_id",
+        "entities_in_target",
+    ),
+    [("event", *params) for params in parametrize_target_entities("event")],
+    indirect=["target_entities_indirect"],
+)
+@pytest.mark.parametrize(
+    ("press_count", "states"),
+    [
+        pytest.param(
+            1,
+            _press_count_event_states(
+                _ALL_BUTTON_EVENT_TYPES,
+                [
+                    ("press_end", None, 0),
+                    ("single_press", None, 1),
+                    ("multi_press", 1, 0),
+                    ("multi_press", 2, 0),
+                ],
+            ),
+            id="single",
+        ),
+        pytest.param(
+            2,
+            _press_count_event_states(
+                _ALL_BUTTON_EVENT_TYPES,
+                [
+                    ("press_start", None, 0),
+                    ("press_end", None, 0),
+                    ("single_press", None, 0),
+                    ("multi_press", 2, 1),
+                    ("multi_press", 2, 1),
+                    ("multi_press", 3, 0),
+                    ("multi_press", None, 0),
+                    ("long_press_start", None, 0),
+                ],
+            ),
+            id="double",
+        ),
+        pytest.param(
+            5,
+            _press_count_event_states(
+                _ALL_BUTTON_EVENT_TYPES,
+                [("multi_press", 4, 0), ("multi_press", 5, 1)],
+            ),
+            id="above_ui_options",
+        ),
+        pytest.param(
+            2,
+            _press_count_event_states(
+                _NO_MULTI_PRESS_BUTTON_EVENT_TYPES,
+                [
+                    ("single_press", None, 0),
+                    ("press_end", None, 0),
+                    ("multi_press", 2, 0),
+                ],
+            ),
+            id="multi_press_not_declared",
+        ),
+        pytest.param(
+            2,
+            _press_count_event_states([], [("multi_press", 2, 0)]),
+            id="empty_event_types",
+        ),
+    ],
+)
+async def test_button_pressed_trigger_press_count(
+    hass: HomeAssistant,
+    target_entities_indirect: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    press_count: int,
+    states: list[BasicTriggerStateDescription],
+) -> None:
+    """Test the pressed trigger fires only on presses with the configured count."""
+    await _assert_trigger_fires(
+        hass,
+        target_entities=target_entities_indirect,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger="button.pressed",
+        states=states,
+        trigger_options={"press_count": press_count},
+    )
+
+
+@pytest.mark.parametrize(
     ("trigger", "event_types", "event_type", "expected_reports"),
     [
         pytest.param(
@@ -814,6 +978,105 @@ async def test_button_event_trigger_not_triggered_reports(
     expected_reports: list[tuple[str, dict[str, Any]]],
 ) -> None:
     """Test the trigger reports only unsupported button event types."""
+    await _assert_not_triggered_reports(
+        hass,
+        trigger=trigger,
+        options={},
+        entity_id=_EVENT_ENTITY_ID,
+        initial_state=_button_event_state(STATE_UNKNOWN, event_types),
+        state=_button_event_state(
+            "2026-01-01T00:00:00.000+00:00", event_types, event_type
+        ),
+        expected_reports=expected_reports,
+    )
+
+
+@pytest.mark.parametrize(
+    ("event_types", "event_press_count", "expected_reports"),
+    [
+        pytest.param(
+            _NO_MULTI_PRESS_BUTTON_EVENT_TYPES,
+            None,
+            [
+                (
+                    "entity_event_types_not_supported",
+                    {
+                        "entity_id": _EVENT_ENTITY_ID,
+                        "event_types": _NO_MULTI_PRESS_BUTTON_EVENT_TYPES,
+                    },
+                )
+            ],
+            id="multi_press_not_declared",
+        ),
+        pytest.param(
+            [],
+            2,
+            [
+                (
+                    "entity_event_types_not_supported",
+                    {"entity_id": _EVENT_ENTITY_ID, "event_types": []},
+                )
+            ],
+            id="empty_event_types",
+        ),
+        pytest.param(_ALL_BUTTON_EVENT_TYPES, 3, [], id="other_press_count"),
+    ],
+)
+async def test_button_pressed_trigger_press_count_not_triggered_reports(
+    hass: HomeAssistant,
+    event_types: list[str],
+    event_press_count: int | None,
+    expected_reports: list[tuple[str, dict[str, Any]]],
+) -> None:
+    """Test the pressed trigger reports entities that can't report the press count."""
+    await _assert_not_triggered_reports(
+        hass,
+        trigger="button.pressed",
+        options={"press_count": 2},
+        entity_id=_EVENT_ENTITY_ID,
+        initial_state=_button_event_state(STATE_UNKNOWN, event_types),
+        state=_button_event_state(
+            "2026-01-01T00:00:00.000+00:00",
+            event_types,
+            "multi_press",
+            press_count=event_press_count,
+        ),
+        expected_reports=expected_reports,
+    )
+
+
+@pytest.mark.parametrize("entity_id", ["button.test_button", "input_button.test"])
+async def test_button_pressed_trigger_press_count_ignores_buttons(
+    hass: HomeAssistant, entity_id: str
+) -> None:
+    """Test a press count above 1 never fires for button and input_button entities."""
+    await _assert_not_triggered_reports(
+        hass,
+        trigger="button.pressed",
+        options={"press_count": 2},
+        entity_id=entity_id,
+        initial_state={"state": STATE_UNKNOWN, "attributes": {}},
+        state={"state": "2026-01-01T00:00:00+00:00", "attributes": {}},
+        expected_reports=[
+            (
+                "entity_press_count_not_supported",
+                {"entity_id": entity_id, "press_count": 2},
+            )
+        ],
+    )
+
+
+async def _assert_not_triggered_reports(
+    hass: HomeAssistant,
+    *,
+    trigger: str,
+    options: dict[str, Any],
+    entity_id: str,
+    initial_state: StateDescription,
+    state: StateDescription,
+    expected_reports: list[tuple[str, dict[str, Any]]],
+) -> None:
+    """Assert a state change doesn't fire the trigger and reports the reasons."""
     calls: list[dict[str, Any]] = []
     reports: list[NotTriggeredInfo] = []
 
@@ -829,15 +1092,14 @@ async def test_button_event_trigger_not_triggered_reports(
     ) -> None:
         reports.append(info)
 
-    set_or_remove_state(
-        hass, _EVENT_ENTITY_ID, _button_event_state(STATE_UNKNOWN, event_types)
-    )
+    set_or_remove_state(hass, entity_id, initial_state)
     validated_config = await async_validate_trigger_config(
         hass,
         [
             {
                 CONF_PLATFORM: trigger,
-                CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                CONF_TARGET: {CONF_ENTITY_ID: entity_id},
+                CONF_OPTIONS: options,
             }
         ],
     )
@@ -852,17 +1114,12 @@ async def test_button_event_trigger_not_triggered_reports(
     )
     assert unsub is not None
 
-    set_or_remove_state(
-        hass,
-        _EVENT_ENTITY_ID,
-        _button_event_state("2026-01-01T00:00:00.000+00:00", event_types, event_type),
-    )
+    set_or_remove_state(hass, entity_id, state)
     await hass.async_block_till_done()
+    unsub()
 
     assert calls == []
     assert [(report.reason, report.data) for report in reports] == expected_reports
-
-    unsub()
 
 
 @pytest.mark.parametrize(
@@ -1490,6 +1747,7 @@ async def _assert_trigger_fires(
     entities_in_target: int,
     trigger: str,
     states: list[BasicTriggerStateDescription],
+    trigger_options: dict[str, Any] | None = None,
 ) -> None:
     """Assert that the trigger fires when targeted entity states change."""
     calls: list[str] = []
@@ -1500,7 +1758,7 @@ async def _assert_trigger_fires(
         set_or_remove_state(hass, eid, states[0]["included_state"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, None, trigger_target_config, calls)
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config, calls)
 
     for state in states[1:]:
         included_state = state["included_state"]

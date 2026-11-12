@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Final, override
 import probatio
 
 from homeassistant.components.event import (
+    ATTR_PRESS_COUNT,
     DOMAIN as EVENT_DOMAIN,
     ButtonEventType,
     EventDeviceClass,
@@ -38,6 +39,7 @@ from .const import DOMAIN
 
 ATTR_REPEAT_COUNT: Final = "repeat_count"
 CONF_INTERVAL: Final = "interval"
+CONF_PRESS_COUNT: Final = "press_count"
 
 HOLD_TIMEOUT: Final = timedelta(seconds=30)
 
@@ -53,6 +55,16 @@ PRESSED_EVENT_TYPES: tuple[ButtonEventType, ...] = (
 HELD_EVENT_TYPES: tuple[ButtonEventType, ...] = (
     ButtonEventType.LONG_PRESS_START,
     ButtonEventType.LONG_PRESS_END,
+)
+
+PRESSED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    {
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Optional(CONF_PRESS_COUNT, default=1): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1)
+            ),
+        },
+    }
 )
 
 HELD_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
@@ -83,13 +95,24 @@ def _get_first_declared_event_type(
 
 
 class ButtonPressedTrigger(StatelessEntityTriggerBase):
-    """Trigger for button presses."""
+    """Trigger for button presses, optionally a set number of presses."""
 
     _domain_specs = {
         DOMAIN: DomainSpec(),
         INPUT_BUTTON_DOMAIN: DomainSpec(),
         EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.BUTTON),
     }
+    _schema = PRESSED_TRIGGER_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the pressed trigger."""
+        super().__init__(hass, config)
+        self._press_count: int = self._options[CONF_PRESS_COUNT]
+        self._event_types: tuple[ButtonEventType, ...] = (
+            PRESSED_EVENT_TYPES
+            if self._press_count == 1
+            else (ButtonEventType.MULTI_PRESS,)
+        )
 
     @override
     def is_valid_state(
@@ -97,13 +120,21 @@ class ButtonPressedTrigger(StatelessEntityTriggerBase):
         state: State,
         report_not_triggered: NotTriggeredReasonReporter,
     ) -> bool:
-        """Check if the state is a button press."""
+        """Check if the state is a button press with the configured press count."""
         if state.domain != EVENT_DOMAIN:
-            return True
+            # Button and input button entities only report single presses.
+            if self._press_count == 1:
+                return True
+            report_not_triggered(
+                "entity_press_count_not_supported",
+                entity_id=state.entity_id,
+                press_count=self._press_count,
+            )
+            return False
         event_types = state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES)
         if (
             pressed_event_type := _get_first_declared_event_type(
-                event_types, PRESSED_EVENT_TYPES
+                event_types, self._event_types
             )
         ) is None:
             report_not_triggered(
@@ -112,9 +143,14 @@ class ButtonPressedTrigger(StatelessEntityTriggerBase):
                 event_types=event_types,
             )
             return False
-        return (
+        if (
             state.attributes.get(EventEntityStateAttribute.EVENT_TYPE)
-            == pressed_event_type
+            != pressed_event_type
+        ):
+            return False
+        return (
+            self._press_count == 1
+            or state.attributes.get(ATTR_PRESS_COUNT) == self._press_count
         )
 
 
