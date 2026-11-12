@@ -622,44 +622,6 @@ async def test_setup_serial_wrong_telegram(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test options flow."""
-
-    entry_data = {
-        "port": "/dev/ttyUSB0",
-        "dsmr_version": "2.2",
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=entry_data,
-        unique_id="/dev/ttyUSB0",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "time_between_update": 15,
-        },
-    )
-
-    with (
-        patch("homeassistant.components.dsmr.async_setup_entry", return_value=None),
-        patch("homeassistant.components.dsmr.async_unload_entry", return_value=None),
-    ):
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-
-        await hass.async_block_till_done()
-
-    assert entry.options == {"time_between_update": 15}
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a DSMR config entry."""

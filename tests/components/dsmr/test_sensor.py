@@ -64,9 +64,6 @@ async def test_default_setup(
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -95,7 +92,7 @@ async def test_default_setup(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -211,9 +208,6 @@ async def test_setup_only_energy(
         "dsmr_version": "2.2",
         "serial_id": "1234",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -231,7 +225,7 @@ async def test_setup_only_energy(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -267,9 +261,6 @@ async def test_v4_meter(
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -290,7 +281,7 @@ async def test_v4_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -355,9 +346,6 @@ async def test_v5_meter(
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -378,7 +366,7 @@ async def test_v5_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -428,9 +416,6 @@ async def test_luxembourg_meter(
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -462,7 +447,7 @@ async def test_luxembourg_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -524,9 +509,6 @@ async def test_luxembourg_smarty_encrypted_meter(
         "serial_id_gas": "5678",
         "encryption_key": "aabbccddeeff00112233445566778899",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -558,7 +540,7 @@ async def test_luxembourg_smarty_encrypted_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -610,9 +592,6 @@ async def test_austrian_sagemcom_encrypted_meter(
         "serial_id_gas": None,
         "encryption_key": "aabbccddeeff00112233445566778899",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -641,7 +620,7 @@ async def test_austrian_sagemcom_encrypted_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -687,9 +666,6 @@ async def test_eonhu_meter(
         "dsmr_version": "5EONHU",
         "serial_id": "1234",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -710,7 +686,7 @@ async def test_eonhu_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -757,9 +733,6 @@ async def test_belgian_meter(
         "dsmr_version": "5B",
         "serial_id": "1234",
         "serial_id_gas": None,
-    }
-    entry_options = {
-        "time_between_update": 0,
     }
 
     telegram = Telegram()
@@ -885,7 +858,7 @@ async def test_belgian_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -992,9 +965,6 @@ async def test_belgian_meter_alt(
         "serial_id": "1234",
         "serial_id_gas": None,
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1095,7 +1065,7 @@ async def test_belgian_meter_alt(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -1180,9 +1150,6 @@ async def test_belgian_meter_mbus(
         "serial_id": "1234",
         "serial_id_gas": None,
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1258,7 +1225,7 @@ async def test_belgian_meter_mbus(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -1330,9 +1297,6 @@ async def test_belgian_meter_low(
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1342,7 +1306,7 @@ async def test_belgian_meter_low(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -1379,9 +1343,6 @@ async def test_swedish_meter(
         "serial_id": None,
         "serial_id_gas": None,
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1402,7 +1363,7 @@ async def test_swedish_meter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -1454,9 +1415,6 @@ async def test_easymeter(
         "serial_id": None,
         "serial_id_gas": None,
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1477,10 +1435,7 @@ async def test_easymeter(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr",
-        unique_id="/dev/ttyUSB0",
-        data=entry_data,
-        options=entry_options,
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -1691,9 +1646,6 @@ async def test_reconnect(
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1722,7 +1674,7 @@ async def test_reconnect(
     protocol.wait_closed = wait_closed
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -1774,9 +1726,6 @@ async def test_gas_meter_providing_energy_reading(
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1792,7 +1741,7 @@ async def test_gas_meter_providing_energy_reading(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     mock_entry.add_to_hass(hass)
@@ -1829,9 +1778,6 @@ async def test_heat_meter_mbus(
         "serial_id": "1234",
         "serial_id_gas": None,
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1852,7 +1798,7 @@ async def test_heat_meter_mbus(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     hass.loop.set_debug(True)
@@ -1897,9 +1843,6 @@ async def test_heat_cool_meter_mbus(
         "serial_id": "1234",
         "serial_id_gas": None,
     }
-    entry_options = {
-        "time_between_update": 0,
-    }
 
     telegram = Telegram()
     telegram.add(
@@ -1920,7 +1863,7 @@ async def test_heat_cool_meter_mbus(
     )
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
     )
 
     hass.loop.set_debug(True)
