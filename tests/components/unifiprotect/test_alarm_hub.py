@@ -1,7 +1,6 @@
 """Tests for the UniFi Protect Alarm Hub (Public API) entities."""
 
 from datetime import datetime
-from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -35,6 +34,8 @@ DOMAIN = "unifiprotect"
 
 ALARM_HUB_MAC = "AABBCCDDEEFF"
 HUB_EVENT = "event.alarm_hub_activity"
+INPUT_EVENT = "event.alarm_hub_input_7"
+NAMED_INPUT_EVENT = "event.alarm_hub_hallway"
 
 
 def _make_alarm_hub() -> LinkStation:
@@ -367,80 +368,120 @@ async def test_alarm_hub_unavailable_when_public_bootstrap_lost(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
+def _capture_events(hass: HomeAssistant, *entity_ids: str) -> list[HAEvent]:
+    """Collect the state changes of the given entities."""
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    async_track_state_change_event(hass, entity_ids, _capture)
+    return events
+
+
 @pytest.mark.parametrize(
-    ("event_type", "metadata", "expected_type", "expected_data"),
+    ("event_type", "status", "expected_type"),
     [
+        pytest.param(EventType.ALARM_HUB_MOTION, "alarm", "motion", id="motion"),
         pytest.param(
-            EventType.ALARM_HUB_MOTION,
-            PublicEventMetadata(pin="6", status_text="alarm"),
-            "motion",
-            {ATTR_INPUT: 7, ATTR_STATUS: "alarm"},
-            id="motion",
-        ),
-        pytest.param(
-            EventType.ALARM_HUB_ENTRY_OPENED,
-            PublicEventMetadata(pin="0", status_text="alarm"),
-            "entry_opened",
-            {ATTR_INPUT: 1, ATTR_STATUS: "alarm"},
-            id="entry_opened",
+            EventType.ALARM_HUB_ENTRY_OPENED, "alarm", "entry_opened", id="entry_opened"
         ),
         pytest.param(
             EventType.ALARM_HUB_ENTRY_CLOSED,
-            PublicEventMetadata(pin="31", status_text="normal"),
+            "normal",
             "entry_closed",
-            {ATTR_INPUT: 32, ATTR_STATUS: "normal"},
             id="entry_closed",
         ),
+        pytest.param(EventType.ALARM_HUB_SMOKE, "alarm", "smoke", id="smoke"),
         pytest.param(
-            EventType.ALARM_HUB_SMOKE,
-            PublicEventMetadata(pin="4", status_text="alarm"),
-            "smoke",
-            {ATTR_INPUT: 5, ATTR_STATUS: "alarm"},
-            id="smoke",
+            EventType.ALARM_HUB_GLASS_BREAK, "alarm", "glass_break", id="glass_break"
         ),
         pytest.param(
-            EventType.ALARM_HUB_GLASS_BREAK,
-            PublicEventMetadata(pin="4", status_text="alarm"),
-            "glass_break",
-            {ATTR_INPUT: 5, ATTR_STATUS: "alarm"},
-            id="glass_break",
+            EventType.ALARM_HUB_BUTTON_PRESS, "alarm", "button_press", id="button_press"
         ),
-        pytest.param(
-            EventType.ALARM_HUB_BUTTON_PRESS,
-            PublicEventMetadata(pin="16", status_text="alarm"),
-            "button_press",
-            {ATTR_INPUT: 17, ATTR_STATUS: "alarm"},
-            id="button_press",
-        ),
-        pytest.param(
-            EventType.ALARM_HUB_TAMPER,
-            PublicEventMetadata(pin="8", status_text="tamper"),
-            "tamper",
-            {ATTR_INPUT: 9, ATTR_STATUS: "tamper"},
-            id="tamper",
-        ),
+        pytest.param(EventType.ALARM_HUB_TAMPER, "tamper", "tamper", id="tamper"),
+    ],
+)
+async def test_alarm_hub_input_event_fires(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+    event_type: EventType,
+    status: str,
+    expected_type: str,
+) -> None:
+    """An input event fires on the entity of that input only."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    # Input 6 of the API is input 7 in Protect.
+    entity = entity_registry.async_get(INPUT_EVENT)
+    assert entity is not None
+    assert entity.unique_id == f"{ALARM_HUB_MAC}_input_6"
+
+    events = _capture_events(hass, INPUT_EVENT, HUB_EVENT, NAMED_INPUT_EVENT)
+    metadata = PublicEventMetadata(pin="6", status_text=status)
+    # Protect dispatches every change of an event; it must fire only once.
+    for change in (EventChange.STARTED, EventChange.ENDED):
+        ufp_with_alarm_hub.events_msg(
+            _hub_event(alarm_hub, event_type, metadata), change
+        )
+        await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["entity_id"] == INPUT_EVENT
+    attributes = events[0].data["new_state"].attributes
+    assert attributes["event_type"] == expected_type
+    assert attributes[ATTR_EVENT_ID] == "evt-1"
+    assert attributes[ATTR_STATUS] == status
+    assert ATTR_INPUT not in attributes
+
+
+async def test_alarm_hub_named_input_event(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """An input named in Protect uses that name for its entity."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    events = _capture_events(hass, INPUT_EVENT, HUB_EVENT, NAMED_INPUT_EVENT)
+    metadata = PublicEventMetadata(pin="24", status_text="alarm")
+    ufp_with_alarm_hub.events_msg(
+        _hub_event(alarm_hub, EventType.ALARM_HUB_MOTION, metadata),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+
+    assert [event.data["entity_id"] for event in events] == [NAMED_INPUT_EVENT]
+
+
+@pytest.mark.parametrize(
+    ("event_type", "metadata", "expected_type", "expected_status"),
+    [
         pytest.param(
             EventType.ALARM_HUB_DEVICE_TAMPER,
             PublicEventMetadata(status_text="tampered"),
             "device_tamper",
-            {ATTR_STATUS: "tampered"},
+            "tampered",
             id="device_tamper",
         ),
         pytest.param(
             EventType.ALARM_HUB_RELAY_SWITCHED,
             None,
             "relay_switched",
-            {},
+            None,
             id="relay_switched",
         ),
         pytest.param(
-            EventType.ALARM_HUB_BATTERY_LOW, None, "battery_low", {}, id="battery_low"
+            EventType.ALARM_HUB_BATTERY_LOW, None, "battery_low", None, id="battery_low"
         ),
         pytest.param(
             EventType.ALARM_HUB_BATTERY_CONNECTED,
             PublicEventMetadata(),
             "battery_connected",
-            {},
+            None,
             id="battery_connected",
         ),
     ],
@@ -453,43 +494,107 @@ async def test_alarm_hub_event_fires(
     event_type: EventType,
     metadata: PublicEventMetadata | None,
     expected_type: str,
-    expected_data: dict[str, Any],
+    expected_status: str | None,
 ) -> None:
-    """Each alarm hub event fires with its input number and status."""
+    """An event of the hub itself fires on the hub entity."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
     entity = entity_registry.async_get(HUB_EVENT)
     assert entity is not None
     assert entity.unique_id == f"{ALARM_HUB_MAC}_alarm_hub"
 
-    events: list[HAEvent] = []
+    events = _capture_events(hass, INPUT_EVENT, HUB_EVENT, NAMED_INPUT_EVENT)
+    ufp_with_alarm_hub.events_msg(
+        _hub_event(alarm_hub, event_type, metadata), EventChange.STARTED
+    )
+    await hass.async_block_till_done()
 
-    @callback
-    def _capture(event: HAEvent) -> None:
-        events.append(event)
+    assert len(events) == 1
+    assert events[0].data["entity_id"] == HUB_EVENT
+    attributes = events[0].data["new_state"].attributes
+    assert attributes["event_type"] == expected_type
+    assert attributes.get(ATTR_STATUS) == expected_status
+    assert ATTR_INPUT not in attributes
 
-    unsub = async_track_state_change_event(hass, HUB_EVENT, _capture)
-    # Protect dispatches every change of an event; it must fire only once.
-    for change in (EventChange.STARTED, EventChange.ENDED):
-        ufp_with_alarm_hub.events_msg(
-            _hub_event(alarm_hub, event_type, metadata), change
+
+async def test_alarm_hub_emergency_input_fires_on_hub(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """The emergency input has no numbered terminal and no entity of its own."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "event", DOMAIN, f"{ALARM_HUB_MAC}_input_32"
         )
-        await hass.async_block_till_done()
-    unsub()
+        is None
+    )
+
+    events = _capture_events(hass, HUB_EVENT)
+    metadata = PublicEventMetadata(pin="32", status_text="alarm")
+    ufp_with_alarm_hub.events_msg(
+        _hub_event(alarm_hub, EventType.ALARM_HUB_BUTTON_PRESS, metadata),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
 
     assert len(events) == 1
     attributes = events[0].data["new_state"].attributes
-    assert attributes["event_type"] == expected_type
-    assert attributes[ATTR_EVENT_ID] == "evt-1"
-    for key in (ATTR_INPUT, ATTR_STATUS):
-        assert attributes.get(key) == expected_data.get(key)
+    assert attributes["event_type"] == "button_press"
+    assert ATTR_INPUT not in attributes
+
+
+async def test_alarm_hub_disabled_input_fires_on_hub(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A disabled input has no entity; its events name the input on the hub."""
+    alarm_hub.alarm_hub["input"]["24"]["enable"] = "off"
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    assert hass.states.get(NAMED_INPUT_EVENT) is None
+
+    events = _capture_events(hass, HUB_EVENT)
+    metadata = PublicEventMetadata(pin="24", status_text="alarm")
+    ufp_with_alarm_hub.events_msg(
+        _hub_event(alarm_hub, EventType.ALARM_HUB_MOTION, metadata),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    attributes = events[0].data["new_state"].attributes
+    assert attributes["event_type"] == "motion"
+    assert attributes[ATTR_INPUT] == 25
+
+
+async def test_alarm_hub_inputs_without_terminal_list(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """Without a terminal list every enabled input gets an entity."""
+    del alarm_hub.alarm_hub["connector"]
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "event", DOMAIN, f"{ALARM_HUB_MAC}_input_32"
+        )
+        is not None
+    )
 
 
 async def test_alarm_hub_event_covers_all_hub_event_types(
     hass: HomeAssistant,
     ufp_with_alarm_hub: MockUFPFixture,
 ) -> None:
-    """The event entity declares one type per alarm hub event of the library."""
+    """The hub entity declares one type per alarm hub event of the library."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
     hub_event_types = [

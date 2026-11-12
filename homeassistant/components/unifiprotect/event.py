@@ -12,6 +12,7 @@ from uiprotect.data import (
     Fob,
     LinkStation,
     ModelType,
+    OnOffState,
     ProtectAdoptableDeviceModel,
     PublicCamera,
     PublicDeviceModel,
@@ -690,7 +691,7 @@ class ProtectFobButtonEventEntity(
         self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
 
 
-_ALARM_HUB_EVENT_TYPES: dict[EventType, str] = {
+_ALARM_HUB_INPUT_EVENT_TYPES: dict[EventType, str] = {
     EventType.ALARM_HUB_MOTION: "motion",
     EventType.ALARM_HUB_ENTRY_OPENED: "entry_opened",
     EventType.ALARM_HUB_ENTRY_CLOSED: "entry_closed",
@@ -698,6 +699,10 @@ _ALARM_HUB_EVENT_TYPES: dict[EventType, str] = {
     EventType.ALARM_HUB_GLASS_BREAK: "glass_break",
     EventType.ALARM_HUB_BUTTON_PRESS: "button_press",
     EventType.ALARM_HUB_TAMPER: "tamper",
+}
+
+_ALARM_HUB_EVENT_TYPES: dict[EventType, str] = {
+    **_ALARM_HUB_INPUT_EVENT_TYPES,
     EventType.ALARM_HUB_DEVICE_TAMPER: "device_tamper",
     EventType.ALARM_HUB_RELAY_SWITCHED: "relay_switched",
     EventType.ALARM_HUB_BATTERY_LOW: "battery_low",
@@ -711,21 +716,55 @@ _ALARM_HUB_EVENT_DESCRIPTION = EventEntityDescription(
 )
 
 
+def _alarm_hub_terminals(hub: LinkStation) -> set[int] | None:
+    """Return the inputs that have a numbered terminal, if the hub lists them.
+
+    The emergency input has its own connector and no number.
+    """
+    connector = (hub.alarm_hub or {}).get("connector")
+    terminals = connector.get("tb") if isinstance(connector, dict) else None
+    if not isinstance(terminals, dict):
+        return None
+    return {int(terminal) for terminal in terminals if terminal.isdecimal()}
+
+
+def _alarm_hub_event_data(event: ProtectEvent) -> dict[str, Any]:
+    """Return the event id and the reported status of an alarm hub event."""
+    event_data: dict[str, Any] = {ATTR_EVENT_ID: event.id}
+    if (metadata := event.metadata) is not None and metadata.status_text is not None:
+        event_data[ATTR_STATUS] = metadata.status_text
+    return event_data
+
+
+def _alarm_hub_event_input(event: ProtectEvent) -> int | None:
+    """Return the input an alarm hub event belongs to."""
+    if (
+        (metadata := event.metadata) is None
+        or (pin := metadata.pin) is None
+        or not pin.isdecimal()
+    ):
+        return None
+    return int(pin)
+
+
 class ProtectAlarmHubEventEntity(
     ProtectFireOnceMixin, ProtectPublicEventSubscriberEntity, EventEntity
 ):
-    """A UniFi Protect alarm hub event entity.
+    """The event entity of a UniFi Protect alarm hub itself.
 
-    Each hub exposes one event entity that fires every alarm hub event, with
-    the input and its status as event data.
+    Fires the events of the hub and those of inputs without an entity of
+    their own.
     """
 
     _ufp_uses_public = True
     _ufp_requires_events_ws = True
 
-    def __init__(self, data: ProtectData, hub: LinkStation) -> None:
+    def __init__(
+        self, data: ProtectData, hub: LinkStation, input_ids: frozenset[int]
+    ) -> None:
         """Initialize the alarm hub event entity."""
         super().__init__(data, hub, _ALARM_HUB_EVENT_DESCRIPTION)
+        self._input_ids = input_ids
 
     @override
     def _async_public_event_subscriptions(
@@ -737,14 +776,85 @@ class ProtectAlarmHubEventEntity(
 
     @callback
     def _async_hub_event(self, event: ProtectEvent) -> None:
-        event_data: dict[str, Any] = {ATTR_EVENT_ID: event.id}
-        if (metadata := event.metadata) is not None:
-            if (pin := metadata.pin) is not None and pin.isdecimal():
-                # Protect numbers the inputs from 1, the API from 0.
-                event_data[ATTR_INPUT] = int(pin) + 1
-            if metadata.status_text is not None:
-                event_data[ATTR_STATUS] = metadata.status_text
+        input_id = _alarm_hub_event_input(event)
+        if input_id in self._input_ids:
+            return
+        event_data = _alarm_hub_event_data(event)
+        hub = self._ufp_public_obj
+        terminals = _alarm_hub_terminals(hub) if isinstance(hub, LinkStation) else None
+        if input_id is not None and (terminals is None or input_id in terminals):
+            # Protect numbers the inputs from 1, the API from 0.
+            event_data[ATTR_INPUT] = input_id + 1
         self._fire_once(event, _ALARM_HUB_EVENT_TYPES[event.type], event_data)
+
+
+class ProtectAlarmHubInputEventEntity(
+    ProtectFireOnceMixin, ProtectPublicEventSubscriberEntity, EventEntity
+):
+    """The event entity of one input of a UniFi Protect alarm hub."""
+
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
+
+    def __init__(
+        self, data: ProtectData, hub: LinkStation, input_id: int, name: str | None
+    ) -> None:
+        """Initialize the alarm hub input event entity."""
+        description = EventEntityDescription(
+            key=f"input_{input_id}",
+            translation_key="alarm_hub_input",
+            event_types=list(_ALARM_HUB_INPUT_EVENT_TYPES.values()),
+        )
+        super().__init__(data, hub, description)
+        self._input_id = input_id
+        # Protect numbers the inputs from 1, the API from 0.
+        self._attr_translation_placeholders = {"input": str(input_id + 1)}
+        if name:
+            # Device-provided names take precedence over the translated default.
+            self._attr_name = name
+
+    @override
+    def _async_public_event_subscriptions(
+        self,
+    ) -> Iterable[tuple[EventType, Callable[[ProtectEvent], None]]]:
+        return (
+            (event_type, self._async_input_event)
+            for event_type in _ALARM_HUB_INPUT_EVENT_TYPES
+        )
+
+    @callback
+    def _async_input_event(self, event: ProtectEvent) -> None:
+        if _alarm_hub_event_input(event) != self._input_id:
+            return
+        self._fire_once(
+            event,
+            _ALARM_HUB_INPUT_EVENT_TYPES[event.type],
+            _alarm_hub_event_data(event),
+        )
+
+
+@callback
+def _async_alarm_hub_event_entities(
+    data: ProtectData, hub: LinkStation
+) -> list[ProtectDeviceEntity]:
+    """Build the event entities of one alarm hub.
+
+    Every enabled input with a numbered terminal gets its own entity.
+    """
+    terminals = _alarm_hub_terminals(hub)
+    inputs = {
+        input_id: hub_input
+        for input_id, hub_input in hub.alarm_hub_inputs.items()
+        if hub_input.enable is OnOffState.ON
+        and (terminals is None or input_id in terminals)
+    }
+    return [
+        ProtectAlarmHubEventEntity(data, hub, frozenset(inputs)),
+        *(
+            ProtectAlarmHubInputEventEntity(data, hub, input_id, hub_input.name)
+            for input_id, hub_input in inputs.items()
+        ),
+    ]
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -952,7 +1062,7 @@ async def async_setup_entry(
         if isinstance(device, Fob):
             async_add_entities([ProtectFobButtonEventEntity(data, device)])
         elif isinstance(device, LinkStation) and device.is_alarm_hub:
-            async_add_entities([ProtectAlarmHubEventEntity(data, device)])
+            async_add_entities(_async_alarm_hub_event_entities(data, device))
         elif isinstance(device, PublicCamera):
             async_add_entities(_async_public_event_entities(data, device))
         elif isinstance(device, PublicSensor):
@@ -977,8 +1087,9 @@ async def async_setup_entry(
                     for fob in api.public_bootstrap.fobs.values()
                 ),
                 *(
-                    ProtectAlarmHubEventEntity(data, hub)
+                    entity
                     for hub in api.public_bootstrap.alarm_hubs.values()
+                    for entity in _async_alarm_hub_event_entities(data, hub)
                 ),
             ]
         )

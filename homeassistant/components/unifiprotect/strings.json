@@ -349,7 +349,23 @@
               "motion": "Motion",
               "relay_switched": "Relay switched",
               "smoke": "Smoke",
-              "tamper": "Input tampered"
+              "tamper": "Tampered"
+            }
+          }
+        }
+      },
+      "alarm_hub_input": {
+        "name": "Input {input}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "button_press": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::button_press%]",
+              "entry_closed": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::entry_closed%]",
+              "entry_opened": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::entry_opened%]",
+              "glass_break": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::glass_break%]",
+              "motion": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::motion%]",
+              "smoke": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::smoke%]",
+              "tamper": "[%key:component::unifiprotect::entity::event::alarm_hub::state_attributes::event_type::state::tamper%]"
             }
           }
         }

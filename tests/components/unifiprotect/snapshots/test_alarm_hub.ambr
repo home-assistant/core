@@ -29,6 +29,77 @@
     'via_device_id': <DeviceEntry identifiers=[('unifiprotect', 'A1E00C826924')]>,
   })
 # ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_24_hour_tamper-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub 24 Hour Tamper',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.alarm_hub_24_hour_tamper',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_24_hour_tamper]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.alarm_hub_24_hour_tamper',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': '24 Hour Tamper',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '24 Hour Tamper',
+    'platform': 'unifiprotect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_hub_input',
+    'unique_id': 'AABBCCDDEEFF_input_16',
+    'unit_of_measurement': None,
+  })
+# ---
 # name: test_alarm_hub_device_and_entities[event.alarm_hub_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -105,6 +176,361 @@
     'supported_features': 0,
     'translation_key': 'alarm_hub',
     'unique_id': 'AABBCCDDEEFF_alarm_hub',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_hallway-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Hallway',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.alarm_hub_hallway',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_hallway]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.alarm_hub_hallway',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hallway',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hallway',
+    'platform': 'unifiprotect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_hub_input',
+    'unique_id': 'AABBCCDDEEFF_input_24',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_input_26-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Input 26',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.alarm_hub_input_26',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_input_26]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.alarm_hub_input_26',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Input 26',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Input 26',
+    'platform': 'unifiprotect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_hub_input',
+    'unique_id': 'AABBCCDDEEFF_input_25',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_input_7-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Input 7',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.alarm_hub_input_7',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_input_7]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.alarm_hub_input_7',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Input 7',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Input 7',
+    'platform': 'unifiprotect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_hub_input',
+    'unique_id': 'AABBCCDDEEFF_input_6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_kitchen_smoke-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Kitchen Smoke',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.alarm_hub_kitchen_smoke',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_kitchen_smoke]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.alarm_hub_kitchen_smoke',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Kitchen Smoke',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Kitchen Smoke',
+    'platform': 'unifiprotect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_hub_input',
+    'unique_id': 'AABBCCDDEEFF_input_4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_living_room_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Living Room Window',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.alarm_hub_living_room_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_alarm_hub_device_and_entities[event.alarm_hub_living_room_window]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'motion',
+        'entry_opened',
+        'entry_closed',
+        'smoke',
+        'glass_break',
+        'button_press',
+        'tamper',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', 'aa:bb:cc:dd:ee:ff')]>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.alarm_hub_living_room_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Living Room Window',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Living Room Window',
+    'platform': 'unifiprotect',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_hub_input',
+    'unique_id': 'AABBCCDDEEFF_input_8',
     'unit_of_measurement': None,
   })
 # ---
