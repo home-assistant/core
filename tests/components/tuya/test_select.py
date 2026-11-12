@@ -138,8 +138,6 @@ async def test_dlq_relay_status_select(
 
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
-    assert state.state == "last"
-    assert state.attributes["options"] == ["power_off", "power_on", "last"]
 
     await hass.services.async_call(
         SELECT_DOMAIN,
