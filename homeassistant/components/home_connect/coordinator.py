@@ -421,7 +421,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 # Also avoid redundant program fetches if the
                 # program hasn't changed since the last fetch.
                 if program_update_event_value:
-                    await self.update_options(program_update_event_value[1])
+                    await self.update_options(
+                        program_update_event_value[1],
+                        frozenset(event.key for event in event_message.data.items),
+                    )
                     self.last_fetched_program = program_update_event_value
                 self._call_event_listener(event_message)
 
@@ -584,7 +587,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         # When the active program is cleared, refresh options from the selected
         # program so the UI doesn't keep showing the completed program's options.
         # Wait for READY; earlier requests fail.
-        await self.update_options(program)
+        await self.update_options(
+            program, frozenset(event.key for event in event_message.data.items)
+        )
         self.last_fetched_program = (
             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
             program,
@@ -715,6 +720,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         programs = []
         events = {}
         options = {}
+        options_definitive = False
         if appliance.type in APPLIANCES_WITH_PROGRAMS:  # pylint: disable=too-many-nested-blocks
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
@@ -728,6 +734,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 )
             else:
                 programs.extend(all_programs.programs)
+                options_definitive = True
                 current_program_key = None
                 program_options = None
                 for program, event_key in (
@@ -762,7 +769,17 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         self.last_fetched_program = (event_key, current_program_key)
 
                 if current_program_key:
-                    options = await self.get_options_definitions(current_program_key)
+                    fetched_options = await self.get_options_definitions(
+                        current_program_key
+                    )
+                    if fetched_options is None:
+                        # The fetch failed, so the current option set is
+                        # unknown; keep the previous definitions and cached
+                        # events instead of pruning live values.
+                        options = dict(self.data.options)
+                        options_definitive = False
+                    else:
+                        options = fetched_options
                     for option in program_options or []:
                         option_event_key = EventKey(option.key)
                         events[option_event_key] = Event(
@@ -800,12 +817,23 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 status=status,
             )
         )
+        if options_definitive:
+            # The refreshed program is authoritative, so events cached while
+            # the appliance was unreachable can be pruned safely. Listeners
+            # are not called here: a refresh notifies every listener anyway.
+            self._prune_stale_option_events(notify=False)
 
     async def get_options_definitions(
         self, program_key: ProgramKey
-    ) -> dict[OptionKey, ProgramDefinitionOption]:
-        """Get options with constraints for appliance."""
+    ) -> dict[OptionKey, ProgramDefinitionOption] | None:
+        """Get options with constraints for appliance.
+
+        Returns None when the definitions could not be fetched, so callers
+        can keep the previous state instead of treating it as an empty set.
+        """
         if program_key is ProgramKey.UNKNOWN:
+            # An unresolvable program is not a fetch failure; it genuinely
+            # has no options.
             return {}
         try:
             return {
@@ -825,14 +853,54 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 self.data.info.ha_id,
                 error,
             )
-            return {}
+            return None
 
-    async def update_options(self, program_key: ProgramKey) -> None:
-        """Update options for appliance."""
-        options = self.data.options
+    def _prune_stale_option_events(
+        self,
+        keep_event_keys: frozenset[EventKey] = frozenset(),
+        notify: bool = True,
+    ) -> None:
+        """Drop events for options that are no longer part of the program.
+
+        Only keys used by option entities are pruned, so status events like
+        program progress are kept. BaseProgram is kept too: it is not an
+        option event and is needed to resolve favorite programs.
+        Events in keep_event_keys are preserved, e.g. events that arrived in
+        the same message that triggered the update.
+        """
+        from .number import NUMBER_OPTIONS  # noqa: PLC0415
+        from .select import PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS  # noqa: PLC0415
+        from .switch import SWITCH_OPTIONS  # noqa: PLC0415
+
         events = self.data.events
-        options_to_notify = options.copy()
-        options.clear()
+        known_option_keys = {
+            description.key
+            for description in (
+                *PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS,
+                *NUMBER_OPTIONS,
+                *SWITCH_OPTIONS,
+            )
+        }
+        for event_key in list(events):
+            option_key = OptionKey(event_key)
+            if (
+                event_key in keep_event_keys
+                or option_key in self.data.options
+                or option_key not in known_option_keys
+            ):
+                continue
+            del events[event_key]
+            if notify:
+                for listener in self._get_listeners_for_event_key(event_key):
+                    listener()
+
+    async def update_options(
+        self,
+        program_key: ProgramKey,
+        keep_event_keys: frozenset[EventKey] = frozenset(),
+    ) -> None:
+        """Update options for appliance."""
+        events = self.data.events
         if (
             program_key in FAVORITE_PROGRAMS
             and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
@@ -844,38 +912,18 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         else:
             resolved_program_key = program_key
 
-        options.update(await self.get_options_definitions(resolved_program_key))
+        new_options = await self.get_options_definitions(resolved_program_key)
+        if new_options is None:
+            # The fetch failed, so the current option set is unknown; keep the
+            # previous definitions and cached events until the next update.
+            return
 
-        # Drop events for options that are no longer part of the program,
-        # including options that were only ever reported by events. Only
-        # keys used by option entities are pruned, so status events like
-        # program progress are kept. BaseProgram is kept too: it is not an
-        # option event and is needed to resolve favorite programs.
-        from .number import NUMBER_OPTIONS  # noqa: PLC0415
-        from .select import PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS  # noqa: PLC0415
-        from .switch import SWITCH_OPTIONS  # noqa: PLC0415
+        options = self.data.options
+        options_to_notify = options.copy()
+        options.clear()
+        options.update(new_options)
 
-        known_option_keys = {
-            description.key
-            for description in (
-                *PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS,
-                *NUMBER_OPTIONS,
-                *SWITCH_OPTIONS,
-            )
-        }
-        event_keys_to_check = {EventKey(key) for key in options_to_notify}
-        event_keys_to_check.update(events)
-        for event_key in event_keys_to_check:
-            option_key = OptionKey(event_key)
-            if (
-                option_key not in known_option_keys
-                or option_key in options
-                or event_key not in events
-            ):
-                continue
-            del events[event_key]
-            for listener in self._get_listeners_for_event_key(event_key):
-                listener()
+        self._prune_stale_option_events(keep_event_keys)
 
         for option in options.values():
             option_event_key = EventKey(option.key)
