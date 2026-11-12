@@ -318,11 +318,11 @@ async def test_refresh_known_errors(
     assert err_msg[2] in caplog.text
 
 
-async def test_refresh_device_unavailable(
+async def test_refresh_update_failed_unreachable(
     crd: update_coordinator.DataUpdateCoordinator[int],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test device unavailable is logged once at info level."""
+    """Test UpdateFailedUnreachable is logged once at info level."""
     await crd.async_refresh()
     caplog.clear()
 
