@@ -1,6 +1,5 @@
 """Test the air-Q coordinator."""
 
-import logging
 from unittest.mock import AsyncMock
 
 import pytest
@@ -42,7 +41,6 @@ async def test_logging_in_coordinator_first_update_data(
     which is actually necessary is 'name', and its absence is checked and logged,
     as well as its being set.
     """
-    caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
 
     # check that the name _is_ missing
@@ -78,7 +76,6 @@ async def test_logging_in_coordinator_subsequent_update_data(
     instead of actually calling the _async_update_data, which would populate the log
     with the messages we want to see not being repeated.
     """
-    caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
     coordinator.device_info.name = TEST_DEVICE_INFO["name"]
     coordinator.device_info.model = TEST_DEVICE_INFO["model"]
@@ -105,7 +102,6 @@ async def test_logging_when_warming_up_sensor_present(
     mock_airq: AsyncMock,
 ) -> None:
     """Test that warming up sensors are logged."""
-    caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
     mock_airq.get_latest_data.return_value = TEST_DEVICE_DATA | {
         "Status": STATUS_WARMUP
