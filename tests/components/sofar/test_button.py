@@ -6,12 +6,13 @@ from unittest.mock import patch
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,8 +25,6 @@ from . import (
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _setup(
@@ -101,30 +100,39 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
     assert connection.for_unit(1).holding[register] == 1
 
 
+@pytest.mark.parametrize(
+    ("serial", "model", "seed"),
+    [
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, id="pv"),
+        pytest.param(
+            MOCK_HYBRID_SERIAL, MOCK_HYBRID_MODEL, seed_hybrid_inverter, id="hybrid"
+        ),
+    ],
+)
 async def test_rtc_sync_reported_to_hass(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    serial: str,
+    model: str,
+    seed: Callable[[MockModbusUnit], None],
 ) -> None:
     """Test the RTC sync result reaches its sensor after the refresh."""
     await _setup(
-        hass,
-        MOCK_HYBRID_SERIAL,
-        MOCK_HYBRID_MODEL,
-        seed_hybrid_inverter,
-        platforms=(Platform.BUTTON, Platform.SENSOR),
+        hass, serial, model, seed, platforms=(Platform.BUTTON, Platform.SENSOR)
     )
     button_id = entity_registry.async_get_entity_id(
-        BUTTON_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_rtc_sync"
+        BUTTON_DOMAIN, DOMAIN, f"{serial}_rtc_sync"
     )
     result_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_sync_rtc_result"
+        SENSOR_DOMAIN, DOMAIN, f"{serial}_sync_rtc_result"
     )
     assert button_id is not None
     assert result_id is not None
@@ -133,8 +141,8 @@ async def test_rtc_sync_reported_to_hass(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: button_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: button_id},
         blocking=True,
     )
 
@@ -156,7 +164,7 @@ async def test_press_modbus_error(
     with pytest.raises(ModbusError, match="busy"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )

@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from xknx.core import XknxConnectionState
 from xknx.devices.light import Light as XknxLight
 
@@ -28,8 +29,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_fire_time_changed
 
 
 async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:

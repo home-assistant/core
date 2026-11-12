@@ -6,6 +6,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import (
     CONF_PAYLOAD_LENGTH,
@@ -25,9 +27,6 @@ from homeassistant.core import HomeAssistant
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_button_simple(

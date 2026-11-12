@@ -7,6 +7,7 @@ import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
 
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MODULE, setup_integration
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @dataclass
@@ -57,6 +56,8 @@ class MockPyViCare:
                     service,
                     "Vitovalor"
                     if fixture.data_file.endswith("VitoValor.json")
+                    else "Vitoligno300C"
+                    if fixture.data_file.endswith("Vitoligno300C.json")
                     else f"model{idx}",
                     "Online" if fixture.online else "Offline",
                     roles=list(fixture.roles),
@@ -199,5 +200,5 @@ async def mock_vicare_room_sensors(
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
-    with patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry:
+    with patch(f"{MODULE}.async_setup_entry", return_value=None) as mock_setup_entry:
         yield mock_setup_entry

@@ -6,6 +6,10 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -43,8 +47,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 
 async def test_all_entities(

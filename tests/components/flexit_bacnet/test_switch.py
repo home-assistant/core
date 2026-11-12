@@ -4,21 +4,16 @@ from unittest.mock import AsyncMock
 
 from flexit_bacnet import DecodingError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "switch.device_name_electric_heater"
 
@@ -55,8 +50,8 @@ async def test_switches_implementation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -69,8 +64,8 @@ async def test_switches_implementation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -84,8 +79,8 @@ async def test_switches_implementation(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -97,8 +92,8 @@ async def test_switches_implementation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -110,8 +105,8 @@ async def test_switches_implementation(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -123,8 +118,8 @@ async def test_switches_implementation(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 

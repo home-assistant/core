@@ -26,7 +26,7 @@ _PLATFORMS = (Platform.SENSOR,)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> None:
     """Set up S3 from a config entry."""
 
     data = cast(dict, entry.data)
@@ -79,14 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
     coordinator = entry.runtime_data
     await coordinator.client.__aexit__(None, None, None)
-    return True

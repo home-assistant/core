@@ -5,9 +5,14 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.enphase_envoy.const import Platform
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
@@ -15,14 +20,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 SLEEP = "button.acb_1234_sleep"
 WAKE = "button.acb_1234_wake"
@@ -79,8 +82,8 @@ async def test_button_sleep(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: SLEEP},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: SLEEP},
         blocking=True,
     )
     # Default SOC band is derived from the battery configured with sleep thresholds
@@ -104,8 +107,8 @@ async def test_button_wake(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: WAKE},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: WAKE},
         blocking=True,
     )
     mock_envoy.clear_acb_sleep.assert_awaited_once_with(ALL_SERIALS)
@@ -135,8 +138,8 @@ async def test_button_sleep_uses_selected_soc(
     )
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: SLEEP},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: SLEEP},
         blocking=True,
     )
     mock_envoy.set_acb_sleep.assert_awaited_once_with(
@@ -161,8 +164,8 @@ async def test_button_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: SLEEP},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: SLEEP},
             blocking=True,
         )
 
@@ -181,8 +184,8 @@ async def test_button_value_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: SLEEP},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: SLEEP},
             blocking=True,
         )
 

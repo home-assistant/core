@@ -1,5 +1,6 @@
 """Support for esphome devices."""
 
+import dataclasses
 import logging
 
 from aioesphomeapi import APIConnectionError
@@ -10,11 +11,11 @@ from homeassistant.components.usb import (
     SerialDevice,
     USBDevice,
     async_register_serial_port_scanner,
+    usb_serial_device_from_port,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -24,7 +25,6 @@ from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .manager import (
-    DEVICE_CONFLICT_ISSUE_FORMAT,
     ESPHomeManager,
     async_create_api_client,
     async_get_manufacturer_model,
@@ -53,19 +53,40 @@ def _async_scan_serial_ports(
         if device_info is None:
             continue
 
-        manufacturer, model = async_get_manufacturer_model(device_info)
+        identities = entry_data.serial_proxy_identities
 
-        ports.extend(
-            SerialDevice(
-                device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
-                serial_number=(
-                    device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
-                ),
-                manufacturer=manufacturer,
-                description=f"{model} ({proxy.name})",
+        for instance, proxy in enumerate(device_info.serial_proxies):
+            identity = identities.get(instance)
+            url = serial_proxy.build_port_url(entry.entry_id, proxy.name, identity)
+
+            if url is None:
+                continue
+
+            if not serial_proxy.has_identity(identity):
+                manufacturer, model = async_get_manufacturer_model(device_info)
+
+                ports.append(
+                    SerialDevice(
+                        device=str(url),
+                        serial_number=(
+                            device_info.mac_address.replace(":", "")
+                            + "-"
+                            + slugify(proxy.name)
+                        ),
+                        manufacturer=manufacturer,
+                        description=f"{model} ({proxy.name})",
+                    )
+                )
+                continue
+
+            port_info = serial_proxy.identity_port_info(identity)
+            ports.append(
+                usb_serial_device_from_port(
+                    dataclasses.replace(
+                        port_info, device=str(url), resolved_device=str(url)
+                    )
+                )
             )
-            for proxy in device_info.serial_proxies
-        )
 
     return ports
 
@@ -87,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Set up the esphome component."""
     host: str = entry.data[CONF_HOST]
     password: str | None = entry.data[CONF_PASSWORD]
@@ -117,26 +138,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
     )
     await manager.async_start()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Unload an esphome config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data.loaded_platforms
     )
-    if unload_ok:
-        await cleanup_instance(entry)
-    return unload_ok
+    await cleanup_instance(hass, entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Remove an esphome config entry."""
     if bluetooth_mac_address := entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS):
         async_remove_scanner(hass, bluetooth_mac_address.upper())
-    async_delete_issue(
-        hass, DOMAIN, DEVICE_CONFLICT_ISSUE_FORMAT.format(entry.entry_id)
-    )
     await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()
 
     await _async_clear_dynamic_encryption_key(hass, entry)

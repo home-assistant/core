@@ -3,6 +3,13 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+    setup_test_component_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -16,14 +23,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import MockBinarySensor
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_get_device_automation_capabilities,
-    async_get_device_automations,
-    setup_test_component_platform,
-)
 
 
 async def test_get_triggers(

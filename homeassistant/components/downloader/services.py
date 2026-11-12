@@ -42,7 +42,11 @@ class DownloaderServiceArgument(StrEnum):
 async def download_file(service: ServiceCall) -> None:
     """Download file specified in the URL."""
 
-    entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
+    if not (entries := service.hass.config_entries.async_loaded_entries(DOMAIN)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="not_loaded"
+        )
+    entry = entries[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
     url: str = service.data[DownloaderServiceArgument.URL]
     subdir: str | None = service.data.get(DownloaderServiceArgument.SUBDIR)

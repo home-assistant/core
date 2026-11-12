@@ -15,7 +15,6 @@ from tesla_powerwall import (
 from yarl import URL
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -150,7 +149,7 @@ class PowerwallDataManager:
                 break
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> None:
     """Set up Tesla Powerwall from a config entry."""
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
@@ -262,8 +261,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def async_migrate_entity_unique_ids(
@@ -451,6 +448,6 @@ def async_last_update_was_successful(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

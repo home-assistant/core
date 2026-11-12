@@ -21,7 +21,7 @@ type TonewinnerConfigEntry = ConfigEntry[TonewinnerReceiver]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -> None:
     """Set up Tonewinner from a config entry."""
     port = entry.data[CONF_SERIAL_PORT]
 
@@ -38,11 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -
     entry.runtime_data = receiver
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.disconnect()

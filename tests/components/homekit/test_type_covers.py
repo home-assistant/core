@@ -1,5 +1,7 @@
 """Test different accessory types: Covers."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -39,8 +41,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_mock_service
 
 
 async def test_garage_door_open_close(

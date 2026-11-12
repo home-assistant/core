@@ -19,7 +19,10 @@ from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
     async_register_firmware_info_provider,
 )
-from homeassistant.components.usb import usb_device_from_path
+from homeassistant.components.usb import (
+    async_find_moved_serial_port,
+    usb_device_from_path,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_TYPE,
@@ -51,6 +54,7 @@ from .helpers import (
     SIGNAL_ADD_ENTITIES,
     HAZHAData,
     ZHAGatewayProxy,
+    async_update_device_path,
     create_zha_config,
     get_config_entry_unique_id,
     get_zha_data,
@@ -118,6 +122,10 @@ CENTICELSIUS = "C-100"
 # Internal definitions
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
@@ -139,7 +147,7 @@ def _raise_if_port_in_use(hass: HomeAssistant, device_path: str) -> None:
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
@@ -158,6 +166,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         new_data[CONF_DEVICE][CONF_DEVICE_PATH] = usb_device.device
         hass.config_entries.async_update_entry(config_entry, data=new_data)
         device_path = usb_device.device
+
+    # The radio may have moved between the host and a serial proxy, or between proxies
+    if (new_path := async_find_moved_serial_port(hass, device_path)) is not None:
+        _LOGGER.info("Following ZHA device path from %s to %s", device_path, new_path)
+        async_update_device_path(hass, config_entry, new_path)
+        device_path = new_path
 
     ha_zha_data: HAZHAData = get_zha_data(hass)
     ha_zha_data.config_entry = config_entry
@@ -217,7 +231,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ):
             try:
                 # Ignore all exceptions during probing, they shouldn't halt setup
-                if await warn_on_wrong_silabs_firmware(hass, device_path):
+                if await warn_on_wrong_silabs_firmware(
+                    hass, device_path, config_entry.entry_id
+                ):
                     raise ConfigEntryError("Incorrect firmware installed") from exc
             except AlreadyRunningEZSP as ezsp_exc:
                 raise ConfigEntryNotReady from ezsp_exc
@@ -267,7 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     @callback
     def update_config(event: Event) -> None:
         """Handle Core config update."""
-        zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+        zha_gateway.update_local_timezone(ZoneInfo(hass.config.time_zone))
         zha_gateway.config.country_code = hass.config.country
 
     config_entry.async_on_unload(
@@ -284,13 +300,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload ZHA config entry."""
-    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
@@ -305,10 +319,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         for platform in PLATFORMS:
             del ha_zha_data.platforms[platform]
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -394,4 +406,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-    return True

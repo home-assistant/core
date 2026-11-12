@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, override
 
+from pyportainer.models.docker import DockerVolume
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -12,7 +13,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
-    DockerVolume,
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
@@ -162,7 +162,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}"
-            f"_{self.device_name}_{entity_description.key}"
+            f"_{self.endpoint_id}_{self.device_name}_{entity_description.key}"
         )
 
     @property

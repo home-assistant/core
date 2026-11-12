@@ -1,6 +1,5 @@
 """Config flow for Midea."""
 
-from functools import partial
 from operator import itemgetter
 from typing import Any, override
 
@@ -55,19 +54,22 @@ from .device_catalog import MIDEA_DEVICE_NAMES
 
 DEFAULT_CLOUD: str = get_default_cloud()
 
+
+def _subtype_int(value: object, default: int = 0) -> int:
+    """Coerce a cloud model number into the integer subtype midealocal expects."""
+    if isinstance(value, (int, str)):
+        try:
+            return int(value)
+        except ValueError:
+            return default
+    return default
+
+
 LOGIN_MODE_PRESET = "preset"
 LOGIN_MODE_ACCOUNT = "account"
 
 
-def _connect_and_close(dm: MideaDevice) -> bool:
-    """Connect to the device, always closing the socket afterwards."""
-    try:
-        return dm.connect(check_protocol=True)
-    finally:
-        dm.close_socket()
-
-
-def _select_and_connect(
+async def _async_select_and_connect(
     *,
     device_id: int,
     device_type: int,
@@ -79,7 +81,7 @@ def _select_and_connect(
     model: str,
     subtype: int,
 ) -> bool | None:
-    """Select the device implementation and connect to it in a single executor job.
+    """Select the device implementation and connect to it.
 
     Returns None if there is no device implementation for device_type.
     """
@@ -98,7 +100,10 @@ def _select_and_connect(
     )
     if dm is None:
         return None
-    return _connect_and_close(dm)
+    try:
+        return await dm.connect(check_protocol=True)
+    finally:
+        await dm.close_socket()
 
 
 class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -333,7 +338,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         # get all devices list
-        all_devices = await self.hass.async_add_executor_job(discover)
+        all_devices = await discover()
         # available devices exist
         if len(all_devices) > 0:
             table = (
@@ -372,8 +377,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 ip_address = user_input[CONF_IP_ADDRESS]
             # use midea-local discover() to get devices list with ip_address
-            self.devices = await self.hass.async_add_executor_job(
-                lambda: discover(list(self.supports.keys()), ip_address=ip_address),
+            self.devices = await discover(
+                list(self.supports.keys()), ip_address=ip_address
             )
             self.available_device = {}
             for device_id, device in self.devices.items():
@@ -475,18 +480,17 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         error = "connect_error"
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
-            connected = await self.hass.async_add_executor_job(
-                partial(
-                    _select_and_connect,
-                    device_id=appliance_id,
-                    device_type=device.get(CONF_TYPE),
-                    ip_address=device.get(CONF_IP_ADDRESS),
-                    port=device.get(CONF_PORT),
-                    token=value["token"],
-                    key=value["key"],
-                    device_protocol=ProtocolVersion.V3,
-                    model=device.get(CONF_MODEL),
-                    subtype=device.get(CONF_SUBTYPE, 0),
+            connected = await _async_select_and_connect(
+                device_id=appliance_id,
+                device_type=device.get(CONF_TYPE),
+                ip_address=device.get(CONF_IP_ADDRESS),
+                port=device.get(CONF_PORT),
+                token=value["token"],
+                key=value["key"],
+                device_protocol=ProtocolVersion.V3,
+                model=device.get(CONF_MODEL),
+                subtype=_subtype_int(
+                    device.get(CONF_SUBTYPE) or self.found_device.get(CONF_SUBTYPE)
                 ),
             )
             if connected is None:
@@ -530,6 +534,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS),
                 CONF_PORT: device.get(CONF_PORT),
                 CONF_MODEL: device.get(CONF_MODEL),
+                CONF_SUBTYPE: device.get(CONF_SUBTYPE, 0),
                 CONF_MAC: device.get(CONF_MAC),
                 CONF_SN: device.get(CONF_SN),
             }
@@ -545,7 +550,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     # set subtype with model_number
                     if cloud_name := device_info.get("name"):
                         self.found_device[CONF_NAME] = cloud_name
-                    self.found_device[CONF_SUBTYPE] = device_info.get("model_number")
+                    # LAN discovery reports the subtype for most devices;
+                    # the cloud model number is only a fallback.
+                    if not self.found_device.get(CONF_SUBTYPE):
+                        self.found_device[CONF_SUBTYPE] = _subtype_int(
+                            device_info.get("model_number")
+                        )
 
                 # phase 1, try with user input login data
                 keys = await self._check_key_from_cloud(device_id)
@@ -593,8 +603,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.found_device[CONF_TOKEN] = keys["token"]
                 self.found_device[CONF_KEY] = keys["key"]
                 self._clear_login_state()
+                # _check_key_from_cloud already connected with this token/key
                 return await self._async_create_midea_entry(
                     self._found_device_to_user_input(),
+                    validated=True,
                 )
             # v1/v2 device add without token/key, no cloud interaction needed
             self._clear_login_state()
@@ -634,6 +646,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_midea_entry(
         self,
         user_input: dict[str, Any],
+        *,
+        validated: bool = False,
     ) -> ConfigFlowResult:
         """Validate device connection with all the input and create the entry."""
         device_id = user_input[CONF_DEVICE_ID]
@@ -644,19 +658,16 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(device_id))
         self._abort_if_unique_id_configured()
 
-        connected = await self.hass.async_add_executor_job(
-            partial(
-                _select_and_connect,
-                device_id=device_id,
-                device_type=user_input[CONF_TYPE],
-                ip_address=user_input[CONF_IP_ADDRESS],
-                port=user_input[CONF_PORT],
-                token=user_input[CONF_TOKEN],
-                key=user_input[CONF_KEY],
-                device_protocol=user_input[CONF_PROTOCOL],
-                model=user_input[CONF_MODEL],
-                subtype=user_input[CONF_SUBTYPE],
-            ),
+        connected = validated or await _async_select_and_connect(
+            device_id=device_id,
+            device_type=user_input[CONF_TYPE],
+            ip_address=user_input[CONF_IP_ADDRESS],
+            port=user_input[CONF_PORT],
+            token=user_input[CONF_TOKEN],
+            key=user_input[CONF_KEY],
+            device_protocol=user_input[CONF_PROTOCOL],
+            model=user_input[CONF_MODEL],
+            subtype=user_input[CONF_SUBTYPE],
         )
         if connected:
             device_type = user_input[CONF_TYPE]
@@ -707,9 +718,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             if device_id not in self.devices:
                 ip = user_input[CONF_IP_ADDRESS]
                 # discover device
-                self.devices = await self.hass.async_add_executor_job(
-                    lambda: discover(list(self.supports.keys()), ip_address=ip),
-                )
+                self.devices = await discover(list(self.supports.keys()), ip_address=ip)
                 # discover result MUST exist
                 if len(self.devices) != 1:
                     return self._show_manually_form(
@@ -798,10 +807,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         error = None
         if user_input is not None:
-            devices = await self.hass.async_add_executor_job(
-                lambda: discover(
-                    list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
-                ),
+            devices = await discover(
+                list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
             )
             entry_device_id = entry.data[CONF_DEVICE_ID]
             device = devices.get(entry_device_id)

@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 from pyvlx import Intensity, PyVLXException
 from pyvlx.opening_device import Position
 
@@ -19,8 +24,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import update_callback_entity, update_polled_entities
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("setup_integration")
 

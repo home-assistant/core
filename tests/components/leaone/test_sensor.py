@@ -1,14 +1,14 @@
 """Test the Leaone sensors."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+
 from homeassistant.components.leaone.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
 from . import SCALE_SERVICE_INFO, SCALE_SERVICE_INFO_2, SCALE_SERVICE_INFO_3
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_sensors(hass: HomeAssistant) -> None:

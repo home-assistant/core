@@ -6,6 +6,11 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from growattServer import GrowattV1ApiError, GrowattV1ApiErrorCode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.growatt_server.coordinator import SCAN_INTERVAL
@@ -18,8 +23,6 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 DOMAIN = "growatt_server"
 
@@ -53,7 +56,7 @@ async def test_set_number_value_api_error(
     """Test handling API error when setting number value."""
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError(
-        message="API Error",
+        message="Error during writing parameter",
         error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE,
         error_msg="API Error",
     )
@@ -69,8 +72,11 @@ async def test_set_number_value_api_error(
             blocking=True,
         )
     assert excinfo.value.translation_domain == "growatt_server"
-    assert excinfo.value.translation_key == "api_error"
-    assert "error" in excinfo.value.translation_placeholders
+    assert excinfo.value.translation_key == "api_error_with_code"
+    assert excinfo.value.translation_placeholders == {
+        "error": "API Error",
+        "code": "10011",
+    }
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")

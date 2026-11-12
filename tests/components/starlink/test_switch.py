@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from starlink_grpc import GrpcError
 
 from homeassistant.components.starlink.const import DOMAIN
@@ -11,6 +12,7 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,6 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,8 +33,6 @@ from .patchers import (
     STATUS_DATA_FIXTURE,
     STATUS_DATA_TARGET,
 )
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.starlink_use_starlink_positioning_exclusively"
 SET_GPS_CONFIG_TARGET = "homeassistant.components.starlink.coordinator.set_gps_config"
@@ -125,7 +126,7 @@ async def test_starlink_positioning_exclusive_error(hass: HomeAssistant) -> None
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )

@@ -8,9 +8,10 @@ from unittest.mock import MagicMock, PropertyMock
 from freezegun.api import FrozenDateTimeFactory
 import motionmount
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.motionmount.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -26,8 +27,6 @@ from . import (
     ZEROCONF_MAC,
     ZEROCONF_NAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MAC = bytes.fromhex("c4dd57f8a55f")
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -844,13 +843,7 @@ async def test_full_reauth_flow_implementation(
     """Test reauthentication."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"

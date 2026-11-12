@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yalexs_ble import AuthError, DoorStatus, LockInfo, LockState, LockStatus
 
 from homeassistant import config_entries
@@ -26,8 +27,6 @@ from . import (
     SAME_LOCAL_NAME_DISCOVERY_INFO,
     YALE_ACCESS_LOCK_DISCOVERY_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _get_mock_push_lock():
@@ -78,7 +77,7 @@ async def test_user_step_success(hass: HomeAssistant, slot: int) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -139,7 +138,7 @@ async def test_user_step_from_ignored(hass: HomeAssistant, slot: int) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -262,7 +261,7 @@ async def test_user_step_invalid_keys(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result6 = await hass.config_entries.flow.async_configure(
@@ -332,7 +331,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -402,7 +401,7 @@ async def test_user_step_auth_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -472,7 +471,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -513,7 +512,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -560,7 +559,7 @@ async def test_integration_discovery_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -606,7 +605,7 @@ async def test_integration_discovery_prefers_address(hass: HomeAssistant) -> Non
 
     with patch(
         "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
@@ -687,7 +686,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth(
 
     with patch(
         "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -752,7 +751,7 @@ async def test_bluetooth_discovery_with_cached_config(
     # Confirm the discovery
     with patch(
         "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -791,7 +790,7 @@ async def test_integration_discovery_updates_key_unique_local_name(
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -953,7 +952,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_uuid_addres
 
     with patch(
         "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1070,7 +1069,7 @@ async def test_user_is_setting_up_lock_and_discovery_happens_in_the_middle(
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         user_flow_task = asyncio.create_task(
@@ -1164,7 +1163,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1228,7 +1227,7 @@ async def test_user_step_with_cached_config(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.yalexs_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         # No user input triggers using cached config
@@ -1280,7 +1279,7 @@ async def test_options(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.yalexs_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],

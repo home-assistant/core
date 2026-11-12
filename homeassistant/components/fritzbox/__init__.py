@@ -18,7 +18,7 @@ from .const import DEFAULT_VERIFY_SSL, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> None:
     """Set up the AVM FRITZ!SmartHome platforms."""
 
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
@@ -58,22 +58,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout_fritzbox)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> None:
     """Unloading the AVM FRITZ!SmartHome platforms."""
     try:
         await hass.async_add_executor_job(entry.runtime_data.fritz.logout)
     except (RequestConnectionError, HTTPError) as ex:
         LOGGER.debug("logout failed with '%s', anyway continue with unload", ex)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: FritzboxConfigEntry
-) -> bool:
+) -> None:
     """Migrate old config entry to a new format."""
     LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -107,7 +105,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-    return True
 
 
 async def async_remove_config_entry_device(

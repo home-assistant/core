@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from tesla_powerwall import (
     AccessDeniedError,
     ApiError,
@@ -29,8 +30,6 @@ from .mocks import (
     _mock_powerwall_with_fixtures,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 VALID_CONFIG = {CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "00GGX"}
 
 
@@ -46,7 +45,7 @@ async def _async_configure_success(
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         return await hass.config_entries.flow.async_configure(flow_id, VALID_CONFIG)
@@ -70,7 +69,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -152,7 +151,7 @@ async def test_form_pw3_restricted(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -298,7 +297,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -341,7 +340,7 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -390,7 +389,7 @@ async def test_dhcp_discovery_restricted_clears_unique_id(hass: HomeAssistant) -
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -435,7 +434,7 @@ async def test_dhcp_discovery_auto_configure_restricted(hass: HomeAssistant) -> 
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -476,7 +475,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -571,7 +570,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -605,7 +604,7 @@ async def test_dhcp_discovery_update_ip_address(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -642,7 +641,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -679,7 +678,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -714,7 +713,7 @@ async def test_dhcp_discovery_updates_unique_id(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -753,7 +752,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -889,7 +888,7 @@ async def test_dhcp_discovery_does_not_overwrite_real_din(
         ),
         patch(
             "homeassistant.components.powerwall.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(

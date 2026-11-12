@@ -39,10 +39,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, DOMAIN
-from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
-from .models import ZwaveJSConfigEntry
+from .models import ZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -398,6 +397,12 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
             and self.info.platform_hint.startswith("gate")
         ):
             self._attr_device_class = CoverDeviceClass.GATE
+        elif (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("shade")
+        ):
+            self._attr_device_class = CoverDeviceClass.SHADE
 
 
 class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):

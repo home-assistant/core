@@ -118,6 +118,9 @@
       "arofene_link": {
         "name": "Methanal"
       },
+      "child_lock": {
+        "name": "[%key:component::midea::entity::switch::child_lock::name%]"
+      },
       "door_warn": {
         "name": "Door warning"
       },
@@ -127,17 +130,38 @@
       "filter_cleaning_reminder": {
         "name": "Filter cleaning"
       },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "freezer_door_overtime": {
+        "name": "Freezer door open too long"
+      },
       "full_dust": {
         "name": "Full dust"
       },
       "header_exist": {
         "name": "Header"
       },
+      "heating": {
+        "name": "Heating"
+      },
+      "keep_warm": {
+        "name": "Keep warm"
+      },
       "led_status": {
         "name": "LED"
       },
       "night_mode": {
         "name": "Night mode"
+      },
+      "protection": {
+        "name": "Protection"
+      },
+      "refrigerator_door": {
+        "name": "Refrigerator door"
+      },
+      "refrigerator_door_overtime": {
+        "name": "Refrigerator door open too long"
       },
       "rinse_aid": {
         "name": "Rinse aid"
@@ -156,6 +180,9 @@
       }
     },
     "button": {
+      "reset_filter": {
+        "name": "Reset filter counters"
+      },
       "start": {
         "name": "Start"
       }
@@ -196,6 +223,26 @@
               "soft": "Soft",
               "strong": "Strong",
               "warm": "Warm"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "bed_room": "Bedroom",
+              "clothes_dry": "Clothes dry",
+              "continuous": "Continuous",
+              "kitchen": "Kitchen",
+              "living_room": "Living room",
+              "manual": "[%key:common::state::manual%]",
+              "shoes_dry": "Shoes dry",
+              "silent": "Silent",
+              "sleep": "[%key:component::humidifier::entity_component::_::state_attributes::mode::state::sleep%]"
             }
           }
         }
@@ -382,6 +429,83 @@
       "condenser_temperature": {
         "name": "Condenser temperature"
       },
+      "cooking_mode": {
+        "name": "Cooking mode",
+        "state": {
+          "above_tube": "Top grill",
+          "auto": "Auto menu",
+          "baby_egg": "Baby egg",
+          "baby_fruit": "Baby fruit",
+          "baby_milk": "Baby milk",
+          "bake_cake": "Bake cake",
+          "bake_cookies": "Bake cookies",
+          "bake_ribs": "Bake ribs",
+          "bake_shrimp": "Bake shrimp",
+          "bake_swing": "Bake swing",
+          "baking": "Baking",
+          "brittle": "Brittle",
+          "bun": "Bun",
+          "carrots": "Carrots",
+          "chicken_block": "Chicken block",
+          "chicken_soup": "Chicken soup",
+          "coconut_sogo": "Coconut sago",
+          "code_to_hot": "Cold to hot",
+          "coix_bean": "Coix seed",
+          "dumplings": "Dumplings",
+          "egg": "Egg",
+          "fans_scallops": "Vermicelli scallops",
+          "fast_hot": "Fast heat",
+          "fast_soup": "Fast soup",
+          "fast_steam": "Fast steam",
+          "ferment": "Ferment",
+          "frozen_food": "Frozen food",
+          "hot_steam": "Hot steam",
+          "humidity_auto": "Humidity auto menu",
+          "instant_noodle": "Instant noodle",
+          "jujube_longan": "Jujube longan",
+          "kebab": "Kebab",
+          "lotus_seed": "Lotus seed",
+          "meat": "Meat",
+          "meat_eggplant": "Meat eggplant",
+          "meat_tofu": "Meat tofu",
+          "metal_sterilize": "Metal sterilize",
+          "microwave": "Microwave",
+          "milk_coffee": "Milk coffee",
+          "none": "None",
+          "papaya_milk": "Papaya milk",
+          "pearl_meat": "Pearl meat",
+          "popcorn": "Popcorn",
+          "porridge": "Porridge",
+          "pre_hot": "Preheat",
+          "pumpkin": "Pumpkin",
+          "pure_steam": "Pure steam",
+          "pure_steam_fish": "Pure steam fish",
+          "remove_odor": "Remove odor",
+          "rice": "Rice",
+          "roast": "Roast",
+          "sauerkraut_fish": "Sauerkraut fish",
+          "sausage": "Sausage",
+          "sauted_meat": "Sautéed meat",
+          "scale_clean": "Scale clean",
+          "sirloin": "Sirloin",
+          "smart_clean": "Smart clean",
+          "smart_steam_fish": "Smart steam fish",
+          "snow_pear": "Snow pear",
+          "spicy_sausage": "Spicy sausage",
+          "spicy_tofu": "Spicy tofu",
+          "steam_bun": "Steam bun",
+          "steam_corn": "Steam corn",
+          "steam_ribs": "Steam ribs",
+          "steam_seafood": "Steam seafood",
+          "sweet_potato": "Sweet potato",
+          "time_unfreeze": "Timed defrost",
+          "tofu": "Tofu",
+          "unfreeze": "Defrost",
+          "vegetable": "Vegetable",
+          "warm": "Warm",
+          "wing": "Wing"
+        }
+      },
       "current_energy_consumption": {
         "name": "Current energy consumption"
       },
@@ -476,8 +600,8 @@
       "dry_temperature": {
         "name": "Dry temperature"
       },
-      "energy_consumption": {
-        "name": "Energy consumption"
+      "energy_consumption_24h": {
+        "name": "24h window energy consumption"
       },
       "evaporator_temperature": {
         "name": "Evaporator temperature"
@@ -490,6 +614,16 @@
       },
       "filter_life_level": {
         "name": "Filter {filter_number} life level"
+      },
+      "fire_power": {
+        "name": "Power level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "medium_high": "Medium high",
+          "medium_low": "Medium low"
+        }
       },
       "flex_zone_actual_temp": {
         "name": "Flex zone actual temperature"
@@ -705,18 +839,26 @@
       "status": {
         "name": "Status",
         "state": {
+          "cancel": "Canceled",
+          "cloud": "Cloud recipe",
           "delay": "Delayed",
           "delay_choosing": "Delay choosing",
           "delay_pause": "Delay paused",
           "end": "End",
           "fault": "[%key:common::state::fault%]",
           "finished": "Finished",
+          "heat": "Heating",
           "idle": "[%key:common::state::idle%]",
+          "order": "Scheduled",
           "pause": "[%key:common::state::paused%]",
+          "pause_cancel": "Pause canceled",
           "paused": "[%key:common::state::paused%]",
           "prevent_wrinkle_end": "Prevent wrinkle end",
+          "reaction": "Reaction",
+          "save_power": "Power saving",
           "standby": "[%key:common::state::standby%]",
           "start": "Start",
+          "three": "Three",
           "working": "Working"
         }
       },
@@ -946,6 +1088,12 @@
       "disinfect": {
         "name": "Disinfect"
       },
+      "megawater": {
+        "name": "Mega Water"
+      },
+      "memo_u": {
+        "name": "Memo-U"
+      },
       "night_light": {
         "name": "Night light"
       },
@@ -957,6 +1105,9 @@
       },
       "prompt_tone": {
         "name": "Prompt tone"
+      },
+      "protection": {
+        "name": "Protection"
       },
       "pump": {
         "name": "Pump"
@@ -976,8 +1127,17 @@
       "sound": {
         "name": "Sound"
       },
+      "sterilization": {
+        "name": "Sterilization"
+      },
       "tbh": {
         "name": "TBH"
+      },
+      "variable_heating": {
+        "name": "Variable heating"
+      },
+      "whole_tank_heating": {
+        "name": "Whole tank heating"
       },
       "zone1_curve": {
         "name": "Zone 1 curve"

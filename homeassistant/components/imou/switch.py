@@ -1,6 +1,6 @@
 """Support for Imou switch controls."""
 
-from typing import Any, override
+from typing import Any, cast, override
 
 from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.ha_device import ImouHaDevice
@@ -41,10 +41,12 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_AB_ALARM_SOUND,
         translation_key=PARAM_AB_ALARM_SOUND,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_AUDIO_ENCODE_CONTROL,
         translation_key=PARAM_AUDIO_ENCODE_CONTROL,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_CLOSE_CAMERA,
@@ -58,11 +60,13 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_HEADER_DETECT,
         translation_key=PARAM_HEADER_DETECT,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_LIGHT,
         translation_key=PARAM_LIGHT,
         device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_LINKAGE_SIREN,
@@ -77,6 +81,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PARAM_MOTION_DETECT,
         translation_key=PARAM_MOTION_DETECT,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_PET_DETECT,
@@ -151,7 +156,7 @@ class ImouSwitch(ImouEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return True if the switch is on."""
-        return self.device.switches[self._entity_type][PARAM_STATE]
+        return cast(bool | None, self.device.switches[self._entity_type][PARAM_STATE])
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

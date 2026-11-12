@@ -9,6 +9,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "The Rachio API key is no longer valid. You can get a new API key from {api_key_url}. Go to Settings, then select 'GET API KEY'.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

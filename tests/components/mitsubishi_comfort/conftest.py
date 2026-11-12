@@ -13,12 +13,11 @@ from mitsubishi_comfort import (
     VaneDirection,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 MOCK_USERNAME = "test@test.com"
 MOCK_PASSWORD = "testpass"

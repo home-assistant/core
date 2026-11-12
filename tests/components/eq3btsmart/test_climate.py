@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 from eq3btsmart.const import Eq3Event
 from eq3btsmart.exceptions import Eq3Exception
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -24,9 +26,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import MAC
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
 
 ENTITY_ID = "climate.aa_bb_cc_dd_ee_ff"
 

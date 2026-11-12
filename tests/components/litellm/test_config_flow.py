@@ -10,6 +10,7 @@ from openai import (
     PermissionDeniedError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.litellm.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.litellm.const import (
@@ -19,7 +20,7 @@ from homeassistant.components.litellm.const import (
     CONF_STT_PROMPT,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -27,8 +28,6 @@ from homeassistant.helpers import llm
 
 from . import get_subentry_id, setup_integration
 from .conftest import TEST_URL, models_response
-
-from tests.common import MockConfigEntry
 
 CONVERSATION_MODEL_OPTIONS = [
     {"value": "gpt-3.5-turbo", "label": "gpt-3.5-turbo"},
@@ -273,12 +272,6 @@ async def _create_stt_with_hints(
     )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: True},
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
         {
             CONF_MODEL: "gpt-4",
             CONF_STT_CUSTOM_PROMPT_KEYWORDS: True,
@@ -350,19 +343,18 @@ async def test_reconfigure_stt_hints(
 async def test_reconfigure_stt_disable_hints(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test disabling hints clears both saved STT fields."""
+    """Test disabling hints does not save the hidden STT fields."""
     subentry_id = await _create_stt_with_hints(hass, mock_config_entry)
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_MODEL: "gpt-4", CONF_STT_CUSTOM_PROMPT_KEYWORDS: False},
+        {
+            CONF_MODEL: "gpt-4",
+            CONF_STT_CUSTOM_PROMPT_KEYWORDS: False,
+            CONF_STT_PROMPT: "New prompt",
+            CONF_STT_KEYWORDS: "New, keywords",
+        },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -630,3 +622,104 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_models")
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        "name": "localhost:4000",
+        CONF_URL: TEST_URL,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_URL: TEST_URL, CONF_API_KEY: "new-key"}
+
+
+@pytest.mark.parametrize(
+    "api_key",
+    [
+        pytest.param("new-key", id="new_key"),
+        pytest.param("bla", id="same_key"),
+    ],
+)
+@pytest.mark.usefixtures("mock_models")
+async def test_reauth_flow_loaded_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    api_key: str,
+) -> None:
+    """Test reauthenticating a loaded entry reloads it once."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    mock_openai_client.with_options.reset_mock()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: api_key}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_URL: TEST_URL, CONF_API_KEY: api_key}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Each setup pings the proxy once, so one call means one reload
+    mock_openai_client.with_options.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(InvalidAuth, "invalid_auth", id="invalid_auth"),
+        pytest.param(CannotConnect, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.litellm.config_flow._get_models",
+        new_callable=AsyncMock,
+        side_effect=exception,
+    ) as mock_get_models:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-key"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": error}
+
+        mock_get_models.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-key"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_URL: TEST_URL, CONF_API_KEY: "new-key"}

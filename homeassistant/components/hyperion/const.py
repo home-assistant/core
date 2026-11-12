@@ -1,6 +1,5 @@
 """Constants for Hyperion integration."""
 
-CONF_AUTH_ID = "auth_id"
 CONF_CREATE_TOKEN = "create_token"
 CONF_INSTANCE = "instance"
 CONF_PRIORITY = "priority"

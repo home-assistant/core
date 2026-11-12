@@ -31,6 +31,9 @@ ALLOWED_TOKENS_IN_FILE: dict[str, dict[str, str]] = {
     "const.py": {
         '"hacs"': "the domain of the custom integration",
     },
+    "profiles.py": {
+        "hacs.vip": "the China mirrors",
+    },
     "migration.py": {
         '"hacs"': "the domain of the custom integration",
         '"hacstag"': "the query parameter on migrated dashboard resource URLs",

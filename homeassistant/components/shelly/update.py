@@ -192,7 +192,7 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         super().__init__(coordinator, key, attribute, description)
 
         self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
-        self._blu_trv_name = cast(str, self._attr_device_info["name"])
+        self._blu_trv_name = cast(str, self._attr_device_info.name)
 
         update_coordinator = coordinator.config_entry.runtime_data.rpc_blu_trv_update
 
@@ -279,6 +279,7 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             assert self._id is not None
 
         self._ota_in_progress = True
+        self.async_write_ha_state()
 
         try:
             await self.coordinator.device.blu_trv_update_firmware(self._id)
@@ -296,9 +297,22 @@ class RpcBluTrvUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
+        else:
+            await self._async_refresh_installed_version()
         finally:
             self._ota_in_progress = False
             self._ota_progress_percentage = None
+
+    async def _async_refresh_installed_version(self) -> None:
+        """Re-read the BLU TRV status since the gateway does not push the new fw_ver."""
+        try:
+            await self.coordinator.device.get_dynamic_components()
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug(
+                "Failed to refresh the status of BLU TRV %s after OTA update: %r",
+                self._blu_trv_name,
+                err,
+            )
 
 
 RPC_UPDATES: Final = {

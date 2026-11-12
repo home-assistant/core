@@ -14,6 +14,7 @@ from unittest.mock import patch
 from modbus_connection import ModbusUnit
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.solaredge_modbus.const import (
     CONF_UNIT_ID,
@@ -22,8 +23,6 @@ from homeassistant.components.solaredge_modbus.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 HOST = "1.2.3.4"
 PORT = 1502

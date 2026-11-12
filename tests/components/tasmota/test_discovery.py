@@ -5,6 +5,8 @@ import json
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, WebSocketGenerator
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
@@ -18,9 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import setup_tasmota_helper
 from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3, remove_device
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 
 def _get_device_for_config_entry(
@@ -610,6 +609,121 @@ async def test_entity_duplicate_removal(
     assert "Removing entity: switch" not in caplog.text
 
 
+@pytest.mark.usefixtures("mqtt_mock", "setup_tasmota")
+async def test_discovery_hash_cleared_on_add_abort(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the discovery hash is cleared when adding the entity is aborted.
+
+    If it leaks, a later discovery message is treated as an update for a
+    non-existent entity and the entity can never be created.
+    """
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    mac = config["mac"]
+    discovery_hash = (mac, "switch", "relay", 0)
+
+    # Pin the entity_id via the registry, then occupy it with an unrelated state so
+    # the platform aborts adding the tasmota entity because the id is in use.
+    entity_registry.async_get_or_create(
+        "switch", "tasmota", f"{mac}_switch_relay_0", suggested_object_id="tasmota_test"
+    )
+    hass.states.async_set("switch.tasmota_test", "on")
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    assert discovery_hash not in hass.data[ALREADY_DISCOVERED]
+
+    # Free the entity_id and re-discover; the entity is created this time
+    hass.states.async_remove("switch.tasmota_test")
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    assert discovery_hash in hass.data[ALREADY_DISCOVERED]
+    state = hass.states.get("switch.tasmota_test")
+    assert state is not None
+    assert state.name == "Tasmota Test"
+
+
+@pytest.mark.usefixtures("mqtt_mock", "setup_tasmota")
+async def test_discovery_hash_cleared_on_removal(hass: HomeAssistant) -> None:
+    """Test the discovery hash is cleared when the entity is removed.
+
+    If it leaks, a later discovery message is treated as an update for a
+    non-existent entity and the entity can never be created again.
+    """
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    mac = config["mac"]
+    discovery_hash = (mac, "switch", "relay", 0)
+
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+    assert discovery_hash in hass.data[ALREADY_DISCOVERED]
+    assert hass.states.get("switch.tasmota_test") is not None
+
+    # Disabling the relay removes the entity
+    config["rl"][0] = 0
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+    assert discovery_hash not in hass.data[ALREADY_DISCOVERED]
+    assert hass.states.get("switch.tasmota_test") is None
+
+    # Re-enable the relay; the entity is created again
+    config["rl"][0] = 1
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+    assert discovery_hash in hass.data[ALREADY_DISCOVERED]
+    state = hass.states.get("switch.tasmota_test")
+    assert state is not None
+    assert state.name == "Tasmota Test"
+
+
+@pytest.mark.usefixtures("mqtt_mock", "setup_tasmota")
+async def test_discovery_hash_cleared_on_remove_after_rename(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the discovery hash is cleared when the entity is removed after a rename.
+
+    The entity_id is changed in place, so the on-remove callback registered when
+    the entity was constructed must survive the rename and clear the hash on the
+    next removal.
+    """
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    mac = config["mac"]
+    discovery_hash = (mac, "switch", "relay", 0)
+
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+    assert discovery_hash in hass.data[ALREADY_DISCOVERED]
+    assert hass.states.get("switch.tasmota_test") is not None
+
+    entity_registry.async_update_entity(
+        "switch.tasmota_test", new_entity_id="switch.milk"
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.milk") is not None
+    assert discovery_hash in hass.data[ALREADY_DISCOVERED]
+
+    # Remove the entity by re-discovering the relay as disabled
+    config["rl"][0] = 0
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.milk") is None
+    assert discovery_hash not in hass.data[ALREADY_DISCOVERED]
+
+
 async def test_same_topic(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
@@ -668,6 +782,10 @@ async def test_same_topic(
     issue_id = "topic_duplicated_tasmota_49A3BC/cmnd/"
     issue = issue_registry.async_get_issue("tasmota", issue_id)
     assert issue.data["mac"] == " ".join(config["mac"] for config in configs[0:2])
+    assert (
+        issue.config_entry_id
+        == hass.config_entries.async_entries("tasmota")[0].entry_id
+    )
 
     # Discover a 3rd device with same topic
     async_fire_mqtt_message(
@@ -781,7 +899,12 @@ async def test_topic_no_prefix(
 
     # Verify a repairs issue was created
     issue_id = "topic_no_prefix_00000049A3BC"
-    assert ("tasmota", issue_id) in issue_registry.issues
+    issue = issue_registry.async_get_issue("tasmota", issue_id)
+    assert issue is not None
+    assert (
+        issue.config_entry_id
+        == hass.config_entries.async_entries("tasmota")[0].entry_id
+    )
 
     # Rediscover device with fixed config
     config["ft"] = "%topic%/%prefix%/"

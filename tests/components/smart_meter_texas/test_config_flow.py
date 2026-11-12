@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 TEST_LOGIN = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
 
@@ -29,7 +28,7 @@ def _patch_success() -> Generator[None]:
         patch("smart_meter_texas.Client.authenticate", return_value=True),
         patch(
             "homeassistant.components.smart_meter_texas.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -48,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch("smart_meter_texas.Client.authenticate", return_value=True),
         patch(
             "homeassistant.components.smart_meter_texas.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -168,3 +167,72 @@ async def test_form_duplicate_account(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauth updates the password."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=TEST_LOGIN, unique_id=TEST_LOGIN[CONF_USERNAME]
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "homeassistant.components.smart_meter_texas.config_flow.Account"
+        ) as mock_account,
+        _patch_success(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+        await hass.async_block_till_done()
+
+    mock_account.assert_called_once_with("test-username", "new-password")
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data == TEST_LOGIN | {CONF_PASSWORD: "new-password"}
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(SmartMeterTexasAuthError, "invalid_auth", id="invalid_auth"),
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
+        pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(SmartMeterTexasAPIError, "cannot_connect", id="api_error"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant, side_effect: type[Exception], error: str
+) -> None:
+    """Test reauth handles errors and can recover."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=TEST_LOGIN, unique_id=TEST_LOGIN[CONF_USERNAME]
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch("smart_meter_texas.Client.authenticate", side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "wrong-password"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PASSWORD: "new-password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new-password"

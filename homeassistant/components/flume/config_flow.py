@@ -103,11 +103,12 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -148,9 +149,7 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            description_placeholders={
-                CONF_USERNAME: existing_entry.data[CONF_USERNAME]
-            },
+            description_placeholders={"username": existing_entry.data[CONF_USERNAME]},
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {

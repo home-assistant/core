@@ -14,20 +14,12 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
     FLASH_LONG,
     FLASH_SHORT,
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightServiceArgument,
 )
 from homeassistant.core import callback
 
@@ -193,13 +185,13 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         # rgb/brightness input is in range 0-255, but esphome uses 0-1
 
-        if (brightness_ha := kwargs.get(ATTR_BRIGHTNESS)) is not None:
+        if (brightness_ha := kwargs.get(LightServiceArgument.BRIGHTNESS)) is not None:
             data["brightness"] = brightness_ha / 255
             color_modes = _filter_color_modes(
                 color_modes, LightColorCapability.BRIGHTNESS
             )
 
-        if (rgb_ha := kwargs.get(ATTR_RGB_COLOR)) is not None:
+        if (rgb_ha := kwargs.get(LightServiceArgument.RGB_COLOR)) is not None:
             rgb = tuple(x / 255 for x in rgb_ha)
             color_bri = max(rgb)
             # normalize rgb
@@ -208,7 +200,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             color_modes = _filter_color_modes(color_modes, LightColorCapability.RGB)
             try_keep_current_mode = False
 
-        if (rgbw_ha := kwargs.get(ATTR_RGBW_COLOR)) is not None:
+        if (rgbw_ha := kwargs.get(LightServiceArgument.RGBW_COLOR)) is not None:
             *rgb, w = tuple(x / 255 for x in rgbw_ha)  # type: ignore[assignment]
             color_bri = max(rgb)
             # normalize rgb
@@ -220,7 +212,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             )
             try_keep_current_mode = False
 
-        if (rgbww_ha := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
+        if (rgbww_ha := kwargs.get(LightServiceArgument.RGBWW_COLOR)) is not None:
             *rgb, cw, ww = tuple(x / 255 for x in rgbww_ha)  # type: ignore[assignment]
             color_bri = max(rgb)
             # normalize rgb
@@ -250,13 +242,15 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
             data["color_brightness"] = color_bri
 
-        if (flash := kwargs.get(ATTR_FLASH)) is not None:
+        if (flash := kwargs.get(LightServiceArgument.FLASH)) is not None:
             data["flash_length"] = FLASH_LENGTHS[flash]
 
-        if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
+        if (transition := kwargs.get(LightServiceArgument.TRANSITION)) is not None:
             data["transition_length"] = transition
 
-        if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
+        if (
+            color_temp_k := kwargs.get(LightServiceArgument.COLOR_TEMP_KELVIN)
+        ) is not None:
             # Do not use kelvin_to_mired here to prevent precision loss
             color_temp_mired = 1_000_000.0 / color_temp_k
             data["color_temperature"] = color_temp_mired
@@ -279,10 +273,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 )
             try_keep_current_mode = False
 
-        if (effect := kwargs.get(ATTR_EFFECT)) is not None:
+        if (effect := kwargs.get(LightServiceArgument.EFFECT)) is not None:
             data["effect"] = effect
 
-        if (white_ha := kwargs.get(ATTR_WHITE)) is not None:
+        if (white_ha := kwargs.get(LightServiceArgument.WHITE)) is not None:
             # ESPHome multiplies brightness and white together for final brightness
             # HA only sends `white` in turn_on, and reads total brightness
             # through brightness property.
@@ -297,7 +291,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if self._supports_color_mode and color_modes:
             if (
                 try_keep_current_mode
-                and self._state is not None
+                and self._has_state
                 and self._state.color_mode in color_modes
             ):
                 # if possible, stay with the color mode that is already set
@@ -314,10 +308,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         data: dict[str, Any] = {"key": self._key, "state": False}
-        if ATTR_FLASH in kwargs:
-            data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
-        if ATTR_TRANSITION in kwargs:
-            data["transition_length"] = kwargs[ATTR_TRANSITION]
+        if LightServiceArgument.FLASH in kwargs:
+            data["flash_length"] = FLASH_LENGTHS[kwargs[LightServiceArgument.FLASH]]
+        if LightServiceArgument.TRANSITION in kwargs:
+            data["transition_length"] = kwargs[LightServiceArgument.TRANSITION]
         self._client.light_command(**data, device_id=self._static_info.device_id)
 
     @property

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -20,8 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import async_fire_time_changed
 
 
 async def test_device(

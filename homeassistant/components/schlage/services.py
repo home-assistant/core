@@ -1,12 +1,32 @@
 """Services for the Schlage integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN, SERVICE_ADD_CODE, SERVICE_DELETE_CODE, SERVICE_GET_CODES
+from .const import DOMAIN
+
+
+class SchlageService(StrEnum):
+    """Store keys for Schlage services."""
+
+    GET_CODES = "get_codes"
+    ADD_CODE = "add_code"
+    DELETE_CODE = "delete_code"
+
+
+class SchlageServiceArgument(StrEnum):
+    """Store keys for Schlage service arguments."""
+
+    NAME = "name"
+    CODE = "code"
+    NOTIFY_ON_USE = "notify_on_use"
+    START_DATETIME = "start_datetime"
+    END_DATETIME = "end_datetime"
 
 
 @callback
@@ -15,35 +35,39 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_ADD_CODE,
+        SchlageService.ADD_CODE,
         entity_domain=LOCK_DOMAIN,
         schema={
-            probatio.Required("name"): cv.string,
-            probatio.Required("code"): probatio.All(
+            probatio.Required(SchlageServiceArgument.NAME): cv.string,
+            probatio.Required(SchlageServiceArgument.CODE): probatio.All(
                 cv.string, cv.matches_regex(r"^\d{4,8}$")
             ),
-            probatio.Optional("notify_on_use", default=True): cv.boolean,
+            probatio.Optional(
+                SchlageServiceArgument.NOTIFY_ON_USE, default=True
+            ): cv.boolean,
+            probatio.Optional(SchlageServiceArgument.START_DATETIME): cv.datetime,
+            probatio.Optional(SchlageServiceArgument.END_DATETIME): cv.datetime,
         },
-        func=SERVICE_ADD_CODE,
+        func="add_code",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_DELETE_CODE,
+        SchlageService.DELETE_CODE,
         entity_domain=LOCK_DOMAIN,
         schema={
-            probatio.Required("name"): cv.string,
+            probatio.Required(SchlageServiceArgument.NAME): cv.string,
         },
-        func=SERVICE_DELETE_CODE,
+        func="delete_code",
     )
 
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_GET_CODES,
+        SchlageService.GET_CODES,
         entity_domain=LOCK_DOMAIN,
         schema=None,
-        func=SERVICE_GET_CODES,
+        func="get_codes",
         supports_response=SupportsResponse.ONLY,
     )

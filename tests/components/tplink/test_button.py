@@ -2,13 +2,14 @@
 
 from kasa import Feature
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.tplink.button import BUTTON_DESCRIPTIONS
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -27,8 +28,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -190,8 +189,8 @@ async def test_button_press(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     mocked_feature.set_value.assert_called_with(True)
@@ -273,6 +272,7 @@ async def test_button_exists_with_deprecation(
     assert (entity is None) == entity_disabled
     assert (hass.states.get(entity_id) is None) == entity_disabled
 
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert (
-        issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+        issue is not None and issue.config_entry_id == config_entry.entry_id
     ) == entity_has_automations

@@ -2,6 +2,7 @@
 
 from kasa import Device, Feature, Module
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tplink.const import DOMAIN
@@ -22,8 +23,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 async def test_states(

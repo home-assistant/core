@@ -10,6 +10,15 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    get_test_config_dir,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config as config_util, core, loader, runner
@@ -25,16 +34,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.translation import async_translations_loaded
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration
-
-from .common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    get_test_config_dir,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
@@ -70,6 +69,11 @@ async def apply_stop_hass(stop_hass: None) -> None:
 @pytest.fixture(autouse=True)
 def disable_block_async_io(disable_block_async_io):
     """Disable the loop protection from block_async_io after each test."""
+
+
+@pytest.fixture(autouse=True)
+def disable_block_shared_serial(disable_block_shared_serial: None) -> None:
+    """Restore pyserial after each test."""
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -762,7 +766,7 @@ def mock_enable_logging() -> Generator[AsyncMock]:
 def mock_process_ha_config_upgrade() -> Generator[Mock]:
     """Mock enable logging."""
     with patch(
-        "homeassistant.config.process_ha_config_upgrade"
+        "homeassistant.config.process_ha_config_upgrade", return_value=None
     ) as process_ha_config_upgrade:
         yield process_ha_config_upgrade
 
@@ -819,11 +823,33 @@ async def test_setup_hass(
     )
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+    assert config_util.DATA_PREVIOUS_VERSION not in hass.data
 
     # debug in RuntimeConfig should set it it in hass.config
     assert hass.config.debug is True
 
     assert hass == async_get_hass()
+
+
+@pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
+@pytest.mark.usefixtures(
+    "mock_hass_config", "mock_enable_logging", "mock_ensure_config_exists"
+)
+async def test_setup_hass_keeps_previous_version(
+    mock_process_ha_config_upgrade: Mock,
+) -> None:
+    """Test the version that ran before an update is kept for the trigger."""
+    mock_process_ha_config_upgrade.return_value = "2026.9.4"
+
+    hass = await bootstrap.async_setup_hass(
+        runner.RuntimeConfig(
+            config_dir=get_test_config_dir(),
+            skip_pip=True,
+            recovery_mode=False,
+        ),
+    )
+
+    assert hass.data[config_util.DATA_PREVIOUS_VERSION] == "2026.9.4"
 
 
 @pytest.mark.parametrize("hass_config", [{"browser": {}, "frontend": {}}])
@@ -1426,7 +1452,7 @@ async def test_bootstrap_dependencies(
     calls: list[str] = []
     assertions: list[bool] = []
 
-    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def async_mqtt_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Assert the mqtt config entry was set up."""
         calls.append("mqtt")
         # assert the integration is not yet set up
@@ -1438,7 +1464,6 @@ async def test_bootstrap_dependencies(
             )
         )
         assertions.append(integration not in hass.config.components)
-        return True
 
     async def async_integration_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Assert the mqtt config entry was set up."""

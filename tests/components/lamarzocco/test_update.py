@@ -7,6 +7,8 @@ from pylamarzocco.const import FirmwareType, UpdateProgressInfo, UpdateStatus
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import UpdateDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
@@ -16,9 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

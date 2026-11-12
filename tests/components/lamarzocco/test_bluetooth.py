@@ -13,6 +13,7 @@ from pylamarzocco.const import MachineMode, MachineState, ModelName, WidgetType
 from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 from pylamarzocco.models import BluetoothMachineTelemetry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lamarzocco.const import CONF_OFFLINE_MODE, DOMAIN
@@ -22,13 +23,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import async_init_integration, get_bluetooth_service_info
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Entities with bt_offline_mode=True
 BLUETOOTH_ONLY_BASE_ENTITIES = [
@@ -99,6 +99,24 @@ async def test_bluetooth_coordinator_updates_based_on_websocket_state(
     assert mock_lamarzocco.get_dashboard_from_bluetooth.called
 
 
+@pytest.mark.usefixtures("mock_ble_device_from_address")
+async def test_bluetooth_model_info_skipped_with_cloud(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+) -> None:
+    """Test the model is not read over Bluetooth when the cloud provides it."""
+    # some machines report a family over Bluetooth that can't be parsed
+    mock_lamarzocco.get_model_info_from_bluetooth.side_effect = ValueError(
+        "Invalid model name: LINEA"
+    )
+
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+
+    assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
+    mock_lamarzocco.get_model_info_from_bluetooth.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
@@ -141,6 +159,39 @@ async def test_bt_offline_mode_entity_available_when_cloud_fails(
         )
         assert state
         assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", [ModelName.LINEA_MICRA])
+async def test_bt_offline_mode_steam_boiler_missing_widget(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry_bluetooth: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test steam boiler entities handle a missing steam boiler widget."""
+    await async_init_integration(hass, mock_config_entry_bluetooth)
+
+    del mock_lamarzocco.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL]
+
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in (
+        f"select.{mock_lamarzocco.serial_number}_steam_level",
+        f"switch.{mock_lamarzocco.serial_number}_steam_boiler",
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get(
+        f"sensor.{mock_lamarzocco.serial_number}_steam_boiler_ready_time"
+    )
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "KeyError" not in caplog.text
 
 
 async def test_entity_without_bt_becomes_unavailable_when_cloud_fails_no_bt(
@@ -283,6 +334,7 @@ async def test_setup_through_bluetooth_only(
 
     await async_init_integration(hass, mock_config_entry_bluetooth)
     assert mock_config_entry_bluetooth.state is ConfigEntryState.LOADED
+    mock_lamarzocco_bluetooth.get_model_info_from_bluetooth.assert_called_once()
 
     # Check all Bluetooth entities are available
     for entity_id in entities:
@@ -338,6 +390,7 @@ async def test_manual_offline_mode(
     )
     await hass.config_entries.async_setup(mock_config_entry_bluetooth.entry_id)
     await hass.async_block_till_done()
+    mock_lamarzocco.get_model_info_from_bluetooth.assert_called_once()
 
     main_switch = f"switch.{mock_lamarzocco.serial_number}"
     state = hass.states.get(main_switch)

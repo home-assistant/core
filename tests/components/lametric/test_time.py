@@ -7,6 +7,11 @@ from unittest.mock import MagicMock, call
 from demetriek import LaMetricConnectionError, LaMetricError, ScreensaverMode
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lametric.const import SCAN_INTERVAL
@@ -21,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_START_TIME = "time.frenck_s_lametric_screensaver_start_time"
 ENTITY_END_TIME = "time.frenck_s_lametric_screensaver_end_time"

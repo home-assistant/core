@@ -9,9 +9,14 @@ from aioautomower.model import MowerAttributes, SingleMessageData
 from aioautomower.model.model_message import Message, Severity, SingleMessageAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -21,8 +26,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
@@ -86,7 +89,10 @@ async def test_event(
 
     state = hass.states.get("event.garden_test_mower_1_message")
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
+    assert (
+        state.attributes[EventEntityStateAttribute.EVENT_TYPE]
+        == "wheel_motor_overloaded_rear_left"
+    )
 
     # Reload the config entry to ensure the entity is created again
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
@@ -100,7 +106,10 @@ async def test_event(
 
     state = hass.states.get("event.garden_test_mower_1_message")
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
+    assert (
+        state.attributes[EventEntityStateAttribute.EVENT_TYPE]
+        == "wheel_motor_overloaded_rear_left"
+    )
 
     # Check updating event with a new message
     message = SingleMessageData(
@@ -122,7 +131,9 @@ async def test_event(
     await hass.async_block_till_done()
     state = hass.states.get("event.garden_test_mower_1_message")
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
+    assert (
+        state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "alarm_mower_lifted"
+    )
 
     # Check message for another mower, creates an new entity and dont
     # change the state of the first entity
@@ -146,10 +157,12 @@ async def test_event(
 
     entry = entity_registry.async_get("event.garden_test_mower_1_message")
     assert entry is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
+    assert (
+        state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "alarm_mower_lifted"
+    )
     state = hass.states.get("event.garden_test_mower_2_message")
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "battery_problem"
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "battery_problem"
 
     # Check event entity is removed, when the mower is removed
     values_copy = deepcopy(values)
@@ -211,7 +224,9 @@ async def test_event_destination_blocked(
 
     state = hass.states.get("event.garden_test_mower_1_message")
     assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "destination_blocked"
+    assert (
+        state.attributes[EventEntityStateAttribute.EVENT_TYPE] == "destination_blocked"
+    )
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))

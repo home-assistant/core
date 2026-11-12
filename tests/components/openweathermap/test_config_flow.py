@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyopenweathermap import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import LATITUDE, LONGITUDE
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_API_KEY: "foo",

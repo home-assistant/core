@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_overseerr.exceptions import (
     OverseerrAuthenticationError,
     OverseerrConnectionError,
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import WEBHOOK_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

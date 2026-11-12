@@ -5,12 +5,11 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import aiodhcpwatcher
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.dhcp import DOMAIN
 from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_subscribe_discovery(

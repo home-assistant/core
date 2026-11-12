@@ -1,14 +1,13 @@
 """Tests for the Peblar binary sensor platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("init_integration", [Platform.BINARY_SENSOR], indirect=True)

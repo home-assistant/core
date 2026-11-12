@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
 from homeassistant.components.victron_remote_monitoring.config_flow import SiteNotFound
@@ -14,8 +15,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 def _make_site(site_id: int, name: str = "ESS System") -> Mock:

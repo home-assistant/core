@@ -4,6 +4,7 @@ import logging
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser, mock_platform
 
 from homeassistant.components.llm import DATA_PLATFORMS, LLMTools, async_get_tools
 from homeassistant.core import Context, HomeAssistant
@@ -11,8 +12,6 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import frame, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockUser, mock_platform
 
 
 class _StubTool(llm.Tool):

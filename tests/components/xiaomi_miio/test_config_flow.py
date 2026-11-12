@@ -7,6 +7,7 @@ from construct.core import ChecksumError
 from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.xiaomi_miio import const
@@ -16,8 +17,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
@@ -88,10 +87,10 @@ def xiaomi_miio_connect_fixture():
             return_value=TEST_CLOUD_DEVICES_1,
         ),
         patch(
-            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+            "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=None
         ),
         patch(
-            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
+            "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=None
         ),
     ):
         yield

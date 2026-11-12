@@ -4,7 +4,6 @@ import logging
 from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -42,7 +41,7 @@ class ResponseSwitch(SwitchEntity):
         self,
         coordinator: FireServiceUpdateCoordinator,
         client: FireServiceRotaClient,
-        entry: ConfigEntry,
+        entry: FireServiceConfigEntry,
     ) -> None:
         """Initialize."""
         self._coordinator = coordinator

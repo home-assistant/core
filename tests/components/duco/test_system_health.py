@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from duco_connectivity.exceptions import DucoConnectionError
+from pytest_homeassistant.common import MockConfigEntry, get_system_health_info
 
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, get_system_health_info
 
 
 async def test_system_health_single_entry(

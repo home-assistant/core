@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .conftest import MockAlarmControlPanel
 
@@ -31,11 +31,11 @@ async def help_test_async_alarm_control_panel_service(
     hass: HomeAssistant,
     entity_id: str,
     service: str,
-    code: str | UndefinedType | None = UNDEFINED,
+    code: str | Undefined | None = Undefined,
 ) -> None:
     """Help to lock a test lock."""
     data: dict[str, Any] = {"entity_id": entity_id}
-    if code is not UNDEFINED:
+    if code is not Undefined:
         data[ATTR_CODE] = code
 
     await hass.services.async_call(

@@ -1,8 +1,9 @@
 """Common fixtures for the ENGIE Belgium tests."""
 
-from collections.abc import Generator
-from datetime import date
+from collections.abc import Generator, Iterable
+from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
+from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     AccountRelation,
@@ -12,13 +13,24 @@ from aioengiebelgium import (
     CustomerAccount,
     CustomerAccountRelations,
     EanPrices,
+    EnergyContract,
+    EnergyContractsResponse,
+    EngieBeEpexNotPublishedError,
+    EpexGranularity,
+    EpexPayload,
+    EpexSlot,
+    MonthlyPeaks,
+    Peak,
     PricePeriod,
     PriceSlot,
     PricesResponse,
+    ProductConfiguration,
     ServicePoint,
     bare_ean,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.engie_be.const import (
     CONF_MFA_METHOD,
@@ -26,9 +38,11 @@ from homeassistant.components.engie_be.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
-
+BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"
 SUBJECT = "auth0|69f5b418f3be21cc2ede9c98"
@@ -147,6 +161,136 @@ def build_service_point(ean: str) -> ServicePoint:
     return ServicePoint(ean_energy_types={bare: _SERVICE_POINT_ENERGY_TYPES[bare]})
 
 
+def build_contracts(*, dynamic: bool = False) -> EnergyContractsResponse:
+    """Build an energy-contracts response with one active electricity contract."""
+    return EnergyContractsResponse(
+        items=(
+            EnergyContract(
+                business_agreement_number=BAN,
+                service_point_number=bare_ean(OFFTAKE_INJECTION_EAN),
+                division="ELECTRICITY",
+                status="ACTIVE",
+                product_configuration=ProductConfiguration(
+                    energy_product="DYNAMIC" if dynamic else "FIXED"
+                ),
+            ),
+        )
+    )
+
+
+def _api_timestamp(moment: datetime) -> datetime:
+    """Return a timestamp carrying the fixed Brussels offset the API would send."""
+    wall = BRUSSELS_TIME_ZONE.fromutc(moment.replace(tzinfo=BRUSSELS_TIME_ZONE))
+    return wall.replace(tzinfo=timezone(wall.utcoffset()))
+
+
+def build_epex_payload(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Build an EPEX payload of Brussels-offset slots covering the window with rising values."""
+    step = timedelta(minutes=granularity.value)
+    slots: list[EpexSlot] = []
+    moment = start.astimezone(UTC)
+    end_utc = end.astimezone(UTC)
+    while moment < end_utc:
+        local = moment.astimezone(BRUSSELS_TIME_ZONE)
+        slots.append(
+            EpexSlot(
+                start=_api_timestamp(moment),
+                end=_api_timestamp(moment + step),
+                value_eur_per_kwh=round((local.hour + 1 + local.minute / 60) / 100, 6),
+            )
+        )
+        moment = moment + step
+    return EpexPayload(slots=tuple(slots), slot_duration=step)
+
+
+def build_epex_payload_without_tomorrow(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Raise for any window after today and build a payload otherwise."""
+    if (
+        start.astimezone(BRUSSELS_TIME_ZONE).date()
+        > dt_util.now(BRUSSELS_TIME_ZONE).date()
+    ):
+        raise EngieBeEpexNotPublishedError("not published")
+    return build_epex_payload(start, end, granularity)
+
+
+def build_epex_payload_with_gap(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Return an hourly payload without the slot covering the frozen afternoon."""
+    payload = build_epex_payload(start, end, granularity)
+    if granularity is not EpexGranularity.HOURLY:
+        return payload
+    gap_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    return EpexPayload(
+        slots=tuple(slot for slot in payload.slots if slot.start != gap_start),
+        slot_duration=payload.slot_duration,
+    )
+
+
+def build_epex_payload_with_partial_tomorrow(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Return one slot for tomorrow windows and a full payload otherwise."""
+    if (
+        start.astimezone(BRUSSELS_TIME_ZONE).date()
+        > dt_util.now(BRUSSELS_TIME_ZONE).date()
+    ):
+        payload = build_epex_payload(start, end, granularity)
+        return EpexPayload(slots=payload.slots[:1], slot_duration=payload.slot_duration)
+    return build_epex_payload(start, end, granularity)
+
+
+def build_peak(
+    start: datetime, *, power_kw: float = 4.2, energy_kwh: float = 1.05
+) -> Peak:
+    """Build a 15-minute capacity tariff peak starting at the given moment."""
+    return Peak(
+        peak_kw=power_kw,
+        peak_kwh=energy_kwh,
+        start=start,
+        end=start + timedelta(minutes=15),
+    )
+
+
+def build_monthly_peaks(
+    year: int,
+    month: int,
+    *,
+    peak: Peak | None = None,
+    daily_peaks: tuple[Peak, ...] = (),
+    previous_peak: Peak | None = None,
+) -> MonthlyPeaks:
+    """Build a monthly peaks response for the given month."""
+    return MonthlyPeaks(
+        year=year,
+        month=month,
+        peak_of_the_month=peak,
+        daily_peaks=daily_peaks,
+        previous_peak_of_the_month=previous_peak,
+    )
+
+
+def build_monthly_peaks_for_request(
+    ban: str, year: int, month: int, *, day: int | None = None
+) -> MonthlyPeaks:
+    """Build a peaks response with one peak on the 15th of the requested month."""
+    start = datetime(year, month, 15, 18, 0, tzinfo=BRUSSELS_TIME_ZONE)
+    peak = build_peak(start, power_kw=4.2, energy_kwh=1.05)
+    return build_monthly_peaks(year, month, peak=peak, daily_peaks=(peak,))
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
@@ -179,6 +323,9 @@ def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
         client.async_get_customer_account_relations.return_value = build_relations()
         client.async_get_prices.return_value = build_prices()
         client.async_get_service_point.side_effect = build_service_point
+        client.async_get_energy_contracts.return_value = build_contracts()
+        client.async_get_epex_prices.side_effect = build_epex_payload
+        client.async_get_monthly_peaks.side_effect = build_monthly_peaks_for_request
         client.async_start_authentication.return_value = mock_auth_flow
         yield mock_client_class
 
@@ -197,6 +344,38 @@ def mock_auth_flow() -> MagicMock:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.engie_be.async_setup_entry", return_value=True
+        "homeassistant.components.engie_be.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def frozen_afternoon(freezer: FrozenDateTimeFactory) -> None:
+    """Freeze time on a Brussels Saturday afternoon."""
+    freezer.move_to(datetime(2026, 10, 3, 14, 0, tzinfo=BRUSSELS_TIME_ZONE))
+
+
+def without_capacity_tariff(
+    entries: Iterable[er.RegistryEntry],
+) -> list[er.RegistryEntry]:
+    """Return the given registry entries excluding the capacity tariff peak sensors."""
+    return [entry for entry in entries if "_capacity_tariff_" not in entry.unique_id]
+
+
+async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
+    """Set up a loaded ENGIE Belgium entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def setup_dynamic_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+) -> None:
+    """Set up an entry whose household has a dynamic electricity tariff."""
+    mock_engie_client.return_value.async_get_energy_contracts.return_value = (
+        build_contracts(dynamic=True)
+    )
+    await setup_entry(hass, mock_config_entry)

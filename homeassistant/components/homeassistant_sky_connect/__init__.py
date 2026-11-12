@@ -2,10 +2,12 @@
 
 from dataclasses import dataclass
 import logging
-import os.path
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
+)
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_get_serial_port_via_device_id,
 )
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     async_create_multi_pan_migration_issue,
@@ -17,6 +19,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
 from homeassistant.components.usb import (
     USBDevice,
+    async_is_serial_port_present,
     async_register_port_event_callback,
     async_scan_serial_ports,
 )
@@ -55,6 +58,7 @@ class HomeAssistantSkyConnectData:
     """Runtime data definition."""
 
     coordinator: FirmwareUpdateCoordinator
+    via_device_id: str | None
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -92,12 +96,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Set up a Home Assistant SkyConnect config entry."""
 
     # Postpone loading the config entry if the device is missing
     device_path = entry.data[DEVICE]
-    if not await hass.async_add_executor_job(os.path.exists, device_path):
+    if not await async_is_serial_port_present(hass, device_path):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="device_disconnected",
@@ -121,23 +125,26 @@ async def async_setup_entry(
         session,
         NABU_CASA_FIRMWARE_RELEASES_URL,
     )
-    entry.runtime_data = HomeAssistantSkyConnectData(coordinator)
+    entry.runtime_data = HomeAssistantSkyConnectData(
+        coordinator=coordinator,
+        via_device_id=async_get_serial_port_via_device_id(hass, device_path),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
-
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, ["switch", "update"]
+    )
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HomeAssistantSkyConnectConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     _LOGGER.debug(
@@ -190,7 +197,9 @@ async def async_migrate_entry(
 
                 if not (usb_info := serial_ports_info.get(device)):
                     raise HomeAssistantError(
-                        f"USB device {device} is missing, cannot migrate"
+                        translation_domain=DOMAIN,
+                        translation_key="device_missing_migration",
+                        translation_placeholders={"device": device},
                     )
 
                 assert isinstance(usb_info, USBDevice)
@@ -292,5 +301,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

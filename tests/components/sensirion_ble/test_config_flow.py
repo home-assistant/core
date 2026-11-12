@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.sensirion_ble.const import DOMAIN
@@ -15,8 +16,6 @@ from .fixtures import (
     NOT_SENSIRION_SERVICE_INFO,
     SENSIRION_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +33,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     with patch(
-        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=True
+        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -84,7 +83,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     mock_request_active_scan.assert_awaited_once_with(hass)
     with patch(
-        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=True
+        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -115,7 +114,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=True
+        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -206,7 +205,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=True
+        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -245,7 +244,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=True
+        "homeassistant.components.sensirion_ble.async_setup_entry", return_value=None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

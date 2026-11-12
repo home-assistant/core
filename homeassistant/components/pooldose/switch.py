@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PooldoseConfigEntry
+from .coordinator import PooldoseConfigEntry
 from .entity import PooldoseEntity
 
 if TYPE_CHECKING:
@@ -72,6 +72,7 @@ class PooldoseSwitch(PooldoseEntity, SwitchEntity):
         super().__init__(coordinator, serial_number, device_info, description, "switch")
         self._async_update_attrs()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

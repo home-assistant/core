@@ -7,6 +7,7 @@ import blebox_uniapi.error
 import blebox_uniapi.update
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
@@ -30,8 +31,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(name="firmwareupdate")

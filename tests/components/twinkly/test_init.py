@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.twinkly.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MAC, TEST_MODEL
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_twinkly_client")

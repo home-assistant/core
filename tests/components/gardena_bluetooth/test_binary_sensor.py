@@ -4,14 +4,13 @@ from collections.abc import Awaitable, Callable
 
 from gardena_bluetooth.const import Valve
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_entry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

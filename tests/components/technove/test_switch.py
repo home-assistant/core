@@ -4,15 +4,17 @@ from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from technove import TechnoVEConnectionError, TechnoVEError
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -20,8 +22,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
@@ -127,8 +127,8 @@ async def test_invalid_response(
     with pytest.raises(HomeAssistantError, match="Invalid response from TechnoVE API"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: state.entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -167,8 +167,8 @@ async def test_connection_error(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: state.entity_id},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -196,8 +196,8 @@ async def test_disable_charging_auto_charge(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 

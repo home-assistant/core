@@ -7,6 +7,7 @@ from opendata_transport.exceptions import (
     OpendataTransportError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.swiss_public_transport import config_flow
 from homeassistant.components.swiss_public_transport.const import (
@@ -23,8 +24,6 @@ from homeassistant.components.swiss_public_transport.const import (
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

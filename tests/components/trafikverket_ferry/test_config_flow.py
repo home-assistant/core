@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
 
 from homeassistant import config_entries
@@ -15,8 +16,6 @@ from homeassistant.components.trafikverket_ferry.const import (
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -34,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_ferry.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -78,7 +77,7 @@ async def test_no_time(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_ferry.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -156,7 +155,7 @@ async def test_flow_fails(
         ),
         patch(
             "homeassistant.components.trafikverket_ferry.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -200,7 +199,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_ferry.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -278,7 +277,7 @@ async def test_reauth_flow_error(
         ),
         patch(
             "homeassistant.components.trafikverket_ferry.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
