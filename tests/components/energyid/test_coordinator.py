@@ -83,10 +83,7 @@ async def _setup_with_directives(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    coordinator = mock_config_entry.runtime_data.directive_coordinator
-    # Without entities nothing listens to the coordinator, so it wouldn't poll.
-    coordinator.async_add_listener(lambda: None)
-    return coordinator
+    return mock_config_entry.runtime_data.directive_coordinator
 
 
 async def test_directives_require_opt_in(
@@ -363,30 +360,45 @@ async def test_startup_failure_does_not_block_setup(
     assert set(coordinator.data.resources) == {DIRECTIVE_ID}
 
 
-@pytest.mark.parametrize("status", [401, 403])
-async def test_rejected_credentials_at_startup_start_reauth(
+async def test_unauthorized_at_startup_does_not_block_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
-    status: int,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test rejected credentials on the first fetch fail setup and start reauth."""
+    """Test a 401 on the first fetch leaves the entry loaded without reauth."""
     mock_webhook_client.api_access_token = "device-token"
     mock_webhook_client.get_directives = AsyncMock(
         side_effect=ClientResponseError(
-            request_info=MagicMock(), history=(), status=status
+            request_info=MagicMock(), history=(), status=401
         )
     )
-    hass.config_entries.async_update_entry(
-        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
+
+    assert not coordinator.last_update_success
+    assert "Unable to retrieve EnergyID directives" in caplog.text
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_forbidden_means_no_directives(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test a 403 on the directive list means no directive is granted."""
+    mock_webhook_client.api_access_token = "device-token"
+    mock_webhook_client.get_directives = AsyncMock(
+        side_effect=ClientResponseError(
+            request_info=MagicMock(), history=(), status=403
+        )
     )
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    coordinator = await _setup_with_directives(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+    assert coordinator.last_update_success
+    assert coordinator.data.resources == {}
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_access_granted_after_setup(
@@ -410,60 +422,83 @@ async def test_access_granted_after_setup(
     assert set(coordinator.data.resources) == {DIRECTIVE_ID}
     state = coordinator.data.schedules[DIRECTIVE_ID].state_at(dt_util.utcnow())
     assert state.current == schedule.data[0]
+    # Slots with the same signal are not a change.
+    assert state.next_change == schedule.data[4].timestamp
+    assert state.next_signal == schedule.data[4]
 
 
-@pytest.mark.parametrize("status", [401, 403])
-async def test_rejected_credentials_start_reauth(
+async def _poll_with_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    method: str,
     status: int,
-) -> None:
-    """Test rejected credentials while polling start the reauthentication flow."""
+) -> EnergyIDDirectiveCoordinator:
+    """Set up one directive, then let the next poll get an HTTP error."""
     resource, schedule = _directive_fixture()
     mock_webhook_client.api_access_token = "device-token"
     mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
     mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
     coordinator = await _setup_with_directives(hass, mock_config_entry)
 
-    mock_webhook_client.get_directives.side_effect = ClientResponseError(
+    getattr(mock_webhook_client, method).side_effect = ClientResponseError(
         request_info=MagicMock(), history=(), status=status
     )
     freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert not coordinator.last_update_success
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+    return coordinator
 
 
-@pytest.mark.parametrize("status", [401, 403])
-async def test_rejected_schedule_credentials_start_reauth(
+@pytest.mark.parametrize("method", ["get_directives", "get_directive_data"])
+async def test_unauthorized_while_polling_fails_update_without_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    status: int,
+    method: str,
 ) -> None:
-    """Test credentials rejected on a schedule start reauthentication."""
-    resource, schedule = _directive_fixture()
-    mock_webhook_client.api_access_token = "device-token"
-    mock_webhook_client.get_directives = AsyncMock(return_value=[resource])
-    mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
-    coordinator = await _setup_with_directives(hass, mock_config_entry)
-
-    mock_webhook_client.get_directive_data.side_effect = ClientResponseError(
-        request_info=MagicMock(), history=(), status=status
+    """Test a 401 that survives the client's own retry only fails the update."""
+    coordinator = await _poll_with_error(
+        hass, mock_config_entry, mock_webhook_client, freezer, method, 401
     )
-    freezer.tick(DIRECTIVE_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_forbidden_while_polling_removes_directives(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test access withdrawn while polling leaves no directives."""
+    coordinator = await _poll_with_error(
+        hass, mock_config_entry, mock_webhook_client, freezer, "get_directives", 403
+    )
+
+    assert coordinator.last_update_success
+    assert coordinator.data.resources == {}
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_forbidden_schedule_only_drops_that_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a 403 on one schedule keeps the directive but drops its schedule."""
+    coordinator = await _poll_with_error(
+        hass, mock_config_entry, mock_webhook_client, freezer, "get_directive_data", 403
+    )
+
+    assert coordinator.last_update_success
+    assert set(coordinator.data.resources) == {DIRECTIVE_ID}
+    assert coordinator.data.schedules == {}
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_schedule_server_error_keeps_directive_granted(
@@ -501,6 +536,11 @@ async def _lose_claim_and_deny(client: MagicMock, *_args: object) -> NoReturn:
     raise PermissionError("The device is not authenticated")
 
 
+async def _lose_claim_and_reject(client: MagicMock, *_args: object) -> NoReturn:
+    client.is_claimed = False
+    raise ClientResponseError(request_info=MagicMock(), history=(), status=401)
+
+
 @pytest.mark.parametrize(
     ("method", "lose_claim"),
     [
@@ -511,7 +551,15 @@ async def _lose_claim_and_deny(client: MagicMock, *_args: object) -> NoReturn:
             "get_directives", _lose_claim_and_deny, id="get_directives_denied"
         ),
         pytest.param(
+            "get_directives", _lose_claim_and_reject, id="get_directives_rejected"
+        ),
+        pytest.param(
             "get_directive_data", _lose_claim_and_deny, id="get_directive_data"
+        ),
+        pytest.param(
+            "get_directive_data",
+            _lose_claim_and_reject,
+            id="get_directive_data_rejected",
         ),
     ],
 )

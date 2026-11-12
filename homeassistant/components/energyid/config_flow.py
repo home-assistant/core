@@ -10,6 +10,7 @@ from energyid_webhooks.client_v2 import WebhookClient
 import probatio
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -234,6 +235,10 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask whether to receive directives, then create the entry."""
+        if self.source == SOURCE_REAUTH:
+            return self._async_finish_reauth()
+        await self.async_set_unique_id(self._flow_data[CONF_DEVICE_ID])
+        self._abort_if_unique_id_configured()
         if user_input is not None:
             _LOGGER.debug(
                 "Creating entry with title: %s", self._flow_data["record_name"]
@@ -250,6 +255,21 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="directives",
             data_schema=_directives_schema(False),
             description_placeholders=DIRECTIVES_PLACEHOLDERS,
+        )
+
+    @callback
+    def _async_finish_reauth(self) -> ConfigFlowResult:
+        """Store the new credentials when they still link the same record."""
+        reauth_entry = self._get_reauth_entry()
+        # The unique ID is the generated device ID, so the record is the identity.
+        if self._flow_data["record_number"] != reauth_entry.data["record_number"]:
+            return self.async_abort(reason="wrong_account")
+        return self.async_update_reload_and_abort(
+            reauth_entry,
+            data_updates={
+                CONF_PROVISIONING_KEY: self._flow_data[CONF_PROVISIONING_KEY],
+                CONF_PROVISIONING_SECRET: self._flow_data[CONF_PROVISIONING_SECRET],
+            },
         )
 
     async def async_step_reauth(
@@ -274,16 +294,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
-                # Authentication successful and claimed
-                await self.async_set_unique_id(self._flow_data["record_number"])
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_PROVISIONING_KEY: user_input[CONF_PROVISIONING_KEY],
-                        CONF_PROVISIONING_SECRET: user_input[CONF_PROVISIONING_SECRET],
-                    },
-                )
+                return self._async_finish_reauth()
 
             if auth_status == "needs_claim":
                 return await self.async_step_auth_and_claim()
