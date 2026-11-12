@@ -3,7 +3,6 @@
 import logging
 
 from tplink_omada_client import OmadaSite
-from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -76,16 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, entry, client, site_client)
-    await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
 
-    _remove_old_devices(
-        hass,
-        entry,
-        controller.devices_coordinator.data,
-        controller.controller_status_coordinator.data.mac,
-    )
+    # The first refresh sweeps stale registry entries before platforms create
+    # entities, so replaced devices do not push new entities onto suffixed IDs.
+    await controller.initialize_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -95,22 +90,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> No
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-def _remove_old_devices(
+async def async_remove_config_entry_device(
     hass: HomeAssistant,
-    entry: OmadaConfigEntry,
-    omada_devices: dict[str, OmadaListDevice],
-    controller_mac: str,
-) -> None:
-    device_registry = dr.async_get(hass)
-
-    for registered_device in dr.async_entries_for_config_entry(
-        device_registry, entry.entry_id
-    ):
-        mac = next(
-            (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
-        )
-        if mac and mac != controller_mac and mac not in omada_devices:
-            device_registry.async_remove_device(registered_device.id)
+    config_entry: OmadaConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Remove a device from the registry and drop its cached state."""
+    controller = getattr(config_entry, "runtime_data", None)
+    if controller is None:
+        return False
+    mac = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    controller_status = controller.controller_status_coordinator.data
+    if mac is None or (controller_status is not None and mac == controller_status.mac):
+        return False
+    await controller.async_forget_device(mac)
+    controller.forget_cached_device(mac)
+    return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
