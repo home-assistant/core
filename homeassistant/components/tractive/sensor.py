@@ -143,6 +143,56 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    TractiveSensorEntityDescription(
+        key="resting_heart_rate_status",
+        translation_key="resting_heart_rate_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "calculating_baseline",
+            "elevated",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
+    ),
+    TractiveSensorEntityDescription(
+        key="resting_respiratory_rate_status",
+        translation_key="resting_respiratory_rate_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "calculating_baseline",
+            "elevated",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
+    ),
+    TractiveSensorEntityDescription(
+        key="bark_status",
+        translation_key="bark_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "calculating_baseline",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
+    ),
+    TractiveSensorEntityDescription(
+        key="scratch_status",
+        translation_key="scratch_status",
+        health_sensor=True,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "infrequent",
+            "normal",
+            "not_enough_data_today",
+            "not_synced_yet",
+        ],
+    ),
 )
 
 

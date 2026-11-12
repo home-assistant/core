@@ -37,6 +37,10 @@ async def test_sensor(
             minutes_night_sleep=300,
             minutes_rest=122,
             weight=23700,
+            bark_status="not_synced_yet",
+            resting_heart_rate_status="normal",
+            resting_respiratory_rate_status="elevated",
+            scratch_status="not_enough_data_today",
         )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -79,6 +83,10 @@ async def test_sensor_device_assignment(
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
         "sensor.test_pet_weight",
+        "sensor.test_pet_bark_status",
+        "sensor.test_pet_resting_heart_rate_status",
+        "sensor.test_pet_resting_respiratory_rate_status",
+        "sensor.test_pet_scratch_status",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
@@ -130,6 +138,10 @@ async def test_sensor_without_health_data(
         "sensor.test_pet_daily_goal",
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
+        "sensor.test_pet_bark_status",
+        "sensor.test_pet_resting_heart_rate_status",
+        "sensor.test_pet_resting_respiratory_rate_status",
+        "sensor.test_pet_scratch_status",
     ):
         assert hass.states.get(entity_id) is None
 
