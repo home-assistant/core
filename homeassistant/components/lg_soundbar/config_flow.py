@@ -103,8 +103,8 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         if not details:
             return self.async_abort(reason="no_data")
-        # Without a reported uuid, nothing identifies the soundbar:
-        # the announced uuid differs and would not match manual entries
+        # Some models report no uuid and are set up by hand:
+        # the announced uuid differs and would not match their entries
         if "uuid" not in details:
             return self.async_abort(reason="not_supported")
 
