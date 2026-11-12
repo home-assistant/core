@@ -7,6 +7,7 @@ from typing import override
 
 from pyocat.models import (
     DeviceResponse,
+    EventCategory,
     MeasurementResponse,
     MlState,
     ModeId,
@@ -61,7 +62,7 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         key="event.category",
         translation_key="event_category",
         device_class=SensorDeviceClass.ENUM,
-        options=["error", "warning", "info"],
+        options=list(EventCategory),
         value_fn=lambda data: data.event.category if data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](
