@@ -906,6 +906,9 @@
       "last_watering_time": {
         "name": "Last watering time"
       },
+      "leakage_current": {
+        "name": "Leakage current"
+      },
       "lifetime_battery_charge_energy": {
         "name": "Lifetime battery charge energy"
       },

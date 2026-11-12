@@ -129,6 +129,13 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.DLQ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.RELAY_STATUS,
+            translation_key="relay_status",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DR: (
         TuyaSelectEntityDescription(
             key=DPCode.LEVEL,
