@@ -24,9 +24,9 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_HOST,
-    CommonServiceArgument,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -487,8 +487,8 @@ async def test_ptz_preset_buttons_on_hub_cameras(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: BACK_CAMERA_DOOR_ENTITY_ID},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: BACK_CAMERA_DOOR_ENTITY_ID},
         blocking=True,
     )
     back_camera.modules[Module.PanTilt].goto_preset.assert_called_once_with("1")
