@@ -905,9 +905,7 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any], start: float | None = None
 ) -> None:
     """Set up all the integrations."""
-    watcher = _WatchPendingSetups(
-        hass, _setup_started(hass), monotonic() if start is None else start
-    )
+    watcher = _WatchPendingSetups(hass, _setup_started(hass), start or monotonic())
     watcher.async_start()
 
     integrations, all_integrations = await _async_resolve_domains_and_preload(
