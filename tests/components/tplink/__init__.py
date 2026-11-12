@@ -16,7 +16,7 @@ from kasa import (
     ThermostatState,
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState, Thermostat
-from kasa.smart.modules import Speaker
+from kasa.smart.modules import HumiditySensor, Speaker
 from kasa.smart.modules.alarm import Alarm
 from kasa.smart.modules.clean import AreaUnit, Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
@@ -445,6 +445,13 @@ def _mocked_thermostat_module(device):
     return therm
 
 
+def _mocked_humidity_module(device):
+    humidity = MagicMock(auto_spec=HumiditySensor, name="Mocked humidity sensor")
+    humidity.humidity = 57
+
+    return humidity
+
+
 def _mocked_clean_module(device):
     clean = MagicMock(auto_spec=Clean, name="Mocked clean")
 
@@ -551,6 +558,7 @@ MODULE_TO_MOCK_GEN = {
     Module.Alarm: _mocked_alarm_module,
     Module.Camera: _mocked_camera_module,
     Module.Thermostat: _mocked_thermostat_module,
+    Module.HumiditySensor: _mocked_humidity_module,
     Module.Clean: _mocked_clean_module,
     Module.Speaker: _mocked_speaker_module,
 }
