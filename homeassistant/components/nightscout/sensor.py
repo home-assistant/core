@@ -2,18 +2,31 @@
 
 from typing import Any, override
 
+from py_nightscout.models import ServerStatus
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
+from homeassistant.const import (
+    ATTR_DATE,
+    CONF_URL,
+    EntityCategory,
+    UnitOfBloodGlucoseConcentration,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION
-from .coordinator import NightscoutConfigEntry, NightscoutGlucoseCoordinator
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from .coordinator import (
+    NightscoutConfigEntry,
+    NightscoutGlucoseCoordinator,
+    NightscoutStatusCoordinator,
+)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -30,6 +43,44 @@ TREND_ICONS = {
     "DoubleUp": "mdi:chevron-triple-up",
 }
 
+# Nightscout always reports thresholds in mg/dL, even on mmol/L sites
+THRESHOLD_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="bgHigh",
+        translation_key="urgent_high_threshold",
+        device_class=SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION,
+        native_unit_of_measurement=UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bgTargetTop",
+        translation_key="target_range_top",
+        device_class=SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION,
+        native_unit_of_measurement=UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bgTargetBottom",
+        translation_key="target_range_bottom",
+        device_class=SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION,
+        native_unit_of_measurement=UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bgLow",
+        translation_key="urgent_low_threshold",
+        device_class=SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION,
+        native_unit_of_measurement=UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
+def _get_thresholds(status: ServerStatus) -> dict[str, Any] | None:
+    """Return the thresholds from the server status settings."""
+    thresholds: dict[str, Any] | None = (status.settings or {}).get("thresholds")
+    return thresholds
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -37,8 +88,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Glucose Sensor."""
-    coordinator = entry.runtime_data
-    async_add_entities([NightscoutSensor(coordinator, "Blood Sugar", entry.unique_id)])
+    glucose_coordinator = entry.runtime_data.glucose
+    status_coordinator = entry.runtime_data.status
+    entities: list[SensorEntity] = [
+        NightscoutSensor(glucose_coordinator, "Blood Sugar", entry.unique_id)
+    ]
+    if _get_thresholds(status_coordinator.data) is not None:
+        entities.extend(
+            NightscoutThresholdSensor(status_coordinator, description)
+            for description in THRESHOLD_SENSORS
+        )
+    async_add_entities(entities)
 
 
 class NightscoutSensor(CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEntity):
@@ -98,3 +158,33 @@ class NightscoutSensor(CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEn
         if reading is None:
             return "mdi:cloud-question"
         return TREND_ICONS.get(reading.direction, "mdi:cloud-question")
+
+
+class NightscoutThresholdSensor(
+    CoordinatorEntity[NightscoutStatusCoordinator], SensorEntity
+):
+    """A glucose threshold configured on the Nightscout server."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: NightscoutStatusCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the threshold sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        entry = coordinator.config_entry
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_URL])}
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the threshold value."""
+        thresholds = _get_thresholds(self.coordinator.data) or {}
+        value: float | None = thresholds.get(self.entity_description.key)
+        return value
