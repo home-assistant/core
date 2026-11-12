@@ -73,7 +73,11 @@ from .helper import (
     async_stream_endpoint_url,
     get_camera_from_entity_id,
 )
-from .img_util import TurboJPEGSingleton, scale_jpeg_camera_image
+from .img_util import (
+    TurboJPEGSingleton,
+    async_ensure_turbojpeg,
+    scale_jpeg_camera_image,
+)
 from .prefs import (
     CameraPreferences,
     DynamicStreamSettings,
@@ -206,6 +210,7 @@ async def _async_get_image(
                 ):
                     assert width is not None
                     assert height is not None
+                    await async_ensure_turbojpeg(camera.hass)
                     return Image(
                         content_type, scale_jpeg_camera_image(image, width, height)
                     )
