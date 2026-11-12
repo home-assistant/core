@@ -152,7 +152,7 @@ class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_SERIAL_NUMBER: self._device.serial_number,
+                    "serial": self._device.serial_number,
                 }
             }
         )

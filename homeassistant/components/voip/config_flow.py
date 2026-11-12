@@ -5,15 +5,11 @@ from typing import Any, override
 import probatio
 from voip_utils import SIP_PORT
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import config_validation as cv
 
+from . import VoipConfigEntry
 from .const import CONF_SIP_PORT, CONF_SIP_USER, DOMAIN
 
 
@@ -47,7 +43,7 @@ class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: VoipConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return VoipOptionsFlowHandler()

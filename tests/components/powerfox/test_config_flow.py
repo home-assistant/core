@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, patch
 
-from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
+from powerfox import (
+    PowerfoxAuthenticationError,
+    PowerfoxConnectionError,
+    PowerfoxNoDataError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -140,6 +144,7 @@ async def test_duplicate_entry_reconfiguration(
     [
         (PowerfoxConnectionError, "cannot_connect"),
         (PowerfoxAuthenticationError, "invalid_auth"),
+        (PowerfoxNoDataError, "no_devices"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -203,6 +208,7 @@ async def test_step_reauth(
     [
         (PowerfoxConnectionError, "cannot_connect"),
         (PowerfoxAuthenticationError, "invalid_auth"),
+        (PowerfoxNoDataError, "no_devices"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -275,6 +281,7 @@ async def test_reconfigure(
     [
         (PowerfoxConnectionError, "cannot_connect"),
         (PowerfoxAuthenticationError, "invalid_auth"),
+        (PowerfoxNoDataError, "no_devices"),
     ],
 )
 async def test_reconfigure_exceptions(

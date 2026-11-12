@@ -4,7 +4,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 import logging
 from typing import Any, Literal, final, override
@@ -448,8 +448,13 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
         *,
         context: Context | None = None,
+        audio_settings: AudioSettings | None = None,
     ) -> None:
-        """Triggers an Assist pipeline in Home Assistant from a satellite."""
+        """Triggers an Assist pipeline in Home Assistant from a satellite.
+
+        silence_seconds in audio_settings is always taken from the satellite's
+        VAD sensitivity.
+        """
         await self._cancel_running_pipeline()
 
         # Consume system prompt in first pipeline
@@ -528,8 +533,9 @@ class AssistSatelliteEntity(entity.Entity):
                         satellite_id=self.entity_id,
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
-                        audio_settings=AudioSettings(
-                            silence_seconds=self._resolve_vad_sensitivity()
+                        audio_settings=replace(
+                            audio_settings or AudioSettings(),
+                            silence_seconds=self._resolve_vad_sensitivity(),
                         ),
                         start_stage=start_stage,
                         end_stage=end_stage,

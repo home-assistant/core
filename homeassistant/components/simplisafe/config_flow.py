@@ -21,7 +21,6 @@ from . import SimpliSafeConfigEntry
 from .const import DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
-CONF_DOCUMENTATION_URL = "documentation_url"
 DOCUMENTATION_URL = (
     "https://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
 )

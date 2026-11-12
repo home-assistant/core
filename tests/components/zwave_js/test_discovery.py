@@ -13,17 +13,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
@@ -40,6 +37,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     EntityCategory,
     Platform,
 )
@@ -96,6 +94,25 @@ async def test_zvidar_state(hass: HomeAssistant, client, zvidar, integration) ->
 
     state = hass.states.get("cover.window_blind_controller")
     assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHADE
+
+
+async def test_simon_io_700_roller_blind(
+    hass: HomeAssistant,
+    client: MagicMock,
+    simon_io_700_roller_blind: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that Simon IO 700 roller blind multilevel switch value is discovered as a cover."""
+    node = simon_io_700_roller_blind
+    assert node.device_class.specific.label == "Unused"
+
+    state = hass.states.get("light.simon_io_700_roller_blind")
+    assert not state
+
+    state = hass.states.get("cover.simon_io_700_roller_blind")
+    assert state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == CoverDeviceClass.SHUTTER
 
 
 async def test_ge_12730(hass: HomeAssistant, client, ge_12730, integration) -> None:
@@ -428,8 +445,8 @@ async def test_indicator_test(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1
@@ -448,8 +465,8 @@ async def test_indicator_test(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert client.async_send_command.call_count == 1

@@ -10,15 +10,12 @@ from pydrawise.schema import Zone
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.hydrawise.const import (
-    ATTR_DURATION,
-    ATTR_UNTIL,
-    DOMAIN,
-    SERVICE_RESUME,
-    SERVICE_START_WATERING,
-    SERVICE_SUSPEND,
+from homeassistant.components.hydrawise.const import DOMAIN
+from homeassistant.components.hydrawise.services import (
+    HydrawiseService,
+    HydrawiseServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -32,10 +29,10 @@ async def test_start_watering(
     """Test that the start_watering service works as intended."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_WATERING,
+        HydrawiseService.START_WATERING,
         {
-            ATTR_ENTITY_ID: "binary_sensor.zone_one_watering",
-            ATTR_DURATION: 20,
+            CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering",
+            HydrawiseServiceArgument.DURATION: 20,
         },
         blocking=True,
     )
@@ -53,8 +50,8 @@ async def test_start_watering_no_duration(
     """Test that the start_watering service works with no duration specified."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_WATERING,
-        {ATTR_ENTITY_ID: "binary_sensor.zone_one_watering"},
+        HydrawiseService.START_WATERING,
+        {CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering"},
         blocking=True,
     )
     mock_pydrawise.start_zone.assert_called_once_with(zones[0], custom_run_duration=0)
@@ -69,8 +66,8 @@ async def test_resume(
     """Test that the resume service works as intended."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESUME,
-        {ATTR_ENTITY_ID: "binary_sensor.zone_one_watering"},
+        HydrawiseService.RESUME,
+        {CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering"},
         blocking=True,
     )
     mock_pydrawise.resume_zone.assert_called_once_with(zones[0])
@@ -85,10 +82,10 @@ async def test_suspend(
     """Test that the suspend service works as intended."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SUSPEND,
+        HydrawiseService.SUSPEND,
         {
-            ATTR_ENTITY_ID: "binary_sensor.zone_one_watering",
-            ATTR_UNTIL: datetime(2026, 1, 1, 0, 0, 0),
+            CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering",
+            HydrawiseServiceArgument.UNTIL: datetime(2026, 1, 1, 0, 0, 0),
         },
         blocking=True,
     )
@@ -100,9 +97,13 @@ async def test_suspend(
 @pytest.mark.parametrize(
     ("service", "service_data", "api_method"),
     [
-        (SERVICE_START_WATERING, {}, "start_zone"),
-        (SERVICE_SUSPEND, {ATTR_UNTIL: datetime(2026, 1, 1, 0, 0, 0)}, "suspend_zone"),
-        (SERVICE_RESUME, {}, "resume_zone"),
+        (HydrawiseService.START_WATERING, {}, "start_zone"),
+        (
+            HydrawiseService.SUSPEND,
+            {HydrawiseServiceArgument.UNTIL: datetime(2026, 1, 1, 0, 0, 0)},
+            "suspend_zone",
+        ),
+        (HydrawiseService.RESUME, {}, "resume_zone"),
     ],
 )
 @pytest.mark.parametrize(
@@ -131,7 +132,10 @@ async def test_service_api_error(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "binary_sensor.zone_one_watering", **service_data},
+            {
+                CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering",
+                **service_data,
+            },
             blocking=True,
         )
 

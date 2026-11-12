@@ -1,11 +1,12 @@
 """Services for Green Planet Energy integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 
 import probatio
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -21,16 +22,24 @@ from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
 
-SERVICE_GET_PRICES = "get_prices"
-ATTR_HOURS = "hours"
-SERVICE_GET_CHEAPEST_DURATION = "get_cheapest_duration"
-
-ATTR_DURATION = "duration"
-ATTR_TIME_RANGE = "time_range"
-
 TIME_RANGE_DAY = "day"
 TIME_RANGE_NIGHT = "night"
 TIME_RANGE_FULL_DAY = "full_day"
+
+
+class GreenPlanetEnergyService(StrEnum):
+    """Store keys for Green Planet Energy services."""
+
+    GET_CHEAPEST_DURATION = "get_cheapest_duration"
+    GET_PRICES = "get_prices"
+
+
+class GreenPlanetEnergyServiceArgument(StrEnum):
+    """Store keys for Green Planet Energy service arguments."""
+
+    DURATION = "duration"
+    TIME_RANGE = "time_range"
+    HOURS = "hours"
 
 
 def _validate_hours(v: float) -> float:
@@ -42,10 +51,10 @@ def _validate_hours(v: float) -> float:
 
 SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
-        probatio.Required(ATTR_HOURS): probatio.All(
+        probatio.Required(GreenPlanetEnergyServiceArgument.HOURS): probatio.All(
             probatio.Coerce(float),
             probatio.Range(min=0.25, max=24),
             _validate_hours,
@@ -55,12 +64,12 @@ SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
 
 SERVICE_GET_CHEAPEST_DURATION_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DURATION): probatio.All(
+        probatio.Required(GreenPlanetEnergyServiceArgument.DURATION): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0.5, max=24)
         ),
-        probatio.Optional(ATTR_TIME_RANGE, default=TIME_RANGE_FULL_DAY): probatio.In(
-            [TIME_RANGE_DAY, TIME_RANGE_NIGHT, TIME_RANGE_FULL_DAY]
-        ),
+        probatio.Optional(
+            GreenPlanetEnergyServiceArgument.TIME_RANGE, default=TIME_RANGE_FULL_DAY
+        ): probatio.In([TIME_RANGE_DAY, TIME_RANGE_NIGHT, TIME_RANGE_FULL_DAY]),
     }
 )
 
@@ -84,8 +93,8 @@ async def get_cheapest_duration(call: ServiceCall) -> ServiceResponse:
         )
 
     coordinator = entry.runtime_data
-    duration = call.data[ATTR_DURATION]
-    time_range = call.data[ATTR_TIME_RANGE]
+    duration = call.data[GreenPlanetEnergyServiceArgument.DURATION]
+    time_range = call.data[GreenPlanetEnergyServiceArgument.TIME_RANGE]
     data = coordinator.data
     api = coordinator.api
     now = dt_util.now()
@@ -134,9 +143,11 @@ async def get_prices(call: ServiceCall) -> ServiceResponse:
     tomorrow's prices have not been published yet) are silently omitted
     from the result.
     """
-    entry = async_get_config_entry(call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID])
+    entry = async_get_config_entry(
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
+    )
     data = entry.runtime_data.data
-    hours: float = call.data[ATTR_HOURS]
+    hours: float = call.data[GreenPlanetEnergyServiceArgument.HOURS]
 
     now = dt_util.now()
     slot_timestamp = int(dt_util.as_timestamp(now) // 900 * 900)
@@ -184,7 +195,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_CHEAPEST_DURATION,
+        GreenPlanetEnergyService.GET_CHEAPEST_DURATION,
         get_cheapest_duration,
         schema=SERVICE_GET_CHEAPEST_DURATION_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -192,7 +203,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_PRICES,
+        GreenPlanetEnergyService.GET_PRICES,
         get_prices,
         schema=SERVICE_GET_PRICES_SCHEMA,
         supports_response=SupportsResponse.ONLY,

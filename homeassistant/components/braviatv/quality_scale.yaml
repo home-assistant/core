@@ -47,21 +47,13 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      coordinator.py, media_player.py and remote.py are below 95%.
-      There are no tests for the button, media_player and remote platforms.
+  test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
   discovery: done
-  discovery-update-info:
-    status: todo
-    comment: |
-      The SSDP step uses the UPnP UDN as unique ID while entries use the CID or MAC,
-      so the host is never updated when the IP address changes.
+  discovery-update-info: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -78,9 +70,7 @@ rules:
     status: exempt
     comment: The integration does not provide any noisy or less popular entities.
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: The BrowseError raised in async_browse_media is not translated.
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: The integration does not provide any custom icons.

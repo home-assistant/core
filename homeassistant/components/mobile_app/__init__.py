@@ -1,6 +1,7 @@
 """Integrates Native Apps to Home Assistant."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
+import asyncio
 from contextlib import suppress
 from functools import partial
 from typing import Any, override
@@ -46,6 +47,7 @@ from .const import (
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
+    DATA_REGISTRATION_LOCK,
     DATA_STORE,
     DOMAIN,
     SENSOR_TYPES,
@@ -53,11 +55,11 @@ from .const import (
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
 )
-from .helpers import async_is_local_only_user, savable_state
+from .helpers import async_is_local_only_user
 from .http_api import RegistrationsView
 from .live_activity.store import async_cleanup_expired_live_activity_tokens
 from .timers import async_handle_timer_event
-from .util import async_create_cloud_hook, supports_push
+from .util import async_create_cloud_hook, async_retire_webhook, supports_push
 from .webhook import handle_webhook
 
 PLATFORMS = [
@@ -89,6 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
+        DATA_REGISTRATION_LOCK: asyncio.Lock(),
     }
 
     # Tokens can expire while Home Assistant is stopped.
@@ -132,7 +135,9 @@ async def _async_setup_cloudhook(
 
     def clean_cloudhook() -> None:
         """Clean up cloudhook from config entry."""
-        if CONF_CLOUDHOOK_URL in entry.data:
+        if CONF_CLOUDHOOK_URL in entry.data and (
+            entry.data[CONF_WEBHOOK_ID] == webhook_id
+        ):
             data = dict(entry.data)
             data.pop(CONF_CLOUDHOOK_URL)
             hass.config_entries.async_update_entry(entry, data=data)
@@ -147,6 +152,9 @@ async def _async_setup_cloudhook(
 
     def on_cloudhook_change(cloudhook: dict[str, Any] | None) -> None:
         """Handle cloudhook changes."""
+        if entry.data[CONF_WEBHOOK_ID] != webhook_id:
+            # The app has registered again with another webhook
+            return
         if cloudhook:
             if entry.data.get(CONF_CLOUDHOOK_URL) == cloudhook[CONF_CLOUDHOOK_URL]:
                 return
@@ -213,6 +221,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
+    async def _async_unload_webhook() -> None:
+        # The entry data may have a new webhook ID by now if the app registered again
+        webhook_unregister(hass, webhook_id)
+        del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+        del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+        await hass_notify.async_reload(hass, DOMAIN)
+
+    entry.async_on_unload(_async_unload_webhook)
+
     await _async_setup_cloudhook(hass, entry, registration[CONF_USER_ID], webhook_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -231,25 +248,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a mobile app entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
-
-    webhook_unregister(hass, webhook_id)
-    del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-    del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-    await hass_notify.async_reload(hass, DOMAIN)
-
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup when entry is removed."""
-    webhook_id = entry.data[CONF_WEBHOOK_ID]
-    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
-    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
-    store = hass.data[DOMAIN][DATA_STORE]
-    await store.async_save(savable_state(hass))
-
-    if CONF_CLOUDHOOK_URL in entry.data:
-        with suppress(cloud.CloudNotAvailable, ValueError):
-            await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+    await async_retire_webhook(hass, entry.data)
 
 
 class _MobileAppStore(Store[dict[str, Any]]):

@@ -4,12 +4,6 @@
       "camera_in_use": {
         "default": "mdi:webcam"
       },
-      "locked": {
-        "default": "mdi:lock-open-variant",
-        "state": {
-          "on": "mdi:lock"
-        }
-      },
       "pending_reboot": {
         "default": "mdi:restart"
       }
@@ -29,6 +23,11 @@
       },
       "power_sleep": {
         "default": "mdi:power-sleep"
+      }
+    },
+    "event": {
+      "notification": {
+        "default": "mdi:message-badge"
       }
     },
     "media_player": {
@@ -236,6 +235,9 @@
     },
     "send_keypress": {
       "service": "mdi:keyboard"
+    },
+    "send_message": {
+      "service": "mdi:message-badge"
     },
     "send_text": {
       "service": "mdi:keyboard"

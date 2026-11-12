@@ -1,1 +1,1 @@
-"""Tests for fitbit component."""
+"""Tests for the Fitbit integration."""

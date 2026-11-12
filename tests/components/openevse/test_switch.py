@@ -18,8 +18,15 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    CommonServiceArgument,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -120,8 +127,10 @@ async def test_manual_override_switch_uses_current_state(
     mock_charger.update.side_effect = _override_enabled_on_charger
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
+        SwitchService.TURN_ON,
+        {
+            CommonServiceArgument.ENTITY_ID: "switch.openevse_mock_config_manual_override"
+        },
         blocking=True,
     )
 
@@ -276,9 +285,9 @@ async def test_switch_raises(
     with pytest.raises(expected) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "switch.openevse_mock_config_current_shaper",
+                CommonServiceArgument.ENTITY_ID: "switch.openevse_mock_config_current_shaper",
             },
             blocking=True,
         )

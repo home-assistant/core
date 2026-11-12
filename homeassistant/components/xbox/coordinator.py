@@ -213,16 +213,17 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
         """Fetch presence data."""
 
         me = await self.client.people.get_friend_by_xuid(self.client.xuid)
-        friends = await self.client.people.get_friends_own()
 
         presence_data = {self.client.xuid: me.people[0]}
-        presence_data.update(
-            {
-                friend.xuid: friend
-                for friend in friends.people
-                if friend.xuid in self.friend_subentries()
-            }
-        )
+        if friend_xuids := self.friend_subentries():
+            friends = await self.client.people.get_friends_own()
+            presence_data.update(
+                {
+                    friend.xuid: friend
+                    for friend in friends.people
+                    if friend.xuid in friend_xuids
+                }
+            )
 
         # retrieve title details
         for person in presence_data.values():

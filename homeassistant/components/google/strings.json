@@ -62,13 +62,9 @@
     }
   },
   "services": {
-    "add_event": {
-      "description": "Adds a new calendar event.",
+    "create_event": {
+      "description": "Adds a new event to a Google calendar.",
       "fields": {
-        "calendar_id": {
-          "description": "The id of the calendar you want.",
-          "name": "Calendar ID"
-        },
         "description": {
           "description": "The description of the event. Optional.",
           "name": "Description"
@@ -85,6 +81,10 @@
           "description": "Days or weeks that you want to create the event in.",
           "name": "In"
         },
+        "location": {
+          "description": "The location of the event. Optional.",
+          "name": "[%key:common::config_flow::data::location%]"
+        },
         "start_date": {
           "description": "The date the whole day event should start.",
           "name": "Start date"
@@ -95,44 +95,6 @@
         },
         "summary": {
           "description": "Acts as the title of the event.",
-          "name": "Summary"
-        }
-      },
-      "name": "Add event"
-    },
-    "create_event": {
-      "description": "Adds a new event to a Google calendar.",
-      "fields": {
-        "description": {
-          "description": "[%key:component::google::services::add_event::fields::description::description%]",
-          "name": "Description"
-        },
-        "end_date": {
-          "description": "[%key:component::google::services::add_event::fields::end_date::description%]",
-          "name": "End date"
-        },
-        "end_date_time": {
-          "description": "The date and time the event should end.",
-          "name": "End time"
-        },
-        "in": {
-          "description": "Days or weeks that you want to create the event in.",
-          "name": "In"
-        },
-        "location": {
-          "description": "The location of the event. Optional.",
-          "name": "[%key:common::config_flow::data::location%]"
-        },
-        "start_date": {
-          "description": "[%key:component::google::services::add_event::fields::start_date::description%]",
-          "name": "Start date"
-        },
-        "start_date_time": {
-          "description": "The date and time the event should start.",
-          "name": "Start time"
-        },
-        "summary": {
-          "description": "[%key:component::google::services::add_event::fields::summary::description%]",
           "name": "Summary"
         }
       },
