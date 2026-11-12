@@ -1,0 +1,44 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "applicationCategory": "Home Automation",
+  "audience": [
+    "Developers",
+    "End Users/Desktop"
+  ],
+  "author": [
+    {
+      "@type": "Organization",
+      "name": "The Home Assistant Authors",
+      "email": "hello@home-assistant.io"
+    }
+  ],
+  "codeRepository": "https://github.com/home-assistant/core",
+  "description": "Open-source home automation platform running on Python 3.",
+  "developmentStatus": "Production/Stable",
+  "identifier": "homeassistant",
+  "issueTracker": "https://github.com/home-assistant/core/issues",
+  "keywords": [
+    "automation",
+    "home"
+  ],
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "name": "homeassistant",
+  "operatingSystem": [
+    "OS Independent"
+  ],
+  "programmingLanguage": [
+    "Python"
+  ],
+  "readme": "README.rst",
+  "relatedLink": [
+    "https://community.home-assistant.io/",
+    "https://www.home-assistant.io/join-chat/"
+  ],
+  "runtimePlatform": [
+    "Python >=3.14.2"
+  ],
+  "softwareHelp": "https://contributors.home-assistant.io/",
+  "url": "https://www.home-assistant.io/",
+  "version": "2026.11.0.dev0"
+}
