@@ -1,0 +1,79 @@
+{
+  "applianceId": "925060678_01:12375757-443E071142DA",
+  "properties": {
+    "desired": {},
+    "reported": {
+      "defrostRoutineState": "WAIT",
+      "temperatureRepresentation": "CELSIUS",
+      "fridge": {
+        "alerts": [],
+        "doorState": "CLOSED",
+        "fastModeTimeToEnd": 0,
+        "fastMode": "OFF",
+        "targetTemperatureF": 39.2,
+        "targetTemperatureC": 4.0,
+        "applianceState": "RUNNING"
+      },
+      "ui2LockMode": true,
+      "sabbathMode": "OFF",
+      "extraCavity": {
+        "alerts": [],
+        "temperatureAdjustingState": 0,
+        "cloneTargetTemperatureMode": 0,
+        "doorState": "CLOSED",
+        "targetTemperatureF": 38.3,
+        "targetTemperatureC": 3.5,
+        "applianceState": "RUNNING",
+        "fanState": 1
+      },
+      "vacationHolidayMode": "OFF",
+      "iceMaker": {
+        "alerts": [],
+        "iceDispenserState": 1,
+        "iceTrayWaterFillSetting": 3,
+        "evaporatorFanState": 1,
+        "defrostTemperatureC": -17.0,
+        "applianceState": "RUNNING",
+        "defrostTemperatureF": 1.3999999999999986
+      },
+      "waterFilterState": "GOOD",
+      "waterFilterLifeTime": 9449467,
+      "airFilterState": "BUY",
+      "applianceInfo": {
+        "applianceType": "CR",
+        "capabilityHash": "9c2e947184c1193f1cd69768f6253faefc03ed5030f195559be2021a5612b296"
+      },
+      "uiLockMode": false,
+      "cpv": "00",
+      "applianceMode": "NORMAL",
+      "applianceMainBoardSwVersion": "JHBG0E00",
+      "coolingValveState": "2",
+      "alerts": [],
+      "waterFilterFlow": 108.0,
+      "networkInterface": {
+        "swVersion": "v5.4.2",
+        "linkQualityIndicator": "GOOD",
+        "otaState": "IDLE",
+        "niuSwUpdateCurrentDescription": "A07491702B-S00008607A",
+        "swAncAndRevision": "S00008607A"
+      },
+      "airFilterLifeTime": 15664447,
+      "freezer": {
+        "alerts": [],
+        "doorState": "CLOSED",
+        "fastModeTimeToEnd": 0,
+        "fastMode": "OFF",
+        "targetTemperatureF": -0.3999999999999986,
+        "targetTemperatureC": -18.0,
+        "applianceState": "RUNNING"
+      },
+      "reminderTime": -1,
+      "connectivityState": "connected",
+      "sensorHumidity": 51
+    },
+    "metadataDesired": {},
+    "metadata": {}
+  },
+  "status": "enabled",
+  "connectionState": "connected"
+}
