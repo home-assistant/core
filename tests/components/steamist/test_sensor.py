@@ -34,3 +34,17 @@ async def test_steam_inactive(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.steam_minutes_remain")
     assert state.state == "0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.MINUTES
+
+
+@pytest.mark.usefixtures("mock_aio_discovery")
+async def test_550_active_profile_sensor(hass: HomeAssistant) -> None:
+    """Test that the active_profile sensor is set up on model 550."""
+    from aiosteamist import MODEL_550
+    from . import MOCK_ASYNC_GET_STATUS_550_STEAM_ACTIVE
+
+    await _async_setup_entry_with_status(
+        hass, MOCK_ASYNC_GET_STATUS_550_STEAM_ACTIVE, model=MODEL_550
+    )
+    state = hass.states.get("sensor.active_profile")
+    assert state is not None
+    assert state.state == "steam_profile_1"
