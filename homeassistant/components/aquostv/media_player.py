@@ -32,20 +32,16 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import AquosConfigEntry
-from .const import (
-    CONF_POWER_ON_ENABLED,
-    DEFAULT_NAME,
-    DEFAULT_PASSWORD,
-    DEFAULT_PORT,
-    DEFAULT_RETRIES,
-    DEFAULT_TIMEOUT,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    INTEGRATION_TITLE,
-    MAX_VOLUME,
-)
+from .const import CONF_POWER_ON_ENABLED, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+INTEGRATION_TITLE = "Sharp Aquos TV"
+DEFAULT_USERNAME = "admin"
+DEFAULT_PASSWORD = "password"
+DEFAULT_TIMEOUT = 0.5
+DEFAULT_RETRIES = 2
+MAX_VOLUME = 100
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
